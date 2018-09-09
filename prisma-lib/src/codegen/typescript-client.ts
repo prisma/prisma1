@@ -63,7 +63,9 @@ export class TypescriptGenerator extends Generator {
       return (
         this.renderInterfaceOrObject(type, true) +
         '\n\n' +
-        this.renderInterfaceOrObject(type, false)
+        this.renderInterfaceOrObject(type, false) +
+        '\n\n' +
+        this.renderInterfaceOrObject(type, false, true)
       )
     },
 
@@ -139,6 +141,7 @@ export type ${type.name}_Output = string`
         .join(' |\n')}`
     },
   }
+
   constructor({ schema }: { schema: GraphQLSchema }) {
     super({ schema })
   }
@@ -401,7 +404,9 @@ export const prisma = new Prisma()`
 
     const infoString = renderInfo
       ? ', info?: GraphQLResolveInfo, options?: Options'
-      : isFragmentAble ? `, fragment?: string | object` : ``
+      : isFragmentAble
+        ? `, fragment?: string | object`
+        : ``
 
     // hard-coded for Prisma ease-of-use
     if (isMutation && field.name.startsWith('create')) {
@@ -507,6 +512,7 @@ export const prisma = new Prisma()`
   renderInterfaceOrObject(
     type: GraphQLObjectTypeRef | GraphQLInputObjectType | GraphQLInterfaceType,
     node = true,
+    subscription = false,
   ): string {
     const fields = type.getFields()
     const fieldDefinition = Object.keys(fields)
@@ -533,11 +539,12 @@ export const prisma = new Prisma()`
     }
 
     return this.renderInterfaceWrapper(
-      `${type.name}${node ? 'Node' : ``}`,
+      `${type.name}${node ? 'Node' : subscription ? 'Subscription' : ''}`,
       type.description!,
       interfaces,
       fieldDefinition,
       !node,
+      subscription,
     )
   }
 
@@ -687,11 +694,14 @@ ${fieldDefinition}
     interfaces: GraphQLInterfaceType[],
     fieldDefinition: string,
     promise?: boolean,
+    subscription?: boolean,
   ): string {
     const actualInterfaces = promise
       ? [
           {
-            name: `Promise<${typeName}Node | AsyncIterator<${typeName}Node>>`,
+            name: subscription
+              ? `Promise<AsyncIterator<${typeName}Node>>`
+              : `Promise<${typeName}Node`,
           },
         ].concat(interfaces)
       : interfaces
