@@ -465,6 +465,7 @@ export const prisma = new Prisma()`
               partial: delegate,
               renderFunction: false,
               isMutation: false,
+              isSubscription: operation === 'subscription',
             })}>`
           : `<T = ${this.renderFieldType({
               field,
@@ -473,6 +474,7 @@ export const prisma = new Prisma()`
               partial: delegate,
               renderFunction: false,
               isMutation,
+              isSubscription: operation === 'subscription',
             })}>`
         return `    ${field.name}: ${T}(${this.renderArgs(
           field,
@@ -529,6 +531,7 @@ export const prisma = new Prisma()`
           partial: false,
           renderFunction: true,
           isMutation: false,
+          isSubscription: subscription,
         })}`
       })
       .join('\n')
@@ -539,7 +542,7 @@ export const prisma = new Prisma()`
     }
 
     return this.renderInterfaceWrapper(
-      `${type.name}${node ? 'Node' : subscription ? 'Subscription' : ''}`,
+      `${type.name}${node ? 'Node' : ''}`,
       type.description!,
       interfaces,
       fieldDefinition,
@@ -558,6 +561,14 @@ export const prisma = new Prisma()`
     return `${field.name}${isNonNullType(field.type) ? '' : '?'}`
   }
 
+  wrapType(type, subscription = false) {
+    if (subscription) {
+      return `Promise<AsyncIterator<${type}>>`
+    }
+
+    return `Promise<${type}>`
+  }
+
   renderFieldType({
     field,
     node,
@@ -565,6 +576,7 @@ export const prisma = new Prisma()`
     partial,
     renderFunction,
     isMutation = false,
+    isSubscription = false,
   }: {
     field
     node: boolean
@@ -572,6 +584,7 @@ export const prisma = new Prisma()`
     partial: boolean
     renderFunction: boolean
     isMutation: boolean
+    isSubscription?: boolean
     // node: boolean = true,
     // input: boolean = false,
     // partial: boolean = false,
@@ -599,6 +612,10 @@ export const prisma = new Prisma()`
       typeString += `Node`
     }
 
+    if (!partial && isSubscription) {
+      typeString += 'Subscription'
+    }
+
     if (isScalar && !isInput) {
       if (isList) {
         typeString += `[]`
@@ -610,7 +627,7 @@ export const prisma = new Prisma()`
           field.args && field.args.length > 0
             ? this.renderArgs(field, isMutation)
             : ''
-        }) => Promise<${typeString}>`
+        }) => ${this.wrapType(typeString, isSubscription)}`
       }
     }
 
@@ -623,13 +640,16 @@ export const prisma = new Prisma()`
         return `${typeString}[]`
       } else {
         if (renderFunction) {
-          return `<T = Promise<Array<${typeString}>>> (${
+          return `<T = ${this.wrapType(
+            `Array<${typeString}`,
+            isSubscription,
+          )}>> (${
             field.args && field.args.length > 0
               ? this.renderArgs(field, isMutation, false, false, true)
               : ''
           }) => T`
         } else {
-          return `Promise<Array<${typeString}>>`
+          return this.wrapType(`Array<${typeString}>`, isSubscription)
         }
       }
     }
@@ -639,16 +659,21 @@ export const prisma = new Prisma()`
     }
 
     if (node && (!isInput || isScalar)) {
-      return `Promise<${typeString}>`
+      return this.wrapType(`${typeString}`, isSubscription)
     }
 
     if (isInput || !renderFunction) {
       return typeString
     }
 
-    if (node && !typeString.endsWith('Node')) {
-      typeString = `${typeString}Node`
-    }
+    // if (node && !typeString.endsWith('Node')) {
+    //   typeString = `${typeString}Node`
+    // }
+
+    // if (isSubscription && !typeString.endsWith('Subscription')) {
+    //   typeString = `${typeStringSubscription}`
+    // }
+
     return `<T = ${typeString}>(${
       field.args && field.args.length > 0
         ? this.renderArgs(field, isMutation, false, false, true)
@@ -701,7 +726,7 @@ ${fieldDefinition}
           {
             name: subscription
               ? `Promise<AsyncIterator<${typeName}Node>>`
-              : `Promise<${typeName}Node`,
+              : `Promise<${typeName}Node>`,
           },
         ].concat(interfaces)
       : interfaces
@@ -711,7 +736,7 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition}
       }>`
-        : `export interface ${typeName}${
+        : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
               ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
               : ''
