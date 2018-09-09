@@ -14,14 +14,14 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Start a local Prisma server using Docker
-- Create a Prisma service configuration
-- Deploy a Prisma service to the local Prisma server
+- Setup Prisma using Docker
+- Configure your Prisma API
+- Generate the Prisma client
 - Read and write data using the Prisma client
 
 ## Install the Prisma CLI
 
-The [Prisma CLI](alx4) is used to deploy and manage Prisma Services. You can install it using [Homwbrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
 
 <Code languages={["Homebrew", "NPM"]}>
 
@@ -45,7 +45,7 @@ To use Prisma locally, you need to have [Docker](https://www.docker.com) install
 
 ### Create Docker Compose file
 
-To launch a Prisma server on your machine, you need a [Docker Compose file](https://docs.docker.com/compose/compose-file/) that configures the Prisma server and specifies the database it can connect to.
+To launch Prisma on your machine, you need a [Docker Compose file](https://docs.docker.com/compose/compose-file/) that configures Prisma and specifies the database it can connect to.
 
 ```bash copy
 touch docker-compose.yml
@@ -120,20 +120,21 @@ volumes:
 
 </Code>
 
-
 > You can switch between **MySQL** and **PostgreSQL** by using the tabs above the code block.
 
 ### Start database and Prisma server
 
-To start the Prisma server and launch the connected database, run the following command:
+To start Prisma and launch the connected database, run the following command:
 
 ```bash copy
 docker-compose up -d
 ```
 
-## Create a Prisma service
+Your local Prisma server is now running on `http://localhost:4466`.
 
-To bootstrap the service configuration files for your first Prisma service, create a new directory and initalize it using the `prisma init` command:
+## Configure your Prisma API
+
+To bootstrap the configuration files for your Prisma client, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
@@ -141,13 +142,27 @@ cd hello-world
 prisma init --endpoint http://localhost:4466
 ```
 
+> The `endpoint` needs to match the URL of a running Prisma server.
+
+## Deploy the Prisma API
+
+The `prisma init` command created the _minimal_ setup needed to deploy the Prisma API: `prisma.yml` and `datamodel.prisma`. 
+
+With these configuration files, you can now _deploy_ the Prisma API:
+
+```bash copy
+prisma deploy
+```
+
+Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
+
 ## Generate your Prisma client
 
-The Prisma client is a custom, auto-generated library that connects to the API of your Prisma service. Append the following lines to the end of your `prisma.yml`:
+The Prisma client is a custom, auto-generated library that connects to your Prisma API. Append the following lines to the end of your `prisma.yml`:
 
 ```yml copy
 generate:
-  - generator: javascript
+  - generator: javascript-client
     output: generated
 ```
 
@@ -158,18 +173,6 @@ prisma generate
 ```
 
 The CLI now stored your Prisma client inside the `generated` folder as specified in `prisma.yml`.
-
-## Deploy the Prisma service
-
-The `prisma init` command created the _minimal_ service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.prisma`. 
-
-This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
-
-```bash copy
-prisma deploy
-```
-
-Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
 
 ## Prepare Node application
 
@@ -188,7 +191,7 @@ npm install --save prisma-lib graphql
 
 ## Read and write data using the Prisma client
 
-Now type the following code in `index.js` and save it afterwards:
+Now add the following code to `index.js` and save it afterwards:
 
 ```js copy
 const { prisma } = require('./prisma')

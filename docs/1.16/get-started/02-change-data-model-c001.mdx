@@ -11,11 +11,10 @@ export const meta = {
 
 On this page, you will learn how to:
 
-- Change the datamodel of your Prisma service
-- Deploy the adjusted datamodel to update your Prisma API
-- Re-generate your Prisma client
+- Adjust the datamodel and update your Prisma API
+- Regenerate your Prisma client
 - Create two database records in a single transaction
-- Query relations
+- Query relational data
 
 <Warning>
 
@@ -51,7 +50,7 @@ Here's what changed:
 
 ## Redeploy your Prisma service
 
-To apply the changes you just made to your datamodel, you need to redeploy your Prisma service:
+To apply the changes you just made to your datamodel, you need to redeploy the Prisma API:
 
 ```bash copy
 prisma deploy
@@ -65,7 +64,7 @@ Because the Prisma client is aware of your datamodel, you need to regenerate it 
 prisma generate
 ```
 
-The Prisma client in `prisma.js` is now being updated and has been adjusted to your new datamodel.
+The Prisma client in `prisma.js` is now being updated and its API has been adjusted to use your new datamodel.
 
 ## Read and write nested objects
 
@@ -108,7 +107,7 @@ Run the script with the following command:
 node index.js
 ```
 
-## Query relations
+## Query relational data
 
 With the Prisma client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
 
