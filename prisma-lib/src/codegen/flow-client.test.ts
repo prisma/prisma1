@@ -9,10 +9,14 @@ const typeDefs = fs.readFileSync(
   'utf-8',
 )
 test('flow generator', t => {
-  const schema = buildSchema(typeDefs)
-  const generator = new FlowGenerator({
-    schema,
-  })
-  const result = generator.render()
-  t.snapshot(result)
+  try {
+    const schema = buildSchema(typeDefs)
+    const generator = new FlowGenerator({
+      schema,
+    })
+    const result = generator.render()
+    t.snapshot(result)
+  } catch (e) {
+    console.log(e.codeFrame)
+  }
 })

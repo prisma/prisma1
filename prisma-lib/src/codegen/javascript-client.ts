@@ -6,19 +6,10 @@ export class JavascriptGenerator extends TypescriptGenerator {
     super(options)
   }
   format(code: string, options: prettier.Options = {}) {
-    try {
-      return prettier.format(code, {
-        ...options,
-        parser: 'javascript',
-      })
-    } catch (e) {
-      console.log(
-        `There is a syntax error in generated code, unformatted code printed, error: ${JSON.stringify(
-          e,
-        )}`,
-      )
-      return code
-    }
+    return prettier.format(code, {
+      ...options,
+      parser: 'javascript',
+    })
   }
   renderJavascript(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
