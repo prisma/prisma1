@@ -15,10 +15,10 @@ export const meta = {
 
 > Learn more about the `info` object in [this](https://www.prisma.io/blog/graphql-server-basics-demystifying-the-info-argument-in-graphql-resolvers-6f26249f613a/) article.
 
-Schema delegation is only applicable in the context of a GraphQL resolver function where the `info` object is available. The Prisma Client exposes schema delegation functionality via the `$delegate` property. For each operation in your [Prisma GraphQL API](./prisma-graphql-api), the `$delegate` property exposes one function. The function needs to be prefixed with the _operation type_, i.e. `query`, `mutation` or `subscription`. For example, the delegate function for a `users` query and a `createUser` mutation need to be invoked as follows: `prisma.query.users(...)` and `prisma.mutation.createUser(...)`. 
+Schema delegation is only applicable in the context of a GraphQL resolver function where the `info` object is available. The Prisma client exposes schema delegation functionality via the `$delegate` property. For each operation in your [Prisma GraphQL API](./prisma-graphql-api), the `$delegate` property exposes one function. The function needs to be prefixed with the _operation type_, i.e. `query`, `mutation` or `subscription`. For example, the delegate function for a `users` query and a `createUser` mutation need to be invoked as follows: `prisma.query.users(...)` and `prisma.mutation.createUser(...)`. 
 Generally, the API of the `$delegate` property is similar to the one of a [GraphQL Binding](https://oss.prisma.io/content/graphql-binding/01-overview).
 
-When one of the delegate functions is invoked, the Prisma Client constructs a corresponding GraphQL query and injects the selection set that was provided in the first GraphQL query into the newly constructed one.
+When one of the delegate functions is invoked, the Prisma client constructs a corresponding GraphQL query and injects the selection set that was provided in the first GraphQL query into the newly constructed one.
 
 ### Examples
 
