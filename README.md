@@ -95,7 +95,7 @@ The Prisma API is deployed based on the datamodel and exposes CRUD & realtime op
 
 #### 5. Use the Prisma client (JavaScript)
 
-The Prisma client connects to the Prisma API and lets you perform read and write operations in your database. This section explains how to use the Prisma client from **JavaScript**.
+The Prisma client connects to the Prisma API and lets you perform read and write operations against your database. This section explains how to use the Prisma client from **JavaScript**.
 
 Create a new Node script inside the `hello-world` directory:
 
@@ -225,8 +225,6 @@ You can connect the following databases to Prisma already:
 - MySQL
 - Postgres
 - MongoDB ([alpha](https://github.com/prisma/prisma/issues/1643))
-
-More database connectors will follow.
 
 ### Upcoming Connectors
 
