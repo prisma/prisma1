@@ -6,11 +6,10 @@
 
 **Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that can be used via the Prisma client.
 
-- **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go, ...
-- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB, ... (see all supported databases)
+- **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
+- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB, ... ([see all supported databases](https://www.prisma.io/features/databases/).)
 - **Type-safe database access** including filters, aggregations, pagination and transactions.
 - **Realtime event systems for your database** to get notified about database events.
-- **Works with all frontend frameworks** like React, Vue.js, Angular.
 - **Declarative data modeling & migrations (optional)** with simple SDL syntax.
 
 ## Contents
@@ -33,7 +32,7 @@ brew install prisma
 ```
 
 <Details>
-<Summary><b>Alternative: Install with NPM or Yarne</b></Summary>
+<Summary><b>Alternative: Install with NPM or Yarn</b></Summary>
 
 ```bash
 npm install -g prisma
@@ -42,18 +41,11 @@ yarn global add prisma
 ```
 </Details>
 
-#### 2. Create a new Prisma service
-
-Run the following command to create the files you need for a new Prisma [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
+#### 2. Connect Prisma to your database
 
 ```bash
 prisma init hello-world
 ```
-
-Then select the **Demo server** (hosted in Prisma Cloud) and follow the instructions of the interactive CLI prompt.
-
-<details><summary><b>Alternative: Setup Prisma with your own database.</b></summary>
-<p>
 
 Instead of using a Demo server, you can also setup a Prisma server that is connected to your own database. Note that this **requires [Docker](https://www.docker.com)**.
 
