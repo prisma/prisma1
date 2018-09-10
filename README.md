@@ -7,7 +7,7 @@
 **Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that is used via the Prisma client.
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
-- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB, ... ([see all supported databases](https://www.prisma.io/features/databases/))
+- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB. ([see all supported databases](https://www.prisma.io/features/databases/))
 - **Type-safe database access** including filters, aggregations, pagination and transactions.
 - **Realtime event systems for your database** to get notified about database events.
 - **Declarative data modeling & migrations (optional)** with simple SDL syntax.
@@ -82,12 +82,23 @@ To deploy your Prisma API, run the following command:
 prisma deploy
 ```
 
+> If you started with an existing database, **this won't make any changes to your database**. 
+
+The Prisma API is deployed based on the datamodel defined in `datamodel.prisma` and exposes CRUD & realtime operations for each model in that file. 
+
 ### 4. Use the Prisma client
 
-<details><summary><b>See more API operations.</b></summary>
+You can use the Prisma client to read and write data in your database. The following code snippets assume that there is a simple `User` type in your datamodel - if that's not the case you need:
+
+```js
+const prisma = new Prisma()
+```
+
+
+<details><summary><b>See more API operations</b></summary>
 <p>
 
-```
+```js
 const prisma = new Prisma()
 ```
 
