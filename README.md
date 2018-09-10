@@ -54,7 +54,9 @@ The interactice CLI wizard now helps you to connect Prisma to your database:
 - If you want to start with a new database, select **Create new database**.
 - If you already have a database, select **Use existing database** (and provide database credentials).
 
-Once the command has finished, you need to run the following commands to setup Prisma:
+After you provided the required database information to the wizard, it prompts you to select the language for your Prisma client.
+
+Once the wizard has terminated, run the following commands to setup Prisma:
 
 ```
 cd hello-world
@@ -72,33 +74,15 @@ Select the **Demo server** and follow the instructions of the interactive CLI pr
 
 </Details>
 
-### 3. Define your data model
+### 3. Deploy your Prisma API
 
-Edit `datamodel.graphql` to define your data model using GraphQL SDL:
-
-```graphql
-type Tweet {
-  id: ID! @unique
-  createdAt: DateTime!
-  text: String!
-  owner: User!
-}
-
-type User {
-  id: ID! @unique
-  handle: String! @unique
-  name: String!
-  tweets: [Tweet!]!
-}
-```
-
-### 4. Deploy your Prisma service
-
-To deploy your service, run the following command:
+To deploy your Prisma API, run the following command:
 
 ```
 prisma deploy
 ```
+
+This creates a 
 
 ### 5. Explore the API in a Playground
 
