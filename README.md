@@ -156,7 +156,8 @@ const usersCalledAlice = await prisma
 ```
 
 ```js
- const updatedUser = await prisma
+// replace the __USER_ID__ placeholder with an actual user ID
+const updatedUser = await prisma
   .updateUser({
     where: { id: "__USER_ID__" },
     data: { email: "alice@prisma.io" }
@@ -164,6 +165,7 @@ const usersCalledAlice = await prisma
 ```
 
 ```js
+// replace the __USER_ID__ placeholder with an actual user ID
  const deletedUser = await prisma
   .deleteUser({ id: "__USER_ID__" })
 ```
