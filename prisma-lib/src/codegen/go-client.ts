@@ -15,6 +15,8 @@ import {
 
 import * as upperCamelCase from 'uppercamelcase'
 
+import { getTypeNames } from '../utils/getTypeNames'
+
 const goCase = (s: string) => {
   const cased = upperCamelCase(s)
   return cased.startsWith('Id') ? `ID${cased.slice(2)}` : cased
@@ -106,7 +108,7 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-        db    DB
+        db    Client
         stack []Instruction
       }
 
@@ -237,7 +239,7 @@ export class GoGenerator extends Generator {
       
       // ${type.name}ExecArray docs
       type ${type.name}ExecArray struct {
-        db    DB
+        db    Client
         stack []Instruction
       }
 
@@ -322,7 +324,7 @@ export class GoGenerator extends Generator {
       return `
       // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
-        db    DB
+        db    Client
         stack []Instruction
       }
 
@@ -454,8 +456,8 @@ export class GoGenerator extends Generator {
               func (exists *Exists) ${goCase(field.name)}(params *${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
-                // TODO: Reference to DB in a better way
-                db := DB{
+                // TODO: Reference to client in a better way
+                db := Client{
                   Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
                     options,
                   )}})[exists.Endpoint != ""],
@@ -493,7 +495,7 @@ export class GoGenerator extends Generator {
           }
           
           // ${goCase(field.name)} docs
-          func (db DB) ${goCase(field.name)} (${
+          func (db Client) ${goCase(field.name)} (${
           args.length === 1
             ? `params *${this.getDeepType(args[0].type)}`
             : `params *${goCase(field.name)}Params`
@@ -553,7 +555,7 @@ export class GoGenerator extends Generator {
   }
 
   render(options: RenderOptions) {
-    const typeNames = this.getTypeNames()
+    const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
 
     const queryType = this.schema.getQueryType()
@@ -620,24 +622,37 @@ func isArray(i interface{}) bool {
   }
 }
 
-// DB Type to represent the client
-type DB struct {
+type PrismaOptions struct {
+	Endpoint string
+	Debug    bool
+}
+
+func New(options *PrismaOptions) Client {
+	return Client{
+		Endpoint: options.Endpoint,
+		Debug:    options.Debug,
+		Exists: Exists{
+			Endpoint: options.Endpoint,
+			Debug:    options.Debug,
+		},
+	}
+}
+
+type Client struct {
   Endpoint string
   Debug bool
   Exists Exists
 }
 
 // Exists docs
-// TODO: Handle scoping better
 type Exists struct {
 	Endpoint string
 	Debug    bool
 }
 
 // ProcessInstructions docs
-func (db *DB) ProcessInstructions(stack []Instruction) string {
+func (db *Client) ProcessInstructions(stack []Instruction) string {
 	query := make(map[string]interface{})
-	// TODO: This needs to handle arg name collisions across instructions
 	argsByInstruction := make(map[string][]GraphQLArg)
 	var allArgs []GraphQLArg
 	firstInstruction := stack[0]
@@ -816,7 +831,7 @@ ${typeNames
       .join('\n')}
 
 // GraphQL Send a GraphQL operation request
-func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
+func (db Client) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
@@ -843,33 +858,5 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 	return respData
 }
         `
-  }
-
-  // TODO: Move this to some utils because this is same as TypescriptGenerator
-  getTypeNames() {
-    const ast = this.schema
-    // Create types
-    return Object.keys(ast.getTypeMap())
-      .filter(typeName => !typeName.startsWith('__'))
-      .filter(typeName => typeName !== (ast.getQueryType() as any).name)
-      .filter(
-        typeName =>
-          ast.getMutationType()
-            ? typeName !== (ast.getMutationType()! as any).name
-            : true,
-      )
-      .filter(
-        typeName =>
-          ast.getSubscriptionType()
-            ? typeName !== (ast.getSubscriptionType()! as any).name
-            : true,
-      )
-      .sort(
-        (a, b) =>
-          (ast.getType(a) as any).constructor.name <
-          (ast.getType(b) as any).constructor.name
-            ? -1
-            : 1,
-      )
   }
 }
