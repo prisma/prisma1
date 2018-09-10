@@ -27,11 +27,19 @@
 
 [Watch this 3-min tutorial](https://www.youtube.com/watch?v=CORQo5rooX8) or follow the steps below to get started with Prisma.
 
-#### 1. Install the CLI via NPM
+#### 1. Install Prisma via Homebrew
 
 ```bash
-npm install -g prisma
+brew install prisma
 ```
+
+<Details>
+<Summary>Install with NPM</Summary>
+
+```bash
+brew install prisma
+```
+</Details>
 
 #### 2. Create a new Prisma service
 
