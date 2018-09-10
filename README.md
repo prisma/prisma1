@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma the data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the Prisma client. Prisma is to build **GraphQL servers, REST APIs & more**. 
+**Prisma the data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. Prisma is used to build **GraphQL servers, REST APIs & more**. 
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
@@ -33,7 +33,7 @@ brew tap prisma/prisma
 ```
 
 <Details>
-<Summary><b>Alternative: Install with NPM or Yarn</b></Summary>
+<Summary><b>Alternative</b>: Install with NPM or Yarn</Summary>
 
 ```
 npm install -g prisma
@@ -65,7 +65,7 @@ docker-compose up -d
 
 #### 3. Define your data model
 
-Edit `datamodel.prisma` to define your data model using [SDL](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) syntax:
+Edit `datamodel.prisma` to define your data model using [SDL](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) syntax. Each model is mapped to a table in your database schema:
 
 ```graphql
 type User {
@@ -82,8 +82,6 @@ type Post {
   author: User
 }
 ```
-
-Each model is mapped to a table in your database schema.
 
 #### 4. Deploy your Prisma API
 
