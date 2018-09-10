@@ -221,7 +221,7 @@ Prisma runs as _standalone processes_ which allows for it to be scaled independe
 You can connect the following databases to Prisma already:
 
 - MySQL
-- Postgres
+- PostgreSQL
 - MongoDB ([alpha](https://github.com/prisma/prisma/issues/1643))
 
 ### Upcoming Connectors
