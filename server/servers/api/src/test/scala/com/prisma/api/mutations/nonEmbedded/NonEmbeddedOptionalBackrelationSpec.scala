@@ -5,7 +5,7 @@ import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class OptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
+class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "Nested Updates" should "work for models with missing backrelations " in {
