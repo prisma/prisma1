@@ -79,7 +79,7 @@ export class English extends TwoFormInflector {
     "ditto", "dynamo", "embryo", "ghetto", "guano", "inferno", "jumbo",
     "lumbago", "magneto", "manifesto", "medico", "octavo", "photo",
     "pro", "quarto", "canto", "lingo", "generalissimo", "stylo",
-    "rhino", "casino", "auto", "macro", "zero", "todo"]
+    "rhino", "casino", "auto", "macro", "zero"]
   private static CATEGORY_O_I = ["solo", "soprano", "basso", "alto", "contralto", "tempo", "piano",
     "virtuoso"]
   private static CATEGORY_EN_INA = ["stamen", "foramen", "lumen"]
@@ -142,7 +142,7 @@ export class English extends TwoFormInflector {
       super.irregularFromList([
         ["beef", "beefs"],
         ["brother", "brothers"],
-        ["cow", "cows"],
+        ["cos", "cows"],
         ["genie", "genies"],
         ["money", "moneys"],
         ["octopus", "octopuses"],
@@ -229,7 +229,7 @@ export class English extends TwoFormInflector {
     // The rest take -oes
     super.rule("o$", "oes");
 
-    super.rule("ulum$", "ula");
+    super.rule("ulum", "ula");
 
     super.categoryRule(English.CATEGORY_A_ATA, "", "es");
 

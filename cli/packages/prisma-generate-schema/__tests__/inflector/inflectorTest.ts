@@ -57,8 +57,7 @@ const exampleWordList =
     ["virus", "viruses"],
     ["gastrostomy", "gastrostomies"],
     ["baculum", "bacula"],
-    ["pancreas", "pancreases"],
-    ["todo", "todos"]
+    ["pancreas", "pancreases"]
   ]
 
 test('Inflector should correctly inflect our test word list', () => {
