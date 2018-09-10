@@ -82,7 +82,7 @@ Here's a few things to note about the datamodel:
 
 The Prisma client is an auto-generated library that replaces a traditional ORM in your API server. It connects to a Prisma server which sits on top your database:
 
-![](https://imgur.com/4KNuto9.png)
+![](https://imgur.com/URyxmnZ.png)
 
 ### Seamless relations API
 
@@ -249,7 +249,11 @@ db.GraphQL(`
 
 ## Prisma server
 
-The Prisma server is a standalone infrastructure component that is connected to your database. Therefore, it needs to be configured with your database connection details and user credentials when being deployed.
+The Prisma server is a standalone infrastructure component that is connected to your database:
+
+![](https://imgur.com/774DDya.png)
+
+It needs to be configured with your database connection details and user credentials when being deployed.
 
 The main responsibility of the Prisma server is to translate requests made by the Prisma client into actual database queries.
 
