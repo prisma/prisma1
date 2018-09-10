@@ -627,11 +627,13 @@ export const prisma = new Prisma()`
       }
     }
 
-    if ((node || isList) && !isScalar) {
+    const addSubscription = !partial && isSubscription && !isScalar
+
+    if ((node || isList) && !isScalar && !addSubscription) {
       typeString += `Node`
     }
 
-    if (!partial && isSubscription) {
+    if (addSubscription) {
       typeString += 'Subscription'
     }
 
