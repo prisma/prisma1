@@ -6,5 +6,5 @@ type Query {
 
 type Mutation {
   createPost(data: PostCreateInput!): Post
-  deletePost(id: ID!): Post
+  deletePost(id: ID!): ID!
 }

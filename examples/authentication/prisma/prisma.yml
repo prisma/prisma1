@@ -1,6 +1,8 @@
 endpoint: http://localhost:4466/authentication
 datamodel: datamodel.graphql
-
+generate:
+    - generator: typescript
+      output: ../src/generated/prisma.ts
 hooks:
   post-deploy:
     - echo "Deployment finished"

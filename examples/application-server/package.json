@@ -7,10 +7,21 @@
   "author": "Prisma",
   "license": "Apache 2",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "ts-node src/index.ts",
+    "prisma": "cd prisma && prisma",
+    "graphql-resolver-codegen": "graphql-resolver-codegen"
   },
   "dependencies": {
-    "graphql-yoga": "1.13.1",
-    "prisma-binding": "^2.1.0"
+    "graphql": "^0.13.2",
+    "graphql-yoga": "^1.16.1",
+    "jsonwebtoken": "^8.3.0",
+    "prisma-lib": "^0.1.23"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^2.0.0",
+    "graphql-resolver-codegen": "^0.0.3",
+    "prisma": "^1.17.0-alpha.10",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.0.1"
   }
 }
