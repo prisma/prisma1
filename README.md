@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that can be used via the Prisma client.
+**Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that is used via the Prisma client.
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB, ... ([see all supported databases](https://www.prisma.io/features/databases/).)
