@@ -150,7 +150,7 @@ node index.js
 const usersCalledAlice = await prisma
   .users({
     where: {
-      name: 'Alice'
+      name: "Alice"
     }
   })
 ```
@@ -158,14 +158,20 @@ const usersCalledAlice = await prisma
 ```js
  const updatedUser = await prisma
   .updateUser({
-    where: { id: '__USER_ID__' },
-    data: { email: 'alice@prisma.io' }
+    where: { id: "__USER_ID__" },
+    data: { email: "alice@prisma.io" }
   })
 ```
 
 ```js
  const deletedUser = await prisma
-  .deleteUser({ id: '__USER_ID__' })
+  .deleteUser({ id: "__USER_ID__" })
+```
+
+```js
+const postsByAuthor = await prisma
+  .user({ email: "alice@prisma.io" })
+  .posts()
 ```
 
 </p>
