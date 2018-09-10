@@ -212,7 +212,7 @@ You can also check the [**AirBnB clone example**](https://github.com/prismagraph
 
 Prisma takes the role of the **data layer** in your backend architecture, replacing traditional ORMs and custom data access layers. It enables a _layered architecture_ which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
 
-The **Prisma client** is used in your application server to perform read and write operations against your database through the Prisma API. 
+The **Prisma client** is used inside your application server to perform read and write operations against your database through the Prisma API.
 
 Prisma runs as _standalone processes_ which allows for it to be scaled independently from your application server.
 
