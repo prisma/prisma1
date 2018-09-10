@@ -95,7 +95,7 @@ prisma deploy
 
 The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file.
 
-#### 4. Use the Prisma client (JavaScript)
+#### 5. Use the Prisma client (JavaScript)
 
 The Prisma client connects to the Prisma API and lets you perform read and write operations in your database. This section explains how to use the Prisma client from **JavaScript**.
 
@@ -180,8 +180,9 @@ const postsByAuthor = await prisma
 </details>
 
 
-#### 5. Next steps
+#### 6. Next steps
 
+- [Use Prisma with an existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/)
 - [Build an app with Prisma client](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/) 
 - [Check out some examples](#examples)
 - [Read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
