@@ -49,10 +49,14 @@ To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Ru
 prisma init hello-world
 ```
 
-The interactice CLI wizard now helps you to connect Prisma to a database:
+The interactice CLI wizard now helps you with the required setup:
 
-- If you want to start with a new database, select **Create new database**.
-- If you already have a database, select **Use existing database** (and provide database credentials).
+- Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/) or a hosted [demo database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-demo-server-a001/))
+- Select the database type: **MySQL** or **PostgreSQL**
+- Select the language for the generated Prisma client: **TypeScript**, **Flow**, **JavaScript** or **Go**
+
+If you want to start with an **existing database** or just play around with a sandbox environment on a **Demo server**, follow the Quickstart in the documentation.
+
 
 After you provided the database information, the wizard prompts you to **select the language** for the generated Prisma client.
 
@@ -88,12 +92,11 @@ The Prisma API is deployed based on the datamodel defined in `datamodel.prisma` 
 
 #### 4. Use the Prisma client
 
-You can use the Prisma client to read and write data in your database. The following code snippets assume that there is a simple `User` type in your datamodel - if that's not the case you need to adjust the API calls:
+You can use the Prisma client to read and write data in your database. The following code snippets assume that there is a simple `User` type in your datamodel - if that's not the case you need to adjust the function calls (or go [here]() for a more in-depth ):
 
 ```js
 const prisma = new Prisma()
 ```
-
 
 <details><summary><b>See more API operations</b></summary>
 <p>
