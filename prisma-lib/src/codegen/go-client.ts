@@ -11,6 +11,7 @@ import {
   GraphQLArgument,
   GraphQLFieldMap,
   GraphQLInputFieldMap,
+  isNonNullType,
 } from 'graphql'
 
 import * as upperCamelCase from 'uppercamelcase'
@@ -130,9 +131,12 @@ export class GoGenerator extends Generator {
           ${args.length > 0 ? `
           type ${goCase(field.name)}ParamsExec struct {
             ${args
-              .map(arg => `${goCase(arg.name)} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
-          }
+              .map(arg => {
+                const { isNonNull } = this.extractFieldLikeType(arg as GraphQLField<any, any>)
+                return `${goCase(arg.name)} ${isNonNull ? `` : `*`}${this.scalarMapping[arg.type.toString()] || arg.type }`
+              }).join('\n')
         }
+      }
           ` : ``}
           
           // ${goCase(field.name)} docs - executable for types
@@ -175,7 +179,7 @@ export class GoGenerator extends Generator {
         .join('\n')}
 
       // Exec docs
-      func (instance ${type.name}Exec) Exec() (${type.name}, error) {
+      func (instance ${type.name}Exec) Exec() (${isNonNullType(type) ? `` : `*`}${type.name}, error) {
         var allArgs []GraphQLArg
         variables := make(map[string]interface{})
         for instructionKey := range instance.stack {
@@ -243,7 +247,7 @@ export class GoGenerator extends Generator {
           fmt.Println("Data Unpacked Exec:", genericData)
         }
 
-        var decodedData ${type.name}
+        var decodedData ${isNonNullType(type) ? `` : `*`}${type.name}
         mapstructure.Decode(genericData, &decodedData)
         if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
@@ -323,9 +327,8 @@ export class GoGenerator extends Generator {
               const {
                 typeName,
                 isNonNull,
-                isScalar,
               } = this.extractFieldLikeType(field as GraphQLField<any, any>)
-              return `${goCase(field.name)} ${isScalar ? `` : `*`}${this
+              return `${goCase(field.name)} ${isNonNull ? `` : `*`}${this
                 .scalarMapping[typeName] || typeName} \`json:"${field.name}${
                 isNonNull ? `` : `,omitempty`
               }"\``
@@ -375,11 +378,11 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const { typeName } = this.extractFieldLikeType(
+              const { typeName, isNonNull } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
 
-              return `${goCase(field.name)} *${this.scalarMapping[typeName] ||
+              return `${goCase(field.name)} ${isNonNull && type.name !== typeName ? `` : `*`}${this.scalarMapping[typeName] ||
                 typeName} \`json:"${field.name},omitempty"\``
             })
             .join('\n')}
@@ -512,7 +515,7 @@ export class GoGenerator extends Generator {
             ${args
               .map(arg => {
                 const { typeName, isNonNull } = this.extractFieldLikeType(arg)
-                return `${goCase(arg.name)} *${this.scalarMapping[typeName] ||
+                return `${goCase(arg.name)} ${isNonNull ? `` : `*`}${this.scalarMapping[typeName] ||
                   typeName} \`json:"${arg.name}${
                   isNonNull ? `` : `,omitempty`
                 }"\``
@@ -531,18 +534,21 @@ export class GoGenerator extends Generator {
           var args []GraphQLArg
           ${args
             .map(arg => {
-              return `if params${
+              const { isNonNull } = this.extractFieldLikeType(arg)
+              return `
+              ${isNonNull ? `` : `if params${
                 args.length === 1 ? `` : `.${goCase(arg.name)}`
-              } != nil {
+              } != nil {`}
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
                   Key: "${arg.name}",
                   TypeName: "${arg.type}",
-                  Value: *params${
+                  Value: ${isNonNull ? `` : `*`}params${
                     args.length === 1 ? `` : `.${goCase(arg.name)}`
                   },
                 })
-              }`
+                ${isNonNull ? `` : `}`}
+              `
             })
             .join('\n')}
           
