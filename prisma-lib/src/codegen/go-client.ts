@@ -462,11 +462,13 @@ export class GoGenerator extends Generator {
         const { typeFields, typeName, isList } = this.extractFieldLikeType(
           field,
         )
-
+        
         const whereArgs = args.filter(arg => arg.name === 'where')
-        let whereArg = null
+        let whereArg, whereArgIsNonNull = null
         if (whereArgs.length > 0) {
           whereArg = whereArgs[0]
+          let { isNonNull } = this.extractFieldLikeType(whereArg) 
+          whereArgIsNonNull = isNonNull as any
         }
 
         return `
@@ -477,7 +479,7 @@ export class GoGenerator extends Generator {
               // Exists
 
               // ${goCase(field.name)} exists docs
-              func (exists *Exists) ${goCase(field.name)}(params *${goCase(
+              func (exists *Exists) ${goCase(field.name)}(params ${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
                 client := Client{
@@ -491,7 +493,7 @@ export class GoGenerator extends Generator {
                     args.length === 1
                       ? `params,`
                       : `&${goCase(field.name)}Params{
-                    Where: params,
+                    Where: ${whereArgIsNonNull ? `` : `&`}params,
                   },`
                   }
                 ).Exec()
@@ -526,7 +528,7 @@ export class GoGenerator extends Generator {
           // ${goCase(field.name)} docs - generated while printing operation - ${operation}
           func (client Client) ${goCase(field.name)} (${
           args.length === 1
-            ? `params *${this.getDeepType(args[0].type)}`
+            ? `params ${args[0].type.toString().indexOf("!") > -1 && args[0].type.toString().indexOf("!]") === -1 ? `` : `*`}${this.getDeepType(args[0].type)}`
             : `params *${goCase(field.name)}Params`
         }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
 
