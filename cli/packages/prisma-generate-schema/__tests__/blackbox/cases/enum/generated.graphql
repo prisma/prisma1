@@ -1,0 +1,731 @@
+type A {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+  b(where: BWhereInput): B!
+}
+
+type AConnection {
+  pageInfo: PageInfo!
+  edges: [AEdge]!
+  aggregate: AggregateA!
+}
+
+input ACreatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input ACreateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: ACreatefieldCInput
+  b: BCreateOneWithoutAInput!
+}
+
+input ACreateManyInput {
+  create: [ACreateInput!]
+}
+
+input ACreateManyWithoutBInput {
+  create: [ACreateWithoutBInput!]
+}
+
+input ACreateWithoutBInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: ACreatefieldCInput
+}
+
+type AEdge {
+  node: A!
+  cursor: String!
+}
+
+type AggregateA {
+  count: Int!
+}
+
+type AggregateAWithId {
+  count: Int!
+}
+
+type AggregateB {
+  count: Int!
+}
+
+type AggregateC {
+  count: Int!
+}
+
+type AggregateD {
+  count: Int!
+}
+
+type AggregateE {
+  count: Int!
+}
+
+enum AOrderByInput {
+  fieldA_ASC
+  fieldA_DESC
+  fieldB_ASC
+  fieldB_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type APreviousValues {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+}
+
+type ASubscriptionPayload {
+  mutation: MutationType!
+  node: A
+  updatedFields: [String!]
+  previousValues: APreviousValues
+}
+
+input ASubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: AWhereInput
+  AND: [ASubscriptionWhereInput!]
+  OR: [ASubscriptionWhereInput!]
+  NOT: [ASubscriptionWhereInput!]
+}
+
+input AUpdatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input AUpdateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AUpdatefieldCInput
+  b: BUpdateOneWithoutAInput
+}
+
+input AUpdateManyInput {
+  create: [ACreateInput!]
+}
+
+input AUpdateManyWithoutBInput {
+  create: [ACreateWithoutBInput!]
+}
+
+input AWhereInput {
+  fieldA: UsedEnum
+  fieldA_not: UsedEnum
+  fieldA_in: [UsedEnum!]
+  fieldA_not_in: [UsedEnum!]
+  fieldB: UsedEnum
+  fieldB_not: UsedEnum
+  fieldB_in: [UsedEnum!]
+  fieldB_not_in: [UsedEnum!]
+  b: BWhereInput
+  AND: [AWhereInput!]
+  OR: [AWhereInput!]
+  NOT: [AWhereInput!]
+}
+
+type AWithId {
+  id: ID!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+  c(where: CWhereInput): C
+}
+
+type AWithIdConnection {
+  pageInfo: PageInfo!
+  edges: [AWithIdEdge]!
+  aggregate: AggregateAWithId!
+}
+
+input AWithIdCreatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input AWithIdCreateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: AWithIdCreatefieldCInput
+  c: CCreateOneWithoutAInput
+}
+
+input AWithIdCreateOneInput {
+  create: AWithIdCreateInput
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdCreateOneWithoutCInput {
+  create: AWithIdCreateWithoutCInput
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdCreateWithoutCInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: AWithIdCreatefieldCInput
+}
+
+type AWithIdEdge {
+  node: AWithId!
+  cursor: String!
+}
+
+enum AWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  fieldA_ASC
+  fieldA_DESC
+  fieldB_ASC
+  fieldB_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type AWithIdPreviousValues {
+  id: ID!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+}
+
+type AWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: AWithId
+  updatedFields: [String!]
+  previousValues: AWithIdPreviousValues
+}
+
+input AWithIdSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: AWithIdWhereInput
+  AND: [AWithIdSubscriptionWhereInput!]
+  OR: [AWithIdSubscriptionWhereInput!]
+  NOT: [AWithIdSubscriptionWhereInput!]
+}
+
+input AWithIdUpdateDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+  c: CUpdateOneWithoutAInput
+}
+
+input AWithIdUpdatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input AWithIdUpdateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+  c: CUpdateOneWithoutAInput
+}
+
+input AWithIdUpdateOneInput {
+  create: AWithIdCreateInput
+  update: AWithIdUpdateDataInput
+  upsert: AWithIdUpsertNestedInput
+  delete: Boolean
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdUpdateOneWithoutCInput {
+  create: AWithIdCreateWithoutCInput
+  update: AWithIdUpdateWithoutCDataInput
+  upsert: AWithIdUpsertWithoutCInput
+  delete: Boolean
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdUpdateWithoutCDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+}
+
+input AWithIdUpsertNestedInput {
+  update: AWithIdUpdateDataInput!
+  create: AWithIdCreateInput!
+}
+
+input AWithIdUpsertWithoutCInput {
+  update: AWithIdUpdateWithoutCDataInput!
+  create: AWithIdCreateWithoutCInput!
+}
+
+input AWithIdWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  fieldA: UsedEnum
+  fieldA_not: UsedEnum
+  fieldA_in: [UsedEnum!]
+  fieldA_not_in: [UsedEnum!]
+  fieldB: UsedEnum
+  fieldB_not: UsedEnum
+  fieldB_in: [UsedEnum!]
+  fieldB_not_in: [UsedEnum!]
+  c: CWhereInput
+  AND: [AWithIdWhereInput!]
+  OR: [AWithIdWhereInput!]
+  NOT: [AWithIdWhereInput!]
+}
+
+input AWithIdWhereUniqueInput {
+  id: ID
+}
+
+type B {
+  field: String!
+  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+}
+
+type BatchPayload {
+  count: Long!
+}
+
+type BConnection {
+  pageInfo: PageInfo!
+  edges: [BEdge]!
+  aggregate: AggregateB!
+}
+
+input BCreateInput {
+  field: String!
+  a: ACreateManyWithoutBInput
+}
+
+input BCreateOneWithoutAInput {
+  create: BCreateWithoutAInput
+}
+
+input BCreateWithoutAInput {
+  field: String!
+}
+
+type BEdge {
+  node: B!
+  cursor: String!
+}
+
+enum BOrderByInput {
+  field_ASC
+  field_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type BPreviousValues {
+  field: String!
+}
+
+type BSubscriptionPayload {
+  mutation: MutationType!
+  node: B
+  updatedFields: [String!]
+  previousValues: BPreviousValues
+}
+
+input BSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: BWhereInput
+  AND: [BSubscriptionWhereInput!]
+  OR: [BSubscriptionWhereInput!]
+  NOT: [BSubscriptionWhereInput!]
+}
+
+input BUpdateInput {
+  field: String
+  a: AUpdateManyWithoutBInput
+}
+
+input BUpdateOneWithoutAInput {
+  create: BCreateWithoutAInput
+  update: BUpdateWithoutADataInput
+  upsert: BUpsertWithoutAInput
+  delete: Boolean
+}
+
+input BUpdateWithoutADataInput {
+  field: String
+}
+
+input BUpsertWithoutAInput {
+  update: BUpdateWithoutADataInput!
+  create: BCreateWithoutAInput!
+}
+
+input BWhereInput {
+  field: String
+  field_not: String
+  field_in: [String!]
+  field_not_in: [String!]
+  field_lt: String
+  field_lte: String
+  field_gt: String
+  field_gte: String
+  field_contains: String
+  field_not_contains: String
+  field_starts_with: String
+  field_not_starts_with: String
+  field_ends_with: String
+  field_not_ends_with: String
+  a_every: AWhereInput
+  a_some: AWhereInput
+  a_none: AWhereInput
+  AND: [BWhereInput!]
+  OR: [BWhereInput!]
+  NOT: [BWhereInput!]
+}
+
+type C {
+  field: [Int!]!
+  a(where: AWithIdWhereInput): AWithId!
+}
+
+type CConnection {
+  pageInfo: PageInfo!
+  edges: [CEdge]!
+  aggregate: AggregateC!
+}
+
+input CCreatefieldInput {
+  set: [Int!]
+}
+
+input CCreateInput {
+  field: CCreatefieldInput
+  a: AWithIdCreateOneWithoutCInput!
+}
+
+input CCreateOneWithoutAInput {
+  create: CCreateWithoutAInput
+}
+
+input CCreateWithoutAInput {
+  field: CCreatefieldInput
+}
+
+type CEdge {
+  node: C!
+  cursor: String!
+}
+
+enum COrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type CPreviousValues {
+  field: [Int!]!
+}
+
+type CSubscriptionPayload {
+  mutation: MutationType!
+  node: C
+  updatedFields: [String!]
+  previousValues: CPreviousValues
+}
+
+input CSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: CWhereInput
+  AND: [CSubscriptionWhereInput!]
+  OR: [CSubscriptionWhereInput!]
+  NOT: [CSubscriptionWhereInput!]
+}
+
+input CUpdatefieldInput {
+  set: [Int!]
+}
+
+input CUpdateInput {
+  field: CUpdatefieldInput
+  a: AWithIdUpdateOneWithoutCInput
+}
+
+input CUpdateOneWithoutAInput {
+  create: CCreateWithoutAInput
+  update: CUpdateWithoutADataInput
+  upsert: CUpsertWithoutAInput
+  delete: Boolean
+  disconnect: Boolean
+}
+
+input CUpdateWithoutADataInput {
+  field: CUpdatefieldInput
+}
+
+input CUpsertWithoutAInput {
+  update: CUpdateWithoutADataInput!
+  create: CCreateWithoutAInput!
+}
+
+input CWhereInput {
+  a: AWithIdWhereInput
+  AND: [CWhereInput!]
+  OR: [CWhereInput!]
+  NOT: [CWhereInput!]
+}
+
+type D {
+  field: [DateTime!]!
+  a(where: AWithIdWhereInput): AWithId!
+}
+
+scalar DateTime
+
+type DConnection {
+  pageInfo: PageInfo!
+  edges: [DEdge]!
+  aggregate: AggregateD!
+}
+
+input DCreatefieldInput {
+  set: [DateTime!]
+}
+
+input DCreateInput {
+  field: DCreatefieldInput
+  a: AWithIdCreateOneInput!
+}
+
+type DEdge {
+  node: D!
+  cursor: String!
+}
+
+enum DOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type DPreviousValues {
+  field: [DateTime!]!
+}
+
+type DSubscriptionPayload {
+  mutation: MutationType!
+  node: D
+  updatedFields: [String!]
+  previousValues: DPreviousValues
+}
+
+input DSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: DWhereInput
+  AND: [DSubscriptionWhereInput!]
+  OR: [DSubscriptionWhereInput!]
+  NOT: [DSubscriptionWhereInput!]
+}
+
+input DUpdatefieldInput {
+  set: [DateTime!]
+}
+
+input DUpdateInput {
+  field: DUpdatefieldInput
+  a: AWithIdUpdateOneInput
+}
+
+input DWhereInput {
+  a: AWithIdWhereInput
+  AND: [DWhereInput!]
+  OR: [DWhereInput!]
+  NOT: [DWhereInput!]
+}
+
+type E {
+  field: Json
+  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+}
+
+type EConnection {
+  pageInfo: PageInfo!
+  edges: [EEdge]!
+  aggregate: AggregateE!
+}
+
+input ECreateInput {
+  field: Json
+  a: ACreateManyInput
+}
+
+type EEdge {
+  node: E!
+  cursor: String!
+}
+
+enum EOrderByInput {
+  field_ASC
+  field_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type EPreviousValues {
+  field: Json
+}
+
+type ESubscriptionPayload {
+  mutation: MutationType!
+  node: E
+  updatedFields: [String!]
+  previousValues: EPreviousValues
+}
+
+input ESubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: EWhereInput
+  AND: [ESubscriptionWhereInput!]
+  OR: [ESubscriptionWhereInput!]
+  NOT: [ESubscriptionWhereInput!]
+}
+
+input EUpdateInput {
+  field: Json
+  a: AUpdateManyInput
+}
+
+input EWhereInput {
+  a_every: AWhereInput
+  a_some: AWhereInput
+  a_none: AWhereInput
+  AND: [EWhereInput!]
+  OR: [EWhereInput!]
+  NOT: [EWhereInput!]
+}
+
+scalar Json
+
+scalar Long
+
+type Mutation {
+  createA(data: ACreateInput!): A!
+  updateManyAs(data: AUpdateInput!, where: AWhereInput): BatchPayload!
+  deleteManyAs(where: AWhereInput): BatchPayload!
+  createAWithId(data: AWithIdCreateInput!): AWithId!
+  updateAWithId(data: AWithIdUpdateInput!, where: AWithIdWhereUniqueInput!): AWithId
+  updateManyAWithIds(data: AWithIdUpdateInput!, where: AWithIdWhereInput): BatchPayload!
+  upsertAWithId(where: AWithIdWhereUniqueInput!, create: AWithIdCreateInput!, update: AWithIdUpdateInput!): AWithId!
+  deleteAWithId(where: AWithIdWhereUniqueInput!): AWithId
+  deleteManyAWithIds(where: AWithIdWhereInput): BatchPayload!
+  createB(data: BCreateInput!): B!
+  updateManyBs(data: BUpdateInput!, where: BWhereInput): BatchPayload!
+  deleteManyBs(where: BWhereInput): BatchPayload!
+  createC(data: CCreateInput!): C!
+  updateManyCs(data: CUpdateInput!, where: CWhereInput): BatchPayload!
+  deleteManyCs(where: CWhereInput): BatchPayload!
+  createD(data: DCreateInput!): D!
+  updateManyDs(data: DUpdateInput!, where: DWhereInput): BatchPayload!
+  deleteManyDs(where: DWhereInput): BatchPayload!
+  createE(data: ECreateInput!): E!
+  updateManyEs(data: EUpdateInput!, where: EWhereInput): BatchPayload!
+  deleteManyEs(where: EWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Query {
+  as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
+  asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
+  aWithId(where: AWithIdWhereUniqueInput!): AWithId
+  aWithIds(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithId]!
+  aWithIdsConnection(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AWithIdConnection!
+  bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
+  bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
+  cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
+  csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
+  ds(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D]!
+  dsConnection(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): DConnection!
+  es(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E]!
+  esConnection(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): EConnection!
+  node(id: ID!): Node
+}
+
+type Subscription {
+  a(where: ASubscriptionWhereInput): ASubscriptionPayload
+  aWithId(where: AWithIdSubscriptionWhereInput): AWithIdSubscriptionPayload
+  b(where: BSubscriptionWhereInput): BSubscriptionPayload
+  c(where: CSubscriptionWhereInput): CSubscriptionPayload
+  d(where: DSubscriptionWhereInput): DSubscriptionPayload
+  e(where: ESubscriptionWhereInput): ESubscriptionPayload
+}
+
+enum UsedEnum {
+  A
+  B
+  C
+  D
+}
