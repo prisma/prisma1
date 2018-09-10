@@ -9,3 +9,9 @@ export const meta = {
 }
 
 ## Overview
+
+The Prisma client lets you send raw database queries using the `$raw` property.
+
+Since a Prisma server can be connected to multiple databases, you can select the database you want to access via dot notation, for example a database named `my-database` could be accessed like this: `$raw.my-database(SELECT * FROM user)`. For each Prisma server, there is one `default` database - for convenience, you can omit the dot notation for the `default` database: `$raw(SELECT * FROM user)`
+
+You can find more info about this topic [here](https://github.com/prisma/prisma/issues/2052).
