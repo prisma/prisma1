@@ -128,24 +128,30 @@ export class GoGenerator extends Generator {
           )
           return `
           ${args.length > 0 ? `
-          type ${goCase(field.name)}Params struct {
+          type ${goCase(field.name)}ParamsExec struct {
             ${args
-              .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
+              .map(arg => `${goCase(arg.name)} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
           }
         }
           ` : ``}
           
           // ${goCase(field.name)} docs - executable for types
-        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}Params` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
+        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []GraphQLArg
               
               ${args.length > 0 ? `
-              args = append(args, GraphQLArg{
-                Name: "${field.name}",
-                Key: "${field.name}",
-                TypeName: "${typeName}",
-                Value: params,
-              })
+              if params != nil {
+                ${args.map(arg => `
+                if params.${goCase(arg.name)} != nil {
+                  args = append(args, GraphQLArg{
+                    Name: "${arg.name}",
+                    Key: "${arg.name}",
+                    TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
+                    Value: params.${goCase(arg.name)},
+                  })
+                }
+                `)}
+              }
               ` : ``}
 
               instance.stack = append(instance.stack, Instruction{
@@ -343,7 +349,7 @@ export class GoGenerator extends Generator {
         stack []Instruction
       }
 
-      // ${goCase(type.name)} docs
+      // ${goCase(type.name)} docs - generated with types in GraphQLInterfaceType
       type ${goCase(type.name)} interface {
         ${Object.keys(fieldMap).map(key => {
           const field = fieldMap[key]
@@ -514,7 +520,7 @@ export class GoGenerator extends Generator {
               .join('\n')}
           }
           
-          // ${goCase(field.name)} docs
+          // ${goCase(field.name)} docs - generated while printing operation - ${operation}
           func (client Client) ${goCase(field.name)} (${
           args.length === 1
             ? `params *${this.getDeepType(args[0].type)}`
@@ -631,6 +637,9 @@ type PrismaOptions struct {
 }
 
 func New(options *PrismaOptions) Client {
+  if options == nil {
+    return Client{}
+  }
 	return Client{
 		Endpoint: options.Endpoint,
 		Debug:    options.Debug,
