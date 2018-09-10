@@ -4,13 +4,12 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that can be used via the Prisma client.  
+**Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that can be used via the Prisma client (available in various languages, such as JavaScript, TypeScript, Flow, Go, ...).
 
-- **Type-safe API** including filters, aggregations, pagination and transactions.
-- **Data modeling & migrations** with declarative GraphQL SDL.
-- **Realtime API** using GraphQL subscriptions.
-- **Advanced API composition** using GraphQL bindings and schema stitching.
+- **Type-safe database access** including filters, aggregations, pagination and transactions.
+- **Realtime event systems for your database** to get notified about database events.
 - **Works with all frontend frameworks** like React, Vue.js, Angular.
+- **Declarative data modeling & migrations (optional)** with simple SDL syntax.
 
 ## Contents
 
@@ -33,11 +32,14 @@
 brew install prisma
 ```
 
+<br />
 <Details>
-<Summary>Install with NPM</Summary>
+<Summary><b>Alternative</b>: Install with NPM or Yarn</Summary>
 
 ```bash
-brew install prisma
+npm install -g prisma
+# or
+yarn global add prisma
 ```
 </Details>
 
