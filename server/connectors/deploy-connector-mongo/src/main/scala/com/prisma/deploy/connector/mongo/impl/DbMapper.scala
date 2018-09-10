@@ -1,11 +1,12 @@
 package com.prisma.deploy.connector.mongo.impl
 
+import com.prisma.deploy.connector.MissingBackRelations
 import com.prisma.shared.models
-import com.prisma.shared.models.Migration
+import com.prisma.shared.models.{Migration, Schema}
 import com.prisma.utils.mongo.{DocumentFormat, JsonBsonConversion, MongoExtensions}
 import org.mongodb.scala.Document
 import play.api.libs.functional.syntax._
-import play.api.libs.json.JsPath
+import play.api.libs.json.{JsPath, JsValue}
 
 object DbMapper extends JsonBsonConversion with MongoExtensions {
   import com.prisma.shared.models.MigrationStepsJsonFormatter._
@@ -40,13 +41,18 @@ object DbMapper extends JsonBsonConversion with MongoExtensions {
   }
 
   def convertToProjectModel(projectDocument: ProjectDocument, migration: models.Migration): models.Project = {
+
+    //Fixme add test case for this or find out which ignored one was testing this
+    val schemaWithMissingBackRelations = migration.schema
+    val schemaWithAddedBackRelations   = MissingBackRelations.add(schemaWithMissingBackRelations)
+
     models.Project(
       id = projectDocument.id,
       secrets = projectDocument.secrets,
       allowQueries = projectDocument.allowQueries,
       allowMutations = projectDocument.allowMutations,
       revision = migration.revision,
-      schema = migration.schema,
+      schema = schemaWithAddedBackRelations,
       functions = migration.functions.toList,
       ownerId = ""
     )
