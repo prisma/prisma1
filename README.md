@@ -41,9 +41,27 @@ yarn global add prisma
 ```
 </Details>
 
-#### 2. Connect Prisma to a databse
+#### 2. Connect Prisma to a database
 
-**To setup Prisma, you need to have [Docker](https://www.docker.com) installed**.
+To setup Prisma, you need to have [Docker](https://www.docker.com) installed.
+
+Run the following command to get started with Prisma:
+
+```
+prisma init hello-world
+```
+
+The interactice CLI wizard now helps you to connect Prisma to your database:
+
+- If you want to start with a new database, select **Create new database**.
+- If you already have a database, select **Use existing database** (and provide database credentials in next step).
+
+Once the command has finished, you need to run the following commands to setup Prisma:
+
+```
+cd hello-world
+docker-compose up -d
+```
 
 <Details>
 <Summary><b>Alternative: Use Prisma in a sandbox without Docker</b></Summary>
@@ -55,19 +73,6 @@ prisma init hello-world
 Select the **Demo server** (hosted in Prisma Cloud) and follow the instructions of the interactive CLI prompt. Note that this requires you to authenticate with [Prisma Cloud](https://www.prisma.io/cloud) as this is wehre the Demo server is hosted.
 
 </Details>
-
-Run the following command to get started with Prisma:
-
-```
-prisma init hello-world
-```
-
-
-
-- Create a new database
-- Connect an existing database
-
-Once the command has finished, you need to run `docker-compose up -d` to start the Prisma server.
 
 #### 3. Define your data model
 
