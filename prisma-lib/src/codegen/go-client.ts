@@ -128,25 +128,26 @@ export class GoGenerator extends Generator {
           )
           return `
           ${args.length > 0 ? `
-          type struct ${goCase(field.name)}Params {
+          type ${goCase(field.name)}Params struct {
             ${args
-              .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`)
+              .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
           }
+        }
           ` : ``}
           
           // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}Params` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []GraphQLArg
-              ${args
-                .map(
-                  arg => `args = append(args, GraphQLArg{
-                Name: "${arg.name}",
-                Key: "${arg.name}",
-                TypeName: "${arg.type}",
-                Value: ${arg.name},
-              })`,
-                )
-                .join('\n')}
+              
+              ${args.length > 0 ? `
+              args = append(args, GraphQLArg{
+                Name: "${field.name}",
+                Key: "${field.name}",
+                TypeName: "${typeName}",
+                Value: params,
+              })
+              ` : ``}
+
               instance.stack = append(instance.stack, Instruction{
                 Name: "${field.name}",
                 Field: GraphQLField{
@@ -159,7 +160,7 @@ export class GoGenerator extends Generator {
                 Operation: "",
                 Args: args,
               })
-            return &${goCase(typeName.toString())}Exec{
+            return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
               client: instance.client,
               stack: instance.stack,
             }
