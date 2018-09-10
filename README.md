@@ -26,8 +26,8 @@
 #### 1. Install Prisma via Homebrew
 
 ```
-brew install prisma
 brew tap prisma/prisma
+brew install prisma
 ```
 
 <Details>
