@@ -52,7 +52,7 @@ prisma init hello-world
 The interactice CLI wizard now helps you to connect Prisma to your database:
 
 - If you want to start with a new database, select **Create new database**.
-- If you already have a database, select **Use existing database** (and provide database credentials in next step).
+- If you already have a database, select **Use existing database** (and provide database credentials).
 
 Once the command has finished, you need to run the following commands to setup Prisma:
 
@@ -63,6 +63,8 @@ docker-compose up -d
 
 <Details>
 <Summary><b>Alternative: Use Prisma in a sandbox without Docker</b></Summary>
+
+Run the following command to get started with Prisma:
 
 ```
 prisma init hello-world
