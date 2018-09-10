@@ -33,7 +33,7 @@ brew install prisma
 ```
 
 <Details>
-<Summary><b>Alternative</b>: Install with NPM or Yarn</Summary>
+<Summary><b>Alternative: Install with NPM or Yarne</b></Summary>
 
 ```bash
 npm install -g prisma
