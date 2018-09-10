@@ -25,7 +25,7 @@
 
 ## Quickstart
 
-### 1. Install Prisma via Homebrew
+#### 1. Install Prisma via Homebrew
 
 ```
 brew install prisma
@@ -41,7 +41,7 @@ yarn global add prisma
 ```
 </Details>
 
-### 2. Connect Prisma to a database
+#### 2. Connect Prisma to a database
 
 To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Run the following command to get started with Prisma:
 
@@ -74,7 +74,7 @@ Select the **Demo server** and follow the instructions of the interactive CLI pr
 
 </Details>
 
-### 3. Deploy your Prisma API
+#### 3. Deploy your Prisma API
 
 To deploy your Prisma API, run the following command:
 
@@ -86,9 +86,9 @@ prisma deploy
 
 The Prisma API is deployed based on the datamodel defined in `datamodel.prisma` and exposes CRUD & realtime operations for each model in that file. 
 
-### 4. Use the Prisma client
+#### 4. Use the Prisma client
 
-You can use the Prisma client to read and write data in your database. The following code snippets assume that there is a simple `User` type in your datamodel - if that's not the case you need:
+You can use the Prisma client to read and write data in your database. The following code snippets assume that there is a simple `User` type in your datamodel - if that's not the case you need to adjust the API calls:
 
 ```js
 const prisma = new Prisma()
@@ -105,7 +105,7 @@ const prisma = new Prisma()
 </p>
 </details>
 
-### 5. Next steps
+#### 5. Next steps
 
 Coming soon
 
