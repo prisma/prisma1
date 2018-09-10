@@ -212,7 +212,7 @@ The **Prisma client** is used inside your application server to perform read and
 
 Prisma runs as _standalone processes_ which allows for it to be scaled independently from your application server.
 
-<p align="center"><img src="https://imgur.com/OyIQQxF.png" height="250" /></p>
+<p align="center"><img src="https://imgur.com/OyIQQxF.png" /></p>
 
 ## Database Connectors
 
