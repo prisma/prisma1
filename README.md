@@ -29,6 +29,7 @@
 
 ```
 brew install prisma
+brew tap prisma/prisma
 ```
 
 <Details>
