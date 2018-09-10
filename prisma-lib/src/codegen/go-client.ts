@@ -298,6 +298,13 @@ export class GoGenerator extends Generator {
       // ${type.name} docs - generated with types
       type ${type.name} struct {
           ${Object.keys(fieldMap)
+            .filter(key => {
+              const field = fieldMap[key]
+              const {
+                isScalar,
+              } = this.extractFieldLikeType(field as GraphQLField<any, any>)
+              return isScalar
+            })
             .map(key => {
               const field = fieldMap[key]
               const {
