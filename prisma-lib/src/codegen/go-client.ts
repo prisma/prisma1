@@ -162,7 +162,7 @@ export class GoGenerator extends Generator {
         .join('\n')}
 
       // Exec docs
-      func (instance ${type.name}Exec) Exec() ${type.name} {
+      func (instance ${type.name}Exec) Exec() (${type.name}, error) {
         var allArgs []GraphQLArg
         variables := make(map[string]interface{})
         for instructionKey := range instance.stack {
@@ -201,9 +201,10 @@ export class GoGenerator extends Generator {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data := instance.client.GraphQL(query, variables)
+        data, err := instance.client.GraphQL(query, variables)
         if instance.client.Debug {
           fmt.Println("Data Exec:", data)
+          fmt.Println("Error Exec:", err)
         }
 
         var genericData interface{} // This can handle both map[string]interface{} and []interface[]
@@ -234,7 +235,7 @@ export class GoGenerator extends Generator {
         if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
-        return decodedData
+        return decodedData, err
       }
       
       // ${type.name}ExecArray docs
@@ -244,7 +245,7 @@ export class GoGenerator extends Generator {
       }
 
       // Exec docs
-      func (instance ${type.name}ExecArray) Exec() []${type.name} {
+      func (instance ${type.name}ExecArray) Exec() ([]${type.name}, error) {
         query := instance.client.ProcessInstructions(instance.stack)
         variables := make(map[string]interface{})
         for _, instruction := range instance.stack {
@@ -255,7 +256,6 @@ export class GoGenerator extends Generator {
             if instance.client.Debug {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
-            // TODO: Need to handle arg.Name collisions
             variables[arg.Name] = arg.Value
           }
         }
@@ -263,9 +263,10 @@ export class GoGenerator extends Generator {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data := instance.client.GraphQL(query, variables)
+        data, err := instance.client.GraphQL(query, variables)
         if instance.client.Debug {
           fmt.Println("Data Exec:", data)
+          fmt.Println("Error Exec:", err)
         }
 
         var genericData interface{} // This can handle both map[string]interface{} and []interface[]
@@ -291,7 +292,7 @@ export class GoGenerator extends Generator {
         if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
-        return decodedData
+        return decodedData, err
       }
 
       // ${type.name} docs - generated with types
@@ -456,14 +457,13 @@ export class GoGenerator extends Generator {
               func (exists *Exists) ${goCase(field.name)}(params *${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
-                // TODO: Reference to client in a better way
                 client := Client{
                   Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
                     options,
                   )}})[exists.Endpoint != ""],
                   Debug: exists.Debug,
                 }
-                data := client.${goCase(field.name)}(
+                data, err := client.${goCase(field.name)}(
                   ${
                     args.length === 1
                       ? `params,`
@@ -472,6 +472,12 @@ export class GoGenerator extends Generator {
                   },`
                   }
                 ).Exec()
+                if err != nil {
+                  if client.Debug {
+                    fmt.Println("Error Exists", err)
+                  }
+                  return false
+                }
                 if isZeroOfUnderlyingType(data) {
                   return false
                 }
@@ -831,7 +837,7 @@ ${typeNames
       .join('\n')}
 
 // GraphQL Send a GraphQL operation request
-func (client Client) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
+func (client Client) GraphQL(query string, variables map[string]interface{}) (map[string]interface{}, error) {
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
@@ -853,9 +859,9 @@ func (client Client) GraphQL(query string, variables map[string]interface{}) map
     if client.Debug {
       fmt.Println("GraphQL Response:", respData)
     }
-		log.Fatal(err)
+		return nil, err
 	}
-	return respData
+	return respData, nil
 }
         `
   }
