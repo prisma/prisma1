@@ -240,6 +240,7 @@ You can connect the following databases to Prisma already:
 
 - MySQL
 - Postgres
+- MongoDB ([alpha](https://github.com/prisma/prisma/issues/1643))
 
 More database connectors will follow.
 
@@ -247,7 +248,6 @@ More database connectors will follow.
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-- [MongoDB Connector](https://github.com/prismagraphql/prisma/issues/1643)
 - [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
 
 ### Further Connectors
