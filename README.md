@@ -7,7 +7,7 @@
 **Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that is used via the Prisma client. Prisma can be used to build GraphQL servers, REST APIs and a lot more. 
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
-- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB. ([see all supported databases](https://www.prisma.io/features/databases/))
+- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
 - **Type-safe database access** including filters, aggregations, pagination and transactions.
 - **Realtime event systems for your database** to get notified about database events.
 - **Declarative data modeling & migrations (optional)** with simple SDL syntax.
