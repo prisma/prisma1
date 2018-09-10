@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that is used via the Prisma client.
+**Prisma the data layer for modern applications**. It replaces traditional ORMs and custom data access layers by providing a universal database abstraction that is used via the Prisma client. Prisma can be used to build GraphQL servers, REST APIs and a lot more. 
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB. ([see all supported databases](https://www.prisma.io/features/databases/))
@@ -55,11 +55,6 @@ The interactice CLI wizard now helps you with the required setup:
 - Select the database type: **MySQL** or **PostgreSQL**
 - Select the language for the generated Prisma client: **TypeScript**, **Flow**, **JavaScript** or **Go**
 
-If you want to start with an **existing database** or just play around with a sandbox environment on a **Demo server**, follow the Quickstart in the documentation.
-
-
-After you provided the database information, the wizard prompts you to **select the language** for the generated Prisma client.
-
 Once the wizard has terminated, run the following commands to setup Prisma:
 
 ```
@@ -67,18 +62,27 @@ cd hello-world
 docker-compose up -d
 ```
 
-<Details>
-<Summary><b>Alternative: Use Prisma in a sandbox without Docker</b></Summary>
+#### 3. Define your data model
 
+Edit `datamodel.prisma` to define your data model using [SDL](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) syntax:
+
+```graphql
+type User {
+  id: ID! @unique
+  email: String @unique
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
+}
 ```
-prisma init hello-world
-```
 
-Select the **Demo server** and follow the instructions of the interactive CLI prompt. Note that this requires you to authenticate with [Prisma Cloud](https://www.prisma.io/cloud) as this is wehre the Demo server is hosted.
-
-</Details>
-
-#### 3. Deploy your Prisma API
+#### 4. Deploy your Prisma API
 
 To deploy your Prisma API, run the following command:
 
@@ -86,27 +90,75 @@ To deploy your Prisma API, run the following command:
 prisma deploy
 ```
 
-> If you started with an existing database, **this won't make any changes to your database**. 
+The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file. 
 
-The Prisma API is deployed based on the datamodel defined in `datamodel.prisma` and exposes CRUD & realtime operations for each model in that file. 
+#### 4. Use the Prisma client (JavaScript)
 
-#### 4. Use the Prisma client
+This section explains how to use the Prisma client from JavaScript.
 
-You can use the Prisma client to read and write data in your database. The following code snippets assume that there is a simple `User` type in your datamodel - if that's not the case you need to adjust the function calls (or go [here]() for a more in-depth ):
+##### 4.1. Create Node app
+
+The Prisma client connects to the Prisma API and lets you perform read and write operations in your database:
 
 ```js
-const prisma = new Prisma()
+const { prisma } = require('./prisma')
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user with a new post
+  const newUser = await prisma
+    .createUser({
+      name: "Alice"
+      posts: {
+        create: {
+          title: "The data layer for modern apps",
+        }
+      },
+    })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+
+  const allPosts = await prisma.posts()
+  console.log(allPosts)
+}
+
+main().catch(e => console.error(e))
 ```
 
 <details><summary><b>See more API operations</b></summary>
 <p>
 
 ```js
-const prisma = new Prisma()
+const usersCalledAlice = await prisma
+  .users({
+    where: {
+      name: 'Alice'
+    }
+  })
+```
+
+```js
+ const updatedUser = await prisma
+  .updateUser({
+    where: { id: '__USER_ID__' },
+    data: { email: 'alice@prisma.io' }
+  })
+```
+
+```js
+ const deletedUser = await prisma
+  .deleteUser({ id: '__USER_ID__' })
+
 ```
 
 </p>
 </details>
+
+
 
 #### 5. Next steps
 
