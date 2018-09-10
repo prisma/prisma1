@@ -714,13 +714,17 @@ export const prisma = new Prisma()`
       if (inputType === 'DateTime') {
         inputType += 'Input'
       }
-      return `${inputType}[] | ${inputType}`
+      return this.renderInputListType(inputType)
     }
     let name = (type as GraphQLNamedType).name
     if (name === 'DateTime') {
       name += 'Input'
     }
     return `${name}${(type as GraphQLNamedType).name === 'ID' ? '_Input' : ''}`
+  }
+
+  renderInputListType(type) {
+    return `${type}[] | ${type}`
   }
 
   renderTypeWrapper(

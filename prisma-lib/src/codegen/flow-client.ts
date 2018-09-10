@@ -43,6 +43,9 @@ import { typeDefs } from './graphql'`
   renderGraphQL() {
     return `$graphql: <T: any>(query: string, variables?: {[key: string]: any}) => Promise<T>;`
   }
+  renderInputListType(type) {
+    return `${type}[]`
+  }
   renderExists() {
     const queryType = this.schema.getQueryType()
     if (queryType) {
