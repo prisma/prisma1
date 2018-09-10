@@ -83,6 +83,8 @@ type Post {
 }
 ```
 
+Each model is mapped to a table in your database schema.
+
 #### 4. Deploy your Prisma API
 
 To deploy your Prisma API, run the following command:
@@ -91,15 +93,21 @@ To deploy your Prisma API, run the following command:
 prisma deploy
 ```
 
-The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file. 
+The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file.
 
 #### 4. Use the Prisma client (JavaScript)
 
-This section explains how to use the Prisma client from JavaScript.
+The Prisma client connects to the Prisma API and lets you perform read and write operations in your database. This section explains how to use the Prisma client from **JavaScript**.
 
 ##### 4.1. Create Node app
 
-The Prisma client connects to the Prisma API and lets you perform read and write operations in your database:
+Create a new Node script inside the `hello-world` directory:
+
+```
+touch index.js
+```
+
+Now add. the following code to it:
 
 ```js
 const { prisma } = require('./prisma')
@@ -163,7 +171,7 @@ const usersCalledAlice = await prisma
 
 #### 5. Next steps
 
-Coming soon
+Learn how to [build an app](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/) using your Prisma client or [read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
 
 ## Examples
 
