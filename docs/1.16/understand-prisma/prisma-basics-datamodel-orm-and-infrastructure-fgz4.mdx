@@ -182,7 +182,7 @@ Here is an example that subscribes to events where new `User` records are create
 prisma.$subsribe.user({
   mutation_in: ["CREATED"],
   email_contains: "gmail"
-})
+}).node()
 ```
 
 
@@ -190,7 +190,7 @@ prisma.$subsribe.user({
 prisma.$subsribe.user({
   mutation_in: ["CREATED"],
   email_contains: "gmail"
-})
+}).node()
 ```
 
 ```go
