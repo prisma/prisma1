@@ -8,7 +8,7 @@ export class JavascriptGenerator extends TypescriptGenerator {
   format(code: string, options: prettier.Options = {}) {
     return prettier.format(code, {
       ...options,
-      parser: 'javascript',
+      parser: 'babylon',
     })
   }
   renderJavascript(options?: RenderOptions) {
