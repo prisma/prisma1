@@ -1,6 +1,6 @@
 import { Cluster, PrismaDefinitionClass } from 'prisma-yml'
 import { GraphQLClient } from 'graphql-request'
-import { DBClient } from 'prisma-db-introspection/src/types/common'
+import { DBClient } from './types/common'
 
 const SERVICE_NAME = 'prisma-temporary-introspection-service'
 const SERVICE_STAGE = 'prisma-temporary-test-stage'
