@@ -11,6 +11,7 @@ export interface RenderOptions {
 export class FlowGenerator extends TypescriptGenerator {
   genericsDelimiter = ':'
   lineBreakDelimiter = ','
+  partialType = '$Shape'
   exportPrisma = false
   renderImports() {
     return `\

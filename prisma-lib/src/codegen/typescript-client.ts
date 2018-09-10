@@ -36,6 +36,7 @@ export interface RenderOptions {
 export class TypescriptGenerator extends Generator {
   genericsDelimiter = '='
   lineBreakDelimiter = ''
+  partialType = 'Partial'
   exportPrisma = true
   scalarMapping = {
     Int: 'number',
@@ -676,7 +677,7 @@ export const prisma = new Prisma()`
     }
 
     if (partial) {
-      typeString = `Partial<${typeString}>`
+      typeString = `${this.partialType}<${typeString}>`
     }
 
     if (node && (!isInput || isScalar)) {
