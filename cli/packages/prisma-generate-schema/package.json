@@ -1,12 +1,11 @@
 {
   "name": "prisma-generate-schema",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Transform prisma datamodel SDL into graphql-js SDL",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "rm -rf dist && node_modules/jest-cli/bin/jest.js",
-    "build": "tsc -d",
-    "prepare": "yarn build"
+    "build": "tsc -d"
   },
   "files": [
     "dist"

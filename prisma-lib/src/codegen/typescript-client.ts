@@ -36,6 +36,7 @@ export interface RenderOptions {
 export class TypescriptGenerator extends Generator {
   genericsDelimiter = '='
   lineBreakDelimiter = ''
+  partialType = 'Partial'
   exportPrisma = true
   scalarMapping = {
     Int: 'number',
@@ -424,7 +425,7 @@ export const prisma = new Prisma()`
     const infoString = renderInfo
       ? ', info?: GraphQLResolveInfo, options?: Options'
       : isFragmentAble
-        ? `, fragment?: string | object`
+        ? `, fragment?: string | Object`
         : ``
 
     // hard-coded for Prisma ease-of-use
@@ -432,7 +433,7 @@ export const prisma = new Prisma()`
       return `data${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
         args[0],
         isMutation,
-      )}, fragment?: string | object`
+      )}, fragment?: string | Object`
     } else if (
       (isMutation && field.name.startsWith('delete')) || // either it's a delete mutation
       (!isMutation &&
@@ -443,7 +444,7 @@ export const prisma = new Prisma()`
       return `where${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
         args[0],
         isMutation,
-      )}, fragment?: string | object`
+      )}, fragment?: string | Object`
     }
 
     return `args${allOptional ? '?' : ''}: {${hasArgs ? ' ' : ''}${args
@@ -676,7 +677,7 @@ export const prisma = new Prisma()`
     }
 
     if (partial) {
-      typeString = `Partial<${typeString}>`
+      typeString = `${this.partialType}<${typeString}>`
     }
 
     if (node && (!isInput || isScalar)) {
@@ -713,13 +714,17 @@ export const prisma = new Prisma()`
       if (inputType === 'DateTime') {
         inputType += 'Input'
       }
-      return `${inputType}[] | ${inputType}`
+      return this.renderInputListType(inputType)
     }
     let name = (type as GraphQLNamedType).name
     if (name === 'DateTime') {
       name += 'Input'
     }
     return `${name}${(type as GraphQLNamedType).name === 'ID' ? '_Input' : ''}`
+  }
+
+  renderInputListType(type) {
+    return `${type}[] | ${type}`
   }
 
   renderTypeWrapper(
