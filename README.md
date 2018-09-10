@@ -180,7 +180,9 @@ const postsByAuthor = await prisma
 
 #### 5. Next steps
 
-Learn how to [build an app](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/) using your Prisma client or [read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
+- [Build an app with Prisma client](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/) 
+- [Check out some examples](#examples)
+- [Read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
 
 ## Examples
 
