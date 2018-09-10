@@ -196,7 +196,7 @@ export default class GenereateCommand extends Command {
     }
 
     const flowCode = generator.render(options)
-    fs.writeFileSync(path.join(output, 'index.flow.js'), flowCode)
+    fs.writeFileSync(path.join(output, 'index.js'), flowCode)
 
     const typeDefs = generator.renderTypedefs()
     fs.writeFileSync(path.join(output, 'graphql.js'), typeDefs)

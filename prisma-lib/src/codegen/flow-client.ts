@@ -13,6 +13,8 @@ export class FlowGenerator extends TypescriptGenerator {
   lineBreakDelimiter = ','
   partialType = '$Shape'
   exportPrisma = false
+
+  prismaInterface = 'PrismaInterface'
   renderImports() {
     return `\
 /**
@@ -38,7 +40,7 @@ import { typeDefs } from './graphql'`
   }
   renderAtLeastOne() {
     // TODO: as soon as flow has a clean solution for at least one, implement it here
-    return `type AtLeastOne<T, U> = $Shape<T>`
+    return `type AtLeastOne<T> = $Shape<T>`
   }
   renderGraphQL() {
     return `$graphql: <T: any>(query: string, variables?: {[key: string]: any}) => Promise<T>;`
@@ -53,11 +55,9 @@ import { typeDefs } from './graphql'`
     }
     return ''
   }
-  renderExports(options?: RenderOptions) {
-    const args = this.renderPrismaClassArgs(options)
+  // renderExports(options?: RenderOptions) {
+  //   const args = this.renderPrismaClassArgs(options)
 
-    return `export const prisma: BindingConstructor<Prisma> = makePrismaBindingClass(${args})
-  export { prisma as Prisma }
-  `
-  }
+  //   return `export const prisma: Prisma = makePrismaBindingClass(${args})`
+  // }
 }
