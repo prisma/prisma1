@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma the data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. Prisma is used to build **GraphQL servers, REST APIs & more**. 
+**Prisma is the data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. Prisma is used to build **GraphQL servers, REST APIs & more**. 
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
@@ -26,8 +26,8 @@
 #### 1. Install Prisma via Homebrew
 
 ```
-brew install prisma
 brew tap prisma/prisma
+brew install prisma
 ```
 
 <Details>
