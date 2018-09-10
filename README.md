@@ -64,8 +64,6 @@ docker-compose up -d
 <Details>
 <Summary><b>Alternative: Use Prisma in a sandbox without Docker</b></Summary>
 
-Run the following command to get started with Prisma:
-
 ```
 prisma init hello-world
 ```
