@@ -25,17 +25,6 @@ trait ApiConnector {
   def shutdown(): Future[Unit]
 }
 
-case class MutactionResults2(
-    databaseResult: DatabaseMutactionResult,
-    nestedResults: Vector[MutactionResults2]
-) {
-  def allResults: Vector[DatabaseMutactionResult] = databaseResult +: nestedResults.flatMap(_.allResults)
-
-  def getExecuted: Vector[DatabaseMutaction] = {
-    nestedResults.map(_.databaseResult.mutaction)
-  }
-}
-
 case class MutactionResults(results: Vector[DatabaseMutactionResult])
 
 trait DatabaseMutactionExecutor {

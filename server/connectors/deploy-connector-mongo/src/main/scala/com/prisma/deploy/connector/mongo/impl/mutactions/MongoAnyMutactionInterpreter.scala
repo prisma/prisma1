@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.mongo.impl.mutactions
 
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.mongo.database.NoAction
 
 object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMutaction] {
   override def execute(mutaction: DeployMutaction) = {
@@ -11,9 +12,9 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateColumn          => CreateColumnInterpreter.execute(x)
       case x: UpdateColumn          => UpdateColumnInterpreter.execute(x)
       case x: DeleteColumn          => DeleteColumnInterpreter.execute(x)
-      case x: CreateScalarListTable => CreateScalarListInterpreter.execute(x)
-      case x: UpdateScalarListTable => UpdateScalarListInterpreter.execute(x)
-      case x: DeleteScalarListTable => DeleteScalarListInterpreter.execute(x)
+      case x: CreateScalarListTable => NoAction.unit
+      case x: UpdateScalarListTable => NoAction.unit
+      case x: DeleteScalarListTable => NoAction.unit
       case x: CreateModelTable      => CreateModelInterpreter.execute(x)
       case x: RenameTable           => RenameModelInterpreter.execute(x)
       case x: DeleteModelTable      => DeleteModelInterpreter.execute(x)
@@ -31,9 +32,9 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateColumn          => CreateColumnInterpreter.rollback(x)
       case x: UpdateColumn          => UpdateColumnInterpreter.rollback(x)
       case x: DeleteColumn          => DeleteColumnInterpreter.rollback(x)
-      case x: CreateScalarListTable => CreateScalarListInterpreter.rollback(x)
-      case x: UpdateScalarListTable => UpdateScalarListInterpreter.rollback(x)
-      case x: DeleteScalarListTable => DeleteScalarListInterpreter.rollback(x)
+      case x: CreateScalarListTable => NoAction.unit
+      case x: UpdateScalarListTable => NoAction.unit
+      case x: DeleteScalarListTable => NoAction.unit
       case x: CreateModelTable      => CreateModelInterpreter.rollback(x)
       case x: RenameTable           => RenameModelInterpreter.rollback(x)
       case x: DeleteModelTable      => DeleteModelInterpreter.rollback(x)
