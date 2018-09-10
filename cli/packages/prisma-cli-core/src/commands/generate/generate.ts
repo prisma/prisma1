@@ -172,9 +172,13 @@ export default class GenereateCommand extends Command {
     const goCode = generator.render(options)
     fs.writeFileSync(path.join(output, 'prisma.go'), goCode)
 
+    const goLibCode = generator.renderLib(options)
+    fs.writeFileSync(path.join(output, 'lib.go'), goLibCode)
+
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
     spawnSync('go', ['fmt', path.join(output, 'prisma.go')])
+    spawnSync('go', ['fmt', path.join(output, 'lib.go')])
   }
 
   async generateFlow(output: string, schemaString: string) {

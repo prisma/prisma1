@@ -15,6 +15,8 @@ import {
 
 import * as upperCamelCase from 'uppercamelcase'
 
+import { getTypeNames } from '../utils/getTypeNames'
+
 const goCase = (s: string) => {
   const cased = upperCamelCase(s)
   return cased.startsWith('Id') ? `ID${cased.slice(2)}` : cased
@@ -106,7 +108,7 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-        db    DB
+        client    Client
         stack []Instruction
       }
 
@@ -126,7 +128,7 @@ export class GoGenerator extends Generator {
           )
           return ` // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args
-            .map(arg => `${arg.name} *${arg.type}`)
+            .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`)
             .join(',')}) *${goCase(typeName.toString())}Exec {
               var args []GraphQLArg
               ${args
@@ -152,7 +154,7 @@ export class GoGenerator extends Generator {
                 Args: args,
               })
             return &${goCase(typeName.toString())}Exec{
-              db: instance.db,
+              client: instance.client,
               stack: instance.stack,
             }
           }`
@@ -160,17 +162,17 @@ export class GoGenerator extends Generator {
         .join('\n')}
 
       // Exec docs
-      func (instance ${type.name}Exec) Exec() ${type.name} {
+      func (instance ${type.name}Exec) Exec() (${type.name}, error) {
         var allArgs []GraphQLArg
         variables := make(map[string]interface{})
         for instructionKey := range instance.stack {
           instruction := &instance.stack[instructionKey]
-          if instance.db.Debug {
+          if instance.client.Debug {
             fmt.Println("Instruction Exec: ", instruction)
           }
           for argKey := range instruction.Args {
             arg := &instruction.Args[argKey]
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
             isUnique := false
@@ -180,28 +182,29 @@ export class GoGenerator extends Generator {
                 if existingArg.Name == arg.Name {
                   isUnique = false
                   arg.Name = arg.Name + "_" + strconv.Itoa(key)
-                  if instance.db.Debug {
+                  if instance.client.Debug {
                     fmt.Println("Resolving Collision Arg Name: ", arg.Name)
                   }
                   break
                 }
               }
             }
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Arg Name: ", arg.Name)
             }
             allArgs = append(allArgs, *arg)
             variables[arg.Name] = arg.Value
           }
         }
-        query := instance.db.ProcessInstructions(instance.stack)
-        if instance.db.Debug {
+        query := instance.client.ProcessInstructions(instance.stack)
+        if instance.client.Debug {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data := instance.db.GraphQL(query, variables)
-        if instance.db.Debug {
+        data, err := instance.client.GraphQL(query, variables)
+        if instance.client.Debug {
           fmt.Println("Data Exec:", data)
+          fmt.Println("Error Exec:", err)
         }
 
         var genericData interface{} // This can handle both map[string]interface{} and []interface[]
@@ -211,11 +214,11 @@ export class GoGenerator extends Generator {
         if !isArray(dataType) {
           unpackedData := data
           for _, instruction := range instance.stack {
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
             unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
               fmt.Println("Unpacked Data Step Exec:", unpackedData)
               fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
@@ -223,47 +226,47 @@ export class GoGenerator extends Generator {
             genericData = unpackedData
           }
         }
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Unpacked Exec:", genericData)
         }
 
         var decodedData ${type.name}
         mapstructure.Decode(genericData, &decodedData)
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
-        return decodedData
+        return decodedData, err
       }
       
       // ${type.name}ExecArray docs
       type ${type.name}ExecArray struct {
-        db    DB
+        client    Client
         stack []Instruction
       }
 
       // Exec docs
-      func (instance ${type.name}ExecArray) Exec() []${type.name} {
-        query := instance.db.ProcessInstructions(instance.stack)
+      func (instance ${type.name}ExecArray) Exec() ([]${type.name}, error) {
+        query := instance.client.ProcessInstructions(instance.stack)
         variables := make(map[string]interface{})
         for _, instruction := range instance.stack {
-          if instance.db.Debug {
+          if instance.client.Debug {
             fmt.Println("Instruction Exec: ", instruction)
           }
           for _, arg := range instruction.Args {
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
-            // TODO: Need to handle arg.Name collisions
             variables[arg.Name] = arg.Value
           }
         }
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data := instance.db.GraphQL(query, variables)
-        if instance.db.Debug {
+        data, err := instance.client.GraphQL(query, variables)
+        if instance.client.Debug {
           fmt.Println("Data Exec:", data)
+          fmt.Println("Error Exec:", err)
         }
 
         var genericData interface{} // This can handle both map[string]interface{} and []interface[]
@@ -280,16 +283,16 @@ export class GoGenerator extends Generator {
             }
           }
         }
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Unpacked Exec:", genericData)
         }
 
         var decodedData []${type.name}
         mapstructure.Decode(genericData, &decodedData)
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
-        return decodedData
+        return decodedData, err
       }
 
       // ${type.name} docs - generated with types
@@ -322,7 +325,7 @@ export class GoGenerator extends Generator {
       return `
       // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
-        db    DB
+        client    Client
         stack []Instruction
       }
 
@@ -454,14 +457,13 @@ export class GoGenerator extends Generator {
               func (exists *Exists) ${goCase(field.name)}(params *${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
-                // TODO: Reference to DB in a better way
-                db := DB{
+                client := Client{
                   Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
                     options,
                   )}})[exists.Endpoint != ""],
                   Debug: exists.Debug,
                 }
-                data := db.${goCase(field.name)}(
+                data, err := client.${goCase(field.name)}(
                   ${
                     args.length === 1
                       ? `params,`
@@ -470,6 +472,12 @@ export class GoGenerator extends Generator {
                   },`
                   }
                 ).Exec()
+                if err != nil {
+                  if client.Debug {
+                    fmt.Println("Error Exists", err)
+                  }
+                  return false
+                }
                 if isZeroOfUnderlyingType(data) {
                   return false
                 }
@@ -493,7 +501,7 @@ export class GoGenerator extends Generator {
           }
           
           // ${goCase(field.name)} docs
-          func (db DB) ${goCase(field.name)} (${
+          func (client Client) ${goCase(field.name)} (${
           args.length === 1
             ? `params *${this.getDeepType(args[0].type)}`
             : `params *${goCase(field.name)}Params`
@@ -530,7 +538,7 @@ export class GoGenerator extends Generator {
           })
 
           return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-            db: db,
+            client: client,
             stack: stack,
           }
         }`
@@ -552,34 +560,17 @@ export class GoGenerator extends Generator {
     }
   }
 
-  render(options: RenderOptions) {
-    const typeNames = this.getTypeNames()
-    const typeMap = this.schema.getTypeMap()
-
-    const queryType = this.schema.getQueryType()
-    const queryFields = queryType!.getFields()
-
-    const mutationType = this.schema.getMutationType()
-    const mutationFields = mutationType!.getFields()
+  renderLib(options: RenderOptions) {
     return `
 // Code generated by Prisma CLI (https://github.com/prisma/prisma). DO NOT EDIT.
 package prisma
 
 import (
-	"context"
-  "log"
-  "reflect"
-  "fmt"
-  "bytes"
-  "strconv"
-  "text/template"
-
-  "github.com/machinebox/graphql"
-  "github.com/mitchellh/mapstructure"
+	"bytes"
+	"fmt"
+	"html/template"
+	"reflect"
 )
-
-// ID docs
-type ID struct{}
 
 // GraphQLField docs
 type GraphQLField struct {
@@ -620,30 +611,43 @@ func isArray(i interface{}) bool {
   }
 }
 
-// DB Type to represent the client
-type DB struct {
+type PrismaOptions struct {
+	Endpoint string
+	Debug    bool
+}
+
+func New(options *PrismaOptions) Client {
+	return Client{
+		Endpoint: options.Endpoint,
+		Debug:    options.Debug,
+		Exists: Exists{
+			Endpoint: options.Endpoint,
+			Debug:    options.Debug,
+		},
+	}
+}
+
+type Client struct {
   Endpoint string
   Debug bool
   Exists Exists
 }
 
 // Exists docs
-// TODO: Handle scoping better
 type Exists struct {
 	Endpoint string
 	Debug    bool
 }
 
 // ProcessInstructions docs
-func (db *DB) ProcessInstructions(stack []Instruction) string {
+func (client *Client) ProcessInstructions(stack []Instruction) string {
 	query := make(map[string]interface{})
-	// TODO: This needs to handle arg name collisions across instructions
 	argsByInstruction := make(map[string][]GraphQLArg)
 	var allArgs []GraphQLArg
 	firstInstruction := stack[0]
 	for i := len(stack) - 1; i >= 0; i-- {
 		instruction := stack[i]
-		if db.Debug {
+		if client.Debug {
 			fmt.Println("Instruction: ", instruction)
 		}
 		if len(query) == 0 {
@@ -665,7 +669,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 		}
 	}
 
-	if db.Debug {
+	if client.Debug {
 		fmt.Println("Final Query:", query)
 		fmt.Println("Final Args By Instruction:", argsByInstruction)
 		fmt.Println("Final All Args:", allArgs)
@@ -786,7 +790,7 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	}
 	queryTemplate.Execute(&queryBytes, data)
 
-	if db.Debug {
+	if client.Debug {
 		fmt.Println("Query String: ", queryBytes.String())
 	}
 	if err == nil {
@@ -794,7 +798,34 @@ func (db *DB) ProcessInstructions(stack []Instruction) string {
 	}
 	return "Failed to generate query"
 }
+    `
+  }
 
+  render(options: RenderOptions) {
+    const typeNames = getTypeNames(this.schema)
+    const typeMap = this.schema.getTypeMap()
+
+    const queryType = this.schema.getQueryType()
+    const queryFields = queryType!.getFields()
+
+    const mutationType = this.schema.getMutationType()
+    const mutationFields = mutationType!.getFields()
+    return `
+// Code generated by Prisma CLI (https://github.com/prisma/prisma). DO NOT EDIT.
+package prisma
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+	"strconv"
+
+	"github.com/machinebox/graphql"
+	"github.com/mitchellh/mapstructure"
+)
+
+// ID docs
+type ID struct{}
 
 // Queries
 ${this.printOperation(queryFields, 'query', options)}
@@ -816,14 +847,14 @@ ${typeNames
       .join('\n')}
 
 // GraphQL Send a GraphQL operation request
-func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
+func (client Client) GraphQL(query string, variables map[string]interface{}) (map[string]interface{}, error) {
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
-	client := graphql.NewClient(
-      (map[bool]string{true: db.Endpoint, false: ${this.printEndpoint(
+	gqlClient := graphql.NewClient(
+      (map[bool]string{true: client.Endpoint, false: ${this.printEndpoint(
         options,
-      )}})[db.Endpoint != ""],
+      )}})[client.Endpoint != ""],
     )
 
 	for key, value := range variables {
@@ -834,42 +865,14 @@ func (db DB) GraphQL(query string, variables map[string]interface{}) map[string]
 
 	// var respData ResponseStruct
 	var respData map[string]interface{}
-	if err := client.Run(ctx, req, &respData); err != nil {
-    if db.Debug {
+	if err := gqlClient.Run(ctx, req, &respData); err != nil {
+    if client.Debug {
       fmt.Println("GraphQL Response:", respData)
     }
-		log.Fatal(err)
+		return nil, err
 	}
-	return respData
+	return respData, nil
 }
         `
-  }
-
-  // TODO: Move this to some utils because this is same as TypescriptGenerator
-  getTypeNames() {
-    const ast = this.schema
-    // Create types
-    return Object.keys(ast.getTypeMap())
-      .filter(typeName => !typeName.startsWith('__'))
-      .filter(typeName => typeName !== (ast.getQueryType() as any).name)
-      .filter(
-        typeName =>
-          ast.getMutationType()
-            ? typeName !== (ast.getMutationType()! as any).name
-            : true,
-      )
-      .filter(
-        typeName =>
-          ast.getSubscriptionType()
-            ? typeName !== (ast.getSubscriptionType()! as any).name
-            : true,
-      )
-      .sort(
-        (a, b) =>
-          (ast.getType(a) as any).constructor.name <
-          (ast.getType(b) as any).constructor.name
-            ? -1
-            : 1,
-      )
   }
 }
