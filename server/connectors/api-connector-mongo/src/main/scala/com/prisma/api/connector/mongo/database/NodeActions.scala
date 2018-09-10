@@ -249,8 +249,8 @@ trait NodeActions extends NodeSingleQueries {
 
       case x: UpdateNode =>
         val (nestedCreateFields: Map[String, Vector[BsonDocument]], nestedCreateResults) = embeddedNestedCreateDocsAndResultsThatCanBeWithinUpdate(mutaction)
-        val nestedCreates = nestedCreateFields.map {
-          case (f, v) if v.length <= 1 => set(path.stringForField(f), v)
+        val nestedCreates = nestedCreateFields.collect {
+          case (f, v) if v.length == 1 => set(path.stringForField(f), v.head)
           case (f, v) if v.length > 1  => pushEach(path.stringForField(f), v: _*)
         }.toVector
         (nestedCreates, nestedCreateResults)
