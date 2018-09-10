@@ -70,7 +70,7 @@ Run the following command to get started with Prisma:
 prisma init hello-world
 ```
 
-Select the **Demo server** (hosted in Prisma Cloud) and follow the instructions of the interactive CLI prompt. Note that this requires you to authenticate with [Prisma Cloud](https://www.prisma.io/cloud) as this is wehre the Demo server is hosted.
+Select the **Demo server** and follow the instructions of the interactive CLI prompt. Note that this requires you to authenticate with [Prisma Cloud](https://www.prisma.io/cloud) as this is wehre the Demo server is hosted.
 
 </Details>
 
