@@ -92,66 +92,17 @@ Run the following command to open a [GraphQL Playground](https://github.com/pris
 prisma playground
 ```
 
-<details><summary><b>I don't know what queries and mutations I can send.</b></summary>
+<details><summary><b>See more API operations.</b></summary>
 <p>
 
-**Create a new user**:
 
-```graphql
-mutation {
-  createUser(data: { name: "Alice", handle: "alice" }) {
-    id
-  }
-}
-```
-
-**Query all users and their tweets**:
-
-```graphql
-query {
-  users {
-    id
-    name
-    tweets {
-      id
-      createdAt
-      text
-    }
-  }
-}
-```
-
-**Create a new tweet for a user**:
-
-> Replace the `__USER_ID__` placeholder with the `id` of an actual `User`
-
-```graphql
-mutation {
-  createTweet(
-    data: {
-      text: "Prisma makes building GraphQL servers fun & easy"
-      owner: { connect: { id: "__USER_ID__" } }
-    }
-  ) {
-    id
-    createdAt
-    owner {
-      name
-    }
-  }
-}
-```
 
 </p>
 </details>
 
 ### 6. Next steps
 
-You can now connect to Prisma's GraphQL API, select what you would like to do next:
-
-- [**Build a GraphQL server (recommended)**](https://www.prisma.io/docs/tutorials/-ohdaiyoo6c)
-- Access Prisma's GraphQL API from a Node script (_coming soon_)
-- Access Prisma's GraphQL API directly from the frontend (_coming soon_)
+Coming soon
 
 ## Examples
 
