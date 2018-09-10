@@ -63,7 +63,7 @@ export class GoGenerator extends Generator {
     const isList =
       field.type.toString().indexOf('[') === 0 &&
       field.type.toString().indexOf(']') > -1
-    const isNonNull = field.type.toString().indexOf('!') > -1
+    const isNonNull = field.type.toString().indexOf('!') > -1 && field.type.toString().indexOf('!]') === -1
     let fieldMap: GraphQLFieldMap<any, any> | GraphQLInputFieldMap | null = null
     if (deepType!.constructor.name === 'GraphQLObjectType') {
       fieldMap = (deepType as GraphQLObjectType).getFields()
@@ -382,7 +382,7 @@ export class GoGenerator extends Generator {
                 field as GraphQLField<any, any>,
               )
 
-              return `${goCase(field.name)} ${isNonNull && type.name !== typeName ? `` : `*`}${this.scalarMapping[typeName] ||
+              return `${goCase(field.name)} ${isNonNull ? `` : `*`}${this.scalarMapping[typeName] ||
                 typeName} \`json:"${field.name},omitempty"\``
             })
             .join('\n')}
