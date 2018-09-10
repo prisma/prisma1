@@ -111,7 +111,7 @@
     "prisma-db-introspection": "0.0.6",
     "prisma-generate-schema": "0.0.6",
     "prisma-json-schema": "0.1.1",
-    "prisma-lib": "0.1.37",
+    "prisma-lib": "0.1.38",
     "prisma-yml": "^1.0.88",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
