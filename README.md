@@ -17,9 +17,7 @@
 - [Quickstart](#quickstart)
 - [Examples](#examples)
 - [Architecture](#architecture)
-- [Is Prisma an ORM?](#is-prisma-an-orm)
 - [Database Connectors](#database-connectors)
-- [GraphQL API](#graphql-api)
 - [Community](#community)
 - [Contributing](#contributing)
 
@@ -250,15 +248,14 @@ Join the discussion or contribute to influence which we'll work on next!
 
 ## Community
 
-Prisma has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
+Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
 - [Forum](https://www.prisma.io/forum)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
 - [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Europe](https://www.graphql-europe.org/) (June 15, Berlin)
-- [GraphQL Day](https://www.graphqlday.org/)
+- [GraphQL Europe](https://www.graphql-europe.org/)
 - [Email](mailto:hello@prisma.io)
 
 ## Contributing
