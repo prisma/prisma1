@@ -126,10 +126,16 @@ export class GoGenerator extends Generator {
           const { typeFields, typeName } = this.extractFieldLikeType(
             field as GraphQLField<any, any>,
           )
-          return ` // ${goCase(field.name)} docs - executable for types
-        func (instance *${type.name}Exec) ${goCase(field.name)}(${args
-            .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`)
-            .join(',')}) *${goCase(typeName.toString())}Exec {
+          return `
+          ${args.length > 0 ? `
+          type struct ${goCase(field.name)}Params {
+            ${args
+              .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`)
+          }
+          ` : ``}
+          
+          // ${goCase(field.name)} docs - executable for types
+        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}Params` : ``}) *${goCase(typeName.toString())}Exec {
               var args []GraphQLArg
               ${args
                 .map(
