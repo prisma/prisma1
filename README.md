@@ -49,7 +49,7 @@ To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Ru
 prisma init hello-world
 ```
 
-The interactice CLI wizard now helps you to connect Prisma to your database:
+The interactice CLI wizard now helps you to connect Prisma to a database:
 
 - If you want to start with a new database, select **Create new database**.
 - If you already have a database, select **Use existing database** (and provide database credentials).
@@ -82,25 +82,19 @@ To deploy your Prisma API, run the following command:
 prisma deploy
 ```
 
-This creates a 
-
-### 5. Explore the API in a Playground
-
-Run the following command to open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground/releases) and start sending queries and mutations:
-
-```
-prisma playground
-```
+### 4. Use the Prisma client
 
 <details><summary><b>See more API operations.</b></summary>
 <p>
 
-
+```
+const prisma = new Prisma()
+```
 
 </p>
 </details>
 
-### 6. Next steps
+### 5. Next steps
 
 Coming soon
 
