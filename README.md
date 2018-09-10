@@ -25,7 +25,7 @@
 
 ## Quickstart
 
-#### 1. Install Prisma via Homebrew
+### 1. Install Prisma via Homebrew
 
 ```
 brew install prisma
@@ -41,11 +41,9 @@ yarn global add prisma
 ```
 </Details>
 
-#### 2. Connect Prisma to a database
+### 2. Connect Prisma to a database
 
-To setup Prisma, you need to have [Docker](https://www.docker.com) installed.
-
-Run the following command to get started with Prisma:
+To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Run the following command to get started with Prisma:
 
 ```
 prisma init hello-world
@@ -74,7 +72,7 @@ Select the **Demo server** (hosted in Prisma Cloud) and follow the instructions 
 
 </Details>
 
-#### 3. Define your data model
+### 3. Define your data model
 
 Edit `datamodel.graphql` to define your data model using GraphQL SDL:
 
@@ -94,7 +92,7 @@ type User {
 }
 ```
 
-#### 4. Deploy your Prisma service
+### 4. Deploy your Prisma service
 
 To deploy your service, run the following command:
 
@@ -102,7 +100,7 @@ To deploy your service, run the following command:
 prisma deploy
 ```
 
-#### 5. Explore the API in a Playground
+### 5. Explore the API in a Playground
 
 Run the following command to open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground/releases) and start sending queries and mutations:
 
@@ -163,7 +161,7 @@ mutation {
 </p>
 </details>
 
-#### 6. Next steps
+### 6. Next steps
 
 You can now connect to Prisma's GraphQL API, select what you would like to do next:
 
