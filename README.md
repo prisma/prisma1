@@ -54,7 +54,7 @@ The interactice CLI wizard now helps you to connect Prisma to a database:
 - If you want to start with a new database, select **Create new database**.
 - If you already have a database, select **Use existing database** (and provide database credentials).
 
-After you provided the database information to the wizard, it prompts you to **select the language** for the generated Prisma client.
+After you provided the database information, the wizard prompts you to **select the language** for the generated Prisma client.
 
 Once the wizard has terminated, run the following commands to setup Prisma:
 
