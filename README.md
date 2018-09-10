@@ -248,26 +248,26 @@ More database connectors will follow.
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-- [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
+- [Elastic Search](https://github.com/prismagraphql/prisma/issues/1665)
 
 ### Further Connectors
 
 We are still collecting use cases and feedback for the API design and feature set of the following connectors:
 
-- [MS SQL Connector](https://github.com/prismagraphql/prisma/issues/1642)
-- [Oracle Connector](https://github.com/prismagraphql/prisma/issues/1644)
-- [ArangoDB Connector](https://github.com/prismagraphql/prisma/issues/1645)
-- [Neo4j Connector](https://github.com/prismagraphql/prisma/issues/1646)
-- [Druid Connector](https://github.com/prismagraphql/prisma/issues/1647)
-- [Dgraph Connector](https://github.com/prismagraphql/prisma/issues/1648)
-- [DynamoDB Connector](https://github.com/prismagraphql/prisma/issues/1655)
-- [Cloud Firestore Connector](https://github.com/prismagraphql/prisma/issues/1660)
-- [CockroachDB Connector](https://github.com/prismagraphql/prisma/issues/1705)
-- [Cassandra Connector](https://github.com/prismagraphql/prisma/issues/1750)
-- [Redis Connector](https://github.com/prismagraphql/prisma/issues/1722)
-- [AWS Neptune Connector](https://github.com/prismagraphql/prisma/issues/1752)
-- [CosmosDB Connector](https://github.com/prismagraphql/prisma/issues/1663)
-- [Influx Connector](https://github.com/prismagraphql/prisma/issues/1857)
+- [MS SQL](https://github.com/prismagraphql/prisma/issues/1642)
+- [Oracle](https://github.com/prismagraphql/prisma/issues/1644)
+- [ArangoDB](https://github.com/prismagraphql/prisma/issues/1645)
+- [Neo4j](https://github.com/prismagraphql/prisma/issues/1646)
+- [Druid](https://github.com/prismagraphql/prisma/issues/1647)
+- [Dgraph](https://github.com/prismagraphql/prisma/issues/1648)
+- [DynamoDB](https://github.com/prismagraphql/prisma/issues/1655)
+- [Cloud Firestore](https://github.com/prismagraphql/prisma/issues/1660)
+- [CockroachDB](https://github.com/prismagraphql/prisma/issues/1705)
+- [Cassandra](https://github.com/prismagraphql/prisma/issues/1750)
+- [Redis](https://github.com/prismagraphql/prisma/issues/1722)
+- [AWS Neptune](https://github.com/prismagraphql/prisma/issues/1752)
+- [CosmosDB](https://github.com/prismagraphql/prisma/issues/1663)
+- [Influx](https://github.com/prismagraphql/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
