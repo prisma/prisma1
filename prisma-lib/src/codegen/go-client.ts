@@ -108,7 +108,7 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-        db    Client
+        client    Client
         stack []Instruction
       }
 
@@ -154,7 +154,7 @@ export class GoGenerator extends Generator {
                 Args: args,
               })
             return &${goCase(typeName.toString())}Exec{
-              db: instance.db,
+              client: instance.client,
               stack: instance.stack,
             }
           }`
@@ -167,12 +167,12 @@ export class GoGenerator extends Generator {
         variables := make(map[string]interface{})
         for instructionKey := range instance.stack {
           instruction := &instance.stack[instructionKey]
-          if instance.db.Debug {
+          if instance.client.Debug {
             fmt.Println("Instruction Exec: ", instruction)
           }
           for argKey := range instruction.Args {
             arg := &instruction.Args[argKey]
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
             isUnique := false
@@ -182,27 +182,27 @@ export class GoGenerator extends Generator {
                 if existingArg.Name == arg.Name {
                   isUnique = false
                   arg.Name = arg.Name + "_" + strconv.Itoa(key)
-                  if instance.db.Debug {
+                  if instance.client.Debug {
                     fmt.Println("Resolving Collision Arg Name: ", arg.Name)
                   }
                   break
                 }
               }
             }
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Arg Name: ", arg.Name)
             }
             allArgs = append(allArgs, *arg)
             variables[arg.Name] = arg.Value
           }
         }
-        query := instance.db.ProcessInstructions(instance.stack)
-        if instance.db.Debug {
+        query := instance.client.ProcessInstructions(instance.stack)
+        if instance.client.Debug {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data := instance.db.GraphQL(query, variables)
-        if instance.db.Debug {
+        data := instance.client.GraphQL(query, variables)
+        if instance.client.Debug {
           fmt.Println("Data Exec:", data)
         }
 
@@ -213,11 +213,11 @@ export class GoGenerator extends Generator {
         if !isArray(dataType) {
           unpackedData := data
           for _, instruction := range instance.stack {
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
             unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
               fmt.Println("Unpacked Data Step Exec:", unpackedData)
               fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
@@ -225,13 +225,13 @@ export class GoGenerator extends Generator {
             genericData = unpackedData
           }
         }
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Unpacked Exec:", genericData)
         }
 
         var decodedData ${type.name}
         mapstructure.Decode(genericData, &decodedData)
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
         return decodedData
@@ -239,32 +239,32 @@ export class GoGenerator extends Generator {
       
       // ${type.name}ExecArray docs
       type ${type.name}ExecArray struct {
-        db    Client
+        client    Client
         stack []Instruction
       }
 
       // Exec docs
       func (instance ${type.name}ExecArray) Exec() []${type.name} {
-        query := instance.db.ProcessInstructions(instance.stack)
+        query := instance.client.ProcessInstructions(instance.stack)
         variables := make(map[string]interface{})
         for _, instruction := range instance.stack {
-          if instance.db.Debug {
+          if instance.client.Debug {
             fmt.Println("Instruction Exec: ", instruction)
           }
           for _, arg := range instruction.Args {
-            if instance.db.Debug {
+            if instance.client.Debug {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
             // TODO: Need to handle arg.Name collisions
             variables[arg.Name] = arg.Value
           }
         }
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data := instance.db.GraphQL(query, variables)
-        if instance.db.Debug {
+        data := instance.client.GraphQL(query, variables)
+        if instance.client.Debug {
           fmt.Println("Data Exec:", data)
         }
 
@@ -282,13 +282,13 @@ export class GoGenerator extends Generator {
             }
           }
         }
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Unpacked Exec:", genericData)
         }
 
         var decodedData []${type.name}
         mapstructure.Decode(genericData, &decodedData)
-        if instance.db.Debug {
+        if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
         }
         return decodedData
@@ -324,7 +324,7 @@ export class GoGenerator extends Generator {
       return `
       // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
-        db    Client
+        client    Client
         stack []Instruction
       }
 
@@ -457,13 +457,13 @@ export class GoGenerator extends Generator {
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
                 // TODO: Reference to client in a better way
-                db := Client{
+                client := Client{
                   Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
                     options,
                   )}})[exists.Endpoint != ""],
                   Debug: exists.Debug,
                 }
-                data := db.${goCase(field.name)}(
+                data := client.${goCase(field.name)}(
                   ${
                     args.length === 1
                       ? `params,`
@@ -495,7 +495,7 @@ export class GoGenerator extends Generator {
           }
           
           // ${goCase(field.name)} docs
-          func (db Client) ${goCase(field.name)} (${
+          func (client Client) ${goCase(field.name)} (${
           args.length === 1
             ? `params *${this.getDeepType(args[0].type)}`
             : `params *${goCase(field.name)}Params`
@@ -532,7 +532,7 @@ export class GoGenerator extends Generator {
           })
 
           return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-            db: db,
+            client: client,
             stack: stack,
           }
         }`
@@ -651,14 +651,14 @@ type Exists struct {
 }
 
 // ProcessInstructions docs
-func (db *Client) ProcessInstructions(stack []Instruction) string {
+func (client *Client) ProcessInstructions(stack []Instruction) string {
 	query := make(map[string]interface{})
 	argsByInstruction := make(map[string][]GraphQLArg)
 	var allArgs []GraphQLArg
 	firstInstruction := stack[0]
 	for i := len(stack) - 1; i >= 0; i-- {
 		instruction := stack[i]
-		if db.Debug {
+		if client.Debug {
 			fmt.Println("Instruction: ", instruction)
 		}
 		if len(query) == 0 {
@@ -680,7 +680,7 @@ func (db *Client) ProcessInstructions(stack []Instruction) string {
 		}
 	}
 
-	if db.Debug {
+	if client.Debug {
 		fmt.Println("Final Query:", query)
 		fmt.Println("Final Args By Instruction:", argsByInstruction)
 		fmt.Println("Final All Args:", allArgs)
@@ -801,7 +801,7 @@ func (db *Client) ProcessInstructions(stack []Instruction) string {
 	}
 	queryTemplate.Execute(&queryBytes, data)
 
-	if db.Debug {
+	if client.Debug {
 		fmt.Println("Query String: ", queryBytes.String())
 	}
 	if err == nil {
@@ -831,14 +831,14 @@ ${typeNames
       .join('\n')}
 
 // GraphQL Send a GraphQL operation request
-func (db Client) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
+func (client Client) GraphQL(query string, variables map[string]interface{}) map[string]interface{} {
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
-	client := graphql.NewClient(
-      (map[bool]string{true: db.Endpoint, false: ${this.printEndpoint(
+	gqlClient := graphql.NewClient(
+      (map[bool]string{true: client.Endpoint, false: ${this.printEndpoint(
         options,
-      )}})[db.Endpoint != ""],
+      )}})[client.Endpoint != ""],
     )
 
 	for key, value := range variables {
@@ -849,8 +849,8 @@ func (db Client) GraphQL(query string, variables map[string]interface{}) map[str
 
 	// var respData ResponseStruct
 	var respData map[string]interface{}
-	if err := client.Run(ctx, req, &respData); err != nil {
-    if db.Debug {
+	if err := gqlClient.Run(ctx, req, &respData); err != nil {
+    if client.Debug {
       fmt.Println("GraphQL Response:", respData)
     }
 		log.Fatal(err)
