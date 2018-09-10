@@ -235,11 +235,6 @@ More database connectors will follow.
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
 - [Elastic Search](https://github.com/prismagraphql/prisma/issues/1665)
-
-### Further Connectors
-
-We are still collecting use cases and feedback for the API design and feature set of the following connectors:
-
 - [MS SQL](https://github.com/prismagraphql/prisma/issues/1642)
 - [Oracle](https://github.com/prismagraphql/prisma/issues/1644)
 - [ArangoDB](https://github.com/prismagraphql/prisma/issues/1645)
