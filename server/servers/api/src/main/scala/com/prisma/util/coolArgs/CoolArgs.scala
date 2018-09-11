@@ -184,8 +184,8 @@ case class CoolArgs(raw: Map[String, Any]) {
 
   def getCreateArgs(model: Model) = {
     val nonListCreateArgs       = generateNonListCreateArgs(model)
-    val converter               = GCCreateReallyCoolArgsConverter(model)
-    val nonListArgs: PrismaArgs = converter.toReallyCoolArgs(nonListCreateArgs.raw).addDateTimesIfNecessary(model)
+    val converter               = GCCreatePrismaArgsConverter(model)
+    val nonListArgs: PrismaArgs = converter.toPrismaArgs(nonListCreateArgs.raw).addDateTimesIfNecessary(model)
     val listArgs                = getScalarListArgs(model)
 
     (nonListArgs, listArgs)
