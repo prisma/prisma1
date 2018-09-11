@@ -112,7 +112,7 @@
     "prisma-db-introspection": "0.0.7",
     "prisma-generate-schema": "0.0.6",
     "prisma-json-schema": "0.1.2",
-    "prisma-yml": "^1.0.88",
+    "prisma-yml": "1.0.95",
     "scuid": "^1.0.2",
     "semver": "^5.4.1",
     "sillyname": "^0.1.0",

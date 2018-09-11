@@ -111,7 +111,7 @@
     "memfs": "^2.5.3",
     "opn": "^5.1.0",
     "prisma-json-schema": "0.1.2",
-    "prisma-yml": "^1.0.88",
+    "prisma-yml": "1.0.95",
     "raven": "2.3.0",
     "replaceall": "^0.1.6",
     "rwlockfile": "^1.4.8",
