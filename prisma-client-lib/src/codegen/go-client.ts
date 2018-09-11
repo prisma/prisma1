@@ -230,7 +230,15 @@ export class GoGenerator extends Generator {
             if instance.client.Debug {
               fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
-            unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
+            if isArray(unpackedData[instruction.Name]) {
+              genericData = (unpackedData[instruction.Name]).([]interface{})
+              break
+            } else {
+              unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
+            }
+            if instance.client.Debug {
+              fmt.Println("Partially Unpacked Data Step Exec:", unpackedData)
+            }
             if instance.client.Debug {
               fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
               fmt.Println("Unpacked Data Step Exec:", unpackedData)
@@ -287,13 +295,26 @@ export class GoGenerator extends Generator {
         // Is unpacking needed
         dataType := reflect.TypeOf(data)
         if !isArray(dataType) {
+          unpackedData := data
           for _, instruction := range instance.stack {
-            unpackedData := data[instruction.Name]
-            if isArray(unpackedData) {
-              genericData = (unpackedData).([]interface{})
-            } else {
-              genericData = (unpackedData).(map[string]interface{})
+            if instance.client.Debug {
+              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
+            if isArray(unpackedData[instruction.Name]) {
+              genericData = (unpackedData[instruction.Name]).([]interface{})
+              break
+            } else {
+              unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
+            }
+            if instance.client.Debug {
+              fmt.Println("Partially Unpacked Data Step Exec:", unpackedData)
+            }
+            if instance.client.Debug {
+              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
+              fmt.Println("Unpacked Data Step Exec:", unpackedData)
+              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
+            }
+            genericData = unpackedData
           }
         }
         if instance.client.Debug {
