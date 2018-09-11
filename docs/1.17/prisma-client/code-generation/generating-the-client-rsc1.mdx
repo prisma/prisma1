@@ -26,7 +26,7 @@ endpoint: http://localhost:4000
 
 generate:
   - generator: typescript-client
-    output: prisma.ts
+    output: ./prisma-client/
 ```
 
 Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
@@ -44,11 +44,11 @@ secret: mysecret42
 
 generate:
   - generator: typescript-client
-    output: prisma.ts
+    output: ./prisma-client-ts/
   - generator: javascript-client
-    output: prisma.js
-  - generator: schema
-    output: prisma.graphql
+    output: ./prisma-client-js/
+  - generator: graphql-schema
+    output: ./graphql-schema/
 ```
 
 ## Generated code
