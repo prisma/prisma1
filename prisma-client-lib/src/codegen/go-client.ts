@@ -11,6 +11,7 @@ import {
   GraphQLArgument,
   GraphQLFieldMap,
   GraphQLInputFieldMap,
+  isNonNullType,
 } from 'graphql'
 
 import * as upperCamelCase from 'uppercamelcase'
@@ -62,7 +63,7 @@ export class GoGenerator extends Generator {
     const isList =
       field.type.toString().indexOf('[') === 0 &&
       field.type.toString().indexOf(']') > -1
-    const isNonNull = field.type.toString().indexOf('!') > -1
+    const isNonNull = field.type.toString().indexOf('!') > -1 && field.type.toString().indexOf('!]') === -1
     let fieldMap: GraphQLFieldMap<any, any> | GraphQLInputFieldMap | null = null
     if (deepType!.constructor.name === 'GraphQLObjectType') {
       fieldMap = (deepType as GraphQLObjectType).getFields()
@@ -128,24 +129,33 @@ export class GoGenerator extends Generator {
           )
           return `
           ${args.length > 0 ? `
-          type ${goCase(field.name)}Params struct {
+          type ${goCase(field.name)}ParamsExec struct {
             ${args
-              .map(arg => `${arg.name} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
-          }
+              .map(arg => {
+                const { isNonNull } = this.extractFieldLikeType(arg as GraphQLField<any, any>)
+                return `${goCase(arg.name)} ${isNonNull ? `` : `*`}${this.scalarMapping[arg.type.toString()] || arg.type }`
+              }).join('\n')
         }
+      }
           ` : ``}
           
           // ${goCase(field.name)} docs - executable for types
-        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}Params` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
+        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []GraphQLArg
               
               ${args.length > 0 ? `
-              args = append(args, GraphQLArg{
-                Name: "${field.name}",
-                Key: "${field.name}",
-                TypeName: "${typeName}",
-                Value: params,
-              })
+              if params != nil {
+                ${args.map(arg => `
+                if params.${goCase(arg.name)} != nil {
+                  args = append(args, GraphQLArg{
+                    Name: "${arg.name}",
+                    Key: "${arg.name}",
+                    TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
+                    Value: params.${goCase(arg.name)},
+                  })
+                }
+                `).join('\n')}
+              }
               ` : ``}
 
               instance.stack = append(instance.stack, Instruction{
@@ -169,7 +179,7 @@ export class GoGenerator extends Generator {
         .join('\n')}
 
       // Exec docs
-      func (instance ${type.name}Exec) Exec() (${type.name}, error) {
+      func (instance ${type.name}Exec) Exec() (${isNonNullType(type) ? `` : `*`}${type.name}, error) {
         var allArgs []GraphQLArg
         variables := make(map[string]interface{})
         for instructionKey := range instance.stack {
@@ -237,7 +247,7 @@ export class GoGenerator extends Generator {
           fmt.Println("Data Unpacked Exec:", genericData)
         }
 
-        var decodedData ${type.name}
+        var decodedData ${isNonNullType(type) ? `` : `*`}${type.name}
         mapstructure.Decode(genericData, &decodedData)
         if instance.client.Debug {
           fmt.Println("Data Exec Decoded:", decodedData)
@@ -281,13 +291,18 @@ export class GoGenerator extends Generator {
         // Is unpacking needed
         dataType := reflect.TypeOf(data)
         if !isArray(dataType) {
+          unpackedData := data
           for _, instruction := range instance.stack {
-            unpackedData := data[instruction.Name]
-            if isArray(unpackedData) {
-              genericData = (unpackedData).([]interface{})
-            } else {
-              genericData = (unpackedData).(map[string]interface{})
+            if instance.client.Debug {
+              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
+            unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
+            if instance.client.Debug {
+              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
+              fmt.Println("Unpacked Data Step Exec:", unpackedData)
+              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
+            }
+            genericData = unpackedData
           }
         }
         if instance.client.Debug {
@@ -317,9 +332,8 @@ export class GoGenerator extends Generator {
               const {
                 typeName,
                 isNonNull,
-                isScalar,
               } = this.extractFieldLikeType(field as GraphQLField<any, any>)
-              return `${goCase(field.name)} ${isScalar ? `` : `*`}${this
+              return `${goCase(field.name)} ${isNonNull ? `` : `*`}${this
                 .scalarMapping[typeName] || typeName} \`json:"${field.name}${
                 isNonNull ? `` : `,omitempty`
               }"\``
@@ -343,7 +357,7 @@ export class GoGenerator extends Generator {
         stack []Instruction
       }
 
-      // ${goCase(type.name)} docs
+      // ${goCase(type.name)} docs - generated with types in GraphQLInterfaceType
       type ${goCase(type.name)} interface {
         ${Object.keys(fieldMap).map(key => {
           const field = fieldMap[key]
@@ -369,12 +383,13 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .map(key => {
               const field = fieldMap[key]
-              const { typeName } = this.extractFieldLikeType(
+              const { typeName, isNonNull, isScalar } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
 
-              return `${goCase(field.name)} *${this.scalarMapping[typeName] ||
-                typeName} \`json:"${field.name},omitempty"\``
+              // Removed ,omitempty from here as it might not be needed for input types
+              return `${goCase(field.name)} ${isNonNull ? `` : `*`}${this.scalarMapping[typeName] ||
+                typeName} \`json:"${field.name}${isScalar ? `` : `,omitempty`}"\``
             })
             .join('\n')}
             }
@@ -453,11 +468,13 @@ export class GoGenerator extends Generator {
         const { typeFields, typeName, isList } = this.extractFieldLikeType(
           field,
         )
-
+        
         const whereArgs = args.filter(arg => arg.name === 'where')
-        let whereArg = null
+        let whereArg, whereArgIsNonNull = null
         if (whereArgs.length > 0) {
           whereArg = whereArgs[0]
+          let { isNonNull } = this.extractFieldLikeType(whereArg) 
+          whereArgIsNonNull = isNonNull as any
         }
 
         return `
@@ -468,7 +485,7 @@ export class GoGenerator extends Generator {
               // Exists
 
               // ${goCase(field.name)} exists docs
-              func (exists *Exists) ${goCase(field.name)}(params *${goCase(
+              func (exists *Exists) ${goCase(field.name)}(params ${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
                 client := Client{
@@ -482,7 +499,7 @@ export class GoGenerator extends Generator {
                     args.length === 1
                       ? `params,`
                       : `&${goCase(field.name)}Params{
-                    Where: params,
+                    Where: ${whereArgIsNonNull ? `` : `&`}params,
                   },`
                   }
                 ).Exec()
@@ -506,7 +523,7 @@ export class GoGenerator extends Generator {
             ${args
               .map(arg => {
                 const { typeName, isNonNull } = this.extractFieldLikeType(arg)
-                return `${goCase(arg.name)} *${this.scalarMapping[typeName] ||
+                return `${goCase(arg.name)} ${isNonNull ? `` : `*`}${this.scalarMapping[typeName] ||
                   typeName} \`json:"${arg.name}${
                   isNonNull ? `` : `,omitempty`
                 }"\``
@@ -514,10 +531,10 @@ export class GoGenerator extends Generator {
               .join('\n')}
           }
           
-          // ${goCase(field.name)} docs
+          // ${goCase(field.name)} docs - generated while printing operation - ${operation}
           func (client Client) ${goCase(field.name)} (${
           args.length === 1
-            ? `params *${this.getDeepType(args[0].type)}`
+            ? `params ${args[0].type.toString().indexOf("!") > -1 && args[0].type.toString().indexOf("!]") === -1 ? `` : `*`}${this.getDeepType(args[0].type)}`
             : `params *${goCase(field.name)}Params`
         }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
 
@@ -525,18 +542,21 @@ export class GoGenerator extends Generator {
           var args []GraphQLArg
           ${args
             .map(arg => {
-              return `if params${
-                args.length === 1 ? `` : `.${goCase(arg.name)}`
-              } != nil {
+              const { isNonNull } = this.extractFieldLikeType(arg)
+              return `
+              ${isNonNull ? `` : `if params != nil ${
+                args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
+              } {`}
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
                   Key: "${arg.name}",
                   TypeName: "${arg.type}",
-                  Value: *params${
+                  Value: ${isNonNull ? `` : `*`}params${
                     args.length === 1 ? `` : `.${goCase(arg.name)}`
                   },
                 })
-              }`
+                ${isNonNull ? `` : `}`}
+              `
             })
             .join('\n')}
           
@@ -631,6 +651,9 @@ type PrismaOptions struct {
 }
 
 func New(options *PrismaOptions) Client {
+  if options == nil {
+    return Client{}
+  }
 	return Client{
 		Endpoint: options.Endpoint,
 		Debug:    options.Debug,

@@ -5521,27 +5521,24 @@ prisma-cli@^1.0.7:
     semver "^5.4.1"
     source-map-support "^0.4.18"
 
-prisma-db-introspection@0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-0.0.6.tgz#4111edee6193f0a1df5fb9f6ec419db40b49721d"
+prisma-client-lib@0.1.45:
+  version "0.1.45"
+  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-0.1.45.tgz#8c5daaca41d9de1be45c56e8a675a1872dc58688"
   dependencies:
-    ajv "5"
-    bluebird "^3.5.1"
-    chalk "^2.3.0"
+    "@types/node" "^10.7.0"
+    apollo-link-error "^1.1.0"
+    apollo-link-ws "^1.0.8"
     debug "^3.1.0"
-    dotenv "^4.0.0"
-    fs-extra "^5.0.0"
-    graphql-request "^1.5.0"
-    isomorphic-fetch "^2.2.1"
-    js-yaml "^3.10.0"
-    json-stable-stringify "^1.0.1"
-    jsonwebtoken "^8.1.0"
-    lodash "^4.17.4"
-    pg "^7.4.1"
-    prisma-json-schema "^0.0.1"
-    replaceall "^0.1.6"
-    scuid "^1.0.2"
-    yaml-ast-parser "^0.0.40"
+    graphql-import "^0.6.0"
+    graphql-tag "^2.9.2"
+    graphql-tools "3.1.1"
+    http-link-dataloader "^0.1.4"
+    jsonwebtoken "^8.3.0"
+    object-path-immutable "^3.0.0"
+    prettier "^1.14.2"
+    subscriptions-transport-ws "^0.9.14"
+    uppercamelcase "^3.0.0"
+    ws "^6.0.0"
 
 prisma-generate-schema@0.0.6:
   version "0.0.6"
@@ -5566,25 +5563,6 @@ prisma-json-schema@0.1.1:
 prisma-json-schema@^0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.1.tgz#0802e156a293faefdf21e5e41beb8d3681f45cb1"
-
-prisma-lib@0.1.38:
-  version "0.1.38"
-  resolved "https://registry.yarnpkg.com/prisma-lib/-/prisma-lib-0.1.38.tgz#7b9e8c50c6deb004d5e1fc3cc1314f8156b75321"
-  dependencies:
-    "@types/node" "^10.7.0"
-    apollo-link-error "^1.1.0"
-    apollo-link-ws "^1.0.8"
-    debug "^3.1.0"
-    graphql-import "^0.6.0"
-    graphql-tag "^2.9.2"
-    graphql-tools "3.1.1"
-    http-link-dataloader "^0.1.4"
-    jsonwebtoken "^8.3.0"
-    object-path-immutable "^3.0.0"
-    prettier "^1.14.2"
-    subscriptions-transport-ws "^0.9.14"
-    uppercamelcase "^3.0.0"
-    ws "^6.0.0"
 
 prisma-yml@0.0.4:
   version "0.0.4"

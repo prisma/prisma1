@@ -9,7 +9,7 @@ import {
   JavascriptGenerator,
   GoGenerator,
   FlowGenerator,
-} from 'prisma-lib'
+} from 'prisma-client-lib'
 import { spawnSync } from 'npm-run'
 import generateCRUDSchemaString from 'prisma-generate-schema'
 
