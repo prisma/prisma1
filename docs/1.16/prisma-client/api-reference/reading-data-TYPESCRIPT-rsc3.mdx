@@ -237,13 +237,13 @@ query {
 
 <Code languages={["TypeScript", "GraphQL"]}>
 
- ```ts
-const votesForLink: VoteNode[] = await prisma
+```ts
+const votesByUser: VoteNode[] = await prisma
   .user({ email: "alice@prisma.io" })
   .votes()
- ```
+```
 
- ```graphql
+```graphql
 query {
   user(where: {
     email: "alice@prisma.io"
@@ -253,9 +253,49 @@ query {
     }
   }
 }
- ```
+```
 
- </Code>
+</Code>
+
+## Using fragments for fine-grained data access
+
+The second argument on each generated query function is an optional _fragment_ that allows to specify exactly which fields of the requested model should be included in the result.
+
+### Examples
+
+_Fetch the `name` and `email` of the users as well the the `description` and `url` of their related links_:
+
+<Code languages={["JavaScript", "GraphQL"]}>
+
+```js
+const fragment = `
+fragment UserWithLinks on User {
+  name
+  email
+  links {
+    description
+    url
+  }
+}
+`
+
+const userWithPosts = await prisma.users({}, fragment)
+```
+
+```graphql
+query {
+  users {
+    name
+    email
+    links {
+      description
+      url
+    }
+  }
+}
+```
+
+</Code>
 
 ## Basic filters for lists
 
