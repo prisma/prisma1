@@ -5556,9 +5556,9 @@ prisma-json-schema@0.0.4:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.4.tgz#4ecee29c351e382fb833dad83a38c62961380458"
 
-prisma-json-schema@0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.1.1.tgz#d8fd35848cab1d3e7b567b34b3e27c11a5f817b2"
+prisma-json-schema@0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.1.2.tgz#2ad1cad7858d42bb8b32d3a31e9d3d9a7318d2e0"
 
 prisma-json-schema@^0.0.1:
   version "0.0.1"

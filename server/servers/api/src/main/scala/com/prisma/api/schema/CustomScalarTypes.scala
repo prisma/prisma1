@@ -3,7 +3,6 @@ package com.prisma.api.schema
 import java.util.UUID
 
 import com.prisma.gc_values.UuidGCValue
-import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 import sangria.ast

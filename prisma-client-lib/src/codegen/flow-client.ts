@@ -22,8 +22,8 @@ export class FlowGenerator extends TypescriptGenerator {
  */
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import type { IResolvers } from 'graphql-tools/dist/Interfaces'
-import type { BasePrismaOptions as BPOType, Options } from 'prisma-lib'
-import { makePrismaBindingClass } from 'prisma-lib'
+import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
+import { makePrismaBindingClass } from 'prisma-client-lib'
 import { typeDefs } from './graphql'`
   }
   renderBindingConstructor() {

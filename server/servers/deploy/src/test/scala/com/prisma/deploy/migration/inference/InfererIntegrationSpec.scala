@@ -300,7 +300,7 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
       SchemaSyntaxValidator.directiveRequirements,
       SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
       SchemaSyntaxValidator.requiredReservedFields,
-      true
+      allowScalarLists = true
     )
 
     val prismaSdl = validator.generateSDL

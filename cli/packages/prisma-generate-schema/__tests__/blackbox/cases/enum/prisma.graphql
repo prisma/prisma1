@@ -2,7 +2,7 @@ type A {
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
-  b(where: BWhereInput): B!
+  b: B!
 }
 
 """A connection to a list of items."""
@@ -187,7 +187,7 @@ type AWithId implements Node {
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
-  c(where: CWhereInput): C
+  c: C
 }
 
 """A connection to a list of items."""
@@ -594,7 +594,7 @@ input BWhereInput {
 
 type C {
   field: [Int!]!
-  a(where: AWithIdWhereInput): AWithId!
+  a: AWithId!
 }
 
 """A connection to a list of items."""
@@ -725,7 +725,7 @@ input CWhereInput {
 
 type D {
   field: [DateTime!]!
-  a(where: AWithIdWhereInput): AWithId!
+  a: AWithId!
 }
 
 scalar DateTime

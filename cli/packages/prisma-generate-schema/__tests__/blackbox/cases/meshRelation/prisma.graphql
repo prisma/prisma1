@@ -1,8 +1,8 @@
 type A {
   field: Int!
-  a(where: AWhereInput): A!
+  a: A!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  c(where: CWhereInput): C
+  c: C
   e(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E!]
 }
 
@@ -273,10 +273,10 @@ input AWhereInput {
 
 type B {
   field: [String!]!
-  c(where: CWhereInput): C
+  c: C
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  a(where: AWhereInput): A!
-  c2(where: CWhereInput): C
+  a: A!
+  c2: C
 }
 
 type BatchPayload {
@@ -491,10 +491,10 @@ input BWhereInput {
 
 type C {
   expirationDate: DateTime
-  c(where: CWhereInput): C!
+  c: C!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  a(where: AWhereInput): A
-  b2(where: BWhereInput): B
+  a: A
+  b2: B
 }
 
 """A connection to a list of items."""
@@ -744,9 +744,9 @@ input CWhereInput {
 
 type D {
   field: Json
-  c(where: CWhereInput): C!
-  b(where: BWhereInput): B!
-  a(where: AWhereInput): A!
+  c: C!
+  b: B!
+  a: A!
   d(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D!]
 }
 
@@ -868,7 +868,7 @@ input DWhereInput {
 
 type E {
   field: Json
-  a(where: AWhereInput): A!
+  a: A!
 }
 
 """A connection to a list of items."""

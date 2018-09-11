@@ -52,7 +52,7 @@ case class JdbcDatabaseMutactionExecutor(
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
           childResults <- executeTopLevelMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction], mutationBuilder)
                            .map(Vector(_))
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
         for {
@@ -62,12 +62,12 @@ case class JdbcDatabaseMutactionExecutor(
                              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
                            case _ => DBIO.successful(Vector.empty)
                          }
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
-        } yield MutactionResults(result, Vector.empty)
+        } yield MutactionResults(Vector(result))
     }
   }
 
@@ -82,7 +82,7 @@ case class JdbcDatabaseMutactionExecutor(
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- executeNestedMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction], parentId, mutationBuilder)
                            .map(Vector(_))
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
         for {
@@ -92,12 +92,12 @@ case class JdbcDatabaseMutactionExecutor(
                              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
                            case _ => DBIO.successful(Vector.empty)
                          }
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
-        } yield MutactionResults(result, Vector.empty)
+        } yield MutactionResults(Vector(result))
     }
   }
 

@@ -291,7 +291,7 @@ type AWithId implements Node {
   b: Int!
   c: String!
   d: String
-  b2(where: BWhereInput): B!
+  b2: B!
 }
 
 """A connection to a list of items."""
@@ -610,7 +610,7 @@ input AWithIdWhereUniqueInput {
 
 type B {
   a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
-  a2(where: AWithIdWhereInput): AWithId
+  a2: AWithId
 }
 
 type BatchPayload {

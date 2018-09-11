@@ -338,6 +338,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
     schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
+
   }
 
   "the executeRaw mutation" should "be there if raw access is enabled" in {

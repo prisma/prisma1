@@ -69,7 +69,7 @@ type Todo implements Node {
   id: ID!
   text: String!
   done: Boolean!
-  user(where: UserWhereInput): User!
+  user: User!
 }
 """A connection to a list of items."""
 type TodoConnection {

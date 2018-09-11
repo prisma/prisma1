@@ -268,6 +268,7 @@ object ProjectJsonFormatter {
   implicit val modelReads: Reads[ModelTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "stableIdentifier").read[String] and
+      (JsPath \ "isEmbedded").readNullable[Boolean].map(_.getOrElse(false)) and
       (JsPath \ "fields").read[List[FieldTemplate]] and
       (JsPath \ "manifestation").readNullable[ModelManifestation]
   )(ModelTemplate.apply _)
@@ -275,6 +276,7 @@ object ProjectJsonFormatter {
   implicit val modelWrites: Writes[ModelTemplate] = (
     (JsPath \ "name").write[String] and
       (JsPath \ "stableIdentifier").write[String] and
+      (JsPath \ "isEmbedded").write[Boolean] and
       (JsPath \ "fields").write[List[FieldTemplate]] and
       (JsPath \ "manifestation").writeNullable[ModelManifestation]
   )(unlift(ModelTemplate.unapply))
@@ -295,7 +297,7 @@ object ProjectJsonFormatter {
   implicit lazy val projectFormat             = Json.format[Project]
   implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
   implicit lazy val migrationStatusFormat     = JsonUtils.enumFormat(MigrationStatus)
-  implicit lazy val migrationStepsFormat      = Json.format[Migration]
+  implicit lazy val migrationFormat           = Json.format[Migration]
 
   def failingFormat[T] = new Format[T] {
 

@@ -120,7 +120,7 @@ trait FilterConditionBuilder extends BuilderBase {
       case EveryRelatedNode      => jooqField.notIn(subSelect)
       case NoRelatedNode         => jooqField.notIn(subSelect)
       case AtLeastOneRelatedNode => jooqField.in(subSelect)
-      case NoRelationCondition   => jooqField.in(subSelect)
+      case ToOneRelatedNode      => jooqField.in(subSelect)
     }
   }
 

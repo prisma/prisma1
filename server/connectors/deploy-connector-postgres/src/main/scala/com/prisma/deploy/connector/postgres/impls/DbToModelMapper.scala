@@ -16,7 +16,6 @@ object DbToModelMapper {
       ownerId = project.ownerId.getOrElse(""),
       revision = migration.revision,
       schema = convertSchema(migration.schema),
-      webhookUrl = project.webhookUrl,
       secrets = project.secrets.as[Vector[String]],
       allowQueries = project.allowQueries,
       allowMutations = project.allowMutations,

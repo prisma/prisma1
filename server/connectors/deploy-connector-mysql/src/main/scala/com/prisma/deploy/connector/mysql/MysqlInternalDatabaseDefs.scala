@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql
 import com.prisma.config.DatabaseConfig
 import com.typesafe.config.{Config, ConfigFactory}
 
-case class MysqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
+case class MySqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.MySQLProfile.api._
 
   val managementSchemaName = dbConfig.managementSchema.getOrElse("prisma")

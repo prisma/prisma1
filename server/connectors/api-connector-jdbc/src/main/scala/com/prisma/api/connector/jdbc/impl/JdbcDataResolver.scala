@@ -66,6 +66,11 @@ case class JdbcDataResolver(
       case None        => table
     }
     val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
+    performWithTiming("countByTable", slickDatabase.database.run(query))
+  }
+
+  override def countByModel(model: Model, args: Option[QueryArguments]) = {
+    val query = queryBuilder.countFromModel(model, args)
     performWithTiming("countByModel", slickDatabase.database.run(query))
   }
 

@@ -50,8 +50,8 @@ Long can represent values between -(2^63) and 2^63 - 1.
 scalar Long
 
 type MultiSelfReferencingB {
-  a(where: MultiSelfReferencingBWhereInput): MultiSelfReferencingB
-  b(where: MultiSelfReferencingBWhereInput): MultiSelfReferencingB
+  a: MultiSelfReferencingB
+  b: MultiSelfReferencingB
 }
 
 """A connection to a list of items."""
@@ -195,8 +195,8 @@ input MultiSelfReferencingBWhereInput {
 
 type MultiSelfReferencingBWithId implements Node {
   id: ID!
-  a(where: MultiSelfReferencingBWithIdWhereInput): MultiSelfReferencingBWithId
-  b(where: MultiSelfReferencingBWithIdWhereInput): MultiSelfReferencingBWithId
+  a: MultiSelfReferencingBWithId
+  b: MultiSelfReferencingBWithId
 }
 
 """A connection to a list of items."""
@@ -850,7 +850,7 @@ type Query {
 
 type SelfReferencingA implements Node {
   id: ID!
-  a(where: SelfReferencingAWithIdWhereInput): SelfReferencingAWithId!
+  a: SelfReferencingAWithId!
   field: Int!
 }
 
@@ -1018,7 +1018,7 @@ input SelfReferencingAWhereUniqueInput {
 
 type SelfReferencingAWithId implements Node {
   id: ID!
-  a(where: SelfReferencingAWithIdWhereInput): SelfReferencingAWithId!
+  a: SelfReferencingAWithId!
   field: Int!
 }
 
@@ -1209,7 +1209,7 @@ input SelfReferencingAWithIdWhereUniqueInput {
 
 type SelfReferencingB implements Node {
   id: ID!
-  a(where: SelfReferencingBWhereInput): SelfReferencingB
+  a: SelfReferencingB
   field: Int!
 }
 
@@ -1401,7 +1401,7 @@ input SelfReferencingBWhereUniqueInput {
 
 type SelfReferencingBWithId implements Node {
   id: ID!
-  a(where: SelfReferencingBWithIdWhereInput): SelfReferencingBWithId
+  a: SelfReferencingBWithId
   field: Int!
 }
 

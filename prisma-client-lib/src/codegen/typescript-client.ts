@@ -250,7 +250,7 @@ ${this.renderExports(options)}
     return `\
 import { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import { IResolvers } from 'graphql-tools/dist/Interfaces'
-import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-lib'
+import { makePrismaBindingClass, BasePrismaOptions, Options } from 'prisma-client-lib'
 import { typeDefs } from './graphql'`
   }
   renderPrismaClassArgs(options?: RenderOptions) {
@@ -271,7 +271,9 @@ import { typeDefs } from './graphql'`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
-    return `export const Prisma = makePrismaBindingClass<BindingConstructor<${this.prismaInterface}>>(${args})
+    return `export const Prisma = makePrismaBindingClass<BindingConstructor<${
+      this.prismaInterface
+    }>>(${args})
 export const prisma = new Prisma()`
   }
   renderTypedefs() {

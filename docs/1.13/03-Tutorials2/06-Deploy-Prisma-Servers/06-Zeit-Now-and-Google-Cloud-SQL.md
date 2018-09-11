@@ -114,6 +114,9 @@ Change `xx.xx.xx.xx` to the Cloud SQL IP address returned in 1.1.
 {
   "name": "prisma-now",
   "type": "docker",
+  "features": {
+    "cloud": "v1"
+  },
   "build": {
     "env": {
       "SQL_HOST": "xx.xx.xx.xx",

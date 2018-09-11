@@ -1,7 +1,7 @@
 type A {
-  toB(where: BWhereInput): B!
-  toB2(where: BWhereInput): B!
-  toC(where: CWhereInput): C
+  toB: B!
+  toB2: B!
+  toC: C
 }
 
 """A connection to a list of items."""
@@ -174,9 +174,9 @@ input AWhereInput {
 }
 
 type B {
-  toA(where: AWhereInput): A!
-  toA2(where: AWhereInput): A!
-  toC(where: CWhereInput): C!
+  toA: A!
+  toA2: A!
+  toC: C!
 }
 
 type BatchPayload {

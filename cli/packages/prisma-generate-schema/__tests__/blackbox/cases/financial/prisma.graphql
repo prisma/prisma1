@@ -69,8 +69,8 @@ type Campus implements Node {
   accounts(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialAccount!]
   description: String
   isActive: Boolean
-  organization(where: GroupWhereInput): Group
-  location(where: LocationWhereInput): Location
+  organization: Group
+  location: Location
   name: String!
   phoneNumbers(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PhoneNumber!]
 }
@@ -739,7 +739,7 @@ input FinancialAccountWhereUniqueInput {
 type FinancialPaymentDetail implements Node {
   id: ID!
   accountNumberMasked: String!
-  billingLocation(where: LocationWhereInput): Location
+  billingLocation: Location
   creditCardType: CREDIT_CARD
   achType: ACH_TYPE
   currencyType: CURRENCY_TYPE
@@ -1075,14 +1075,14 @@ input FinancialPaymentDetailWhereUniqueInput {
 
 type FinancialScheduledTransaction implements Node {
   id: ID!
-  person(where: PersonWhereInput): Person
+  person: Person
   endDate: DateTime
-  payment(where: FinancialPaymentDetailWhereInput): FinancialPaymentDetail
+  payment: FinancialPaymentDetail
   isActive: Boolean!
   startDate: DateTime
   frequency: TRANSACTION_FREQUENCY
   transactions(where: FinancialTransactionWhereInput, orderBy: FinancialTransactionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialTransaction!]
-  account(where: FinancialAccountWhereInput): FinancialAccount
+  account: FinancialAccount
   amount: Float!
 }
 
@@ -1427,15 +1427,15 @@ input FinancialScheduledTransactionWhereUniqueInput {
 
 type FinancialTransaction implements Node {
   id: ID!
-  payment(where: FinancialPaymentDetailWhereInput): FinancialPaymentDetail
-  person(where: PersonWhereInput): Person
+  payment: FinancialPaymentDetail
+  person: Person
   processedDate: DateTime
-  scheduledTransaction(where: FinancialScheduledTransactionWhereInput): FinancialScheduledTransaction
+  scheduledTransaction: FinancialScheduledTransaction
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
   amount: Float!
-  account(where: FinancialAccountWhereInput): FinancialAccount
-  organization(where: GroupWhereInput): Group!
+  account: FinancialAccount
+  organization: Group!
 }
 
 """A connection to a list of items."""
@@ -1779,12 +1779,12 @@ type Group implements Node {
   id: ID!
   key: String
   description: String
-  type(where: GroupTypeWhereInput): GroupType!
+  type: GroupType!
   invites(where: GroupInviteWhereInput, orderBy: GroupInviteOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupInvite!]
   isActive: Boolean!
   members(where: GroupMemberWhereInput, orderBy: GroupMemberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupMember!]
   name: String!
-  organization(where: GroupWhereInput): Group
+  organization: Group
 }
 
 enum GROUP_INVITE_STATUS {
@@ -1881,8 +1881,8 @@ type GroupEdge {
 type GroupInvite implements Node {
   id: ID!
   email: String!
-  group(where: GroupWhereInput): Group!
-  groupRole(where: GroupRoleWhereInput): GroupRole
+  group: Group!
+  groupRole: GroupRole
   status: GROUP_INVITE_STATUS!
 }
 
@@ -2123,9 +2123,9 @@ input GroupInviteWhereUniqueInput {
 
 type GroupMember implements Node {
   id: ID!
-  group(where: GroupWhereInput): Group
-  role(where: GroupRoleWhereInput): GroupRole
-  person(where: PersonWhereInput): Person
+  group: Group
+  role: GroupRole
+  person: Person
 }
 
 """A connection to a list of items."""
@@ -2334,7 +2334,7 @@ type GroupRole implements Node {
   canEdit: Boolean!
   canView: Boolean!
   description: String!
-  groupType(where: GroupTypeWhereInput): GroupType
+  groupType: GroupType
   isLeader: Boolean
   name: String!
   type: GROUP_ROLE_TYPE
@@ -3865,7 +3865,7 @@ type Person implements Node {
   phoneNumbers(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PhoneNumber!]
   scheduledTransactions(where: FinancialScheduledTransactionWhereInput, orderBy: FinancialScheduledTransactionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialScheduledTransaction!]
   transactions(where: FinancialTransactionWhereInput, orderBy: FinancialTransactionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialTransaction!]
-  user(where: UserWhereInput): User
+  user: User
 }
 
 """A connection to a list of items."""
@@ -4586,7 +4586,7 @@ enum TRANSACTION_STATUS {
 
 type User implements Node {
   id: ID!
-  person(where: PersonWhereInput): Person!
+  person: Person!
 }
 
 """A connection to a list of items."""

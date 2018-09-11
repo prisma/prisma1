@@ -25,10 +25,10 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   lazy val deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
 
-  lazy val invalidationTestKit   = InMemoryPubSubTestKit[String]()
-  lazy val sssEventsTestKit      = InMemoryPubSubTestKit[String]()
-  lazy val responsePubSubTestKit = InMemoryPubSubTestKit[String]()
-  lazy val requestsQueueTestKit  = InMemoryQueueTestKit[SubscriptionRequest]()
+  override lazy val invalidationTestKit = InMemoryPubSubTestKit[String]()
+  lazy val sssEventsTestKit             = InMemoryPubSubTestKit[String]()
+  lazy val responsePubSubTestKit        = InMemoryPubSubTestKit[String]()
+  lazy val requestsQueueTestKit         = InMemoryQueueTestKit[SubscriptionRequest]()
 
   override val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = {
     invalidationTestKit.map[SchemaInvalidatedMessage]((_: String) => SchemaInvalidated)

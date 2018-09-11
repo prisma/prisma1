@@ -7,7 +7,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.MySQLProfile.backend.DatabaseDef
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MysqlProjectPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends ProjectPersistence {
+case class MySqlProjectPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends ProjectPersistence {
   override def load(id: String): Future[Option[Project]] = {
     internalDatabase
       .run(ProjectTable.byIdWithMigration(id))
