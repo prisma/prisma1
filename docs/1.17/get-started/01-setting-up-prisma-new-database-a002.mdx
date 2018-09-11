@@ -164,7 +164,7 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 ```yml copy
 generate:
   - generator: javascript-client
-    output: generated
+    output: ./prisma-client/
 ```
 
 Now generate the client with this command:
@@ -173,7 +173,7 @@ Now generate the client with this command:
 prisma generate
 ```
 
-The CLI now stored your Prisma client inside the `generated` folder as specified in `prisma.yml`.
+The CLI now stored your Prisma client inside the `prisma-client` folder as specified in `prisma.yml`.
 
 ## Prepare Node application
 
@@ -195,7 +195,7 @@ npm install --save prisma-lib graphql
 Now add the following code to `index.js` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./prisma')
+const { prisma } = require('./prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
