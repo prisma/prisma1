@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedScalarListsCapability
+import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
@@ -285,22 +285,22 @@ class ObjectTypeBuilder(
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
 
-      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
+      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
         item.data.map(field.name) match {
           case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
 
-      case f: RelationField if f.isList =>
-        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
-
-      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
+      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
         item.data.map(field.name) match {
           case NullGCValue => None
           case value       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot))
         }
+
+      case f: RelationField if f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])

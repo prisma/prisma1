@@ -175,13 +175,13 @@ trait NodeActions extends NodeSingleQueries {
 
     val actionsAndResults = mutaction.nestedDeletes.map {
       case toOneDelete @ NestedDeleteNode(_, rf, None) =>
-        node.toOneChild(rf) match {
+        node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toOneDelete.model, None)
           case Some(nestedNode) => (unset(path.stringForField(rf.name)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toOneDelete))
         }
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) =>
-        node.toManyChild(rf, where) match {
+        node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
           case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
         }
@@ -207,7 +207,7 @@ trait NodeActions extends NodeSingleQueries {
     val actionsArrayFiltersAndResults = mutaction.nestedUpdates.collect {
       case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) =>
         val updatedPath = path.append(rf)
-        val subNode = node.toOneChild(rf) match {
+        val subNode = node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
           case Some(prismaNode) => prismaNode
         }
@@ -222,7 +222,7 @@ trait NodeActions extends NodeSingleQueries {
 
       case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) =>
         val updatedPath = path.append(rf, where)
-        val subNode = node.toManyChild(rf, where) match {
+        val subNode = node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
           case Some(prismaNode) => prismaNode
         }

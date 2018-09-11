@@ -4,13 +4,13 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.RelationField
 
 case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String] = None) {
-  def toOneChild(relationField: RelationField): Option[PrismaNode] = data.map.get(relationField.name) match {
+  def getToOneChild(relationField: RelationField): Option[PrismaNode] = data.map.get(relationField.name) match {
     case None              => None
     case Some(NullGCValue) => None
     case Some(value)       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot, Some(relationField.relatedModel_!.name)))
   }
 
-  def toManyChild(relationField: RelationField, where: NodeSelector): Option[PrismaNode] = data.map.get(relationField.name) match {
+  def getToManyChild(relationField: RelationField, where: NodeSelector): Option[PrismaNode] = data.map.get(relationField.name) match {
     case None =>
       None
 
@@ -22,7 +22,9 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
         case Some(gc) => Some(PrismaNode(CuidGCValue.dummy, gc.asRoot, Some(relationField.relatedModel_!.name)))
         case None     => None
       }
-    case x => sys.error("Checking for toMany child in PrismaNode returned unexpected result" + x)
+
+    case x =>
+      sys.error("Checking for toMany child in PrismaNode returned unexpected result" + x)
   }
 }
 

@@ -13,11 +13,11 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(client)
 
-  override def dataResolver(project: Project): DataResolver = new MongoDataResolver(project, client)
+  override def dataResolver(project: Project): DataResolver = MongoDataResolver(project, client)
 
-  override def masterDataResolver(project: Project): DataResolver = new MongoDataResolver(project, client)
+  override def masterDataResolver(project: Project): DataResolver = MongoDataResolver(project, client)
 
-  override def projectIdEncoder: ProjectIdEncoder = new ProjectIdEncoder('_')
+  override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
   override def capabilities: Set[ApiConnectorCapability] = Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability)
 
