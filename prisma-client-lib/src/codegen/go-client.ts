@@ -62,7 +62,7 @@ export class GoGenerator extends Generator {
     const isList =
       field.type.toString().indexOf('[') === 0 &&
       field.type.toString().indexOf(']') > -1
-    const isNonNull = field.type.toString().indexOf('!') > -1 && field.type.toString().indexOf('!]') === -1
+    const isNonNull = field.type.toString().indexOf('!') > -1
     let fieldMap: GraphQLFieldMap<any, any> | GraphQLInputFieldMap | null = null
     if (deepType!.constructor.name === 'GraphQLObjectType') {
       fieldMap = (deepType as GraphQLObjectType).getFields()
@@ -130,11 +130,9 @@ export class GoGenerator extends Generator {
           ${args.length > 0 ? `
           type ${goCase(field.name)}ParamsExec struct {
             ${args
-              .map(arg => {
-                return `${goCase(arg.name)} *${this.scalarMapping[arg.type.toString()] || arg.type }`
-              }).join('\n')
+              .map(arg => `${goCase(arg.name)} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
+          }
         }
-      }
           ` : ``}
           
           // ${goCase(field.name)} docs - executable for types
@@ -152,7 +150,7 @@ export class GoGenerator extends Generator {
                     Value: params.${goCase(arg.name)},
                   })
                 }
-                `).join('\n')}
+                `)}
               }
               ` : ``}
 
@@ -289,18 +287,13 @@ export class GoGenerator extends Generator {
         // Is unpacking needed
         dataType := reflect.TypeOf(data)
         if !isArray(dataType) {
-          unpackedData := data
           for _, instruction := range instance.stack {
-            if instance.client.Debug {
-              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
+            unpackedData := data[instruction.Name]
+            if isArray(unpackedData) {
+              genericData = (unpackedData).([]interface{})
+            } else {
+              genericData = (unpackedData).(map[string]interface{})
             }
-            unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            if instance.client.Debug {
-              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
-              fmt.Println("Unpacked Data Step Exec:", unpackedData)
-              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
-            }
-            genericData = unpackedData
           }
         }
         if instance.client.Debug {
@@ -330,8 +323,9 @@ export class GoGenerator extends Generator {
               const {
                 typeName,
                 isNonNull,
+                isScalar,
               } = this.extractFieldLikeType(field as GraphQLField<any, any>)
-              return `${goCase(field.name)} *${this
+              return `${goCase(field.name)} ${isScalar ? `` : `*`}${this
                 .scalarMapping[typeName] || typeName} \`json:"${field.name}${
                 isNonNull ? `` : `,omitempty`
               }"\``
@@ -465,7 +459,7 @@ export class GoGenerator extends Generator {
         const { typeFields, typeName, isList } = this.extractFieldLikeType(
           field,
         )
-        
+
         const whereArgs = args.filter(arg => arg.name === 'where')
         let whereArg = null
         if (whereArgs.length > 0) {
@@ -480,7 +474,7 @@ export class GoGenerator extends Generator {
               // Exists
 
               // ${goCase(field.name)} exists docs
-              func (exists *Exists) ${goCase(field.name)}(params ${goCase(
+              func (exists *Exists) ${goCase(field.name)}(params *${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
                 client := Client{
@@ -492,9 +486,9 @@ export class GoGenerator extends Generator {
                 data, err := client.${goCase(field.name)}(
                   ${
                     args.length === 1
-                      ? `&params,`
+                      ? `params,`
                       : `&${goCase(field.name)}Params{
-                    Where: &params,
+                    Where: params,
                   },`
                   }
                 ).Exec()
@@ -537,20 +531,18 @@ export class GoGenerator extends Generator {
           var args []GraphQLArg
           ${args
             .map(arg => {
-              return `
-              if params != nil ${
-                args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
-              } {
+              return `if params${
+                args.length === 1 ? `` : `.${goCase(arg.name)}`
+              } != nil {
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
                   Key: "${arg.name}",
                   TypeName: "${arg.type}",
-                  Value: params${
+                  Value: *params${
                     args.length === 1 ? `` : `.${goCase(arg.name)}`
                   },
                 })
-              }
-              `
+              }`
             })
             .join('\n')}
           
