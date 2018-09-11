@@ -44,15 +44,8 @@ case class FilterOutEmptyInputTypes(schema: Schema[ApiUserContext, Unit]) {
   }
 
   private def mapInputObjectType(it: InputObjectType[_]): Option[InputObjectType[_]] = {
-    println(s"checking ${it.name}")
     val invalidFields = it.fields.filter { f =>
-      println(s"${f.name} ${f.inputValueType.namedType.name} ")
-      val x = invalidTypes.map(_.name).contains(f.inputValueType.namedType.name)
-      println(x)
-      x
-    }
-    if (invalidFields.nonEmpty) {
-      println(s"${it.name} has invalid fields: ${invalidFields.map(_.name)}")
+      invalidTypes.map(_.name).contains(f.inputValueType.namedType.name)
     }
     val validFields = it.fields.filterNot(f => invalidFields.contains(f))
     if (validFields.isEmpty) {

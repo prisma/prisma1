@@ -280,9 +280,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
               nestedUpsertInputField(field)
         )
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
-//        inputObjectType.fields.nonEmpty.toOption {
-//          InputField[Any](field.name, OptionInputType(inputObjectType))
-//        }
       }
     }
   }
@@ -314,9 +311,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           OptionInputType(inputObjectType)
         }
 
-//        inputObjectType.fields.nonEmpty.toOption {
-//          InputField[Any](field.name, possiblyRequired)
-//        }
         Some(InputField[Any](field.name, possiblyRequired))
       }
     }
