@@ -531,9 +531,9 @@ export class GoGenerator extends Generator {
           var args []GraphQLArg
           ${args
             .map(arg => {
-              return `if params${
-                args.length === 1 ? `` : `.${goCase(arg.name)}`
-              } != nil {
+              return `if params != nil ${
+                args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
+              } {
                 args = append(args, GraphQLArg{
                   Name: "${arg.name}",
                   Key: "${arg.name}",
