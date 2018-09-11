@@ -7,7 +7,7 @@ export const meta = {
   step: 1,
   gettingStartedTitle: 'Use free, hosted demo database',
   position: 3,
-  nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and (re-)generate your Prisma client.'
+  nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and regenerate your Prisma client.'
 }
 
 ## Goals
@@ -15,18 +15,18 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Create a Prisma service configuration
-- Deploy a Prisma service to a Demo server in Prisma Cloud
+- Setup a Prisma Demo server with a sandboxed database
 - Read and write data using the Prisma client
 
 ## Install the Prisma CLI
 
-The [Prisma CLI](alx4) is used to deploy and manage Prisma Services. You can install it using [Homwbrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
 
 <Code languages={["Homebrew", "NPM"]}>
 
 ```bash copy
 brew install prisma
+brew tap prisma/prisma
 ```
 
 ```bash copy
@@ -37,7 +37,7 @@ npm install -g prisma
 
 ## Create a Prisma service configuration
 
-To bootstrap the configuration files for your first Prisma service, create a new directory and initalize it using the `prisma init` command:
+To bootstrap the configuration files for your Prisma setup, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
@@ -45,7 +45,7 @@ cd hello-world
 prisma init
 ```
 
-After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy your Prisma service:
+After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy Prisma:
 
 1. Select **Demo server** from the list.
 1. When your browser opens, register with [Prisma Cloud](https://www.prisma.io/cloud/). This is needed because that's where the Demo server is hosted.
@@ -54,22 +54,22 @@ After running `prisma init`, the Prisma CLI prompts you to select _how_ you want
 
 <Collapse title="Learn about the generated files">
 
-- `prisma.yml`: The root configuration file for your Prisma service.
-- `datamodel.prisma`: Specifies the datamodel for your application that will be mapped to the database.
-- `prisma.js`: The auto-generated Prisma client library that connects to your Prisma service.
+- `prisma.yml`: The root configuration file for your Prisma setup.
+- `datamodel.prisma`: Specifies the datamodel for your application that will be mapped to the database (this basically defines your database schema).
+- `prisma.js`: The auto-generated Prisma client library that connects to Prisma.
 
 </Collapse>
 
 
-## Deploy the Prisma service
+## Deploy Prisma
 
-The `prisma init` command created the _minimal_ Service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.prisma`. This Service configuration now needs to be _deployed_ so you can use the Prisma API of your Service:
+The `prisma init` command created the _minimal_ configuration needed to deploy Prisma: `prisma.yml` and `datamodel.prisma`. Prisma now needs to be _deployed_ so you can [use the Prisma API](nms2):
 
 ```bash copy
 prisma deploy
 ```
 
-Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.`
+Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
 
 ## Prepare Node application
 
@@ -114,7 +114,7 @@ Execute the script with the following command:
 node index.js
 ```
 
-Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`). 
+Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`).
 
 Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
