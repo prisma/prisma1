@@ -21,7 +21,7 @@ _Subscribe to "create" and "update" events for the `User` mode_:
 ```js
 const createdAndUpdatedUserIterator: UserAsyncIterator = await db.$subscribe.user({
   mutation_in: ['CREATED', 'UPDATED']
-})
+}).node()
 ```
 
  _Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
@@ -29,5 +29,5 @@ const createdAndUpdatedUserIterator: UserAsyncIterator = await db.$subscribe.use
  ```js
 const userIterator: UserAsyncIterator = await db.$subscribe.user({
   email_contains: `gmail` 
-})
+}).node()
 ```
