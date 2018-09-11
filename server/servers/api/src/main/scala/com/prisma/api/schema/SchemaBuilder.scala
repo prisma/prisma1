@@ -17,7 +17,7 @@ import sangria.ast.Selection
 import sangria.relay._
 import sangria.schema._
 
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.concurrent.Future
 
 case class ApiUserContext(clientId: String)
@@ -56,9 +56,62 @@ case class SchemaBuilderImpl(
     val mutation     = buildMutation()
     val subscription = buildSubscription()
 
-    Schema(
+    val s = Schema(
       query = query,
       mutation = mutation,
+      subscription = subscription,
+      validationRules = SchemaValidationRule.empty
+    )
+    val invalidTypes = s.allTypes.values.toVector.filter {
+      case it: InputObjectType[_] => it.fields.isEmpty
+      case x                      => false
+    }
+    println(s"invalidTypes: ${invalidTypes.map(_.name)}")
+    def mapField[A](field: Field[A, _]): Field[A, Unit] = {
+      val newArguments = field.arguments.flatMap(mapArgument)
+      field.copy(arguments = newArguments).asInstanceOf[Field[A, Unit]]
+    }
+
+    def mapArgument(argument: Argument[_]): Option[Argument[_]] = {
+      if (invalidTypes.contains(argument.inputValueType)) {
+        None
+      } else {
+        argument.inputValueType match {
+          case iot: InputObjectType[_] =>
+            mapInputObjectType(iot).map { iot =>
+              argument.copy(argumentType = iot)
+            }
+          case _ => Some(argument)
+        }
+      }
+    }
+
+    def mapInputObjectType(it: InputObjectType[_]): Option[InputObjectType[_]] = {
+      println(s"checking ${it.name}")
+      val invalidFields = it.fields.filter { f =>
+        println(s"${f.name} ${f.inputValueType.namedType.name} ")
+        val x = invalidTypes.map(_.name).contains(f.inputValueType.namedType.name)
+        println(x)
+        x
+      }
+      if (invalidFields.nonEmpty) {
+        println(s"${it.name} has invalid fields: ${invalidFields.map(_.name)}")
+      }
+      val validFields = it.fields.filterNot(f => invalidFields.contains(f))
+      if (validFields.isEmpty) {
+        None
+      } else {
+        Some(it.copy(fieldsFn = () => validFields))
+      }
+    }
+
+    val newFields: List[Field[ApiUserContext, Unit]]          = mutation.get.fields.map(mapField).toList
+    val newMutation: Option[ObjectType[ApiUserContext, Unit]] = Some(ObjectType("Mutation", newFields))
+
+//    s
+    Schema(
+      query = query,
+      mutation = newMutation,
       subscription = subscription,
       validationRules = SchemaValidationRule.empty
     )
