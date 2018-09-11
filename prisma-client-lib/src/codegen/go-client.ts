@@ -150,7 +150,7 @@ export class GoGenerator extends Generator {
                     Value: params.${goCase(arg.name)},
                   })
                 }
-                `)}
+                `).join('\n')}
               }
               ` : ``}
 
