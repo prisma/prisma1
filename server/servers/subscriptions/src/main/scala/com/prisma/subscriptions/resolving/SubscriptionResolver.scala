@@ -10,7 +10,7 @@ import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventT
 import com.prisma.subscriptions.resolving.SubscriptionsManagerForModel.Requests.StartSubscription
 import com.prisma.subscriptions.util.PlayJson
 import com.prisma.subscriptions.{SubscriptionDependencies, SubscriptionExecutor}
-import com.prisma.util.coolArgs.GCCreateReallyCoolArgsConverter
+import com.prisma.util.coolArgs.GCCreatePrismaArgsConverter
 import play.api.libs.json._
 
 import scala.concurrent.duration.Duration
@@ -27,7 +27,7 @@ case class SubscriptionResolver(
     ec: ExecutionContext
 ) {
   import DatabaseEvents._
-  val converter = GCCreateReallyCoolArgsConverter(model)
+  val converter = GCCreatePrismaArgsConverter(model)
 
   def handleDatabaseMessage(event: String): Future[Option[JsValue]] = {
     import DatabaseEventReaders._
@@ -62,14 +62,14 @@ case class SubscriptionResolver(
   }
 
   def handleDatabaseUpdateEvent(event: DatabaseUpdateEvent): Future[Option[JsValue]] = {
-    val reallyCoolArgs: PrismaArgs = converter.toReallyCoolArgsFromJson(event.previousValues)
+    val reallyCoolArgs: PrismaArgs = converter.toPrismaArgsFromJson(event.previousValues)
     val previousValues             = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = Some(event.changedFields.toList))
   }
 
   def handleDatabaseDeleteEvent(event: DatabaseDeleteEvent): Future[Option[JsValue]] = {
-    val reallyCoolArgs: PrismaArgs = converter.toReallyCoolArgsFromJson(event.node)
+    val reallyCoolArgs: PrismaArgs = converter.toPrismaArgsFromJson(event.node)
     val previousValues             = PrismaNode(event.nodeId, reallyCoolArgs.raw.asRoot)
 
     executeQuery(event.nodeId, Some(previousValues), updatedFields = None)

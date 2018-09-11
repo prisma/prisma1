@@ -175,7 +175,8 @@ object SchemaDsl extends AwaitUtils {
       name: String,
       fields: Buffer[FieldTemplate] = Buffer.empty,
       var withPermissions: Boolean = true,
-      relations: Buffer[RelationTemplate] = Buffer.empty
+      relations: Buffer[RelationTemplate] = Buffer.empty,
+      isEmbedded: Boolean = false
   ) {
     val id = name
 
@@ -403,6 +404,7 @@ object SchemaDsl extends AwaitUtils {
       ModelTemplate(
         name = name,
         stableIdentifier = Cuid.createCuid(),
+        isEmbedded = isEmbedded,
         fieldTemplates = fields.toList,
         manifestation = None
       )

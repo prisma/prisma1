@@ -10,6 +10,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.{JsString, Json}
 
 class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpecBase with AwaitUtils {
+  override def doNotRunForPrototypes: Boolean = true
+
   val project = SchemaDsl.fromBuilder { schema =>
     val statusEnum: Enum                = schema.enum("Status", Vector("Active", "Done"))
     val comment: SchemaDsl.ModelBuilder = schema.model("Comment").field("text", _.String)

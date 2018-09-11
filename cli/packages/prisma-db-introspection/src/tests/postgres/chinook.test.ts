@@ -1,30 +1,31 @@
 import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../connectors/PostgresConnector';
+import { PostgresConnector } from '../../connectors/PostgresConnector'
 
 function introspect(): Promise<{ numTables: number; sdl: string }> {
-    const pgConnector = new PostgresConnector(connectionDetails)
-    return new Introspector(pgConnector).introspect('DatabaseIntrospector')
+  const client = new Client(connectionDetails)
+  const pgConnector = new PostgresConnector(client)
+  return new Introspector(pgConnector).introspect('DatabaseIntrospector')
 }
 
 async function testSchema(sql: string) {
-    const client = new Client(connectionDetails)
-    await client.connect()
-    await client.query('DROP SCHEMA IF EXISTS DatabaseIntrospector cascade;')
-    await client.query('CREATE SCHEMA DatabaseIntrospector;')
-    await client.query('SET search_path TO DatabaseIntrospector;')
-    await client.query(sql)
+  const client = new Client(connectionDetails)
+  await client.connect()
+  await client.query('DROP SCHEMA IF EXISTS DatabaseIntrospector cascade;')
+  await client.query('CREATE SCHEMA DatabaseIntrospector;')
+  await client.query('SET search_path TO DatabaseIntrospector;')
+  await client.query(sql)
 
-    expect(await introspect()).toMatchSnapshot()
+  expect(await introspect()).toMatchSnapshot()
 
-    await client.end()
+  await client.end()
 }
 
 describe('Introspector', () => {
-    test('large example database', async () => {
-        // https://github.com/lerocha/chinook-database/wiki/Chinook-Schema
-        await testSchema(`
+  test('large example database', async () => {
+    // https://github.com/lerocha/chinook-database/wiki/Chinook-Schema
+    await testSchema(`
 /*******************************************************************************
  Chinook Database - Version 1.4
  Script: Chinook_PostgreSql.sql
@@ -219,5 +220,5 @@ ALTER TABLE "Track" ADD CONSTRAINT "FK_TrackMediaTypeId"
 
 CREATE INDEX "IFK_TrackMediaTypeId" ON "Track" ("MediaTypeId");
         `)
-    })
+  })
 })

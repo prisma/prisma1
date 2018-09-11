@@ -1,5 +1,6 @@
 package com.prisma.api.schema
 
+import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
@@ -18,7 +19,8 @@ class ObjectTypeBuilder(
     project: models.Project,
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
-    onlyId: Boolean = false
+    onlyId: Boolean = false,
+    capabilities: Set[ApiConnectorCapability]
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -138,21 +140,16 @@ class ObjectTypeBuilder(
     }
   }
 
-  def resolveConnection(field: RelationField): OutputType[Any] = {
-    field.isList match {
-      case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
-      case false => modelObjectTypes(field.relatedModel_!.name)
-    }
+  def resolveConnection(field: RelationField): OutputType[Any] = field.isList match {
+    case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
+    case false => modelObjectTypes(field.relatedModel_!.name)
   }
 
-  def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = {
-
-    field match {
-      case f if f.isHidden               => List.empty
-      case _: ScalarField                => List.empty
-      case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
-      case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
-    }
+  def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = field match {
+    case f if f.isHidden               => List.empty
+    case _: ScalarField                => List.empty
+    case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
+    case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
   }
 
   def mapToListConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
@@ -212,7 +209,7 @@ class ObjectTypeBuilder(
           case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_some")                    => relationFilter(value, AtLeastOneRelatedNode)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_none")                    => relationFilter(value, NoRelatedNode)
-          case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, NoRelationCondition)
+          case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, ToOneRelatedNode)
           case Seq() if filter.name == "AND"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "AND")                        => AndFilter(generateSubFilters(value))
           case Seq() if filter.name == "OR"                                                      => FalseFilter
@@ -283,10 +280,23 @@ class ObjectTypeBuilder(
 
     field match {
       case f: ScalarField if f.isList =>
-        ScalarListDeferred(model, f, item.id)
+        if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
+
+      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
+        item.data.map(field.name) match {
+          case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
+          case NullGCValue         => Vector.empty[PrismaNode]
+          case x                   => sys.error("not handled yet" + x)
+        }
+
+      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
+        item.data.map(field.name) match {
+          case NullGCValue => None
+          case value       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot))
+        }
 
       case f: RelationField if f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])

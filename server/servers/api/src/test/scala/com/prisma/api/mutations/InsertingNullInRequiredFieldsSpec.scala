@@ -6,12 +6,12 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  "Setting a required value to null" should "throw a proper error" in {
+  "Updating a required value to null" should "throw a proper error" in {
     val project = SchemaDsl.fromString() {
       """type A {
         |  id: ID! @unique
         |  b: String! @unique
-        |  key: String! @unique
+        |  key: String!
         |}
       """
     }
@@ -44,7 +44,33 @@ class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiS
     )
   }
 
-  "Setting an optional value to null" should "work" in {
+  "Creating a required value as null" should "throw a proper error" in {
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |  id: ID! @unique
+        |  b: String! @unique
+        |  key: String!
+        |}
+      """
+    }
+    database.setup(project)
+
+    server.queryThatMustFail(
+      """mutation a {
+        |  createA(data: {
+        |    b: "abc"
+        |    key: null
+        |  }) {
+        |    id
+        |  }
+        |}""",
+      project,
+      errorCode = 0,
+      errorContains = """Argument 'data' expected type 'ACreateInput!' but got: {b: \"abc\", key: null}. Reason: 'key' String value expected"""
+    )
+  }
+
+  "Updating an optional value to null" should "work" in {
     val project = SchemaDsl.fromString() {
       """type A {
         |  id: ID! @unique
@@ -81,6 +107,32 @@ class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiS
     )
 
     server.query("""query{as{b,key}}""", project).toString should be("""{"data":{"as":[{"b":"abc","key":null}]}}""")
+  }
+
+  "Creating an optional value as null" should "work" in {
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |  id: ID! @unique
+        |  b: String! @unique
+        |  key: String
+        |}
+      """
+    }
+    database.setup(project)
+
+    server.query(
+      """mutation a {
+        |  createA(data: {
+        |    b: "abc"
+        |    key: null
+        |  }) {
+        |    b,
+        |    key
+        |  }
+        |}""",
+      project,
+      dataContains = """{"createA":{"b":"abc","key":null}}"""
+    )
   }
 
 }

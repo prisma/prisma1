@@ -1,10 +1,11 @@
 import { Introspector } from '../../Introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../connectors/PostgresConnector';
+import { PostgresConnector } from '../../connectors/PostgresConnector'
 
 function introspect(): Promise<{ numTables: number; sdl: string }> {
-  const pgConnector = new PostgresConnector(connectionDetails)
+  const client = new Client(connectionDetails)
+  const pgConnector = new PostgresConnector(client)
   return new Introspector(pgConnector).introspect('public')
 }
 

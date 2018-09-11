@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.messagebus.pubsub.Message
@@ -173,7 +174,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
+  "A Create Mutation" should "gracefully fail when a unique violation occurs" taggedAs (IgnoreMongo) in {
     server.query(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
     server.queryThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
   }

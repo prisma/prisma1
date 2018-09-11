@@ -1,0 +1,23 @@
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: 'Check Existence (Go)',
+  position: 80,
+  technology: "go",
+  technologyOrder: 3,
+  articleGroup: "Check Existence",
+}
+
+## Overview
+
+The Prisma client lets you check whether a certain record exists in the database using the `Exists` property. For each model type in your [datamodel](knul), the Prisma client exposes one function on this property named after the model (but lowercased). Each of these functions receives a a filter object as input argument that specifies the conditions for the record and returns a boolean value that's `true` if there's at least one database record matching the specified filter, `false` otherwise.
+
+### Examples
+
+_Check if a user with a certain ID exists_:
+
+```go
+userExists := client.Exists.User(&prisma.UserWhereUniqueInput{
+  ID: "cjli6tko8005t0a23fid7kke7",
+})
+```

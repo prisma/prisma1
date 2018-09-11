@@ -1,4 +1,4 @@
-import Deploy from './'
+import Deploy from './deploy'
 import { changedDefaultDefinition } from '../../examples'
 import { mockDefinition, Config } from 'prisma-cli-engine'
 import default_definition from './nocks/default_definition'

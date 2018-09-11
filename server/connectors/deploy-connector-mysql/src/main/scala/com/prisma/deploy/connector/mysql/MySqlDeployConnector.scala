@@ -1,8 +1,9 @@
 package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
+import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MysqlInternalDatabaseSchema, TelemetryTable}
+import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls._
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -15,14 +16,15 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive         = true
-  lazy val internalDatabaseDefs = MysqlInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabase
   lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
   lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
 
-  override val projectPersistence: ProjectPersistence           = MysqlProjectPersistence(managementDatabase)
-  override val migrationPersistence: MigrationPersistence       = MysqlMigrationPersistence(managementDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExectutor(projectDatabase)
+  override val projectPersistence: ProjectPersistence           = MySqlProjectPersistence(managementDatabase)
+  override val migrationPersistence: MigrationPersistence       = MySqlMigrationPersistence(managementDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
+  override def capabilities                                     = Set(MigrationsCapability)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -55,7 +57,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def initialize(): Future[Unit] = {
     setupDatabase
-      .run(MysqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
+      .run(MySqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
       .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
   }
 

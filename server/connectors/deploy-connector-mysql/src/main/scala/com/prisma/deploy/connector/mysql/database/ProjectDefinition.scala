@@ -33,16 +33,6 @@ class ProjectTable(tag: Tag) extends Table[ProjectDefinition](tag, "Project") {
 object ProjectTable {
   implicit val statusMapper = MigrationTable.statusMapper
 
-  def byId(id: String): SqlAction[Option[ProjectDefinition], NoStream, Read] = {
-    Tables.Projects
-      .filter {
-        _.id === id
-      }
-      .take(1)
-      .result
-      .headOption
-  }
-
   def byIdWithMigration(id: String): SqlAction[Option[(ProjectDefinition, Migration)], NoStream, Read] = {
     val baseQuery = for {
       project   <- Tables.Projects

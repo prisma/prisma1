@@ -2,9 +2,6 @@ import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import chalk from 'chalk'
-import * as npmRun from 'npm-run'
-const debug = require('debug')('init')
-import * as spawn from 'cross-spawn'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 
@@ -48,13 +45,13 @@ export default class Init extends Command {
     if (
       files.length > 0 &&
       (files.includes('prisma.yml') ||
-        files.includes('datamodel.graphql') ||
+        files.includes('datamodel.prisma') ||
         files.includes('docker-compose.yml'))
     ) {
       this.out.log(`
 The directory ${chalk.cyan(
-          this.config.definitionDir,
-        )} contains files that could conflict:
+        this.config.definitionDir,
+      )} contains files that could conflict:
 
 ${files.map(f => `  ${f}`).join('\n')}
 
@@ -65,18 +62,24 @@ Either try using a new directory name, or remove the files listed above.
 
     if (endpoint) {
       fs.copySync(
-        path.join(__dirname, 'boilerplate', 'datamodel.graphql'),
-        path.join(this.config.definitionDir, 'datamodel.graphql'),
+        path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
+        path.join(this.config.definitionDir, 'datamodel.prisma'),
       )
       fs.copySync(
         path.join(__dirname, 'boilerplate', 'prisma.yml'),
         path.join(this.config.definitionDir, 'prisma.yml'),
       )
 
-      const endpointDefinitionPath = path.join(this.config.definitionDir, 'prisma.yml')
+      const endpointDefinitionPath = path.join(
+        this.config.definitionDir,
+        'prisma.yml',
+      )
       const endpointPrismaYml = fs.readFileSync(endpointDefinitionPath, 'utf-8')
 
-      const newEndpointPrismaYml = endpointPrismaYml.replace('ENDPOINT', endpoint)
+      const newEndpointPrismaYml = endpointPrismaYml.replace(
+        'ENDPOINT',
+        endpoint,
+      )
       fs.writeFileSync(endpointDefinitionPath, newEndpointPrismaYml)
 
       const endpointSteps: string[] = []
@@ -86,22 +89,23 @@ Either try using a new directory name, or remove the files listed above.
         endpointSteps.push(`Open folder: ${chalk.cyan(`cd ${endpointDir}`)}`)
       }
 
-      endpointSteps.push(`Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`)
-
+      endpointSteps.push(
+        `Deploy your Prisma service: ${chalk.cyan('prisma deploy')}`,
+      )
 
       const endpointCreatedFiles = [
         `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
         `  ${chalk.cyan(
-          'datamodel.graphql',
+          'datamodel.prisma',
         )}    GraphQL SDL-based datamodel (foundation for database)`,
       ]
 
       this.out.log(`
 ${chalk.bold(
-          `Created ${
+        `Created ${
           endpointCreatedFiles.length
-          } new files:                                                                          `,
-        )}
+        } new files:                                                                          `,
+      )}
 
 ${endpointCreatedFiles.join('\n')}
 
@@ -110,22 +114,32 @@ ${chalk.bold('Next steps:')}
 ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
       this.out.exit(0)
-    } 
-    
-    const endpointDialog = new EndpointDialog(
-      this.out,
-      this.client,
-      this.env,
-      this.config,
-    )
+    }
+
+    const endpointDialog = new EndpointDialog({
+      out: this.out,
+      client: this.client,
+      env: this.env,
+      config: this.config,
+      definition: this.definition,
+      shouldAskForGenerator: true,
+    })
+
     const results = await endpointDialog.getEndpoint()
 
-    fs.copySync(
-      path.join(__dirname, 'boilerplate', 'prisma.yml'),
+    let prismaYmlString = `endpoint: ENDPOINT
+datamodel: datamodel.prisma`
+
+    if (results.generator) {
+      prismaYmlString += this.getGeneratorConfig(results.generator)
+    }
+
+    fs.writeFileSync(
       path.join(this.config.definitionDir, 'prisma.yml'),
+      prismaYmlString,
     )
     fs.writeFileSync(
-      path.join(this.config.definitionDir, 'datamodel.graphql'),
+      path.join(this.config.definitionDir, 'datamodel.prisma'),
       results.datamodel,
     )
     if (results.cluster!.local && results.writeDockerComposeYml) {
@@ -140,7 +154,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
         `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
       )
     }
-    
+
     const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
     const prismaYml = fs.readFileSync(definitionPath, 'utf-8')
 
@@ -194,7 +208,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
     const createdFiles = [
       `  ${chalk.cyan('prisma.yml')}           Prisma service definition`,
       `  ${chalk.cyan(
-        'datamodel.graphql',
+        'datamodel.prisma',
       )}    GraphQL SDL-based datamodel (foundation for database)`,
     ]
 
@@ -214,10 +228,10 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
     this.out.log(`
 ${chalk.bold(
-        `Created ${
+      `Created ${
         createdFiles.length
-        } new files:                                                                          `,
-      )}
+      } new files:                                                                          `,
+    )}
 
 ${createdFiles.join('\n')}
 
@@ -233,5 +247,14 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
         )}`,
       )
     }
+  }
+  getGeneratorConfig(generator: string) {
+    return `\n\ngenerate:
+  - generator: ${generator}
+    output: ./generated/prisma
+
+hooks:
+  post-deploy:
+    - prisma generate`
   }
 }

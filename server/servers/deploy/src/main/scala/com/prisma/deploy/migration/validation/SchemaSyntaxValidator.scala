@@ -24,11 +24,9 @@ object FieldRequirement {
 case class FieldRequirement(name: String, validTypes: Vector[String], required: Boolean, unique: Boolean, list: Boolean) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
-  def isValid(field: FieldDefinition): Boolean = {
-    field.name == name match {
-      case true  => validTypes.contains(field.typeName) && field.isRequired == required && field.isUnique == unique && field.isList == list
-      case false => true
-    }
+  def isValid(field: FieldDefinition): Boolean = field.name == name match {
+    case true  => validTypes.contains(field.typeName) && field.isRequired == required && field.isUnique == unique && field.isList == list
+    case false => true
   }
 }
 
@@ -55,7 +53,8 @@ object SchemaSyntaxValidator {
     ),
     DirectiveRequirement("rename", requiredArguments = Seq(RequiredArg("oldName", mustBeAString = true)), optionalArguments = Seq.empty),
     DirectiveRequirement("default", requiredArguments = Seq(RequiredArg("value", mustBeAString = false)), optionalArguments = Seq.empty),
-    DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
+    DirectiveRequirement("unique", requiredArguments = Seq.empty, optionalArguments = Seq.empty),
+    DirectiveRequirement("embedded", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
   val idFieldRequirementForPassiveConnectors = FieldRequirement("id", Vector("ID", "UUID", "Int"), required = true, unique = true, list = false)
@@ -105,11 +104,9 @@ case class SchemaSyntaxValidator(
     }
   }
 
-  def validate: Seq[DeployError] = {
-    result match {
-      case Success(_) => validateInternal
-      case Failure(e) => List(DeployError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
-    }
+  def validate: Seq[DeployError] = result match {
+    case Success(_) => validateInternal
+    case Failure(e) => List(DeployError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
   }
 
   def generateSDL: PrismaSdl = {
@@ -124,12 +121,15 @@ case class SchemaSyntaxValidator(
       val prismaFields = definition.fields.map {
         case x if isRelationField(x) =>
           RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
-        case x if isEnumField(x) => EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+
+        case x if isEnumField(x) =>
+          EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+
         case x if isScalarField(x) =>
           ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
       }
 
-      PrismaType(definition.name, definition.tableNameDirective, fieldFn = prismaFields)(_)
+      PrismaType(definition.name, definition.tableNameDirective, definition.isEmbedded, prismaFields)(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
