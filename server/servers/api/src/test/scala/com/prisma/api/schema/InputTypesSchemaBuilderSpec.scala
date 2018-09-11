@@ -512,4 +512,160 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
+
+  "When a type is bot required and non-required two separate types" should "be generated" in {
+
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |    field: Int
+        |}
+        |
+        |type B {
+        |    field: Int
+        |    a: A!
+        |}
+        |
+        |type C {
+        |    field: Int
+        |    a: A
+        |}"""
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input ACreateInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input ACreateOneInput {
+                       |  create: ACreateInput
+                       |}
+                       |
+                       |input AUpdateDataInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input AUpdateInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input AUpdateOneInput {
+                       |  create: ACreateInput
+                       |  disconnect: Boolean
+                       |  delete: Boolean
+                       |  update: AUpdateDataInput
+                       |  upsert: AUpsertNestedInput
+                       |}
+                       |
+                       |input AUpdateOneRequiredInput {
+                       |  create: ACreateInput
+                       |  update: AUpdateDataInput
+                       |  upsert: AUpsertNestedInput
+                       |}
+                       |
+                       |input AUpsertNestedInput {
+                       |  update: AUpdateDataInput!
+                       |  create: ACreateInput!
+                       |}
+                       |
+                       |input BCreateInput {
+                       |  field: Int
+                       |  a: ACreateOneInput!
+                       |}
+                       |
+                       |input BUpdateInput {
+                       |  field: Int
+                       |  a: AUpdateOneRequiredInput
+                       |}
+                       |
+                       |input CCreateInput {
+                       |  field: Int
+                       |  a: ACreateOneInput
+                       |}
+                       |
+                       |input CUpdateInput {
+                       |  field: Int
+                       |  a: AUpdateOneInput
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "When a type is bot required and non-required two separate types" should "be generated (changed order)" in {
+
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |    field: Int
+        |}
+        |
+        |type B {
+        |    field: Int
+        |    a: A
+        |}
+        |
+        |type C {
+        |    field: Int
+        |    a: A!
+        |}"""
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input ACreateInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input ACreateOneInput {
+                       |  create: ACreateInput
+                       |}
+                       |
+                       |input AUpdateDataInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input AUpdateInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input AUpdateOneInput {
+                       |  create: ACreateInput
+                       |  disconnect: Boolean
+                       |  delete: Boolean
+                       |  update: AUpdateDataInput
+                       |  upsert: AUpsertNestedInput
+                       |}
+                       |
+                       |input AUpdateOneRequiredInput {
+                       |  create: ACreateInput
+                       |  update: AUpdateDataInput
+                       |  upsert: AUpsertNestedInput
+                       |}
+                       |
+                       |input AUpsertNestedInput {
+                       |  update: AUpdateDataInput!
+                       |  create: ACreateInput!
+                       |}
+                       |
+                       |input BCreateInput {
+                       |  field: Int
+                       |  a: ACreateOneInput
+                       |}
+                       |
+                       |input BUpdateInput {
+                       |  field: Int
+                       |  a: AUpdateOneInput
+                       |}
+                       |
+                       |input CCreateInput {
+                       |  field: Int
+                       |  a: ACreateOneInput!
+                       |}
+                       |
+                       |input CUpdateInput {
+                       |  field: Int
+                       |  a: AUpdateOneRequiredInput
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
 }
