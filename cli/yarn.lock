@@ -5540,9 +5540,9 @@ prisma-client-lib@0.1.47:
     uppercamelcase "^3.0.0"
     ws "^6.0.0"
 
-prisma-generate-schema@0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-0.0.6.tgz#7bc8749afaefcab1fe432e86acdf6e5441f4b919"
+prisma-generate-schema@0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-0.0.7.tgz#1f50ad3a97e71242a276ae767c9ef9d17dbb6659"
   dependencies:
     "@types/jest" "^23.3.1"
     graphql "^0.13.2"
