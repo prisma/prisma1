@@ -1,5 +1,6 @@
 package com.prisma.api.queries
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -93,7 +94,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
       .pathAsLong("data.todoesConnection.aggregate.count") should be(1)
   }
 
-  "the count query" should "obey pagination" in {
+  "the count query" should "obey pagination" taggedAs (IgnoreMongo) in {
     val emptyResult = server.query(
       """{
         |  todoesConnection(first: 3){
