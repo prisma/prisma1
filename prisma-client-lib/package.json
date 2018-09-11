@@ -1,5 +1,5 @@
 {
-  "name": "prisma-lib",
+  "name": "prisma-client-lib",
   "version": "0.1.44",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "MIT",
