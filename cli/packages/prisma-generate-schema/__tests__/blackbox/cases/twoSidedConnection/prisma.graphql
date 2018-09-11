@@ -107,8 +107,8 @@ type AggregateCWithoutIdWithC {
 }
 
 type AWithA {
-  x(where: AWithIdWithAWhereInput): AWithIdWithA!
-  y(where: AWithoutIdWithAWhereInput): AWithoutIdWithA!
+  x: AWithIdWithA!
+  y: AWithoutIdWithA!
 }
 
 """A connection to a list of items."""
@@ -249,8 +249,8 @@ input AWithAWhereInput {
 }
 
 type AWithB {
-  x(where: BWithIdWithAWhereInput): BWithIdWithA!
-  y(where: BWithoutIdWithAWhereInput): BWithoutIdWithA!
+  x: BWithIdWithA!
+  y: BWithoutIdWithA!
 }
 
 """A connection to a list of items."""
@@ -393,8 +393,8 @@ input AWithBWhereInput {
 }
 
 type AWithC {
-  x(where: CWithIdWithAWhereInput): CWithIdWithA!
-  y(where: CWithoutIdWithAWhereInput): CWithoutIdWithA!
+  x: CWithIdWithA!
+  y: CWithoutIdWithA!
 }
 
 """A connection to a list of items."""
@@ -513,7 +513,7 @@ input AWithCWhereInput {
 type AWithIdWithA implements Node {
   id: ID!
   field: String!
-  x(where: AWithAWhereInput): AWithA!
+  x: AWithA!
 }
 
 """A connection to a list of items."""
@@ -725,7 +725,7 @@ input AWithIdWithAWhereUniqueInput {
 type AWithIdWithB implements Node {
   id: ID!
   field: String!
-  x(where: BWithAWhereInput): BWithA!
+  x: BWithA!
 }
 
 """A connection to a list of items."""
@@ -938,7 +938,7 @@ input AWithIdWithBWhereUniqueInput {
 type AWithIdWithC implements Node {
   id: ID!
   field: String!
-  x(where: CWithAWhereInput): CWithA!
+  x: CWithA!
 }
 
 """A connection to a list of items."""
@@ -1156,7 +1156,7 @@ input AWithIdWithCWhereUniqueInput {
 
 type AWithoutIdWithA {
   field: String!
-  x(where: AWithAWhereInput): AWithA!
+  x: AWithA!
 }
 
 """A connection to a list of items."""
@@ -1320,7 +1320,7 @@ input AWithoutIdWithAWhereInput {
 
 type AWithoutIdWithB {
   field: String!
-  x(where: BWithAWhereInput): BWithA!
+  x: BWithA!
 }
 
 """A connection to a list of items."""
@@ -1485,7 +1485,7 @@ input AWithoutIdWithBWhereInput {
 
 type AWithoutIdWithC {
   field: String!
-  x(where: CWithAWhereInput): CWithA!
+  x: CWithA!
 }
 
 """A connection to a list of items."""
@@ -1641,8 +1641,8 @@ type BatchPayload {
 }
 
 type BWithA {
-  x(where: AWithIdWithBWhereInput): AWithIdWithB
-  y(where: AWithoutIdWithBWhereInput): AWithoutIdWithB
+  x: AWithIdWithB
+  y: AWithoutIdWithB
 }
 
 """A connection to a list of items."""
@@ -1783,8 +1783,8 @@ input BWithAWhereInput {
 }
 
 type BWithB {
-  x(where: BWithIdWithBWhereInput): BWithIdWithB
-  y(where: BWithoutIdWithBWhereInput): BWithoutIdWithB
+  x: BWithIdWithB
+  y: BWithoutIdWithB
 }
 
 """A connection to a list of items."""
@@ -1927,8 +1927,8 @@ input BWithBWhereInput {
 }
 
 type BWithC {
-  x(where: CWithIdWithBWhereInput): CWithIdWithB
-  y(where: CWithoutIdWithBWhereInput): CWithoutIdWithB
+  x: CWithIdWithB
+  y: CWithoutIdWithB
 }
 
 """A connection to a list of items."""
@@ -2047,7 +2047,7 @@ input BWithCWhereInput {
 type BWithIdWithA implements Node {
   id: ID!
   field: String!
-  x(where: AWithBWhereInput): AWithB
+  x: AWithB
 }
 
 """A connection to a list of items."""
@@ -2259,7 +2259,7 @@ input BWithIdWithAWhereUniqueInput {
 type BWithIdWithB implements Node {
   id: ID!
   field: String!
-  x(where: BWithBWhereInput): BWithB
+  x: BWithB
 }
 
 """A connection to a list of items."""
@@ -2472,7 +2472,7 @@ input BWithIdWithBWhereUniqueInput {
 type BWithIdWithC implements Node {
   id: ID!
   field: String!
-  x(where: CWithBWhereInput): CWithB
+  x: CWithB
 }
 
 """A connection to a list of items."""
@@ -2690,7 +2690,7 @@ input BWithIdWithCWhereUniqueInput {
 
 type BWithoutIdWithA {
   field: String!
-  x(where: AWithBWhereInput): AWithB
+  x: AWithB
 }
 
 """A connection to a list of items."""
@@ -2854,7 +2854,7 @@ input BWithoutIdWithAWhereInput {
 
 type BWithoutIdWithB {
   field: String!
-  x(where: BWithBWhereInput): BWithB
+  x: BWithB
 }
 
 """A connection to a list of items."""
@@ -3019,7 +3019,7 @@ input BWithoutIdWithBWhereInput {
 
 type BWithoutIdWithC {
   field: String!
-  x(where: CWithBWhereInput): CWithB
+  x: CWithB
 }
 
 """A connection to a list of items."""

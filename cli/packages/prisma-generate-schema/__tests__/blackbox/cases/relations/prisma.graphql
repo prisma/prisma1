@@ -34,7 +34,7 @@ type BatchPayload {
 type BillingInfo implements Node {
   id: ID!
   account: String!
-  user(where: UserWhereInput): User!
+  user: User!
 }
 
 """A connection to a list of items."""
@@ -455,7 +455,7 @@ interface Node {
 
 type OptionalDetails {
   text: String!
-  user(where: UserWhereInput): User!
+  user: User!
 }
 
 """A connection to a list of items."""
@@ -794,7 +794,7 @@ type Post implements Node {
   id: ID!
   text: String!
   count: Int!
-  user(where: UserWhereInput): User!
+  user: User!
   likes(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User!]
 }
 
@@ -1366,11 +1366,11 @@ type User implements Node {
   name: String!
   posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
   postsWithoutConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection!]
-  billingInfo(where: BillingInfoWhereInput): BillingInfo!
-  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereInput): BillingInfoWithoutConnection!
+  billingInfo: BillingInfo!
+  billingInfoWithoutConnection: BillingInfoWithoutConnection!
   likes(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
-  optionalDetails(where: OptionalDetailsWhereInput): OptionalDetails
-  optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereInput): OptionalDetailsWithoutConnection
+  optionalDetails: OptionalDetails
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection
 }
 
 """A connection to a list of items."""

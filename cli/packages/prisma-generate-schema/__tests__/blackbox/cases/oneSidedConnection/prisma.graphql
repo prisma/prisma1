@@ -1,6 +1,6 @@
 type A {
-  x(where: TypeWithIdWhereInput): TypeWithId!
-  y(where: TypeWithoutIdWhereInput): TypeWithoutId!
+  x: TypeWithId!
+  y: TypeWithoutId!
 }
 
 """A connection to a list of items."""
@@ -125,8 +125,8 @@ input AWhereInput {
 }
 
 type B {
-  x(where: TypeWithIdWhereInput): TypeWithId
-  y(where: TypeWithoutIdWhereInput): TypeWithoutId
+  x: TypeWithId
+  y: TypeWithoutId
 }
 
 type BatchPayload {
@@ -323,8 +323,8 @@ input CWhereInput {
 
 type D implements Node {
   id: ID!
-  x(where: TypeWithIdWhereInput): TypeWithId!
-  y(where: TypeWithoutIdWhereInput): TypeWithoutId!
+  x: TypeWithId!
+  y: TypeWithoutId!
 }
 
 """A connection to a list of items."""
@@ -467,8 +467,8 @@ input DWhereUniqueInput {
 
 type E implements Node {
   id: ID!
-  x(where: TypeWithIdWhereInput): TypeWithId
-  y(where: TypeWithoutIdWhereInput): TypeWithoutId
+  x: TypeWithId
+  y: TypeWithoutId
 }
 
 """A connection to a list of items."""

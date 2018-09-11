@@ -202,12 +202,12 @@ type OnlyId implements Node {
 
 type OnlyIdAndARelation implements Node {
   id: ID!
-  ref(where: OnlyIdWhereInput): OnlyId!
+  ref: OnlyId!
 }
 
 type OnlyIdAndARelation2 implements Node {
   id: ID!
-  ref(where: OnlyIdWhereInput): OnlyId
+  ref: OnlyId
 }
 
 """A connection to a list of items."""
@@ -620,7 +620,7 @@ type OnlyRelation {
 }
 
 type OnlyRelationA {
-  ref(where: OnlyRelationAWhereInput): OnlyRelationA!
+  ref: OnlyRelationA!
 }
 
 """A connection to a list of items."""
@@ -730,7 +730,7 @@ input OnlyRelationAWhereInput {
 }
 
 type OnlyRelationB {
-  ref(where: OnlyRelationBWhereInput): OnlyRelationB
+  ref: OnlyRelationB
 }
 
 """A connection to a list of items."""
