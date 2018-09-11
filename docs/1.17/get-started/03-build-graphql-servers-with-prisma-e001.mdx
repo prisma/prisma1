@@ -73,7 +73,7 @@ type Post {
 Here is how you implement the resolver functions for the six API operations defined in the GraphQL schema. Replace the current contents of `index.js` entirely with the following code snippet:
 
 ```js lineNumbers,copy
-const { prisma } = require('./prisma')
+const { prisma } = require('./prisma-client')
 const { GraphQLServer } = require('graphql-yoga')
 
 const resolvers = {
