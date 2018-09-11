@@ -25,7 +25,7 @@ datamodel: datamodel.prisma
 endpoint: http://localhost:4000
 
 generate:
-  - generator: typescript
+  - generator: typescript-client
     output: prisma.ts
 ```
 
@@ -43,9 +43,9 @@ endpoint: http://localhost:4466
 secret: mysecret42
 
 generate:
-  - generator: typescript
+  - generator: typescript-client
     output: prisma.ts
-  - generator: javascript
+  - generator: javascript-client
     output: prisma.js
   - generator: schema
     output: prisma.graphql
