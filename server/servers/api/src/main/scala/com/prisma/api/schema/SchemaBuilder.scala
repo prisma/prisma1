@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
+import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
@@ -36,7 +37,7 @@ object SchemaBuilder {
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Vector[ApiConnectorCapability] = Vector.empty,
+    capabilities: Set[ApiConnectorCapability] = Set.empty,
     enableRawAccess: Boolean = false
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
@@ -45,7 +46,7 @@ case class SchemaBuilderImpl(
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
   val dataResolver                         = apiDependencies.dataResolver(project)
   val masterDataResolver                   = apiDependencies.masterDataResolver(project)
-  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
+  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface), capabilities = capabilities)
   val objectTypes                          = objectTypeBuilder.modelObjectTypes
   val connectionTypes                      = objectTypeBuilder.modelConnectionTypes
   val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)
@@ -68,21 +69,22 @@ case class SchemaBuilderImpl(
   }
 
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {
-    val fields = project.models.map(getAllItemsField) ++
-      project.models.flatMap(getSingleItemField) ++
-      project.models.map(getAllItemsConnectionField) ++
+    val fields = project.nonEmbeddedModels.map(getAllItemsField) ++
+      project.nonEmbeddedModels.flatMap(getSingleItemField) ++
+      project.nonEmbeddedModels.map(getAllItemsConnectionField) ++
       capabilities.contains(NodeQueryCapability).toOption(nodeField)
 
     ObjectType("Query", fields)
   }
 
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
-    val fields = project.models.map(createItemField) ++
-      project.models.flatMap(updateItemField) ++
-      project.models.flatMap(deleteItemField) ++
-      project.models.flatMap(upsertItemField) ++
-      project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField) ++
+
+    val fields = project.nonEmbeddedModels.map(createItemField) ++
+      project.nonEmbeddedModels.flatMap(updateItemField) ++
+      project.nonEmbeddedModels.flatMap(deleteItemField) ++
+      project.nonEmbeddedModels.flatMap(upsertItemField) ++
+      project.nonEmbeddedModels.flatMap(updateManyField) ++
+      project.nonEmbeddedModels.map(deleteManyField) ++
       rawAccessField
     Some(ObjectType("Mutation", fields))
   }

@@ -6,6 +6,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.ApiTestDatabase
+import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.shared.models.{Project, ProjectId, ProjectWithClientId}
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
@@ -17,7 +18,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 trait SubscriptionSpecBase
-    extends ConnectorAwareTest
+    extends ConnectorAwareTest[ApiConnectorCapability]
     with AwaitUtils
     with TestFrameworkInterface
     with BeforeAndAfterEach
@@ -37,6 +38,9 @@ trait SubscriptionSpecBase
   val requestsTestKit                       = dependencies.requestsQueueTestKit
   val responsesTestKit                      = dependencies.responsePubSubTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
+
+  override def capabilities                                               = dependencies.apiConnector.capabilities
+  override def connectorHasCapability(capability: ApiConnectorCapability) = dependencies.apiConnector.hasCapability(capability)
 
   override def prismaConfig = dependencies.config
 

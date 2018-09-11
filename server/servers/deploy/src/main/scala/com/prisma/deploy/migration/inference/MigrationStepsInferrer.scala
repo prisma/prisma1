@@ -64,6 +64,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     } yield CreateModel(nextModel.name)
   }
 
+  //Fixme this needs to detect when the @embedded changes
   lazy val modelsToUpdate: Vector[UpdateModel] = {
     for {
       nextModel         <- nextSchema.models.toVector

@@ -1,10 +1,9 @@
 package com.prisma.deploy.database.schema.queries
 
-import com.prisma.deploy.specutils.ActiveDeploySpecBase
-import com.prisma.shared.models.ProjectId
+import com.prisma.deploy.specutils.DeploySpecBase
 import org.scalatest.{FlatSpec, Matchers}
 
-class ListMigrationsSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
+class ListMigrationsSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "ListMigrations" should "return all migrations for a project" in {
     val (project, _) = setupProject(basicTypesGql)

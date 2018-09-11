@@ -172,9 +172,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("id").isHidden shouldEqual true
+    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("createdAt").isHidden shouldEqual true
+    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("updatedAt").isHidden shouldEqual true
   }
 
   "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
