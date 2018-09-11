@@ -119,15 +119,17 @@ case class SchemaSyntaxValidator(
 
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
       val prismaFields = definition.fields.map {
-        case x if isRelationField(x) => RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
-        case x if isEnumField(x)     => EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+        case x if isRelationField(x) =>
+          RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
+
+        case x if isEnumField(x) =>
+          EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+
         case x if isScalarField(x) =>
           ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
       }
 
-      val isEmbedded = definition.directives.exists(_.name == "embedded")
-
-      PrismaType(definition.name, definition.tableNameDirective, isEmbedded, prismaFields)(_)
+      PrismaType(definition.name, definition.tableNameDirective, definition.isEmbedded, prismaFields)(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)

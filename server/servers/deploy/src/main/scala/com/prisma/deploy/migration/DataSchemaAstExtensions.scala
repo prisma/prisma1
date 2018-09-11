@@ -59,6 +59,7 @@ object DataSchemaAstExtensions {
       nameBeforeRename.getOrElse(objectType.name)
     }
 
+    def isEmbedded: Boolean                          = objectType.directives.exists(_.name == "embedded")
     def field_!(name: String): FieldDefinition       = field(name).getOrElse(sys.error(s"Could not find the field $name on the type ${objectType.name}"))
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
 

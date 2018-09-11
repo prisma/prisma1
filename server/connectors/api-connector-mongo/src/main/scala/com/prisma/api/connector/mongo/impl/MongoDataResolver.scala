@@ -43,9 +43,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   }
 
   // Fixme this does not use selected fields
-  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
+  override def getNodes(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val filter = args match {
+    val filter = queryArguments match {
       case Some(arg) => arg.filter
       case None      => None
     }
@@ -64,12 +64,16 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   //these are only used for relations between non-embedded types
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
-                               args: Option[QueryArguments],
+                               queryArguments: Option[QueryArguments],
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = ???
 
-  override def getRelationNodes(relationTableName: String, args: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
+  override def getRelationNodes(relationTableName: String, queryArguments: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
 
   // these should never be used and are only in here due to the interface
-  override def getScalarListValues(model: Model, listField: ScalarField, args: Option[QueryArguments]): Future[ResolverResult[ScalarListValues]] = ???
-  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]  = ???
+  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: Option[QueryArguments]): Future[ResolverResult[ScalarListValues]] = ???
+  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]            = ???
+
+  override def countByModel(model: Model, queryArguments: Option[QueryArguments]): Future[Int] = {
+    countByTable(model.dbName, queryArguments.flatMap(_.filter))
+  }
 }

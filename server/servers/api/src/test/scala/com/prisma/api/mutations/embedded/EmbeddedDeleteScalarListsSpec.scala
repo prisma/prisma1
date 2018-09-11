@@ -15,33 +15,41 @@ class EmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecB
       """type Top {
         | id: ID! @unique
         | name: String! @unique
+        | topList: [Int!]!
         | bottom: Bottom
         |}
         |
         |type Bottom @embedded{
         | name: String! @unique
-        | list: [Int!]!
+        | bottomList: [Int!]!
         |}"""
     }
 
     database.setup(project)
 
-    server.query(
+    val create = server.query(
       """mutation {
         |  createTop(
-        |    data: { name: "test", bottom: {create: {name: "test2", list: {set: [1,2,3]}} }}
+        |    data: { name: "test", topList: {set: [1,2,3]} bottom: {create: {name: "test2", bottomList: {set: [1,2,3]}} }}
         |  ){
         |    name
-        |    bottom{name, list} 
+        |    topList
+        |    bottom{name, bottomList}
         |  }
         |}
       """,
       project
     )
 
-    val res = server.query("""mutation{updateTop(where:{name:"test" }data: {bottom: {delete: true}}){name, bottom{name}}}""", project)
+    create.toString should be("""{"data":{"createTop":{"name":"test","topList":[1,2,3],"bottom":{"name":"test2","bottomList":[1,2,3]}}}}""")
 
-    res.toString should be("""{"data":{"updateTop":{"name":"test","bottom":null}}}""")
+    val deleteBottom = server.query("""mutation{updateTop(where:{name:"test" }data: {bottom: {delete: true}}){name, bottom{name}}}""", project)
+
+    deleteBottom.toString should be("""{"data":{"updateTop":{"name":"test","bottom":null}}}""")
+
+    val deleteTop = server.query("""mutation{deleteTop(where:{name:"test" }){name}}""", project)
+
+    deleteTop.toString should be("""{"data":{"deleteTop":{"name":"test"}}}""")
   }
 
 }
