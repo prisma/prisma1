@@ -16,7 +16,7 @@ The setup in this tutorial assumes that you have a running Kubernetes cluster in
 </InfoBox>
 
 <InfoBox>
-All Kubernetes definition files are also bundled in this [repository](https://github.com/akoenig/prisma-kubernetes-deployment)
+All Kubernetes definition files are also bundled in this (repository)[https://github.com/akoenig/prisma-kubernetes-deployment]
 </InfoBox>
 
 ## Prerequisites
