@@ -15,10 +15,10 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Start a local Prisma server using Docker
-- Introspect your existing database and generate a service configuration
-- Deploy a Prisma service to the local Prisma server
-- Generate a Prisma client for your service
+- Setup Prisma using Docker
+- Introspect your existing database and derive a datamodel
+- Use the datamodel to configure your Prisma API
+- Generate a Prisma client
 - Read and write data using the Prisma client
 
 <Warning>
@@ -41,12 +41,13 @@ You also need to know whether your database server uses **SSL**.
 
 ## Install the Prisma CLI
 
-The [Prisma CLI](alx4) is used to deploy and manage Prisma Services. You can install it using [Homwbrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
 
 <Code languages={["Homebrew", "NPM"]}>
 
 ```bash copy
 brew install prisma
+brew tap prisma/prisma
 ```
 
 ```bash copy
@@ -63,7 +64,7 @@ To use Prisma locally, you need to have [Docker](https://www.docker.com) install
 
 ### Create Docker Compose file
 
-To launch a Prisma server on your machine, you need a Docker Compose file that configures the Prisma server and specifies to which database it can connect:
+To launch Prisma on your machine, you need a [Docker Compose file](https://docs.docker.com/compose/compose-file/) that configures Prisma and specifies to which database it can connect:
 
 ```bash copy
 touch docker-compose.yml
@@ -107,7 +108,7 @@ services:
 
 ### Specify database connection
 
-To specify the database to which your Prisma server should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
+To specify the database to which Prisma should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
 
 - `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`.
 - `__YOUR_POSTGRES_PORT__`: The port where your Postgres server listens, e.g. `5432`.
@@ -119,7 +120,7 @@ To specify the database to which your Prisma server should connect, replace the 
 
 ### Start Prisma server
 
-To start the Prisma server and launch the connected database, run the following command:
+To start Prisma and launch the connected database, run the following command:
 
 ```bash copy
 docker-compose up -d
@@ -131,7 +132,7 @@ Your local Prisma server is now running on `http://localhost:4466`.
 
 ### Create prisma.yml
 
-Before deploying the Prisma service, you need to create a `prisma.yml`:
+Next, you need to create a `prisma.yml`:
 
 ```bash copy
 touch prisma.yml
@@ -147,7 +148,7 @@ endpoint: http://localhost:4466
 
 ### Introspect database
 
-You now need to introspect your database schema to generate the datamodel for your Prisma service:
+You now need to introspect your database schema to generate the datamodel which is the foundation for the API of your Prisma client:
 
 ```bash copy
 prisma introspect
@@ -157,9 +158,9 @@ The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-153388616
 
 Finally, you need to rename the file to `datamodel.prisma` because that's the file name you specifed in `prisma.yml`.
 
-## Deploy the Prisma service
+## Deploy the Prisma API
 
-This service configuration now needs to be _deployed_ so you can use the Prisma API of your service. Run the following command (this does **not** change anything in your database):
+You now have the _minimal_ setup to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
 prisma deploy
@@ -173,11 +174,11 @@ Launching the Prisma server may take a few minutes. In case the `prisma deploy` 
 
 ## Generate your Prisma client
 
-The Prisma client is a custom, auto-generated library that connects to the API of your Prisma service. Append the following lines to the end of your `prisma.yml`:
+The Prisma client is a custom, auto-generated library that connects to your Prisma API. Append the following lines to the end of your `prisma.yml`:
 
 ```yml copy
 generate:
-  - generator: javascript
+  - generator: javascript-client
     output: generated
 ```
 
@@ -215,7 +216,7 @@ type User {
 }
 ```
 
-If you don't have such a `User` type, feel free to adjust the following code snippets with a type that matches your datamodel.
+If you don't have such a `User` type, you need to adjust the following code snippets with a type that matches your datamodel.
 
 Add the following code in `index.js` and save it afterwards:
 
