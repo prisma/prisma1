@@ -11,21 +11,21 @@ fi
 
 export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
 
-if [ "$changedFiles" = *"docs/1.0/"* ] || \
-   [ "$changedFiles" = *"docs/1.1/"* ] || \
-   [ "$changedFiles" = *"docs/1.2/"* ] || \
-   [ "$changedFiles" = *"docs/1.3/"* ] || \
-   [ "$changedFiles" = *"docs/1.4/"* ] || \
-   [ "$changedFiles" = *"docs/1.5/"* ] || \
-   [ "$changedFiles" = *"docs/1.6/"* ] || \
-   [ "$changedFiles" = *"docs/1.7/"* ] || \
-   [ "$changedFiles" = *"docs/1.8/"* ] || \
-   [ "$changedFiles" = *"docs/1.9/"* ] || \
-   [ "$changedFiles" = *"docs/1.10/"* ] || \
-   [ "$changedFiles" = *"docs/1.11/"* ] || \
-   [ "$changedFiles" = *"docs/1.12/"* ] || \
-   [ "$changedFiles" = *"docs/1.13/"* ] || \
-   [ "$changedFiles" = *"docs/1.14/"* ];
+if [[ "$changedFiles" = *"docs/1.0/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.1/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.2/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.3/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.4/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.5/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.6/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.7/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.8/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.9/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.10/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.11/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.12/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.13/"* ]] || \
+   [[ "$changedFiles" = *"docs/1.14/"* ]];
 then
   echo "There were changes in the old docs. Going to deploy old docs"
 
@@ -48,7 +48,7 @@ then
   docs-cli -c ./docs
 
   curl -X POST -d '' $NETLIFY_HOOK
-elif [ "$changedFiles" = *"docs/"* ]; then
+elif [[ "$changedFiles" = *"docs/"* ]]; then
   echo "Deploying new docs"
   curl -X POST -d '' $NETLIFY_HOOK_DOCS_V2
 else
