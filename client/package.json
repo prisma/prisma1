@@ -34,7 +34,7 @@
     "@types/graphql": "^0.13.4",
     "@types/node": "10.0.2",
     "ava": "^0.25.0",
-    "graphql": "^0.13.2",
+    "graphql": "^14.0.2",
     "semantic-release": "^15.5.2",
     "tslint": "5.9.1",
     "tslint-config-standard": "7.0.0",
