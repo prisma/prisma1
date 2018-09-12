@@ -72,6 +72,64 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     result.pathAsString("data.node.title") should equal(title)
   }
 
+  "the node query" should "work if the given id exists when using mutiple fragments" in {
+    val project = SchemaDsl.fromString() {
+      """
+        |type Todo {
+        |  id: ID! @unique
+        |  title: String!
+        |  comment: Comment!
+        |}
+        |
+        |type Comment {
+        |  text1: String!
+        |  text2: String!
+        |}
+      """.stripMargin
+    }
+    database.setup(project)
+
+    val title = "Hello World!"
+    val id = server
+      .query(
+        s"""mutation {
+           |  createTodo(data: {title: "$title", comment: {create :{text1:"text1" text2: "text2"}}}) {
+           |    id
+           |  }
+           |}""".stripMargin,
+        project
+      )
+      .pathAsString("data.createTodo.id")
+
+    // In total there are 2 selections for the type Comment. They don't select the same fields.
+    val result = server.query(
+      s"""{
+         |  node(id: "$id"){
+         |    id
+         |    ...on Todo {
+         |      title
+         |      comment {
+         |        text1
+         |      }
+         |    }
+         |    ...todoFields
+         |  }
+         |}
+         |
+         |fragment todoFields on Todo {
+         |  comment {
+         |    text2
+         |  }
+         |}
+         |""".stripMargin,
+      project
+    )
+
+    result.pathAsString("data.node.title") should equal(title)
+    result.pathAsString("data.node.comment.text1") should equal("text1")
+    result.pathAsString("data.node.comment.text2") should equal("text2")
+  }
+
 //  "the node query" should "work if the model name changed and the stableRelayIdentifier is the same" in {
 //    val project = SchemaDsl.fromString() {
 //      """
