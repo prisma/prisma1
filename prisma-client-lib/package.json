@@ -2,7 +2,7 @@
   "name": "prisma-client-lib",
   "version": "0.1.48",
   "author": "Tim Suchanek <suchanek@prisma.io>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "files": [
     "dist"
   ],
