@@ -1,7 +1,0 @@
-type User {
-  id: ID! @unique
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  email: String! @unique
-  password: String!
-}
