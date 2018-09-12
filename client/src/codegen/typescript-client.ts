@@ -172,6 +172,10 @@ export interface Exists {\n${this.renderExists()}\n}
 
 export interface Node {}
 
+export interface Fragmentable {
+  $fragment<T>(fragment: string | Object): T
+}
+
 ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
   $exists: Exists;
   $graphql: <T ${
@@ -204,27 +208,6 @@ ${this.renderMutations()};
 export interface Subscription {
 ${this.renderSubscriptions()};
 }
-
-export interface Delegate {
-  (
-    operation: 'query' | 'mutation',
-    fieldName: string,
-    args: {
-      [key: string]: any
-    },
-    infoOrQuery?: GraphQLResolveInfo,
-    options?: Options,
-  ): Promise<any>${this.lineBreakDelimiter}
-  query: DelegateQuery${this.lineBreakDelimiter}
-  mutation: DelegateMutation${this.lineBreakDelimiter}
-  subscription: DelegateSubscription
-}
-
-export interface DelegateQuery {\n${this.renderDelegateQueries()}\n}
-
-export interface DelegateMutation {\n${this.renderDelegateMutations()}\n}
-
-export interface DelegateSubscription {\n${this.renderDelegateSubscriptions()}\n}
 
 ${this.renderClientConstructor}
 
@@ -305,7 +288,6 @@ export const prisma = new Prisma()`
     return this.renderMainMethodFields(
       'mutation',
       mutationType.getFields(),
-      false,
       true,
     )
   }
@@ -318,35 +300,6 @@ export const prisma = new Prisma()`
       'subscription',
       queryType.getFields(),
       false,
-    )
-  }
-  renderDelegateQueries() {
-    const queryType = this.schema.getQueryType()
-    if (!queryType) {
-      return '{}'
-    }
-    return this.renderMainMethodFields('query', queryType.getFields(), true)
-  }
-  renderDelegateMutations() {
-    const mutationType = this.schema.getMutationType()
-    if (!mutationType) {
-      return '{}'
-    }
-    return this.renderMainMethodFields(
-      'mutation',
-      mutationType.getFields(),
-      true,
-    )
-  }
-  renderDelegateSubscriptions() {
-    const subscriptionType = this.schema.getSubscriptionType()
-    if (!subscriptionType) {
-      return '{}'
-    }
-    return this.renderMainMethodFields(
-      'subscription',
-      subscriptionType.getFields(),
-      true,
     )
   }
   getTypeNames() {
@@ -427,16 +380,14 @@ export const prisma = new Prisma()`
 
     const infoString = renderInfo
       ? ', info?: GraphQLResolveInfo, options?: Options'
-      : isFragmentAble
-        ? `, fragment?: string | Object`
-        : ``
+      : ``
 
     // hard-coded for Prisma ease-of-use
     if (isMutation && field.name.startsWith('create')) {
       return `data${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
         args[0],
         isMutation,
-      )}, fragment?: string | Object`
+      )}`
     } else if (
       (isMutation && field.name.startsWith('delete')) || // either it's a delete mutation
       (!isMutation &&
@@ -447,7 +398,7 @@ export const prisma = new Prisma()`
       return `where${allOptional ? '?' : ''}: ${this.renderInputFieldTypeHelper(
         args[0],
         isMutation,
-      )}, fragment?: string | Object`
+      )}`
     }
 
     return `args${allOptional ? '?' : ''}: {${hasArgs ? ' ' : ''}${args
@@ -474,38 +425,25 @@ export const prisma = new Prisma()`
   renderMainMethodFields(
     operation: string,
     fields: GraphQLFieldMap<any, any>,
-    delegate = false,
     isMutation = false,
   ): string {
     return Object.keys(fields)
       .map(f => {
         const field = fields[f]
-        const T = delegate
-          ? `<T ${this.genericsDelimiter} ${this.renderFieldType({
-              field,
-              node: delegate,
-              input: false,
-              partial: delegate,
-              renderFunction: false,
-              isMutation: false,
-              isSubscription: operation === 'subscription',
-            })}>`
-          : `<T ${this.genericsDelimiter} ${this.renderFieldType({
-              field,
-              node: delegate,
-              input: false,
-              partial: delegate,
-              renderFunction: false,
-              isMutation,
-              isSubscription: operation === 'subscription',
-            })}>`
-        return `    ${field.name}: ${T}(${this.renderArgs(
+        return `    ${field.name}: (${this.renderArgs(
           field,
-          delegate,
           isMutation,
           true,
           true,
-        )}) => T`
+        )}) => ${this.renderFieldType({
+          field,
+          node: false,
+          input: false,
+          partial: false,
+          renderFunction: false,
+          isMutation,
+          isSubscription: operation === 'subscription',
+        })}`
       })
       .join(';\n')
   }
@@ -520,9 +458,6 @@ export const prisma = new Prisma()`
 
   getInternalTypeName(type) {
     const deepType = this.getDeepType(type)
-    // if (isListType(type)) {
-    //   return `${deepType}Array`
-    // }
     const name = String(deepType)
     return name === 'ID' ? 'ID_Output' : name
   }
@@ -756,6 +691,9 @@ ${fieldDefinition}
             name: subscription
               ? `Promise<AsyncIterator<${typeName}Node>>`
               : `Promise<${typeName}Node>`,
+          },
+          {
+            name: 'Fragmentable',
           },
         ].concat(interfaces)
       : interfaces
