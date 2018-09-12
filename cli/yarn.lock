@@ -89,7 +89,7 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@types/methods/-/methods-1.1.0.tgz#fa0c8c81992257903f724651ec2500ec427dc32d"
 
-"@types/node@*", "@types/node@^10.7.0":
+"@types/node@*", "@types/node@^10.9.4":
   version "10.9.4"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.9.4.tgz#0f4cb2dc7c1de6096055357f70179043c33e9897"
 
@@ -240,18 +240,6 @@ anymatch@^2.0.0:
     micromatch "^3.1.4"
     normalize-path "^2.1.1"
 
-apollo-link-error@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/apollo-link-error/-/apollo-link-error-1.1.0.tgz#ef8a64411361314364db40c1d4023b987a84860f"
-  dependencies:
-    apollo-link "^1.2.2"
-
-apollo-link-ws@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/apollo-link-ws/-/apollo-link-ws-1.0.8.tgz#ac1de8f29e92418728479a9a523af9f75b9ccc8b"
-  dependencies:
-    apollo-link "^1.2.2"
-
 apollo-link@^1.2.1, apollo-link@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-1.2.2.tgz#54c84199b18ac1af8d63553a68ca389c05217a03"
@@ -261,10 +249,11 @@ apollo-link@^1.2.1, apollo-link@^1.2.2:
     zen-observable-ts "^0.8.9"
 
 apollo-utilities@^1.0.0, apollo-utilities@^1.0.1:
-  version "1.0.20"
-  resolved "https://registry.yarnpkg.com/apollo-utilities/-/apollo-utilities-1.0.20.tgz#b14318686cb67838279fb5f009cca0ec97a4d140"
+  version "1.0.21"
+  resolved "https://registry.yarnpkg.com/apollo-utilities/-/apollo-utilities-1.0.21.tgz#cb8b5779fe275850b16046ff8373f4af2de90765"
   dependencies:
     fast-json-stable-stringify "^2.0.0"
+    fclone "^1.0.11"
 
 app-root-path@^2.0.0:
   version "2.1.0"
@@ -1150,8 +1139,8 @@ concat-stream@^1.4.7:
     typedarray "^0.0.6"
 
 config-chain@^1.1.11:
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/config-chain/-/config-chain-1.1.11.tgz#aba09747dfbe4c3e70e766a6e41586e1859fc6f2"
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/config-chain/-/config-chain-1.1.12.tgz#0fde8d091200eb5e808caf25fe618c02f48e4efa"
   dependencies:
     ini "^1.3.4"
     proto-list "~1.2.1"
@@ -1354,11 +1343,23 @@ debug@2.6.9, debug@^2.1.2, debug@^2.2.0, debug@^2.3.3, debug@^2.6.8, debug@^2.6.
   dependencies:
     ms "2.0.0"
 
-debug@3.1.0, debug@^3.1.0:
+debug@3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.1.0.tgz#5bb5a0672628b64149566ba16819e61518c67261"
   dependencies:
     ms "2.0.0"
+
+debug@^3.1.0:
+  version "3.2.5"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-3.2.5.tgz#c2418fbfd7a29f4d4f70ff4cea604d4b64c46407"
+  dependencies:
+    ms "^2.1.1"
+
+debug@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.0.1.tgz#f9bb36d439b8d1f0dd52d8fb6b46e4ebb8c1cd5b"
+  dependencies:
+    ms "^2.1.1"
 
 decamelize@^1.1.1:
   version "1.2.0"
@@ -1592,7 +1593,7 @@ duplexer3@^0.1.4:
 
 duplexer@^0.1.1:
   version "0.1.1"
-  resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
+  resolved "http://registry.npmjs.org/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -1662,8 +1663,8 @@ es-to-primitive@^1.1.1:
     is-symbol "^1.0.1"
 
 es6-promise@^4.0.3:
-  version "4.2.4"
-  resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.4.tgz#dc4221c2b16518760bd8c39a52d8f356fc00ed29"
+  version "4.2.5"
+  resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.5.tgz#da6d0d5692efb461e082c14817fe2427d8f5d054"
 
 es6-promisify@^5.0.0:
   version "5.0.0"
@@ -1984,6 +1985,10 @@ fb-watchman@^2.0.0:
   resolved "https://registry.yarnpkg.com/fb-watchman/-/fb-watchman-2.0.0.tgz#54e9abf7dfa2f26cd9b1636c588c1afc05de5d58"
   dependencies:
     bser "^2.0.0"
+
+fclone@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/fclone/-/fclone-1.0.11.tgz#10e85da38bfea7fc599341c296ee1d77266ee640"
 
 fd-slicer@~1.1.0:
   version "1.1.0"
@@ -2553,12 +2558,12 @@ graphql-config-extension-prisma@0.0.3:
     graphql-config "^1.1.4"
     prisma-yml "0.0.4"
 
-graphql-config-extension-prisma@^0.0.12:
-  version "0.0.12"
-  resolved "https://registry.yarnpkg.com/graphql-config-extension-prisma/-/graphql-config-extension-prisma-0.0.12.tgz#c591a2dd3d45eb4b039a39b5d4a6ea7ca7d8e05a"
+graphql-config-extension-prisma@^0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/graphql-config-extension-prisma/-/graphql-config-extension-prisma-0.2.2.tgz#88d6b741279ceb4330be465e5272c0dc4736a3e5"
   dependencies:
     graphql-config "^2.0.1"
-    prisma-yml "1.0.50"
+    prisma-yml "1.0.95"
 
 graphql-config@1.1.7:
   version "1.1.7"
@@ -2601,6 +2606,16 @@ graphql-config@^2.0.1:
     lodash "^4.17.4"
     minimatch "^3.0.4"
 
+graphql-config@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/graphql-config/-/graphql-config-2.2.0.tgz#fe1529eb5b77d0bf5cb32b8bbda2f5e7db622d97"
+  dependencies:
+    graphql-import "^0.7.1"
+    graphql-request "^1.5.0"
+    js-yaml "^3.10.0"
+    lodash "^4.17.4"
+    minimatch "^3.0.4"
+
 graphql-import@0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.4.0.tgz#84c1b2dfde1c9af26525bd87a6d2f84a63853501"
@@ -2614,11 +2629,12 @@ graphql-import@^0.4.0, graphql-import@^0.4.4:
   dependencies:
     lodash "^4.17.4"
 
-graphql-import@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.6.0.tgz#c00cb8a269ceea263e062922c8c81a2272d1ffcb"
+graphql-import@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/graphql-import/-/graphql-import-0.7.1.tgz#4add8d91a5f752d764b0a4a7a461fcd93136f223"
   dependencies:
     lodash "^4.17.4"
+    resolve-from "^4.0.0"
 
 graphql-playground-html@1.4.4:
   version "1.4.4"
@@ -2678,21 +2694,11 @@ graphql-tag@^2.9.2:
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.9.2.tgz#2f60a5a981375f430bf1e6e95992427dc18af686"
 
-graphql-tools@3.1.1:
+graphql-tools@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-3.1.1.tgz#d593358f01e7c8b1671a17b70ddb034dea9dbc50"
   dependencies:
     apollo-link "^1.2.2"
-    apollo-utilities "^1.0.1"
-    deprecated-decorator "^0.1.6"
-    iterall "^1.1.3"
-    uuid "^3.1.0"
-
-graphql-tools@^2.24.0:
-  version "2.24.0"
-  resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-2.24.0.tgz#bbacaad03924012a0edb8735a5e65df5d5563675"
-  dependencies:
-    apollo-link "^1.2.1"
     apollo-utilities "^1.0.1"
     deprecated-decorator "^0.1.6"
     iterall "^1.1.3"
@@ -2716,11 +2722,11 @@ graphql@^0.11.7:
   dependencies:
     iterall "1.1.3"
 
-graphql@^0.13.1, graphql@^0.13.2:
-  version "0.13.2"
-  resolved "http://registry.npmjs.org/graphql/-/graphql-0.13.2.tgz#4c740ae3c222823e7004096f832e7b93b2108270"
+graphql@^14.0.2:
+  version "14.0.2"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.0.2.tgz#7dded337a4c3fd2d075692323384034b357f5650"
   dependencies:
-    iterall "^1.2.1"
+    iterall "^1.2.2"
 
 growly@^1.3.0:
   version "1.3.0"
@@ -3250,7 +3256,7 @@ is-number@^4.0.0:
 
 is-obj@^1.0.0, is-obj@^1.0.1:
   version "1.0.1"
-  resolved "https://registry.yarnpkg.com/is-obj/-/is-obj-1.0.1.tgz#3e4729ac1f5fde025cd7d83a896dab9f4f67db0f"
+  resolved "http://registry.npmjs.org/is-obj/-/is-obj-1.0.1.tgz#3e4729ac1f5fde025cd7d83a896dab9f4f67db0f"
 
 is-object@^1.0.1:
   version "1.0.1"
@@ -3439,7 +3445,7 @@ iterall@1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.1.3.tgz#1cbbff96204056dde6656e2ed2e2226d0e6d72c9"
 
-iterall@^1.1.0, iterall@^1.1.3, iterall@^1.2.1:
+iterall@^1.1.0, iterall@^1.1.3, iterall@^1.2.1, iterall@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.2.2.tgz#92d70deb8028e0c39ff3164fdbf4d8b088130cd7"
 
@@ -4714,16 +4720,16 @@ nanomatch@^1.2.9:
     to-regex "^3.0.1"
 
 natives@^1.1.0:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/natives/-/natives-1.1.4.tgz#2f0f224fc9a7dd53407c7667c84cf8dbe773de58"
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/natives/-/natives-1.1.5.tgz#3bdbdb4104023e5dd239b56fc7ef3d9a17acc6aa"
 
 natural-compare@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
 
 needle@^2.2.1:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.2.tgz#1120ca4c41f2fcc6976fd28a8968afe239929418"
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-2.2.3.tgz#c1b04da378cd634d8befe2de965dc2cfb0fd65ca"
   dependencies:
     debug "^2.1.2"
     iconv-lite "^0.4.4"
@@ -4928,12 +4934,6 @@ object-copy@^0.1.0:
 object-keys@^1.0.12:
   version "1.0.12"
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.0.12.tgz#09c53855377575310cca62f55bb334abff7b3ed2"
-
-object-path-immutable@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/object-path-immutable/-/object-path-immutable-3.0.0.tgz#c242a7e6648c64e37bd9f363bbf2fb91ced69ff5"
-  dependencies:
-    is-plain-object "^2.0.4"
 
 object-visit@^1.0.0:
   version "1.0.1"
@@ -5521,40 +5521,32 @@ prisma-cli@^1.0.7:
     semver "^5.4.1"
     source-map-support "^0.4.18"
 
-prisma-client-lib@0.1.48:
-  version "0.1.48"
-  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-0.1.48.tgz#1d9afdf7e05ef846e47a4962eb19c63eb07a47e8"
+prisma-client-lib@0.2.48:
+  version "0.2.48"
+  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-0.2.48.tgz#e354097d966ece06db95267e673f9053deae704c"
   dependencies:
-    "@types/node" "^10.7.0"
-    apollo-link-error "^1.1.0"
-    apollo-link-ws "^1.0.8"
-    debug "^3.1.0"
-    graphql-import "^0.6.0"
+    "@types/node" "^10.9.4"
+    debug "^4.0.1"
     graphql-tag "^2.9.2"
-    graphql-tools "3.1.1"
     http-link-dataloader "^0.1.4"
     jsonwebtoken "^8.3.0"
-    object-path-immutable "^3.0.0"
     prettier "^1.14.2"
     subscriptions-transport-ws "^0.9.14"
     uppercamelcase "^3.0.0"
     ws "^6.0.0"
+    zen-observable "^0.8.9"
 
-prisma-generate-schema@0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-0.0.7.tgz#1f50ad3a97e71242a276ae767c9ef9d17dbb6659"
+prisma-generate-schema@0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-0.0.8.tgz#5521618397156bfaa1ae3495cadc69c4449e4717"
   dependencies:
     "@types/jest" "^23.3.1"
-    graphql "^0.13.2"
+    graphql "^14.0.2"
     pluralize "^7.0.0"
     popsicle "^10.0.1"
     prisma-cli "^1.0.7"
     tslint-config-prettier "^1.15.0"
     tslint-eslint-rules "^5.4.0"
-
-prisma-json-schema@0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.0.4.tgz#4ecee29c351e382fb833dad83a38c62961380458"
 
 prisma-json-schema@0.1.2:
   version "0.1.2"
@@ -5620,29 +5612,6 @@ prisma-yml@1.0.14-5:
     jsonwebtoken "^8.1.0"
     lodash "^4.17.4"
     prisma-json-schema "^0.0.1"
-    replaceall "^0.1.6"
-    scuid "^1.0.2"
-    yaml-ast-parser "^0.0.40"
-
-prisma-yml@1.0.50:
-  version "1.0.50"
-  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.0.50.tgz#c85de8fa55efc6cac59083496bc038278be04076"
-  dependencies:
-    ajv "5"
-    bluebird "^3.5.1"
-    chalk "^2.3.0"
-    debug "^3.1.0"
-    dotenv "^4.0.0"
-    fs-extra "^5.0.0"
-    graphql-request "^1.5.0"
-    http-proxy-agent "^2.1.0"
-    https-proxy-agent "^2.2.1"
-    isomorphic-fetch "^2.2.1"
-    js-yaml "^3.10.0"
-    json-stable-stringify "^1.0.1"
-    jsonwebtoken "^8.1.0"
-    lodash "^4.17.4"
-    prisma-json-schema "0.0.4"
     replaceall "^0.1.6"
     scuid "^1.0.2"
     yaml-ast-parser "^0.0.40"
@@ -5803,7 +5772,7 @@ read-pkg@^2.0.0:
 
 readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2, readable-stream@^2.3.0, readable-stream@^2.3.5:
   version "2.3.6"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.6.tgz#b11c27d88b8ff1fbe070643cf94b0c79ae1b0aaf"
+  resolved "http://registry.npmjs.org/readable-stream/-/readable-stream-2.3.6.tgz#b11c27d88b8ff1fbe070643cf94b0c79ae1b0aaf"
   dependencies:
     core-util-is "~1.0.0"
     inherits "~2.0.3"
@@ -5815,7 +5784,7 @@ readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable
 
 readable-stream@~1.0.0, readable-stream@~1.0.31:
   version "1.0.34"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
+  resolved "http://registry.npmjs.org/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
   dependencies:
     core-util-is "~1.0.0"
     inherits "~2.0.1"
@@ -6003,6 +5972,10 @@ resolve-dir@^1.0.0:
 resolve-from@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-3.0.0.tgz#b22c7af7d9d6881bc8b6e653335eebcb0a188748"
+
+resolve-from@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-4.0.0.tgz#4abcd852ad32dd7baabfe9b40e00a36db5f392e6"
 
 resolve-url@^0.2.1:
   version "0.2.1"
@@ -6467,8 +6440,8 @@ string-length@^2.0.0:
     strip-ansi "^4.0.0"
 
 string-similarity@^1.2.0:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/string-similarity/-/string-similarity-1.2.1.tgz#a1e01012e8221587409816c133c28037ea6be2e6"
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/string-similarity/-/string-similarity-1.2.2.tgz#99b2c20a3c9bbb3903964eae1d89856db3d8db9b"
   dependencies:
     lodash.every "^4.6.0"
     lodash.flattendeep "^4.4.0"
@@ -6689,7 +6662,7 @@ through2@^2.0.3:
 
 through@2, through@^2.3.6:
   version "2.3.8"
-  resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
+  resolved "http://registry.npmjs.org/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
 
 timed-out@4.0.1, timed-out@^4.0.0:
   version "4.0.1"
@@ -7390,7 +7363,7 @@ zen-observable-ts@^0.8.9:
   dependencies:
     zen-observable "^0.8.0"
 
-zen-observable@^0.8.0:
+zen-observable@^0.8.0, zen-observable@^0.8.9:
   version "0.8.9"
   resolved "https://registry.yarnpkg.com/zen-observable/-/zen-observable-0.8.9.tgz#0475c760ff0eda046bbdfa4dc3f95d392807ac53"
 

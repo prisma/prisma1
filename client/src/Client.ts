@@ -18,20 +18,21 @@ import { sign } from 'jsonwebtoken'
 import { BatchedGraphQLClient } from 'http-link-dataloader'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
 import { observableToAsyncIterable } from './utils/observableToAsyncIterable'
+import * as WS from 'ws'
 // to make the TS compiler happy
 
 let instructionId = 0
 
 export interface InstructionsMap {
-  [key: string]: Instruction[]
+  [key: string]: Array<Instruction>
 }
 
 export interface Instruction {
   fieldName: string
   args?: any
-  field: GraphQLField<any, any>
-  fragment: string | object
+  field?: GraphQLField<any, any>
   typeName: string
+  fragment?: string
 }
 
 export class Client {
@@ -75,7 +76,9 @@ export class Client {
         connectionParams: {
           Authorization: `Bearer ${token}`,
         },
+        inactivityTimeout: 60000,
       },
+      WS,
     )
   }
 
@@ -316,48 +319,64 @@ export class Client {
           [Symbol.toStringTag]: 'Promise',
         }
         if (type instanceof GraphQLObjectType) {
+          const fieldsArray = (Object.entries(type.getFields()) as any).concat([
+            [`$fragment`, null],
+          ])
           value = {
             ...value,
-            ...Object.entries(type.getFields())
+            ...fieldsArray
               .map(([fieldName, field]) => {
                 return {
                   key: fieldName,
-                  value: (args, arg2, fragment) => {
+                  value: (args, arg2) => {
                     const id = typeof args === 'number' ? args : ++instructionId
 
                     let realArgs = typeof args === 'number' ? arg2 : args
                     this.currentInstructions[id] =
                       this.currentInstructions[id] || []
-                    if (this.currentInstructions[id].length === 0) {
-                      if (name === 'Mutation') {
-                        if (fieldName.startsWith('create')) {
-                          realArgs = { data: realArgs }
-                        }
-                        if (fieldName.startsWith('delete')) {
-                          realArgs = { where: realArgs }
-                        }
-                      } else if (name === 'Query') {
-                        if (field.args.length === 1) {
-                          realArgs = { where: realArgs }
-                        }
-                      }
-                    }
-                    this.currentInstructions[id].push({
-                      fieldName,
-                      args: realArgs,
-                      field,
-                      typeName: type.name,
-                      fragment: typeof args === 'number' ? fragment : arg2,
-                    })
-                    const typeName = this.getTypeName(field.type)
 
-                    // this is black magic. what we do here: bind both .then, .catch and all resolvers to `id`
-                    return mapValues(this.types[typeName], (key, value) => {
-                      if (typeof value === 'function') {
-                        return value.bind(this, id)
+                    if (fieldName === '$fragment') {
+                      const currentInstructions = this.currentInstructions[id]
+                      currentInstructions[
+                        currentInstructions.length - 1
+                      ].fragment = arg2
+                      return mapValues(value, (key, v) => {
+                        if (typeof v === 'function') {
+                          return v.bind(this, id)
+                        }
+                        return v
+                      })
+                    } else {
+                      if (this.currentInstructions[id].length === 0) {
+                        if (name === 'Mutation') {
+                          if (fieldName.startsWith('create')) {
+                            realArgs = { data: realArgs }
+                          }
+                          if (fieldName.startsWith('delete')) {
+                            realArgs = { where: realArgs }
+                          }
+                        } else if (name === 'Query') {
+                          if (field.args.length === 1) {
+                            realArgs = { where: realArgs }
+                          }
+                        }
                       }
-                      return value
-                    })
+                      this.currentInstructions[id].push({
+                        fieldName,
+                        args: realArgs,
+                        field,
+                        typeName: type.name,
+                      })
+                      const typeName = this.getTypeName(field.type)
+
+                      // this is black magic. what we do here: bind both .then, .catch and all resolvers to `id`
+                      return mapValues(this.types[typeName], (key, value) => {
+                        if (typeof value === 'function') {
+                          return value.bind(this, id)
+                        }
+                        return value
+                      })
+                    }
                   },
                 }
               })

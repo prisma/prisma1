@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@types/jest": "^23.3.1",
-    "graphql": "^0.13.2",
+    "graphql": "^14.0.2",
     "pluralize": "^7.0.0",
     "popsicle": "^10.0.1",
     "prisma-cli": "^1.0.7",
