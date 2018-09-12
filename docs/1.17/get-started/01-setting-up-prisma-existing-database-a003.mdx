@@ -46,8 +46,8 @@ The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it 
 <Code languages={["Homebrew", "NPM"]}>
 
 ```bash copy
-brew install prisma
 brew tap prisma/prisma
+brew install prisma
 ```
 
 ```bash copy
@@ -60,7 +60,16 @@ npm install -g prisma@beta
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
 
+> Don't want to use Docker? You can also get started with a [demo database](a001) for now.
+
 ## Set up Prisma server
+
+### Create new directory
+
+```bash copy
+mkdir hello-world
+cd hello-world
+```
 
 ### Create Docker Compose file
 
@@ -101,7 +110,7 @@ services:
 ```
 
 ```yml copy
-# coming soon
+# Coming soon. See https://github.com/prisma/prisma/issues/2506
 ```
 
 </Code>
@@ -202,7 +211,7 @@ Next, initialize an empty NPM project in the current directory and install the r
 
 ```bash copy
 npm init -y
-npm install --save prisma-lib graphql
+npm install --save prisma-client-lib graphql
 ```
 
 ## Read and write data using the Prisma client
