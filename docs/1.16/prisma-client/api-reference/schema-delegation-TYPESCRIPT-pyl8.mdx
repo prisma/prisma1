@@ -1,0 +1,75 @@
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: 'Schema Delegation (TypeScript)',
+  position: 80,
+  technology: "typescript",
+  technologyOrder: 2,
+  articleGroup: "Schema Delegation",
+}
+
+
+## Overview
+
+[Schema delegation](https://www.prisma.io/blog/graphql-schema-stitching-explained-schema-delegation-4c6caf468405/) is a concept from GraphQL. It means that a GraphQL server forwards ("delegates") an incoming request to another GraphQL server to be resolved there instead of resolving the request itself. It therefore passes the `info` object to the underlying GraphQL schema of the final GraphQL server. 
+
+> Learn more about the `info` object in [this](https://www.prisma.io/blog/graphql-server-basics-demystifying-the-info-argument-in-graphql-resolvers-6f26249f613a/) article.
+
+Schema delegation is only applicable in the context of a GraphQL resolver function where the `info` object is available. The Prisma client exposes schema delegation functionality via the `$delegate` property. For each operation in your [Prisma GraphQL API](./prisma-graphql-api), the `$delegate` property exposes one function. The function needs to be prefixed with the _operation type_, i.e. `query`, `mutation` or `subscription`. For example, the delegate function for a `users` query and a `createUser` mutation need to be invoked as follows: `prisma.query.users(...)` and `prisma.mutation.createUser(...)`. 
+Generally, the API of the `$delegate` property is similar to the one of a [GraphQL Binding](https://oss.prisma.io/content/graphql-binding/01-overview).
+
+When one of the delegate functions is invoked, the Prisma client constructs a corresponding GraphQL query and injects the selection set that was provided in the first GraphQL query into the newly constructed one.
+
+### Examples
+
+_Delegate a `users` query to the Prisma GraphQL API_:
+
+Schema definition:
+
+```graphql
+# import User from "prisma.graphql"
+
+type Query {
+  users: [User!]!
+}
+```
+
+Resolver implementation:
+
+```js
+const resolvers = {
+  Query: {
+    users = (root, args, context, info: GraphQLResolveInfo) => {
+      return prisma.$delegate.query.users(
+        info,
+      })
+    }
+  }
+}
+```
+
+_Delegate a `createUser` mutation to the Prisma GraphQL API_:
+
+Schema definition:
+
+```graphql
+# import User from "prisma.graphql"
+
+type Mutation {
+  createUser: User!
+}
+```
+
+Resolver implementation:
+
+```js
+const resolvers = {
+  Query: {
+    users = (root, args, context, info: GraphQLResolveInfo) => {
+      return prisma.$delegate.mutation.createUser(
+        info,
+      })
+    }
+  }
+}
+```

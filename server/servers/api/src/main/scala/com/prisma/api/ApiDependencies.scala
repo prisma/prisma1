@@ -9,6 +9,7 @@ import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.auth.{Auth, AuthImpl}
+import com.prisma.config.PrismaConfig
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
@@ -24,6 +25,7 @@ trait ApiDependencies extends AwaitUtils {
 
   implicit val system: ActorSystem
   val materializer: ActorMaterializer
+  def config: PrismaConfig
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
   def invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
@@ -33,7 +35,7 @@ trait ApiDependencies extends AwaitUtils {
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Vector[ApiConnectorCapability] = apiConnector.capabilities
+  def capabilities: Set[ApiConnectorCapability] = apiConnector.capabilities
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))

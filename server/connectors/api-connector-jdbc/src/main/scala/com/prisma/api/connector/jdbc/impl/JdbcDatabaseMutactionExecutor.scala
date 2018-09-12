@@ -4,6 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.gc_values.IdGCValue
+import play.api.libs.json.{JsNumber, JsObject, JsValue}
 import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,6 +16,11 @@ case class JdbcDatabaseMutactionExecutor(
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
+
+  override def executeRaw(query: String): Future[JsValue] = {
+    val action = JdbcActionsBuilder("", slickDatabase).executeRaw(query)
+    slickDatabase.database.run(action)
+  }
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = true)
 
@@ -46,7 +52,7 @@ case class JdbcDatabaseMutactionExecutor(
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
           childResults <- executeTopLevelMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction], mutationBuilder)
                            .map(Vector(_))
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
         for {
@@ -56,12 +62,12 @@ case class JdbcDatabaseMutactionExecutor(
                              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
                            case _ => DBIO.successful(Vector.empty)
                          }
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
-        } yield MutactionResults(result, Vector.empty)
+        } yield MutactionResults(Vector(result))
     }
   }
 
@@ -76,7 +82,7 @@ case class JdbcDatabaseMutactionExecutor(
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- executeNestedMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction], parentId, mutationBuilder)
                            .map(Vector(_))
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
         for {
@@ -86,12 +92,12 @@ case class JdbcDatabaseMutactionExecutor(
                              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
                            case _ => DBIO.successful(Vector.empty)
                          }
-        } yield MutactionResults(result, childResults)
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
-        } yield MutactionResults(result, Vector.empty)
+        } yield MutactionResults(Vector(result))
     }
   }
 

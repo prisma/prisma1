@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
+import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
 import com.prisma.deploy.connector.postgres.impls._
@@ -25,6 +26,7 @@ case class PostgresDeployConnector(
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(managementDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
+  override def capabilities                                          = if (isActive) Set(MigrationsCapability) else Set.empty
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

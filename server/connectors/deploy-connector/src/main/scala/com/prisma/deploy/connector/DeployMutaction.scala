@@ -2,12 +2,14 @@ package com.prisma.deploy.connector
 
 import com.prisma.shared.models._
 
-sealed trait DeployMutaction
+sealed trait DeployMutaction {
+  def projectId: String
+}
 
 //  new project deploy mutactions
 
 case class CreateProject(projectId: String)  extends DeployMutaction
-case class TruncateProject(project: Project) extends DeployMutaction
+case class TruncateProject(project: Project) extends DeployMutaction { val projectId = project.id }
 case class DeleteProject(projectId: String)  extends DeployMutaction
 
 // those should be named fields

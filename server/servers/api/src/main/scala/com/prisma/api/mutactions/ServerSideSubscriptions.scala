@@ -14,9 +14,9 @@ object ServerSideSubscriptions {
       mutactionResults: MutactionResults,
       requestId: Id
   ): Vector[ExecuteServerSideSubscription] = {
-    val createResults    = mutactionResults.allResults.collect { case m: CreateNodeResult => m }
-    val updateMutactions = mutactionResults.allResults.collect { case x: UpdateNodeResult => x }
-    val deleteMutactions = mutactionResults.allResults.collect { case x: DeleteNodeResult => x }
+    val createResults    = mutactionResults.results.collect { case m: CreateNodeResult => m }
+    val updateMutactions = mutactionResults.results.collect { case x: UpdateNodeResult => x }
+    val deleteMutactions = mutactionResults.results.collect { case x: DeleteNodeResult => x }
 
     val result = extractFromCreateMutactions(project, createResults, requestId) ++
       extractFromUpdateMutactions(project, updateMutactions, requestId) ++

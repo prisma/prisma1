@@ -1,0 +1,144 @@
+export const meta = {
+  title: 'Introduction to GraphQL Server Development',
+  position: 30,
+  description: 'This page is introduces the basics of GraphQL server development. It is only relevant if you are not familiar with concepts such as the GraphQL schema, its root fields and resolver functions. If you already know about these, you can skip this page.'
+}
+
+## The GraphQL schema
+
+### The types in the GraphQL schema define the API operations
+
+At the core of every GraphQL API there is a [_GraphQL schema_](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) that clearly defines all available API operations and data types. The schema is written using a dedicated syntax called _Schema Definition Language_ (SDL). SDL is simple, concise and straightforward to use.
+
+Here is an example demonstrating how to define a simple type `User` that has two fields, `id` and `name`:
+
+```graphql
+type User {
+  id: ID!
+  name: String!
+}
+```
+
+Every GraphQL schema has three special _root types_: `Query`, `Mutation` and `Subscription`. The fields on these root types are called _root fields_ and define the actual _operations_ of the API. 
+
+![](https://imgur.com/Ag8R7rn.png)
+
+- `Query`: Operations that *read* data.
+- `Mutation`: Operations that cause *side effects* on the server-side (e.g. write data to the database).
+- `Subscription`: Operations that let you subscribe to *events* and receive continuous updates in realtime from the server (via a long-lived connection).
+
+### Root fields define the entry-points for the API
+
+As an example, consider the `Query` and `Mutation` types:
+
+```graphql
+type Query {
+  users: [User!]!
+}
+
+type Mutation {
+  createUser(name: String!): User!
+}
+
+type User {
+  id: ID!
+  name: String!
+}
+```
+
+Based on this GraphQL schema, it is possible to precisely derive what the available API operations are:
+
+1. The `users` field on `Query` means the API exposes a `users` query:
+
+  ```graphql
+  # The `users` root field on `Query` allows for a query like this
+  query {
+    users {
+      id
+      name
+    }
+  }
+  ```
+
+1. Similarly, the `createUser` root field on the `Mutation` type means that it is possible to send a `creareUser` mutation to the API:
+
+  ```graphql
+  # The `createUser` root field on `Mutation` allows for a mutation like this
+  mutation {
+    createUser(name: "Sarah") {
+      id
+    }
+  }
+  ```
+
+The first field in a query, mutation or subscription operation _always_ has to be a root field from the respective GraphQL schema - otherwise the operation will be rejected by the GraphQL server.
+
+The collection of all fields and their arguments inside a query/mutation/subscriptions is called the _selection set_ of the operation. The _type_ of the root field determines which fields can be further included in the operation's selection set. In the case of the above example, the types of the root fields are `User` and `[User!]!` which in both cases allows to include any fields of the `User` type.
+
+![](https://i.imgur.com/nogExCy.png)
+
+If the root field had a [scalar](http://graphql.org/learn/schema/#scalar-types) type, it wouldn't be possible to include any further fields in the selection set. As an example, consider the following GraphQL schema:
+
+```graphql
+type Query {
+  hello: String!
+}
+```
+
+A GraphQL API defined by this query only accepts a single operation:
+
+```graphql
+query {
+  hello
+}
+```
+
+Because the type of the `hello` root field is `String!` (which is a scalar type), it is not possible to include further fields in the selection set of the `hello` query.
+
+## Resolver functions
+
+### Schema definition vs Resolver implementation
+
+GraphQL has a clear separation of _schema definition_ and _implementation_. While the SDL schema definition only _describes_ the API operations and data types, the _concrete implementation_ is achieved with so-called _resolver_ functions. 
+
+The combination of both, the schema definition and resolver implementations, is often referred to as an _executable schema_.
+
+Every field in the GraphQL schema is backed by one resolver function, meaning there are precisely as many resolver functions as fields in the GraphQL schema (this also includes fields on types other than root types).
+
+![](https://i.imgur.com/fwAob9g.png)
+
+The resolver function for a field is responsible for fetching the data for precisely that field. For example, the resolver for the `users` root field above needs to fetch (and return) a list of `User` objects.
+
+The GraphQL query resolution process therefore merely becomes an action of invoking the resolver functions for the fields contained in the query, because each resolver returns the data for its field.
+
+### Anatomy of a resolver function
+
+A resolver function always takes four arguments (in the following order):
+
+1. `parent` (also sometimes called `root`): Queries are resolved by the GraphQL execution engine which invokes the resolvers for the fields contained in the query. Because queries can contain _nested_ fields, there might be multiple _levels_ of resolver execution. The `parent` argument always represents the return value from the _previous_ resolver call. See [here](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e#query-execution) for more info.
+2. `args`: Potential arguments that were provided for that field (e.g. the `name` of the `User` in the example of the `createUser` mutation above).
+3. `context`: An object that gets passed through the resolver chain that each resolver can write to and read from (basically a means for resolvers to communicate and share information).
+4. `info`: An AST representation of the query or mutation. You can read more about in details in this article: [Demystifying the `info` Argument in GraphQL Resolvers](https://www.prisma.io/blog/graphql-server-basics-demystifying-the-info-argument-in-graphql-resolvers-6f26249f613a/).
+
+Here is a possible way how we could implement resolvers for the above schema definition (the implementation assumes there's some global object `db` that provides an interface to a database):
+
+```js
+const Query = {
+  users: (parent, args, context, info) => {
+    return db.users()
+  }
+}
+
+const Mutation = {
+  createUser: (parent, args, context, info) => {
+    return db.createUser(args.name)
+  }
+}
+
+const User = {
+  id: (parent, args, context, info) => parent.id,
+  name: (parent, args, context, info) => parent.name,
+}
+```
+
+The sample schema definition from above has exactly four fields. This resolver implementation now provides the four respective resolver functions. Notice that the resolvers for the `User` type can actually be omitted since their implementation is trivial and is inferred by the GraphQL execution engine.

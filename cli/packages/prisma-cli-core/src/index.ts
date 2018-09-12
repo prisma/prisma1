@@ -1,4 +1,4 @@
-import Deploy from './commands/deploy'
+import Deploy from './commands/deploy/deploy'
 import Init from './commands/init'
 // import Auth from './commands/auth/index'
 import Info from './commands/info/index'
@@ -18,6 +18,7 @@ import InitPrisma from './commands/init-prisma'
 import IntrospectCommand from './commands/introspect/introspect'
 import Seed from './commands/seed/seed'
 import ManagementToken from './commands/management-token'
+import Generate from './commands/generate/generate'
 
 export const groups = [
   {
@@ -89,6 +90,11 @@ export const topics = [
     description: 'Export command',
     group: 'data',
   },
+  {
+    name: 'generate',
+    description: 'Generate the schema or the bindings',
+    group: 'data',
+  },
   { name: 'reset', description: 'Reset data of a service', group: 'data' },
   /* Cloud */
   {
@@ -135,6 +141,7 @@ export const commands = [
   Account,
   ClusterToken,
   IntrospectCommand,
+  Generate,
 ]
 
 export {
@@ -155,4 +162,6 @@ export {
   Logout,
   InitPrisma,
   IntrospectCommand,
-}
+  Generate,
+  }
+

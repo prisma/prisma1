@@ -49,12 +49,13 @@ case class QueryArguments(
     filter: Option[Filter],
     orderBy: Option[OrderBy]
 ) {
-  val isWithPagination = last.orElse(first).isDefined
+  val isWithPagination = last.orElse(first).orElse(skip).isDefined
 }
 
 object QueryArguments {
-  def empty                      = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
-  def withFilter(filter: Filter) = QueryArguments.empty.copy(filter = Some(filter))
+  def empty                                              = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def withFilter(filter: Filter): QueryArguments         = QueryArguments.empty.copy(filter = Some(filter))
+  def withFilter(filter: Option[Filter]): QueryArguments = QueryArguments.empty.copy(filter = filter)
 }
 
 object SelectedFields {
@@ -122,7 +123,7 @@ sealed trait RelationCondition
 object EveryRelatedNode      extends RelationCondition
 object AtLeastOneRelatedNode extends RelationCondition
 object NoRelatedNode         extends RelationCondition
-object NoRelationCondition   extends RelationCondition
+object ToOneRelatedNode      extends RelationCondition
 
 object NodeSubscriptionFilter extends Filter
 object TrueFilter             extends Filter

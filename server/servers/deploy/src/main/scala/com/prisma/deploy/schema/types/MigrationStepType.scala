@@ -43,7 +43,8 @@ object MigrationStepType {
 
   lazy val UpdateModelType = fieldsHelper[UpdateModel](
     Field("name", StringType, resolve = _.value.name),
-    Field("newName", StringType, resolve = _.value.newName)
+    Field("newName", StringType, resolve = _.value.newName),
+    Field("isEmbedded", OptionType(BooleanType), resolve = _.value.isEmbedded)
   )
 
   lazy val CreateEnumType = fieldsHelper[CreateEnum](

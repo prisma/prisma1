@@ -16,19 +16,8 @@ trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   def readNodeId(model: Model): ReadsResultSet[IdGCValue] = ReadsResultSet(_.getId(model))
 
   def readPrismaNodeWithParent(rf: RelationField, fields: Set[ScalarField]): ReadsResultSet[PrismaNodeWithParent] = ReadsResultSet { rs =>
-    val node = readPrismaNode(rf.relatedModel_!, fields, rs)
-
-    val parentId = if (rf.relation.isSameModelRelation) {
-      val firstSide  = rs.getParentId(RelationSide.relationColumnAliasA, rf.model.idField_!.typeIdentifier)
-      val secondSide = rs.getParentId(RelationSide.relationColumnAliasB, rf.model.idField_!.typeIdentifier)
-      if (firstSide == node.id) secondSide else firstSide
-    } else {
-      val parentRelationSide = rf.relation.modelA match {
-        case x if x == rf.relatedModel_! => RelationSide.relationColumnAliasB
-        case _                           => RelationSide.relationColumnAliasA
-      }
-      rs.getParentId(parentRelationSide, rf.model.idField_!.typeIdentifier)
-    }
+    val node     = readPrismaNode(rf.relatedModel_!, fields, rs)
+    val parentId = rs.getParentId(parentModelAlias, rf.model.idField_!.typeIdentifier)
     PrismaNodeWithParent(parentId, node)
   }
 
