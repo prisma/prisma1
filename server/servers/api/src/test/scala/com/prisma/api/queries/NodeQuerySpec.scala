@@ -106,9 +106,11 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
       s"""{
          |  node(id: "$id"){
          |    id
-         |    title
-         |    comment {
-         |      text1
+         |    ...on Todo {
+         |      title
+         |      comment {
+         |        text1
+         |      }
          |    }
          |    ...todoFields
          |  }
