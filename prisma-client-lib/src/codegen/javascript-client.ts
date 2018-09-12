@@ -19,7 +19,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var prisma_lib_1 = require("prisma-client-lib");
 var typeDefs = require("./graphql").typeDefs
 
-exports.Prisma = prisma_lib_1.makePrismaBindingClass(${args});
+exports.Prisma = prisma_lib_1.makePrismaClientClass(${args});
 exports.prisma = new exports.Prisma();
 `)
   }

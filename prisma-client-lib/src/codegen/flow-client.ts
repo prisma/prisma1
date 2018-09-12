@@ -23,11 +23,11 @@ export class FlowGenerator extends TypescriptGenerator {
 import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import type { IResolvers } from 'graphql-tools/dist/Interfaces'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
-import { makePrismaBindingClass } from 'prisma-client-lib'
+import { makePrismaClientClass } from 'prisma-client-lib'
 import { typeDefs } from './graphql'`
   }
-  renderBindingConstructor() {
-    return `export interface BindingConstructor<T> {
+  renderClientConstructor() {
+    return `export interface ClientConstructor<T> {
   new(options?: BPOType): T
 }
 `
@@ -58,6 +58,6 @@ import { typeDefs } from './graphql'`
   // renderExports(options?: RenderOptions) {
   //   const args = this.renderPrismaClassArgs(options)
 
-  //   return `export const prisma: Prisma = makePrismaBindingClass(${args})`
+  //   return `export const prisma: Prisma = makePrismaClientClass(${args})`
   // }
 }

@@ -1,7 +1,7 @@
-import { Prisma as BaseBinding } from './Prisma'
+import { Prisma as BaseClient } from './Prisma'
 import { BasePrismaOptions } from './types'
 
-export function makePrismaBindingClass<T>({
+export function makePrismaClientClass<T>({
   typeDefs,
   endpoint,
   secret,
@@ -10,7 +10,7 @@ export function makePrismaBindingClass<T>({
   endpoint: string
   secret?: string
 }): T {
-  return class Binding extends BaseBinding {
+  return class Client extends BaseClient {
     constructor(options: BasePrismaOptions) {
       super({ typeDefs, endpoint, secret, ...options })
     }

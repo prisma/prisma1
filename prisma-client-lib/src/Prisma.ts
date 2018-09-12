@@ -1,16 +1,15 @@
 import { Exists, PrismaOptions } from './types'
 import { sign } from 'jsonwebtoken'
 import { makePrismaLink } from './link'
-import { buildExistsInfo } from './info'
 import { SharedLink } from './SharedLink'
 import { getTypesAndWhere } from './utils'
 import { getCachedTypeDefs, getCachedRemoteSchema } from './cache'
-import { Binding } from '.'
+import { Client } from './Client'
 import { BatchedGraphQLClient } from 'http-link-dataloader'
 
 const sharedLink = new SharedLink()
 
-export class Prisma extends Binding {
+export class Prisma extends Client {
   $exists: Exists
   token: string
   client: BatchedGraphQLClient
@@ -80,15 +79,16 @@ export class Prisma extends Binding {
       const types = getTypesAndWhere(queryType)
 
       return types.reduce((acc, { type, pluralFieldName }) => {
+        const firstLetterLowercaseTypeName =
+          type[0].toLowerCase() + type.slice(1)
         return {
           ...acc,
-          [type[0].toLowerCase() + type.slice(1)]: args =>
-            this.$delegate(
-              'query',
-              pluralFieldName,
-              { where: args },
-              buildExistsInfo(pluralFieldName, this.schema),
-            ).then(res => res.length > 0),
+          [firstLetterLowercaseTypeName]: args => {
+            // TODO: when the fragment api is there, only add one field
+            return this[pluralFieldName]({ where: args }).then(
+              res => res.length > 0,
+            )
+          },
         }
       }, {})
     }

@@ -26,14 +26,14 @@ export interface SubscriptionMap {
   ) => AsyncIterator<any> | Promise<AsyncIterator<any>>
 }
 
-export interface BindingOptions {
+export interface ClientOptions {
   fragmentReplacements?: FragmentReplacement[]
   schema: GraphQLSchema
   before?: () => void
   debug?: boolean
 }
 
-export interface BindingWithoutSchemaOptions {
+export interface ClientWithoutSchemaOptions {
   fragmentReplacements?: FragmentReplacement[]
   before?: () => void
 }

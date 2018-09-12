@@ -96,7 +96,7 @@ export function forwardTo(bindingName: string) {
         }' not found on binding '${bindingName}'.`
       }
     } else {
-      message += `Binding '${bindingName}' not found.`
+      message += `Client '${bindingName}' not found.`
     }
 
     throw new Error(message)

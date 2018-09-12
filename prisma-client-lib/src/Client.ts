@@ -1,9 +1,4 @@
-import {
-  QueryMap,
-  BindingOptions,
-  SubscriptionMap /*, Operation*/,
-  QueryOrMutation,
-} from './types'
+import { ClientOptions } from './types'
 import {
   GraphQLObjectType,
   GraphQLScalarType,
@@ -13,16 +8,13 @@ import {
   execute,
   subscribe,
   GraphQLField,
+  GraphQLSchema,
 } from 'graphql'
 import mapAsyncIterator from './utils/mapAsyncIterator'
-import { Delegate } from './Delegate'
 import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
 const log = require('debug')('binding')
 // to make the TS compiler happy
-
-// to avoid recreation on each instantiation for the same schema, we cache the created methods
-const delegateCache = new Map()
 
 let instructionId = 0
 
@@ -38,59 +30,21 @@ export interface Instruction {
   typeName: string
 }
 
-export class Binding extends Delegate {
+export class Client {
   // subscription: SubscriptionMap
   types: any
   query: any
   $subscribe: any
   debug
   mutation: any
+  schema: GraphQLSchema
   currentInstructions: InstructionsMap = {}
 
-  constructor({ schema, fragmentReplacements, before, debug }: BindingOptions) {
-    super({ schema, fragmentReplacements, before })
+  constructor({ schema, debug }: ClientOptions) {
     this.debug = debug
+    this.schema = schema
 
     this.buildMethods()
-  }
-
-  buildQueryMethods(operation: QueryOrMutation): QueryMap {
-    const queryType =
-      operation === 'query'
-        ? this.schema.getQueryType()
-        : this.schema.getMutationType()
-    if (!queryType) {
-      return {}
-    }
-    const fields = queryType.getFields()
-    return Object.entries(fields)
-      .map(([fieldName, field]) => {
-        return {
-          key: fieldName,
-          value: (args, info, options) => {
-            return this.$delegate(operation, fieldName, args, info, options)
-          },
-        }
-      })
-      .reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {})
-  }
-
-  buildSubscriptionMethods(): SubscriptionMap {
-    const subscriptionType = this.schema.getSubscriptionType()
-    if (!subscriptionType) {
-      return {}
-    }
-    const fields = subscriptionType.getFields()
-    return Object.entries(fields)
-      .map(([fieldName, field]) => {
-        return {
-          key: fieldName,
-          value: (args, info, options) => {
-            return this.delegateSubscription(fieldName, args, info, options)
-          },
-        }
-      })
-      .reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {})
   }
 
   getOperation(instructions) {
@@ -121,7 +75,6 @@ export class Binding extends Delegate {
         },
       ],
     }
-    this.before()
     if (this.debug) {
       console.log(`\nQuery:`)
       const query = print(document)
@@ -313,30 +266,6 @@ export class Binding extends Delegate {
   }
 
   buildMethods() {
-    this.buildDelegateMethods()
-    this.buildORMMethods()
-  }
-
-  buildDelegateMethods() {
-    const methods = this.getDelegateMethods()
-    Object.assign(this.$delegate, methods)
-  }
-
-  getDelegateMethods() {
-    const cachedMethods = delegateCache.get(this.schema)
-    if (cachedMethods) {
-      return cachedMethods
-    }
-    const methods = {
-      query: this.buildQueryMethods('query'),
-      mutation: this.buildQueryMethods('mutation'),
-      subscription: this.buildSubscriptionMethods(),
-    }
-    delegateCache.set(this.schema, methods)
-    return methods
-  }
-
-  buildORMMethods() {
     this.types = this.getORMTypes()
     Object.assign(this, this.types.Query)
     Object.assign(this, this.types.Mutation)
