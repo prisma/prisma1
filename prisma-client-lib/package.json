@@ -27,7 +27,8 @@
     "prettier": "^1.14.2",
     "subscriptions-transport-ws": "^0.9.14",
     "uppercamelcase": "^3.0.0",
-    "ws": "^6.0.0"
+    "ws": "^6.0.0",
+    "zen-observable": "^0.8.9"
   },
   "devDependencies": {
     "@types/graphql": "^0.13.4",

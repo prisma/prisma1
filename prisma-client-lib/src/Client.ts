@@ -5,8 +5,6 @@ import {
   Kind,
   OperationTypeNode,
   print,
-  execute,
-  subscribe,
   GraphQLField,
   GraphQLSchema,
   buildSchema,
@@ -18,6 +16,8 @@ import { getTypesAndWhere } from './utils'
 const log = require('debug')('binding')
 import { sign } from 'jsonwebtoken'
 import { BatchedGraphQLClient } from 'http-link-dataloader'
+import { SubscriptionClient } from 'subscriptions-transport-ws'
+import { observableToAsyncIterable } from './utils/observableToAsyncIterable'
 // to make the TS compiler happy
 
 let instructionId = 0
@@ -45,6 +45,7 @@ export class Client {
   endpoint: string
   secret?: string
   client: BatchedGraphQLClient
+  subscriptionClient: SubscriptionClient
   schema: GraphQLSchema
   token: string
   currentInstructions: InstructionsMap = {}
@@ -68,6 +69,14 @@ export class Client {
           }
         : {},
     })
+    this.subscriptionClient = new SubscriptionClient(
+      endpoint.replace(/^http/, 'ws'),
+      {
+        connectionParams: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
   }
 
   getOperation(instructions) {
@@ -144,10 +153,12 @@ export class Client {
   }
 
   execute(operation, document, variables) {
+    const query = print(document)
     if (operation === 'subscription') {
-      return subscribe(this.schema, document, {}, {}, variables)
+      const subscription = this.subscriptionClient.request({ query, variables })
+      return observableToAsyncIterable(subscription)
     }
-    return execute(this.schema, document, {}, {}, variables) as any
+    return this.client.request(query, variables).then(data => ({ data }))
   }
 
   then = async (id, resolve, reject) => {
@@ -289,13 +300,13 @@ export class Client {
   }
 
   buildMethods() {
-    this.types = this.getORMTypes()
+    this.types = this.getTypes()
     Object.assign(this, this.types.Query)
     Object.assign(this, this.types.Mutation)
     this.$subscribe = this.types.Subscription
   }
 
-  getORMTypes() {
+  getTypes() {
     const typeMap = this.schema.getTypeMap()
     const types = Object.entries(typeMap)
       .map(([name, type]) => {
