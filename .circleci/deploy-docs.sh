@@ -25,7 +25,7 @@ if [ "$changedFiles" = *"docs/1.0/"* ] || \
    [ "$changedFiles" = *"docs/1.11/"* ] || \
    [ "$changedFiles" = *"docs/1.12/"* ] || \
    [ "$changedFiles" = *"docs/1.13/"* ] || \
-   [ "$changedFiles" = *"docs/1.14/"* ]
+   [ "$changedFiles" = *"docs/1.14/"* ];
 then
   echo "There were changes in the old docs. Going to deploy old docs"
 
@@ -48,7 +48,7 @@ then
   docs-cli -c ./docs
 
   curl -X POST -d '' $NETLIFY_HOOK
-elif [ "$changedFiles" = *"docs/"* ]
+elif [ "$changedFiles" = *"docs/"* ]; then
   echo "Deploying new docs"
   curl -X POST -d '' $NETLIFY_HOOK_DOCS_V2
 else
