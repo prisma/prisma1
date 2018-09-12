@@ -20,15 +20,10 @@
   },
   "dependencies": {
     "@types/node": "^10.7.0",
-    "apollo-link-error": "^1.1.0",
-    "apollo-link-ws": "^1.0.8",
     "debug": "^3.1.0",
-    "graphql-import": "^0.6.0",
     "graphql-tag": "^2.9.2",
-    "graphql-tools": "3.1.1",
     "http-link-dataloader": "^0.1.4",
     "jsonwebtoken": "^8.3.0",
-    "object-path-immutable": "^3.0.0",
     "prettier": "^1.14.2",
     "subscriptions-transport-ws": "^0.9.14",
     "uppercamelcase": "^3.0.0",
@@ -37,7 +32,6 @@
   "devDependencies": {
     "@types/graphql": "^0.13.4",
     "@types/node": "10.0.2",
-    "apollo-link": "1.2.2",
     "ava": "^0.25.0",
     "graphql": "^0.13.2",
     "semantic-release": "^15.5.2",
@@ -46,6 +40,6 @@
     "typescript": "2.8.3"
   },
   "peerDependencies": {
-    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0"
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
   }
 }

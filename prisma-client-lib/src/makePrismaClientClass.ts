@@ -1,5 +1,5 @@
-import { Prisma as BaseClient } from './Prisma'
-import { BasePrismaOptions } from './types'
+import { Client as BaseClient } from './Client'
+import { BaseClientOptions } from './types'
 
 export function makePrismaClientClass<T>({
   typeDefs,
@@ -11,7 +11,7 @@ export function makePrismaClientClass<T>({
   secret?: string
 }): T {
   return class Client extends BaseClient {
-    constructor(options: BasePrismaOptions) {
+    constructor(options: BaseClientOptions) {
       super({ typeDefs, endpoint, secret, ...options })
     }
   } as any

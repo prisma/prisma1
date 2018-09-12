@@ -1,5 +1,4 @@
-import { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
-import { Transform } from 'graphql-tools'
+import { GraphQLResolveInfo } from 'graphql'
 
 export type Operation = 'query' | 'mutation' | 'subscription'
 // needed to exclude 'subscription' in delegate api
@@ -26,25 +25,10 @@ export interface SubscriptionMap {
   ) => AsyncIterator<any> | Promise<AsyncIterator<any>>
 }
 
-export interface ClientOptions {
-  fragmentReplacements?: FragmentReplacement[]
-  schema: GraphQLSchema
-  before?: () => void
-  debug?: boolean
-}
-
 export interface ClientWithoutSchemaOptions {
   fragmentReplacements?: FragmentReplacement[]
   before?: () => void
 }
-
-// args: {
-//   [key: string]: any
-// },
-// info?: GraphQLResolveInfo | string,
-// context?: {
-//   [key: string]: any
-// },
 
 export interface Args {
   [key: string]: any
@@ -52,11 +36,6 @@ export interface Args {
 
 export interface Context {
   [key: string]: any
-}
-
-export interface Options {
-  transforms?: Transform[]
-  context?: Context
 }
 
 export interface Filter {
@@ -67,13 +46,12 @@ export interface Exists {
   [rootField: string]: (filter: Filter) => Promise<boolean>
 }
 
-export interface BasePrismaOptions {
-  fragmentReplacements?: FragmentReplacement[]
-  endpoint?: string
+export interface BaseClientOptions {
+  endpoint: string
   secret?: string
   debug?: boolean
 }
 
-export interface PrismaOptions extends BasePrismaOptions {
+export interface ClientOptions extends BaseClientOptions {
   typeDefs: string
 }

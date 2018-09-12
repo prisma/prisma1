@@ -1,4 +1,4 @@
-import { ClientOptions } from './types'
+import { ClientOptions, Exists } from './types'
 import {
   GraphQLObjectType,
   GraphQLScalarType,
@@ -9,11 +9,15 @@ import {
   subscribe,
   GraphQLField,
   GraphQLSchema,
+  buildSchema,
 } from 'graphql'
 import mapAsyncIterator from './utils/mapAsyncIterator'
 import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
+import { getTypesAndWhere } from './utils'
 const log = require('debug')('binding')
+import { sign } from 'jsonwebtoken'
+import { BatchedGraphQLClient } from 'http-link-dataloader'
 // to make the TS compiler happy
 
 let instructionId = 0
@@ -35,16 +39,35 @@ export class Client {
   types: any
   query: any
   $subscribe: any
+  $exists: any
   debug
   mutation: any
+  endpoint: string
+  secret?: string
+  client: BatchedGraphQLClient
   schema: GraphQLSchema
+  token: string
   currentInstructions: InstructionsMap = {}
 
-  constructor({ schema, debug }: ClientOptions) {
+  constructor({ typeDefs, endpoint, secret, debug }: ClientOptions) {
     this.debug = debug
-    this.schema = schema
+    this.schema = buildSchema(typeDefs)
+    this.endpoint = endpoint
+    this.secret = secret
 
     this.buildMethods()
+
+    const token = secret ? sign({}, secret!) : undefined
+
+    this.$exists = this.buildExists()
+    this.token = token
+    this.client = new BatchedGraphQLClient(endpoint, {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {},
+    })
   }
 
   getOperation(instructions) {
@@ -354,6 +377,32 @@ export class Client {
     }
 
     return type
+  }
+
+  private buildExists(): Exists {
+    const queryType = this.schema.getQueryType()
+    if (!queryType) {
+      return {}
+    }
+    if (queryType) {
+      const types = getTypesAndWhere(queryType)
+
+      return types.reduce((acc, { type, pluralFieldName }) => {
+        const firstLetterLowercaseTypeName =
+          type[0].toLowerCase() + type.slice(1)
+        return {
+          ...acc,
+          [firstLetterLowercaseTypeName]: args => {
+            // TODO: when the fragment api is there, only add one field
+            return this[pluralFieldName]({ where: args }).then(
+              res => res.length > 0,
+            )
+          },
+        }
+      }, {})
+    }
+
+    return {}
   }
 }
 
