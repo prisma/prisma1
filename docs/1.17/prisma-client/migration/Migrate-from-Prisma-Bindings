@@ -22,13 +22,15 @@ For `prisma.yml`, change `hooks` and add `generate` with the proper generator an
 
 ```yml
 
-...
+// ...
 
 generate:
   - generator: typescript-client
-    output: ./generated/prisma-client-ts/
+    output: ./generated/prisma-client-ts
   - generator: javascript-client
-    output: ./generated/prisma-client-js/
+    output: ./generated/prisma-client-js
+  - generator: graphql-schema
+    output: ./generated/prisma.graphql
 
 hooks:
   post-deploy:
@@ -41,12 +43,12 @@ Then in the file where you instantiate `prisma-binding`, remove:
 ```js
 const { Prisma } = require("prisma-binding")
 
-...
+// ...
 
 const db = new Prisma({
   resolvers,
   typeDefs: `./generated/prisma.graphql`,
-  ...
+  // ...
 });
 ```
 
@@ -55,11 +57,11 @@ In that same file, add the following lines:
 ```js
 const { Prisma } = require("./generated/prisma-js/index")
 
-...
+// ...
 
 const prisma = new Prisma({})
 
-...
+// ...
 
 const server = new GraphQLServer({
   typeDefs: './schema.graphql',
