@@ -259,7 +259,7 @@ query {
 
 ## Using fragments for fine-grained data access
 
-The second argument on each generated query function is an optional _fragment_ that allows to specify exactly which fields of the requested model should be included in the result.
+Instead of querying all scalar fields of a model (which is the default behavior), you can specify which fields you'd like retrieve by using the `$fragment` API feature (based on GraphQL). This is useful to exclude large unneeded fields (like BLOB values or huge strings) or to even retrieve relations.
 
 ### Examples
 
@@ -279,18 +279,22 @@ fragment UserWithLinks on User {
 }
 `
 
-const userWithPosts = await prisma.users({}, fragment)
+const userWithPosts = await prisma.users().$fragment(fragment)
 ```
 
 ```graphql
 query {
   users {
-    name
-    email
-    links {
-      description
-      url
-    }
+    ...UserWithLinks
+  }
+}
+
+fragment UserWithLinks on User {
+  name
+  email
+  links {
+    description
+    url
   }
 }
 ```
