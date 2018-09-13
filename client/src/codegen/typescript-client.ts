@@ -364,10 +364,8 @@ export const prisma = new Prisma()`
 
   renderArgs(
     field: GraphQLField<any, any>,
-    renderInfo = false,
     isMutation = false,
     isTopLevel = false,
-    isFragmentAble = false,
   ) {
     const { args } = field
     const hasArgs = args.length > 0
@@ -431,7 +429,6 @@ export const prisma = new Prisma()`
         return `    ${field.name}: (${this.renderArgs(
           field,
           isMutation,
-          true,
           true,
         )}) => ${this.renderFieldType({
           field,
@@ -603,7 +600,7 @@ export const prisma = new Prisma()`
             isSubscription,
           )}>> (${
             field.args && field.args.length > 0
-              ? this.renderArgs(field, isMutation, false, false, true)
+              ? this.renderArgs(field, isMutation, false)
               : ''
           }) => T`
         } else {
@@ -634,7 +631,7 @@ export const prisma = new Prisma()`
 
     return `<T ${this.genericsDelimiter} ${typeString}>(${
       field.args && field.args.length > 0
-        ? this.renderArgs(field, isMutation, false, false, true)
+        ? this.renderArgs(field, isMutation, false)
         : ''
     }) => T`
   }
