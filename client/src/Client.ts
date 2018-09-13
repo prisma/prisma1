@@ -171,7 +171,7 @@ export class Client {
       result = await this.processInstructions(id)
       // console.log(`then: ${Date.now() - before}`)
       this.currentInstructions[id] = []
-      resolve(result)
+      return resolve(result)
     } catch (e) {
       this.currentInstructions[id] = []
       reject(e)
@@ -424,9 +424,9 @@ export class Client {
           ...acc,
           [firstLetterLowercaseTypeName]: args => {
             // TODO: when the fragment api is there, only add one field
-            return this[pluralFieldName]({ where: args }).then(
-              res => res.length > 0,
-            )
+            return this[pluralFieldName]({ where: args }).then(res => {
+              return res.length > 0
+            })
           },
         }
       }, {})
