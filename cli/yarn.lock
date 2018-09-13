@@ -5517,15 +5517,16 @@ prisma-cli@^1.0.7:
     semver "^5.4.1"
     source-map-support "^0.4.18"
 
-prisma-client-lib@0.2.50:
-  version "0.2.50"
-  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-0.2.50.tgz#a37484a41f64b1d4f29e142e3cc1bf13c0006989"
+prisma-client-lib@0.2.51:
+  version "0.2.51"
+  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-0.2.51.tgz#377c5a09087c0f7018cec4ee6c1ec28b1946029c"
   dependencies:
     "@types/node" "^10.9.4"
     debug "^4.0.1"
     graphql-tag "^2.9.2"
     http-link-dataloader "^0.1.4"
     jsonwebtoken "^8.3.0"
+    lodash.flatten "^4.4.0"
     prettier "^1.14.2"
     subscriptions-transport-ws "^0.9.14"
     uppercamelcase "^3.0.0"
