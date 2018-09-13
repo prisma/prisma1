@@ -37,11 +37,13 @@ case class ApiServer(
     with LazyLogging {
   import system.dispatcher
 
-  val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = sys.env.getOrElse("ENV", "local")
-  val projectFetcher      = apiDependencies.projectFetcher
-  val reservedSegments    = Set("private", "import", "export")
-  val projectIdEncoder    = apiDependencies.projectIdEncoder
+  val log: String => Unit   = (msg: String) => logger.info(msg)
+  val requestPrefix         = sys.env.getOrElse("ENV", "local")
+  val projectFetcher        = apiDependencies.projectFetcher
+  val reservedSegments      = Set("private", "import", "export")
+  val projectIdEncoder      = apiDependencies.projectIdEncoder
+  val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
+  val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
 
   import scala.concurrent.duration._
 
@@ -67,10 +69,8 @@ case class ApiServer(
   }
 
   val innerRoutes = extractRequest { _ =>
-    val requestId             = requestPrefix + ":api:" + createCuid()
-    val requestBeginningTime  = System.currentTimeMillis()
-    val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
-    val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
+    val requestId            = requestPrefix + ":api:" + createCuid()
+    val requestBeginningTime = System.currentTimeMillis()
 
     def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
       val end            = System.currentTimeMillis()
