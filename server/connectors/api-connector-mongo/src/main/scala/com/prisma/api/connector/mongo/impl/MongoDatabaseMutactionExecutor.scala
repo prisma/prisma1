@@ -73,7 +73,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
     case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(mutaction = m)
-    case m: TopLevelUpsertNode => ??? //delayed
+    case m: TopLevelUpsertNode => UpsertNodeInterpreter(mutaction = m) // might need relay flag
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: UpdateNodes        => UpdateNodesInterpreter(mutaction = m)
     case m: DeleteNodes        => DeleteNodesInterpreter(mutaction = m, shouldDeleteRelayIds = false)
@@ -87,7 +87,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
     case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m, includeRelayRow = false)
     case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
-    case m: NestedUpsertNode => ??? //delayed
+    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(mutaction = m) //might need relay flag
     case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
     case m: NestedConnect    => ??? //delayed
     case m: NestedDisconnect => ??? //delayed
