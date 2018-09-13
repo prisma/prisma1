@@ -25,7 +25,7 @@ import {
 import { Generator } from './Generator'
 import { getExistsTypes } from '../utils'
 
-import { flatten } from 'lodash'
+import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
 
 const { version } = require('../../package.json')
