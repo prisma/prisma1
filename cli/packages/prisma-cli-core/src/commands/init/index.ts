@@ -44,9 +44,7 @@ export default class Init extends Command {
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
-      (files.includes('prisma.yml') ||
-        files.includes('datamodel.prisma') ||
-        files.includes('docker-compose.yml'))
+      (files.includes('prisma.yml') || files.includes('datamodel.prisma'))
     ) {
       this.out.log(`
 The directory ${chalk.cyan(

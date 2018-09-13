@@ -1,6 +1,6 @@
 {
   "name": "prisma-client-lib",
-  "version": "0.2.49",
+  "version": "0.2.50",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "Apache-2.0",
   "files": [
@@ -31,7 +31,7 @@
     "zen-observable": "^0.8.9"
   },
   "devDependencies": {
-    "@types/graphql": "^14.0.0",
+    "@types/graphql": "0.13",
     "@types/node": "10.0.2",
     "ava": "^0.25.0",
     "graphql": "^14.0.2",
