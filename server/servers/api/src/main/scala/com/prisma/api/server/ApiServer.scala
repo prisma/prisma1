@@ -86,8 +86,7 @@ case class ApiServer(
       val actualDuration = logRequestEnd(projectId, throttledBy)
 
       if (logSlowQueries && actualDuration > slowQueryLogThreshold) {
-        println("SLOW QUERY")
-        println("DURATION: " + actualDuration)
+        println("SLOW QUERY - DURATION: " + actualDuration)
         println("QUERY: " + json)
       }
     }
