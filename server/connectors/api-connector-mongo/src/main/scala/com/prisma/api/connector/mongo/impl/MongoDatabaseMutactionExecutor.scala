@@ -47,6 +47,20 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
       fn: T => MongoAction[MutactionResults]
   ): MongoAction[MutactionResults] = {
     mutaction match {
+      case m: UpsertNode =>
+        for {
+          result <- fn(mutaction)
+//          childResults <- result match {
+//                           case results: MutactionResults =>
+//                             val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
+//                             val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
+//
+//                             val nestedMutactionsStillToRun = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
+//                             MongoAction.seq(nestedMutactionsStillToRun)
+//                           case _ => MongoAction.successful(Vector.empty)
+//                         }
+        } yield MutactionResults(result.results) //++ childResults.flatMap(_.results))
+
       case m: FurtherNestedMutaction =>
         for {
           result <- fn(mutaction)

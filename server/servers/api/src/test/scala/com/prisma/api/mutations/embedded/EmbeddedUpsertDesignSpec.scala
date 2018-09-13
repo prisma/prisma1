@@ -45,7 +45,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todo":null}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(0)
   }
 
   "An upsert on the top level" should "only execute the nested create mutations of the correct update branch" in {
