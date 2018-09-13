@@ -209,7 +209,9 @@ export default class GenereateCommand extends Command {
     const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
-      return `process.env['${match[1]}']`
+      return `\`${str.slice(0, match.index)}$\{process.env['${
+        match[1]
+      }']}${str.slice(match[0].length + match.index)}\``
     } else {
       return `'${str}'`
     }
