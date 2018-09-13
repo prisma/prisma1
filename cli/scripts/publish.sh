@@ -170,7 +170,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   # new docker tag
   sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
 
-  cat src/utils.ts
+  cat src/util.ts
 
   yarn build
   if [[ $CIRCLE_TAG ]]; then
