@@ -174,17 +174,16 @@ export class Client {
       return resolve(result)
     } catch (e) {
       this.currentInstructions[id] = []
-      reject(e)
+      return reject(e)
     }
-    return result
   }
 
   catch = async (id, reject) => {
     try {
-      await this.processInstructions(id)
+      return await this.processInstructions(id)
     } catch (e) {
       this.currentInstructions[id] = []
-      reject(e)
+      return reject(e)
     }
   }
 
