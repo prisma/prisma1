@@ -1,6 +1,6 @@
 {
   "name": "prisma-client-lib",
-  "version": "0.2.54",
+  "version": "0.2.55",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "Apache-2.0",
   "files": [

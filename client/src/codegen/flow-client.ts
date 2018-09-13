@@ -28,7 +28,7 @@ import type { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import type { IResolvers } from 'graphql-tools/dist/Interfaces'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
 import { makePrismaClientClass } from 'prisma-client-lib'
-import { typeDefs } from './graphql'`
+import { typeDefs } from './prisma-schema'`
   }
   renderClientConstructor() {
     return `export interface ClientConstructor<T> {

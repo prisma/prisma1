@@ -17,7 +17,7 @@ export class JavascriptGenerator extends TypescriptGenerator {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var prisma_lib_1 = require("prisma-client-lib");
-var typeDefs = require("./graphql").typeDefs
+var typeDefs = require("./prisma-schema").typeDefs
 
 exports.Prisma = prisma_lib_1.makePrismaClientClass(${args});
 exports.prisma = new exports.Prisma();

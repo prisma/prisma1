@@ -236,7 +236,7 @@ ${this.renderExports(options)}
 import { GraphQLResolveInfo, GraphQLSchema } from 'graphql'
 import { IResolvers } from 'graphql-tools/dist/Interfaces'
 import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
-import { typeDefs } from './graphql'`
+import { typeDefs } from './prisma-schema'`
   }
   renderPrismaClassArgs(options?: RenderOptions) {
     let endpointString = ''
@@ -263,7 +263,7 @@ export const prisma = new Prisma()`
   }
   renderTypedefs() {
     return (
-      'export const typeDefs = `' +
+      'export const typeDefs = /* GraphQL */ `' +
       printSchema(this.schema).replace(/`/g, '\\`') +
       '`'
     )
