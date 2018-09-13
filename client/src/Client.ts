@@ -132,14 +132,14 @@ export class Client {
   }
 
   mapSubscriptionPayload(result, instructions) {
-    debugger
-    return mapAsyncIterator(result, res =>
-      this.extractPayload(res, instructions),
-    )
+    return mapAsyncIterator(result, res => {
+      const extracted = this.extractPayload(res, instructions)
+      return extracted
+    })
   }
 
   extractPayload(result, instructions) {
-    let pointer = result.data
+    let pointer = result
     let count = 0
     while (
       pointer &&
@@ -159,9 +159,9 @@ export class Client {
     const query = print(document)
     if (operation === 'subscription') {
       const subscription = this.subscriptionClient.request({ query, variables })
-      return observableToAsyncIterable(subscription)
+      return Promise.resolve(observableToAsyncIterable(subscription))
     }
-    return this.client.request(query, variables).then(data => ({ data }))
+    return this.client.request(query, variables)
   }
 
   then = async (id, resolve, reject) => {
