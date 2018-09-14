@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedTypesCapability, JoinRelationsCapability}
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -57,11 +57,9 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todo: Todo
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   uTodo: String @unique
         |   todoInts: [Int!]!
-        |   list: List
         |}"""
     }
 
@@ -82,10 +80,7 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     val result = server.query(s"""query{lists {uList, todo {uTodo}}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"C","todo":{"uTodo":"C"}}]}}""")
 
-    server.query(s"""query{todoes {uTodo}}""", project).toString should be("""{"data":{"todoes":[{"uTodo":"C"}]}}""")
-
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
   }
 
   "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {
@@ -98,11 +93,9 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todo: Todo
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   uTodo: String @unique
         |   todoInts: [Int!]!
-        |   list: List
         |}"""
     }
 
@@ -121,7 +114,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     val result = server.query(s"""query{lists {uList, listInts}}""", project)
     result.toString should equal("""{"data":{"lists":[{"uList":"A","listInts":[70,80]}]}}""")
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(0)
   }
 
   "An upsert on the top level" should "be able to reset lists to empty" in {
@@ -229,11 +221,9 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todoes: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded {
         |   uTodo: String @unique
         |   todoInts: [Int!]!
-        |   lists: [List!]!
         |}"""
     }
 
@@ -257,7 +247,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","todoInts":[700,800]}]}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
   }
 
   "A nested upsert" should "only execute the nested scalarlists of the correct create branch" in {
@@ -270,11 +259,9 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todoes: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded {
         |   uTodo: String @unique
         |   todoInts: [Int!]!
-        |   lists: [List!]!
         |}"""
     }
 
@@ -290,7 +277,7 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
            |		                           create:{uTodo:"C", todoInts:{set: [100, 200]}}
            |		                           update:{uTodo:"D", todoInts:{set: [700, 800]}}
            |}}
-           |}){id}}""".stripMargin,
+           |}){id}}""",
         project
       )
 
@@ -298,7 +285,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[3,4]},{"uTodo":"C","todoInts":[100,200]}]}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(2)
   }
 
   "A nested upsert" should "only execute the nested scalarlists of the correct create branch for to many relations" in {
@@ -311,11 +297,9 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todoes: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   uTodo: String @unique
         |   todoInts: [Int!]!
-        |   list: List
         |}"""
     }
 
@@ -339,7 +323,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[3,4]},{"uTodo":"C","todoInts":[100,200]}]}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(2)
   }
 
   "A nested upsert" should "be able to reset lists to empty" in {
@@ -352,11 +335,9 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todoes: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded {
         |   uTodo: String @unique
         |   todoInts: [Int!]!
-        |   list: List
         |}"""
     }
 
@@ -380,7 +361,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"B","todoInts":[]}]}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
   }
 
   "A nested upsert" should "execute the nested connect mutations of the correct create branch" in {
@@ -392,23 +372,18 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todoes: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   uTodo: String @unique
-        |   lists: [List!]!
         |   tags: [Tag!]!
         |}
         |
-        |type Tag{
-        |   id: ID! @unique
+        |type Tag @embedded{
         |   uTag: String @unique
-        |   todoes: [Todo!]!
         |}"""
     }
 
     database.setup(project)
 
-    server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
     server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
 
     server
@@ -417,10 +392,10 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
            |                    data:{todoes: {
            |                        upsert:{
            |                               where:{uTodo: "B"}
-           |		                           create:{uTodo:"C" tags: {connect: {uTag: "D"}}}
-           |		                           update:{uTodo:"Should Not Matter" tags: {create: {uTag: "D"}}}
+           |		                           create:{uTodo:"C" tags: {create: {uTag: "D"}}}
+           |		                           update:{uTodo:"Should Not Matter" tags: {create: {uTag: "E"}}}
            |}}
-           |}){id}}""".stripMargin,
+           |}){id}}""",
         project
       )
 
@@ -428,9 +403,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","tags":[{"uTag":"D"}]}]}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
-    countItems(project, "tags") should be(1)
-
   }
 
   "A nested upsert" should "execute the nested connect mutations of the correct update branch" in {
@@ -442,23 +414,18 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   todoes: [Todo!]!
         |}
         |
-        |type Todo{
-        |   id: ID! @unique
+        |type Todo @embedded{
         |   uTodo: String @unique
-        |   lists: [List!]!
         |   tags: [Tag!]!
         |}
         |
-        |type Tag{
-        |   id: ID! @unique
+        |type Tag @embedded{
         |   uTag: String @unique
-        |   todoes: [Todo!]!
         |}"""
     }
 
     database.setup(project)
 
-    server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
     server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B"}}}){id}}""", project)
 
     server
@@ -467,10 +434,10 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
            |                    data:{todoes: {
            |                        upsert:{
            |                               where:{uTodo: "B"}
-           |		                           create:{uTodo:"Should Not Matter" tags: {connect: {uTag: "D"}}}
-           |		                           update:{uTodo:"C" tags: {connect: {uTag: "D"}}}
+           |		                           create:{uTodo:"Should Not Matter" tags: {create: {uTag: "E"}}}
+           |		                           update:{uTodo:"C" tags: {create: {uTag: "D"}}}
            |}}
-           |}){id}}""".stripMargin,
+           |}){id}}""",
         project
       )
 
@@ -478,9 +445,6 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","tags":[{"uTag":"D"}]}]}]}}""")
 
     countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
-    countItems(project, "tags") should be(1)
-
   }
 
   //endregion
