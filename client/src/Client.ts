@@ -171,11 +171,16 @@ export class Client {
       result = await this.processInstructions(id)
       // console.log(`then: ${Date.now() - before}`)
       this.currentInstructions[id] = []
-      return resolve(result)
+      if (typeof resolve === 'function') {
+        return resolve(result)
+      }
     } catch (e) {
       this.currentInstructions[id] = []
-      return reject(e)
+      if (typeof reject === 'function') {
+        return reject(e)
+      }
     }
+    return result
   }
 
   catch = async (id, reject) => {
