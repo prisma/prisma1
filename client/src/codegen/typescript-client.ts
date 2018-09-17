@@ -696,7 +696,7 @@ ${fieldDefinition}
     return `${this.renderDescription(typeDescription)}${
       typeName.includes('WhereUniqueInput')
         ? `export type ${typeName} = AtLeastOne<{
-        ${fieldDefinition}
+        ${fieldDefinition.replace("?:", ":")}
       }>`
         : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
