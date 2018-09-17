@@ -1,5 +1,6 @@
 package com.prisma.api.queries.embedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
@@ -9,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(EmbeddedTypesCapability)
-  val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromString() {
     """
       |type List {
       |  id: ID! @unique
@@ -128,7 +129,7 @@ class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"4"}},{"node":{"name":"5"}},{"node":{"name":"6"}}]""")
   }
 
-  "the cursor returned on the sub level" should "work" in {
+  "the cursor returned on the sub level" should "work" taggedAs (IgnoreMongo) in {
     val result1 = server.query(
       """
         |{
@@ -164,7 +165,7 @@ class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6"))
   }
 
-  "the cursor returned on the sub level" should "work 2" in {
+  "the cursor returned on the sub level" should "work 2" taggedAs (IgnoreMongo) in {
     val result1 = server.query(
       """
         |{
@@ -200,7 +201,7 @@ class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6", "7"))
   }
 
-  "the pagination" should "work when starting from multiple nodes (== top level connection field)" in {
+  "the pagination" should "work when starting from multiple nodes (== top level connection field)" taggedAs (IgnoreMongo) in {
     val result1 = server.query(
       """
         |{
@@ -314,7 +315,7 @@ class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result should be("""{"data":{"lists":[{"name":"5"},{"name":"6"},{"name":"7"}]}}""".parseJson)
   }
 
-  "skip on relations" should "work" in {
+  "skip on relations" should "work" taggedAs (IgnoreMongo) in {
     val result = server.query(
       s"""
          |{
