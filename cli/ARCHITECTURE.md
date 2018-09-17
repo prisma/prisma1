@@ -42,4 +42,4 @@
 ```
 
 This diagram has been drawn with [MonoDraw](https://monodraw.helftone.com/)
-You can find the source file [here](https://github.com/prisma/prisma/blob/master/cli/architecture-diagram.monopic)
+You can find the source file [here](https://github.com/prisma/prisma/blob/beta/cli/architecture-diagram.monopic)
