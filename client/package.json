@@ -14,6 +14,7 @@
     "test-only": "npm run build && ava dist/**/*.test.js dist/*.test.js",
     "test-generator-only": "npm run build && ava dist/codegen/**/*.test.js dist/codegen/*.test.js",
     "test-ts-generator-only": "npm run build && ava dist/codegen/typescript-client.test.js",
+    "test-ts-definitions-generator-only": "npm run build && ava dist/codegen/typescript-definitions.test.js",
     "test-go-generator-only": "npm run build && ava dist/codegen/go-client.test.js",
     "test-flow-generator-only": "npm run build && ava dist/codegen/flow-client.test.js",
     "test": "tslint src/**/*.ts && npm run test-generator-only"
