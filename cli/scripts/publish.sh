@@ -109,9 +109,6 @@ else
   if [ $CIRCLE_BRANCH == "alpha" ]; then
     step=2
   fi
-  if [ $CIRCLE_BRANCH == "beta" ]; then
-    step=3
-  fi
   nextDockerMinor=$((nextDockerMinor + step))
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}-${CIRCLE_BRANCH}"
 fi
@@ -149,7 +146,7 @@ if [ -z "$CIRCLE_TAG" ]; then
   # calc next last number
   if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
     echo "$betaMinor is greater than $latestMinor"
-    nextLastNumber=$((betaLastNumber + step))
+    nextLastNumber=$((betaLastNumber + step + 1))
   fi
 
   export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
