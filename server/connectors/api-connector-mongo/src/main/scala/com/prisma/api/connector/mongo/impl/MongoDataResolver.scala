@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.database.{FilterConditionBuilder, OrderByClauseBuilder}
+import com.prisma.api.connector.mongo.database.{CursorConditionBuilder, FilterConditionBuilder, OrderByClauseBuilder}
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.helpers.LimitClauseHelper
@@ -55,9 +55,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
     val mongoFilter = buildConditionForFilter(filter)
 
-    // cursor
+    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
 
-    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter))
+    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter, cursorCondition))
     val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
     val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
 

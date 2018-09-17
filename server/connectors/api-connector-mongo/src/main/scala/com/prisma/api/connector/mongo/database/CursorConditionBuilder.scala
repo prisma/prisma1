@@ -1,53 +1,44 @@
 package com.prisma.api.connector.mongo.database
 
+import com.mongodb.client.model.Filters
 import com.prisma.api.connector._
-import com.prisma.shared.models._
-import org.mongodb.scala.{Document, FindObservable}
+import org.mongodb.scala.bson.conversions
+import org.mongodb.scala.model.Filters.notEqual
+
+object HackforTrue {
+  val hackForTrue = notEqual("_id", -1)
+}
 
 object CursorConditionBuilder {
-  // This creates a query that checks if the id is in a certain set returned by a subquery Q.
-  // The subquery Q fetches all the ID's defined by the cursors and order.
-  // On invalid cursor params, no error is thrown. The result set will just be empty.
 
-  def buildCursorCondition(query: FindObservable[Document], queryArguments: Option[QueryArguments]): FindObservable[Document] = queryArguments match {
+  def buildCursorCondition(queryArguments: Option[QueryArguments]): conversions.Bson = queryArguments match {
     case Some(args) => buildCursorCondition(args)
-    case None       => query
+    case None       => Filters.and(HackforTrue.hackForTrue)
   }
 
-  private def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
+  private def buildCursorCondition(queryArguments: QueryArguments): conversions.Bson = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
-    if (before.isEmpty && after.isEmpty) return noCondition()
+    if (before.isEmpty && after.isEmpty) return Filters.and(HackforTrue.hackForTrue)
 
-    val idFieldWithAlias = aliasColumn(model.dbNameOfIdField_!)
-    val idField          = modelIdColumn(model)
-
-    // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
-    // We need that since before/after are dependent on the order.
-    val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
-      case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
-      case None        => (idField, idFieldWithAlias, "asc")
+    val sortDirection = orderBy match {
+      case Some(order) => order.sortOrder.toString
+      case None        => "asc"
     }
 
-    val selectQuery = sql
-      .select(orderByField)
-      .from(modelTable(model))
-      .where(idField.equal(stringDummy))
+    def cursorCondition(cursor: String, cursorType: String): conversions.Bson =
+      (cursorType, sortDirection.toLowerCase.trim) match {
+        case ("before", "asc")  => Filters.lt("_id", cursor)
+        case ("before", "desc") => Filters.gt("_id", cursor)
+        case ("after", "asc")   => Filters.gt("_id", cursor)
+        case ("after", "desc")  => Filters.lt("_id", cursor)
+        case _                  => throw new IllegalArgumentException
+      }
 
-    // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
-    // to get the items before, we use the "<" comparator on the column that defines the order.
-    def cursorFor(cursor: String, cursorType: String): Condition = (cursorType, sortDirection.toLowerCase.trim) match {
-      case ("before", "asc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
-      case ("before", "desc") => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
-      case ("after", "asc")   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
-      case ("after", "desc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
-      case _                  => throw new IllegalArgumentException
-    }
+    val afterCursorCondition  = after.map(cursorCondition(_, "after")).getOrElse(HackforTrue.hackForTrue)
+    val beforeCursorCondition = before.map(cursorCondition(_, "before")).getOrElse(HackforTrue.hackForTrue)
 
-    val afterCursorFilter  = after.map(cursorFor(_, "after")).getOrElse(noCondition())
-    val beforeCursorFilter = before.map(cursorFor(_, "before")).getOrElse(noCondition())
-
-    afterCursorFilter.and(beforeCursorFilter)
+    Filters.and(afterCursorCondition, beforeCursorCondition)
   }
 
 }
