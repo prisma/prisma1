@@ -48,7 +48,7 @@ To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Ru
 prisma init hello-world
 ```
 
-The interactice CLI wizard now helps you with the required setup:
+The interactive CLI wizard now helps you with the required setup:
 
 - Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/) or a hosted [demo database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-demo-server-a001/))
 - Select the database type: **MySQL** or **PostgreSQL**
