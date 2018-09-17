@@ -237,20 +237,20 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 # Build prisma-generate-schema
 #
 
-if [ $generateSchemaChanged ]; then
-  cd prisma-generate-schema
-  sleep 3.0
-  ../../scripts/doubleInstall.sh
-  yarn build
-  npm version $newVersion
+# if [ $generateSchemaChanged ]; then
+#   cd prisma-generate-schema
+#   sleep 3.0
+#   ../../scripts/doubleInstall.sh
+#   yarn build
+#   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
-  else
-    npm publish --tag $CIRCLE_BRANCH
-  fi
-  cd ..
-fi
+#   if [[ $CIRCLE_TAG ]]; then
+#     npm publish
+#   else
+#     npm publish --tag $CIRCLE_BRANCH
+#   fi
+#   cd ..
+# fi
 export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
 
 
@@ -264,8 +264,8 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
   yarn add prisma-db-introspection@$introspectionVersion
-  sleep 0.5
-  yarn add prisma-generate-schema@$generateSchemaVersion
+  # sleep 0.5
+  # yarn add prisma-generate-schema@$generateSchemaVersion
   sleep 0.2
   yarn add prisma-client-lib@$clientVersion
   sleep 0.3
