@@ -7,6 +7,6 @@ export interface RenderOptions {
 
 export class TypescriptDefinitionsGenerator extends TypescriptGenerator {
   renderExports(options?: RenderOptions) {
-    return ``
+    return `export const prisma: Prisma;`
   }
 }
