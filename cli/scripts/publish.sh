@@ -120,7 +120,7 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 #
 
 if [ -z "$CIRCLE_TAG" ]; then
-  latestBetaVersion=$(npm info prisma version --tag $CIRCLE_BRANCH)
+  latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
   latestVersionElements=(${latestVersion//./ })
   latestBetaVersionElements=(${latestBetaVersion//./ })
 
@@ -207,6 +207,29 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   cd ..
 fi
 export ymlVersion=$(cat prisma-yml/package.json | jq -r '.version')
+
+#
+# Build prisma-cli-engine
+#
+
+if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
+  cd prisma-cli-engine
+  sleep 3.0
+  yarn add prisma-yml@$ymlVersion
+  sleep 0.2
+  ../../scripts/doubleInstall.sh
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
+export engineVersion=$(cat prisma-cli-engine/package.json | jq -r '.version')
+
 
 #
 # Build prisma-db-introspection
