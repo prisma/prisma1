@@ -1,12 +1,14 @@
 package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
+class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
   val project = SchemaDsl.fromString() {
     """
       |type List {

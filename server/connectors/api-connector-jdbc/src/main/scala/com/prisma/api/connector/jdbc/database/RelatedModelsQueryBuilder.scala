@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
+import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
@@ -61,7 +62,7 @@ case class RelatedModelsQueryBuilder(
   lazy val mysqlHack = {
     val relatedNodeCondition = field(name(relationTableAlias, modelRelationSideColumn)).equal(placeHolder)
     val order                = orderByInternal(secondaryOrderByForPagination, queryArguments)
-    val skipAndLimit         = skipAndLimitValues(queryArguments)
+    val skipAndLimit         = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
     val tmp = base
       .where(relatedNodeCondition, queryArgumentsCondition, cursorCondition)

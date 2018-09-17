@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.{QueryArguments, ResolverResult, ScalarListElement, ScalarListValues}
+import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Model, ScalarField}
@@ -19,7 +20,7 @@ trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with Ord
     lazy val query = {
       val condition    = buildConditionForFilter(args.flatMap(_.filter))
       val order        = orderByForScalarListField(topLevelAlias, args)
-      val skipAndLimit = skipAndLimitValues(args)
+      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
 
       val base = sql
         .select()
