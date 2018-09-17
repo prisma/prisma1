@@ -1,13 +1,16 @@
-package com.prisma.api.queries.nonEmbedded
+package com.prisma.api.queries.embedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
+class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
-  val project = SchemaDsl.fromString() {
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(EmbeddedTypesCapability)
+  lazy val project = SchemaDsl.fromString() {
     """
       |type List {
       |  id: ID! @unique
@@ -15,10 +18,8 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |  todos: [Todo!]!
       |}
       |
-      |type Todo {
-      |  id: ID! @unique
+      |type Todo @embedded{
       |  title: String! @unique
-      |  list: List!
       |}
     """
   }
@@ -27,7 +28,6 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     super.beforeAll()
     database.setup(project)
     createLists()
-    createTodos()
   }
 
   "hasNextPage" should "be true if there are more nodes" in {
@@ -129,7 +129,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"4"}},{"node":{"name":"5"}},{"node":{"name":"6"}}]""")
   }
 
-  "the cursor returned on the sub level" should "work" in {
+  "the cursor returned on the sub level" should "work" taggedAs (IgnoreMongo) in {
     val result1 = server.query(
       """
         |{
@@ -165,7 +165,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6"))
   }
 
-  "the cursor returned on the sub level" should "work 2" in {
+  "the cursor returned on the sub level" should "work 2" taggedAs (IgnoreMongo) in {
     val result1 = server.query(
       """
         |{
@@ -201,7 +201,7 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6", "7"))
   }
 
-  "the pagination" should "work when starting from multiple nodes (== top level connection field)" in {
+  "the pagination" should "work when starting from multiple nodes (== top level connection field)" taggedAs (IgnoreMongo) in {
     val result1 = server.query(
       """
         |{
@@ -301,7 +301,21 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result should be("""{"data":{"lists":[{"name":"2"},{"name":"3"},{"name":"4"},{"name":"5"},{"name":"6"},{"name":"7"}]}}""".parseJson)
   }
 
-  "skip on relations" should "work" in {
+  "last" should "work" in {
+    val result = server.query(
+      s"""
+         |{
+         |  lists(last:3) {
+         |    name
+         |  }
+         |}
+      """,
+      project
+    )
+    result should be("""{"data":{"lists":[{"name":"5"},{"name":"6"},{"name":"7"}]}}""".parseJson)
+  }
+
+  "skip on relations" should "work" taggedAs (IgnoreMongo) in {
     val result = server.query(
       s"""
          |{
@@ -321,30 +335,13 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(
       """
         |mutation {
-        |  a: createList(data: {name: "1"}){ id }
+        |  a: createList(data: {name: "1", todos:{create:[{title: "1"},{title: "2"},{title: "3"},{title: "4"},{title: "5"},{title: "6"},{title: "7"}]}}){ id }
         |  b: createList(data: {name: "2"}){ id }
         |  c: createList(data: {name: "3"}){ id }
         |  d: createList(data: {name: "4"}){ id }
         |  e: createList(data: {name: "5"}){ id }
         |  f: createList(data: {name: "6"}){ id }
         |  g: createList(data: {name: "7"}){ id }
-        |}
-      """,
-      project
-    )
-  }
-
-  private def createTodos(): Unit = {
-    server.query(
-      """
-        |mutation {
-        |  a: createTodo(data: {title: "1", list: { connect: {name:"1"}}}){ id }
-        |  b: createTodo(data: {title: "2", list: { connect: {name:"1"}}}){ id }
-        |  c: createTodo(data: {title: "3", list: { connect: {name:"1"}}}){ id }
-        |  d: createTodo(data: {title: "4", list: { connect: {name:"1"}}}){ id }
-        |  e: createTodo(data: {title: "5", list: { connect: {name:"1"}}}){ id }
-        |  f: createTodo(data: {title: "6", list: { connect: {name:"1"}}}){ id }
-        |  g: createTodo(data: {title: "7", list: { connect: {name:"1"}}}){ id }
         |}
       """,
       project

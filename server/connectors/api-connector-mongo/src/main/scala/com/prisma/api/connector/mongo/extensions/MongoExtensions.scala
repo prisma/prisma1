@@ -10,6 +10,7 @@ import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Filters.notEqual
 import play.api.libs.json.Json
 
 import scala.collection.mutable
@@ -159,3 +160,7 @@ sealed trait PathSegment {
 
 case class ToOneSegment(rf: RelationField)                       extends PathSegment
 case class ToManySegment(rf: RelationField, where: NodeSelector) extends PathSegment
+
+object HackforTrue {
+  val hackForTrue = notEqual("_id", -1)
+}

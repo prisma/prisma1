@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
+import com.prisma.api.helpers.{LimitClauseHelper, SkipAndLimit}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField}
 import org.jooq.{Record, SelectForUpdateStep}
@@ -30,7 +31,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       readResult = { rs =>
         val _                      = rs.next()
         val count                  = rs.getInt(1)
-        val SkipAndLimit(_, limit) = skipAndLimitValues(args) // this returns the actual limit increased by 1 to enable hasNextPage for pagination
+        val SkipAndLimit(_, limit) = LimitClauseHelper.skipAndLimitValues(args) // this returns the actual limit increased by 1 to enable hasNextPage for pagination
         val result = limit match {
           case Some(limit) => if (count > (limit - 1)) count - 1 else count
           case None        => count
@@ -44,7 +45,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
     val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
-    val skipAndLimit    = skipAndLimitValues(queryArguments)
+    val skipAndLimit    = LimitClauseHelper.skipAndLimitValues(queryArguments)
     val jooqFields      = selectedFields.scalarNonListFields.map(aliasColumn)
 
     val base = sql
@@ -128,7 +129,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
           SetParams.setCursor(pp, arg)
 
           if (arg.isWithPagination) {
-            val skipAndLimit = skipAndLimitValues(args)
+            val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
             skipAndLimit.limit.foreach(pp.setInt)
             pp.setInt(skipAndLimit.skip)
           }
