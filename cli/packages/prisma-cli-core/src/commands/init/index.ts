@@ -128,7 +128,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
     let prismaYmlString = `endpoint: ENDPOINT
 datamodel: datamodel.prisma`
 
-    if (results.generator) {
+    if (results.generator && results.generator !== 'no-generation') {
       prismaYmlString += this.getGeneratorConfig(results.generator)
     }
 
@@ -165,12 +165,6 @@ datamodel: datamodel.prisma`
       : ``
 
     const isLocal = results.cluster!.local && results.writeDockerComposeYml
-    const dbType = results.database ? results.database.type : ''
-    const beautifulDbTypesMap = {
-      mysql: 'MySQL',
-      postgres: 'PostgreSQL',
-    }
-    const beautifulDbType = beautifulDbTypesMap[dbType] || ''
 
     const steps: string[] = []
 

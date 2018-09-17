@@ -752,6 +752,10 @@ export class EndpointDialog {
         name: 'Prisma Go Client',
         value: 'go-client',
       },
+      {
+        name: `Don't generate`,
+        value: 'no-generation',
+      },
     ]
 
     const { generator } = await this.out.prompt({
