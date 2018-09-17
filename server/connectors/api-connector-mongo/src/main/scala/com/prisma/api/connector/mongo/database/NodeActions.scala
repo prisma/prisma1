@@ -26,10 +26,10 @@ trait NodeActions extends NodeSingleQueries {
 
   def createNode(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      val collection: MongoCollection[Document]                                               = database.getCollection(mutaction.model.dbName)
-      val (id: IdGCValue, docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction)
+      val collection: MongoCollection[Document]                                = database.getCollection(mutaction.model.dbName)
+      val (docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction)
 
-      collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(Vector(CreateNodeResult(id, mutaction)) ++ childResults))
+      collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(childResults))
     }
 
   def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
@@ -95,7 +95,7 @@ trait NodeActions extends NodeSingleQueries {
 
     previousValues.flatMap {
       case None =>
-        val (id: IdGCValue, docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction.create)
+        val (docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(mutaction.create)
 
         collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(Vector(UpsertNodeResult(mutaction.create, mutaction)) ++ childResults))
 
@@ -162,8 +162,7 @@ trait NodeActions extends NodeSingleQueries {
 
   //endregion
 
-  private def createToDoc(mutaction: CreateNode,
-                          results: Vector[DatabaseMutactionResult] = Vector.empty): (IdGCValue, Document, Vector[DatabaseMutactionResult]) = {
+  private def createToDoc(mutaction: CreateNode, results: Vector[DatabaseMutactionResult] = Vector.empty): (Document, Vector[DatabaseMutactionResult]) = {
 
     val nonListValues: List[(String, GCValue)] =
       mutaction.model.scalarNonListFields
@@ -176,7 +175,7 @@ trait NodeActions extends NodeSingleQueries {
     val thisResult                         = CreateNodeResult(id, mutaction)
     val doc                                = Document(nonListArgsWithId ++ mutaction.listArgs) ++ nestedCreateFields
 
-    (id, doc, childResults :+ thisResult)
+    (doc, childResults :+ thisResult)
   }
 
   private def embeddedNestedCreateDocsAndResults(mutaction: FurtherNestedMutaction): (Map[String, BsonValue], Vector[DatabaseMutactionResult]) = {
@@ -201,8 +200,8 @@ trait NodeActions extends NodeSingleQueries {
 
   private def nestedCreateDocAndResultHelper(mutaction: FurtherNestedMutaction) = {
     val nestedCreates                                        = mutaction.nestedCreates.map(m => m.relationField -> createToDoc(m))
-    val childResults: Vector[DatabaseMutactionResult]        = nestedCreates.flatMap(x => x._2._3)
-    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2._2))
+    val childResults: Vector[DatabaseMutactionResult]        = nestedCreates.flatMap(x => x._2._2)
+    val grouped: Map[RelationField, immutable.Seq[Document]] = nestedCreates.groupBy(_._1).mapValues(_.map(_._2._1))
     (childResults, grouped)
   }
 
@@ -288,7 +287,7 @@ trait NodeActions extends NodeSingleQueries {
       case toOneUpsert @ NestedUpsertNode(_, rf, None, create, update) =>
         node.getToOneChild(rf) match {
           case None =>
-            val (id, createDoc, createResults) = createToDoc(create)
+            val (createDoc, createResults) = createToDoc(create)
             (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toOneUpsert, toOneUpsert))
 
           case Some(_) =>
@@ -299,7 +298,7 @@ trait NodeActions extends NodeSingleQueries {
       case toManyUpsert @ NestedUpsertNode(_, rf, Some(where), create, update) =>
         node.getToManyChild(rf, where) match {
           case None =>
-            val (id, createDoc, createResults) = createToDoc(create)
+            val (createDoc, createResults) = createToDoc(create)
             (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toManyUpsert, toManyUpsert))
 
           case Some(_) =>

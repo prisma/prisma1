@@ -1,14 +1,16 @@
 package com.prisma.subscriptions
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
-import com.prisma.shared.schema_dsl.SchemaDsl.ModelBuilder
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
 
-class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
-  override def doNotRunForPrototypes: Boolean = true
+class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
+
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
 
   val webhookTestKit = testDependencies.webhookPublisher
 
@@ -23,16 +25,27 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
     webhookTestKit.reset
   }
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val status: Enum = schema.enum("TodoStatus", Vector("Active", "Done"))
-    val comment: ModelBuilder = schema
-      .model("Comment")
-      .field("text", _.String)
-    val todo: ModelBuilder = schema
-      .model("Todo")
-      .field("title", _.String)
-      .field("status", _.Enum, enum = Some(status))
-    todo.oneToManyRelation("comments", "todo", comment)
+  val project = SchemaDsl.fromString() {
+    """
+      |type Todo {
+      |   id: ID! @unique
+      |   title: String
+      |   status: TodoStatus
+      |   comments: [Comment!]!
+      |}
+      |
+      |type Comment{
+      |   id: ID! @unique
+      |   text: String
+      |   todo: Todo
+      |}
+      |
+      |enum TodoStatus {
+      |   ACTIVE
+      |   DONE
+      |}
+      |
+    """
   }
 
   def subscriptionQueryFor(mutation: String): String =
@@ -41,7 +54,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
       |  todo(where: {
       |    mutation_in : [$mutation]
       |    node: {
-      |      status: Active
+      |      status: ACTIVE
       |    }
       |  }){
       |    node {
@@ -93,7 +106,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
   val actualProject: Project = project.copy(functions = List(sssFunctionForCreate, sssFunctionForUpdate, sssFunctionForDeleted))
 
   val newTodoTitle     = "The title of the new todo"
-  val newTodoStatus    = "Active"
+  val newTodoStatus    = "ACTIVE"
   val updatedTodoTitle = "The title of the updated todo"
 
   "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches on a Create" in {
@@ -157,7 +170,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
          |mutation {
          |  updateTodo(
          |    where: { id: "$id" }
-         |    data: { title:"$updatedTodoTitle", status: Active}
+         |    data: { title:"$updatedTodoTitle", status: ACTIVE}
          |  ){
          |    id
          |  }
@@ -179,7 +192,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
                                     |    "todo": {
                                     |      "node": {
                                     |        "title": "$updatedTodoTitle",
-                                    |        "status": "Active",
+                                    |        "status": "ACTIVE",
                                     |        "comments": []
                                     |      },
                                     |      "previousValues": {
@@ -362,7 +375,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
       s"""mutation {
          |  createTodo(data:{
          |    title:"$theTitle"
-         |    status: Active
+         |    status: ACTIVE
          |  }){
          |    id
          |  }
