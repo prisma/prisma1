@@ -75,7 +75,7 @@ latestVersion=$(npm info prisma version)
 tag=${CIRCLE_TAG:-$latestVersion}
 tagElements=(${tag//./ })
 nextDockerMinor=${tagElements[1]}
-if [[ $CIRCLE_TAG ]]; then
+if [[ $CIRCLE_TAG ]] && [[ $CIRCLE_BRANCH == "master" ]]; then
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}"
 else
   step=1
