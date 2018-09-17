@@ -1,8 +1,7 @@
-import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, RelatedModelInputObjectTypeGenerator } from '../../generator'
+import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs } from '../../generator'
 import { IGQLType, IGQLField } from '../../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
+import { capitalize } from '../../../util/util';
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
-import { capitalize, plural } from '../../../util/util';
 
 
 export default class ModelUpdateWithoutRelatedInputGenerator extends RelatedModelInputObjectTypeGenerator {

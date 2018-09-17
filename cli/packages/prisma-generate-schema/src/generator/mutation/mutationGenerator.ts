@@ -27,7 +27,7 @@ export default class MutationGenerator extends RootGenerator {
   }
 
   private generateCreateField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<null, null>
 
     if (this.generators.modelCreateInput.wouldBeEmpty(model, {})) {
       return fields
@@ -44,7 +44,7 @@ export default class MutationGenerator extends RootGenerator {
   }
 
   private generateUpdateField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<null, null>
 
     if (this.generators.modelUpdateInput.wouldBeEmpty(model, {})) {
       return fields
@@ -66,7 +66,7 @@ export default class MutationGenerator extends RootGenerator {
   }
 
   private generateUpdateManyField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<null, null>
 
     if (this.generators.modelUpdateInput.wouldBeEmpty(model, {})) {
       return fields
@@ -87,7 +87,7 @@ export default class MutationGenerator extends RootGenerator {
   }
 
   private generateUpsertField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<null, null>
 
     if (this.generators.modelCreateInput.wouldBeEmpty(model, {})) {
       return fields
@@ -113,7 +113,7 @@ export default class MutationGenerator extends RootGenerator {
   }
 
   private generateDeleteField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<null, null>
 
     if (this.generators.modelWhereUniqueInput.wouldBeEmpty(model, {})) {
       return fields
@@ -131,7 +131,7 @@ export default class MutationGenerator extends RootGenerator {
   }
 
   private generateDeleteManyField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<null, null>
 
     if (this.generators.modelWhereInput.wouldBeEmpty(model, {})) {
       return fields
