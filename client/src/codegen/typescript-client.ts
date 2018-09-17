@@ -93,10 +93,7 @@ export class TypescriptGenerator extends Generator {
       const fieldDefinition = Object.keys(type.getFields())
         .map(f => {
           const field = type.getFields()[f]
-          const isOptional = !isNonNullType(field.type)
-          return `  ${this.renderFieldName(field, false)}${
-            isOptional ? '?' : ''
-          }: ${this.renderInputFieldType(field.type)}`
+          return `${this.renderFieldName(field, false)}: ${this.renderInputFieldType(field.type)}`
         })
         .join(`${this.lineBreakDelimiter}\n`)
 
