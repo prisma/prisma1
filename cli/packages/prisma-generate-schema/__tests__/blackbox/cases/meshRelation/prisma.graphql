@@ -1,8 +1,8 @@
 type A {
   field: Int!
-  a: A!
+  a(where: AWhereInput): A!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  c: C
+  c(where: CWhereInput): C
   e(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E!]
 }
 
@@ -146,7 +146,7 @@ input ASubscriptionWhereInput {
 
 input AUpdateDataInput {
   field: Int
-  a: AUpdateOneInput
+  a: AUpdateOneRequiredInput
   b: BUpdateManyWithoutAInput
   c: CUpdateOneWithoutAInput
   e: EUpdateManyWithoutAInput
@@ -154,24 +154,28 @@ input AUpdateDataInput {
 
 input AUpdateInput {
   field: Int
-  a: AUpdateOneInput
+  a: AUpdateOneRequiredInput
   b: BUpdateManyWithoutAInput
   c: CUpdateOneWithoutAInput
   e: EUpdateManyWithoutAInput
 }
 
-input AUpdateOneInput {
+input AUpdateOneRequiredInput {
   create: ACreateInput
-  delete: Boolean
   update: AUpdateDataInput
   upsert: AUpsertNestedInput
 }
 
-input AUpdateOneWithoutBInput {
+input AUpdateOneRequiredWithoutBInput {
   create: ACreateWithoutBInput
-  delete: Boolean
   update: AUpdateWithoutBDataInput
   upsert: AUpsertWithoutBInput
+}
+
+input AUpdateOneRequiredWithoutEInput {
+  create: ACreateWithoutEInput
+  update: AUpdateWithoutEDataInput
+  upsert: AUpsertWithoutEInput
 }
 
 input AUpdateOneWithoutCInput {
@@ -182,30 +186,23 @@ input AUpdateOneWithoutCInput {
   upsert: AUpsertWithoutCInput
 }
 
-input AUpdateOneWithoutEInput {
-  create: ACreateWithoutEInput
-  delete: Boolean
-  update: AUpdateWithoutEDataInput
-  upsert: AUpsertWithoutEInput
-}
-
 input AUpdateWithoutBDataInput {
   field: Int
-  a: AUpdateOneInput
+  a: AUpdateOneRequiredInput
   c: CUpdateOneWithoutAInput
   e: EUpdateManyWithoutAInput
 }
 
 input AUpdateWithoutCDataInput {
   field: Int
-  a: AUpdateOneInput
+  a: AUpdateOneRequiredInput
   b: BUpdateManyWithoutAInput
   e: EUpdateManyWithoutAInput
 }
 
 input AUpdateWithoutEDataInput {
   field: Int
-  a: AUpdateOneInput
+  a: AUpdateOneRequiredInput
   b: BUpdateManyWithoutAInput
   c: CUpdateOneWithoutAInput
 }
@@ -273,10 +270,10 @@ input AWhereInput {
 
 type B {
   field: [String!]!
-  c: C
+  c(where: CWhereInput): C
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  a: A!
-  c2: C
+  a(where: AWhereInput): A!
+  c2(where: CWhereInput): C
 }
 
 type BatchPayload {
@@ -412,7 +409,7 @@ input BUpdateDataInput {
   field: BUpdatefieldInput
   c: CUpdateOneWithoutBInput
   b: BUpdateManyInput
-  a: AUpdateOneWithoutBInput
+  a: AUpdateOneRequiredWithoutBInput
   c2: CUpdateOneWithoutB2Input
 }
 
@@ -424,7 +421,7 @@ input BUpdateInput {
   field: BUpdatefieldInput
   c: CUpdateOneWithoutBInput
   b: BUpdateManyInput
-  a: AUpdateOneWithoutBInput
+  a: AUpdateOneRequiredWithoutBInput
   c2: CUpdateOneWithoutB2Input
 }
 
@@ -440,9 +437,8 @@ input BUpdateManyWithoutCInput {
   create: [BCreateWithoutCInput!]
 }
 
-input BUpdateOneInput {
+input BUpdateOneRequiredInput {
   create: BCreateInput
-  delete: Boolean
   update: BUpdateDataInput
   upsert: BUpsertNestedInput
 }
@@ -459,7 +455,7 @@ input BUpdateWithoutC2DataInput {
   field: BUpdatefieldInput
   c: CUpdateOneWithoutBInput
   b: BUpdateManyInput
-  a: AUpdateOneWithoutBInput
+  a: AUpdateOneRequiredWithoutBInput
 }
 
 input BUpsertNestedInput {
@@ -491,10 +487,10 @@ input BWhereInput {
 
 type C {
   expirationDate: DateTime
-  c: C!
+  c(where: CWhereInput): C!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  a: A
-  b2: B
+  a(where: AWhereInput): A
+  b2(where: BWhereInput): B
 }
 
 """A connection to a list of items."""
@@ -617,7 +613,7 @@ input CSubscriptionWhereInput {
 
 input CUpdateDataInput {
   expirationDate: DateTime
-  c: CUpdateOneInput
+  c: CUpdateOneRequiredInput
   b: BUpdateManyWithoutCInput
   a: AUpdateOneWithoutCInput
   b2: BUpdateOneWithoutC2Input
@@ -625,15 +621,14 @@ input CUpdateDataInput {
 
 input CUpdateInput {
   expirationDate: DateTime
-  c: CUpdateOneInput
+  c: CUpdateOneRequiredInput
   b: BUpdateManyWithoutCInput
   a: AUpdateOneWithoutCInput
   b2: BUpdateOneWithoutC2Input
 }
 
-input CUpdateOneInput {
+input CUpdateOneRequiredInput {
   create: CCreateInput
-  delete: Boolean
   update: CUpdateDataInput
   upsert: CUpsertNestedInput
 }
@@ -664,21 +659,21 @@ input CUpdateOneWithoutBInput {
 
 input CUpdateWithoutADataInput {
   expirationDate: DateTime
-  c: CUpdateOneInput
+  c: CUpdateOneRequiredInput
   b: BUpdateManyWithoutCInput
   b2: BUpdateOneWithoutC2Input
 }
 
 input CUpdateWithoutB2DataInput {
   expirationDate: DateTime
-  c: CUpdateOneInput
+  c: CUpdateOneRequiredInput
   b: BUpdateManyWithoutCInput
   a: AUpdateOneWithoutCInput
 }
 
 input CUpdateWithoutBDataInput {
   expirationDate: DateTime
-  c: CUpdateOneInput
+  c: CUpdateOneRequiredInput
   a: AUpdateOneWithoutCInput
   b2: BUpdateOneWithoutC2Input
 }
@@ -744,9 +739,9 @@ input CWhereInput {
 
 type D {
   field: Json
-  c: C!
-  b: B!
-  a: A!
+  c(where: CWhereInput): C!
+  b(where: BWhereInput): B!
+  a(where: AWhereInput): A!
   d(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D!]
 }
 
@@ -839,9 +834,9 @@ input DSubscriptionWhereInput {
 
 input DUpdateInput {
   field: Json
-  c: CUpdateOneInput
-  b: BUpdateOneInput
-  a: AUpdateOneInput
+  c: CUpdateOneRequiredInput
+  b: BUpdateOneRequiredInput
+  a: AUpdateOneRequiredInput
   d: DUpdateManyInput
 }
 
@@ -868,7 +863,7 @@ input DWhereInput {
 
 type E {
   field: Json
-  a: A!
+  a(where: AWhereInput): A!
 }
 
 """A connection to a list of items."""
@@ -959,7 +954,7 @@ input ESubscriptionWhereInput {
 
 input EUpdateInput {
   field: Json
-  a: AUpdateOneWithoutEInput
+  a: AUpdateOneRequiredWithoutEInput
 }
 
 input EUpdateManyWithoutAInput {
@@ -1003,6 +998,7 @@ type Mutation {
   deleteManyAs(where: AWhereInput): BatchPayload!
   deleteManyCs(where: CWhereInput): BatchPayload!
   deleteManyBs(where: BWhereInput): BatchPayload!
+  executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
 enum MutationType {
@@ -1032,6 +1028,10 @@ type PageInfo {
   endCursor: String
 }
 
+enum PrismaDatabase {
+  default
+}
+
 type Query {
   es(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E]!
   ds(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D]!
@@ -1058,4 +1058,3 @@ type Subscription {
   c(where: CSubscriptionWhereInput): CSubscriptionPayload
   b(where: BSubscriptionWhereInput): BSubscriptionPayload
 }
-

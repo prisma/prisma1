@@ -323,6 +323,7 @@ export interface IGenerators {
   modelUpdateInput: ModelInputObjectTypeGenerator
   modelUpdateDataInput: ModelInputObjectTypeGenerator
   modelUpdateOneInput: ModelInputObjectTypeGenerator
+  modelUpdateOneRequiredInput: ModelInputObjectTypeGenerator
   modelUpdateManyInput: ModelInputObjectTypeGenerator
   modelUpdateWithoutRelatedDataInput: RelatedModelInputObjectTypeGenerator
   modelUpdateOneWithoutRelatedInput: RelatedModelInputObjectTypeGenerator

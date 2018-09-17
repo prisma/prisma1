@@ -9,6 +9,7 @@ import ScalarListCreateInput from "./mutation/create/scalarListCreateInput"
 import ModelUpdateInputGenerator from "./mutation/update/modelUpdateInputGenerator";
 import ModelUpdateDataInputGenerator from "./mutation/update/modelUpdateDataInputGenerator";
 import ModelUpdateOneInputTypeGenerator from "./mutation/update/modelUpdateOneInputGenerator";
+import ModelUpdateOneRequiredInputTypeGenerator from "./mutation/update/modelUpdateOneRequiredInputGenerator";
 import ModelUpdateManyInputTypeGenerator from "./mutation/update/modelUpdateManyInputGenerator";
 import ModelUpdateWithoutRelatedDataInputGenerator from "./mutation/update/modelUpdateWithoutRelatedDataInputGenerator";
 import ModelUpdateOneWithoutRelatedInputTypeGenerator from "./mutation/update/modelUpdateOneWithoutRelatedInputGenerator";
@@ -61,6 +62,7 @@ export default class Generators implements IGenerators {
   modelUpdateInput = new ModelUpdateInputGenerator(this.typeRegistry, this)
   modelUpdateDataInput = new ModelUpdateDataInputGenerator(this.typeRegistry, this)
   modelUpdateOneInput = new ModelUpdateOneInputTypeGenerator(this.typeRegistry, this)
+  modelUpdateOneRequiredInput = new ModelUpdateOneRequiredInputTypeGenerator(this.typeRegistry, this)
   modelUpdateManyInput = new ModelUpdateManyInputTypeGenerator(this.typeRegistry, this)
   modelUpdateWithoutRelatedDataInput = new ModelUpdateWithoutRelatedDataInputGenerator(this.typeRegistry, this)
   modelUpdateOneWithoutRelatedInput = new ModelUpdateOneWithoutRelatedInputTypeGenerator(this.typeRegistry, this)

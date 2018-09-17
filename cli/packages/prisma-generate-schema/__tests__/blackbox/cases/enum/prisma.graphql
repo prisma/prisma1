@@ -2,7 +2,7 @@ type A {
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
-  b: B!
+  b(where: BWhereInput): B!
 }
 
 """A connection to a list of items."""
@@ -139,7 +139,7 @@ input AUpdateInput {
   fieldA: UsedEnum
   fieldB: UsedEnum
   fieldC: AUpdatefieldCInput
-  b: BUpdateOneWithoutAInput
+  b: BUpdateOneRequiredWithoutAInput
 }
 
 input AUpdateManyInput {
@@ -187,7 +187,7 @@ type AWithId implements Node {
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
-  c: C
+  c(where: CWhereInput): C
 }
 
 """A connection to a list of items."""
@@ -313,18 +313,16 @@ input AWithIdUpdateInput {
   c: CUpdateOneWithoutAInput
 }
 
-input AWithIdUpdateOneInput {
+input AWithIdUpdateOneRequiredInput {
   create: AWithIdCreateInput
   connect: AWithIdWhereUniqueInput
-  delete: Boolean
   update: AWithIdUpdateDataInput
   upsert: AWithIdUpsertNestedInput
 }
 
-input AWithIdUpdateOneWithoutCInput {
+input AWithIdUpdateOneRequiredWithoutCInput {
   create: AWithIdCreateWithoutCInput
   connect: AWithIdWhereUniqueInput
-  delete: Boolean
   update: AWithIdUpdateWithoutCDataInput
   upsert: AWithIdUpsertWithoutCInput
 }
@@ -522,9 +520,8 @@ input BUpdateInput {
   a: AUpdateManyWithoutBInput
 }
 
-input BUpdateOneWithoutAInput {
+input BUpdateOneRequiredWithoutAInput {
   create: BCreateWithoutAInput
-  delete: Boolean
   update: BUpdateWithoutADataInput
   upsert: BUpsertWithoutAInput
 }
@@ -594,7 +591,7 @@ input BWhereInput {
 
 type C {
   field: [Int!]!
-  a: AWithId!
+  a(where: AWithIdWhereInput): AWithId!
 }
 
 """A connection to a list of items."""
@@ -691,7 +688,7 @@ input CUpdatefieldInput {
 
 input CUpdateInput {
   field: CUpdatefieldInput
-  a: AWithIdUpdateOneWithoutCInput
+  a: AWithIdUpdateOneRequiredWithoutCInput
 }
 
 input CUpdateOneWithoutAInput {
@@ -725,7 +722,7 @@ input CWhereInput {
 
 type D {
   field: [DateTime!]!
-  a: AWithId!
+  a(where: AWithIdWhereInput): AWithId!
 }
 
 scalar DateTime
@@ -816,7 +813,7 @@ input DUpdatefieldInput {
 
 input DUpdateInput {
   field: DUpdatefieldInput
-  a: AWithIdUpdateOneInput
+  a: AWithIdUpdateOneRequiredInput
 }
 
 input DWhereInput {
@@ -964,6 +961,7 @@ type Mutation {
   deleteManyEs(where: EWhereInput): BatchPayload!
   deleteManyAs(where: AWhereInput): BatchPayload!
   deleteManyAWithIds(where: AWithIdWhereInput): BatchPayload!
+  executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
 enum MutationType {
@@ -991,6 +989,10 @@ type PageInfo {
 
   """When paginating forwards, the cursor to continue."""
   endCursor: String
+}
+
+enum PrismaDatabase {
+  default
 }
 
 type Query {
@@ -1030,4 +1032,3 @@ enum UsedEnum {
   C
   D
 }
-

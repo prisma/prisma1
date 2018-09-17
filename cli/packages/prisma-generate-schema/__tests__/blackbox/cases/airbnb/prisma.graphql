@@ -92,7 +92,7 @@ type AggregateViews {
 
 type Amenities implements Node {
   id: ID!
-  place: Place!
+  place(where: PlaceWhereInput): Place!
   elevator: Boolean!
   petsAllowed: Boolean!
   internet: Boolean!
@@ -742,11 +742,11 @@ type BatchPayload {
 type Booking implements Node {
   id: ID!
   createdAt: DateTime!
-  bookee: User!
-  place: Place!
+  bookee(where: UserWhereInput): User!
+  place(where: PlaceWhereInput): Place!
   startDate: DateTime!
   endDate: DateTime!
-  payment: Payment!
+  payment(where: PaymentWhereInput): Payment!
 }
 
 """A connection to a list of items."""
@@ -1302,7 +1302,7 @@ type CreditCardInformation implements Node {
   lastName: String!
   postalCode: String!
   country: String!
-  paymentAccount: PaymentAccount
+  paymentAccount(where: PaymentAccountWhereInput): PaymentAccount
 }
 
 """A connection to a list of items."""
@@ -1841,13 +1841,13 @@ scalar DateTime
 
 type Experience implements Node {
   id: ID!
-  category: ExperienceCategory
+  category(where: ExperienceCategoryWhereInput): ExperienceCategory
   title: String!
-  host: User!
-  location: Location!
+  host(where: UserWhereInput): User!
+  location(where: LocationWhereInput): Location!
   pricePerPerson: Int!
   reviews(where: ReviewWhereInput, orderBy: ReviewOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Review!]
-  preview: Picture!
+  preview(where: PictureWhereInput): Picture!
   popularity: Int!
 }
 
@@ -1855,7 +1855,7 @@ type ExperienceCategory implements Node {
   id: ID!
   mainColor: String!
   name: String!
-  experience: Experience
+  experience(where: ExperienceWhereInput): Experience
 }
 
 """A connection to a list of items."""
@@ -2527,7 +2527,7 @@ type GuestRequirements implements Node {
   govIssuedId: Boolean!
   recommendationsFromOtherHosts: Boolean!
   guestTripInformation: Boolean!
-  place: Place!
+  place(where: PlaceWhereInput): Place!
 }
 
 """A connection to a list of items."""
@@ -3035,13 +3035,13 @@ type Location implements Node {
   id: ID!
   lat: Float!
   lng: Float!
-  neighbourHood: Neighbourhood
-  user: User
-  place: Place
+  neighbourHood(where: NeighbourhoodWhereInput): Neighbourhood
+  user(where: UserWhereInput): User
+  place(where: PlaceWhereInput): Place
   address: String
   directions: String
-  experience: Experience
-  restaurant: Restaurant
+  experience(where: ExperienceWhereInput): Experience
+  restaurant(where: RestaurantWhereInput): Restaurant
 }
 
 """A connection to a list of items."""
@@ -3552,8 +3552,8 @@ scalar Long
 type Message implements Node {
   id: ID!
   createdAt: DateTime!
-  from: User!
-  to: User!
+  from(where: UserWhereInput): User!
+  to(where: UserWhereInput): User!
   deliveredAt: DateTime!
   readAt: DateTime!
 }
@@ -3996,8 +3996,8 @@ type Neighbourhood implements Node {
   locations(where: LocationWhereInput, orderBy: LocationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Location!]
   name: String!
   slug: String!
-  homePreview: Picture
-  city: City!
+  homePreview(where: PictureWhereInput): Picture
+  city(where: CityWhereInput): City!
   featured: Boolean!
   popularity: Int!
 }
@@ -4361,7 +4361,7 @@ type Notification implements Node {
   id: ID!
   createdAt: DateTime!
   type: NOTIFICATION_TYPE
-  user: User!
+  user(where: UserWhereInput): User!
   link: String!
   readDate: DateTime!
 }
@@ -4677,8 +4677,8 @@ type Payment implements Node {
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
-  booking: Booking!
-  paymentMethod: PaymentAccount!
+  booking(where: BookingWhereInput): Booking!
+  paymentMethod(where: PaymentAccountWhereInput): PaymentAccount!
 }
 
 enum PAYMENT_PROVIDER {
@@ -4690,10 +4690,10 @@ type PaymentAccount implements Node {
   id: ID!
   createdAt: DateTime!
   type: PAYMENT_PROVIDER
-  user: User!
+  user(where: UserWhereInput): User!
   payments(where: PaymentWhereInput, orderBy: PaymentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Payment!]
-  paypal: PaypalInformation
-  creditcard: CreditCardInformation
+  paypal(where: PaypalInformationWhereInput): PaypalInformation
+  creditcard(where: CreditCardInformationWhereInput): CreditCardInformation
 }
 
 """A connection to a list of items."""
@@ -5333,7 +5333,7 @@ type PaypalInformation implements Node {
   id: ID!
   createdAt: DateTime!
   email: String!
-  paymentAccount: PaymentAccount!
+  paymentAccount(where: PaymentAccountWhereInput): PaymentAccount!
 }
 
 """A connection to a list of items."""
@@ -5743,14 +5743,14 @@ type Place implements Node {
   numBeds: Int!
   numBaths: Int!
   reviews(where: ReviewWhereInput, orderBy: ReviewOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Review!]
-  amenities: Amenities!
-  host: User!
-  pricing: Pricing!
-  location: Location!
-  views: Views!
-  guestRequirements: GuestRequirements
-  policies: Policies
-  houseRules: HouseRules
+  amenities(where: AmenitiesWhereInput): Amenities!
+  host(where: UserWhereInput): User!
+  pricing(where: PricingWhereInput): Pricing!
+  location(where: LocationWhereInput): Location!
+  views(where: ViewsWhereInput): Views!
+  guestRequirements(where: GuestRequirementsWhereInput): GuestRequirements
+  policies(where: PoliciesWhereInput): Policies
+  houseRules(where: HouseRulesWhereInput): HouseRules
   bookings(where: BookingWhereInput, orderBy: BookingOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Booking!]
   pictures(where: PictureWhereInput, orderBy: PictureOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Picture!]
   popularity: Int!
@@ -6859,7 +6859,7 @@ type Policies implements Node {
   checkInStartTime: Float!
   checkInEndTime: Float!
   checkoutTime: Float!
-  place: Place!
+  place(where: PlaceWhereInput): Place!
 }
 
 """A connection to a list of items."""
@@ -7157,7 +7157,7 @@ input PoliciesWhereUniqueInput {
 
 type Pricing implements Node {
   id: ID!
-  place: Place!
+  place(where: PlaceWhereInput): Place!
   monthlyDiscount: Int
   weeklyDiscount: Int
   perNight: Int!
@@ -7732,7 +7732,7 @@ type Restaurant implements Node {
   title: String!
   avgPricePerPerson: Int!
   pictures(where: PictureWhereInput, orderBy: PictureOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Picture!]
-  location: Location!
+  location(where: LocationWhereInput): Location!
   isCurated: Boolean!
   slug: String!
   popularity: Int!
@@ -8102,8 +8102,8 @@ type Review implements Node {
   value: Int!
   cleanliness: Int!
   communication: Int!
-  place: Place!
-  experience: Experience
+  place(where: PlaceWhereInput): Place!
+  experience(where: ExperienceWhereInput): Experience
 }
 
 """A connection to a list of items."""
@@ -8638,13 +8638,13 @@ type User implements Node {
   responseTime: Int
   isSuperHost: Boolean!
   ownedPlaces(where: PlaceWhereInput, orderBy: PlaceOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Place!]
-  location: Location
+  location(where: LocationWhereInput): Location
   bookings(where: BookingWhereInput, orderBy: BookingOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Booking!]
   paymentAccount(where: PaymentAccountWhereInput, orderBy: PaymentAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PaymentAccount!]
   sentMessages(where: MessageWhereInput, orderBy: MessageOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Message!]
   receivedMessages(where: MessageWhereInput, orderBy: MessageOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Message!]
   notifications(where: NotificationWhereInput, orderBy: NotificationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Notification!]
-  profilePicture: Picture
+  profilePicture(where: PictureWhereInput): Picture
   hostingExperiences(where: ExperienceWhereInput, orderBy: ExperienceOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Experience!]
 }
 
@@ -9608,7 +9608,7 @@ input UserWhereUniqueInput {
 type Views implements Node {
   id: ID!
   lastWeek: Int!
-  place: Place!
+  place(where: PlaceWhereInput): Place!
 }
 
 """A connection to a list of items."""
@@ -9798,4 +9798,3 @@ input ViewsWhereInput {
 input ViewsWhereUniqueInput {
   id: ID
 }
-
