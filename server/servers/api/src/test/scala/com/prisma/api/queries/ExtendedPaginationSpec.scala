@@ -563,6 +563,124 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //endregion
 
+  //region Skip 1 First 1
+
+  "Top level Skip 1 First 1 " should "return the second item" in {
+    val result = server.query(
+      """
+        |{
+        |  tops(skip: 1, first: 1){t, middles{m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be("""{"data":{"tops":[{"t":"T2","middles":[{"m":"M21"},{"m":"M22"},{"m":"M23"}]}]}}""")
+  }
+
+  "Top level  Skip 1 First 3 " should "return only the last two items" in {
+    val result = server.query(
+      """
+        |{
+        |  tops(skip: 1, first: 3){t, middles{m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T2","middles":[{"m":"M21"},{"m":"M22"},{"m":"M23"}]},{"t":"T3","middles":[{"m":"M31"},{"m":"M32"},{"m":"M33"}]}]}}""")
+  }
+
+  "Middle level Skip 1 First 1 " should "return the second" in {
+    val result = server.query(
+      """
+        |{
+        |  tops{t, middles(skip: 1, first: 1){m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"}]},{"t":"T2","middles":[{"m":"M22"}]},{"t":"T3","middles":[{"m":"M32"}]}]}}""")
+  }
+
+  "Middle level Skip 1 First 3 " should "return the last two items" in {
+    val result = server.query(
+      """
+        |{
+        |  tops{t, middles(skip: 1, first: 3){m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"},{"m":"M13"}]},{"t":"T2","middles":[{"m":"M22"},{"m":"M23"}]},{"t":"T3","middles":[{"m":"M32"},{"m":"M33"}]}]}}""")
+  }
+
+  //endregion
+
+  //region Skip Last
+
+  "Top level Skip 1 Last 1 " should "return the second item" in {
+    val result = server.query(
+      """
+        |{
+        |  tops(skip: 1, last: 1){t, middles{m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be("""{"data":{"tops":[{"t":"T2","middles":[{"m":"M21"},{"m":"M22"},{"m":"M23"}]}]}}""")
+  }
+
+  "Top level  Skip 1 Last 3 " should "return only the first two items" in {
+    val result = server.query(
+      """
+        |{
+        |  tops(skip: 1, last: 3){t, middles{m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M11"},{"m":"M12"},{"m":"M13"}]},{"t":"T2","middles":[{"m":"M21"},{"m":"M22"},{"m":"M23"}]}]}}""")
+  }
+
+//  "Middle level Skip 1 First 1 " should "return the second" in {
+//    val result = server.query(
+//      """
+//        |{
+//        |  tops{t, middles(skip: 1, first: 1){m}}
+//        |}
+//      """,
+//      project
+//    )
+//
+//    result.toString() should be(
+//      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"}]},{"t":"T2","middles":[{"m":"M22"}]},{"t":"T3","middles":[{"m":"M32"}]}]}}""")
+//  }
+//
+//  "Middle level Skip 1 First 3 " should "return the last two items" in {
+//    val result = server.query(
+//      """
+//        |{
+//        |  tops{t, middles(skip: 1, first: 3){m}}
+//        |}
+//      """,
+//      project
+//    )
+//
+//    result.toString() should be(
+//      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"},{"m":"M13"}]},{"t":"T2","middles":[{"m":"M22"},{"m":"M23"}]},{"t":"T3","middles":[{"m":"M32"},{"m":"M33"}]}]}}""")
+//  }
+
+  //endregion
+
   private def createData(): Unit = {
     server.query(
       """
