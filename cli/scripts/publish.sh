@@ -89,7 +89,7 @@ fi
 
 echo "introspection changed: $introspectionChanged yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged ] && [ -z "$CIRCLE_TAG" ]; then
+if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
