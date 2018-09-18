@@ -391,7 +391,7 @@ class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with 
          |mutation {
          |  updateTodo(
          |    where: { id: "$id" }
-         |    data: { title:"new title", status: Done } 
+         |    data: { title:"new title", status: DONE }
          |  ){
          |    id
          |  }
