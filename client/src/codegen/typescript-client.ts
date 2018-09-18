@@ -693,9 +693,10 @@ ${fieldDefinition}
       : interfaces
 
     return `${this.renderDescription(typeDescription)}${
+      // TODO: Find a better solution than the hacky replace to remove ? from inside AtLeastOne
       typeName.includes('WhereUniqueInput')
         ? `export type ${typeName} = AtLeastOne<{
-        ${fieldDefinition}
+        ${fieldDefinition.replace("?:", ":")}
       }>`
         : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0

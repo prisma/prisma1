@@ -6,6 +6,7 @@ import * as path from 'path'
 import { buildSchema } from 'graphql'
 import {
   TypescriptGenerator,
+  TypescriptDefinitionsGenerator,
   JavascriptGenerator,
   GoGenerator,
   FlowGenerator,
@@ -125,7 +126,7 @@ export default class GenereateCommand extends Command {
     const schema = buildSchema(schemaString)
 
     const generator = new JavascriptGenerator({ schema })
-    const generatorTS = new TypescriptGenerator({ schema })
+    const generatorTS = new TypescriptDefinitionsGenerator({ schema })
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
@@ -139,7 +140,7 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.js'), javascript)
 
     const typescript = generatorTS.render(options)
-    fs.writeFileSync(path.join(output, 'index.ts'), typescript)
+    fs.writeFileSync(path.join(output, 'index.d.ts'), typescript)
 
     const typeDefs = generatorTS
       .renderTypedefs()
