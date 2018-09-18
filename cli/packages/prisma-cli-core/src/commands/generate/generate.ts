@@ -140,7 +140,7 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.js'), javascript)
 
     const typescript = generatorTS.render(options)
-    fs.writeFileSync(path.join(output, 'index.ts'), typescript)
+    fs.writeFileSync(path.join(output, 'index.d.ts'), typescript)
 
     const typeDefs = generatorTS
       .renderTypedefs()
