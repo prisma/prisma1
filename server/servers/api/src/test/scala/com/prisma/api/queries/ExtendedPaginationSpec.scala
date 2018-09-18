@@ -34,15 +34,6 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
-  //skip
-  //first
-  //last
-  //skip first
-  //skip last ??
-  //before
-  //after
-  //order
-
   "All data" should "be there" in {
     val result = server.query(
       """
@@ -563,7 +554,7 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //endregion
 
-  //region Skip 1 First 1
+  //region Skip  First
 
   "Top level Skip 1 First 1 " should "return the second item" in {
     val result = server.query(
@@ -651,33 +642,92 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"tops":[{"t":"T1","middles":[{"m":"M11"},{"m":"M12"},{"m":"M13"}]},{"t":"T2","middles":[{"m":"M21"},{"m":"M22"},{"m":"M23"}]}]}}""")
   }
 
-//  "Middle level Skip 1 First 1 " should "return the second" in {
-//    val result = server.query(
-//      """
-//        |{
-//        |  tops{t, middles(skip: 1, first: 1){m}}
-//        |}
-//      """,
-//      project
-//    )
-//
-//    result.toString() should be(
-//      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"}]},{"t":"T2","middles":[{"m":"M22"}]},{"t":"T3","middles":[{"m":"M32"}]}]}}""")
-//  }
-//
-//  "Middle level Skip 1 First 3 " should "return the last two items" in {
-//    val result = server.query(
-//      """
-//        |{
-//        |  tops{t, middles(skip: 1, first: 3){m}}
-//        |}
-//      """,
-//      project
-//    )
-//
-//    result.toString() should be(
-//      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"},{"m":"M13"}]},{"t":"T2","middles":[{"m":"M22"},{"m":"M23"}]},{"t":"T3","middles":[{"m":"M32"},{"m":"M33"}]}]}}""")
-//  }
+  "Middle level Skip 1 Last 1 " should "return the second" in {
+    val result = server.query(
+      """
+        |{
+        |  tops{t, middles(skip: 1, last: 1){m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M12"}]},{"t":"T2","middles":[{"m":"M22"}]},{"t":"T3","middles":[{"m":"M32"}]}]}}""")
+  }
+
+  "Middle level Skip 1 Last 3 " should "return the first two items" in {
+    val result = server.query(
+      """
+        |{
+        |  tops{t, middles(skip: 1, last: 3){m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M11"},{"m":"M12"}]},{"t":"T2","middles":[{"m":"M21"},{"m":"M22"}]},{"t":"T3","middles":[{"m":"M31"},{"m":"M32"}]}]}}""")
+  }
+
+  //endregion
+
+  //region Order First
+
+  "Top level OrderBy First 1 " should "return the last item" in {
+    val result = server.query(
+      """
+        |{
+        |  tops(orderBy: t_DESC, first: 1){t, middles{m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be("""{"data":{"tops":[{"t":"T3","middles":[{"m":"M31"},{"m":"M32"},{"m":"M33"}]}]}}""")
+  }
+
+  "Top level  OrderBy First 3 " should "return all items in reverse order" in {
+    val result = server.query(
+      """
+        |{
+        |  tops(orderBy: t_DESC, first: 3){t, middles{m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T3","middles":[{"m":"M31"},{"m":"M32"},{"m":"M33"}]},{"t":"T2","middles":[{"m":"M21"},{"m":"M22"},{"m":"M23"}]},{"t":"T1","middles":[{"m":"M11"},{"m":"M12"},{"m":"M13"}]}]}}""")
+  }
+
+  "Middle OrderBy First 1 " should "return the last item" in {
+    val result = server.query(
+      """
+        |{
+        |  tops{t, middles(orderBy: m_DESC, first: 1){m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M13"}]},{"t":"T2","middles":[{"m":"M23"}]},{"t":"T3","middles":[{"m":"M33"}]}]}}""")
+  }
+
+  "Middle level OrderBy First 3 " should "return all items in reverse order" in {
+    val result = server.query(
+      """
+        |{
+        |  tops{t, middles(orderBy: m_DESC, first: 3){m}}
+        |}
+      """,
+      project
+    )
+
+    result.toString() should be(
+      """{"data":{"tops":[{"t":"T1","middles":[{"m":"M13"},{"m":"M12"},{"m":"M11"}]},{"t":"T2","middles":[{"m":"M23"},{"m":"M22"},{"m":"M21"}]},{"t":"T3","middles":[{"m":"M33"},{"m":"M32"},{"m":"M31"}]}]}}""")
+  }
 
   //endregion
 
