@@ -1,5 +1,6 @@
 package com.prisma.subscriptions
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
@@ -24,7 +25,7 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     webhookTestKit.reset
   }
 
-  val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromString() {
     """
       |type Todo {
       |   id: ID! @unique
@@ -68,12 +69,42 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
       |}
     """.stripMargin
 
+  def nestedSubscriptionQueryFor(mutation: String): String =
+    s"""
+       |subscription {
+       |  comment(where: {
+       |    mutation_in : [$mutation]
+       |    node: {
+       |      text: "test"
+       |    }
+       |  }){
+       |    node {
+       |      text
+       |    }
+       |    previousValues {
+       |      text
+       |    }
+       |  }
+       |}
+    """.stripMargin
+
   val webhookUrl     = "http://www.mywebhooks.com"
   val webhookHeaders = Vector("header" -> "value")
+
   val sssFunctionForCreate = ServerSideSubscriptionFunction(
     name = "Test Function CREATED",
     isActive = true,
     query = subscriptionQueryFor("CREATED"),
+    delivery = WebhookDelivery(
+      url = webhookUrl,
+      headers = webhookHeaders
+    )
+  )
+
+  val nestedSSSFunctionForCreate = ServerSideSubscriptionFunction(
+    name = "Test Function Nested CREATED",
+    isActive = true,
+    query = nestedSubscriptionQueryFor("CREATED"),
     delivery = WebhookDelivery(
       url = webhookUrl,
       headers = webhookHeaders
@@ -100,7 +131,8 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     )
   )
 
-  val actualProject: Project = project.copy(functions = List(sssFunctionForCreate, sssFunctionForUpdate, sssFunctionForDeleted))
+  lazy val actualProject: Project =
+    project.copy(functions = List(sssFunctionForCreate, sssFunctionForUpdate, sssFunctionForDeleted, nestedSSSFunctionForCreate))
 
   val newTodoTitle     = "The title of the new todo"
   val newTodoStatus    = "ACTIVE"
@@ -255,17 +287,16 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create inside a Create mutation" in {
-    val theTitle = "The title of the new todo"
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create inside a Create mutation" taggedAs (IgnoreMongo) in {
+    val theText = "test"
     val createCommentWithNestedTodo =
-      s"""
-         |mutation {
-         |  createComment(data: {
-         |    text:"some text",
-         |    todo: {
+      s"""mutation {
+         |  createTodo(data: {
+         |    title:"some title",
+         |    status: $newTodoStatus
+         |    comments: {
          |      create: {
-         |        title:"$theTitle"
-         |        status: $newTodoStatus
+         |        text:"$theText"
          |      }
          |    }
          |  }){
@@ -274,7 +305,7 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
          |}
       """.stripMargin
 
-    server.query(createCommentWithNestedTodo, actualProject).pathAsString("data.createComment.id")
+    server.query(createCommentWithNestedTodo, actualProject).pathAsString("data.createTodo.id")
     webhookTestKit.expectPublishCount(1)
 
     val webhook = webhookTestKit.messagesPublished.head
@@ -302,7 +333,7 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create in an Update mutation" in {
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create in an Update mutation" taggedAs (IgnoreMongo) in {
     val newTodoTitle = "The title of the new todo"
     val createComment =
       s"""
