@@ -1,7 +1,5 @@
 import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, TypeFromModelGenerator } from '../../generator'
 import { IGQLType, IGQLField } from '../../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
-
 
 export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTypeGenerator {
   public static generateScalarFieldTypeForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {

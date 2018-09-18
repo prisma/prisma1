@@ -1,6 +1,4 @@
-import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators } from '../../generator'
-import { IGQLType, IGQLField } from '../../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
+import { IGQLType } from '../../../datamodel/model'
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
 
 

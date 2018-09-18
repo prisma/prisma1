@@ -1,7 +1,7 @@
 import { RootGenerator, FieldConfigUtils } from "../generator"
 import { IGQLType } from "../../datamodel/model"
-import { GraphQLObjectType, IGQLField, GraphQLID, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
 import { plural, camelCase } from '../../util/util'
+import { GraphQLObjectType, GraphQLNonNull, GraphQLFieldConfigMap, GraphQLList, GraphQLID } from "graphql"
 
 export default class QueryGenerator extends RootGenerator {
   public getTypeName(input: IGQLType[], args: {}) {
@@ -21,7 +21,7 @@ export default class QueryGenerator extends RootGenerator {
   }
 
   private getNodeField() {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<any, any>
     fields.node = {
       type: this.generators.node.generate(null, {}),
       args: { 
@@ -32,7 +32,7 @@ export default class QueryGenerator extends RootGenerator {
   }
  
   private generateOneQueryField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<any, any>
 
     if(this.generators.uniqueQueryArguments.wouldBeEmpty(model, {})) {
       return fields
@@ -47,7 +47,7 @@ export default class QueryGenerator extends RootGenerator {
   }
  
   private generateManyQueryField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<any, any>
 
     fields[camelCase(plural(model.name))] = {
       type: new GraphQLNonNull(new GraphQLList(this.generators.model.generate(model, {}))),
