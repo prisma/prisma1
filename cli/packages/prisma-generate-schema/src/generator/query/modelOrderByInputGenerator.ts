@@ -1,4 +1,4 @@
-import { GraphQLEnumType, GraphQLEnumValueConfigMap, GraphQLID, GraphQLDate } from 'graphql/type'
+import { GraphQLEnumType, GraphQLEnumValueConfigMap, GraphQLID } from 'graphql/type'
 import { IGQLType } from '../../datamodel/model'
 import { ModelEnumTypeGeneratorBase } from '../generator'
 
@@ -23,12 +23,12 @@ export default class ModelOrderByInputGenerator extends ModelEnumTypeGeneratorBa
     }
 
     // These fields are always present. 
-    values.id_ASC = { type: this.generators.scalarTypeGenerator.generate('ID', {}) }
-    values.id_DESC = { type: this.generators.scalarTypeGenerator.generate('ID', {}) }
-    values.createdAt_ASC = { type: this.generators.scalarTypeGenerator.generate('DateTime', {}) }
-    values.createdAt_DESC = { type: this.generators.scalarTypeGenerator.generate('DateTime', {}) }
-    values.updatedAt_ASC = { type: this.generators.scalarTypeGenerator.generate('DateTime', {}) }
-    values.updatedAt_DESC = { type: this.generators.scalarTypeGenerator.generate('DateTime', {}) }
+    values.id_ASC = { }
+    values.id_DESC = { }
+    values.createdAt_ASC = { }
+    values.createdAt_DESC = { }
+    values.updatedAt_ASC = { }
+    values.updatedAt_DESC = { }
 
 
     return new GraphQLEnumType({

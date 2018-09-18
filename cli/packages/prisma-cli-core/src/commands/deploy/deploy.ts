@@ -14,6 +14,7 @@ import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
+import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 
 export default class Deploy extends Command {
@@ -354,7 +355,9 @@ ${chalk.gray(
     for (const hook of hooks) {
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const child = spawnSync(splittedHook[0], splittedHook.slice(1))
+      const isPackaged = fs.existsSync('/snapshot')
+      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+      const child = spawnPath(splittedHook[0], splittedHook.slice(1))
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
         this.out.log(chalk.red(stderr))

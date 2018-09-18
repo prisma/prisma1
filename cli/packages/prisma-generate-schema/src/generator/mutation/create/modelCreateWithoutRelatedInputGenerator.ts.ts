@@ -1,6 +1,6 @@
 import { ModelObjectTypeGenerator, RelatedGeneratorArgs, RelatedModelInputObjectTypeGenerator } from '../../generator'
 import { IGQLType, IGQLField } from '../../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
+import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLList, GraphQLInputObjectType, GraphQLString } from "graphql/type"
 import ModelCreateInputGenerator from './modelCreateInputGenerator';
 import { plural, camelCase, capitalize } from '../../../util/util';
 

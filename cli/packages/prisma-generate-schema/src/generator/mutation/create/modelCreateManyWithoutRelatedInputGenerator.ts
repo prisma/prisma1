@@ -11,7 +11,7 @@ export abstract class ModelCreateOneOrManyWithoutRelatedInputGenerator extends R
       !TypeFromModelGenerator.hasUniqueField(model.fields)
   }
 
-  protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLInputObjectType
+  protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType
 
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
@@ -34,7 +34,7 @@ export default class ModelCreateManyWithoutRelatedInputGenerator extends ModelCr
     const field = args.relatedField.relatedField as IGQLField
     return `${input.name}CreateManyWithout${capitalize(field.name)}Input`
   }
-  protected maybeWrapList(input: GraphQLInputObjectType) {
+  protected maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType {
     return this.generators.scalarTypeGenerator.wrapList(input)
   }
 }

@@ -1,7 +1,5 @@
-import { ModelInputObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, TypeFromModelGenerator } from '../generator'
+import { ModelInputObjectTypeGenerator, TypeFromModelGenerator } from '../generator'
 import { IGQLType, IGQLField } from '../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
-
 
 export default class ModelWhereUniqueInputGenerator extends ModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: {}) {

@@ -1,6 +1,5 @@
 import { ModelObjectTypeGenerator } from '../generator'
 import { IGQLType, IGQLField } from '../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
 
 export default class ModelGenerator extends ModelObjectTypeGenerator {
 
