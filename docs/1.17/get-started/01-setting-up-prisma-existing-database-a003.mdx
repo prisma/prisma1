@@ -34,7 +34,7 @@ Using your existing database with Prisma currently only works when using **Postg
 
 Make sure to have connection details for your database at hand. This includes the following pieces of information:
 
-- **Host**: The host of your Postgres server, e.g. `localhost`.
+- **Host**: The host of your Postgres server, e.g. `localhost`. When connecting to a local database, you may need to use `host.docker.internal`.
 - **Port**: The port where your Postgres server listens, e.g. `5432`.
 - **User & Password**: The credentials for your Postgres server.
 - **Name of existing _database_**: The name of the Postgres _database_.
@@ -122,7 +122,7 @@ services:
 
 To specify the database to which Prisma should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
 
-- `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`.
+- `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`. When connecting to a local database, you may need to use `host.docker.internal`.
 - `__YOUR_POSTGRES_PORT__`: The port where your Postgres server listens, e.g. `5432`.
 - `__YOUR_POSTGRES_DB__`: The name of your Postgres database.
 - `__YOUR_POSTGRES_SCHEMA__`: The name of your Postgres schema, e.g. `public`.
