@@ -1,0 +1,71 @@
+export const meta = {
+  title: 'Prisma Bindings',
+  position: 2
+}
+
+## Prisma Bindings
+
+Prisma bindings are GraphQL bindings specifically for Prisma APIs. Think of them as an (auto-generated) **SDK for Prisma**.
+
+## Example
+
+Consider the following service configuration for your Prisma service:
+
+**prisma.yml**
+
+```yml
+endpoint: http://localhost:4466
+datamodel: datamodel.graphql
+secret: my-secret-42
+```
+
+**`datamodel.graphql`**
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+
+If you instantiate a `Prisma` binding for on this service, you'll be able to send the following queries/mutations:
+
+```js
+// Instantiate `Prisma` based on concrete service
+const prisma = new Prisma({
+  typeDefs: 'prisma.graphql',
+  endpoint: 'http://localhost:4466'
+  secret: 'my-secret-42'
+})
+
+// Retrieve `name` of a specific user
+prisma.query.user({ where { id: 'abc' } }, '{ name }')
+
+// Retrieve `id` and `name` of all users
+prisma.query.users(null, '{ id name }')
+
+// Create new user called `Sarah` and retrieve the `id`
+prisma.mutation.createUser({ data: { name: 'Sarah' } }, '{ id }')
+
+// Update name of a specific user and retrieve the `id`
+prisma.mutation.updateUser({ where: { id: 'abc' }, data: { name: 'Sarah' } }, '{ id }')
+
+// Delete a specific user and retrieve the `name`
+prisma.mutation.deleteUser({ where: { id: 'abc' } }, '{ id }')
+```
+
+Under the hood, each of these function calls is simply translated into an actual HTTP request against your Prisma service (using [`graphql-request`](https://github.com/prismagraphql/graphql-request)).
+
+The API also allows to ask whether a specific node exists in your Prisma database:
+
+```js
+// Ask whether a post exists with `id` equal to `abc` and whose
+// `author` is called `Sarah` (return boolean value)
+prisma.exists.Post({
+  id: 'abc',
+  author: {
+    name: 'Sarah'
+  }
+})
+```

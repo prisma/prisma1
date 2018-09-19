@@ -9,14 +9,14 @@ import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, UpdateSecrets}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.future.FutureUtils.FutureOr
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 import sangria.parser.QueryParser
 
-import scala.collection.{Seq, immutable}
+import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -55,7 +55,7 @@ case class DeployMutation(
       inferredTables     <- FutureOr(inferTables)
       inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
       _                  <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-      functions          <- FutureOr(getFunctionModels(args.functions))
+      functions          <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps              <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
 
@@ -103,8 +103,8 @@ case class DeployMutation(
     DestructiveChanges(deployConnector, project, nextSchema, steps).check
   }
 
-  private def getFunctionModels(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {
-    dependencies.functionValidator.validateFunctionInputs(project, fns)
+  private def getFunctionModels(nextSchema: Schema, fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {
+    dependencies.functionValidator.validateFunctionInputs(nextSchema, fns)
   }
 
   private def performDeployment(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Good[DeployMutationPayload]] = {
@@ -112,6 +112,7 @@ case class DeployMutation(
       secretsStep <- updateSecretsIfNecessary()
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
     } yield {
+      dependencies.invalidationPublisher.publish(Only(project.id), project.id)
       Good(DeployMutationPayload(args.clientMutationId, migration, errors = Vector.empty, warnings = Vector.empty))
     }
   }

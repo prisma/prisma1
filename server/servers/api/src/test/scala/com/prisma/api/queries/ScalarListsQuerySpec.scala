@@ -7,6 +7,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
+  override def runSuiteOnlyForActiveConnectors = true
+
   "empty scalar list" should "return empty list" in {
 
     val project = SchemaDsl.fromBuilder { schema =>

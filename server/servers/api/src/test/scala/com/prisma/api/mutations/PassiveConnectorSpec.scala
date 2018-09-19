@@ -7,7 +7,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
-  val projectId = "passive_test"
+  val schema = "passive_test"
 
   override def runSuiteOnlyForPassiveConnectors = true
 
@@ -24,32 +24,44 @@ trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
 class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   val inlineRelationSchema = s"""
-                                |DROP SCHEMA IF EXISTS $projectId CASCADE;
-                                |CREATE SCHEMA $projectId;
-                                |CREATE TABLE $projectId.list (
+                                |DROP SCHEMA IF EXISTS $schema CASCADE;
+                                |CREATE SCHEMA $schema;
+                                |CREATE TABLE $schema.list (
                                 |  id      varchar PRIMARY KEY  -- implicit primary key constraint
                                 |, name    text NOT NULL
                                 |);
                                 |
-                                |CREATE TABLE $projectId.todo (
+                                |CREATE TABLE $schema.user (
+                                |  id      varchar PRIMARY KEY  -- implicit primary key constraint
+                                |, name    text NOT NULL
+                                |);
+                                |
+                                |CREATE TABLE $schema.todo (
                                 |  id       varchar PRIMARY KEY
                                 |, title     text NOT NULL
-                                |, list_id varchar NOT NULL REFERENCES $projectId.list (id) ON UPDATE CASCADE
+                                |, list_id varchar REFERENCES $schema.list (id) ON UPDATE CASCADE
+                                |, user_id varchar REFERENCES $schema.user (id) ON UPDATE CASCADE
                                 |);
       """.stripMargin
 
-  lazy val inlineRelationProject = SchemaDsl.fromPassiveConnectorSdl(id = projectId, testDependencies.deployConnector) {
+  lazy val inlineRelationProject = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
     """
       | type List @pgTable(name: "list"){
-      |   id: ID!
+      |   id: ID! @unique
       |   name: String!
-      |   todos: [Todo]
+      |   todos: [Todo!]!
       | }
       |
       | type Todo @pgTable(name: "todo"){
-      |   id: ID!
+      |   id: ID! @unique
       |   title: String!
       |   list: List @pgRelation(column: "list_id")
+      |   user: MyUser @pgRelation(column: "user_id")
+      | }
+      |
+      | type MyUser @pgTable(name: "user"){ # it's called MyUser so that the type is on the right side of the relation to ensure a bug is not there
+      |   id: ID! @unique
+      |   name: String!
       | }
     """.stripMargin
   }
@@ -100,12 +112,45 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
   }
 
+  "Expanding 2 inline relations on a type" should "work" taggedAs (IgnoreActive) in {
+    executeOnInternalDatabase(inlineRelationSchema)
+
+    server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{
+         |         title: "the todo"
+         |         user: {
+         |           create: { name: "the user" }
+         |         }
+         |      }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+
+    val res = server.query(
+      s"""{
+         |  todoes {
+         |    title
+         |    list { name }
+         |    user { name }
+         |  }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+    res should be(s"""{"data":{"todoes":[{"title":"the todo","list":{"name":"the list"},"user":{"name":"the user"}}]}}""".parseJson)
+  }
+
   "the connector" should "support diverging names for models/tables and fields/columns" taggedAs (IgnoreActive) in {
     executeOnInternalDatabase(inlineRelationSchema)
-    val project = SchemaDsl.fromPassiveConnectorSdl(id = projectId, testDependencies.deployConnector) {
+    val project = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
       """
         | type List @pgTable(name: "list"){
-        |   id: ID!
+        |   id: ID! @unique
         |   theName: String! @pgColumn(name: "name")
         | }
       """.stripMargin
@@ -125,34 +170,34 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnectorSpec with Matchers with ApiSpecBase {
   val relationTableSchema =
     s"""
-       |DROP SCHEMA IF EXISTS $projectId CASCADE;
-       |CREATE SCHEMA $projectId;
-       |CREATE TABLE $projectId.list (
+       |DROP SCHEMA IF EXISTS $schema CASCADE;
+       |CREATE SCHEMA $schema;
+       |CREATE TABLE $schema.list (
        |  id      varchar PRIMARY KEY  -- implicit primary key constraint
        |, name    text NOT NULL
        |);
        |
-       |CREATE TABLE $projectId.todo (
+       |CREATE TABLE $schema.todo (
        |  id       varchar PRIMARY KEY
        |, title     text NOT NULL
        |);
        |
-       |CREATE TABLE $projectId.list_to_todo (
-       |  list_id varchar REFERENCES $projectId.list (id) ON UPDATE CASCADE ON DELETE CASCADE
-       |, todo_id varchar REFERENCES $projectId.todo (id) ON UPDATE CASCADE ON DELETE CASCADE
+       |CREATE TABLE $schema.list_to_todo (
+       |  list_id varchar REFERENCES $schema.list (id) ON UPDATE CASCADE ON DELETE CASCADE
+       |, todo_id varchar REFERENCES $schema.todo (id) ON UPDATE CASCADE ON DELETE CASCADE
        |);
      """.stripMargin
 
-  lazy val relationTableProject = SchemaDsl.fromPassiveConnectorSdl(id = projectId, testDependencies.deployConnector) {
+  lazy val relationTableProject = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
     """
       | type List @pgTable(name: "list"){
-      |   id: ID!
+      |   id: ID! @unique
       |   name: String!
-      |   todos: [Todo] @pgRelationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
+      |   todos: [Todo!]! @pgRelationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
       | }
       |
       | type Todo @pgTable(name: "todo"){
-      |   id: ID!
+      |   id: ID! @unique
       |   title: String!
       |   list: List
       | }
@@ -193,32 +238,32 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
 class PassiveConnectorSpecForAutoGeneratedIds extends FlatSpec with PassiveConnectorSpec with Matchers with ApiSpecBase {
   val sqlSchema =
     s"""
-       |DROP SCHEMA IF EXISTS $projectId CASCADE;
-       |CREATE SCHEMA $projectId;
-       |CREATE TABLE $projectId.list (
+       |DROP SCHEMA IF EXISTS $schema CASCADE;
+       |CREATE SCHEMA $schema;
+       |CREATE TABLE $schema.list (
        |  id      SERIAL PRIMARY KEY  -- implicit primary key constraint
        |, name    text NOT NULL
        |, foo     text
        |);
        |
-       |CREATE TABLE $projectId.todo (
+       |CREATE TABLE $schema.todo (
        |  id      SERIAL PRIMARY KEY
        |, title   text NOT NULL
-       |, list_id int REFERENCES $projectId.list (id) ON UPDATE CASCADE
+       |, list_id int REFERENCES $schema.list (id) ON UPDATE CASCADE
        |);
      """.stripMargin
 
-  lazy val project = SchemaDsl.fromPassiveConnectorSdl(id = projectId, testDependencies.deployConnector) {
+  lazy val project = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
     """
       | type List @pgTable(name: "list"){
-      |   id: Int!
+      |   id: Int! @unique
       |   name: String!
       |   foo: String
-      |   todos: [Todo]
+      |   todos: [Todo!]!
       | }
       |
       | type Todo @pgTable(name: "todo"){
-      |   id: Int!
+      |   id: Int! @unique
       |   title: String
       |   list: List @pgRelation(column: "list_id")
       | }

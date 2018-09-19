@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.PreparedStatement
 
-import com.prisma.api.connector._
+import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
@@ -33,17 +33,9 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
   }
 
   def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    queryArguments.first.foreach { _ =>
-      val (first, second) = limitClause(Some(queryArguments)).get
-      pp.setInt(first)
-      pp.setInt(second)
-    }
-
-    queryArguments.last.foreach { _ =>
-      val (first, second) = limitClause(Some(queryArguments)).get
-      pp.setInt(first)
-      pp.setInt(second)
-    }
+    val skipAndLimit = skipAndLimitValues(queryArguments)
+    skipAndLimit.limit.foreach(pp.setInt)
+    pp.setInt(skipAndLimit.skip)
   }
 
   def setFilter(pp: PositionedParameters, filter: Option[Filter]): Unit = {
@@ -55,34 +47,35 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
   def setFilter(pp: PositionedParameters, filter: Filter): Unit = {
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter()           => // NOOP
+      case NodeSubscriptionFilter             => // NOOP
       case AndFilter(filters)                 => filters.foreach(setFilter(pp, _))
       case OrFilter(filters)                  => filters.foreach(setFilter(pp, _))
       case NotFilter(filters)                 => filters.foreach(setFilter(pp, _))
       case NodeFilter(filters)                => setFilter(pp, OrFilter(filters))
       case RelationFilter(_, nestedFilter, _) => setFilter(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
-      case PreComputedSubscriptionFilter(_)                     => // NOOP
-      case ScalarFilter(_, Contains(StringGCValue(value)))      => pp.setString(value)
-      case ScalarFilter(_, NotContains(StringGCValue(value)))   => pp.setString(value)
-      case ScalarFilter(_, StartsWith(StringGCValue(value)))    => pp.setString(value)
-      case ScalarFilter(_, NotStartsWith(StringGCValue(value))) => pp.setString(value)
-      case ScalarFilter(_, EndsWith(StringGCValue(value)))      => pp.setString(value)
-      case ScalarFilter(_, NotEndsWith(StringGCValue(value)))   => pp.setString(value)
-      case ScalarFilter(_, LessThan(value))                     => pp.setGcValue(value)
-      case ScalarFilter(_, GreaterThan(value))                  => pp.setGcValue(value)
-      case ScalarFilter(_, LessThanOrEquals(value))             => pp.setGcValue(value)
-      case ScalarFilter(_, GreaterThanOrEquals(value))          => pp.setGcValue(value)
-      case ScalarFilter(_, NotEquals(NullGCValue))              => // NOOP
-      case ScalarFilter(_, NotEquals(value))                    => pp.setGcValue(value)
-      case ScalarFilter(_, Equals(NullGCValue))                 => // NOOP
-      case ScalarFilter(_, Equals(value))                       => pp.setGcValue(value)
-      case ScalarFilter(_, In(Vector(NullGCValue)))             => // NOOP
-      case ScalarFilter(_, NotIn(Vector(NullGCValue)))          => // NOOP
-      case ScalarFilter(_, In(values))                          => values.foreach(pp.setGcValue)
-      case ScalarFilter(_, NotIn(values))                       => values.foreach(pp.setGcValue)
-      case OneRelationIsNullFilter(_)                           => // NOOP
-      case x                                                    => sys.error(s"Not supported: $x")
+      case TrueFilter                                  => // NOOP
+      case FalseFilter                                 => // NOOP
+      case ScalarFilter(_, Contains(value))            => pp.setGcValue(value)
+      case ScalarFilter(_, NotContains(value))         => pp.setGcValue(value)
+      case ScalarFilter(_, StartsWith(value))          => pp.setGcValue(value)
+      case ScalarFilter(_, NotStartsWith(value))       => pp.setGcValue(value)
+      case ScalarFilter(_, EndsWith(value))            => pp.setGcValue(value)
+      case ScalarFilter(_, NotEndsWith(value))         => pp.setGcValue(value)
+      case ScalarFilter(_, LessThan(value))            => pp.setGcValue(value)
+      case ScalarFilter(_, GreaterThan(value))         => pp.setGcValue(value)
+      case ScalarFilter(_, LessThanOrEquals(value))    => pp.setGcValue(value)
+      case ScalarFilter(_, GreaterThanOrEquals(value)) => pp.setGcValue(value)
+      case ScalarFilter(_, NotEquals(NullGCValue))     => // NOOP
+      case ScalarFilter(_, NotEquals(value))           => pp.setGcValue(value)
+      case ScalarFilter(_, Equals(NullGCValue))        => // NOOP
+      case ScalarFilter(_, Equals(value))              => pp.setGcValue(value)
+      case ScalarFilter(_, In(Vector(NullGCValue)))    => // NOOP
+      case ScalarFilter(_, NotIn(Vector(NullGCValue))) => // NOOP
+      case ScalarFilter(_, In(values))                 => values.foreach(pp.setGcValue)
+      case ScalarFilter(_, NotIn(values))              => values.foreach(pp.setGcValue)
+      case OneRelationIsNullFilter(_)                  => // NOOP
+      case x                                           => sys.error(s"Not supported: $x")
     }
   }
 }

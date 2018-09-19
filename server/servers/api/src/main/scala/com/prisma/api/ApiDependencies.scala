@@ -5,14 +5,14 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability, DataResolver, DatabaseMutactionExecutor}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
-import com.prisma.api.resolver.DeferredResolverProvider
+import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.api.server.RequestHandler
+import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.auth.{Auth, AuthImpl}
-import com.prisma.client.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl}
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
-import com.prisma.messagebus.{PubSub, PubSubPublisher, QueuePublisher}
+import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
+import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
@@ -26,6 +26,7 @@ trait ApiDependencies extends AwaitUtils {
   val materializer: ActorMaterializer
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder
+  def invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   def webhookPublisher: QueuePublisher[Webhook]
   def apiConnector: ApiConnector
   def databaseMutactionExecutor: DatabaseMutactionExecutor = apiConnector.databaseMutactionExecutor
@@ -48,7 +49,7 @@ trait ApiDependencies extends AwaitUtils {
 
   def dataResolver(project: Project): DataResolver       = apiConnector.dataResolver(project)
   def masterDataResolver(project: Project): DataResolver = apiConnector.masterDataResolver(project)
-  def deferredResolverProvider(project: Project)         = new DeferredResolverProvider[ApiUserContext](dataResolver(project))
+  def deferredResolverProvider(project: Project)         = new DeferredResolverImpl[ApiUserContext](dataResolver(project))
 
   def destroy = {
     apiConnector.shutdown().await()

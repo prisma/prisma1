@@ -6,6 +6,7 @@ import play.api.libs.json._
 import sangria.marshalling.{ArrayMapBuilder, InputUnmarshaller, ResultMarshaller, ScalarValueInfo}
 
 object JsonMarshalling {
+  val dateTimeFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z").withZoneUTC()
 
   implicit object CustomPlayJsonResultMarshaller extends ResultMarshaller {
     type Node       = JsValue
@@ -36,7 +37,7 @@ object JsonMarshalling {
         case v: Double     ⇒ JsNumber(v)
         case v: BigInt     ⇒ JsNumber(BigDecimal(v))
         case v: BigDecimal ⇒ JsNumber(v)
-        case v: DateTime   ⇒ JsString(v.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z").withZoneUTC()))
+        case v: DateTime   ⇒ JsString(v.toString(dateTimeFormat))
         case v: JsValue    ⇒ v
         case v             ⇒ throw new IllegalArgumentException("Unsupported scalar value in CustomSprayJsonResultMarshaller: " + v)
       }

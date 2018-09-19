@@ -1,64 +1,94 @@
 import {
+  Connector,
   Table,
   Column,
   TypeIdentifier,
+  TableRelation,
   PrimaryKey,
   PostgresConnectionDetails,
 } from '../types/common'
 import * as _ from 'lodash'
 import { Client } from 'pg'
 
-export class PostgresConnector {
-  client
-  connectionPromise
+
+// Responsible for extracting a normalized representation of a PostgreSQL database (schema)
+export class PostgresConnector implements Connector {
+  client: Client
+  connectionPromise: Promise<any>
 
   constructor(connectionDetails: PostgresConnectionDetails) {
     this.client = new Client(connectionDetails)
     this.connectionPromise = this.client.connect()
+
     // auto disconnect. end waits for queries to succeed
     setTimeout(() => {
       this.client.end()
     }, 3000)
   }
 
-  async queryRelations(schemaName: string) {
-    const res = await this.client.query(
-      `
-SELECT
-    tc.table_schema, tc.constraint_name, tc.table_name, kcu.column_name, 
-    ccu.table_schema AS foreign_table_schema,
-    ccu.table_name AS foreign_table_name,
-    ccu.column_name AS foreign_column_name 
-FROM 
-    information_schema.table_constraints AS tc 
-    JOIN information_schema.key_column_usage AS kcu
-      ON tc.constraint_name = kcu.constraint_name
-    JOIN information_schema.constraint_column_usage AS ccu
-      ON ccu.constraint_name = tc.constraint_name
-WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
-      [schemaName.toLowerCase()]
-    )
+  async listSchemas(): Promise<string[]> {
+    await this.connectionPromise
+    return await this.querySchemas()
+  }
 
-    return res.rows
+  async listTables(schemaName: string): Promise<Table[]> {
+    await this.connectionPromise
+
+    const [relations, tableColumns, primaryKeys] = await Promise.all([
+      this.queryRelations(schemaName),
+      this.queryTableColumns(schemaName),
+      this.queryPrimaryKeys(schemaName)
+    ])
+
+    const tables = _.map(tableColumns, (rawColumns, tableName) => {
+      const tablePrimaryKey = primaryKeys.find(pk => pk.tableName === tableName) || null
+      const tableRelations = relations.filter(rel => rel.source_table === tableName)
+      const columns = _.map(rawColumns, column => {
+        // Ignore composite keys for now
+        const isPk = Boolean(tablePrimaryKey
+          && tablePrimaryKey.fields.length == 1
+          && Boolean(tablePrimaryKey.fields.includes(column.column_name))
+        )
+
+        const { typeIdentifier, comment, error } = this.toTypeIdentifier(
+          column.data_type,
+          column.column_name,
+          isPk
+        )
+
+        const col = {
+          isUnique: column.is_unique || isPk,
+          isPrimaryKey: isPk,
+          defaultValue: this.parseDefaultValue(column.column_default),
+          name: column.column_name,
+          type: column.data_type,
+          typeIdentifier,
+          comment,
+          nullable: column.is_nullable === 'YES',
+        } as Column
+
+        return col
+      }).filter(x => x != null) as Column[]
+      return new Table(tableName, columns, relations)
+    })
+
+    return _.sortBy(tables, x => x.name)
   }
 
   // Queries all columns of all tables in given schema and returns them grouped by table_name
-  async queryTables(schemaName: string) {
-    //, table_name, column_name, is_nullable, data_type, udt_name, column_default
+  async queryTableColumns(schemaName: string): Promise<{ [key: string]: any[] }> {
     const res = await this.client.query(
-      `
-      SELECT *, (SELECT EXISTS(
-        SELECT *
-        FROM information_schema.table_constraints AS tc 
-        JOIN information_schema.key_column_usage AS kcu
-          ON tc.constraint_name = kcu.constraint_name
-        WHERE constraint_type = 'UNIQUE' 
-        AND tc.table_schema = $1::text
-        AND tc.table_name = c.table_name
-        AND kcu.column_name = c.column_name)) as is_unique
-      FROM  information_schema.columns c
-      WHERE table_schema = $1::text
-      `,
+      `SELECT *, (SELECT EXISTS(
+         SELECT *
+         FROM information_schema.table_constraints AS tc 
+         JOIN information_schema.key_column_usage AS kcu
+           ON tc.constraint_name = kcu.constraint_name
+         WHERE constraint_type = 'UNIQUE' 
+         AND tc.table_schema = $1::text
+         AND tc.table_name = c.table_name
+         AND kcu.column_name = c.column_name)) as is_unique
+       FROM  information_schema.columns c
+       WHERE table_schema = $1::text`,
       [schemaName.toLowerCase()]
     )
 
@@ -67,18 +97,16 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
 
   async queryPrimaryKeys(schemaName: string): Promise<PrimaryKey[]> {
     return this.client.query(
-      `
-      SELECT tc.table_name, kc.column_name
-      FROM information_schema.table_constraints tc
-      JOIN information_schema.key_column_usage kc 
-        ON kc.table_name = tc.table_name 
-        AND kc.table_schema = tc.table_schema
-        AND kc.constraint_name = tc.constraint_name
-      WHERE tc.constraint_type = 'PRIMARY KEY'
-      AND tc.table_schema = $1::text
-      AND kc.ordinal_position IS NOT NULL
-      ORDER BY tc.table_name, kc.position_in_unique_constraint;
-      `,
+      `SELECT tc.table_name, kc.column_name
+       FROM information_schema.table_constraints tc
+       JOIN information_schema.key_column_usage kc 
+         ON kc.table_name = tc.table_name 
+         AND kc.table_schema = tc.table_schema
+         AND kc.constraint_name = tc.constraint_name
+       WHERE tc.constraint_type = 'PRIMARY KEY'
+       AND tc.table_schema = $1::text
+       AND kc.ordinal_position IS NOT NULL
+       ORDER BY tc.table_name, kc.position_in_unique_constraint;`,
       [schemaName.toLowerCase()]
     ).then(keys => {
       const grouped = _.groupBy(keys.rows, 'table_name')
@@ -91,99 +119,52 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
     })
   }
 
+  async queryRelations(schemaName: string): Promise<TableRelation[]> {
+    const res = await this.client.query(
+      `SELECT source_table_name,
+              source_attr.attname AS source_column,
+              target_table_name,
+              target_attr.attname AS target_column
+      FROM pg_attribute target_attr, pg_attribute source_attr,
+      (
+        SELECT source_table_name, target_table_name, source_table_oid, target_table_oid, source_constraints[i] source_constraints, target_constraints[i] AS target_constraints
+        FROM
+        (
+          SELECT pgc.relname as source_table_name, pgct.relname as target_table_name, conrelid as source_table_oid, confrelid AS target_table_oid, conkey AS source_constraints, confkey AS target_constraints, generate_series(1, array_upper(conkey, 1)) AS i
+          FROM pg_constraint as pgcon 
+            LEFT JOIN pg_class as pgc ON pgcon.conrelid = pgc.oid -- source table
+            LEFT JOIN pg_namespace as pgn ON pgc.relnamespace = pgn.oid
+            LEFT JOIN pg_class as pgct ON pgcon.confrelid = pgct.oid -- target table
+            LEFT JOIN pg_namespace as pgnt ON pgct.relnamespace = pgnt.oid
+          WHERE contype = 'f'
+          AND pgn.nspname = $1::text 
+          AND pgnt.nspname = $1::text 
+        ) query1
+      ) query2
+      WHERE target_attr.attnum = target_constraints AND target_attr.attrelid = target_table_oid
+      AND   source_attr.attnum = source_constraints AND source_attr.attrelid = source_table_oid;`,
+      [schemaName.toLowerCase()]
+    )
+
+    return res.rows.map(row => {
+      return {
+        source_table: row.source_table_name,
+        source_column: row.source_column,
+        target_table: row.target_table_name,
+        target_column: row.target_column
+      }
+    }) as TableRelation[]
+  }
+
   async querySchemas() {
     const res = await this.client.query(
-      `select schema_name from information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema';`
+      `SELECT schema_name 
+       FROM information_schema.schemata 
+       WHERE schema_name NOT LIKE 'pg_%' 
+       AND schema_name NOT LIKE 'information_schema';`
     )
 
     return res.rows.map(x => x.schema_name)
-  }
-
-  extractRelation(table, column, relations) {
-    const candidate = relations.find(
-      relation =>
-        relation.table_name === table && relation.column_name === column
-    )
-
-    if (candidate) {
-      return {
-        table: candidate.foreign_table_name,
-      }
-    } else {
-      return null
-    }
-  }
-
-  async listSchemas(): Promise<string[]> {
-    await this.connectionPromise
-    return await this.querySchemas()
-  }
-
-  async listTables(schemaName: string): Promise<Table[]> {
-    await this.connectionPromise
-
-    const [relations, tables, primaryKeys] = await Promise.all([
-      this.queryRelations(schemaName),
-      this.queryTables(schemaName),
-      this.queryPrimaryKeys(schemaName)
-    ])
-
-    const withColumns = _.map(tables, (originalColumns, key) => {
-      const tablePrimaryKey = primaryKeys.find(pk => pk.tableName === key) || null
-      const columns = _.map(originalColumns, column => {
-
-        // Ignore compound keys for now
-        const isPk = Boolean(tablePrimaryKey
-          && tablePrimaryKey.fields.length == 1
-          && Boolean(tablePrimaryKey.fields.includes(column.column_name))
-        )
-
-        const { typeIdentifier, comment, error } = this.toTypeIdentifier(
-          column.data_type,
-          column.column_name,
-          isPk
-        )
-
-        const relation = this.extractRelation(
-          column.table_name,
-          column.column_name,
-          relations
-        )
-
-        const col = {
-          isUnique: column.is_unique || isPk,
-          isPrimaryKey: isPk,
-          defaultValue: this.parseDefaultValue(column.column_default),
-          name: column.column_name,
-          type: column.data_type,
-          typeIdentifier,
-          comment,
-          relation: relation,
-          nullable: column.is_nullable === 'YES',
-        } as Column
-
-        return col
-      }).filter(x => x != null) as Column[]
-
-      // todo: relation table if 2 foreign keys. Also: No id field? + no other column that has NOT NULL and no default
-      const sortedColumns = _.sortBy(columns.filter(c => !c.isPrimaryKey), x => x.name)
-      const primaryKeyCol = columns.find(c => c.isPrimaryKey)
-      if (primaryKeyCol) {
-        sortedColumns.unshift(primaryKeyCol)
-      }
-
-      const isJunctionTable =
-        sortedColumns.length === 2 &&
-        sortedColumns.every(x => x.relation != null)
-
-      return {
-        name: key,
-        columns: sortedColumns,
-        isJunctionTable: isJunctionTable,
-      }
-    })
-
-    return _.sortBy(withColumns, x => x.name)
   }
 
   parseDefaultValue(string) {
@@ -232,13 +213,13 @@ WHERE constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1::text;`,
       (type === 'character' ||
         type === 'character varying' ||
         type === 'text' ||
-        type == 'uuid')
+        type === 'uuid')
     ) {
-      return { typeIdentifier: 'ID', comment: null, error: null }
+      return { typeIdentifier: (type === 'uuid') ? 'UUID' : 'ID', comment: null, error: null }
     }
 
     if (type === 'uuid') {
-      return { typeIdentifier: 'String', comment: null, error: null }
+      return { typeIdentifier: 'UUID', comment: null, error: null }
     }
     if (type === 'character') {
       return { typeIdentifier: 'String', comment: null, error: null }

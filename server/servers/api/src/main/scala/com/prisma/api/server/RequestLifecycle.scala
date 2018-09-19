@@ -3,9 +3,11 @@ package com.prisma.api.server
 import com.prisma.api.schema.APIErrors.VariablesParsingError
 import com.prisma.api.schema.ApiUserContext
 import com.prisma.api.schema.CommonErrors.InputCompletelyMalformed
+import com.prisma.cache.Cache
 import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryUtil
 import play.api.libs.json._
+import sangria.ast.Document
 import sangria.parser.QueryParser
 import sangria.schema.Schema
 
@@ -81,6 +83,9 @@ case class GraphQlQuery(
 )
 
 object GraphQlQuery {
+
+  val queryParsingCache = Cache.lfu[String, Try[Document]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
+
   def tryFromJson(requestJson: JsValue): Try[GraphQlQuery] = {
     val JsObject(fields) = requestJson
     val query = fields.get("query") match {
@@ -105,7 +110,9 @@ object GraphQlQuery {
         JsObject.empty
     }
 
-    QueryParser.parse(query).map { queryAst =>
+    val parseResult = queryParsingCache.getOrUpdate(query, () => QueryParser.parse(query))
+
+    parseResult.map { queryAst =>
       GraphQlQuery(
         query = queryAst,
         queryString = query,

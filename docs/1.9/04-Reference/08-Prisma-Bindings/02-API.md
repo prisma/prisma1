@@ -38,7 +38,7 @@ prisma.mutation.createUser({ data: { name: 'Sarah' } }, '{ id }')
 // Update name of a specific user and retrieve the `id`
 prisma.mutation.updateUser({ where: { id: 'abc' }, data: { name: 'Sarah' } }, '{ id }')
 
-// Delete a specific user and retrieve the `name`
+// Delete a specific user and retrieve the `id`
 prisma.mutation.deleteUser({ where: { id: 'abc' } }, '{ id }')
 ```
 

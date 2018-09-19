@@ -47,10 +47,12 @@ your pull request should be accepted quickly.
 
 Here are further contribution instructions:
 
-* [cli](./cli/CONTRIBUTING.md)
-* [docs](./docs/CONTRIBUTING.md)
-* [examples](./examples/CONTRIBUTING.md)
-* [server](./server/CONTRIBUTING.md)
+* [`cli`](./cli/CONTRIBUTING.md)
+* [`docs`](./docs/CONTRIBUTING.md)
+* [`examples`](./examples/CONTRIBUTING.md)
+* [`server`](./server/CONTRIBUTING.md)
+
+For `cli` and `server`, **PRs need to be made against the `alpha` branch** (not `master`).
 
 ## Logistics
 

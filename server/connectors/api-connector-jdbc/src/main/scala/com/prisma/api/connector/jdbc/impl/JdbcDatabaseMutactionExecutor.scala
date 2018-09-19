@@ -4,12 +4,14 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.gc_values.IdGCValue
+import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    isActive: Boolean
+    isActive: Boolean,
+    schemaName: Option[String]
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
@@ -19,12 +21,19 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = JdbcActionsBuilder(schemaName = mutaction.project.id, slickDatabase)
+    val actionsBuilder = JdbcActionsBuilder(schemaName = schemaName.getOrElse(mutaction.project.id), slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)
     }
-    slickDatabase.database.run(singleAction)
+
+    if (slickDatabase.isMySql) {
+      slickDatabase.database.run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
+    } else if (slickDatabase.isPostgres) {
+      slickDatabase.database.run(singleAction)
+    } else {
+      sys.error("No valid database profile given.")
+    }
   }
 
   def executeTopLevelMutaction(
@@ -89,10 +98,10 @@ case class JdbcDatabaseMutactionExecutor(
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
     case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = isActive)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(m)
-    case m: TopLevelUpsertNode => UpsertDataItemInterpreter(m)
+    case m: TopLevelUpsertNode => UpsertNodeInterpreter(m)
     case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
-    case m: UpdateNodes        => UpdateDataItemsInterpreter(m)
-    case m: DeleteNodes        => DeleteDataItemsInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: UpdateNodes        => UpdateNodesInterpreter(m)
+    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
     case m: ResetData          => ResetDataInterpreter(m)
     case m: ImportNodes        => ImportNodesInterpreter(m)
     case m: ImportRelations    => ImportRelationsInterpreter(m)
@@ -102,7 +111,7 @@ case class JdbcDatabaseMutactionExecutor(
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
     case m: NestedCreateNode => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
     case m: NestedUpdateNode => NestedUpdateNodeInterpreter(m)
-    case m: NestedUpsertNode => NestedUpsertDataItemInterpreter(m)
+    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(m)
     case m: NestedDeleteNode => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
     case m: NestedConnect    => NestedConnectInterpreter(m)
     case m: NestedDisconnect => NestedDisconnectInterpreter(m)

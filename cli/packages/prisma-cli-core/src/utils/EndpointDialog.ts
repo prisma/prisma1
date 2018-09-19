@@ -11,7 +11,7 @@ import {
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
-import { Introspector } from 'prisma-db-introspection'
+import { Introspector, PostgresConnector } from 'prisma-db-introspection'
 import * as yaml from 'js-yaml'
 
 export interface GetEndpointParams {
@@ -218,13 +218,13 @@ export class EndpointDialog {
         service = await this.ask({
           message: 'Choose a name for your service',
           key: 'serviceName',
-          defaultValue: 'default'
+          defaultValue: folderName
         })
 
         stage = await this.ask({
           message: 'Choose a name for your stage',
           key: 'stageName',
-          defaultValue: 'default'
+          defaultValue: 'dev'
         })
 
         writeDockerComposeYml = false
@@ -260,8 +260,9 @@ export class EndpointDialog {
             ? `Introspecting database`
             : `Connecting to database`,
         )
+        const connector = new PostgresConnector(this.replaceLocalDockerHost(credentials))
         const introspector = new Introspector(
-          this.replaceLocalDockerHost(credentials),
+          connector,
         )
         let schemas
         try {

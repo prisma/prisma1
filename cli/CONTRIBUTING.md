@@ -23,6 +23,11 @@ Once you deployed your local prisma server, you have to set up the following env
 - TEST_PG_USER
 - TEST_PG_PASSWORD
 - TEST_PG_DB
+## Cache
+
+You might need to set the environment variable `GRAPHCOOL_CLI_CLEAR_CACHE` to some value to prevent overeager caching of your code.
+
+## Testing
 
 To recreate jest snapshots:
 

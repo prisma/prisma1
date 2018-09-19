@@ -164,6 +164,42 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6"))
   }
 
+  "the cursor returned on the sub level" should "work 2" in {
+    val result1 = server.query(
+      """
+        |{
+        |  list(where: {name: "1"}) {
+        |    name
+        |    todos(first: 3){
+        |      id
+        |      title
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result1.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("1", "2", "3"))
+    val cursor = result1.pathAsString("data.list.todos.[2].id")
+
+    val result2 = server.query(
+      s"""
+         |{
+         |  list(where: {name: "1"}) {
+         |    name
+         |    todos(after: "$cursor"){
+         |      id
+         |      title
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
+    result2.pathAsJsArray("data.list.todos").value.map(_.pathAsString("title")) should equal(List("4", "5", "6", "7"))
+  }
+
   "the pagination" should "work when starting from multiple nodes (== top level connection field)" in {
     val result1 = server.query(
       """
@@ -219,6 +255,65 @@ class PaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
 
     result2.toString should be("""{"data":{"lists":[{"name":"2"},{"name":"3"}]}}""")
+  }
+
+  "the cursor returned on the top level" should "work 3" in {
+    val result1 = server.query(
+      """
+        |{
+        |  list(where: {name: "1"}) {
+        |    name
+        |    id
+        |  }
+        |}
+      """,
+      project
+    )
+
+    val cursor = result1.pathAsString("data.list.id")
+
+    val result2 = server.query(
+      s"""
+         |{
+         |  lists(after:"$cursor") {
+         |    name
+         |  }
+         |}
+      """,
+      project
+    )
+
+    result2.toString should be("""{"data":{"lists":[{"name":"2"},{"name":"3"},{"name":"4"},{"name":"5"},{"name":"6"},{"name":"7"}]}}""")
+  }
+
+  "skip" should "work" in {
+    val result = server.query(
+      s"""
+         |{
+         |  lists(skip:1) {
+         |    name
+         |  }
+         |}
+      """,
+      project
+    )
+    result should be("""{"data":{"lists":[{"name":"2"},{"name":"3"},{"name":"4"},{"name":"5"},{"name":"6"},{"name":"7"}]}}""".parseJson)
+  }
+
+  "skip on relations" should "work" in {
+    val result = server.query(
+      s"""
+         |{
+         |  list(where: { name: "1" }) {
+         |    todos(skip: 1) {
+         |      title
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
+    result should be("""{"data":{"list":{"todos":[{"title":"2"},{"title":"3"},{"title":"4"},{"title":"5"},{"title":"6"},{"title":"7"}]}}}""".parseJson)
   }
 
   private def createLists(): Unit = {

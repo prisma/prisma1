@@ -1,28 +1,24 @@
 import { PostgresConnector } from './connectors/PostgresConnector'
-import { SdlPrinter } from './SdlPrinter'
+import { SDLInferrer } from './SDLInferrer'
 import { ClientConfig } from 'pg'
-import { PostgresConnectionDetails } from './types/common'
+import { Connector } from './types/common'
 
 export class Introspector {
-  connectionString: string | ClientConfig
-  connector: PostgresConnector
-  printer = new SdlPrinter()
+  connector: Connector
+  inferrer: SDLInferrer
 
-  constructor(connectionString: PostgresConnectionDetails) {
-    this.connectionString = connectionString
-    this.connector = new PostgresConnector(connectionString)
+  constructor(connector: Connector) {
+    this.connector = connector
+    this.inferrer = new SDLInferrer()
   }
 
   async listSchemas(): Promise<string[]> {
     return this.connector.listSchemas()
   }
 
-  async introspect(
-    schemaName: string,
-  ): Promise<{ numTables: number; sdl: string }> {
-    const tables = await this.connector.listTables(schemaName)
-    const sdl = this.printer.print(tables)
-
-    return { numTables: tables.length, sdl }
+  async introspect(schemaName: string): Promise<{ numTables: number; sdl: string }> {
+    const dbTables = await this.connector.listTables(schemaName)
+    const sdl = this.inferrer.infer(dbTables)
+    return { numTables: dbTables.length, sdl: sdl.render() }
   }
 }

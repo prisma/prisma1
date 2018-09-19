@@ -1,4 +1,0 @@
-enum UserType {
-  ADMIN
-  NORMAL
-}

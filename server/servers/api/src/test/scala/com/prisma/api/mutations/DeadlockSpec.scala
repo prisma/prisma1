@@ -3,13 +3,18 @@ package com.prisma.api.mutations
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.time.{Seconds, Span}
+import org.scalatest.{FlatSpec, Matchers, Retries}
 
 import scala.concurrent.Future
 
-class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-
+class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
   import testDependencies.system.dispatcher
+
+  override def withFixture(test: NoArgTest) = {
+    val delay = Span(5, Seconds) // we assume that the process gets overwhelmed sometimes by the concurrent requests. Give it a bit of time to recover before retrying.
+    withRetry(delay) { super.withFixture(test) }
+  }
 
   "creating many items" should "not cause deadlocks" in {
     val project = SchemaDsl.fromBuilder { schema =>
@@ -25,6 +30,36 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
              |  createTodo(
              |    data:{
              |      a: "a"
+             |    }
+             |  ){
+             |    a
+             |  }
+             |}
+      """,
+          project
+        )
+      )
+
+    Future.traverse(0 to 50)((i) => exec(i)).await(seconds = 30)
+  }
+
+  "creating many node with scalar list values" should "not cause deadlocks" in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val comment = schema.model("Comment").field("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String).field("tags", _.String, isList = true)
+    }
+    database.setup(project)
+
+    def exec(i: Int) =
+      Future(
+        server.query(
+          s"""mutation {
+             |  createTodo(
+             |    data:{
+             |      a: "$i"
+             |      tags: {
+             |        set: ["important", "doitnow"]
+             |      }
              |    }
              |  ){
              |    a
@@ -61,9 +96,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
       project
     )
 
-    val todoId     = createResult.pathAsString("data.createTodo.id")
-    val comment1Id = createResult.pathAsString("data.createTodo.comments.[0].id")
-    val comment2Id = createResult.pathAsString("data.createTodo.comments.[1].id")
+    val todoId = createResult.pathAsString("data.createTodo.id")
 
     def exec(i: Int) =
       server.queryAsync(
@@ -83,6 +116,57 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
 
     Future
       .traverse(0 to 50) { (i) =>
+        exec(i)
+      }
+      .await(seconds = 30)
+  }
+
+  "updating single item many times with scalar list values" should "not cause deadlocks" in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val comment = schema.model("Comment").field("text", _.String)
+      schema.model("Todo").oneToManyRelation("comments", "todo", comment).field("a", _.String).field("tags", _.String, isList = true)
+    }
+    database.setup(project)
+
+    val createResult = server.query(
+      """mutation {
+        |  createTodo(
+        |    data: {
+        |      comments: {
+        |        create: [{text: "comment1"}, {text: "comment2"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    comments { id }
+        |  }
+        |}""",
+      project
+    )
+
+    val todoId = createResult.pathAsString("data.createTodo.id")
+
+    def exec(i: Int) =
+      server.queryAsync(
+        s"""mutation {
+           |  updateTodo(
+           |    where: { id: "${todoId}" }
+           |    data:{
+           |      a: "${i}"
+           |      tags: {
+           |        set: ["important", "doitnow"]
+           |      }
+           |    }
+           |  ){
+           |    a
+           |  }
+           |}
+      """,
+        project
+      )
+
+    Future
+      .traverse(0 to 150) { (i) =>
         exec(i)
       }
       .await(seconds = 30)
@@ -135,7 +219,7 @@ class DeadlockSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUti
       )
 
     Future
-      .traverse(0 to 200) { (i) =>
+      .traverse(0 to 100) { (i) =>
         exec(i)
       }
       .await(seconds = 30)

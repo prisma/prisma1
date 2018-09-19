@@ -12,13 +12,13 @@ trait CursorConditionBuilder extends BuilderBase {
 
   def buildCursorCondition(queryArguments: Option[QueryArguments], model: Model): Condition = queryArguments match {
     case Some(args) => buildCursorCondition(args, model)
-    case None       => trueCondition()
+    case None       => noCondition()
   }
 
   private def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
-    if (before.isEmpty && after.isEmpty) return trueCondition()
+    if (before.isEmpty && after.isEmpty) return noCondition()
 
     val idFieldWithAlias = aliasColumn(model.dbNameOfIdField_!)
     val idField          = modelIdColumn(model)
@@ -26,7 +26,7 @@ trait CursorConditionBuilder extends BuilderBase {
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
     val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
-      case Some(order) => (modelColumn(model, order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
+      case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
       case None        => (idField, idFieldWithAlias, "asc")
     }
 
@@ -45,8 +45,8 @@ trait CursorConditionBuilder extends BuilderBase {
       case _                  => throw new IllegalArgumentException
     }
 
-    val afterCursorFilter  = after.map(cursorFor(_, "after")).getOrElse(trueCondition())
-    val beforeCursorFilter = before.map(cursorFor(_, "before")).getOrElse(trueCondition())
+    val afterCursorFilter  = after.map(cursorFor(_, "after")).getOrElse(noCondition())
+    val beforeCursorFilter = before.map(cursorFor(_, "before")).getOrElse(noCondition())
 
     afterCursorFilter.and(beforeCursorFilter)
   }

@@ -9,6 +9,7 @@ import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelati
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
+import org.scalactic.{Bad, Good}
 import org.scalatest.Suite
 import sangria.parser.QueryParser
 
@@ -51,8 +52,8 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromPassiveConnectorSdl(
-      id: String = TestIds.testProjectId,
-      deployConnector: DeployConnector
+      deployConnector: DeployConnector,
+      id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
     fromString(id, inferredTables, isActive = false, shouldCheckAgainstInferredTables = true)(sdlString)
@@ -66,15 +67,18 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator = SchemaSyntaxValidator(
-      sdlString,
-      SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
-      allowScalarLists = true
-    )
+    val validator          = SchemaSyntaxValidator(sdlString, isActive)
 
-    val prismaSdl = validator.generateSDL
+    val prismaSdl = validator.validateSyntax match {
+      case Good(prismaSdl) =>
+        prismaSdl
+      case Bad(errors) =>
+        sys.error(
+          s"""Encountered the following errors during schema validation. Please fix:
+           |${errors.mkString("\n")}
+         """.stripMargin
+        )
+    }
 
     val schema                 = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
