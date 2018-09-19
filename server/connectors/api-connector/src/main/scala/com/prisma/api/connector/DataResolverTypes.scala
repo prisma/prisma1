@@ -59,12 +59,15 @@ object QueryArguments {
 }
 
 object SelectedFields {
+  val empty             = SelectedFields(Set.empty)
   def all(model: Model) = SelectedFields(model.fields.toSet)
 }
 case class SelectedFields(fields: Set[Field]) {
   val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
   val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
   val relationFields      = fields.collect { case f: RelationField            => f }
+
+  def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 }
 
 object SortOrder extends Enumeration {

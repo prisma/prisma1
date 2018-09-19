@@ -40,14 +40,14 @@ service: myservice
 stage: dev
 cluster: local
 
-datamodel: datamodel.prisma
+datamodel: datamodel.graphql
 ```
 
 After migrated to **Prisma 1.7**, the file will have the following structure:
 
 ```yml
 endpoint: http://localhost:4466/myservice/dev
-datamodel: datamodel.prisma
+datamodel: datamodel.graphql
 ```
 
 ### Example: Deploying to a Prisma Sandbox in the Cloud
@@ -59,14 +59,14 @@ service: myservice
 stage: dev
 cluster: public-crocusraccoon-3/prisma-eu1
 
-datamodel: datamodel.prisma
+datamodel: datamodel.graphql
 ```
 
 After migrated to **Prisma 1.7**, the file will have the following structure:
 
 ```yml
 endpoint: https://eu1.prisma.sh/public-crocusraccoon-3/myservice/dev
-datamodel: datamodel.prisma
+datamodel: datamodel.graphql
 ```
 
 ### Introducing `default` service name and `default` stage

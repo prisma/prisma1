@@ -9,7 +9,7 @@ The [1.8 release](https://github.com/graphcool/prisma/releases/tag/1.8.0) introd
 
 ## Changes to the Management API
 
-The Management API of a Prisma server is responsible for service deployment and also provides information about the Prisma server.
+The Management API of a Prisma Server is responsible for service deployment and also provides information about the Prisma Server.
 
 Previously, the Management API was available at `/cluster`, for example `localhost:4466/cluster`.
 With 1.8, `/cluster` is not available anymore. The endpoint has been updated to `/management`, for example `localhost:4466/management`.
@@ -18,7 +18,7 @@ The Management API exposes a GraphQL API, that previously contained a top-level 
 
 ## Changes to the management database
 
-A Prisma server stores information about services and service migrations in a dedicated management schema in the connected database. Previously, this schema was called `graphcool`. In 1.8, `management` is used by default instead. Using the `managementSchema` setting in the Prisma server configuration allows you to use a different database. For the Postgres connector, both the `database` and the `managementSchema` setting can be adjusted.
+A Prisma Server stores information about services and service migrations in a dedicated management schema in the connected database. Previously, this schema was called `graphcool`. In 1.8, `management` is used by default instead. Using the `managementSchema` setting in the Prisma Server configuration allows you to use a different database. For the Postgres connector, both the `database` and the `managementSchema` setting can be adjusted.
 
 Using MySQL:
 
