@@ -59,7 +59,7 @@ _"JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be
 A JWT has the following three components:
 
 - **Header**: The header typically consists of two parts: the type of the token, which is `JWT`, and the hashing algorithm being used (which is `HS256` in the case of Prisma service tokens).
-  
+
   ```json
   {
     "alg": "HS256",
@@ -68,7 +68,7 @@ A JWT has the following three components:
   ```
 
 - **Payload**: The payload contains the [claims](#claims). Claims are statements about an entity (typically, the user) and additional data. Here is what it looks like when grating permissions for modifying a service called `demo` deployed to the `dev` stage:
-  
+
   ```json
   {
     "grants": [
@@ -99,7 +99,7 @@ Therefore, a JWT typically looks like this: `xxxxx.yyyyy.zzzzz`
 
 The JWT must contain the following [claims](https://jwt.io/introduction/#payload):
 
-- **Issued at**: The `iat` field contains a Unix timestamp with the exact time when the token was generated. 
+- **Issued at**: The `iat` field contains a Unix timestamp with the exact time when the token was generated.
 - **Expiration date**: The `exp` field containts a Unix timestamp denoting the expiration date of the token.
 - **Grants**: The `grants` field is an object with two keys
   - The `target` field specifies the _name_ and _stage_ of the service that's modified with a certain action. Use the `*` wildcard to allows actions for all services running on the Prisma server.
@@ -129,9 +129,9 @@ There are two ways to use the Management API:
 
 ### Using the Prisma CLI
 
-When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests. 
+When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests.
 
-**This is why you have to set the `MANAGEMENT_API_SECRET` environment variable when using the Prisma CLI**. 
+**This is why you have to set the `MANAGEMENT_API_SECRET` environment variable when using the Prisma CLI**.
 
 The CLI reads the secret from the `MANAGEMENT_API_SECRET` environment variable and uses it to generate the JWT which it then attaches to the API request.
 
@@ -149,6 +149,6 @@ When you want to send HTTP requests directly to the Management API of your Prism
 
 The Prisma CLI has a hidden helper command for generating Management API tokens: `prisma cluster-token`. Before running it, you need to set the `MANAGEMENT_API_SECRET` environment variable. Note that this command is not officially documented and might change without further notice.
 
-There already is a [pending feature request](https://github.com/prismagraphql/prisma/issues/2772) for a similar command.
+There already is a [pending feature request](https://github.com/prisma/prisma/issues/2772) for a similar command.
 
 </Warning>

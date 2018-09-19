@@ -4,7 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. Prisma is used to build **GraphQL servers, REST APIs & more**. 
+**Prisma is a data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. Prisma is used to build **GraphQL servers, REST APIs & more**.
 
 - **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
@@ -181,7 +181,7 @@ const postsByAuthor = await prisma
 Here is what you can do next:
 
 - [Use Prisma with an existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/)
-- [Build an app with Prisma client](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/) 
+- [Build an app with Prisma client](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/)
 - [Check out some examples](#examples)
 - [Read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
 
@@ -220,7 +220,7 @@ Prisma runs as _standalone processes_ which allows for it to be scaled independe
 
 ## Database Connectors
 
-[Database connectors](https://github.com/prismagraphql/prisma/issues/1751) provide the link between Prisma and the underlying database.
+[Database connectors](https://github.com/prisma/prisma/issues/1751) provide the link between Prisma and the underlying database.
 
 You can connect the following databases to Prisma already:
 
@@ -232,21 +232,21 @@ You can connect the following databases to Prisma already:
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-- [Elastic Search](https://github.com/prismagraphql/prisma/issues/1665)
-- [MS SQL](https://github.com/prismagraphql/prisma/issues/1642)
-- [Oracle](https://github.com/prismagraphql/prisma/issues/1644)
-- [ArangoDB](https://github.com/prismagraphql/prisma/issues/1645)
-- [Neo4j](https://github.com/prismagraphql/prisma/issues/1646)
-- [Druid](https://github.com/prismagraphql/prisma/issues/1647)
-- [Dgraph](https://github.com/prismagraphql/prisma/issues/1648)
-- [DynamoDB](https://github.com/prismagraphql/prisma/issues/1655)
-- [Cloud Firestore](https://github.com/prismagraphql/prisma/issues/1660)
-- [CockroachDB](https://github.com/prismagraphql/prisma/issues/1705)
-- [Cassandra](https://github.com/prismagraphql/prisma/issues/1750)
-- [Redis](https://github.com/prismagraphql/prisma/issues/1722)
-- [AWS Neptune](https://github.com/prismagraphql/prisma/issues/1752)
-- [CosmosDB](https://github.com/prismagraphql/prisma/issues/1663)
-- [Influx](https://github.com/prismagraphql/prisma/issues/1857)
+- [Elastic Search](https://github.com/prisma/prisma/issues/1665)
+- [MS SQL](https://github.com/prisma/prisma/issues/1642)
+- [Oracle](https://github.com/prisma/prisma/issues/1644)
+- [ArangoDB](https://github.com/prisma/prisma/issues/1645)
+- [Neo4j](https://github.com/prisma/prisma/issues/1646)
+- [Druid](https://github.com/prisma/prisma/issues/1647)
+- [Dgraph](https://github.com/prisma/prisma/issues/1648)
+- [DynamoDB](https://github.com/prisma/prisma/issues/1655)
+- [Cloud Firestore](https://github.com/prisma/prisma/issues/1660)
+- [CockroachDB](https://github.com/prisma/prisma/issues/1705)
+- [Cassandra](https://github.com/prisma/prisma/issues/1750)
+- [Redis](https://github.com/prisma/prisma/issues/1722)
+- [AWS Neptune](https://github.com/prisma/prisma/issues/1752)
+- [CosmosDB](https://github.com/prisma/prisma/issues/1663)
+- [Influx](https://github.com/prisma/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
@@ -265,7 +265,7 @@ Prisma has a [community](https://www.prisma.io/community) of thousands of amazin
 ## Contributing
 
 Contributions are **welcome and extremely helpful** 🙌
-Please refer [to the contribution guide](https://github.com/prismagraphql/prisma/blob/master/CONTRIBUTING.md) for more information.
+Please refer [to the contribution guide](https://github.com/prisma/prisma/blob/master/CONTRIBUTING.md) for more information.
 
 Releases are separated into three _channels_: **alpha**, **beta** and **stable**. You can learn more about these three channels and Prisma's release process [here](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/).
 
