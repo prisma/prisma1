@@ -40,13 +40,13 @@ type Mutation {
 For every type in your data model, six mutation are generated. Taking above the above `User` type as an example, these mutations are:
 
 - `createUser`: Create a new `User` node
-- `updateUser`: Update an existing `User` node 
+- `updateUser`: Update an existing `User` node
 - `deleteUser`: Delete an existing `User` node
 - `upsertUser`: Update an existing `User` node; if it does not exist create a new `User` node
 - `updateManyUsers`: Update many `User` nodes at once
 - `deleteManyUsers`: Delete many `User` nodes at once
 
-To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli): 
+To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
 
 ```bash
 graphql get-schema --endpoint __YOUR_PRISMA_ENDPOINT__ --output prisma.graphql --no-all
@@ -119,7 +119,7 @@ mutation {
 
 ### Updating nodes
 
-You can change the values of one or more fields of a node using an `update` mutation. The node to be updated is [selected](vw4d#node-selection) using the `where` argument and the new values are provided via the `data` argument. Nodes can be selected by any field that's annotated with the `@unique` directive. 
+You can change the values of one or more fields of a node using an `update` mutation. The node to be updated is [selected](vw4d#node-selection) using the `where` argument and the new values are provided via the `data` argument. Nodes can be selected by any field that's annotated with the `@unique` directive.
 
 **Change the `name` of a `User` node identified by its `id`:**
 
@@ -230,7 +230,7 @@ Several nested mutation arguments exist:
 
 Rather than mapping out all possible scenarios at this point, we provide a list of examples.
 
-It's recommended to explore the behaviour of different nested mutations by using the [GraphQL Playground](https://github.com/prismagraphql/graphql-playground).
+It's recommended to explore the behaviour of different nested mutations by using the [GraphQL Playground](https://github.com/prisma/graphql-playground).
 
 ### Creating and connecting related nodes
 
@@ -294,7 +294,7 @@ mutation {
           {
             published: true
             title: "Hello World"
-          }, 
+          },
           {
             title: "GraphQL is great"
           }
@@ -324,7 +324,7 @@ mutation {
           {
             published: true
             title: "Hello World"
-          }, 
+          },
           {
             title: "GraphQL is great"
           }
@@ -459,7 +459,7 @@ mutation {
         delete: [
           {
             id: "cjcf1cj0u01800146jii8h8ch"
-          }, 
+          },
           {
             id: "cjcf1cj0u01810146m84cnt34"
           }
@@ -518,7 +518,7 @@ When updating an existing node of type `User`, a number of additional operations
 - `pop` (coming soon): Remove one or more elements from the beginning or the end of the list.
 - `remove` (coming soon): Remove all elements from the list that match a given filter.
 
-> `push`, `pop` and `remove` are not yet implemented. If you're curios what these are going to look like, you can get a preview in the respective [specification](https://github.com/prismagraphql/prisma/issues/1275).
+> `push`, `pop` and `remove` are not yet implemented. If you're curios what these are going to look like, you can get a preview in the respective [specification](https://github.com/prisma/prisma/issues/1275).
 
 Each scalar list field takes an object with a `set` field in an `update` mutation. The value of that field is a single value _or_ a list of the corresponding scalar type.
 

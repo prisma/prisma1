@@ -36,7 +36,7 @@ For every type in your datamodel, one subscription is generated. Taking above th
 
 - `user`: Fires whenever a `User` node is **created**, **updated** or **deleted**. (Except for [batch mutations](qwe2#batch-mutations)).
 
-To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli): 
+To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
 
 ```bash
 graphql get-schema --endpoint __YOUR_PRISMA_ENDPOINT__ --output prisma.graphql --no-all
@@ -108,7 +108,7 @@ If not further constrained through the `where` argument, the `post` subscription
 
 The `where` argument allows clients to specify exactly what events they’re interested in. Maybe a client always only wants to receive updates when...
 
-- ... a `Post` gets *deleted* 
+- ... a `Post` gets *deleted*
 - ... a `Post` where the `title` contains a specific keyword is *created*
 
 These kinds of constraints can be expressed using the `where` argument. The type of `where` is `PostSubscriptionWhereInput`:
@@ -175,11 +175,11 @@ type PostSubscriptionPayload {
 
 Here's an overview of the values for each field according to the event that triggered the subscription:
 
-`mutation` | `node` | `previousValues` | `updatedFields` | 
+`mutation` | `node` | `previousValues` | `updatedFields` |
 | --- | --- | --- | --- |
 | `CREATE` | The created node  | `null` | `null` |
 | `UPDATE` | The new values of the updated node |  The values of the updated node _before_ the update | A list of strings with the names of the fields that were updated |
-| `DELETE` | `null` | The deleted node | `null` 
+| `DELETE` | `null` | The deleted node | `null`
 
 In the following, each field is discussed in more detail.
 
@@ -531,4 +531,4 @@ mutation updatePost {
 }
 ```
 
-> If you're interested in a direct relation trigger for subscriptions, [please join the discussion on GitHub](https://github.com/prismagraphql/feature-requests/issues/146).
+> If you're interested in a direct relation trigger for subscriptions, [please join the discussion on GitHub](https://github.com/prisma/feature-requests/issues/146).

@@ -40,7 +40,7 @@ For every type in your datamodel, three queries are generated. Taking above the 
 - `users`: Retrieve a list of `User` nodes (as an object query)
 - `usersConnection`: Retrieve a list of `User` nodes (as a connection query)
 
-To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli): 
+To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
 
 ```bash
 graphql get-schema --endpoint __YOUR_PRISMA_ENDPOINT__ --output prisma.graphql --no-all
@@ -155,7 +155,7 @@ You can read more about [node selection here](vw4d#node-selection).
 
 ## Connection queries
 
-Object queries directly return a list of nodes. In special cases, or when using advanced features, using **connection queries** is the preferred option. They are an extension of (and fully compliant with) [Relay connections](https://facebook.github.io/relay/graphql/connections.htm). 
+Object queries directly return a list of nodes. In special cases, or when using advanced features, using **connection queries** is the preferred option. They are an extension of (and fully compliant with) [Relay connections](https://facebook.github.io/relay/graphql/connections.htm).
 
 The core idea of Relay connections is to provide meta-information about the _edges_ in the data graph. For example, each edge not only has access to information about the corresponding object (the `node`) but also is associated with a `cursor` that allows to implement powerful, [cursor-based pagination](https://graphql.org/learn/pagination/#complete-connection-model).
 
@@ -191,7 +191,7 @@ query {
 }
 ```
 
-> More aggregations will be added over time. Find more information about the roadmap [here](https://github.com/prismagraphql/prismagraphql/issues/1312).
+> More aggregations will be added over time. Find more information about the roadmap [here](https://github.com/prisma/prismagraphql/issues/1312).
 
 ## Querying data across relations
 
@@ -258,7 +258,7 @@ The field you are ordering by does not have to be selected in the actual query. 
 
 <Warning>
 
-It's currently not possible to order responses [by multiple fields](https://github.com/prismagraphql/feature-requests/issues/62) or [by related fields](https://github.com/prismagraphql/feature-requests/issues/95). Join the discussion in the feature requests if you're interested in these features!
+It's currently not possible to order responses [by multiple fields](https://github.com/prisma/feature-requests/issues/62) or [by related fields](https://github.com/prisma/feature-requests/issues/95). Join the discussion in the feature requests if you're interested in these features!
 
 </Warning>
 
@@ -401,10 +401,10 @@ query {
 
 #### Combining multiple filters
 
-You can use the filter combinators `OR`, `AND` and `NOT` to create an arbitrary logical combination of filter conditions: 
+You can use the filter combinators `OR`, `AND` and `NOT` to create an arbitrary logical combination of filter conditions:
 
-- For an `AND`-filter to evaluate to `true`, _all_ of the nested conditions have to be `true`. 
-- For an `OR`-filter to evaluate to `true`, _at least one_ of the nested conditions has to be `true`. 
+- For an `AND`-filter to evaluate to `true`, _all_ of the nested conditions have to be `true`.
+- For an `OR`-filter to evaluate to `true`, _at least one_ of the nested conditions has to be `true`.
 - For a `NOT`-filter to evaluate to `true`, all of the nested conditions have to be `false`.
 
 ##### Using `OR`, `AND` and `NOT`
@@ -429,7 +429,7 @@ query {
 }
 ```
 
-`OR`, `AND` and `NOT` each accept a _list_ as input where each list item is an object and therefore needs to be wrapped with curly braces. The sample filter condition from the above query contains two filter objects: 
+`OR`, `AND` and `NOT` each accept a _list_ as input where each list item is an object and therefore needs to be wrapped with curly braces. The sample filter condition from the above query contains two filter objects:
 
 - `{title_in: ["My biggest Adventure", "My latest Hobbies"]}`
 - `{published: true}`
@@ -466,7 +466,7 @@ Notice how we nest the `AND` combinator inside the `OR` combinator.
 
 #### Limitations
 
-Currently, neither [**scalar list filters**](https://github.com/prismagraphql/feature-requests/issues/60) nor [**JSON filters**](https://github.com/prismagraphql/feature-requests/issues/148) are available. Join the discussion in the respective feature requests on GitHub.
+Currently, neither [**scalar list filters**](https://github.com/prisma/feature-requests/issues/60) nor [**JSON filters**](https://github.com/prisma/feature-requests/issues/148) are available. Join the discussion in the respective feature requests on GitHub.
 
 ## Pagination
 
@@ -516,7 +516,7 @@ query {
 ```graphql
 query {
   posts(
-    first: 5 
+    first: 5
     skip: 5
   ) {
     id
@@ -610,7 +610,7 @@ query {
 ```graphql
 query {
   posts(
-    last: 3 
+    last: 3
     before: "cixnen24p33lo0143bexvr52n"
     skip: 5
   ) {

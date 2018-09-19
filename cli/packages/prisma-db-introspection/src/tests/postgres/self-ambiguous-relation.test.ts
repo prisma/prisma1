@@ -23,7 +23,7 @@ async function testSchema(sql: string) {
 }
 
 describe('Introspector', () => {
-  // Schema from https://github.com/prismagraphql/prisma/issues/2504
+  // Schema from https://github.com/prisma/prisma/issues/2504
   test('test schema - 2504', async () => {
     await testSchema(sql)
   })

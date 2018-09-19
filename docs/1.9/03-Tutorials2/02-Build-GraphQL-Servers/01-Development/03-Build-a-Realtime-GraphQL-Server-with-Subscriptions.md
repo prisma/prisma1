@@ -53,7 +53,7 @@ Subscriptions are commonly implemented with [WebSockets](https://en.wikipedia.or
 
 Dealing with realtime logic and pub/sub-systems, properly accessing databases and taking care of implementing the subscription protocol can become fairly complex. Authentication and authorization logic further complicate the implementation of GraphQL subscriptions on the server. In these cases, it’s helpful to use proper abstractions that make your life easier.
 
-One such abstraction is provided by [Prisma](https://www.prisma.io) in combination with [Prisma bindings](https://github.com/prismagraphql/prisma-binding). Think of that combo as a [“GraphQL ORM”](https://github.com/prismagraphql/prisma#is-prisma-an-orm) layer where realtime subscriptions are supported out-of-the-box, making it easy for you to add subscriptions to your API.
+One such abstraction is provided by [Prisma](https://www.prisma.io) in combination with [Prisma bindings](https://github.com/prisma/prisma-binding). Think of that combo as a [“GraphQL ORM”](https://github.com/prisma/prisma#is-prisma-an-orm) layer where realtime subscriptions are supported out-of-the-box, making it easy for you to add subscriptions to your API.
 
 ## 1. Project setup
 
@@ -143,7 +143,7 @@ const server = new GraphQLServer({
 
 ### 1.3. Open a GraphQL Playground
 
-You can now start the server and open up a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) by running the `yarn dev` command:
+You can now start the server and open up a [GraphQL Playground](https://github.com/prisma/graphql-playground) by running the `yarn dev` command:
 
 ![](https://cdn-images-1.medium.com/max/5308/1*GoxKn35GhQpmHZ6bnKbDZA.png)
 
@@ -384,7 +384,7 @@ type Subscription {
 
 </Instruction>
 
-The referenced `PostSubscriptionPayload` is directly taken from the Prisma GraphQL schema. 
+The referenced `PostSubscriptionPayload` is directly taken from the Prisma GraphQL schema.
 
 <Instruction>
 
@@ -396,7 +396,7 @@ It thus also needs to be imported at the top of the file:
 
 </Instruction>
 
-> **Note:** The comment-based import syntax is used by the `[graphql-import](https://github.com/prismagraphql/graphql-import)` package. As of today, GraphQL SDL does not have an official way to import types across files. [This might change soon](https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import).
+> **Note:** The comment-based import syntax is used by the `[graphql-import](https://github.com/prisma/graphql-import)` package. As of today, GraphQL SDL does not have an official way to import types across files. [This might change soon](https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import).
 
 ### 3.2. Implement the subscription resolver
 
@@ -456,7 +456,7 @@ subscription {
 }
 ```
 
-> **Note: **The GraphQL Playground sometimes shows this [bug](https://github.com/prismagraphql/graphql-playground/issues/646) where the subscription directly returns a payload of `null`. If this happens to you, try this [workaround](https://github.com/prismagraphql/graphql-playground/issues/646#issuecomment-382614189).
+> **Note: **The GraphQL Playground sometimes shows this [bug](https://github.com/prisma/graphql-playground/issues/646) where the subscription directly returns a payload of `null`. If this happens to you, try this [workaround](https://github.com/prisma/graphql-playground/issues/646#issuecomment-382614189).
 
 Once the subscription is running, you'll see a loading indicator in the response pane and the **Play**-button turns into a red **Stop**-button for you to stop the subscription.
 
@@ -606,7 +606,7 @@ Navigating back to the subscription tab, you’ll see that the `id` and `title` 
 
 ## Summary
 
-In this tutorial, you learned how to add realtime subscriptions to a GraphQL API using [Prisma](https://www.prisma.io/) and [Prisma bindings](https://github.com/prismagraphql/prisma-binding).
+In this tutorial, you learned how to add realtime subscriptions to a GraphQL API using [Prisma](https://www.prisma.io/) and [Prisma bindings](https://github.com/prisma/prisma-binding).
 
 Similar to implementing queries and mutations with Prisma, you are piggybacking on Prisma’s GraphQL API, leaving the heavy-lifting of database access and pub/sub logic to the powerful Prisma query engine.
 

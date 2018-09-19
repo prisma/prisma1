@@ -13,7 +13,7 @@ description: Learn how to deploy Prisma servers to AWS Fargate.
 
 When building GraphQL servers with Prisma, there are three backend components that need to be deployed:
 
-* Your GraphQL server (commonly implemented with [graphql-yoga](https://github.com/prismagraphql/graphql-yoga))
+* Your GraphQL server (commonly implemented with [graphql-yoga](https://github.com/prisma/graphql-yoga))
 * Your Prisma server & services
 * Your database
 
@@ -31,11 +31,11 @@ While there are many ways to deploy databases with RDS (e.g. using the AWS GUI),
 
 ### 1.1. Getting the CloudFormation template
 
-You can obtain the CloudFormation template for the MySQL database from our [database-templates](https://github.com/prismagraphql/database-templates) GitHub repository.
+You can obtain the CloudFormation template for the MySQL database from our [database-templates](https://github.com/prisma/database-templates) GitHub repository.
 
 <Instruction>
 
-Go ahead and clone or download the entire repo. It currently contains templates for MySQL ([aws/mysql.yml](https://github.com/prismagraphql/database-templates/blob/master/aws/mysql.yml)) and AWS Aurora ([aws/aurora.yml](https://github.com/prismagraphql/database-templates/blob/master/aws/aurora.yml)).
+Go ahead and clone or download the entire repo. It currently contains templates for MySQL ([aws/mysql.yml](https://github.com/prisma/database-templates/blob/master/aws/mysql.yml)) and AWS Aurora ([aws/aurora.yml](https://github.com/prisma/database-templates/blob/master/aws/aurora.yml)).
 
 </Instruction>
 
@@ -65,7 +65,7 @@ Once you have a fargate-supporting region selected, click the **Create Stack **b
 
 <Instruction>
 
-Click the **Choose File** button and select the `mysql.yml` file from the location where you previously downloaded the [database-templates](https://github.com/prismagraphql/database-templates) repo. Then click **Next**.
+Click the **Choose File** button and select the `mysql.yml` file from the location where you previously downloaded the [database-templates](https://github.com/prisma/database-templates) repo. Then click **Next**.
 
 </Instruction>
 
@@ -134,7 +134,7 @@ Save the **DatabasePort** and **DatabaseEndpoint** as you’ll need them in the 
 
 The Prisma server is deployed via a CloudFormation template as well. So, just like before you first need to get access to that template.
 
-You can find it in the [prisma-templates](https://github.com/prismagraphql/prisma-templates) GitHub repository. 
+You can find it in the [prisma-templates](https://github.com/prisma/prisma-templates) GitHub repository.
 
 <Instruction>
 
@@ -256,7 +256,7 @@ Similar to what you did with the database stack before, first select the `my-pri
 
 ## 3. Deploy a Prisma service to the new server
 
-It’s time to put your new server in use and deploy a service to it. 
+It’s time to put your new server in use and deploy a service to it.
 
 <Instruction>
 

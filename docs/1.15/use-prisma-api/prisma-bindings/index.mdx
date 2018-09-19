@@ -55,7 +55,7 @@ prisma.mutation.updateUser({ where: { id: 'abc' }, data: { name: 'Sarah' } }, '{
 prisma.mutation.deleteUser({ where: { id: 'abc' } }, '{ id }')
 ```
 
-Under the hood, each of these function calls is simply translated into an actual HTTP request against your Prisma service (using [`graphql-request`](https://github.com/prismagraphql/graphql-request)).
+Under the hood, each of these function calls is simply translated into an actual HTTP request against your Prisma service (using [`graphql-request`](https://github.com/prisma/graphql-request)).
 
 The API also allows to ask whether a specific node exists in your Prisma database:
 
