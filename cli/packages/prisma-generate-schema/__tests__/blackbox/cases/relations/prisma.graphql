@@ -34,7 +34,7 @@ type BatchPayload {
 type BillingInfo implements Node {
   id: ID!
   account: String!
-  user: User!
+  user(where: UserWhereInput): User!
 }
 
 """A connection to a list of items."""
@@ -127,13 +127,12 @@ input BillingInfoSubscriptionWhereInput {
 
 input BillingInfoUpdateInput {
   account: String
-  user: UserUpdateOneWithoutBillingInfoInput
+  user: UserUpdateOneRequiredWithoutBillingInfoInput
 }
 
-input BillingInfoUpdateOneWithoutUserInput {
+input BillingInfoUpdateOneRequiredWithoutUserInput {
   create: BillingInfoCreateWithoutUserInput
   connect: BillingInfoWhereUniqueInput
-  delete: Boolean
   update: BillingInfoUpdateWithoutUserDataInput
   upsert: BillingInfoUpsertWithoutUserInput
 }
@@ -336,9 +335,8 @@ input BillingInfoWithoutConnectionUpdateInput {
   account: String
 }
 
-input BillingInfoWithoutConnectionUpdateOneInput {
+input BillingInfoWithoutConnectionUpdateOneRequiredInput {
   create: BillingInfoWithoutConnectionCreateInput
-  delete: Boolean
   update: BillingInfoWithoutConnectionUpdateDataInput
   upsert: BillingInfoWithoutConnectionUpsertNestedInput
 }
@@ -399,6 +397,9 @@ input BillingInfoWithoutConnectionWhereInput {
   account_not_ends_with: String
 }
 
+"""Raw JSON value"""
+scalar Json
+
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
@@ -439,6 +440,7 @@ type Mutation {
   deleteManyOptionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
   deleteManyPostWithoutConnections(where: PostWithoutConnectionWhereInput): BatchPayload!
   deleteManyBillingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
+  executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
 enum MutationType {
@@ -455,7 +457,7 @@ interface Node {
 
 type OptionalDetails {
   text: String!
-  user: User!
+  user(where: UserWhereInput): User!
 }
 
 """A connection to a list of items."""
@@ -546,7 +548,7 @@ input OptionalDetailsSubscriptionWhereInput {
 
 input OptionalDetailsUpdateInput {
   text: String
-  user: UserUpdateOneWithoutOptionalDetailsInput
+  user: UserUpdateOneRequiredWithoutOptionalDetailsInput
 }
 
 input OptionalDetailsUpdateOneWithoutUserInput {
@@ -794,7 +796,7 @@ type Post implements Node {
   id: ID!
   text: String!
   count: Int!
-  user: User!
+  user(where: UserWhereInput): User!
   likes(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User!]
 }
 
@@ -907,7 +909,7 @@ input PostSubscriptionWhereInput {
 input PostUpdateInput {
   text: String
   count: Int
-  user: UserUpdateOneWithoutPostsInput
+  user: UserUpdateOneRequiredWithoutPostsInput
   likes: UserUpdateManyWithoutLikesInput
 }
 
@@ -932,7 +934,7 @@ input PostUpdateManyWithoutUserInput {
 input PostUpdateWithoutLikesDataInput {
   text: String
   count: Int
-  user: UserUpdateOneWithoutPostsInput
+  user: UserUpdateOneRequiredWithoutPostsInput
 }
 
 input PostUpdateWithoutUserDataInput {
@@ -1324,6 +1326,10 @@ input PostWithoutConnectionWhereUniqueInput {
   id: ID
 }
 
+enum PrismaDatabase {
+  default
+}
+
 type Query {
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
   posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
@@ -1366,11 +1372,11 @@ type User implements Node {
   name: String!
   posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
   postsWithoutConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection!]
-  billingInfo: BillingInfo!
-  billingInfoWithoutConnection: BillingInfoWithoutConnection!
+  billingInfo(where: BillingInfoWhereInput): BillingInfo!
+  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereInput): BillingInfoWithoutConnection!
   likes(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
-  optionalDetails: OptionalDetails
-  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection
+  optionalDetails(where: OptionalDetailsWhereInput): OptionalDetails
+  optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereInput): OptionalDetailsWithoutConnection
 }
 
 """A connection to a list of items."""
@@ -1522,8 +1528,8 @@ input UserUpdateInput {
   name: String
   posts: PostUpdateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
-  billingInfo: BillingInfoUpdateOneWithoutUserInput
-  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneInput
+  billingInfo: BillingInfoUpdateOneRequiredWithoutUserInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
   likes: PostUpdateManyWithoutLikesInput
   optionalDetails: OptionalDetailsUpdateOneWithoutUserInput
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
@@ -1538,26 +1544,23 @@ input UserUpdateManyWithoutLikesInput {
   upsert: [UserUpsertWithWhereUniqueWithoutLikesInput!]
 }
 
-input UserUpdateOneWithoutBillingInfoInput {
+input UserUpdateOneRequiredWithoutBillingInfoInput {
   create: UserCreateWithoutBillingInfoInput
   connect: UserWhereUniqueInput
-  delete: Boolean
   update: UserUpdateWithoutBillingInfoDataInput
   upsert: UserUpsertWithoutBillingInfoInput
 }
 
-input UserUpdateOneWithoutOptionalDetailsInput {
+input UserUpdateOneRequiredWithoutOptionalDetailsInput {
   create: UserCreateWithoutOptionalDetailsInput
   connect: UserWhereUniqueInput
-  delete: Boolean
   update: UserUpdateWithoutOptionalDetailsDataInput
   upsert: UserUpsertWithoutOptionalDetailsInput
 }
 
-input UserUpdateOneWithoutPostsInput {
+input UserUpdateOneRequiredWithoutPostsInput {
   create: UserCreateWithoutPostsInput
   connect: UserWhereUniqueInput
-  delete: Boolean
   update: UserUpdateWithoutPostsDataInput
   upsert: UserUpsertWithoutPostsInput
 }
@@ -1566,7 +1569,7 @@ input UserUpdateWithoutBillingInfoDataInput {
   name: String
   posts: PostUpdateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
-  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
   likes: PostUpdateManyWithoutLikesInput
   optionalDetails: OptionalDetailsUpdateOneWithoutUserInput
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
@@ -1576,8 +1579,8 @@ input UserUpdateWithoutLikesDataInput {
   name: String
   posts: PostUpdateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
-  billingInfo: BillingInfoUpdateOneWithoutUserInput
-  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneInput
+  billingInfo: BillingInfoUpdateOneRequiredWithoutUserInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
   optionalDetails: OptionalDetailsUpdateOneWithoutUserInput
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
 }
@@ -1586,8 +1589,8 @@ input UserUpdateWithoutOptionalDetailsDataInput {
   name: String
   posts: PostUpdateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
-  billingInfo: BillingInfoUpdateOneWithoutUserInput
-  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneInput
+  billingInfo: BillingInfoUpdateOneRequiredWithoutUserInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
   likes: PostUpdateManyWithoutLikesInput
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
 }
@@ -1595,8 +1598,8 @@ input UserUpdateWithoutOptionalDetailsDataInput {
 input UserUpdateWithoutPostsDataInput {
   name: String
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
-  billingInfo: BillingInfoUpdateOneWithoutUserInput
-  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneInput
+  billingInfo: BillingInfoUpdateOneRequiredWithoutUserInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
   likes: PostUpdateManyWithoutLikesInput
   optionalDetails: OptionalDetailsUpdateOneWithoutUserInput
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput

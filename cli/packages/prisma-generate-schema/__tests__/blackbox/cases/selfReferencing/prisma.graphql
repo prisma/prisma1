@@ -43,6 +43,9 @@ type BatchPayload {
   count: Long!
 }
 
+"""Raw JSON value"""
+scalar Json
+
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
@@ -50,8 +53,8 @@ Long can represent values between -(2^63) and 2^63 - 1.
 scalar Long
 
 type MultiSelfReferencingB {
-  a: MultiSelfReferencingB
-  b: MultiSelfReferencingB
+  a(where: MultiSelfReferencingBWhereInput): MultiSelfReferencingB
+  b(where: MultiSelfReferencingBWhereInput): MultiSelfReferencingB
 }
 
 """A connection to a list of items."""
@@ -195,8 +198,8 @@ input MultiSelfReferencingBWhereInput {
 
 type MultiSelfReferencingBWithId implements Node {
   id: ID!
-  a: MultiSelfReferencingBWithId
-  b: MultiSelfReferencingBWithId
+  a(where: MultiSelfReferencingBWithIdWhereInput): MultiSelfReferencingBWithId
+  b(where: MultiSelfReferencingBWithIdWhereInput): MultiSelfReferencingBWithId
 }
 
 """A connection to a list of items."""
@@ -782,6 +785,7 @@ type Mutation {
   deleteManySelfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput): BatchPayload!
   deleteManySelfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput): BatchPayload!
   deleteManySelfReferencingCs(where: SelfReferencingCWhereInput): BatchPayload!
+  executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
 enum MutationType {
@@ -809,6 +813,10 @@ type PageInfo {
 
   """When paginating forwards, the cursor to continue."""
   endCursor: String
+}
+
+enum PrismaDatabase {
+  default
 }
 
 type Query {
@@ -850,7 +858,7 @@ type Query {
 
 type SelfReferencingA implements Node {
   id: ID!
-  a: SelfReferencingAWithId!
+  a(where: SelfReferencingAWithIdWhereInput): SelfReferencingAWithId!
   field: Int!
 }
 
@@ -935,7 +943,7 @@ input SelfReferencingASubscriptionWhereInput {
 
 input SelfReferencingAUpdateInput {
   field: Int
-  a: SelfReferencingAWithIdUpdateOneInput
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
 }
 
 input SelfReferencingAWhereInput {
@@ -1018,7 +1026,7 @@ input SelfReferencingAWhereUniqueInput {
 
 type SelfReferencingAWithId implements Node {
   id: ID!
-  a: SelfReferencingAWithId!
+  a(where: SelfReferencingAWithIdWhereInput): SelfReferencingAWithId!
   field: Int!
 }
 
@@ -1108,18 +1116,17 @@ input SelfReferencingAWithIdSubscriptionWhereInput {
 
 input SelfReferencingAWithIdUpdateDataInput {
   field: Int
-  a: SelfReferencingAWithIdUpdateOneInput
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
 }
 
 input SelfReferencingAWithIdUpdateInput {
   field: Int
-  a: SelfReferencingAWithIdUpdateOneInput
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
 }
 
-input SelfReferencingAWithIdUpdateOneInput {
+input SelfReferencingAWithIdUpdateOneRequiredInput {
   create: SelfReferencingAWithIdCreateInput
   connect: SelfReferencingAWithIdWhereUniqueInput
-  delete: Boolean
   update: SelfReferencingAWithIdUpdateDataInput
   upsert: SelfReferencingAWithIdUpsertNestedInput
 }
@@ -1209,7 +1216,7 @@ input SelfReferencingAWithIdWhereUniqueInput {
 
 type SelfReferencingB implements Node {
   id: ID!
-  a: SelfReferencingB
+  a(where: SelfReferencingBWhereInput): SelfReferencingB
   field: Int!
 }
 
@@ -1401,7 +1408,7 @@ input SelfReferencingBWhereUniqueInput {
 
 type SelfReferencingBWithId implements Node {
   id: ID!
-  a: SelfReferencingBWithId
+  a(where: SelfReferencingBWithIdWhereInput): SelfReferencingBWithId
   field: Int!
 }
 
