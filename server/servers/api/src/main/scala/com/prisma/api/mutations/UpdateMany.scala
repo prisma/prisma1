@@ -18,26 +18,14 @@ case class UpdateMany(
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {
 
-  import apiDependencies.system.dispatcher
+  val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
-  val coolArgs   = CoolArgs.fromSchemaArgs(args.raw)
-  lazy val count = dataResolver.countByModel(model, Some(QueryArguments.withFilter(whereFilter)))
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] =
+    Future.successful(DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs))
 
-  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
-    count map { _ =>
-//      val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs)
-//      val subscriptionMutactions = Vector.empty
-//      val sssActions             = Vector.empty
-//
-//      PreparedMutactions(
-//        databaseMutactions = sqlMutactions,
-//        sideEffectMutactions = sssActions ++ subscriptionMutactions
-//      )
-
-      DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs)
-    }
+  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = results.results.head match {
+    case ManyNodesResult(_, count) => Future.successful(BatchPayload(count = count))
+    case _                         => sys.error("UpdateMany should always return a ManyNodesResult")
   }
-
-  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = count.map(value => BatchPayload(count = value))
 
 }
