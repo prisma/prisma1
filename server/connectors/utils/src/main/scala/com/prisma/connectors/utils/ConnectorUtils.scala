@@ -30,7 +30,7 @@ object ConnectorUtils {
       case ("mysql", true)        => MySqlDeployConnector(databaseConfig)
       case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
       case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, isActive)
-      case ("mongo", isActive)    => MongoDeployConnector(databaseConfig, isActive)
+      case ("mongo", isActive)    => MongoDeployConnector(databaseConfig, true)
       case (conn, _)              => sys.error(s"Unknown connector $conn")
     }
   }
