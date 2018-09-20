@@ -30,8 +30,6 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val invalidationTestKit = InMemoryPubSubTestKit[String]()
   lazy val sssEventsTestKit             = InMemoryPubSubTestKit[String]()
-  lazy val responsePubSubTestKit        = InMemoryPubSubTestKit[String]()
-  lazy val requestsQueueTestKit         = InMemoryQueueTestKit[SubscriptionRequest]()
 
   override val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = {
     invalidationTestKit.map[SchemaInvalidatedMessage]((_: String) => SchemaInvalidated)
@@ -39,20 +37,6 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsTestKit
   override val sssEventsSubscriber: PubSubSubscriber[String]    = sssEventsTestKit
-
-  override val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] = {
-    responsePubSubTestKit.map[SubscriptionSessionResponseV05](Converters.converterResponse05ToString)
-  }
-
-  override val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse] = {
-    responsePubSubTestKit.map[SubscriptionSessionResponse](Converters.converterResponse07ToString)
-  }
-  override def responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSubTestKit
-
-  override def requestsQueuePublisher: QueuePublisher[Request] = requestsQueueTestKit.map[Request] { req: Request =>
-    SubscriptionRequest(req.sessionId, req.projectId, req.body)
-  }
-  override val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueueTestKit
 
   override val keepAliveIntervalSeconds = 1000
 

@@ -33,8 +33,6 @@ trait SubscriptionSpecBase
   implicit val mat                          = ActorMaterializer()
   val sssEventsTestKit                      = dependencies.sssEventsTestKit
   val invalidationTestKit                   = dependencies.invalidationTestKit
-  val requestsTestKit                       = dependencies.requestsQueueTestKit
-  val responsesTestKit                      = dependencies.responsePubSubTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
 
   override def capabilities                                               = dependencies.apiConnector.capabilities
@@ -57,8 +55,6 @@ trait SubscriptionSpecBase
     super.beforeEach()
     sssEventsTestKit.reset
     invalidationTestKit.reset
-    responsesTestKit.reset
-    requestsTestKit.reset
   }
 
   override def afterAll(): Unit = {
