@@ -47,7 +47,10 @@ trait NodeActions extends NodeSingleQueries {
       val collection                        = database.getCollection(mutaction.model.name)
       val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
 
-      futureIds.flatMap(ids => collection.deleteMany(in("_id", ids.map(_.value): _*)).toFuture().map(_ => MutactionResults(Vector.empty)))
+      futureIds.flatMap { ids =>
+        val results = ManyNodesResult(mutaction, ids.size)
+        collection.deleteMany(in("_id", ids.map(_.value): _*)).toFuture().map(_ => MutactionResults(Vector(results)))
+      }
     }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
@@ -84,9 +87,11 @@ trait NodeActions extends NodeSingleQueries {
       val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
       val scalarUpdates                     = scalarUpdateValues(mutaction)
       val combinedUpdates                   = customCombine(scalarUpdates)
-      val results                           = ManyNodesResult(mutaction)
 
-      futureIds.flatMap(ids => collection.updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture().map(_ => MutactionResults(Vector(results))))
+      futureIds.flatMap { ids =>
+        val results = ManyNodesResult(mutaction, ids.size)
+        collection.updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture().map(_ => MutactionResults(Vector(results)))
+      }
     }
 
   def upsertNode(mutaction: TopLevelUpsertNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
