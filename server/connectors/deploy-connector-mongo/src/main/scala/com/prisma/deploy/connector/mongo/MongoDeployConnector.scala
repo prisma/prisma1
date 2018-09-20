@@ -20,7 +20,8 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
-  override def capabilities: Set[DeployConnectorCapability]     = if (isActive) Set(MigrationsCapability) else Set.empty
+//  override def capabilities: Set[DeployConnectorCapability]     = if (isActive) Set(MigrationsCapability) else Set.empty
+  override def capabilities: Set[DeployConnectorCapability] = Set.empty
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
