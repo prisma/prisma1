@@ -31,7 +31,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
   }
 
   "sending weird messages" should "result in a parsing error" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage("{}")
       wsClient.expectMessage(cantBeParsedError)
 
@@ -65,7 +65,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
   }
 
   "All subscriptions" should "support the basic subscriptions protocol" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage(connectionInit)
       wsClient.expectMessage(connectionAck)
 
@@ -91,7 +91,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
   }
 
   "All subscriptions" should "support the basic subscriptions protocol with number id, null variables and operationName" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage(connectionInit)
       wsClient.expectMessage(connectionAck)
 

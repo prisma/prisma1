@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.{Server, ServerExecutor}
 import com.prisma.api.server.ApiServer
 import com.prisma.deploy.server.ManagementServer
-import com.prisma.subscriptions.SimpleSubscriptionsServer
 import com.prisma.utils.boolean.BooleanUtils._
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
@@ -24,10 +23,11 @@ object PrismaProdMain extends App {
     dependencies.migrator.initialize
     includeMgmtServer
       .flatMap(
-        _.toOption(List(
-          ManagementServer("management", dependencies.config.server2serverSecret),
-          ManagementServer("cluster", dependencies.config.server2serverSecret) // Deprecated, will be removed soon
-        )))
+        _.toOption(
+          List(
+            ManagementServer("management"),
+            ManagementServer("cluster") // Deprecated, will be removed soon
+          )))
       .toList
       .flatten
   }
@@ -40,7 +40,6 @@ object PrismaProdMain extends App {
   val servers = mgmtServer ++ List(
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
-    SimpleSubscriptionsServer(),
     WorkerServer(dependencies)
   )
 
