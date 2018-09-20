@@ -77,8 +77,8 @@ case class SubscriptionSessionActorV05(
       }
 
     case SubscriptionEnd(id) =>
-      if (id.isDefined) {
-        subscriptionsManager ! EndSubscription(id.get, sessionId, projectId)
+      id.foreach { id =>
+        subscriptionsManager ! EndSubscription(id, sessionId, projectId)
       }
 
     case success: CreateSubscriptionSucceeded =>
@@ -88,8 +88,7 @@ case class SubscriptionSessionActorV05(
       sendToWebsocket(SubscriptionFail(fail.request.id, fail.errors.head.getMessage))
 
     case SubscriptionEvent(subscriptionId, payload) =>
-      val response = SubscriptionData(subscriptionId, payload)
-      sendToWebsocket(response)
+      sendToWebsocket(SubscriptionData(subscriptionId, payload))
 
     case ProjectSchemaChanged(subscriptionId) =>
       sendToWebsocket(SubscriptionFail(subscriptionId, "Schema changed"))

@@ -22,8 +22,8 @@ trait SubscriptionSpecBase
     with BeforeAndAfterEach
     with BeforeAndAfterAll
     with ScalatestRouteTest {
-
   this: Suite =>
+
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val dependencies                 = new TestSubscriptionDependencies()
   implicit lazy val implicitSuite           = this
