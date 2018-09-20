@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
 import com.prisma.shared.models.ProjectWithClientId
 import com.prisma.shared.schema_dsl.TestProject
-import com.prisma.stub.Import.withStubServer
 import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.CreateSubscriptionSucceeded
@@ -19,12 +18,10 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
 
   override def afterAll: Unit = shutdown()
 
-  implicit val materializer = ActorMaterializer()
-
+  implicit val materializer  = ActorMaterializer()
+  implicit val dependencies  = new TestSubscriptionDependencies
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
-
-  implicit val dependencies = new TestSubscriptionDependencies
 
   def ignoreKeepAliveProbe: TestProbe = {
     val ret = TestProbe()
@@ -170,14 +167,9 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
   def subscriptionSessionActor(subscriptionsManager: ActorRef) = new SubscriptionSessionActor("sessionId", "projectId", subscriptionsManager)
 
   def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
-    import com.prisma.shared.models.ProjectJsonFormatter._
     val project             = TestProject().copy(id = projectId)
     val projectWithClientId = ProjectWithClientId(project)
-    val stubs = List(
-      com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/${project.id}").stub(200, Json.toJson(projectWithClientId).toString)
-    )
-    withStubServer(stubs, port = dependencies.projectFetcherPort) {
-      fn
-    }
+    dependencies.projectFetcher.put(project.id, projectWithClientId)
+    fn
   }
 }

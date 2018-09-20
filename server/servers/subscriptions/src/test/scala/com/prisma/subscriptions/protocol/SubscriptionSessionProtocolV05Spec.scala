@@ -16,13 +16,12 @@ class SubscriptionSessionProtocolV05Spec extends TestKit(ActorSystem("subscripti
   import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests._
   import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses._
 
-  implicit val materializer = ActorMaterializer()
-
   override def afterAll: Unit = shutdown()
 
+  implicit val materializer  = ActorMaterializer()
+  implicit val dependencies  = new TestSubscriptionDependencies
   val ignoreProbe: TestProbe = TestProbe()
   val ignoreRef: ActorRef    = ignoreProbe.testActor
-  implicit val dependencies  = new TestSubscriptionDependencies
 
   def ignoreKeepAliveProbe: TestProbe = {
     val ret = TestProbe()

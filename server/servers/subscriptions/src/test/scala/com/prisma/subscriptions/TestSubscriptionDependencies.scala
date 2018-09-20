@@ -5,16 +5,19 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.api.{ApiDependencies, TestApiDependencies}
+import com.prisma.cache.Cache
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
-import com.prisma.shared.models.ProjectIdEncoder
+import com.prisma.shared.models.{ProjectIdEncoder, ProjectWithClientId}
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.{Converters, SubscriptionRequest}
 import com.prisma.websocket.protocol.Request
+
+import scala.concurrent.Future
 
 class TestSubscriptionDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends SubscriptionDependencies
@@ -51,11 +54,9 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
   }
   override val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueueTestKit
 
-  val projectFetcherPort                = 12345
   override val keepAliveIntervalSeconds = 1000
-  val projectFetcherPath                = "project-fetcher"
-  override val projectFetcher: ProjectFetcher =
-    ProjectFetcherImpl(Vector.empty, schemaManagerEndpoint = s"http://localhost:$projectFetcherPort/$projectFetcherPath", schemaManagerSecret = "empty")
+
+  override val projectFetcher: TestProjectFetcher = TestProjectFetcher()
 
   override lazy val apiSchemaBuilder: SchemaBuilder = ???
   override lazy val sssEventsPubSub                 = ???
@@ -67,4 +68,12 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
+}
+
+case class TestProjectFetcher() extends ProjectFetcher {
+  val cache = Cache.unbounded[String, ProjectWithClientId]()
+
+  override def fetch(projectIdOrAlias: String) = Future.successful(cache.get(projectIdOrAlias))
+
+  def put(projectIdOrAlias: String, project: ProjectWithClientId) = cache.put(projectIdOrAlias, project)
 }
