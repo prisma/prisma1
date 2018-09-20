@@ -80,14 +80,17 @@ trait SubscriptionSpecBase
   }
 
   def testInitializedWebsocket(project: Project)(checkFn: WSProbe => Unit): Unit = {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage(connectionInit)
       wsClient.expectMessage(connectionAck)
       checkFn(wsClient)
     }
   }
 
-  def testWebsocket(project: Project)(checkFn: WSProbe => Unit): Unit = {
+  def testWebsocketV07(project: Project)(checkFn: WSProbe => Unit): Unit = testWebsocket(project, wsServer.v7ProtocolName)(checkFn)
+  def testWebsocketV05(project: Project)(checkFn: WSProbe => Unit): Unit = testWebsocket(project, wsServer.v5ProtocolName)(checkFn)
+
+  private def testWebsocket(project: Project, wsSubProtocol: String)(checkFn: WSProbe => Unit): Unit = {
     val wsClient = WSProbe()
     import com.prisma.shared.models.ProjectJsonFormatter._
     import com.prisma.stub.Import._
@@ -99,7 +102,7 @@ trait SubscriptionSpecBase
       com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/$projectIdInFetcherUrl").stub(200, Json.toJson(projectWithClientId).toString)
     )
     withStubServer(stubs, port = dependencies.projectFetcherPort) {
-      WS(s"/${project.id}/$dummyStage", wsClient.flow, Seq(wsServer.v7ProtocolName)) ~> wsServer.routes ~> check {
+      WS(s"/${project.id}/$dummyStage", wsClient.flow, Seq(wsSubProtocol)) ~> wsServer.routes ~> check {
         checkFn(wsClient)
       }
     }
