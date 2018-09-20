@@ -97,12 +97,10 @@ const resolvers = {
     createDraft(root, args, context) {
       return context.prisma.createPost(
         {
-          data: {
-            title: args.title,
-            author: {
-              connect: { id: args.userId }
-            }
-          },
+          title: args.title,
+          author: {
+            connect: { id: args.userId }
+          }
         },
 
       )
