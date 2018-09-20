@@ -16,7 +16,6 @@ import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   ProjectSchemaChanged,
   SubscriptionEvent
 }
-import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import play.api.libs.json._
 import sangria.parser.QueryParser
 
@@ -35,8 +34,7 @@ object SubscriptionSessionActor {
 case class SubscriptionSessionActor(
     sessionId: String,
     projectId: String,
-    subscriptionsManager: ActorRef,
-    websocketSessionManager: ActorRef
+    subscriptionsManager: ActorRef
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
     with LogUnhandled
@@ -103,9 +101,8 @@ case class SubscriptionSessionActor(
     case GqlStop(id) =>
       subscriptionsManager ! EndSubscription(id, sessionId, projectId)
 
-    case success: CreateSubscriptionSucceeded =>
-    // FIXME: this is really a NO-OP now?
-
+    case _: CreateSubscriptionSucceeded =>
+    // NOOP
     case fail: CreateSubscriptionFailed =>
       sendToWebsocket(GqlError(fail.request.id, fail.errors.head.getMessage))
 
@@ -138,8 +135,7 @@ case class SubscriptionSessionActor(
   }
 
   private def sendToWebsocket(response: SubscriptionSessionResponse) = {
-    import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
-    websocketSessionManager ! IncomingQueueMessage(sessionId, Json.toJson(response).toString)
+    context.parent ! response
   }
 }
 

@@ -9,43 +9,19 @@ import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import com.prisma.akkautil.http.Server
-import com.prisma.messagebus.pubsub.Everything
-import com.prisma.shared.models.ProjectId
 import com.prisma.subscriptions.SubscriptionDependencies
-import com.prisma.subscriptions.protocol.SubscriptionSessionManager
 import com.prisma.subscriptions.resolving.SubscriptionsManager
-import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
-import com.prisma.websocket.metrics.SubscriptionWebsocketMetrics
 import cool.graph.cuid.Cuid
 import play.api.libs.streams.ActorFlow
-
-import scala.concurrent.Future
 
 case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: String = "")(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
 ) extends Server {
-  import SubscriptionWebsocketMetrics._
-  import dependencies.reporter
-  import system.dispatcher
 
-  val websocketSessionManager = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher)))
-  val v5ProtocolName          = "graphql-subscriptions"
-  val v7ProtocolName          = "graphql-ws"
-
-  // moved from subscriptions
+  val v5ProtocolName       = "graphql-subscriptions"
+  val v7ProtocolName       = "graphql-ws"
   val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager()(dependencies)), "subscriptions-manager")
-  val subscriptionSessionManager = system.actorOf(
-    Props(new SubscriptionSessionManager(subscriptionsManager = subscriptionsManager, websocketSessionManager = websocketSessionManager)(dependencies)),
-    "subscriptions-sessions-manager"
-  )
-
-  val responseSubscription = dependencies.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
-    incomingResponseQueueMessageCount.inc()
-    websocketSessionManager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
-  })
-
-  override def onStop: Future[_] = Future { responseSubscription.unsubscribe }
 
   val innerRoutes =
     pathPrefix(Segments(min = 0, max = 3)) { segments =>
@@ -70,9 +46,8 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
             projectId = projectId,
             sessionId = Cuid.createCuid(),
             outgoing = out,
-            manager = websocketSessionManager,
             isV7protocol = v7protocol,
-            subscriptionSessionManager = subscriptionSessionManager
+            subscriptionsManager = subscriptionsManager
           )(dependencies)
         }
       }(system, materializer)

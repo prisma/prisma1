@@ -12,7 +12,6 @@ import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   ProjectSchemaChanged,
   SubscriptionEvent
 }
-import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import play.api.libs.json.Json
 import sangria.parser.QueryParser
 
@@ -24,8 +23,7 @@ object SubscriptionSessionActorV05 {
 case class SubscriptionSessionActorV05(
     sessionId: String,
     projectId: String,
-    subscriptionsManager: ActorRef,
-    websocketSessionManager: ActorRef
+    subscriptionsManager: ActorRef
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
     with LogUnhandled
@@ -37,7 +35,6 @@ case class SubscriptionSessionActorV05(
   import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
 
   val reporter = dependencies.reporter
-
   activeSubcriptionSessions.inc
 
   override def postStop(): Unit = {
@@ -99,8 +96,7 @@ case class SubscriptionSessionActorV05(
   }
 
   private def sendToWebsocket(response: SubscriptionSessionResponseV05) = {
-    import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
-    websocketSessionManager ! IncomingQueueMessage(sessionId, Json.toJson(response).toString)
+    context.parent ! response
   }
 
 }
