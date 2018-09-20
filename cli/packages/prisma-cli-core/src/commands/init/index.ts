@@ -59,14 +59,27 @@ Either try using a new directory name, or remove the files listed above.
     }
 
     if (endpoint) {
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
-        path.join(this.config.definitionDir, 'datamodel.prisma'),
-      )
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'prisma.yml'),
-        path.join(this.config.definitionDir, 'prisma.yml'),
-      )
+      // TODO: Revert the codepath for pkg bundling after this is resolved https://github.com/zeit/pkg/issues/420
+      const isPackaged = fs.existsSync('/snapshot')
+      if (isPackaged) {
+        fs.writeFileSync(
+          path.join(this.config.definitionDir, 'datamodel.prisma'), 
+          fs.readFileSync(path.join(__dirname, 'boilerplate', 'datamodel.prisma'))
+        )
+        fs.writeFileSync(
+          path.join(this.config.definitionDir, 'prisma.yml'), 
+          fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml'))
+        )
+      } else {
+        fs.copySync(
+          path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
+          path.join(this.config.definitionDir, 'datamodel.prisma'),
+        )
+        fs.copySync(
+          path.join(__dirname, 'boilerplate', 'prisma.yml'),
+          path.join(this.config.definitionDir, 'prisma.yml'),
+        )
+      }
 
       const endpointDefinitionPath = path.join(
         this.config.definitionDir,

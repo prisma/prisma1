@@ -47,7 +47,7 @@
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build",
-    "package": "pkg package.json --targets node10-macos-x64"
+    "package": "./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64"
   },
   "cli-engine": {
     "bin": "prisma",
