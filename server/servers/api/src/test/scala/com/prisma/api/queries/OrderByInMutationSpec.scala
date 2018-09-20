@@ -1,5 +1,6 @@
 package com.prisma.api.queries
 
+import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -26,7 +27,7 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
   }
 
-  "The order when not giving an order by" should "be by Id ascending and therefore oldest first" in {
+  "The order when not giving an order by" should "be by Id ascending and therefore oldest first" taggedAs (IgnorePassive) in {
     val res = server.query(
       """mutation {
         |  createFoo(
