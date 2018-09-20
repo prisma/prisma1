@@ -3,7 +3,7 @@ package com.prisma.subscriptions.protocol
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import com.prisma.shared.models.ProjectWithClientId
+import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -167,9 +167,8 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
   def subscriptionSessionActor(subscriptionsManager: ActorRef) = new SubscriptionSessionActor("sessionId", "projectId", subscriptionsManager)
 
   def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
-    val project             = TestProject().copy(id = projectId)
-    val projectWithClientId = ProjectWithClientId(project)
-    dependencies.projectFetcher.put(project.id, projectWithClientId)
+    val project = TestProject().copy(id = projectId)
+    dependencies.projectFetcher.put(projectId, project)
     fn
   }
 }

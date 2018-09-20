@@ -23,10 +23,11 @@ object PrismaProdMain extends App {
     dependencies.migrator.initialize
     includeMgmtServer
       .flatMap(
-        _.toOption(List(
-          ManagementServer("management", dependencies.config.server2serverSecret),
-          ManagementServer("cluster", dependencies.config.server2serverSecret) // Deprecated, will be removed soon
-        )))
+        _.toOption(
+          List(
+            ManagementServer("management"),
+            ManagementServer("cluster") // Deprecated, will be removed soon
+          )))
       .toList
       .flatten
   }

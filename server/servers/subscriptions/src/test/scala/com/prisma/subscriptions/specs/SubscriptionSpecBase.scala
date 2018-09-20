@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.api.ApiTestDatabase
 import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.shared.models.Project
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.websocket.WebsocketServer
@@ -79,10 +79,9 @@ trait SubscriptionSpecBase
 
   private def testWebsocket(project: Project, wsSubProtocol: String)(checkFn: WSProbe => Unit): Unit = {
     val wsClient              = WSProbe()
-    val projectWithClientId   = ProjectWithClientId(project, "clientId")
     val dummyStage            = "test"
     val projectIdInFetcherUrl = projectIdEncoder.toEncodedString(project.id, dummyStage)
-    dependencies.projectFetcher.put(projectIdInFetcherUrl, projectWithClientId)
+    dependencies.projectFetcher.put(projectIdInFetcherUrl, project)
 
     WS(s"/${project.id}/$dummyStage", wsClient.flow, Seq(wsSubProtocol)) ~> wsServer.routes ~> check {
       checkFn(wsClient)

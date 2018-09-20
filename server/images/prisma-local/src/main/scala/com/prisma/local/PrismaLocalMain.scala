@@ -20,8 +20,8 @@ object PrismaLocalMain extends App {
 
   ServerExecutor(
     port = dependencies.config.port.getOrElse(4466),
-    ManagementServer("management", dependencies.config.server2serverSecret),
-    ManagementServer("cluster", dependencies.config.server2serverSecret), // Deprecated, will be removed soon
+    ManagementServer("management"),
+    ManagementServer("cluster"), // Deprecated, will be removed soon
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
     WorkerServer(dependencies)

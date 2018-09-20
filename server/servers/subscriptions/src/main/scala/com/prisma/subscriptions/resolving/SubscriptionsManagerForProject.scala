@@ -45,8 +45,8 @@ case class SubscriptionsManagerForProject(
   }
 
   override def receive: Receive = logUnhandled {
-    case project: ProjectWithClientId =>
-      context.become(ready(project.project))
+    case project: Project =>
+      context.become(ready(project))
       unstashAll()
 
     case akka.actor.Status.Failure(e) =>

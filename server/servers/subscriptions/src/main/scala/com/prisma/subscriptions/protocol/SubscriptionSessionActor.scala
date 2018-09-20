@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.api.ApiMetrics
 import com.prisma.auth.AuthImpl
-import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.shared.models.Project
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.helpers.ProjectHelper
 import com.prisma.subscriptions.metrics.SubscriptionMetrics
@@ -62,8 +62,8 @@ case class SubscriptionSessionActor(
   }
 
   override def receive: Receive = logUnhandled {
-    case project: ProjectWithClientId =>
-      context.become(waitingForInit(project.project))
+    case project: Project =>
+      context.become(waitingForInit(project))
       unstashAll()
 
     case akka.actor.Status.Failure(e) =>

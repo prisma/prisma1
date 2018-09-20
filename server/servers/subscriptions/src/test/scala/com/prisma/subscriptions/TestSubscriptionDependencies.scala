@@ -2,20 +2,16 @@ package com.prisma.subscriptions
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
-import com.prisma.api.project.{ProjectFetcher, ProjectFetcherImpl}
+import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.api.{ApiDependencies, TestApiDependencies}
 import com.prisma.cache.Cache
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorUtils
-import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
-import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber, QueueConsumer, QueuePublisher}
+import com.prisma.messagebus.testkits.InMemoryPubSubTestKit
+import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
-import com.prisma.shared.models.{ProjectIdEncoder, ProjectWithClientId}
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import com.prisma.subscriptions.protocol.{Converters, SubscriptionRequest}
-import com.prisma.websocket.protocol.Request
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 import scala.concurrent.Future
 
@@ -55,9 +51,9 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 }
 
 case class TestProjectFetcher() extends ProjectFetcher {
-  val cache = Cache.unbounded[String, ProjectWithClientId]()
+  val cache = Cache.unbounded[String, Project]()
 
   override def fetch(projectIdOrAlias: String) = Future.successful(cache.get(projectIdOrAlias))
 
-  def put(projectIdOrAlias: String, project: ProjectWithClientId) = cache.put(projectIdOrAlias, project)
+  def put(projectIdOrAlias: String, project: Project) = cache.put(projectIdOrAlias, project)
 }
