@@ -9,11 +9,13 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """|type A {
+         |  id: ID! @unique
          | name: String! @unique
          | value: Int
          |}
          |
          |type B {
+         | id: ID! @unique
          | name: String! @unique
          | value: Int
          |}"""
@@ -24,6 +26,7 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type B {
+        | id: ID! @unique
         | name: String! @unique
         | value: Int
         |}"""
@@ -36,11 +39,13 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """|type A {
+         | id: ID! @unique
          | name: String! @unique
          | value: Int
          |}
          |
          |type B {
+         | id: ID! @unique
          | name: String! @unique
          | value: Int
          |}"""
@@ -51,6 +56,7 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type B {
+        | id: ID! @unique
         | name: String! @unique
         | value: Int
         |}"""
@@ -63,11 +69,13 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """|type A {
+         | id: ID! @unique
          | name: String! @unique
          | value: Int
          |}
          |
          |type B {
+         | id: ID! @unique
          | name: String! @unique
          | value: Int
          |}"""
@@ -76,6 +84,7 @@ class DeleteModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type B {
+        | id: ID! @unique
         | name: String! @unique
         | value: Int
         |}"""
