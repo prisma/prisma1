@@ -3,14 +3,6 @@ package com.prisma.deploy.connector.mongo.impl.mutactions
 import com.prisma.deploy.connector.mongo.database.{MongoDeployDatabaseMutationBuilder, NoAction}
 import com.prisma.deploy.connector.{CreateModelTable, DeleteModelTable, RenameTable}
 
-object CreateModelInterpreter extends MongoMutactionInterpreter[CreateModelTable] {
-  override def execute(mutaction: CreateModelTable) = NoAction.unit
-
-  override def rollback(mutaction: CreateModelTable) = {
-    MongoDeployDatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
-  }
-}
-
 object DeleteModelInterpreter extends MongoMutactionInterpreter[DeleteModelTable] {
   override def execute(mutaction: DeleteModelTable) = {
     MongoDeployDatabaseMutationBuilder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
