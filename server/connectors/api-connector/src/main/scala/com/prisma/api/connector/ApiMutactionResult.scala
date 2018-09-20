@@ -24,7 +24,7 @@ object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
 
 object ManyHelper {
   def getManyCount(result: MutactionResults): Int = result.results match {
-    case Vector.empty => sys.error("ManyMutation should always return a ManyNodesResult")
+    case x if x.isEmpty => sys.error("ManyMutation should always return a ManyNodesResult")
     case x =>
       x.head match {
         case ManyNodesResult(_, count) => count
