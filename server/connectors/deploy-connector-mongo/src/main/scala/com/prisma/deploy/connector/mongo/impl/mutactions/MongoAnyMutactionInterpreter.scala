@@ -9,9 +9,9 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateProject         => CreateProjectInterpreter.execute(x)
       case x: TruncateProject       => TruncateProjectInterpreter.execute(x)
       case x: DeleteProject         => DeleteProjectInterpreter.execute(x)
-      case x: CreateColumn          => CreateColumnInterpreter.execute(x)
-      case x: UpdateColumn          => UpdateColumnInterpreter.execute(x)
-      case x: DeleteColumn          => DeleteColumnInterpreter.execute(x)
+      case x: CreateColumn          => NoAction.unit
+      case x: UpdateColumn          => NoAction.unit
+      case x: DeleteColumn          => NoAction.unit
       case x: CreateScalarListTable => NoAction.unit
       case x: UpdateScalarListTable => NoAction.unit
       case x: DeleteScalarListTable => NoAction.unit
@@ -29,9 +29,9 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateProject         => CreateProjectInterpreter.rollback(x)
       case x: TruncateProject       => TruncateProjectInterpreter.rollback(x)
       case x: DeleteProject         => DeleteProjectInterpreter.rollback(x)
-      case x: CreateColumn          => CreateColumnInterpreter.rollback(x)
-      case x: UpdateColumn          => UpdateColumnInterpreter.rollback(x)
-      case x: DeleteColumn          => DeleteColumnInterpreter.rollback(x)
+      case x: CreateColumn          => NoAction.unit
+      case x: UpdateColumn          => NoAction.unit
+      case x: DeleteColumn          => NoAction.unit
       case x: CreateScalarListTable => NoAction.unit
       case x: UpdateScalarListTable => NoAction.unit
       case x: DeleteScalarListTable => NoAction.unit
