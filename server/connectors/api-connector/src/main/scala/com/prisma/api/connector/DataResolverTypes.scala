@@ -68,6 +68,17 @@ case class SelectedFields(fields: Set[Field]) {
   val relationFields      = fields.collect { case f: RelationField            => f }
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
+
+  def includeOrderBy(args: Option[QueryArguments]): SelectedFields = {
+    args match {
+      case None => this
+      case Some(arguments) =>
+        arguments.orderBy match {
+          case None          => this
+          case Some(orderBy) => this ++ SelectedFields(Set(orderBy.field))
+        }
+    }
+  }
 }
 
 object SortOrder extends Enumeration {
