@@ -45,8 +45,7 @@ trait SubscriptionSpecBase
   override def prismaConfig = dependencies.config
 
   val wsServer            = WebsocketServer(dependencies)
-  val simpleSubServer     = SimpleSubscriptionsServer()
-  val subscriptionServers = ServerExecutor(port = 8085, wsServer, simpleSubServer)
+  val subscriptionServers = ServerExecutor(port = 8085, wsServer)
 
   Await.result(subscriptionServers.start, 15.seconds)
 

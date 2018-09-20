@@ -8,7 +8,14 @@ import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.QueuePublisher
 import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.protocol.StringOrInt
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Requests.SubscriptionSessionRequestV05
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Requests.{GqlStop, SubscriptionSessionRequest}
+import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.GqlError
+import com.prisma.subscriptions.protocol.SubscriptionSessionManager.Requests.{EnrichedSubscriptionRequest, EnrichedSubscriptionRequestV05, StopSession}
+import com.prisma.subscriptions.util.PlayJson
 import com.prisma.websocket.protocol.Request
+import play.api.libs.json.{JsError, JsSuccess, Json}
 
 import scala.collection.mutable
 import scala.concurrent.duration._ // if you don't supply your own Protocol (see below)
@@ -76,7 +83,7 @@ case class WebsocketSession(
     sessionId: String,
     outgoing: ActorRef,
     manager: ActorRef,
-    requestsPublisher: QueuePublisher[Request],
+    subscriptionSessionManager: ActorRef,
     isV7protocol: Boolean
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
@@ -107,7 +114,23 @@ case class WebsocketSession(
 
   def receive: Receive = logUnhandled {
     case TextMessage.Strict(body) =>
-      requestsPublisher.publish(Request(sessionId, projectId, body))
+      import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionRequestReaders._
+      import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
+      import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionRequestReaders._
+
+      val msg = if (isV7protocol) {
+        for {
+          req <- PlayJson.parse(body).flatMap(_.validate[SubscriptionSessionRequest])
+        } yield EnrichedSubscriptionRequest(sessionId = sessionId, projectId = projectId, req)
+      } else {
+        for {
+          req <- PlayJson.parse(body).flatMap(_.validate[SubscriptionSessionRequestV05])
+        } yield EnrichedSubscriptionRequestV05(sessionId = sessionId, projectId = projectId, req)
+      }
+      msg match {
+        case JsSuccess(m, _) => subscriptionSessionManager ! m
+        case JsError(_)      => outgoing ! TextMessage(Json.toJson(GqlError(StringOrInt(string = Some(""), int = None), "The message can't be parsed")).toString())
+      }
       incomingWebsocketMessageCount.inc()
 
     case IncomingQueueMessage(_, body) =>
@@ -121,6 +144,6 @@ case class WebsocketSession(
   override def postStop = {
     activeWsConnections.dec
     outgoing ! PoisonPill
-    requestsPublisher.publish(Request(sessionId, projectId, "STOP"))
+    subscriptionSessionManager ! StopSession(sessionId)
   }
 }

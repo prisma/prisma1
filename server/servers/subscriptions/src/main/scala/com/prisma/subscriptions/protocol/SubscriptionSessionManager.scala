@@ -32,10 +32,11 @@ object SubscriptionSessionManager {
   }
 }
 
-case class SubscriptionSessionManager(subscriptionsManager: ActorRef)(
-    implicit responsePublisher05: PubSubPublisher[SubscriptionSessionResponseV05],
-    responsePublisher07: PubSubPublisher[SubscriptionSessionResponse],
-    dependencies: SubscriptionDependencies
+case class SubscriptionSessionManager(
+    subscriptionsManager: ActorRef,
+    websocketSessionManager: ActorRef
+)(
+    implicit dependencies: SubscriptionDependencies
 ) extends Actor
     with LogUnhandledExceptions
     with LogUnhandled {
@@ -78,12 +79,12 @@ case class SubscriptionSessionManager(subscriptionsManager: ActorRef)(
   }
 
   private def startSessionActorForProtocolVersionV05(sessionId: String, projectId: String): ActorRef = {
-    val props = Props(SubscriptionSessionActorV05(sessionId, projectId, subscriptionsManager, responsePublisher05))
+    val props = Props(SubscriptionSessionActorV05(sessionId, projectId, subscriptionsManager, websocketSessionManager))
     startSessionActor(sessionId, props)
   }
 
   private def startSessionActorForCurrentProtocolVersion(sessionId: String, projectId: String): ActorRef = {
-    val props = Props(SubscriptionSessionActor(sessionId, projectId, subscriptionsManager, responsePublisher07))
+    val props = Props(SubscriptionSessionActor(sessionId, projectId, subscriptionsManager, websocketSessionManager))
     startSessionActor(sessionId, props)
   }
 

@@ -2,11 +2,8 @@ package com.prisma.subscriptions.protocol
 
 import akka.actor.{Actor, ActorRef}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
-import com.prisma.messagebus.PubSubPublisher
-import com.prisma.messagebus.pubsub.Only
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.metrics.SubscriptionMetrics
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
 import com.prisma.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
@@ -15,6 +12,7 @@ import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   ProjectSchemaChanged,
   SubscriptionEvent
 }
+import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import play.api.libs.json.Json
 import sangria.parser.QueryParser
 
@@ -27,7 +25,7 @@ case class SubscriptionSessionActorV05(
     sessionId: String,
     projectId: String,
     subscriptionsManager: ActorRef,
-    responsePublisher: PubSubPublisher[SubscriptionSessionResponseV05]
+    websocketSessionManager: ActorRef
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
     with LogUnhandled
@@ -51,15 +49,15 @@ case class SubscriptionSessionActorV05(
     case InitConnection(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
         case Some(auth) =>
-          publishToResponseQueue(InitConnectionSuccess)
+          sendToWebsocket(InitConnectionSuccess)
           context.become(readyReceive(auth))
 
         case None =>
-          publishToResponseQueue(InitConnectionFail("No Authorization field was provided in payload."))
+          sendToWebsocket(InitConnectionFail("No Authorization field was provided in payload."))
       }
 
     case _: SubscriptionSessionRequestV05 =>
-      publishToResponseQueue(InitConnectionFail("You have to send an init message before sending anything else."))
+      sendToWebsocket(InitConnectionFail("You have to send an init message before sending anything else."))
   }
 
   def readyReceive(auth: Authorization): Receive = logUnhandled {
@@ -67,7 +65,7 @@ case class SubscriptionSessionActorV05(
       val query = QueryParser.parse(start.query)
 
       if (query.isFailure) {
-        publishToResponseQueue(SubscriptionFail(start.id, s"""the GraphQL Query was not valid"""))
+        sendToWebsocket(SubscriptionFail(start.id, s"""the GraphQL Query was not valid"""))
       } else {
         val createSubscription = CreateSubscription(
           id = start.id,
@@ -87,20 +85,22 @@ case class SubscriptionSessionActorV05(
       }
 
     case success: CreateSubscriptionSucceeded =>
-      publishToResponseQueue(SubscriptionSuccess(success.request.id))
+      sendToWebsocket(SubscriptionSuccess(success.request.id))
 
     case fail: CreateSubscriptionFailed =>
-      publishToResponseQueue(SubscriptionFail(fail.request.id, fail.errors.head.getMessage))
+      sendToWebsocket(SubscriptionFail(fail.request.id, fail.errors.head.getMessage))
 
     case SubscriptionEvent(subscriptionId, payload) =>
       val response = SubscriptionData(subscriptionId, payload)
-      publishToResponseQueue(response)
+      sendToWebsocket(response)
 
     case ProjectSchemaChanged(subscriptionId) =>
-      publishToResponseQueue(SubscriptionFail(subscriptionId, "Schema changed"))
+      sendToWebsocket(SubscriptionFail(subscriptionId, "Schema changed"))
   }
 
-  private def publishToResponseQueue(response: SubscriptionSessionResponseV05) = {
-    responsePublisher.publish(Only(sessionId), response)
+  private def sendToWebsocket(response: SubscriptionSessionResponseV05) = {
+    import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
+    websocketSessionManager ! IncomingQueueMessage(sessionId, Json.toJson(response).toString)
   }
+
 }

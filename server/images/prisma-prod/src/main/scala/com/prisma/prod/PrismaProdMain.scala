@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.{Server, ServerExecutor}
 import com.prisma.api.server.ApiServer
 import com.prisma.deploy.server.ManagementServer
-import com.prisma.subscriptions.SimpleSubscriptionsServer
 import com.prisma.utils.boolean.BooleanUtils._
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
@@ -40,7 +39,6 @@ object PrismaProdMain extends App {
   val servers = mgmtServer ++ List(
     WebsocketServer(dependencies),
     ApiServer(dependencies.apiSchemaBuilder),
-    SimpleSubscriptionsServer(),
     WorkerServer(dependencies)
   )
 

@@ -12,6 +12,8 @@ import com.prisma.akkautil.http.Server
 import com.prisma.messagebus.pubsub.Everything
 import com.prisma.shared.models.ProjectId
 import com.prisma.subscriptions.SubscriptionDependencies
+import com.prisma.subscriptions.protocol.SubscriptionSessionManager
+import com.prisma.subscriptions.resolving.SubscriptionsManager
 import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import com.prisma.websocket.metrics.SubscriptionWebsocketMetrics
 import cool.graph.cuid.Cuid
@@ -27,13 +29,20 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
   import dependencies.reporter
   import system.dispatcher
 
-  val manager        = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher)))
-  val v5ProtocolName = "graphql-subscriptions"
-  val v7ProtocolName = "graphql-ws"
+  val websocketSessionManager = system.actorOf(Props(WebsocketSessionManager(dependencies.requestsQueuePublisher)))
+  val v5ProtocolName          = "graphql-subscriptions"
+  val v7ProtocolName          = "graphql-ws"
+
+  // moved from subscriptions
+  val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager()(dependencies)), "subscriptions-manager")
+  val subscriptionSessionManager = system.actorOf(
+    Props(new SubscriptionSessionManager(subscriptionsManager = subscriptionsManager, websocketSessionManager = websocketSessionManager)(dependencies)),
+    "subscriptions-sessions-manager"
+  )
 
   val responseSubscription = dependencies.responsePubSubSubscriber.subscribe(Everything, { strMsg =>
     incomingResponseQueueMessageCount.inc()
-    manager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
+    websocketSessionManager ! IncomingQueueMessage(strMsg.topic, strMsg.payload)
   })
 
   override def onStop: Future[_] = Future { responseSubscription.unsubscribe }
@@ -61,9 +70,9 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
             projectId = projectId,
             sessionId = Cuid.createCuid(),
             outgoing = out,
-            manager = manager,
-            requestsPublisher = dependencies.requestsQueuePublisher,
-            isV7protocol = v7protocol
+            manager = websocketSessionManager,
+            isV7protocol = v7protocol,
+            subscriptionSessionManager = subscriptionSessionManager
           )(dependencies)
         }
       }(system, materializer)

@@ -4,13 +4,10 @@ import akka.actor.{Actor, ActorRef, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.api.ApiMetrics
 import com.prisma.auth.AuthImpl
-import com.prisma.messagebus.PubSubPublisher
-import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Project, ProjectWithClientId}
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.helpers.ProjectHelper
 import com.prisma.subscriptions.metrics.SubscriptionMetrics
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
 import com.prisma.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
@@ -19,6 +16,7 @@ import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   ProjectSchemaChanged,
   SubscriptionEvent
 }
+import com.prisma.websocket.WebsocketSessionManager.Requests.IncomingQueueMessage
 import play.api.libs.json._
 import sangria.parser.QueryParser
 
@@ -38,7 +36,7 @@ case class SubscriptionSessionActor(
     sessionId: String,
     projectId: String,
     subscriptionsManager: ActorRef,
-    responsePublisher: PubSubPublisher[SubscriptionSessionResponse]
+    websocketSessionManager: ActorRef
 )(implicit dependencies: SubscriptionDependencies)
     extends Actor
     with LogUnhandled
@@ -84,18 +82,18 @@ case class SubscriptionSessionActor(
         case Some(auth) =>
           val authResult = AuthImpl.verify(project.secrets, auth.token)
           if (authResult.isSuccess) {
-            publishToResponseQueue(GqlConnectionAck)
+            sendToWebsocket(GqlConnectionAck)
             context.become(initFinishedReceive(auth))
           } else {
-            publishToResponseQueue(GqlConnectionError("Authentication token is invalid."))
+            sendToWebsocket(GqlConnectionError("Authentication token is invalid."))
           }
 
         case None =>
-          publishToResponseQueue(GqlConnectionError("No Authorization field was provided in payload."))
+          sendToWebsocket(GqlConnectionError("No Authorization field was provided in payload."))
       }
 
     case _: SubscriptionSessionRequest =>
-      publishToResponseQueue(GqlConnectionError("You have to send an init message before sending anything else."))
+      sendToWebsocket(GqlConnectionError("You have to send an init message before sending anything else."))
   }
 
   def initFinishedReceive(auth: Authorization): Receive = logUnhandled {
@@ -109,22 +107,22 @@ case class SubscriptionSessionActor(
     // FIXME: this is really a NO-OP now?
 
     case fail: CreateSubscriptionFailed =>
-      publishToResponseQueue(GqlError(fail.request.id, fail.errors.head.getMessage))
+      sendToWebsocket(GqlError(fail.request.id, fail.errors.head.getMessage))
 
     case ProjectSchemaChanged(subscriptionId) =>
-      publishToResponseQueue(GqlError(subscriptionId, "Schema changed"))
+      sendToWebsocket(GqlError(subscriptionId, "Schema changed"))
 
     case SubscriptionEvent(subscriptionId, payload) =>
       ApiMetrics.subscriptionEventCounter.inc(projectId)
       val response = GqlData(subscriptionId, payload)
-      publishToResponseQueue(response)
+      sendToWebsocket(response)
   }
 
   private def handleStart(id: StringOrInt, payload: GqlStartPayload, auth: Authorization) = {
     val query = QueryParser.parse(payload.query)
 
     if (query.isFailure) {
-      publishToResponseQueue(GqlError(id, s"""the GraphQL Query was not valid"""))
+      sendToWebsocket(GqlError(id, s"""the GraphQL Query was not valid"""))
     } else {
       val createSubscription = CreateSubscription(
         id = id,
@@ -139,8 +137,9 @@ case class SubscriptionSessionActor(
     }
   }
 
-  private def publishToResponseQueue(response: SubscriptionSessionResponse) = {
-    responsePublisher.publish(Only(sessionId), response)
+  private def sendToWebsocket(response: SubscriptionSessionResponse) = {
+    import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
+    websocketSessionManager ! IncomingQueueMessage(sessionId, Json.toJson(response).toString)
   }
 }
 

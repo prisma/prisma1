@@ -1,6 +1,6 @@
 package com.prisma.subscriptions
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.messagebus._
