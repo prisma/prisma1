@@ -21,3 +21,15 @@ case class ManyNodesResult(mutaction: FinalMutaction, count: Int)               
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
   override def mutaction: DatabaseMutaction = ???
 }
+
+object ManyHelper {
+  def getManyCount(result: MutactionResults): Int = result.results match {
+    case Vector.empty => sys.error("ManyMutation should always return a ManyNodesResult")
+    case x =>
+      x.head match {
+        case ManyNodesResult(_, count) => count
+        case _                         => sys.error("ManyMutation should always return a ManyNodesResult")
+      }
+  }
+
+}

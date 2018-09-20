@@ -17,9 +17,6 @@ case class DeleteMany(
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful(DatabaseMutactions(project).getMutactionsForDeleteMany(model, whereFilter))
 
-  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = results.results.head match {
-    case ManyNodesResult(_, count) => Future.successful(BatchPayload(count = count))
-    case _                         => sys.error("DeleteMany should always return a ManyNodesResult")
-  }
+  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = Future.successful(BatchPayload(count = ManyHelper.getManyCount(results)))
 
 }
