@@ -102,7 +102,7 @@ The JWT must contain the following [claims](https://jwt.io/introduction/#payload
 - **Issued at**: The `iat` field contains a Unix timestamp with the exact time when the token was generated.
 - **Expiration date**: The `exp` field containts a Unix timestamp denoting the expiration date of the token.
 - **Grants**: The `grants` field is an object with two keys
-  - The `target` field specifies the _name_ and _stage_ of the service that's modified with a certain action. Use the `*` wildcard to allows actions for all services running on the Prisma server.
+  - The `target` field specifies the _name_ and _stage_ of the service that's modified with a certain action. Use the `*/*` wildcard to allows actions for all services running on the Prisma server.
   - The `action` field specifies which actions are allowed against the `target`. The wildcard `*` allows all actions.
 
 Here is the sample payload of a JWT using wildcards to allow _all_ actions on _all_ services:
@@ -111,7 +111,7 @@ Here is the sample payload of a JWT using wildcards to allow _all_ actions on _a
   {
     "grants": [
       {
-        "target": "*",
+        "target": "*/*",
         "action": "*"
       }
     ],
