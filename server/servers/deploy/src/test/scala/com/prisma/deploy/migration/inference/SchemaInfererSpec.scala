@@ -337,7 +337,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     model.manifestation should equal(Some(ModelManifestation("todo_table")))
   }
 
-  "handle database manifestations for fields" in {
+  "handle pg database manifestations for fields" in {
     val types =
       """|type Todo {
          |  name: String! @pgColumn(name: "my_name_column")
@@ -348,7 +348,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
-  "handle relation table manifestations" ignore {
+  "handle pg relation table manifestations" ignore {
     val types =
       """|type Todo {
          |  name: String!
@@ -368,7 +368,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
-  "handle inline relation manifestations" ignore {
+  "handle pg inline relation manifestations" ignore {
     val types =
       """
          |type List {
@@ -380,6 +380,26 @@ class SchemaInfererSpec extends WordSpec with Matchers {
          |  list: List @pgRelation(column: "list_id")
          |}
          |""".stripMargin
+    val schema = infer(emptyProject.schema, types, isActive = false)
+
+    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
+
+    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
+    relation.manifestation should equal(Some(expectedManifestation))
+  }
+
+  "handle mongo inline relation manifestations" ignore {
+    val types =
+      """
+        |type List {
+        |  todos: [Todo]
+        |}
+        |
+        |type Todo {
+        |  name: String!
+        |  list: List @mongoRelation(field: "list_id")
+        |}
+        |""".stripMargin
     val schema = infer(emptyProject.schema, types, isActive = false)
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation

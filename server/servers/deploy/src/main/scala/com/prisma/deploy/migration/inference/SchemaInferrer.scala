@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.{InferredTables, MissingBackRelations}
-import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
+import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
@@ -255,7 +255,10 @@ case class SchemaInferrerImpl(
     val isThisModelA        = isModelA(prismaType.name, relationField.referencesType)
 
     relationField.relationDbDirective match {
-      case Some(inlineDirective: InlineRelationDirective) =>
+      case Some(inlineDirective: MongoInlineRelationDirective) =>
+        Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.field))
+
+      case Some(inlineDirective: PGInlineRelationDirective) =>
         Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.column))
 
       case Some(tableDirective: RelationTableDirective) =>
