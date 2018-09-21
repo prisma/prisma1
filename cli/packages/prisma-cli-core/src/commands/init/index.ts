@@ -59,13 +59,13 @@ Either try using a new directory name, or remove the files listed above.
     }
 
     if (endpoint) {
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
-        path.join(this.config.definitionDir, 'datamodel.prisma'),
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'datamodel.prisma'), 
+        fs.readFileSync(path.join(__dirname, 'boilerplate', 'datamodel.prisma'))
       )
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'prisma.yml'),
-        path.join(this.config.definitionDir, 'prisma.yml'),
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'prisma.yml'), 
+        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml'))
       )
 
       const endpointDefinitionPath = path.join(
