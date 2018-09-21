@@ -403,12 +403,16 @@ ${chalk.gray(
       this.config,
     )
     const before = Date.now()
-    const from =
-      this.definition.definition!.seed &&
-      this.definition.definition!.seed!.import
-        ? ` from \`${this.definition.definition!.seed!.import}\``
-        : ''
-    this.out.action.start(`Importing seed dataset${from}`)
+    const seedSource =
+      this.definition.definition!.seed!.import ||
+      this.definition.definition!.seed!.run
+    if (!seedSource) {
+      this.out.log(
+        chalk.yellow('Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional')
+      )
+    } else {
+      this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)
+    }
     await seeder.seed(concatName(cluster, serviceName, workspace), stageName)
     this.out.action.stop(prettyTime(Date.now() - before))
   }
