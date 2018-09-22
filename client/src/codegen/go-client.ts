@@ -618,24 +618,24 @@ import (
 
 // GraphQLField docs
 type GraphQLField struct {
-  Name string
-  TypeName string
-  TypeFields []string
+	Name string
+	TypeName string
+	TypeFields []string
 }
 
 // GraphQLArg docs
 type GraphQLArg struct {
-  Name string
-  Key string
-  TypeName string
-  Value interface{}
+	Name string
+	Key string
+	TypeName string
+	Value interface{}
 }
 
 // Instruction docs
 type Instruction struct {
-  Name string
-  Field GraphQLField
-  Operation string
+	Name string
+	Field GraphQLField
+	Operation string
 	Args []GraphQLArg
 }
 
@@ -644,15 +644,15 @@ func isZeroOfUnderlyingType(x interface{}) bool {
 }
 
 func isArray(i interface{}) bool {
-  v := reflect.ValueOf(i)
-  switch v.Kind() {
-  case reflect.Array:
-    return true
-  case reflect.Slice:
-    return true
-  default:
-    return false
-  }
+	v := reflect.ValueOf(i)
+	switch v.Kind() {
+	case reflect.Array:
+		return true
+	case reflect.Slice:
+		return true
+	default:
+		return false
+	}
 }
 
 type PrismaOptions struct {
@@ -661,9 +661,9 @@ type PrismaOptions struct {
 }
 
 func New(options *PrismaOptions) Client {
-  if options == nil {
-    return Client{}
-  }
+	if options == nil {
+		return Client{}
+	}
 	return Client{
 		Endpoint: options.Endpoint,
 		Debug:    options.Debug,
@@ -675,9 +675,9 @@ func New(options *PrismaOptions) Client {
 }
 
 type Client struct {
-  Endpoint string
-  Debug bool
-  Exists Exists
+	Endpoint string
+	Debug bool
+	Exists Exists
 }
 
 // Exists docs
@@ -699,8 +699,8 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
 		}
 		if len(query) == 0 {
 			query[instruction.Name] = instruction.Field.TypeFields
-      argsByInstruction[instruction.Name] = instruction.Args
-      for _, arg := range instruction.Args {
+			argsByInstruction[instruction.Name] = instruction.Args
+			for _, arg := range instruction.Args {
 				allArgs = append(allArgs, arg)
 			}
 		} else {
@@ -708,8 +708,8 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
 			query[instruction.Name] = map[string]interface{}{
 				previousInstruction.Name: query[previousInstruction.Name],
 			}
-      argsByInstruction[instruction.Name] = instruction.Args
-      for _, arg := range instruction.Args {
+			argsByInstruction[instruction.Name] = instruction.Args
+			for _, arg := range instruction.Args {
 				allArgs = append(allArgs, arg)
 			}
 			delete(query, previousInstruction.Name)
@@ -899,14 +899,14 @@ func (client Client) GraphQL(query string, variables map[string]interface{}) (ma
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
-    endpoint := client.Endpoint
-    if endpoint == "" {
-      endpoint = ${this.printEndpoint(options)}
-    }
+	endpoint := client.Endpoint
+	if endpoint == "" {
+		endpoint = ${this.printEndpoint(options)}
+	}
 	gqlClient := graphql.NewClient(endpoint)
 
 	for key, value := range variables {
-    req.Var(key, value)
+		req.Var(key, value)
 	}
 
 	ctx := context.Background()
@@ -914,9 +914,9 @@ func (client Client) GraphQL(query string, variables map[string]interface{}) (ma
 	// var respData ResponseStruct
 	var respData map[string]interface{}
 	if err := gqlClient.Run(ctx, req, &respData); err != nil {
-    if client.Debug {
-      fmt.Println("GraphQL Response:", respData)
-    }
+		if client.Debug {
+			fmt.Println("GraphQL Response:", respData)
+		}
 		return nil, err
 	}
 	return respData, nil
