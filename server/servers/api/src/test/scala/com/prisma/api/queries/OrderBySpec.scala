@@ -17,6 +17,7 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Todo {
       |  id: ID! @unique
       |  title: String! @unique
+      |  test: String
       |  lists: [List!]!
       |}
       |
@@ -199,6 +200,24 @@ class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
 
     result3 should be(result4)
+  }
+
+  "Ordering by a field that is not part of the selected set" should "work" in {
+    val result = server.query(
+      """
+        |{
+        |  list(where: {name: "1"}) {
+        |    name
+        |    todos(orderBy: test_ASC first: 2){
+        |      title
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    result.toString should be("""{"data":{"list":{"name":"1","todos":[{"title":"1"},{"title":"3"}]}}}""")
   }
 
   private def createLists(): Unit = {

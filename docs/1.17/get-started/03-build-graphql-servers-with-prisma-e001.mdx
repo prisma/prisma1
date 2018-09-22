@@ -6,8 +6,11 @@ export const meta = {
   title: 'Build an App with Prisma',
   gettingStartedTitle: 'GraphQL API',
   step: 3,
-  position: 1,
-  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a GraphQL server.'
+  position: 3,
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a GraphQL server.',
+  technology: 'node',
+  technologyOrder: 1,
+  articleGroup: 'Build an App with Prisma',
 }
 
 ## Goals
@@ -94,12 +97,10 @@ const resolvers = {
     createDraft(root, args, context) {
       return context.prisma.createPost(
         {
-          data: {
-            title: args.title,
-            author: {
-              connect: { id: args.userId }
-            }
-          },
+          title: args.title,
+          author: {
+            connect: { id: args.userId }
+          }
         },
 
       )

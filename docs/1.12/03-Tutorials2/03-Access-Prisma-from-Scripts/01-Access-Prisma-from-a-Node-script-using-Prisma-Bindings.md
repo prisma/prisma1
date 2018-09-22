@@ -116,7 +116,7 @@ yarn add prisma-binding graphql
 
 ## Step 3: Download the Prisma database schema
 
-The next step is to download the GraphQL schema of Prisma's GraphQL API (also referred to as _Prisma database schema_) into your project so you can point [Prisma binding](https://github.com/prismagraphql/prisma-binding) to them.
+The next step is to download the GraphQL schema of Prisma's GraphQL API (also referred to as _Prisma database schema_) into your project so you can point [Prisma binding](https://github.com/prisma/prisma-binding) to them.
 
 Downloading the Prisma database schema is done using the [GraphQL CLI](https://oss.prisma.io/content/GraphQL-CLI/01-Overview.html) and [GraphQL Config](https://oss.prisma.io/content/GraphQL-Config/Overview.html).
 
