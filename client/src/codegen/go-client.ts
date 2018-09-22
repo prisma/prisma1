@@ -499,10 +499,12 @@ export class GoGenerator extends Generator {
               func (exists *Exists) ${goCase(field.name)}(params *${goCase(
                   this.getDeepType((whereArg! as any).type).toString(),
                 )}) bool {
+                endpoint := exists.Endpoint
+                if endpoint == "" {
+                  endpoint = ${this.printEndpoint(options)}
+                }
                 client := Client{
-                  Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
-                    options,
-                  )}})[exists.Endpoint != ""],
+                  Endpoint: endpoint,
                   Debug: exists.Debug,
                 }
                 data, err := client.${goCase(field.name)}(
@@ -897,11 +899,11 @@ func (client Client) GraphQL(query string, variables map[string]interface{}) (ma
 	// TODO: Add auth support
 
 	req := graphql.NewRequest(query)
-	gqlClient := graphql.NewClient(
-      (map[bool]string{true: client.Endpoint, false: ${this.printEndpoint(
-        options,
-      )}})[client.Endpoint != ""],
-    )
+    endpoint := client.Endpoint
+    if endpoint == "" {
+      endpoint = ${this.printEndpoint(options)}
+    }
+	gqlClient := graphql.NewClient(endpoint)
 
 	for key, value := range variables {
     req.Var(key, value)
