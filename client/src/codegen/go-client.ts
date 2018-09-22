@@ -135,11 +135,11 @@ export class GoGenerator extends Generator {
           }
         }
           ` : ``}
-          
+
           // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []GraphQLArg
-              
+
               ${args.length > 0 ? `
               if params != nil {
                 ${args.map(arg => `
@@ -259,7 +259,7 @@ export class GoGenerator extends Generator {
         }
         return decodedData, err
       }
-      
+
       // ${type.name}ExecArray docs
       type ${type.name}ExecArray struct {
         client    Client
@@ -527,7 +527,7 @@ export class GoGenerator extends Generator {
               }
           `
               : ``
-          } 
+          }
 
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
@@ -541,7 +541,7 @@ export class GoGenerator extends Generator {
               })
               .join('\n')}
           }
-          
+
           // ${goCase(field.name)} docs - generated while printing operation - ${operation}
           func (client Client) ${goCase(field.name)} (${
           args.length === 1
@@ -567,7 +567,7 @@ export class GoGenerator extends Generator {
               }`
             })
             .join('\n')}
-          
+
           stack = append(stack, Instruction{
             Name: "${field.name}",
             Field: GraphQLField{
@@ -722,10 +722,10 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
 
 	// TODO: Make this recursive - current depth = 3
 	queryTemplateString := \`
-  {{ $.operation }} {{ $.operationName }} 
+  {{ $.operation }} {{ $.operationName }}
   	{{- if eq (len $.allArgs) 0 }} {{ else }} ( {{ end }}
     	{{- range $_, $arg := $.allArgs }}
-			\${{ $arg.Name }}: {{ $arg.TypeName }}, 
+			\${{ $arg.Name }}: {{ $arg.TypeName }},
 		{{- end }}
 	{{- if eq (len $.allArgs) 0 }} {{ else }} ) {{ end }}
     {
@@ -747,7 +747,7 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
         {{end}}
       }
     {{- else }}
-	  {{ $k }} 
+	  {{ $k }}
 	  {{- range $argKey, $argValue := $.argsByInstruction }}
 	  	{{- if eq $argKey $k }}
 	  		{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
@@ -760,49 +760,49 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
 		{
         {{- range $k, $v := $v }}
         {{- if isArray $v }}
-		  {{ $k }} 
+		  {{ $k }}
 		  {{- range $argKey, $argValue := $.argsByInstruction }}
 		  {{- if eq $argKey $k }}
 			{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                 {{- range $k, $arg := $argValue}}
                   {{ $arg.Key }}: \${{ $arg.Name }},
                 {{- end }}
-				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
+				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
               {{- end }}
             {{- end }}
-			{ 
+			{
             {{- range $k1, $v1 := $v }}
               {{ $v1 }}
             {{end}}
           }
         {{- else }}
-		  {{ $k }} 
+		  {{ $k }}
 		  {{- range $argKey, $argValue := $.argsByInstruction }}
 		  {{- if eq $argKey $k }}
 		  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                 {{- range $k, $arg := $argValue}}
                   {{ $arg.Key }}: \${{ $arg.Name }},
                 {{- end }}
-				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
+				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
               {{- end }}
             {{- end }}
 			{
             {{- range $k, $v := $v }}
               {{- if isArray $v }}
-                {{ $k }} { 
+                {{ $k }} {
                   {{- range $k1, $v1 := $v }}
                     {{ $v1 }}
                   {{end}}
                 }
               {{- else }}
-				{{ $k }} 
+				{{ $k }}
 				{{- range $argKey, $argValue := $.argsByInstruction }}
 				{{- if eq $argKey $k }}
 					{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
                       {{- range $k, $arg := $argValue}}
                         {{ $arg.Key }}: \${{ $arg.Name }},
                       {{- end }}
-					  {{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
+					  {{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
                     {{- end }}
                   {{- end }}
 				  {
