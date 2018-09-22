@@ -16,7 +16,6 @@ import {
 import * as upperCamelCase from 'uppercamelcase'
 
 import { getTypeNames } from '../utils/getTypeNames'
-import { codeComment } from '../utils/codeComment';
 
 const goCase = (s: string) => {
   const cased = upperCamelCase(s)
@@ -109,8 +108,8 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-        client    Client
-        stack []Instruction
+        client    *prisma.Client
+        stack []prisma.Instruction
       }
 
       ${Object.keys(fieldMap)
@@ -138,13 +137,13 @@ export class GoGenerator extends Generator {
 
           // ${goCase(field.name)} docs - executable for types
         func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
-              var args []GraphQLArg
+              var args []prisma.GraphQLArg
 
               ${args.length > 0 ? `
               if params != nil {
                 ${args.map(arg => `
                 if params.${goCase(arg.name)} != nil {
-                  args = append(args, GraphQLArg{
+                  args = append(args, prisma.GraphQLArg{
                     Name: "${arg.name}",
                     Key: "${arg.name}",
                     TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
@@ -155,9 +154,9 @@ export class GoGenerator extends Generator {
               }
               ` : ``}
 
-              instance.stack = append(instance.stack, Instruction{
+              instance.stack = append(instance.stack, prisma.Instruction{
                 Name: "${field.name}",
-                Field: GraphQLField{
+                Field: prisma.GraphQLField{
                   Name: "${field.name}",
                   TypeName: "${typeName}",
                   TypeFields: ${`[]string{${typeFields
@@ -177,7 +176,7 @@ export class GoGenerator extends Generator {
 
       // Exec docs
       func (instance ${type.name}Exec) Exec() (${type.name}, error) {
-        var allArgs []GraphQLArg
+        var allArgs []prisma.GraphQLArg
         variables := make(map[string]interface{})
         for instructionKey := range instance.stack {
           instruction := &instance.stack[instructionKey]
@@ -225,13 +224,13 @@ export class GoGenerator extends Generator {
 
         // Is unpacking needed
         dataType := reflect.TypeOf(data)
-        if !isArray(dataType) {
+        if !prisma.IsArray(dataType) {
           unpackedData := data
           for _, instruction := range instance.stack {
             if instance.client.Debug {
               fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
-            if isArray(unpackedData[instruction.Name]) {
+            if prisma.IsArray(unpackedData[instruction.Name]) {
               genericData = (unpackedData[instruction.Name]).([]interface{})
               break
             } else {
@@ -262,8 +261,8 @@ export class GoGenerator extends Generator {
 
       // ${type.name}ExecArray docs
       type ${type.name}ExecArray struct {
-        client    Client
-        stack []Instruction
+        client    *prisma.Client
+        stack []prisma.Instruction
       }
 
       // Exec docs
@@ -295,13 +294,13 @@ export class GoGenerator extends Generator {
 
         // Is unpacking needed
         dataType := reflect.TypeOf(data)
-        if !isArray(dataType) {
+        if !prisma.IsArray(dataType) {
           unpackedData := data
           for _, instruction := range instance.stack {
             if instance.client.Debug {
               fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
             }
-            if isArray(unpackedData[instruction.Name]) {
+            if prisma.IsArray(unpackedData[instruction.Name]) {
               genericData = (unpackedData[instruction.Name]).([]interface{})
               break
             } else {
@@ -367,8 +366,8 @@ export class GoGenerator extends Generator {
       return `
       // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
-        client    Client
-        stack []Instruction
+        client    *prisma.Client
+        stack []prisma.Instruction
       }
 
       // ${goCase(type.name)} docs - generated with types in GraphQLInterfaceType
@@ -503,9 +502,11 @@ export class GoGenerator extends Generator {
                 if endpoint == "" {
                   endpoint = ${this.printEndpoint(options)}
                 }
-                client := Client{
-                  Endpoint: endpoint,
-                  Debug: exists.Debug,
+                client := &Client{
+					Client: &prisma.Client{
+						Endpoint: endpoint,
+						Debug: exists.Debug,
+                  },
                 }
                 data, err := client.${goCase(field.name)}(
                   ${
@@ -517,12 +518,12 @@ export class GoGenerator extends Generator {
                   }
                 ).Exec()
                 if err != nil {
-                  if client.Debug {
+                  if client.Client.Debug {
                     fmt.Println("Error Exists", err)
                   }
                   return false
                 }
-                if isZeroOfUnderlyingType(data) {
+                if prisma.IsZeroOfUnderlyingType(data) {
                   return false
                 }
                 return true
@@ -545,20 +546,20 @@ export class GoGenerator extends Generator {
           }
 
           // ${goCase(field.name)} docs - generated while printing operation - ${operation}
-          func (client Client) ${goCase(field.name)} (${
+          func (client *Client) ${goCase(field.name)} (${
           args.length === 1
             ? `params *${this.getDeepType(args[0].type)}`
             : `params *${goCase(field.name)}Params`
         }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
 
-          stack := make([]Instruction, 0)
-          var args []GraphQLArg
+          stack := make([]prisma.Instruction, 0)
+          var args []prisma.GraphQLArg
           ${args
             .map(arg => {
               return `if params != nil ${
                 args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
               } {
-                args = append(args, GraphQLArg{
+                args = append(args, prisma.GraphQLArg{
                   Name: "${arg.name}",
                   Key: "${arg.name}",
                   TypeName: "${arg.type}",
@@ -570,9 +571,9 @@ export class GoGenerator extends Generator {
             })
             .join('\n')}
 
-          stack = append(stack, Instruction{
+          stack = append(stack, prisma.Instruction{
             Name: "${field.name}",
-            Field: GraphQLField{
+            Field: prisma.GraphQLField{
               Name: "${field.name}",
               TypeName: "${typeName}",
               TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
@@ -582,7 +583,7 @@ export class GoGenerator extends Generator {
           })
 
           return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-            client: client,
+            client: client.Client,
             stack: stack,
           }
         }`
@@ -604,250 +605,6 @@ export class GoGenerator extends Generator {
     }
   }
 
-  renderLib(options: RenderOptions) {
-    return `
-${codeComment}
-package prisma
-
-import (
-	"bytes"
-	"fmt"
-	"html/template"
-	"reflect"
-)
-
-// GraphQLField docs
-type GraphQLField struct {
-	Name string
-	TypeName string
-	TypeFields []string
-}
-
-// GraphQLArg docs
-type GraphQLArg struct {
-	Name string
-	Key string
-	TypeName string
-	Value interface{}
-}
-
-// Instruction docs
-type Instruction struct {
-	Name string
-	Field GraphQLField
-	Operation string
-	Args []GraphQLArg
-}
-
-func isZeroOfUnderlyingType(x interface{}) bool {
-	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
-}
-
-func isArray(i interface{}) bool {
-	v := reflect.ValueOf(i)
-	switch v.Kind() {
-	case reflect.Array:
-		return true
-	case reflect.Slice:
-		return true
-	default:
-		return false
-	}
-}
-
-type PrismaOptions struct {
-	Endpoint string
-	Debug    bool
-}
-
-func New(options *PrismaOptions) Client {
-	if options == nil {
-		return Client{}
-	}
-	return Client{
-		Endpoint: options.Endpoint,
-		Debug:    options.Debug,
-		Exists: Exists{
-			Endpoint: options.Endpoint,
-			Debug:    options.Debug,
-		},
-	}
-}
-
-type Client struct {
-	Endpoint string
-	Debug bool
-	Exists Exists
-}
-
-// Exists docs
-type Exists struct {
-	Endpoint string
-	Debug    bool
-}
-
-// ProcessInstructions docs
-func (client *Client) ProcessInstructions(stack []Instruction) string {
-	query := make(map[string]interface{})
-	argsByInstruction := make(map[string][]GraphQLArg)
-	var allArgs []GraphQLArg
-	firstInstruction := stack[0]
-	for i := len(stack) - 1; i >= 0; i-- {
-		instruction := stack[i]
-		if client.Debug {
-			fmt.Println("Instruction: ", instruction)
-		}
-		if len(query) == 0 {
-			query[instruction.Name] = instruction.Field.TypeFields
-			argsByInstruction[instruction.Name] = instruction.Args
-			for _, arg := range instruction.Args {
-				allArgs = append(allArgs, arg)
-			}
-		} else {
-			previousInstruction := stack[i+1]
-			query[instruction.Name] = map[string]interface{}{
-				previousInstruction.Name: query[previousInstruction.Name],
-			}
-			argsByInstruction[instruction.Name] = instruction.Args
-			for _, arg := range instruction.Args {
-				allArgs = append(allArgs, arg)
-			}
-			delete(query, previousInstruction.Name)
-		}
-	}
-
-	if client.Debug {
-		fmt.Println("Final Query:", query)
-		fmt.Println("Final Args By Instruction:", argsByInstruction)
-		fmt.Println("Final All Args:", allArgs)
-	}
-
-	// TODO: Make this recursive - current depth = 3
-	queryTemplateString := \`
-  {{ $.operation }} {{ $.operationName }}
-  	{{- if eq (len $.allArgs) 0 }} {{ else }} ( {{ end }}
-    	{{- range $_, $arg := $.allArgs }}
-			\${{ $arg.Name }}: {{ $arg.TypeName }},
-		{{- end }}
-	{{- if eq (len $.allArgs) 0 }} {{ else }} ) {{ end }}
-    {
-    {{- range $k, $v := $.query }}
-    {{- if isArray $v }}
-	  {{- $k }}
-	  {{- range $argKey, $argValue := $.argsByInstruction }}
-	  {{- if eq $argKey $k }}
-	  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-				{{- range $k, $arg := $argValue}}
-					{{ $arg.Key }}: \${{ $arg.Name }},
-				{{- end }}
-		{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-			{{- end }}
-		{{- end }}
-	  {
-        {{- range $k1, $v1 := $v }}
-          {{ $v1 }}
-        {{end}}
-      }
-    {{- else }}
-	  {{ $k }}
-	  {{- range $argKey, $argValue := $.argsByInstruction }}
-	  	{{- if eq $argKey $k }}
-	  		{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-            {{- range $k, $arg := $argValue}}
-              {{ $arg.Key }}: \${{ $arg.Name }},
-            {{- end }}
-			{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-          {{- end }}
-        {{- end }}
-		{
-        {{- range $k, $v := $v }}
-        {{- if isArray $v }}
-		  {{ $k }}
-		  {{- range $argKey, $argValue := $.argsByInstruction }}
-		  {{- if eq $argKey $k }}
-			{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-                {{- range $k, $arg := $argValue}}
-                  {{ $arg.Key }}: \${{ $arg.Name }},
-                {{- end }}
-				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-              {{- end }}
-            {{- end }}
-			{
-            {{- range $k1, $v1 := $v }}
-              {{ $v1 }}
-            {{end}}
-          }
-        {{- else }}
-		  {{ $k }}
-		  {{- range $argKey, $argValue := $.argsByInstruction }}
-		  {{- if eq $argKey $k }}
-		  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-                {{- range $k, $arg := $argValue}}
-                  {{ $arg.Key }}: \${{ $arg.Name }},
-                {{- end }}
-				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-              {{- end }}
-            {{- end }}
-			{
-            {{- range $k, $v := $v }}
-              {{- if isArray $v }}
-                {{ $k }} {
-                  {{- range $k1, $v1 := $v }}
-                    {{ $v1 }}
-                  {{end}}
-                }
-              {{- else }}
-				{{ $k }}
-				{{- range $argKey, $argValue := $.argsByInstruction }}
-				{{- if eq $argKey $k }}
-					{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-                      {{- range $k, $arg := $argValue}}
-                        {{ $arg.Key }}: \${{ $arg.Name }},
-                      {{- end }}
-					  {{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-                    {{- end }}
-                  {{- end }}
-				  {
-                  id
-                }
-              {{- end }}
-              {{- end }}
-          }
-        {{- end }}
-        {{- end }}
-      }
-    {{- end }}
-    {{- end }}
-    }
-  \`
-
-	templateFunctions := template.FuncMap{
-		"isArray": isArray,
-	}
-
-	queryTemplate, err := template.New("query").Funcs(templateFunctions).Parse(queryTemplateString)
-	var queryBytes bytes.Buffer
-	var data = make(map[string]interface{})
-	data = map[string]interface{}{
-		"query":             query,
-		"argsByInstruction": argsByInstruction,
-		"allArgs":           allArgs,
-		"operation":         firstInstruction.Operation,
-		"operationName":     firstInstruction.Name,
-	}
-	queryTemplate.Execute(&queryBytes, data)
-
-	if client.Debug {
-		fmt.Println("Query String: ", queryBytes.String())
-	}
-	if err == nil {
-		return queryBytes.String()
-	}
-	return "Failed to generate query"
-}
-    `
-  }
-
   render(options: RenderOptions) {
     const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
@@ -863,12 +620,12 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
 package prisma
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strconv"
 
-	"github.com/machinebox/graphql"
+	"github.com/prisma/go-lib"
+
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -883,6 +640,15 @@ ${this.printOperation(mutationFields, 'mutation', options)}
 
 // Types
 
+type Exists struct{
+	Endpoint string
+	Debug bool
+}
+
+type Client struct {
+	Client *prisma.Client
+}
+
 ${typeNames
       .map(key => {
         let type = typeMap[key]
@@ -893,34 +659,6 @@ ${typeNames
             }`
       })
       .join('\n')}
-
-// GraphQL Send a GraphQL operation request
-func (client Client) GraphQL(query string, variables map[string]interface{}) (map[string]interface{}, error) {
-	// TODO: Add auth support
-
-	req := graphql.NewRequest(query)
-	endpoint := client.Endpoint
-	if endpoint == "" {
-		endpoint = ${this.printEndpoint(options)}
-	}
-	gqlClient := graphql.NewClient(endpoint)
-
-	for key, value := range variables {
-		req.Var(key, value)
-	}
-
-	ctx := context.Background()
-
-	// var respData ResponseStruct
-	var respData map[string]interface{}
-	if err := gqlClient.Run(ctx, req, &respData); err != nil {
-		if client.Debug {
-			fmt.Println("GraphQL Response:", respData)
-		}
-		return nil, err
-	}
-	return respData, nil
-}
         `
   }
 }
