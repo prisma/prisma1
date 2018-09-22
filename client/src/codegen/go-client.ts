@@ -190,7 +190,7 @@ export class GoGenerator extends Generator {
               fmt.Println("Instruction Arg Exec: ", instruction)
             }
             isUnique := false
-            for isUnique == false {
+            for !isUnique {
               isUnique = true
               for key, existingArg := range allArgs {
                 if existingArg.Name == arg.Name {
