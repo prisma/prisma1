@@ -487,11 +487,9 @@ export class GoGenerator extends Generator {
           whereArg = whereArgs[0]
         }
 
-        return `
-
-          ${
-            operation === 'query' && !isList && whereArg
-              ? `
+        var sExists = ""
+        if(operation === 'query' && !isList && whereArg) {
+          sExists = `
               // Exists
 
               // ${goCase(field.name)} exists docs
@@ -527,11 +525,10 @@ export class GoGenerator extends Generator {
                   return false
                 }
                 return true
-              }
-          `
-              : ``
-          }
+              }`
+        }
 
+        var sParams = `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
             ${args
@@ -543,52 +540,187 @@ export class GoGenerator extends Generator {
                 }"\``
               })
               .join('\n')}
-          }
+          }`
 
-          // ${goCase(field.name)} docs - generated while printing operation - ${operation}
-          func (client *Client) ${goCase(field.name)} (${
-          args.length === 1
-            ? `params *${this.getDeepType(args[0].type)}`
-            : `params *${goCase(field.name)}Params`
-        }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+        var sOperation = ""
 
-          stack := make([]prisma.Instruction, 0)
-          var args []prisma.GraphQLArg
-          if params != nil {
-          ${args
-            .map(arg => {
-              return `if true ${
-                args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
-              } {
-                args = append(args, prisma.GraphQLArg{
-                  Name: "${arg.name}",
-                  Key: "${arg.name}",
-                  TypeName: "${arg.type}",
-                  Value: *params${
-                    args.length === 1 ? `` : `.${goCase(arg.name)}`
-                  },
+        // FIXME(dh): This is brittle. A model may conceivably be named "Many",
+        // in which case updateMany would be updating a single instance of Many.
+        // The same issue applies to many other prefixes.
+        if(operation === "mutation" && field.name.startsWith("updateMany")) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *prisma.BatchPayloadExec {
+              return client.Client.UpdateMany(
+                prisma.UpdateParams{
+                  Data: params.Data,
+                  Where: params.Where,
+                },
+                [2]string{"${args[0].type}", "${args[1].type}"},
+                "${field.name}")
+            }
+          `
+        } else if(operation === "mutation" && field.name.startsWith("update")) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
+              ret := client.Client.Update(
+                       prisma.UpdateParams{
+                         Data: params.Data,
+                         Where: params.Where,
+                       },
+                       [3]string{"${args[0].type}", "${args[1].type}", "${typeName}"},
+                       "${field.name}",
+                       []string{${typeFields.map(f => f).join(',')}})
+
+              return &${goCase(typeName)}Exec{
+                client: ret.Client,
+                stack: ret.Stack,
+              }
+            }`
+        } else if(operation === "mutation" && field.name.startsWith("deleteMany")) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(args[0].type)}) *prisma.BatchPayloadExec {
+              return client.Client.DeleteMany(params, "${args[0].type}", "${field.name}")
+            }`
+        } else if(operation === "mutation" && field.name.startsWith("delete")) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(args[0].type)}) *${goCase(typeName)}Exec {
+              ret := client.Client.Delete(
+                params,
+                [2]string{"${args[0].type}", "${typeName}"},
+                "${field.name}",
+                []string{${typeFields.map(f => f).join(',')}})
+
+              return &${goCase(typeName)}Exec{
+                client: ret.Client,
+                stack: ret.Stack,
+              }
+            }`
+        } else if(operation === "query" && !isList && args.length === 1 && field.name !== "node") {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(args[0].type)}) *${goCase(typeName)}Exec {
+              ret := client.Client.GetOne(
+                params,
+                [2]string{"${args[0].type}", "${typeName}"},
+                "${field.name}",
+                []string{${typeFields.map(f => f).join(',')}})
+
+              return &${goCase(typeName)}Exec{
+                client: ret.Client,
+                stack: ret.Stack,
+              }
+            }`
+        } else if(operation === "query" && args.length !== 1) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+              var wparams *prisma.WhereParams
+              if params != nil {
+                wparams = &prisma.WhereParams{
+                  Where: params.Where,
+                  OrderBy: (*string)(params.OrderBy),
+                  Skip: params.Skip,
+                  After: params.After,
+                  Before: params.Before,
+                  First: params.First,
+                  Last: params.Last,
+                }
+              }
+
+              ret := client.Client.GetMany(
+                wparams,
+                [3]string{"${args[0].type}", "${args[1].type}", "${typeName}"},
+                "${field.name}",
+                []string{${typeFields.map(f => f).join(',')}})
+
+              return &${goCase(typeName)}Exec${isList ? `Array` : ``} {
+                client: ret.Client,
+                stack: ret.Stack,
+              }
+            }`
+        } else if(operation === "mutation" && field.name.startsWith("create")) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params * ${this.getDeepType(args[0].type)}) *${goCase(typeName)}Exec {
+              ret := client.Client.Create(
+                params,
+                [2]string{"${args[0].type}", "${typeName}"},
+                "${field.name}",
+                []string{${typeFields.map(f => f).join(',')}})
+
+              return &${goCase(typeName)}Exec{
+                client: ret.Client,
+                stack: ret.Stack,
+              }
+            }`
+        } else if(operation === "mutation" && field.name.startsWith("upsert")) {
+          sOperation = `
+            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
+              var uparams *prisma.UpsertParams
+              if params != nil {
+                uparams = &prisma.UpsertParams{
+                  Where:  params.Where,
+                  Create: params.Create,
+                  Update: params.Update,
+                }
+              }
+              ret := client.Client.Upsert(
+                uparams,
+                [4]string{"${args[0].type}", "${args[1].type}", "${args[2].type}","${typeName}"},
+                "${field.name}",
+                []string{${typeFields.map(f => f).join(',')}})
+
+              return &${goCase(typeName)}Exec{
+                client: ret.Client,
+                stack: ret.Stack,
+              }
+            }`
+        } else {
+          sOperation = `
+            // ${goCase(field.name)} docs - generated while printing operation - ${operation}
+            func (client *Client) ${goCase(field.name)} (${
+            args.length === 1
+              ? `params *${this.getDeepType(args[0].type)}`
+              : `params *${goCase(field.name)}Params`
+            }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+
+              stack := make([]prisma.Instruction, 0)
+              var args []prisma.GraphQLArg
+              if params != nil {
+              ${args
+                .map(arg => {
+                  return `if true ${
+                    args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
+                  } {
+                    args = append(args, prisma.GraphQLArg{
+                      Name: "${arg.name}",
+                      Key: "${arg.name}",
+                      TypeName: "${arg.type}",
+                      Value: *params${
+                        args.length === 1 ? `` : `.${goCase(arg.name)}`
+                      },
+                    })
+                  }`
                 })
-              }`
-            })
-            .join('\n')}
-          }
+                .join('\n')}
+              }
 
-          stack = append(stack, prisma.Instruction{
-            Name: "${field.name}",
-            Field: prisma.GraphQLField{
-              Name: "${field.name}",
-              TypeName: "${typeName}",
-              TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
-            },
-            Operation: "${operation}",
-            Args: args,
-          })
+              stack = append(stack, prisma.Instruction{
+                Name: "${field.name}",
+                Field: prisma.GraphQLField{
+                  Name: "${field.name}",
+                  TypeName: "${typeName}",
+                  TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
+                },
+                Operation: "${operation}",
+                Args: args,
+              })
 
-          return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-            client: client.Client,
-            stack: stack,
-          }
-        }`
+              return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
+                client: client.Client,
+                stack: stack,
+              }
+            }`
+        }
+
+        return sExists + sParams + sOperation
       })
       .join('\n')
   }
