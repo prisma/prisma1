@@ -554,9 +554,10 @@ export class GoGenerator extends Generator {
 
           stack := make([]prisma.Instruction, 0)
           var args []prisma.GraphQLArg
+          if params != nil {
           ${args
             .map(arg => {
-              return `if params != nil ${
+              return `if true ${
                 args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
               } {
                 args = append(args, prisma.GraphQLArg{
@@ -570,6 +571,7 @@ export class GoGenerator extends Generator {
               }`
             })
             .join('\n')}
+          }
 
           stack = append(stack, prisma.Instruction{
             Name: "${field.name}",
