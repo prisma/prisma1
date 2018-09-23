@@ -500,7 +500,7 @@ export class GoGenerator extends Generator {
                 )}) bool {
                 endpoint := exists.Endpoint
                 if endpoint == "" {
-                  endpoint = ${this.printEndpoint(options)}
+                  endpoint = defaultEndpoint
                 }
                 client := &Client{
 					Client: &prisma.Client{
@@ -651,7 +651,7 @@ type Client struct {
     // Dynamic contains the parts of the generated code that are dynamically generated.
     const dynamic = `
 
-const defaultEndpoint = ${this.printEndpoint(options)}
+var defaultEndpoint = ${this.printEndpoint(options)}
 
 // Queries
 ${this.printOperation(queryFields, 'query', options)}
