@@ -19,7 +19,7 @@ case class PostgresDeployConnector(
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
 
-  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImplInterface(isActive)
+  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
 
   lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
   lazy val projectDatabase      = internalDatabaseDefs.managementDatabase

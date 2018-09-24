@@ -8,6 +8,9 @@ import scala.collection.immutable.Seq
 
 class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
+  //Fixme mock fieldrequirements
+  //check different combinations
+
   "succeed if the schema is fine" in {
     val schema =
       """

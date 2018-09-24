@@ -22,6 +22,7 @@ object SchemaDsl extends AwaitUtils {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)
     val project = schemaBuilder.build(id = projectId(suite))
+
     if (!deployConnector.isActive) {
       addIdFields(addManifestations(project), cuidField)
     } else {
@@ -30,9 +31,8 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(
-      id = projectId(suite)
-    )(sdlString.stripMargin)
+    val project = fromString(id = projectId(suite))(sdlString.stripMargin)
+
     if (!deployConnector.isActive) {
       addManifestations(project)
     } else {
