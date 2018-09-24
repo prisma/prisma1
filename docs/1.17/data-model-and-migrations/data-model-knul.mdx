@@ -454,7 +454,7 @@ type Item {
 }
 ```
 
-When used as arguments in an operation, , `Json` fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
+When used as arguments in an operation, `Json` fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 
 ```graphql
 mutation {
@@ -743,7 +743,7 @@ Note that a _to-many_ relation field is always set to required. For example, a f
 
 ### The `@relation` directive
 
-When defining relations between types, you _can_ the `@relation` directive which provides meta-information about the relation. If a relation is ambiguous, you _must_ use the `@relation` directive to disambiguate it.
+When defining relations between types, you _can_ use the `@relation` directive which provides meta-information about the relation. If a relation is ambiguous, you _must_ use the `@relation` directive to disambiguate it.
 
 It can take two arguments:
 
