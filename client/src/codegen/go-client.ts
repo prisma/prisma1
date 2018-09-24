@@ -498,53 +498,6 @@ export class GoGenerator extends Generator {
           field,
         )
 
-        const whereArgs = args.filter(arg => arg.name === 'where')
-        let whereArg = null
-        if (whereArgs.length > 0) {
-          whereArg = whereArgs[0]
-        }
-
-        var sExists = ""
-        if(operation === 'query' && !isList && whereArg) {
-          sExists = `
-              // Exists
-
-              // ${goCase(field.name)} exists docs
-              func (exists *Exists) ${goCase(field.name)}(params *${goCase(
-                  this.getDeepType((whereArg! as any).type).toString(),
-                )}) bool {
-                endpoint := exists.Endpoint
-                if endpoint == "" {
-                  endpoint = defaultEndpoint
-                }
-                client := &Client{
-					Client: &prisma.Client{
-						Endpoint: endpoint,
-						Debug: exists.Debug,
-                  },
-                }
-                data, err := client.${goCase(field.name)}(
-                  ${
-                    args.length === 1
-                      ? `params,`
-                      : `&${goCase(field.name)}Params{
-                    Where: params,
-                  },`
-                  }
-                ).Exec()
-                if err != nil {
-                  if client.Client.Debug {
-                    fmt.Println("Error Exists", err)
-                  }
-                  return false
-                }
-                if prisma.IsZeroOfUnderlyingType(data) {
-                  return false
-                }
-                return true
-              }`
-        }
-
         var sParams = `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
@@ -735,7 +688,7 @@ export class GoGenerator extends Generator {
             }`
         }
 
-        return sExists + sParams + sOperation
+        return sParams + sOperation
       })
       .join('\n')
   }
@@ -786,11 +739,6 @@ import (
 type ID struct{}
 
 // Types
-
-type Exists struct{
-	Endpoint string
-	Debug bool
-}
 
 type Client struct {
 	Client *prisma.Client
