@@ -30,7 +30,7 @@ export function generateCRUDSchema(model: string) : GraphQLSchema {
 /**
  * Computes a prisma OpenCRUD schema for a given model.
  * @param model The model in SDL as string.
- * @returns THe OpenCRUD schema as prettified string for the given model. 
+ * @returns The OpenCRUD schema as prettified string for the given model. 
  */
 export default function generateCRUDSchemaString(model: string) : string {
   return printSchema(generateCRUDSchema(model))
