@@ -18,6 +18,8 @@ export default class ModelUpdateOneRequiredInputTypeGenerator extends ModelUpdat
       fields.upsert = { type: this.generators.modelUpsertNestedInput.generate(model, {}) }
     }
 
+    fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, {}) }
+
     return fields
   }
 }

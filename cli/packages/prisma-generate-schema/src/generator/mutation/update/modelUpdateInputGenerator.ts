@@ -32,7 +32,11 @@ export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTy
       if (field.isList) {
         return generators.modelUpdateManyInput.generate(field.type as IGQLType, relationInfo)
       } else {
-        return generators.modelUpdateOneInput.generate(field.type as IGQLType, relationInfo)
+        if (field.isRequired) {
+          return generators.modelUpdateOneRequiredInput.generate(field.type as IGQLType, relationInfo)
+        } else {
+          return generators.modelUpdateOneInput.generate(field.type as IGQLType, relationInfo)
+        }
       }
     }
   }
