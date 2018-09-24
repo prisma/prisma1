@@ -14,6 +14,8 @@ import {
   NamedTypeNode,
   ObjectTypeDefinitionNode,
   isNamedType,
+  isScalarType,
+  isListType,
 } from 'graphql'
 
 if (process.argv.length < 3) {
@@ -35,6 +37,39 @@ popsicle
     const sdl = printSchema(buildClientSchema(schema))
     const parsedSdl = parse(sdl)
     const mutatedSdl = visit(parsedSdl, {
+      ObjectTypeDefinition: {
+        enter(node: ObjectTypeDefinitionNode) {
+          if (
+            !['Query', 'Mutation', 'Subscription'].includes(node.name.value)
+          ) {
+            const nodeWithValidFields = visit(node, {
+              FieldDefinition: {
+                enter: (fieldNode: FieldDefinitionNode) => {
+                  if (
+                    (fieldNode.arguments &&
+                      fieldNode.arguments.length > 0 &&
+                      fieldNode.type.kind === 'NamedType') ||
+                    (fieldNode.type.kind === 'NonNullType' &&
+                      !isScalarType(fieldNode.type))
+                  ) {
+                    return {
+                      ...fieldNode,
+                      arguments: fieldNode.arguments
+                        ? fieldNode.arguments.filter(
+                            arg => arg.name.value !== 'where',
+                          )
+                        : [],
+                    }
+                  } else {
+                    return fieldNode
+                  }
+                },
+              },
+            })
+            return nodeWithValidFields
+          }
+        },
+      },
       EnumTypeDefinition: {
         enter(enumNode: EnumTypeDefinitionNode) {
           if (enumNode.name.value === 'PrismaDatabase') {

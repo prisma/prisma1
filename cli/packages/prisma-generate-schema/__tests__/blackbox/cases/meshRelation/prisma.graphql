@@ -1,17 +1,22 @@
 type A {
   field: Int!
-  a(where: AWhereInput): A!
+  a: A!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  c(where: CWhereInput): C
+  c: C
   e(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E!]
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type AConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [AEdge]!
   aggregate: AggregateA!
 }
@@ -61,12 +66,17 @@ input ACreateWithoutEInput {
   c: CCreateOneWithoutAInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type AEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: A!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -113,30 +123,30 @@ type ASubscriptionPayload {
 }
 
 input ASubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [ASubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [ASubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [ASubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -228,35 +238,46 @@ input AUpsertWithoutEInput {
 }
 
 input AWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [AWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [AWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [AWhereInput!]
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a: AWhereInput
   b_every: BWhereInput
@@ -270,23 +291,30 @@ input AWhereInput {
 
 type B {
   field: [String!]!
-  c(where: CWhereInput): C
+  c: C
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  a(where: AWhereInput): A!
-  c2(where: CWhereInput): C
+  a: A!
+  c2: C
 }
 
 type BatchPayload {
-  """The number of nodes that have been affected by the Batch operation."""
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
   count: Long!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type BConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [BEdge]!
   aggregate: AggregateB!
 }
@@ -344,12 +372,17 @@ input BCreateWithoutCInput {
   c2: CCreateOneWithoutB2Input
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type BEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: B!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -374,30 +407,30 @@ type BSubscriptionPayload {
 }
 
 input BSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [BSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [BSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [BSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -469,13 +502,17 @@ input BUpsertWithoutC2Input {
 }
 
 input BWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [BWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [BWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [BWhereInput!]
   c: CWhereInput
   b_every: BWhereInput
@@ -487,18 +524,23 @@ input BWhereInput {
 
 type C {
   expirationDate: DateTime
-  c(where: CWhereInput): C!
+  c: C!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
-  a(where: AWhereInput): A
-  b2(where: BWhereInput): B
+  a: A
+  b2: B
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type CConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [CEdge]!
   aggregate: AggregateC!
 }
@@ -548,12 +590,17 @@ input CCreateWithoutBInput {
   b2: BCreateOneWithoutC2Input
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type CEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: C!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -580,30 +627,30 @@ type CSubscriptionPayload {
 }
 
 input CSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [CSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [CSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [CSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -699,35 +746,46 @@ input CUpsertWithoutBInput {
 }
 
 input CWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [CWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [CWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [CWhereInput!]
   expirationDate: DateTime
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   expirationDate_not: DateTime
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   expirationDate_in: [DateTime!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   expirationDate_not_in: [DateTime!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   expirationDate_lt: DateTime
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   expirationDate_lte: DateTime
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   expirationDate_gt: DateTime
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   expirationDate_gte: DateTime
   c: CWhereInput
   b_every: BWhereInput
@@ -739,20 +797,25 @@ input CWhereInput {
 
 type D {
   field: Json
-  c(where: CWhereInput): C!
-  b(where: BWhereInput): B!
-  a(where: AWhereInput): A!
+  c: C!
+  b: B!
+  a: A!
   d(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D!]
 }
 
 scalar DateTime
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type DConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [DEdge]!
   aggregate: AggregateD!
 }
@@ -769,12 +832,17 @@ input DCreateManyInput {
   create: [DCreateInput!]
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type DEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: D!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -801,30 +869,30 @@ type DSubscriptionPayload {
 }
 
 input DSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [DSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [DSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [DSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -845,13 +913,17 @@ input DUpdateManyInput {
 }
 
 input DWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [DWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [DWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [DWhereInput!]
   c: CWhereInput
   b: BWhereInput
@@ -863,15 +935,20 @@ input DWhereInput {
 
 type E {
   field: Json
-  a(where: AWhereInput): A!
+  a: A!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type EConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [EEdge]!
   aggregate: AggregateE!
 }
@@ -889,12 +966,17 @@ input ECreateWithoutAInput {
   field: Json
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type EEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: E!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -921,30 +1003,30 @@ type ESubscriptionPayload {
 }
 
 input ESubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [ESubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [ESubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [ESubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -962,18 +1044,24 @@ input EUpdateManyWithoutAInput {
 }
 
 input EWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [EWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [EWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [EWhereInput!]
   a: AWhereInput
 }
 
-"""Raw JSON value"""
+"""
+Raw JSON value
+"""
 scalar Json
 
 """
@@ -998,7 +1086,6 @@ type Mutation {
   deleteManyAs(where: AWhereInput): BatchPayload!
   deleteManyCs(where: CWhereInput): BatchPayload!
   deleteManyBs(where: BWhereInput): BatchPayload!
-  executeRaw(database: PrismaDatabase, query: String!): Json!
 }
 
 enum MutationType {
@@ -1007,29 +1094,36 @@ enum MutationType {
   DELETED
 }
 
-"""An object with an ID"""
+"""
+An object with an ID
+"""
 interface Node {
-  """The id of the object."""
+  """
+  The id of the object.
+  """
   id: ID!
 }
 
-"""Information about pagination in a connection."""
+"""
+Information about pagination in a connection.
+"""
 type PageInfo {
-  """When paginating forwards, are there more items?"""
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
-
-  """When paginating backwards, are there more items?"""
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
-
-  """When paginating backwards, the cursor to continue."""
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
-
-  """When paginating forwards, the cursor to continue."""
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
-}
-
-enum PrismaDatabase {
-  default
 }
 
 type Query {
@@ -1043,10 +1137,13 @@ type Query {
   asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
   csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
-
-  """Fetches an object given its ID"""
+  """
+  Fetches an object given its ID
+  """
   node(
-    """The ID of an object"""
+    """
+    The ID of an object
+    """
     id: ID!
   ): Node
 }
@@ -1058,3 +1155,4 @@ type Subscription {
   c(where: CSubscriptionWhereInput): CSubscriptionPayload
   b(where: BSubscriptionWhereInput): BSubscriptionPayload
 }
+
