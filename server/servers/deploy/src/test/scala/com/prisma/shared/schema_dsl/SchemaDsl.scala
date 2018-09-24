@@ -1,6 +1,6 @@
 package com.prisma.shared.schema_dsl
 
-import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
+import com.prisma.deploy.connector.{DeployConnector, DeployConnectorCapability, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
@@ -11,7 +11,6 @@ import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import org.scalactic.{Bad, Good}
 import org.scalatest.Suite
-import sangria.parser.QueryParser
 
 object SchemaDsl extends AwaitUtils {
 
@@ -34,8 +33,7 @@ object SchemaDsl extends AwaitUtils {
     val project = fromString(
       id = projectId(suite),
       InferredTables.empty,
-      isActive = deployConnector.isActive,
-      shouldCheckAgainstInferredTables = false
+      capabilities = deployConnector.capabilities
     )(sdlString.stripMargin)
     if (deployConnector.isPassive) {
       addManifestations(project)
@@ -56,18 +54,17 @@ object SchemaDsl extends AwaitUtils {
       id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, isActive = false, shouldCheckAgainstInferredTables = true)(sdlString)
+    fromString(id, inferredTables, Set.empty)(sdlString)
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      isActive: Boolean,
-      shouldCheckAgainstInferredTables: Boolean
+      capabilities: Set[DeployConnectorCapability]
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator          = SchemaSyntaxValidator(sdlString, isActive)
+    val validator          = SchemaSyntaxValidator(sdlString, capabilities)
 
     val prismaSdl = validator.validateSyntax match {
       case Good(prismaSdl) =>
@@ -80,7 +77,7 @@ object SchemaDsl extends AwaitUtils {
         )
     }
 
-    val schema                 = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
+    val schema                 = SchemaInferrer(capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
     TestProject().copy(id = id, schema = withBackRelationsAdded)
   }

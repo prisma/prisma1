@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.collection.immutable.Seq
@@ -13,7 +14,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  title: String
         |}
       """.stripMargin
-    SchemaSyntaxValidator(schema, isActive = true).validate should be(empty)
+    SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate should be(empty)
   }
 
   "fail if the schema is syntactically incorrect" in {
@@ -24,7 +25,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  isDone
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.`type` should equal("Global")
   }
@@ -41,7 +42,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -58,7 +59,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(2))
 
     result.head.`type` should equal("Todo")
@@ -85,7 +86,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(4))
     result.forall(_.description.contains("A relation directive cannot appear more than twice.")) should be(true)
   }
@@ -106,7 +107,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -121,7 +122,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  bla: String
         |}
         """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("title"))
@@ -140,7 +141,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  bla: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -164,7 +165,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  bla: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -180,7 +181,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  bla: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.description should include("not a valid value for onDelete")
   }
@@ -200,7 +201,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -215,7 +216,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -236,7 +237,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  todo: Todo @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val first = result.head
     first.`type` should equal("Todo")
@@ -261,7 +262,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  whatever: Comment @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(2))
     val first = result.head
     first.`type` should equal("Todo")
@@ -287,7 +288,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  todo: Todo @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
   }
 
@@ -304,7 +305,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  todo: Todo! @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -317,7 +318,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error = result.head
     error.`type` should equal("Todo")
@@ -343,7 +344,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       directiveRequirements,
       reservedFieldsRequirements = Vector.empty,
       requiredReservedFields = Vector.empty,
-      allowScalarLists = true
+      capabilities = Set(MigrationsCapability)
     ).validate
     result should have(size(0))
   }
@@ -365,7 +366,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
       directiveRequirements,
       reservedFieldsRequirements = Vector.empty,
       requiredReservedFields = Vector.empty,
-      allowScalarLists = true
+      capabilities = Set(MigrationsCapability)
     ).validate
     result should have(size(2))
     val error1 = result.head
@@ -392,7 +393,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("TodoStatus")
@@ -413,7 +414,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
          |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("TodoStatus")
@@ -428,7 +429,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  title: String @default(value: "foo") @default(value: "bar")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -443,7 +444,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  title: String @defaultValue(value: "foo")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -459,7 +460,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  id: ID!
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -474,7 +475,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  id: Float
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = false).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set.empty).validate
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
@@ -488,7 +489,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  id: Int! @unique
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = false).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set.empty).validate
     result should have(size(0))
   }
 
@@ -499,7 +500,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  title: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -510,7 +511,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  title: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = false).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set.empty).validate
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
@@ -534,7 +535,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
         |  C
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    val result = SchemaSyntaxValidator(schema, capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Privacy")

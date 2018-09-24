@@ -8,7 +8,7 @@ import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
 
-  val inferer      = SchemaInferrer()
+  val inferer      = SchemaInferrer(Set.empty)
   val emptyProject = TestProject.empty
 
   "Inferring embedded typeDirectives" should {
@@ -50,11 +50,11 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
       SchemaSyntaxValidator.directiveRequirements,
       SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
       SchemaSyntaxValidator.requiredReservedFields,
-      true
+      Set.empty
     )
 
     val prismaSdl = validator.generateSDL
 
-    SchemaInferrer().infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    inferer.infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
   }
 }

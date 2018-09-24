@@ -748,4 +748,63 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"updateTop":{"unique":1,"middle":[{"unique":11,"name":"MiddleNew","bottom":[]},{"unique":12,"name":"Middle2","bottom":[{"unique":112}]}]}}}""")
   }
 
+  "Creating nested inline relations" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle @mongoRelation(field:"middle_Ids")
+        |}
+        |
+        |type Middle {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   top: Top
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createMiddle(data: {
+         |   unique: 11111,
+         |   name: "MiddleNonEmbeddedReversed",
+         |   top: {create:{
+         |      unique: 111111,
+         |      name: "TopNonEmbeddedReversed"
+         |    }
+         |   }
+         |}){
+         |  unique,
+         |  top{
+         |    unique
+         |  }
+         |}}""",
+      project
+    )
+
+    //    val res = server.query(
+    //      s"""mutation {
+    //         |   createTop(data: {
+    //         |   unique: 11111,
+    //         |   name: "TopNonEmbedded",
+    //         |   middle: {create:{
+    //         |      unique: 1111111111,
+    //         |      name: "MiddleNonEmbedded"
+    //         |    }
+    //         |   }
+    //         |}){
+    //         |  unique,
+    //         |  middle{
+    //         |    unique
+    //         |  }
+    //         |}}""",
+    //      project
+    //    )
+  }
 }

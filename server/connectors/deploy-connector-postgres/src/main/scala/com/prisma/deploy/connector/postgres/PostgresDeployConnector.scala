@@ -26,7 +26,7 @@ case class PostgresDeployConnector(
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(managementDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
-  override def capabilities                                          = if (isActive) Set(MigrationsCapability) else Set.empty
+  override def capabilities: Set[DeployConnectorCapability]          = if (isActive) Set(MigrationsCapability) else Set.empty
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

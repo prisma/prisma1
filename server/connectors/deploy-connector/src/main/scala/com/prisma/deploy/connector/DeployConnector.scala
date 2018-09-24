@@ -63,4 +63,5 @@ object DeployConnectorCapability extends Enumeratum[DeployConnectorCapability] {
   def values = findValues
 
   object MigrationsCapability extends DeployConnectorCapability
+  // IntrospectionCapability
 }

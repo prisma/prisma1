@@ -1,13 +1,14 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.deploy.connector.DeployConnectorCapability
+import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.TypeIdentifier
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast.{Argument => SangriaArgument, _}
+import sangria.ast._
 
 import scala.collection.immutable.Seq
-import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
@@ -70,15 +71,17 @@ object SchemaSyntaxValidator {
 
   val requiredReservedFields = Vector(idFieldRequirementForPassiveConnectors)
 
-  def apply(schema: String, isActive: Boolean): SchemaSyntaxValidator = {
-    val fieldRequirements         = if (isActive) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
-    val requiredFieldRequirements = if (isActive) Vector.empty else requiredReservedFields
+  def apply(schema: String, capabilities: Set[DeployConnectorCapability]): SchemaSyntaxValidator = {
+
+    val fieldRequirements =
+      if (capabilities.contains(MigrationsCapability)) reservedFieldsRequirementsForActiveConnectors else reservedFieldsRequirementsForPassiveConnectors
+    val requiredFieldRequirements = if (capabilities.contains(MigrationsCapability)) Vector.empty else requiredReservedFields
     SchemaSyntaxValidator(
       schema = schema,
       directiveRequirements = directiveRequirements,
       reservedFieldsRequirements = fieldRequirements,
       requiredReservedFields = requiredFieldRequirements,
-      allowScalarLists = isActive
+      capabilities = capabilities
     )
   }
 }
@@ -88,7 +91,7 @@ case class SchemaSyntaxValidator(
     directiveRequirements: Seq[DirectiveRequirement],
     reservedFieldsRequirements: Seq[FieldRequirement],
     requiredReservedFields: Seq[FieldRequirement],
-    allowScalarLists: Boolean
+    capabilities: Set[DeployConnectorCapability]
 ) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
@@ -285,7 +288,7 @@ case class SchemaSyntaxValidator(
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
-    if (allowScalarLists) {
+    if (capabilities.contains(MigrationsCapability)) {
       scalarFields.collect {
         case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
       }

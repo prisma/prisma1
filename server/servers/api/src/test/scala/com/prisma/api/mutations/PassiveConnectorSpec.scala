@@ -23,6 +23,8 @@ trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
 
 }
 
+// Fixme test if this works when adding to existing toMany relations because it looks like it just overwrites
+
 class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   val inlineRelationSchema = s"""
@@ -81,7 +83,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" ignore {
+  "A Create Mutation" should "created nested items" in {
     executeOnInternalDatabase(inlineRelationSchema)
     // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
@@ -91,14 +93,18 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |    list: {
          |      create: { name: "the list" }
          |    }
-         |  }){ title }
+         |  }){ title
+         |      list{
+         |          name
+         |      }
+         |  }
          |}""".stripMargin,
       project = inlineRelationProject
     )
-    res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
+    res.toString should be(s"""{"data":{"createTodo":{"title":"the todo","list":{"name":"the list"}}}}""")
   }
 
-  "A Create Mutation" should "created nested items 2" in {
+  "A Create Mutation" should "create nested items 2" in {
     executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
