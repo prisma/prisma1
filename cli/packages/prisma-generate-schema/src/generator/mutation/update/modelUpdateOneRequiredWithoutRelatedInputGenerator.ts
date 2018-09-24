@@ -19,7 +19,9 @@ export default class ModelUpdateOneWithoutRelatedInputTypeGenerator extends Rela
       fields.upsert = { type: this.generators.modelUpsertWithoutRelatedInput.generate(model, args) }
     }
 
-    fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, args) }
+    if (!this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)) {
+      fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, args) }
+    }
     
     return fields
   }

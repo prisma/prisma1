@@ -22,7 +22,9 @@ export default class ModelUpdateOneInputTypeGenerator extends ModelUpdateInputGe
     
     fields.disconnect = { type: this.generators.scalarTypeGenerator.generate('Boolean', {}) }
 
-    fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, {}) }
+    if (!this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)) {
+      fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, {}) }
+    }
 
     return fields
   }
