@@ -1,7 +1,6 @@
 package com.prisma.deploy.connector.postgres.impls.mutactions
 
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.impls.mutactions.RenameRelationInterpreter
 
 object AnyMutactionInterpreterImpl extends SqlMutactionInterpreter[DeployMutaction] {
   override def execute(mutaction: DeployMutaction) = {
