@@ -54,7 +54,7 @@ export class GoGenerator extends Generator {
   }
 
   goTypeName(fieldType: FieldLikeType): string {
-    var typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
+    let typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
     if(fieldType.isList) {
       typ = "[]" + typ
     } else if(!fieldType.isNonNull) {
@@ -68,7 +68,7 @@ export class GoGenerator extends Generator {
   }
 
   goStructTag(field: GraphQLField<any, any>): string {
-    var s = "`json:\"" + field.name
+    let s = "`json:\"" + field.name
     if(this.shouldOmitEmpty(this.extractFieldLikeType(field))) {
       s += ",omitempty"
     }
@@ -498,7 +498,7 @@ export class GoGenerator extends Generator {
           field,
         )
 
-        var sParams = `
+        let sParams = `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
             ${args
@@ -510,7 +510,7 @@ export class GoGenerator extends Generator {
               .join('\n')}
           }`
 
-        var sOperation = ""
+        let sOperation = ""
 
         // FIXME(dh): This is brittle. A model may conceivably be named "Many",
         // in which case updateMany would be updating a single instance of Many.
