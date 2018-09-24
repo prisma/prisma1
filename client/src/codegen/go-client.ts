@@ -63,6 +63,19 @@ export class GoGenerator extends Generator {
     return typ
   }
 
+  shouldOmitEmpty(fieldType: FieldLikeType): boolean {
+    return !fieldType.isNonNull
+  }
+
+  goStructTag(field: GraphQLField<any, any>): string {
+    var s = "`json:\"" + field.name
+    if(this.shouldOmitEmpty(this.extractFieldLikeType(field))) {
+      s += ",omitempty"
+    }
+    s += "\"`"
+    return s
+  }
+
   extractFieldLikeType(field: GraphQLField<any, any>): FieldLikeType {
     const deepTypeName = this.getDeepType(field.type)
     const deepType = this.schema.getType(deepTypeName)
@@ -353,7 +366,7 @@ export class GoGenerator extends Generator {
               const field = fieldMap[key]
               const fieldType = this.extractFieldLikeType(field as GraphQLField<any, any>)
 
-              return `${goCase(field.name)} ${this.goTypeName(fieldType)} \`json:"${field.name}${fieldType.isNonNull ? `` : `,omitempty`}"\``
+              return `${goCase(field.name)} ${this.goTypeName(fieldType)} ${this.goStructTag(field as GraphQLField<any, any>)}`
             })
             .join('\n')}
             }
@@ -405,7 +418,7 @@ export class GoGenerator extends Generator {
               )
 
               const typ = this.goTypeName(fieldType)
-              return `${goCase(field.name)} ${typ} \`json:"${field.name},omitempty"\``
+              return `${goCase(field.name)} ${typ} ${this.goStructTag(field as GraphQLField<any, any>)}`
             })
             .join('\n')}
             }
@@ -539,7 +552,7 @@ export class GoGenerator extends Generator {
               .map(arg => {
                 const fieldType = this.extractFieldLikeType(arg)
                 const typ = this.goTypeName(fieldType)
-                return `${goCase(arg.name)} ${typ} \`json:"${arg.name}${fieldType.isNonNull ? `` : `,omitempty`}"\``
+                return `${goCase(arg.name)} ${typ} ${this.goStructTag(arg)}`
               })
               .join('\n')}
           }`
