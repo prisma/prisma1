@@ -2,11 +2,12 @@ package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.{OnDelete, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
+class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBase {
 
   val inferer      = SchemaInferrer(Set.empty)
   val emptyProject = TestProject.empty
@@ -48,8 +49,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
     val validator = SchemaSyntaxValidator(
       types,
       SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
+      deployConnector.fieldRequirements,
       Set.empty
     )
 

@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapabilit
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls._
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.{FieldTemplate, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -15,7 +15,9 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def isActive         = true
+  override def isActive                                      = true
+  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImplInterface(isActive)
+
   lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabase
   lazy val managementDatabase   = internalDatabaseDefs.managementDatabase

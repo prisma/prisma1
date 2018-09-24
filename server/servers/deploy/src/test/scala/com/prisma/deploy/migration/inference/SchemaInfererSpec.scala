@@ -3,12 +3,13 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.{DeployConnectorCapability, InferredTables}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererSpec extends WordSpec with Matchers {
+class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   val emptyProject = TestProject.empty
 
   "if a given relation does not exist yet, the inferer" should {
@@ -453,8 +454,7 @@ class SchemaInfererSpec extends WordSpec with Matchers {
     val validator = SchemaSyntaxValidator(
       types,
       SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
+      deployConnector.fieldRequirements,
       capabilities
     )
 

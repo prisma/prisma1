@@ -9,7 +9,7 @@ import scala.concurrent.Future
 
 trait DeployConnector {
   def isActive: Boolean
-  def isPassive: Boolean = !isActive
+  def fieldRequirements: FieldRequirementsInterface
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor
@@ -18,8 +18,7 @@ trait DeployConnector {
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
   def cloudSecretPersistence: CloudSecretPersistence
   def capabilities: Set[DeployConnectorCapability]
-
-  def hasCapability(capability: DeployConnectorCapability) = capabilities.contains(capability)
+  def hasCapability(capability: DeployConnectorCapability): Boolean = capabilities.contains(capability)
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]

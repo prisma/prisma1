@@ -3,10 +3,11 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
-class InfererIntegrationSpec extends FlatSpec with Matchers {
+class InfererIntegrationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "they" should "should propose no UpdateRelation when ambiguous relations are involved" in {
     val schema =
@@ -298,8 +299,7 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
     val validator = SchemaSyntaxValidator(
       schema,
       SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
+      deployConnector.fieldRequirements,
       capabilities = Set(MigrationsCapability)
     )
 

@@ -5,8 +5,7 @@ import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapabilit
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
 import com.prisma.deploy.connector.postgres.impls._
-import com.prisma.metrics.PrismaCloudSecretLoader
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.{FieldTemplate, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -19,6 +18,9 @@ case class PostgresDeployConnector(
     isActive: Boolean
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
+
+  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImplInterface(isActive)
+
   lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
   lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
   lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
