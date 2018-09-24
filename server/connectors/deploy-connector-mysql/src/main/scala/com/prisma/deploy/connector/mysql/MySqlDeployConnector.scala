@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapabilit
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls._
-import com.prisma.shared.models.{FieldTemplate, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
