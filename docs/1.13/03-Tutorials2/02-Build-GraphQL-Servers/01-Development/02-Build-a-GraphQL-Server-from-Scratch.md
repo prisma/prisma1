@@ -51,7 +51,7 @@ npm init -y
 
 This creates a new directory called `blogr` and adds a `package.json` to it so we can start installing NPM dependencies.
 
-Next, you’ll create the entry-point for the server in a file called `index.js`. 
+Next, you’ll create the entry-point for the server in a file called `index.js`.
 
 <Instruction>
 
@@ -80,7 +80,7 @@ Awesome, that’s it! You’re all set, let’s write the first lines of code �
 
 The core primitive provided by `graphql-yoga` is a class called [`GraphQLServer`](https://github.com/graphcool/graphql-yoga#graphqlserver). It is configured with everything related to the [GraphQL schema](https://blog.graph.cool/graphql-server-basics-the-schema-ac5e2950214e) as well as the web server configuration, such as the *port* it’s running on or its [*CORS*](https://blog.graph.cool/enabling-cors-for-express-graphql-apollo-server-1ef999bfb38d) setup.
 
-For now, you’ll simply instantiate it with a GraphQL schema definition and the corresponding resolver implementation. 
+For now, you’ll simply instantiate it with a GraphQL schema definition and the corresponding resolver implementation.
 
 <Instruction>
 
@@ -359,7 +359,7 @@ The nice thing about resolvers is that they are super flexible, meaning they’r
 
 In this example, we’ll connect the resolvers to [Prisma](https://www.prisma.io). Prisma provides a GraphQL API as an abstraction over a database (in this tutorial, this will be a MySQL DB). Thanks to [prisma-binding](https://github.com/graphcool/prisma-binding) (hold on a bit, we’ll talk about this soon), implementing the resolvers merely becomes a question of [*delegating*](https://blog.graph.cool/graphql-schema-stitching-explained-schema-delegation-4c6caf468405) incoming queries to the underlying Prisma API instead of writing complicated SQL yourself.
 
-Think of Prisma as an [ORM-like layer](https://github.com/prismagraphql/prisma#is-prisma-an-orm) for your GraphQL server.
+Think of Prisma as an [ORM-like layer](https://github.com/prisma/prisma#is-prisma-an-orm) for your GraphQL server.
 
 ### Adding a Prisma configuration to the project
 

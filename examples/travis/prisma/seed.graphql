@@ -1,5 +1,0 @@
-mutation {
-  createUser(data: { name: "Example" }) {
-    id
-  }
-}

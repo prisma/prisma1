@@ -610,61 +610,78 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
-    val inputTypes = """input ACreateInput {
-                       |  field: Int
-                       |}
-                       |
-                       |input ACreateOneInput {
-                       |  create: ACreateInput
-                       |}
-                       |
-                       |input AUpdateDataInput {
-                       |  field: Int
-                       |}
-                       |
-                       |input AUpdateInput {
-                       |  field: Int
-                       |}
-                       |
-                       |input AUpdateOneInput {
-                       |  create: ACreateInput
-                       |  disconnect: Boolean
-                       |  delete: Boolean
-                       |  update: AUpdateDataInput
-                       |  upsert: AUpsertNestedInput
-                       |}
-                       |
-                       |input AUpdateOneRequiredInput {
-                       |  create: ACreateInput
-                       |  update: AUpdateDataInput
-                       |  upsert: AUpsertNestedInput
-                       |}
-                       |
-                       |input AUpsertNestedInput {
-                       |  update: AUpdateDataInput!
-                       |  create: ACreateInput!
-                       |}
-                       |
-                       |input BCreateInput {
-                       |  field: Int
-                       |  a: ACreateOneInput
-                       |}
-                       |
-                       |input BUpdateInput {
-                       |  field: Int
-                       |  a: AUpdateOneInput
-                       |}
-                       |
-                       |input CCreateInput {
-                       |  field: Int
-                       |  a: ACreateOneInput!
-                       |}
-                       |
-                       |input CUpdateInput {
-                       |  field: Int
-                       |  a: AUpdateOneRequiredInput
-                       |}"""
+    val inputTypes =
+      """input ACreateInput {
+        |  field: Int
+        |}
+        |
+        |input ACreateOneInput {
+        |  create: ACreateInput
+        |}
+        |
+        |input AUpdateDataInput {
+        |  field: Int
+        |}
+        |
+        |input AUpdateInput {
+        |  field: Int
+        |}
+        |
+        |input AUpdateOneInput {
+        |  create: ACreateInput
+        |  disconnect: Boolean
+        |  delete: Boolean
+        |  update: AUpdateDataInput
+        |  upsert: AUpsertNestedInput
+        |}
+        |
+        |input AUpdateOneRequiredInput {
+        |  create: ACreateInput
+        |  update: AUpdateDataInput
+        |  upsert: AUpsertNestedInput
+        |}
+        |
+        |input AUpsertNestedInput {
+        |  update: AUpdateDataInput!
+        |  create: ACreateInput!
+        |}
+        |
+        |input BCreateInput {
+        |  field: Int
+        |  a: ACreateOneInput
+        |}
+        |
+        |input BUpdateInput {
+        |  field: Int
+        |  a: AUpdateOneInput
+        |}
+        |
+        |input CCreateInput {
+        |  field: Int
+        |  a: ACreateOneInput!
+        |}
+        |
+        |input CUpdateInput {
+        |  field: Int
+        |  a: AUpdateOneRequiredInput
+        |}"""
 
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "Nested Create types" should "be omitted if the resulting types are empty" in {
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |    id: ID! @unique
+        |    b: B
+        |}
+        |
+        |type B {
+        |    a: A!
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+    schema should not(containInputType("BCreateOneWithoutAInput"))
   }
 }

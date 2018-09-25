@@ -13,8 +13,8 @@ trait SangriaExtensions {
 object SangriaExtensions {
   class ContextExtensions(val ctx: Context[_, _]) extends AnyVal {
     def getSelectedFields(model: Model): SelectedFields = {
-      val currentField   = ctx.astFields.find(_.name == ctx.field.name).get
-      val selectedFields = recurse(model, currentField.selections) ++ model.idField
+      val currentFields  = ctx.astFields.filter(_.name == ctx.field.name)
+      val selectedFields = recurse(model, currentFields.flatMap(_.selections)) ++ model.idField
       SelectedFields(selectedFields.toSet)
     }
 

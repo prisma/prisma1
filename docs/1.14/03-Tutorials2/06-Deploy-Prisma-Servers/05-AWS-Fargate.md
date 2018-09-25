@@ -134,7 +134,7 @@ Save the **DatabasePort** and **DatabaseEndpoint** as you’ll need them in the 
 
 The Prisma server is deployed via a CloudFormation template as well. So, just like before you first need to get access to that template.
 
-You can find it in the [prisma-templates](https://github.com/prismagraphql/prisma-templates) GitHub repository. 
+You can find it in the [prisma-templates](https://github.com/prisma/prisma-templates) GitHub repository.
 
 <Instruction>
 
@@ -256,7 +256,7 @@ Similar to what you did with the database stack before, first select the `my-pri
 
 ## 3. Deploy a Prisma service to the new server
 
-It’s time to put your new server in use and deploy a service to it. 
+It’s time to put your new server in use and deploy a service to it.
 
 <Instruction>
 

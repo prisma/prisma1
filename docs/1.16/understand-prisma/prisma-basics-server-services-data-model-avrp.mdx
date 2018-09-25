@@ -1,0 +1,174 @@
+import Collapse from 'components/Markdown/Collapse'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: 'Prisma Basics: Server, Services & Data Model',
+  position: 20,
+  description: 'Learn about the main concepts you are dealing with when working Prisma. Most importantly: Prisma services, servers and the data model.'
+}
+
+## Main concepts
+
+When working with Prisma, you need to understand the following concepts:
+
+- **Prisma Service**: Each Prisma service provides a mapping from your database to GraphQL and exposes a CRUD/realtime GraphQL API, called the _Prisma API_. Working with Prisma, you will spend most of your time developing and consuming the APIs of your Prisma services.
+- **Prisma Server**: One Prisma server provides the *runtime environment* for many Prisma services. Prisma servers can be deployed anywhere (e.g. using Docker) and are backed by one or more databases. A Prisma server is set up once - after that Prisma services can be *deployed* to it.
+- **Service configuration:** You can think of the service configuration as the *template* for a  service. To deploy a service, the CLI sends the service configuration to the Prisma server which creates/updates the respective Prisma service. The service configuration consists of:
+  - **prisma.yml**: The root configuration file for a Prisma service (includes the service's _endpoint_, the _service secret_, the path to the _data model_ file, ...)
+  - **Data model**: In the data model, you define _models_ which Prisma uses to generate the GraphQL API for your database (and optionally to migrate the underlying database). It's using the declarative GraphQL SDL syntax and is typically stored in a file called `datamodel.graphql`.
+- **Prisma CLI**: The Prisma CLI is primarily used to manage Prisma services. It lets you initialize and deploy services, generate service tokens, introspect a database to generate an SDL data model, delete services from a Prisma server and more.
+
+Here's a simple diagram showing the interplay of these concepts:
+
+![](https://i.imgur.com/xMXxsku.png)
+
+## Prisma services
+
+When working with Prisma, you spend most of your time dealing with services. A Prisma service exposes a CRUD/realtime GraphQL API called the **Prisma API**.
+
+### Prisma API features
+
+The Prisma API is GraphQL API that exposes CRUD/realtime operations based on the model definitions in the data model. Here is an overview of the API features:
+
+- Read from database using GraphQL queries (including _filtering_, _ordering_ and _pagination_)
+- Create, update and delete data using powerful GraphQL mutations
+- Receive realtime events using GraphQL subscriptions
+- [OpenCRUD](https://www.opencrud.org) compliant
+
+### Service endpoint and stages
+
+Each Prisma service has exactly one _endpoint_. The endpoint is composed of the following components:
+
+- **Host**: The _host_ of your Prisma server (incl. protocol and port), e.g. `https://example.com:4466`
+- **Service name**: The first _path component_ of the endpoint URL is a _name_ for the Prisma service, e.g. `my-service`. If no service name is specified, it defaults to `default`.
+- **Service stage**: The second _path component_ of the endpoint URL is the _stage_ of the service. Like the service name, this can be a random string - but you commonly use terms that describe deployment environments (e.g. `dev`, `staging`, `prod`, ...). If no service stage is specified, it defaults to `default`.
+
+Putting it all together, the endpoint for a service might look as follows: `https://example.com:4466/my-service/dev`
+
+![](https://i.imgur.com/Ge85JyL.png)
+
+Prisma services can also be deployed to endpoints without any path components (e.g. `http://localhost:4466`), in these cases Prisma uses `default` for service name _and_ stage. **This means `http://localhost:4466/default/default` can always be written as `http://localhost:4466`.**
+
+<Collapse title="Endpoint structure of Prisma Demo servers">
+
+Another exception for the endpoint structure are _Demo servers_ on Prisma cloud that have an additional path component _before_ the service name and stage. This corresponds to the _name_ of your workspace. For example, if your workspace is called `john-doe`, the endpoint might look as follows: `http://prisma-eu1.sh/john-doe/my-service/dev`
+
+</Collapse>
+
+### Common workflows
+
+ Here are common things you might want to do with your services:
+
+- Define and adjust the service's data model which is the foundation for the generated Prisma API.
+- Build a GraphQL server (with business logic and a custom schema) based on the auto-generated GraphQL API of a Prisma service.
+- Protect your Prisma API by setting a _service secret_ to enable JWT-based authentication.
+- Deploy the same service configuration to multiple _deployment environments_ by adjusting the service's `endpoint` in prisma.yml (e.g. change _host_ and/or _stage_).
+- Configure post-deployment _hooks_ to execute bash commands after a service was deployed (e.g. to download the auto-generated GraphQL schema that defines the Prisma API).
+- Initially seed service data or import/export data as the service is running.
+
+See here for more info about [Prisma services](/develop-prisma-services).
+
+## Service configuration
+
+The Prisma service configuration provides a _template_ for a Prisma service. When deployed, the service configuration is used to create/update a Prisma _service_ running on a Prisma _server_. It consists of the data model and prisma.yml containing various configuration options for the service.
+
+### prisma.yml
+
+Here is a minimal example of what a standard prisma.yml looks like:
+
+```yml
+endpoint: http://localhost:4466/my-service/dev
+datamodel: datamodel.graphql
+secret: my-secret
+```
+
+These are the configuration properties it contains:
+
+- `endpoint`: The HTTP endpoint of the Prisma server (plus *service name* and *stage*) to which the service is deployed. This endpoint exposes the service's Prisma API.
+- `datamodel`: The _file path_ to the data model which serves as foundation for the GraphQL CRUD/realtime API.
+- `secret`: The _service secret_ is used to secure the service's GraphQL API endpoint using JWT-based authentication. If no `secret` is specified, the service does not require authentication.
+
+### Data model
+
+You can think of the data model as a way to specify your _database schema_ in a declarative way. (Prisma enforces a schema even for schemaless databases.)
+
+The data model is written in GraphQL SDL and contains the service's _model definitions_. The auto-generated Prisma API exposes CRUD and realtime operations for each model. 
+
+<Warning>
+
+Even though it's written in GraphQL SDL, the data model is _not_ a valid [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/). This is because it doesn't have any of the `Query`, `Mutation` or `Subscription` root types that are defining actual GraphQL operations. Learn more about the differences [here](knul#data-model-vs-prisma-graphql-schema).
+
+</Warning>
+
+
+Prisma maps each model definition to a _table_ (or an equivalent structure in the case of a non-relational database, e.g. a _document_) in the underlying database.
+
+The data model is typically located in a file called `datamodel.graphql` (though it might be named differently or even split across multiple files).
+
+![](https://i.imgur.com/yvDByNB.png)
+
+## Prisma servers
+
+Prisma servers provide the environment where services are running and therefore are a essential component in your Prisma setup.
+
+[They can be run with Docker](https://hub.docker.com/r/prismagraphql/prisma/) and deployed to your own infrastructure or a cloud provider of your choice. Prisma servers are set up once and after they're available they can be used as deployment targets for Prisma services.
+
+### Maintaining Prisma servers
+
+After a Prisma server is setup and available as a deployment target, there's not much else to do with your Prisma server on a _daily_ basis.
+
+Prisma has a bi-weekly release cycle. It is recommended to keep your Prisma servers up-to-date with the latest releases. Therefore, one major maintenance task is to regularly upgrade Prisma servers to the latest version.
+
+### Relation between a Prisma server, services and databases
+
+One Prisma server is connected to one or more databases. The data of the services running on the server can be distributed among the various databases (*coming soon*).  
+
+### The Management API
+
+The Management API is available on the `/management` path of a Prisma server (e.g. `http://localhost:4466/management`). It is primarily used by the Prisma CLI to deploy and manage the services that are running on the server as well as to perform database migrations.
+
+### Running Prisma servers with Docker
+
+Prisma servers can be run using [Docker](https://www.docker.com). The latest Prisma *Docker image* can be pulled from [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/) using the `docker pull prismagraphql/prisma` command of the Docker CLI.
+
+Here's how a Prisma server (backed by some MySQL database) is typically configured in a Docker Compose file: 
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.15
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: | # the pipe character denotes the beginning of a string
+        port: 4466
+        managementApiSecret: my-secret
+        databases:
+          default:
+            connector: mysql
+            host: 192.148.24.73
+            port: 3306
+            user: root
+            password: password42
+            migrations: true
+```
+
+The `PRISMA_CONFIG` environment variable contains a (multi-line) string specifying various configuration details about the Prisma server:
+
+- `port`: The port it will be running on
+- `managementApiSecret`: The Management API secret that's used to validate incoming requests
+- `databases`: Connection and configuration details for one or more databases that are backing the Prisma server.
+
+### Managing Prisma servers in Prisma Cloud
+
+Prisma Cloud is a set of tools helping you to manage your Prisma servers and services. It consists of the web-based [Prisma Console](https://app.prisma.io/) and parts of the Prisma CLI.
+
+You can host a Prisma server anywhere - be it your on own infrastructure or using your favorite cloud provider (such as AWS, Google Cloud, Digital Ocean, ...). No matter where the Prisma server is hosted, you're still able to _manage_ it through Prisma Cloud. This includes maintenance tasks like _upgrading_ the Prisma version. 
+
+To take advantage of these benefits, you need to connect your Prisma server to Prisma Cloud.
+
+![](https://i.imgur.com/gUzWSwS.png)
+
+With the cloud provider integrations, you're also able to _set up_ your Prisma server directly through the web UI instead of fiddling around with Docker and the APIs/UIs of your cloud provider. As an example, learn how to [setup a new Prisma server with a connected database on Heroku](https://www.youtube.com/watch?v=b2ofz3XxR14).

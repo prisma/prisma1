@@ -43,12 +43,13 @@ case class RelatedModelsQueryBuilder(
     .from(aliasedTable)
     .innerJoin(relationTable2)
     .on(aliasColumn(relatedModel.dbNameOfIdField_!).eq(field(name(relationTableAlias, oppositeModelRelationSideColumn))))
+
   val cursorCondition = buildCursorCondition(queryArguments, relatedModel)
 
   lazy val queryWithPagination = {
     val order          = orderByInternalWithAliases(baseTableAlias, baseTableAlias, secondaryOrderByForPagination, queryArguments)
     val aliasedBase    = base.where(relatedNodesCondition, queryArgumentsCondition, cursorCondition).asTable().as(baseTableAlias)
-    val rowNumberPart  = rowNumber().over().partitionBy(aliasedBase.field(parentModelSide)).orderBy(order: _*).as(rowNumberAlias)
+    val rowNumberPart  = rowNumber().over().partitionBy(field(name(baseTableAlias, parentModelAlias))).orderBy(order: _*).as(rowNumberAlias)
     val withRowNumbers = select(rowNumberPart, aliasedBase.asterisk()).from(aliasedBase).asTable().as(rowNumberTableAlias)
     val limitCondition = rowNumberPart.between(intDummy).and(intDummy)
 

@@ -13,7 +13,7 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     val headDeferred                 = deferreds.head
     val model                        = headDeferred.model
     val args: Option[QueryArguments] = headDeferred.args
-    val selectedFields               = headDeferred.selectedFields
+    val selectedFields               = deferreds.foldLeft(SelectedFields.empty)(_ ++ _.selectedFields)
     val futureResolverResults        = resolver.getNodes(model, args, selectedFields)
 
     orderedDeferreds.map {
