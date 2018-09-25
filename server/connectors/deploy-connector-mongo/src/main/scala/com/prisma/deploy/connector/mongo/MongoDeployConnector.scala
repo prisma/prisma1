@@ -22,7 +22,8 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
-  override def capabilities: Set[ConnectorCapability]           = Set(MigrationsCapability, EmbeddedScalarListsCapability)
+  override def capabilities: Set[ConnectorCapability] =
+    if (isActive) Set(MigrationsCapability, EmbeddedScalarListsCapability) else Set(EmbeddedScalarListsCapability)
 //  override def capabilities: Set[DeployConnectorCapability] = Set.empty
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)

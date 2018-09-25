@@ -9,6 +9,7 @@ import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapability
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
@@ -291,6 +292,16 @@ class ObjectTypeBuilder(
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
+
+      case f: RelationField if !f.isList && f.relation.isInlineRelation =>
+        val manifestation = f.relation.inlineManifestation.get
+
+        //depending where the manifestation is we can get the related ID and fetch the node with that id -> OneDeferred
+        val value = item.data.map("middle")
+        OneDeferred(f.relatedModel_!, NodeSelector.forCuid(f.relatedModel_!, ""))
+        //or use the node Id of this item and fetch the document that has this id stored as its related id -> ToManyDeferredWithFilter
+        val value = item.data.map("middle")
+        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes).head
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {

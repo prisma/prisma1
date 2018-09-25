@@ -33,7 +33,7 @@ object SchemaDsl extends AwaitUtils {
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
 
-    if (!deployConnector.isActive) {
+    if (true) { //Fixme s
       addManifestations(project)
     } else {
       project
@@ -83,7 +83,7 @@ object SchemaDsl extends AwaitUtils {
   private def addManifestations(project: Project): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if (relation.isManyToMany) {
+      if (relation.isManyToMany) { //Fixme this is not reading the MongoRelationstuff
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)
