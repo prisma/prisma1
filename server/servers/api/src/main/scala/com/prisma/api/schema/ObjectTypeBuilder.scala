@@ -297,11 +297,9 @@ class ObjectTypeBuilder(
         val manifestation = f.relation.inlineManifestation.get
 
         if (manifestation.inTableOfModelId == f.model.name) {
-          //depending where the manifestation is we can get the related ID and fetch the node with that id -> OneDeferred
-//          val value = item.data.map("middle")
-          OneDeferred(f.relatedModel_!, NodeSelector.forCuid(f.relatedModel_!, ""))
+          val id = item.data.map("middle_id").asInstanceOf[IdGCValue]
+          OneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
         } else {
-          //or use the node Id of this item and fetch the document that has this id stored as its related id -> ToManyDeferredWithFilter
           ToOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
         }
 

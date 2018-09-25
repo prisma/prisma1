@@ -60,6 +60,8 @@ object BisonToGC {
       case (false, false) =>
         apply(field.typeIdentifier, bison)
 
+      //Fixme if field has inline relation get the ids field and its values
+
       case (true, true) if bison.isArray =>
         val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
         ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
@@ -101,7 +103,7 @@ object DocumentToRoot {
 
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
-
+    //Fixme fetch inline relation data here
     val relationFields: List[(String, GCValue)] =
       model.relationFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 

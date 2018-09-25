@@ -7,9 +7,12 @@ import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whe
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values._
 import com.prisma.shared.models._
+import org.bson.BsonString
+import org.mongodb.scala.bson.BsonValue
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, FindObservable, MongoClient, MongoCollection}
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver with FilterConditionBuilder {
@@ -83,19 +86,21 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
 
     val model                                 = fromField.relatedModel_!
-    val collection: MongoCollection[Document] = database.getCollection(model.name)
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val filter                                = ScalarFilter(model.getScalarFieldByName_!("id").copy(name = "middle_id"), Equals(fromNodeIds.head))
 
     val mongoFilter = buildConditionForFilter(Some(filter))
 
-    val res: Future[Vector[PrismaNodeWithParent]] = collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
-      results.toVector.map { result: Document =>
-        val root = DocumentToRoot(model, result)
-        PrismaNodeWithParent(fromNodeIds.head, PrismaNode(root.idField, root, Some(model.name)))
-      }
+    collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
+      val documentGroupsByParentId: Map[CuidGCValue, Seq[Document]] = results.groupBy(x => CuidGCValue(x("middle_id").asString().getValue))
+
+      documentGroupsByParentId.map { group =>
+        val parentId                                  = fromNodeIds.find(_ == group._1).get
+        val roots                                     = group._2.map(DocumentToRoot(model, _))
+        val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(parentId, PrismaNode(r.idField, r, Some(model.name)))).toVector
+        ResolverResult(prismaNodes, hasPreviousPage = false, hasNextPage = false, parentModelId = Some(parentId))
+      }.toVector
     }
-    ResolverResult(Vector(res), hasPreviousPage = false, hasNextPage = false, parentModelId = Some(fromNodeIds.head))
-    ???
   }
 
   override def getRelationNodes(relationTableName: String, queryArguments: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
