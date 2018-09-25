@@ -84,9 +84,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
     val model                                 = fromField.relatedModel_!
     val collection: MongoCollection[Document] = database.getCollection(model.name)
-    val filter                                = ScalarFilter(model.getFieldByName_!())
+    val filter                                = ScalarFilter(model.getScalarFieldByName_!("id").copy(name = "middle_id"), Equals(fromNodeIds.head))
 
-    val mongoFilter = buildConditionForFilter(filter)
+    val mongoFilter = buildConditionForFilter(Some(filter))
 
     val res: Future[Vector[PrismaNodeWithParent]] = collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
       results.toVector.map { result: Document =>
