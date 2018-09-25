@@ -17,6 +17,10 @@ $ yarn install && yarn build
 $ node dist/index.js
 ```
 
+## Dependencies
+
+To understand the current dependencies setup of Prisma, please have a look at [ARCHITECTURE.md](https://github.com/prisma/prisma/blob/master/cli/ARCHITECTURE.md)
+
 ## Cache
 
 You might need to set the environment variable `GRAPHCOOL_CLI_CLEAR_CACHE` to some value to prevent overeager caching of your code.

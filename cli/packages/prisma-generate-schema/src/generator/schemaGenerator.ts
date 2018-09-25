@@ -6,7 +6,7 @@ export default class SchemaGenerator extends SchemaGeneratorBase {
   public getTypeName(input: IGQLType[], args: {}) {
     return "__Schema";
   }
-  protected generateInternal(input: IGQLType[], args?: {}) {
+  public generate(input: IGQLType[], args?: {}) {
     return new GraphQLSchema({
       query: this.generators.query.generate(input, {}),
       mutation: this.generators.mutation.generate(input, {}),

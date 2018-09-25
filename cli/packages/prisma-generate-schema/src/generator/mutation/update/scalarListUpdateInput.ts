@@ -1,8 +1,8 @@
-import { ScalarInputGenerator } from "../../generator"
+import { ModelInputObjectTypeGenerator } from "../../generator"
 import { IGQLType, IGQLField } from "../../../datamodel/model"
 import { GraphQLInputObjectType } from 'graphql/type'
 
-export default class ScalarListUpdateInput extends ScalarInputGenerator {
+export default class ScalarListUpdateInput extends ModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: IGQLField) {
     return `${input.name}Update${args.name}Input`
   }
@@ -11,7 +11,9 @@ export default class ScalarListUpdateInput extends ScalarInputGenerator {
       name: this.getTypeName(input, args),
       fields: {
         set: {
-          type: this.generators.scalarTypeGenerator.mapToScalarFieldTypeForceOptional(args)
+          type: this.generators.scalarTypeGenerator.wrapList(
+            this.generators.scalarTypeGenerator.generate(args.type, {})
+          )
         }
       }
     })

@@ -1,8 +1,0 @@
-.DS_Store
-node_modules
-.idea
-
-.graphcoolrc
-.envrc
-build.zip
-.env

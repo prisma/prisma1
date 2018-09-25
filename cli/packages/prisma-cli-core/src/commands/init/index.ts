@@ -44,9 +44,7 @@ export default class Init extends Command {
     // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
-      (files.includes('prisma.yml') ||
-        files.includes('datamodel.prisma') ||
-        files.includes('docker-compose.yml'))
+      (files.includes('prisma.yml') || files.includes('datamodel.prisma'))
     ) {
       this.out.log(`
 The directory ${chalk.cyan(
@@ -61,13 +59,13 @@ Either try using a new directory name, or remove the files listed above.
     }
 
     if (endpoint) {
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
-        path.join(this.config.definitionDir, 'datamodel.prisma'),
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'datamodel.prisma'), 
+        fs.readFileSync(path.join(__dirname, 'boilerplate', 'datamodel.prisma'))
       )
-      fs.copySync(
-        path.join(__dirname, 'boilerplate', 'prisma.yml'),
-        path.join(this.config.definitionDir, 'prisma.yml'),
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'prisma.yml'), 
+        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml'))
       )
 
       const endpointDefinitionPath = path.join(
@@ -130,7 +128,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
     let prismaYmlString = `endpoint: ENDPOINT
 datamodel: datamodel.prisma`
 
-    if (results.generator) {
+    if (results.generator && results.generator !== 'no-generation') {
       prismaYmlString += this.getGeneratorConfig(results.generator)
     }
 
@@ -167,12 +165,6 @@ datamodel: datamodel.prisma`
       : ``
 
     const isLocal = results.cluster!.local && results.writeDockerComposeYml
-    const dbType = results.database ? results.database.type : ''
-    const beautifulDbTypesMap = {
-      mysql: 'MySQL',
-      postgres: 'PostgreSQL',
-    }
-    const beautifulDbType = beautifulDbTypesMap[dbType] || ''
 
     const steps: string[] = []
 

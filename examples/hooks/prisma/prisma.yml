@@ -1,8 +1,0 @@
-endpoint: http://localhost:4466/hooks
-datamodel: datamodel.graphql
-
-hooks:
-  post-deploy:
-    - echo "Deployment finished"
-    - graphql get-schema --project db
-    - graphql codegen

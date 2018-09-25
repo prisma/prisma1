@@ -1,7 +1,0 @@
-{
-  "data" : {
-    "users" : [ {
-      "name" : "Example"
-    } ]
-  }
-}

@@ -6,6 +6,7 @@ import * as path from 'path'
 import { buildSchema } from 'graphql'
 import {
   TypescriptGenerator,
+  TypescriptDefinitionsGenerator,
   JavascriptGenerator,
   GoGenerator,
   FlowGenerator,
@@ -57,7 +58,7 @@ export default class GenereateCommand extends Command {
 
         fs.mkdirpSync(resolvedOutput)
 
-        if (generator === 'schema') {
+        if (generator === 'graphql-schema') {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
@@ -78,7 +79,7 @@ export default class GenereateCommand extends Command {
         }
 
         const generators = [
-          'schema-client',
+          'graphql-schema',
           'typescript-client',
           'javascript-client',
           'go-client',
@@ -116,7 +117,7 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.ts'), code)
 
     const typeDefs = generator.renderTypedefs()
-    fs.writeFileSync(path.join(output, 'graphql.ts'), typeDefs)
+    fs.writeFileSync(path.join(output, 'prisma-schema.ts'), typeDefs)
 
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
@@ -125,7 +126,7 @@ export default class GenereateCommand extends Command {
     const schema = buildSchema(schemaString)
 
     const generator = new JavascriptGenerator({ schema })
-    const generatorTS = new TypescriptGenerator({ schema })
+    const generatorTS = new TypescriptDefinitionsGenerator({ schema })
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
@@ -139,13 +140,13 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.js'), javascript)
 
     const typescript = generatorTS.render(options)
-    fs.writeFileSync(path.join(output, 'index.ts'), typescript)
+    fs.writeFileSync(path.join(output, 'index.d.ts'), typescript)
 
     const typeDefs = generatorTS
       .renderTypedefs()
       .replace('export const typeDefs = ', '')
     fs.writeFileSync(
-      path.join(output, 'graphql.js'),
+      path.join(output, 'prisma-schema.js'),
       `module.exports = {
         typeDefs: ${typeDefs}
       }
@@ -199,7 +200,7 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.js'), flowCode)
 
     const typeDefs = generator.renderTypedefs()
-    fs.writeFileSync(path.join(output, 'graphql.js'), typeDefs)
+    fs.writeFileSync(path.join(output, 'prisma-schema.js'), typeDefs)
 
     this.out.log(`Saving Prisma Client (Flow) at ${output}`)
   }
@@ -209,7 +210,9 @@ export default class GenereateCommand extends Command {
     const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
-      return `process.env['${match[1]}']`
+      return `\`${str.slice(0, match.index)}$\{process.env['${
+        match[1]
+      }']}${str.slice(match[0].length + match.index)}\``
     } else {
       return `'${str}'`
     }

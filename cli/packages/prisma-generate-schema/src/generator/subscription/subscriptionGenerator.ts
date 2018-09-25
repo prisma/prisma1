@@ -19,7 +19,7 @@ export default class SubscriptionGenerator extends RootGenerator {
   }
 
   private generateSubscriptionField(model: IGQLType) {
-    const fields = {} as GraphQLFieldConfigMap
+    const fields = {} as GraphQLFieldConfigMap<any, any>
 
     fields[`${camelCase(model.name)}`] = {
       type: this.generators.modelSubscriptionPayload.generate(model, {}),

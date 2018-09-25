@@ -1,7 +1,7 @@
 import { GraphQLEnumType } from 'graphql/type'
-import { AuxillaryObjectTypeGenerator } from '../generator'
+import { AuxillaryEnumGenerator } from '../generator'
 
-export default class MutationTypeGenerator extends AuxillaryObjectTypeGenerator {
+export default class MutationTypeGenerator extends AuxillaryEnumGenerator {
   public getTypeName(input: null, args: {}) {
     return 'MutationType'
   }

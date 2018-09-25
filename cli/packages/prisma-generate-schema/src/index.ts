@@ -20,7 +20,10 @@ export function parseInternalTypes(model: string) : IGQLType[] {
  */
 export function generateCRUDSchema(model: string) : GraphQLSchema {
   const generators = new Generators()
-  const types = parseInternalTypes(model)
+  const types = parseInternalTypes(model).sort(
+    ({ name: a }, { name: b }) => (a > b ? 1 : -1),
+  )
+
   return generators.schema.generate(types, {})
 }
 
