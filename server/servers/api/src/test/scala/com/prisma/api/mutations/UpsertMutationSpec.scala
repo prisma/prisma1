@@ -7,7 +7,6 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForPrototypes: Boolean = true
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.Cuid, isUnique = true)

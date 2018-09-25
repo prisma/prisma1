@@ -16,8 +16,15 @@ case class UpdateNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction
 }
 case class DeleteNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction: DeleteNode) extends FurtherNestedMutactionResult
 case class UpsertNodeResult(result: DatabaseMutaction, mutaction: UpsertNode)                 extends DatabaseMutactionResult
-case class ManyNodesResult(mutaction: FinalMutaction)                                         extends DatabaseMutactionResult
+case class ManyNodesResult(mutaction: FinalMutaction, count: Int)                             extends DatabaseMutactionResult
 
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
   override def mutaction: DatabaseMutaction = ???
+}
+
+object ManyHelper {
+  def getManyCount(result: MutactionResults): Int = result.results.headOption match {
+    case Some(ManyNodesResult(_, count)) => count
+    case _                               => sys.error("ManyMutation should always return a ManyNodesResult")
+  }
 }

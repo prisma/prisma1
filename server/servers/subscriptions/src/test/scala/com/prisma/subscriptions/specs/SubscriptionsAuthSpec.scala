@@ -12,7 +12,7 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SubscriptionSpec
     }
     project.secrets should be(empty)
 
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage(connectionInit)
       wsClient.expectMessage(connectionAck)
     }
@@ -24,7 +24,7 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SubscriptionSpec
     }
     project.secrets should be(empty)
 
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage(connectionInit("arbitrary token"))
       wsClient.expectMessage(connectionAck)
     }
@@ -37,7 +37,7 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SubscriptionSpec
     val actualProject = project.copy(secrets = Vector("other_secret", "secret"))
     val validToken    = Jwt.encode("{}", "secret", JwtAlgorithm.HS256)
 
-    testWebsocket(actualProject) { wsClient =>
+    testWebsocketV07(actualProject) { wsClient =>
       wsClient.sendMessage(connectionInit(validToken))
       wsClient.expectMessage(connectionAck)
     }
@@ -49,7 +49,7 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SubscriptionSpec
     }
     val actualProject = project.copy(secrets = Vector("secret"))
 
-    testWebsocket(actualProject) { wsClient =>
+    testWebsocketV07(actualProject) { wsClient =>
       wsClient.sendMessage(connectionInit)
       wsClient.expectMessage(s"""{"payload":{"message":"Authentication token is invalid."},"type":"connection_error"}""")
     }
@@ -62,7 +62,7 @@ class SubscriptionsAuthSpec extends FlatSpec with Matchers with SubscriptionSpec
     val actualProject = project.copy(secrets = Vector("secret"))
     val invalidToken  = Jwt.encode("{}", "other-secret", JwtAlgorithm.HS256)
 
-    testWebsocket(actualProject) { wsClient =>
+    testWebsocketV07(actualProject) { wsClient =>
       wsClient.sendMessage(connectionInit(invalidToken))
       wsClient.expectMessage(s"""{"payload":{"message":"Authentication token is invalid."},"type":"connection_error"}""")
     }

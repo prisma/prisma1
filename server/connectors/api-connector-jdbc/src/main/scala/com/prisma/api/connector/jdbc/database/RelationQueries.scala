@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.{QueryArguments, RelationNode, ResolverResult}
+import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.shared.models.Relation
 
 trait RelationQueries extends BuilderBase with FilterConditionBuilder with OrderByClauseBuilder with LimitClauseBuilder {
@@ -15,7 +16,7 @@ trait RelationQueries extends BuilderBase with FilterConditionBuilder with Order
       val aliasedTable = relationTable(relation).as(topLevelAlias)
       val condition    = buildConditionForFilter(args.flatMap(_.filter))
       val order        = orderByForRelation(relation, topLevelAlias, args)
-      val skipAndLimit = skipAndLimitValues(args)
+      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
 
       val base = sql
         .select()

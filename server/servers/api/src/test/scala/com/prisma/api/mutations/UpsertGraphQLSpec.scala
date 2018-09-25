@@ -4,11 +4,13 @@ import java.util.UUID
 
 import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
 
   "Upserting an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql) in {
     val project = SchemaDsl.fromString() {
