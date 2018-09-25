@@ -562,51 +562,13 @@ export class GoGenerator extends Generator {
   }
 
   // FIXME(dh): rename this, split it up, etc
-  opUnhandled(field, operation: string) {
-    const { typeFields, typeName, isList } = this.extractFieldLikeType(field)
+  opNode() {
     return `
-      // ${goCase(field.name)} docs - generated while printing operation - ${operation}
-      func (client *Client) ${goCase(field.name)} (${
-      field.args.length === 1
-        ? `params *${this.getDeepType(field.args[0].type)}`
-        : `params *${goCase(field.name)}Params`
-      }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
-
-        stack := make([]prisma.Instruction, 0)
-        var args []prisma.GraphQLArg
-        if params != nil {
-        ${field.args
-          .map(arg => {
-            return `if true ${
-              field.args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
-            } {
-              args = append(args, prisma.GraphQLArg{
-                Name: "${arg.name}",
-                Key: "${arg.name}",
-                TypeName: "${arg.type}",
-                Value: *params${
-                  field.args.length === 1 ? `` : `.${goCase(arg.name)}`
-                },
-              })
-            }`
-          })
-          .join('\n')}
-        }
-
-        stack = append(stack, prisma.Instruction{
-          Name: "${field.name}",
-          Field: prisma.GraphQLField{
-            Name: "${field.name}",
-            TypeName: "${typeName}",
-            TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
-          },
-          Operation: "${operation}",
-          Args: args,
-        })
-
-        return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-          client: client.Client,
-          stack: stack,
+      func (client *Client) Node(id *ID) *NodeExec {
+        exec := client.Client.Node(id)
+        return &NodeExec{
+          client: exec.Client,
+          stack: exec.Stack,
         }
       }`
   }
@@ -650,8 +612,10 @@ export class GoGenerator extends Generator {
           sOperation = this.opCreate(field)
         } else if(operation === "mutation" && field.name.startsWith("upsert")) {
           sOperation = this.opUpsert(field)
+        } else if(operation === "query" && field.name === "node") {
+          sOperation = this.opNode()
         } else {
-          sOperation = this.opUnhandled(field, operation)
+          throw new Error(`Don't know how to handle operation ${operation} on field ${field.name}`)
         }
 
         return sParams + sOperation
