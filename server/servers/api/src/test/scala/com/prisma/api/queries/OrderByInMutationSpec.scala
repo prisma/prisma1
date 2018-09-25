@@ -1,11 +1,14 @@
 package com.prisma.api.queries
 
-import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(ScalarListsCapability, JoinRelationsCapability)
 
   val project = SchemaDsl.fromString() {
     """
@@ -27,7 +30,7 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
   }
 
-  "The order when not giving an order by" should "be by Id ascending and therefore oldest first" taggedAs (IgnorePassive) in {
+  "The order when not giving an order by" should "be by Id ascending and therefore oldest first" in {
     val res = server.query(
       """mutation {
         |  createFoo(
