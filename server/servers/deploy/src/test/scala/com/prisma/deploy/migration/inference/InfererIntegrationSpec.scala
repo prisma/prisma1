@@ -1,9 +1,9 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 

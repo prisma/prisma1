@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
@@ -9,6 +8,7 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
@@ -20,7 +20,7 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false,
-    capabilities: Set[ApiConnectorCapability]
+    capabilities: Set[ConnectorCapability]
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -279,20 +279,20 @@ class ObjectTypeBuilder(
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
 
     field match {
-      case f: ScalarField if f.isList =>
+      case f: ScalarField if f.isList => //Fixme have the way to resolve the field on the field itself
         if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
 
-      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
+      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
 
-      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
+      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case NullGCValue => None
           case value       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot))

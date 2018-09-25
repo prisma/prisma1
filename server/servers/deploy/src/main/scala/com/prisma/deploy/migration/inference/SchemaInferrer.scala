@@ -1,11 +1,11 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
-import com.prisma.deploy.connector.{DeployConnectorCapability, InferredTables}
+import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.await.AwaitUtils
@@ -17,7 +17,7 @@ trait SchemaInferrer {
 }
 
 object SchemaInferrer {
-  def apply(capabilities: Set[DeployConnectorCapability]) = new SchemaInferrer {
+  def apply(capabilities: Set[ConnectorCapability]) = new SchemaInferrer {
     override def infer(baseSchema: Schema, schemaMapping: SchemaMapping, graphQlSdl: PrismaSdl, inferredTables: InferredTables) =
       SchemaInferrerImpl(
         baseSchema = baseSchema,
@@ -33,7 +33,7 @@ case class SchemaInferrerImpl(
     baseSchema: Schema,
     schemaMapping: SchemaMapping,
     prismaSdl: PrismaSdl,
-    capabilities: Set[DeployConnectorCapability],
+    capabilities: Set[ConnectorCapability],
     inferredTables: InferredTables
 ) extends AwaitUtils {
 

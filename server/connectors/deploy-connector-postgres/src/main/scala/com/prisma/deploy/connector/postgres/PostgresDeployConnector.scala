@@ -1,11 +1,11 @@
 package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
 import com.prisma.deploy.connector.postgres.impls._
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -28,7 +28,7 @@ case class PostgresDeployConnector(
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(managementDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
-  override def capabilities: Set[DeployConnectorCapability]          = if (isActive) Set(MigrationsCapability) else Set.empty
+  override def capabilities: Set[ConnectorCapability]                = if (isActive) Set(MigrationsCapability) else Set.empty
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

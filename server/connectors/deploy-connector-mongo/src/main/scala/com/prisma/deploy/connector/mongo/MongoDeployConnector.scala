@@ -1,10 +1,10 @@
 package com.prisma.deploy.connector.mongo
 
 import com.prisma.config.DatabaseConfig
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mongo.impl._
-import com.prisma.shared.models.{FieldTemplate, Project, ProjectIdEncoder}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, MigrationsCapability}
+import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import org.mongodb.scala.MongoClient
 
@@ -22,7 +22,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
-  override def capabilities: Set[DeployConnectorCapability]     = Set(MigrationsCapability)
+  override def capabilities: Set[ConnectorCapability]           = Set(MigrationsCapability, EmbeddedScalarListsCapability)
 //  override def capabilities: Set[DeployConnectorCapability] = Set.empty
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)

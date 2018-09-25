@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.deploy.connector.{DeployConnectorCapability, FieldRequirement, FieldRequirementsInterface}
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
+import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast._
 
@@ -55,7 +55,7 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("embedded", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  def apply(schema: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[DeployConnectorCapability]): SchemaSyntaxValidator = {
+  def apply(schema: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[ConnectorCapability]): SchemaSyntaxValidator = {
     SchemaSyntaxValidator(
       schema = schema,
       directiveRequirements = directiveRequirements,
@@ -69,7 +69,7 @@ case class SchemaSyntaxValidator(
     schema: String,
     directiveRequirements: Seq[DirectiveRequirement],
     fieldRequirements: FieldRequirementsInterface,
-    capabilities: Set[DeployConnectorCapability]
+    capabilities: Set[ConnectorCapability]
 ) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
@@ -266,7 +266,7 @@ case class SchemaSyntaxValidator(
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
-    if (capabilities.contains(MigrationsCapability)) { //ScalarListCapability
+    if (capabilities.contains(MigrationsCapability)) { //Fixme ScalarListCapability
       scalarFields.collect {
         case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
       }
