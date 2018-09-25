@@ -150,7 +150,7 @@ export class GoGenerator extends Generator {
             field as GraphQLField<any, any>,
           )
           return `
-          ${args.length > 0 ? `
+          ${field.args.length > 0 ? `
           type ${goCase(field.name)}ParamsExec struct {
             ${args
               .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
@@ -159,10 +159,10 @@ export class GoGenerator extends Generator {
           ` : ``}
 
           // ${goCase(field.name)} docs - executable for types
-        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
+        func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []prisma.GraphQLArg
 
-              ${args.length > 0 ? `
+              ${field.args.length > 0 ? `
               if params != nil {
                 ${args.map(arg => `
                 if params.${goCase(arg.name)} != nil {
@@ -415,19 +415,211 @@ export class GoGenerator extends Generator {
     },
   }
 
+  opUpdateMany(field) {
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *prisma.BatchPayloadExec {
+        return client.Client.UpdateMany(
+          prisma.UpdateParams{
+            Data: params.Data,
+            Where: params.Where,
+          },
+          [2]string{"${field.args[0].type}", "${field.args[1].type}"},
+          "${field.name}")
+      }`
+  }
+
+  opUpdate(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
+        ret := client.Client.Update(
+                 prisma.UpdateParams{
+                   Data: params.Data,
+                   Where: params.Where,
+                 },
+                 [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                 "${field.name}",
+                 []string{${typeFields.map(f => f).join(',')}})
+
+        return &${goCase(typeName)}Exec{
+          client: ret.Client,
+          stack: ret.Stack,
+        }
+      }`
+  }
+
+  opDeleteMany(field) {
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *prisma.BatchPayloadExec {
+        return client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
+      }`
+  }
+
+  opDelete(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+        ret := client.Client.Delete(
+          params,
+          [2]string{"${field.args[0].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.map(f => f).join(',')}})
+
+        return &${goCase(typeName)}Exec{
+          client: ret.Client,
+          stack: ret.Stack,
+        }
+      }`
+  }
+
+  opGetOne(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+        ret := client.Client.GetOne(
+          params,
+          [2]string{"${field.args[0].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.map(f => f).join(',')}})
+
+        return &${goCase(typeName)}Exec{
+          client: ret.Client,
+          stack: ret.Stack,
+        }
+      }`
+  }
+
+  opGetMany(field) {
+    const { typeFields, typeName, isList } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+        var wparams *prisma.WhereParams
+        if params != nil {
+          wparams = &prisma.WhereParams{
+            Where: params.Where,
+            OrderBy: (*string)(params.OrderBy),
+            Skip: params.Skip,
+            After: params.After,
+            Before: params.Before,
+            First: params.First,
+            Last: params.Last,
+          }
+        }
+
+        ret := client.Client.GetMany(
+          wparams,
+          [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.map(f => f).join(',')}})
+
+        return &${goCase(typeName)}Exec${isList ? `Array` : ``} {
+          client: ret.Client,
+          stack: ret.Stack,
+        }
+      }`
+  }
+
+  opCreate(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params * ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+        ret := client.Client.Create(
+          params,
+          [2]string{"${field.args[0].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.map(f => f).join(',')}})
+
+        return &${goCase(typeName)}Exec{
+          client: ret.Client,
+          stack: ret.Stack,
+        }
+      }`
+  }
+
+  opUpsert(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
+        var uparams *prisma.UpsertParams
+        if params != nil {
+          uparams = &prisma.UpsertParams{
+            Where:  params.Where,
+            Create: params.Create,
+            Update: params.Update,
+          }
+        }
+        ret := client.Client.Upsert(
+          uparams,
+          [4]string{"${field.args[0].type}", "${field.args[1].type}", "${field.args[2].type}","${typeName}"},
+          "${field.name}",
+          []string{${typeFields.map(f => f).join(',')}})
+
+        return &${goCase(typeName)}Exec{
+          client: ret.Client,
+          stack: ret.Stack,
+        }
+      }`
+  }
+
+  // FIXME(dh): rename this, split it up, etc
+  opUnhandled(field, operation: string) {
+    const { typeFields, typeName, isList } = this.extractFieldLikeType(field)
+    return `
+      // ${goCase(field.name)} docs - generated while printing operation - ${operation}
+      func (client *Client) ${goCase(field.name)} (${
+      field.args.length === 1
+        ? `params *${this.getDeepType(field.args[0].type)}`
+        : `params *${goCase(field.name)}Params`
+      }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+
+        stack := make([]prisma.Instruction, 0)
+        var args []prisma.GraphQLArg
+        if params != nil {
+        ${field.args
+          .map(arg => {
+            return `if true ${
+              field.args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
+            } {
+              args = append(args, prisma.GraphQLArg{
+                Name: "${arg.name}",
+                Key: "${arg.name}",
+                TypeName: "${arg.type}",
+                Value: *params${
+                  field.args.length === 1 ? `` : `.${goCase(arg.name)}`
+                },
+              })
+            }`
+          })
+          .join('\n')}
+        }
+
+        stack = append(stack, prisma.Instruction{
+          Name: "${field.name}",
+          Field: prisma.GraphQLField{
+            Name: "${field.name}",
+            TypeName: "${typeName}",
+            TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
+          },
+          Operation: "${operation}",
+          Args: args,
+        })
+
+        return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
+          client: client.Client,
+          stack: stack,
+        }
+      }`
+  }
+
   printOperation(fields, operation: string, options: RenderOptions) {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
-        const args = field.args
-        const { typeFields, typeName, isList } = this.extractFieldLikeType(
-          field,
-        )
 
         let sParams = `
           // ${goCase(field.name)}Params docs
           type ${goCase(field.name)}Params struct {
-            ${args
+            ${field.args
               .map(arg => {
                 const fieldType = this.extractFieldLikeType(arg)
                 const typ = this.goTypeName(fieldType)
@@ -436,182 +628,30 @@ export class GoGenerator extends Generator {
               .join('\n')}
           }`
 
+        const { isList } = this.extractFieldLikeType(field)
         let sOperation = ""
 
         // FIXME(dh): This is brittle. A model may conceivably be named "Many",
         // in which case updateMany would be updating a single instance of Many.
         // The same issue applies to many other prefixes.
         if(operation === "mutation" && field.name.startsWith("updateMany")) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *prisma.BatchPayloadExec {
-              return client.Client.UpdateMany(
-                prisma.UpdateParams{
-                  Data: params.Data,
-                  Where: params.Where,
-                },
-                [2]string{"${args[0].type}", "${args[1].type}"},
-                "${field.name}")
-            }
-          `
+          sOperation = this.opUpdateMany(field)
         } else if(operation === "mutation" && field.name.startsWith("update")) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
-              ret := client.Client.Update(
-                       prisma.UpdateParams{
-                         Data: params.Data,
-                         Where: params.Where,
-                       },
-                       [3]string{"${args[0].type}", "${args[1].type}", "${typeName}"},
-                       "${field.name}",
-                       []string{${typeFields.map(f => f).join(',')}})
-
-              return &${goCase(typeName)}Exec{
-                client: ret.Client,
-                stack: ret.Stack,
-              }
-            }`
+          sOperation = this.opUpdate(field)
         } else if(operation === "mutation" && field.name.startsWith("deleteMany")) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(args[0].type)}) *prisma.BatchPayloadExec {
-              return client.Client.DeleteMany(params, "${args[0].type}", "${field.name}")
-            }`
+          sOperation = this.opDeleteMany(field)
         } else if(operation === "mutation" && field.name.startsWith("delete")) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(args[0].type)}) *${goCase(typeName)}Exec {
-              ret := client.Client.Delete(
-                params,
-                [2]string{"${args[0].type}", "${typeName}"},
-                "${field.name}",
-                []string{${typeFields.map(f => f).join(',')}})
-
-              return &${goCase(typeName)}Exec{
-                client: ret.Client,
-                stack: ret.Stack,
-              }
-            }`
-        } else if(operation === "query" && !isList && args.length === 1 && field.name !== "node") {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(args[0].type)}) *${goCase(typeName)}Exec {
-              ret := client.Client.GetOne(
-                params,
-                [2]string{"${args[0].type}", "${typeName}"},
-                "${field.name}",
-                []string{${typeFields.map(f => f).join(',')}})
-
-              return &${goCase(typeName)}Exec{
-                client: ret.Client,
-                stack: ret.Stack,
-              }
-            }`
-        } else if(operation === "query" && args.length !== 1) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
-              var wparams *prisma.WhereParams
-              if params != nil {
-                wparams = &prisma.WhereParams{
-                  Where: params.Where,
-                  OrderBy: (*string)(params.OrderBy),
-                  Skip: params.Skip,
-                  After: params.After,
-                  Before: params.Before,
-                  First: params.First,
-                  Last: params.Last,
-                }
-              }
-
-              ret := client.Client.GetMany(
-                wparams,
-                [3]string{"${args[0].type}", "${args[1].type}", "${typeName}"},
-                "${field.name}",
-                []string{${typeFields.map(f => f).join(',')}})
-
-              return &${goCase(typeName)}Exec${isList ? `Array` : ``} {
-                client: ret.Client,
-                stack: ret.Stack,
-              }
-            }`
+          sOperation = this.opDelete(field)
+        } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
+          sOperation = this.opGetOne(field)
+        } else if(operation === "query" && field.args.length !== 1) {
+          sOperation = this.opGetMany(field)
         } else if(operation === "mutation" && field.name.startsWith("create")) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params * ${this.getDeepType(args[0].type)}) *${goCase(typeName)}Exec {
-              ret := client.Client.Create(
-                params,
-                [2]string{"${args[0].type}", "${typeName}"},
-                "${field.name}",
-                []string{${typeFields.map(f => f).join(',')}})
-
-              return &${goCase(typeName)}Exec{
-                client: ret.Client,
-                stack: ret.Stack,
-              }
-            }`
+          sOperation = this.opCreate(field)
         } else if(operation === "mutation" && field.name.startsWith("upsert")) {
-          sOperation = `
-            func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
-              var uparams *prisma.UpsertParams
-              if params != nil {
-                uparams = &prisma.UpsertParams{
-                  Where:  params.Where,
-                  Create: params.Create,
-                  Update: params.Update,
-                }
-              }
-              ret := client.Client.Upsert(
-                uparams,
-                [4]string{"${args[0].type}", "${args[1].type}", "${args[2].type}","${typeName}"},
-                "${field.name}",
-                []string{${typeFields.map(f => f).join(',')}})
-
-              return &${goCase(typeName)}Exec{
-                client: ret.Client,
-                stack: ret.Stack,
-              }
-            }`
+          sOperation = this.opUpsert(field)
         } else {
-          sOperation = `
-            // ${goCase(field.name)} docs - generated while printing operation - ${operation}
-            func (client *Client) ${goCase(field.name)} (${
-            args.length === 1
-              ? `params *${this.getDeepType(args[0].type)}`
-              : `params *${goCase(field.name)}Params`
-            }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
-
-              stack := make([]prisma.Instruction, 0)
-              var args []prisma.GraphQLArg
-              if params != nil {
-              ${args
-                .map(arg => {
-                  return `if true ${
-                    args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
-                  } {
-                    args = append(args, prisma.GraphQLArg{
-                      Name: "${arg.name}",
-                      Key: "${arg.name}",
-                      TypeName: "${arg.type}",
-                      Value: *params${
-                        args.length === 1 ? `` : `.${goCase(arg.name)}`
-                      },
-                    })
-                  }`
-                })
-                .join('\n')}
-              }
-
-              stack = append(stack, prisma.Instruction{
-                Name: "${field.name}",
-                Field: prisma.GraphQLField{
-                  Name: "${field.name}",
-                  TypeName: "${typeName}",
-                  TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
-                },
-                Operation: "${operation}",
-                Args: args,
-              })
-
-              return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-                client: client.Client,
-                stack: stack,
-              }
-            }`
+          sOperation = this.opUnhandled(field, operation)
         }
 
         return sParams + sOperation
