@@ -41,8 +41,7 @@ object AnyMutactionInterpreterImpl extends SqlMutactionInterpreter[DeployMutacti
       case x: CreateRelationTable   => CreateRelationInterpreter.rollback(x)
       case x: DeleteRelationTable   => DeleteRelationInterpreter.rollback(x)
       case x: RenameRelationTable   => RenameRelationInterpreter.rollback(x)
-
-      case x: CreateInlineRelation => CreateInlineRelationInterpreter.rollback(x)
+      case x: CreateInlineRelation  => CreateInlineRelationInterpreter.rollback(x)
     }
   }
 }

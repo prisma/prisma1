@@ -31,7 +31,7 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(id = projectId(suite))(sdlString.stripMargin)
+    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
 
     if (!deployConnector.isActive) {
       addManifestations(project)
