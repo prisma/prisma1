@@ -1,13 +1,14 @@
 package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.database.FilterConditionBuilder
+import com.prisma.api.connector.mongo.database.{CursorConditionBuilder, FilterConditionBuilder, OrderByClauseBuilder}
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
+import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.{Document, MongoClient, MongoCollection}
+import org.mongodb.scala.{Document, FindObservable, MongoClient, MongoCollection}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,15 +51,29 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
       case None      => None
     }
 
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
+
     val mongoFilter = buildConditionForFilter(filter)
 
-    val nodes: Future[Seq[PrismaNode]] = collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
+    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
+
+    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter, cursorCondition))
+    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
+    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+
+    val queryWithLimit = skipAndLimit.limit match {
+      case Some(limit) => queryWithSkip.limit(limit)
+      case None        => queryWithSkip
+    }
+
+    val nodes: Future[Seq[PrismaNode]] = queryWithLimit.collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))
       }
     }
-    nodes.map(n => ResolverResult[PrismaNode](n.toVector, false, false, None))
+
+    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
   //these are only used for relations between non-embedded types

@@ -28,7 +28,7 @@ case class MySqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
         |  connectionInitSql="set names utf8mb4"
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$schema?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/$schema?autoReconnect=true&useSSL=${dbConfig.ssl}&requireSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

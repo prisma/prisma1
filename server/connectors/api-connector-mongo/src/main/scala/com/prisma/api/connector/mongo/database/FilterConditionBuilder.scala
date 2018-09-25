@@ -2,7 +2,9 @@ package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
+import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.gc_values.{DateTimeGCValue, GCValue, NullGCValue}
+import com.prisma.shared.models.ScalarField
 import org.mongodb.scala.bson.{BsonDateTime, conversions}
 import org.mongodb.scala.model.Filters._
 
@@ -32,28 +34,30 @@ trait FilterConditionBuilder {
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => and(hackForTrue)
       case FalseFilter                                           => not(and(hackForTrue))
-      case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, scalarField.name), value.value.toString)
-      case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, scalarField.name), value.value.toString))
-      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, scalarField.name), "^" + value.value)
-      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, scalarField.name), "^" + value.value))
-      case ScalarFilter(scalarField, EndsWith(value))            => regex(combineTwo(path, scalarField.name), value.value + "$")
-      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(combineTwo(path, scalarField.name), value.value + "$"))
-      case ScalarFilter(scalarField, LessThan(value))            => lt(combineTwo(path, scalarField.name), fromGCValue(value))
-      case ScalarFilter(scalarField, GreaterThan(value))         => gt(combineTwo(path, scalarField.name), fromGCValue(value))
-      case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(combineTwo(path, scalarField.name), fromGCValue(value))
-      case ScalarFilter(scalarField, GreaterThanOrEquals(value)) => gte(combineTwo(path, scalarField.name), fromGCValue(value))
-      case ScalarFilter(scalarField, NotEquals(NullGCValue))     => notEqual(combineTwo(path, scalarField.name), null)
-      case ScalarFilter(scalarField, NotEquals(value))           => notEqual(combineTwo(path, scalarField.name), fromGCValue(value))
-      case ScalarFilter(scalarField, Equals(NullGCValue))        => equal(combineTwo(path, scalarField.name), null)
-      case ScalarFilter(scalarField, Equals(value))              => equal(combineTwo(path, scalarField.name), fromGCValue(value))
-      case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => in(combineTwo(path, scalarField.name), null)
-      case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(combineTwo(path, scalarField.name), null))
-      case ScalarFilter(scalarField, In(values))                 => in(combineTwo(path, scalarField.name), values.map(fromGCValue): _*)
-      case ScalarFilter(scalarField, NotIn(values))              => not(in(combineTwo(path, scalarField.name), values.map(fromGCValue): _*))
+      case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, renameId(scalarField)), value.value.toString)
+      case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, renameId(scalarField)), value.value.toString))
+      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, renameId(scalarField)), "^" + value.value)
+      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, renameId(scalarField)), "^" + value.value))
+      case ScalarFilter(scalarField, EndsWith(value))            => regex(combineTwo(path, renameId(scalarField)), value.value + "$")
+      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(combineTwo(path, renameId(scalarField)), value.value + "$"))
+      case ScalarFilter(scalarField, LessThan(value))            => lt(combineTwo(path, renameId(scalarField)), fromGCValue(value))
+      case ScalarFilter(scalarField, GreaterThan(value))         => gt(combineTwo(path, renameId(scalarField)), fromGCValue(value))
+      case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(combineTwo(path, renameId(scalarField)), fromGCValue(value))
+      case ScalarFilter(scalarField, GreaterThanOrEquals(value)) => gte(combineTwo(path, renameId(scalarField)), fromGCValue(value))
+      case ScalarFilter(scalarField, NotEquals(NullGCValue))     => notEqual(combineTwo(path, renameId(scalarField)), null)
+      case ScalarFilter(scalarField, NotEquals(value))           => notEqual(combineTwo(path, renameId(scalarField)), fromGCValue(value))
+      case ScalarFilter(scalarField, Equals(NullGCValue))        => equal(combineTwo(path, renameId(scalarField)), null)
+      case ScalarFilter(scalarField, Equals(value))              => equal(combineTwo(path, renameId(scalarField)), fromGCValue(value))
+      case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => in(combineTwo(path, renameId(scalarField)), null)
+      case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(combineTwo(path, renameId(scalarField)), null))
+      case ScalarFilter(scalarField, In(values))                 => in(combineTwo(path, renameId(scalarField)), values.map(fromGCValue): _*)
+      case ScalarFilter(scalarField, NotIn(values))              => not(in(combineTwo(path, renameId(scalarField)), values.map(fromGCValue): _*))
       case OneRelationIsNullFilter(field)                        => equal(combineTwo(path, field.name), null)
       case x                                                     => sys.error(s"Not supported: $x")
     }
   }
+
+  def renameId(field: ScalarField): String = if (field.name == "id") "_id" else field.name
 
   def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
     case x if x.isEmpty => Vector(and(hackForTrue))
@@ -64,7 +68,6 @@ trait FilterConditionBuilder {
     case DateTimeGCValue(value) => BsonDateTime(value.getMillis)
     case x: GCValue             => x.value
   }
-  val hackForTrue = notEqual("_id", -1)
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
     val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)

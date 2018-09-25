@@ -46,44 +46,28 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     }
   }
 
-  def updateNodeById(model: Model, id: IdGCValue, updateArgs: PrismaArgs): DBIO[_] = {
-    if (updateArgs.isEmpty) {
-      DBIOAction.successful(id)
-    } else {
-      val columns = updateArgs.rootGCMap.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
-      val values  = updateArgs.rootGCMap.map { case (_, v) => v }
-
-      val query = sql
-        .update(modelTable(model))
-        .setColumnsWithPlaceHolders(columns)
-        .where(idField(model).equal(placeHolder))
-
-      updateToDBIO(query)(
-        setParams = { pp =>
-          values.foreach(pp.setGcValue)
-          pp.setGcValue(id)
-        }
-      )
-    }
+  def updateNodeById(model: Model, id: IdGCValue, updateArgs: PrismaArgs)(implicit ec: ExecutionContext): DBIO[_] = {
+    updateNodesByIds(model, updateArgs, Vector(id))
   }
 
-  def updateNodes(model: Model, args: PrismaArgs, whereFilter: Option[Filter]): DBIO[_] = {
-    if (args.isEmpty) {
+  def updateNodesByIds(model: Model, args: PrismaArgs, ids: Vector[IdGCValue]): DBIO[_] = {
+    if (args.isEmpty || ids.isEmpty) {
       dbioUnit
     } else {
       val aliasedTable = modelTable(model).as(topLevelAlias)
-      val condition    = buildConditionForFilter(whereFilter)
 
       val columns = args.rootGCMap.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
       val query = sql
         .update(aliasedTable)
         .setColumnsWithPlaceHolders(columns)
-        .where(condition)
+        .where(aliasColumn(model.dbNameOfIdField_!).in(placeHolders(ids)))
+
+      println(query)
 
       updateToDBIO(query)(
         setParams = pp => {
           args.rootGCMap.foreach { case (_, v) => pp.setGcValue(v) }
-          whereFilter.foreach(filter => SetParams.setFilter(pp, filter))
+          ids.foreach(pp.setGcValue)
         }
       )
     }
