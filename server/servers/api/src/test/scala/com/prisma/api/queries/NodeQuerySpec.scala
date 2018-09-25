@@ -1,13 +1,13 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
+import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, NodeQueryCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runOnlyForCapabilities = Set(NodeQueryCapability)
+  override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationsCapability)
 
   "the node query" should "return null if the id does not exist" in {
     val project = SchemaDsl.fromString() {
