@@ -204,7 +204,8 @@ export class GoGenerator extends Generator {
           Client: instance.client,
           Stack: instance.stack,
         }
-        return e.Exec(ctx, &v)
+        err := e.Exec(ctx, &v)
+        return v, err
       }
 
       // ${type.name}ExecArray docs
