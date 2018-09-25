@@ -788,23 +788,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    //    val res = server.query(
-    //      s"""mutation {
-    //         |   createTop(data: {
-    //         |   unique: 11111,
-    //         |   name: "TopNonEmbedded",
-    //         |   middle: {create:{
-    //         |      unique: 1111111111,
-    //         |      name: "MiddleNonEmbedded"
-    //         |    }
-    //         |   }
-    //         |}){
-    //         |  unique,
-    //         |  middle{
-    //         |    unique
-    //         |  }
-    //         |}}""",
-    //      project
-    //    )
+    res.toString should be("""{"data":{"createMiddle":{"unique":11111,"top":{"unique":111111}}}}""")
   }
 }

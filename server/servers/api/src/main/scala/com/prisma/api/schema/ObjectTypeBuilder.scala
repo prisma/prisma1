@@ -302,8 +302,11 @@ class ObjectTypeBuilder(
           OneDeferred(f.relatedModel_!, NodeSelector.forCuid(f.relatedModel_!, ""))
         } else {
           //or use the node Id of this item and fetch the document that has this id stored as its related id -> ToManyDeferredWithFilter
-//          val value = item.data.map("middle")
-          ManyModelDeferred(f.relatedModel_!, None, ctx.getSelectedFields(f.relatedModel_!))
+          val value          = item.data.map("id")
+          val filter         = ScalarFilter(f.relatedModel_!.getFieldByName_!("middle").asInstanceOf[ScalarField], Equals(value))
+          val queryArguments = QueryArguments(None, None, None, None, None, Some(filter), None)
+
+          DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(queryArguments), ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes).map(_.head)
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
