@@ -216,66 +216,13 @@ export class GoGenerator extends Generator {
 
       // Exec docs
       func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
-        query := instance.client.ProcessInstructions(instance.stack)
-        variables := make(map[string]interface{})
-        for _, instruction := range instance.stack {
-          if instance.client.Debug {
-            fmt.Println("Instruction Exec: ", instruction)
-          }
-          for _, arg := range instruction.Args {
-            if instance.client.Debug {
-              fmt.Println("Instruction Arg Exec: ", instruction)
-            }
-            variables[arg.Name] = arg.Value
-          }
+        var v []${type.name}
+        e := &prisma.Exec{
+          Client: instance.client,
+          Stack: instance.stack,
         }
-        if instance.client.Debug {
-          fmt.Println("Query Exec:", query)
-          fmt.Println("Variables Exec:", variables)
-        }
-        data, err := instance.client.GraphQL(ctx, query, variables)
-        if instance.client.Debug {
-          fmt.Println("Data Exec:", data)
-          fmt.Println("Error Exec:", err)
-        }
-
-        var genericData interface{} // This can handle both map[string]interface{} and []interface[]
-
-        // Is unpacking needed
-        dataType := reflect.TypeOf(data)
-        if !prisma.IsArray(dataType) {
-          unpackedData := data
-          for _, instruction := range instance.stack {
-            if instance.client.Debug {
-              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
-            }
-            if prisma.IsArray(unpackedData[instruction.Name]) {
-              genericData = (unpackedData[instruction.Name]).([]interface{})
-              break
-            } else {
-              unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            }
-            if instance.client.Debug {
-              fmt.Println("Partially Unpacked Data Step Exec:", unpackedData)
-            }
-            if instance.client.Debug {
-              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
-              fmt.Println("Unpacked Data Step Exec:", unpackedData)
-              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
-            }
-            genericData = unpackedData
-          }
-        }
-        if instance.client.Debug {
-          fmt.Println("Data Unpacked Exec:", genericData)
-        }
-
-        var decodedData []${type.name}
-        mapstructure.Decode(genericData, &decodedData)
-        if instance.client.Debug {
-          fmt.Println("Data Exec Decoded:", decodedData)
-        }
-        return decodedData, err
+        err := e.ExecArray(ctx, &v)
+        return v, err
       }
 
       // ${type.name} docs - generated with types
@@ -657,12 +604,8 @@ package prisma
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"github.com/prisma/go-lib"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 // ID docs
