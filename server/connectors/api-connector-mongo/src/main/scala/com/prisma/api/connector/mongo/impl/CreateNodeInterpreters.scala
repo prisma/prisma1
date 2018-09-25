@@ -41,9 +41,10 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
   )(implicit ec: ExecutionContext) = {
     relation.manifestation match {
 
+      //Fixme this needs to be a push in order not to overwrite
       case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
         val inlineField    = relation.getFieldOnModel(model.name)
-        val inlineRelation = List((inlineField.name, parentId))
+        val inlineRelation = List((inlineField.name + "_id", parentId))
 
         for {
           mutactionResult <- mutationBuilder.createNode(mutaction, inlineRelation, includeRelayRow)

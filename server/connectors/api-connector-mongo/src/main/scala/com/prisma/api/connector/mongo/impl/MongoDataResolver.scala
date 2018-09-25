@@ -80,7 +80,23 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: Option[QueryArguments],
-                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = ???
+                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+
+    val model                                 = fromField.relatedModel_!
+    val collection: MongoCollection[Document] = database.getCollection(model.name)
+    val filter                                = ScalarFilter(model.getFieldByName_!())
+
+    val mongoFilter = buildConditionForFilter(filter)
+
+    val res: Future[Vector[PrismaNodeWithParent]] = collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
+      results.toVector.map { result: Document =>
+        val root = DocumentToRoot(model, result)
+        PrismaNodeWithParent(fromNodeIds.head, PrismaNode(root.idField, root, Some(model.name)))
+      }
+    }
+    ResolverResult(Vector(res), hasPreviousPage = false, hasNextPage = false, parentModelId = Some(fromNodeIds.head))
+    ???
+  }
 
   override def getRelationNodes(relationTableName: String, queryArguments: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
 
