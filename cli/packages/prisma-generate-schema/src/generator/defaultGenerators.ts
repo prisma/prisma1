@@ -9,9 +9,11 @@ import ScalarListCreateInput from "./mutation/create/scalarListCreateInput"
 import ModelUpdateInputGenerator from "./mutation/update/modelUpdateInputGenerator";
 import ModelUpdateDataInputGenerator from "./mutation/update/modelUpdateDataInputGenerator";
 import ModelUpdateOneInputTypeGenerator from "./mutation/update/modelUpdateOneInputGenerator";
+import ModelUpdateOneRequiredInputTypeGenerator from "./mutation/update/modelUpdateOneRequiredInputGenerator";
 import ModelUpdateManyInputTypeGenerator from "./mutation/update/modelUpdateManyInputGenerator";
 import ModelUpdateWithoutRelatedDataInputGenerator from "./mutation/update/modelUpdateWithoutRelatedDataInputGenerator";
 import ModelUpdateOneWithoutRelatedInputTypeGenerator from "./mutation/update/modelUpdateOneWithoutRelatedInputGenerator";
+import ModelUpdateOneRequiredWithoutRelatedInputTypeGenerator from "./mutation/update/modelUpdateOneRequiredWithoutRelatedInputGenerator";
 import ModelUpdateManyWithoutRelatedInputTypeGenerator from "./mutation/update/modelUpdateManyWithoutRelatedInputGenerator";
 import ModelUpdateWithWhereUniqueNestedInput from "./mutation/update/modelUpdateWithWhereUniqueNestedInputGenerator";
 import ModelUpdateWithWhereUniqueWithoutRelatedInput from "./mutation/update/modelUpdateWithWhereUniqueWithoutRelatedInputGenerator";
@@ -61,9 +63,11 @@ export default class Generators implements IGenerators {
   modelUpdateInput = new ModelUpdateInputGenerator(this.typeRegistry, this)
   modelUpdateDataInput = new ModelUpdateDataInputGenerator(this.typeRegistry, this)
   modelUpdateOneInput = new ModelUpdateOneInputTypeGenerator(this.typeRegistry, this)
+  modelUpdateOneRequiredInput = new ModelUpdateOneRequiredInputTypeGenerator(this.typeRegistry, this)
   modelUpdateManyInput = new ModelUpdateManyInputTypeGenerator(this.typeRegistry, this)
   modelUpdateWithoutRelatedDataInput = new ModelUpdateWithoutRelatedDataInputGenerator(this.typeRegistry, this)
   modelUpdateOneWithoutRelatedInput = new ModelUpdateOneWithoutRelatedInputTypeGenerator(this.typeRegistry, this)
+  modelUpdateOneRequiredWithoutRelatedInput = new ModelUpdateOneRequiredWithoutRelatedInputTypeGenerator(this.typeRegistry, this)
   modelUpdateManyWithoutRelatedInput = new ModelUpdateManyWithoutRelatedInputTypeGenerator(this.typeRegistry, this)
   modelUpdateWithWhereUniqueWithoutRelatedInput = new ModelUpdateWithWhereUniqueWithoutRelatedInput(this.typeRegistry, this)
   modelUpdateWithWhereUniqueNestedInput = new ModelUpdateWithWhereUniqueNestedInput(this.typeRegistry, this)

@@ -4,9 +4,9 @@ import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, Grap
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 
 
-export default class ModelUpdateOneInputTypeGenerator extends ModelUpdateInputGenerator {
+export default class ModelUpdateOneRequiredInputTypeGenerator extends ModelUpdateInputGenerator {
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
-    return `${input.name}UpdateOneInput`
+    return `${input.name}UpdateOneRequiredInput`
   }
 
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
@@ -17,10 +17,6 @@ export default class ModelUpdateOneInputTypeGenerator extends ModelUpdateInputGe
       fields.update = { type: this.generators.modelUpdateDataInput.generate(model, {}) }
       fields.upsert = { type: this.generators.modelUpsertNestedInput.generate(model, {}) }
     }
-
-    fields.delete = { type: this.generators.scalarTypeGenerator.generate('Boolean', {}) }
-    
-    fields.disconnect = { type: this.generators.scalarTypeGenerator.generate('Boolean', {}) }
 
     if (!this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)) {
       fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, {}) }

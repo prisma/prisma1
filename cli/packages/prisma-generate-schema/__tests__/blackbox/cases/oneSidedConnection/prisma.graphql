@@ -3,12 +3,17 @@ type A {
   y: TypeWithoutId!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type AConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [AEdge]!
   aggregate: AggregateA!
 }
@@ -18,12 +23,17 @@ input ACreateInput {
   y: TypeWithoutIdCreateOneInput!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type AEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: A!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -75,30 +85,30 @@ type ASubscriptionPayload {
 }
 
 input ASubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [ASubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [ASubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [ASubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -107,18 +117,22 @@ input ASubscriptionWhereInput {
 }
 
 input AUpdateInput {
-  x: TypeWithIdUpdateOneInput
-  y: TypeWithoutIdUpdateOneInput
+  x: TypeWithIdUpdateOneRequiredInput
+  y: TypeWithoutIdUpdateOneRequiredInput
 }
 
 input AWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [AWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [AWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [AWhereInput!]
   x: TypeWithIdWhereInput
   y: TypeWithoutIdWhereInput
@@ -130,16 +144,23 @@ type B {
 }
 
 type BatchPayload {
-  """The number of nodes that have been affected by the Batch operation."""
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
   count: Long!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type BConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [BEdge]!
   aggregate: AggregateB!
 }
@@ -149,12 +170,17 @@ input BCreateInput {
   y: TypeWithoutIdCreateOneInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type BEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: B!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -174,30 +200,30 @@ type BSubscriptionPayload {
 }
 
 input BSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [BSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [BSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [BSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -211,13 +237,17 @@ input BUpdateInput {
 }
 
 input BWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [BWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [BWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [BWhereInput!]
   x: TypeWithIdWhereInput
   y: TypeWithoutIdWhereInput
@@ -228,12 +258,17 @@ type C {
   y(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithoutId!]
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type CConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [CEdge]!
   aggregate: AggregateC!
 }
@@ -243,12 +278,17 @@ input CCreateInput {
   y: TypeWithoutIdCreateManyInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type CEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: C!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -268,30 +308,30 @@ type CSubscriptionPayload {
 }
 
 input CSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [CSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [CSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [CSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -305,13 +345,17 @@ input CUpdateInput {
 }
 
 input CWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [CWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [CWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [CWhereInput!]
   x_every: TypeWithIdWhereInput
   x_some: TypeWithIdWhereInput
@@ -327,12 +371,17 @@ type D implements Node {
   y: TypeWithoutId!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type DConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [DEdge]!
   aggregate: AggregateD!
 }
@@ -342,12 +391,17 @@ input DCreateInput {
   y: TypeWithoutIdCreateOneInput!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type DEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: D!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -372,30 +426,30 @@ type DSubscriptionPayload {
 }
 
 input DSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [DSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [DSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [DSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -404,58 +458,75 @@ input DSubscriptionWhereInput {
 }
 
 input DUpdateInput {
-  x: TypeWithIdUpdateOneInput
-  y: TypeWithoutIdUpdateOneInput
+  x: TypeWithIdUpdateOneRequiredInput
+  y: TypeWithoutIdUpdateOneRequiredInput
 }
 
 input DWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [DWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [DWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [DWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   x: TypeWithIdWhereInput
   y: TypeWithoutIdWhereInput
@@ -471,12 +542,17 @@ type E implements Node {
   y: TypeWithoutId
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type EConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [EEdge]!
   aggregate: AggregateE!
 }
@@ -486,12 +562,17 @@ input ECreateInput {
   y: TypeWithoutIdCreateOneInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type EEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: E!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -516,30 +597,30 @@ type ESubscriptionPayload {
 }
 
 input ESubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [ESubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [ESubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [ESubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -553,53 +634,70 @@ input EUpdateInput {
 }
 
 input EWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [EWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [EWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [EWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   x: TypeWithIdWhereInput
   y: TypeWithoutIdWhereInput
@@ -615,12 +713,17 @@ type F implements Node {
   y(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithoutId!]
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type FConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [FEdge]!
   aggregate: AggregateF!
 }
@@ -630,12 +733,17 @@ input FCreateInput {
   y: TypeWithoutIdCreateManyInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type FEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: F!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -660,30 +768,30 @@ type FSubscriptionPayload {
 }
 
 input FSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [FSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [FSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [FSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -697,53 +805,70 @@ input FUpdateInput {
 }
 
 input FWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [FWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [FWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [FWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   x_every: TypeWithIdWhereInput
   x_some: TypeWithIdWhereInput
@@ -756,6 +881,11 @@ input FWhereInput {
 input FWhereUniqueInput {
   id: ID
 }
+
+"""
+Raw JSON value
+"""
+scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -808,24 +938,35 @@ enum MutationType {
   DELETED
 }
 
-"""An object with an ID"""
+"""
+An object with an ID
+"""
 interface Node {
-  """The id of the object."""
+  """
+  The id of the object.
+  """
   id: ID!
 }
 
-"""Information about pagination in a connection."""
+"""
+Information about pagination in a connection.
+"""
 type PageInfo {
-  """When paginating forwards, are there more items?"""
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
-
-  """When paginating backwards, are there more items?"""
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
-
-  """When paginating backwards, the cursor to continue."""
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
-
-  """When paginating forwards, the cursor to continue."""
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
 }
 
@@ -850,10 +991,13 @@ type Query {
   fsConnection(where: FWhereInput, orderBy: FOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FConnection!
   typeWithoutIdsConnection(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TypeWithoutIdConnection!
   typeWithIdsConnection(where: TypeWithIdWhereInput, orderBy: TypeWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TypeWithIdConnection!
-
-  """Fetches an object given its ID"""
+  """
+  Fetches an object given its ID
+  """
   node(
-    """The ID of an object"""
+    """
+    The ID of an object
+    """
     id: ID!
   ): Node
 }
@@ -874,12 +1018,17 @@ type TypeWithId implements Node {
   field: String!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type TypeWithIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [TypeWithIdEdge]!
   aggregate: AggregateTypeWithId!
 }
@@ -898,12 +1047,17 @@ input TypeWithIdCreateOneInput {
   connect: TypeWithIdWhereUniqueInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type TypeWithIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: TypeWithId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -931,30 +1085,30 @@ type TypeWithIdSubscriptionPayload {
 }
 
 input TypeWithIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [TypeWithIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [TypeWithIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [TypeWithIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -982,7 +1136,15 @@ input TypeWithIdUpdateManyInput {
 input TypeWithIdUpdateOneInput {
   create: TypeWithIdCreateInput
   connect: TypeWithIdWhereUniqueInput
+  disconnect: Boolean
   delete: Boolean
+  update: TypeWithIdUpdateDataInput
+  upsert: TypeWithIdUpsertNestedInput
+}
+
+input TypeWithIdUpdateOneRequiredInput {
+  create: TypeWithIdCreateInput
+  connect: TypeWithIdWhereUniqueInput
   update: TypeWithIdUpdateDataInput
   upsert: TypeWithIdUpsertNestedInput
 }
@@ -1004,93 +1166,123 @@ input TypeWithIdUpsertWithWhereUniqueNestedInput {
 }
 
 input TypeWithIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [TypeWithIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [TypeWithIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [TypeWithIdWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: String
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: String
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [String!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [String!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: String
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: String
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: String
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: String
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   field_contains: String
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   field_not_contains: String
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   field_starts_with: String
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   field_not_starts_with: String
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   field_ends_with: String
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   field_not_ends_with: String
 }
 
@@ -1102,12 +1294,17 @@ type TypeWithoutId {
   field: String!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type TypeWithoutIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [TypeWithoutIdEdge]!
   aggregate: AggregateTypeWithoutId!
 }
@@ -1124,12 +1321,17 @@ input TypeWithoutIdCreateOneInput {
   create: TypeWithoutIdCreateInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type TypeWithoutIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: TypeWithoutId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1156,30 +1358,30 @@ type TypeWithoutIdSubscriptionPayload {
 }
 
 input TypeWithoutIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [TypeWithoutIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [TypeWithoutIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [TypeWithoutIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1201,7 +1403,14 @@ input TypeWithoutIdUpdateManyInput {
 
 input TypeWithoutIdUpdateOneInput {
   create: TypeWithoutIdCreateInput
+  disconnect: Boolean
   delete: Boolean
+  update: TypeWithoutIdUpdateDataInput
+  upsert: TypeWithoutIdUpsertNestedInput
+}
+
+input TypeWithoutIdUpdateOneRequiredInput {
+  create: TypeWithoutIdCreateInput
   update: TypeWithoutIdUpdateDataInput
   upsert: TypeWithoutIdUpsertNestedInput
 }
@@ -1212,53 +1421,70 @@ input TypeWithoutIdUpsertNestedInput {
 }
 
 input TypeWithoutIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [TypeWithoutIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [TypeWithoutIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [TypeWithoutIdWhereInput!]
   field: String
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: String
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [String!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [String!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: String
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: String
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: String
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: String
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   field_contains: String
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   field_not_contains: String
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   field_starts_with: String
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   field_not_starts_with: String
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   field_ends_with: String
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   field_not_ends_with: String
 }
 
