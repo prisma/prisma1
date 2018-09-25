@@ -604,14 +604,14 @@ export class GoGenerator extends Generator {
           sOperation = this.opDeleteMany(field)
         } else if(operation === "mutation" && field.name.startsWith("delete")) {
           sOperation = this.opDelete(field)
-        } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
-          sOperation = this.opGetOne(field)
-        } else if(operation === "query" && field.args.length !== 1) {
-          sOperation = this.opGetMany(field)
         } else if(operation === "mutation" && field.name.startsWith("create")) {
           sOperation = this.opCreate(field)
         } else if(operation === "mutation" && field.name.startsWith("upsert")) {
           sOperation = this.opUpsert(field)
+        } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
+          sOperation = this.opGetOne(field)
+        } else if(operation === "query" && field.args.length !== 1) {
+          sOperation = this.opGetMany(field)
         } else if(operation === "query" && field.name === "node") {
           sOperation = this.opNode()
         } else {
