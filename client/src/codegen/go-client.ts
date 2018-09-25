@@ -198,88 +198,13 @@ export class GoGenerator extends Generator {
         .join('\n')}
 
       // Exec docs
-      func (instance ${type.name}Exec) Exec() (${type.name}, error) {
-        var allArgs []prisma.GraphQLArg
-        variables := make(map[string]interface{})
-        for instructionKey := range instance.stack {
-          instruction := &instance.stack[instructionKey]
-          if instance.client.Debug {
-            fmt.Println("Instruction Exec: ", instruction)
-          }
-          for argKey := range instruction.Args {
-            arg := &instruction.Args[argKey]
-            if instance.client.Debug {
-              fmt.Println("Instruction Arg Exec: ", instruction)
-            }
-            isUnique := false
-            for !isUnique {
-              isUnique = true
-              for key, existingArg := range allArgs {
-                if existingArg.Name == arg.Name {
-                  isUnique = false
-                  arg.Name = arg.Name + "_" + strconv.Itoa(key)
-                  if instance.client.Debug {
-                    fmt.Println("Resolving Collision Arg Name: ", arg.Name)
-                  }
-                  break
-                }
-              }
-            }
-            if instance.client.Debug {
-              fmt.Println("Arg Name: ", arg.Name)
-            }
-            allArgs = append(allArgs, *arg)
-            variables[arg.Name] = arg.Value
-          }
+      func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
+        var v ${type.name}
+        e := &prisma.Exec{
+          Client: instance.client,
+          Stack: instance.stack,
         }
-        query := instance.client.ProcessInstructions(instance.stack)
-        if instance.client.Debug {
-          fmt.Println("Query Exec:", query)
-          fmt.Println("Variables Exec:", variables)
-        }
-        data, err := instance.client.GraphQL(query, variables)
-        if instance.client.Debug {
-          fmt.Println("Data Exec:", data)
-          fmt.Println("Error Exec:", err)
-        }
-
-        var genericData interface{} // This can handle both map[string]interface{} and []interface[]
-
-        // Is unpacking needed
-        dataType := reflect.TypeOf(data)
-        if !prisma.IsArray(dataType) {
-          unpackedData := data
-          for _, instruction := range instance.stack {
-            if instance.client.Debug {
-              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
-            }
-            if prisma.IsArray(unpackedData[instruction.Name]) {
-              genericData = (unpackedData[instruction.Name]).([]interface{})
-              break
-            } else {
-              unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            }
-            if instance.client.Debug {
-              fmt.Println("Partially Unpacked Data Step Exec:", unpackedData)
-            }
-            if instance.client.Debug {
-              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
-              fmt.Println("Unpacked Data Step Exec:", unpackedData)
-              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
-            }
-            genericData = unpackedData
-          }
-        }
-        if instance.client.Debug {
-          fmt.Println("Data Unpacked Exec:", genericData)
-        }
-
-        var decodedData ${type.name}
-        mapstructure.Decode(genericData, &decodedData)
-        if instance.client.Debug {
-          fmt.Println("Data Exec Decoded:", decodedData)
-        }
-        return decodedData, err
+        return e.Exec(ctx, &v)
       }
 
       // ${type.name}ExecArray docs
@@ -289,7 +214,7 @@ export class GoGenerator extends Generator {
       }
 
       // Exec docs
-      func (instance ${type.name}ExecArray) Exec() ([]${type.name}, error) {
+      func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
         query := instance.client.ProcessInstructions(instance.stack)
         variables := make(map[string]interface{})
         for _, instruction := range instance.stack {
@@ -307,7 +232,7 @@ export class GoGenerator extends Generator {
           fmt.Println("Query Exec:", query)
           fmt.Println("Variables Exec:", variables)
         }
-        data, err := instance.client.GraphQL(query, variables)
+        data, err := instance.client.GraphQL(ctx, query, variables)
         if instance.client.Debug {
           fmt.Println("Data Exec:", data)
           fmt.Println("Error Exec:", err)
@@ -726,9 +651,9 @@ export class GoGenerator extends Generator {
 package prisma
 
 import (
+	"context"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/prisma/go-lib"
 
