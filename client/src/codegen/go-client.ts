@@ -625,7 +625,7 @@ func New(endpoint string, opts ...graphql.ClientOption) *Client {
     // Dynamic contains the parts of the generated code that are dynamically generated.
     const dynamic = `
 
-var defaultEndpoint = ${this.printEndpoint(options)}
+var DefaultEndpoint = ${this.printEndpoint(options)}
 
 // Queries
 ${this.printOperation(queryFields, 'query', options)}
