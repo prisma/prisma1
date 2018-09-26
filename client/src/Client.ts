@@ -8,6 +8,7 @@ import {
   GraphQLField,
   GraphQLSchema,
   buildSchema,
+  GraphQLEnumType,
 } from 'graphql'
 import mapAsyncIterator from './utils/mapAsyncIterator'
 import { mapValues } from './utils/mapValues'
@@ -279,7 +280,10 @@ export class Client {
           node.selectionSet.selections = Object.entries(type.getFields())
             .filter(([_, field]: any) => {
               const fieldType = this.getDeepType(field.type)
-              return fieldType instanceof GraphQLScalarType
+              return (
+                fieldType instanceof GraphQLScalarType ||
+                fieldType instanceof GraphQLEnumType
+              )
             })
             .map(([fieldName]) => ({
               kind: Kind.FIELD,
