@@ -602,6 +602,8 @@ import (
 	"context"
 
 	"github.com/prisma/go-lib"
+
+	"github.com/machinebox/graphql"
 )
 
 // ID docs
@@ -611,6 +613,12 @@ type ID struct{}
 
 type Client struct {
 	Client *prisma.Client
+}
+
+func New(endpoint string, opts ...graphql.ClientOption) *Client {
+  return &Client{
+    Client: prisma.New(endpoint, opts...),
+  }
 }
 `
 
