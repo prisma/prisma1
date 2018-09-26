@@ -175,47 +175,44 @@ export class GoGenerator extends Generator {
             throw new Error("looks like a getMany query but doesn't return an array")
           }
 
-          return sTyp + `
-            // ${goCase(field.name)} docs - executable for types
-            func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
-              var args []prisma.GraphQLArg
-
-
-// XXX this code is identical to building wparams in opGetMany
-              ${field.args.length > 0 ? `
+          if (field.args.length > 0) {
+            return sTyp + `
+              func (instance *${type.name}Exec) ${goCase(field.name)}(${`params *${goCase(field.name)}ParamsExec`}) *${goCase(typeName.toString())}Exec${`Array`} {
+                var wparams *prisma.WhereParams
                 if params != nil {
-                  ${args.map(arg => `
-                  if params.${goCase(arg.name)} != nil {
-                    args = append(args, prisma.GraphQLArg{
-                      Name: "${arg.name}",
-                      Key: "${arg.name}",
-                      TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
-                      Value: params.${goCase(arg.name)},
-                    })
+                  wparams = &prisma.WhereParams{
+                    Where: params.Where,
+                    OrderBy: (*string)(params.OrderBy),
+                    Skip: params.Skip,
+                    After: params.After,
+                    Before: params.Before,
+                    First: params.First,
+                    Last: params.Last,
                   }
-                  `).join('\n')}
                 }
-                ` : ``}
 
-// XXX this code is basically opGetOne or opGetMany, except we're building off an existing stack
-              stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
-              copy(stack, instance.exec.Stack)
-              stack = append(stack, prisma.Instruction{
-                Name: "${field.name}",
-                Field: prisma.GraphQLField{
-                  Name: "${field.name}",
-                  TypeName: "${typeName}",
-                  TypeFields: []string{${typeFields.map(f => f).join(',')}}},
-                Operation: "",
-                Args: args,
-              })
-              return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
-                exec: &prisma.Exec{
-                  Client: instance.exec.Client,
-                  Stack: stack,
-                },
-              }
-            }`
+                ret := instance.exec.Client.GetMany(
+                  instance.exec,
+                  wparams,
+                  [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                  "${field.name}",
+                  []string{${typeFields.map(f => f).join(',')}})
+
+                  return &${goCase(typeName)}Exec${`Array`}{ret}
+              }`
+          } else {
+            return sTyp + `
+              func (instance *${type.name}Exec) ${goCase(field.name)}(${``}) *${goCase(typeName.toString())}Exec${``} {
+                ret := instance.exec.Client.GetOne(
+                  instance.exec,
+                  nil,
+                  [2]string{"", "${typeName}"},
+                  "${field.name}",
+                  []string{${typeFields.map(f => f).join(',')}})
+
+                return &${goCase(typeName)}Exec{ret}
+              }`
+          }
         }).join('\n')}
 
       // Exec docs
@@ -426,6 +423,7 @@ export class GoGenerator extends Generator {
     return `
       func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
         ret := client.Client.GetOne(
+          nil,
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
           "${field.name}",
@@ -453,6 +451,7 @@ export class GoGenerator extends Generator {
         }
 
         ret := client.Client.GetMany(
+          nil,
           wparams,
           [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
           "${field.name}",
