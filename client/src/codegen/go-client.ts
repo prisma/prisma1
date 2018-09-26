@@ -166,12 +166,20 @@ export class GoGenerator extends Generator {
               }`
           }
 
+          if(field.args.length !== 0 && field.args.length !== 7) {
+            throw new Error(`unexpected argument count ${field.args.length}`)
+          }
+          if(field.args.length === 7 && !isList) {
+            throw new Error("looks like a getMany query but doesn't return an array")
+          }
+
           return sTyp + `
             // ${goCase(field.name)} docs - executable for types
             func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []prisma.GraphQLArg
 
-              // XXX(dh): under what conditions can this method have arguments? → it's a Where query when isList == true
+              
+// XXX this code is identical to building wparams in opGetMany
               ${field.args.length > 0 ? `
                 if params != nil {
                   ${args.map(arg => `
@@ -187,6 +195,7 @@ export class GoGenerator extends Generator {
                 }
                 ` : ``}
 
+// XXX this code is basically opGetOne or opGetMany, except we're building off an existing stack
               stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
               copy(stack, instance.exec.Stack)
               stack = append(stack, prisma.Instruction{
@@ -194,10 +203,7 @@ export class GoGenerator extends Generator {
                 Field: prisma.GraphQLField{
                   Name: "${field.name}",
                   TypeName: "${typeName}",
-                  TypeFields: ${`[]string{${typeFields
-                    .map(f => f)
-                    .join(',')}}`},
-                },
+                  TypeFields: []string{${typeFields.map(f => f).join(',')}}},
                 Operation: "",
                 Args: args,
               })
@@ -538,11 +544,17 @@ export class GoGenerator extends Generator {
           sOperation = this.opUpsert(field)
         } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
           sOperation = this.opGetOne(field)
-        } else if(operation === "query" && field.args.length !== 1) {
+        } else if(operation === "query" && field.args.length === 7) {
+          // XXX this query should check for isList
+          // 7 arguments in a getMany query
           sOperation = this.opGetMany(field)
         } else if(operation === "query" && field.name === "node") {
           sOperation = this.opNode()
         } else {
+          // XXX missing combination: !isList && fields.args.length === 7 –
+          // that's for example the case for FooConnection.
+          // it takes a where query, but Exec only returns a single connection.
+          // which seems weird.
           throw new Error(`Don't know how to handle operation ${operation} on field ${field.name}`)
         }
 
