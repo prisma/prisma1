@@ -177,7 +177,7 @@ export class GoGenerator extends Generator {
 
           if (field.args.length > 0) {
             return sTyp + `
-              func (instance *${type.name}Exec) ${goCase(field.name)}(${`params *${goCase(field.name)}ParamsExec`}) *${goCase(typeName.toString())}Exec${`Array`} {
+              func (instance *${type.name}Exec) ${goCase(field.name)}(params *${goCase(field.name)}ParamsExec) *${goCase(typeName)}ExecArray {
                 var wparams *prisma.WhereParams
                 if params != nil {
                   wparams = &prisma.WhereParams{
@@ -196,19 +196,19 @@ export class GoGenerator extends Generator {
                   wparams,
                   [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
                   "${field.name}",
-                  []string{${typeFields.map(f => f).join(',')}})
+                  []string{${typeFields.join(',')}})
 
-                  return &${goCase(typeName)}Exec${`Array`}{ret}
+                  return &${goCase(typeName)}ExecArray{ret}
               }`
           } else {
             return sTyp + `
-              func (instance *${type.name}Exec) ${goCase(field.name)}(${``}) *${goCase(typeName.toString())}Exec${``} {
+              func (instance *${type.name}Exec) ${goCase(field.name)}() *${goCase(typeName)}Exec {
                 ret := instance.exec.Client.GetOne(
                   instance.exec,
                   nil,
                   [2]string{"", "${typeName}"},
                   "${field.name}",
-                  []string{${typeFields.map(f => f).join(',')}})
+                  []string{${typeFields.join(',')}})
 
                 return &${goCase(typeName)}Exec{ret}
               }`
@@ -391,7 +391,7 @@ export class GoGenerator extends Generator {
                  },
                  [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
                  "${field.name}",
-                 []string{${typeFields.map(f => f).join(',')}})
+                 []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
@@ -412,7 +412,7 @@ export class GoGenerator extends Generator {
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
           "${field.name}",
-          []string{${typeFields.map(f => f).join(',')}})
+          []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
@@ -427,7 +427,7 @@ export class GoGenerator extends Generator {
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
           "${field.name}",
-          []string{${typeFields.map(f => f).join(',')}})
+          []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
@@ -455,7 +455,7 @@ export class GoGenerator extends Generator {
           wparams,
           [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
           "${field.name}",
-          []string{${typeFields.map(f => f).join(',')}})
+          []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec${isList ? `Array` : ``} {
           ret,
@@ -471,7 +471,7 @@ export class GoGenerator extends Generator {
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
           "${field.name}",
-          []string{${typeFields.map(f => f).join(',')}})
+          []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
@@ -493,7 +493,7 @@ export class GoGenerator extends Generator {
           uparams,
           [4]string{"${field.args[0].type}", "${field.args[1].type}", "${field.args[2].type}","${typeName}"},
           "${field.name}",
-          []string{${typeFields.map(f => f).join(',')}})
+          []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
