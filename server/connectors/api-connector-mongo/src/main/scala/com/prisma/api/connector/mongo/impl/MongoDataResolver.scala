@@ -84,9 +84,10 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: Option[QueryArguments],
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-
+    //Fixme add back all the pagination stuff from above
     val model                                 = fromField.relatedModel_!
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val manifestation                         = fromField.relation.manifestation.get
     val filter                                = ScalarFilter(model.getScalarFieldByName_!("id").copy(name = "middle_id"), Equals(fromNodeIds.head))
 
     val mongoFilter = buildConditionForFilter(Some(filter))

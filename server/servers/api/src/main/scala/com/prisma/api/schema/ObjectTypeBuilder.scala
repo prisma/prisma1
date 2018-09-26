@@ -294,6 +294,10 @@ class ObjectTypeBuilder(
         }
 
       case f: RelationField if !f.isList && f.relation.isInlineRelation =>
+        //Fixme only MongoInlineRelation
+        //the postgres passive connector still handles that on the connector level
+        //it should be handled for both here
+
         val manifestation = f.relation.inlineManifestation.get
 
         if (manifestation.inTableOfModelId == f.model.name) {

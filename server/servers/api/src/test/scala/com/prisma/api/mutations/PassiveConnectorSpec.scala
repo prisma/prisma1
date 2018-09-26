@@ -32,7 +32,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |CREATE SCHEMA $schema;
                                 |CREATE TABLE $schema.list (
                                 |  id      varchar PRIMARY KEY  -- implicit primary key constraint
-                                |, name    text NOT NULL
+                                |, name    text NOT NULL UNIQUE
                                 |);
                                 |
                                 |CREATE TABLE $schema.user (
@@ -42,7 +42,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |
                                 |CREATE TABLE $schema.todo (
                                 |  id       varchar PRIMARY KEY
-                                |, title     text NOT NULL
+                                |, title     text NOT NULL UNIQUE
                                 |, list_id varchar REFERENCES $schema.list (id) ON UPDATE CASCADE
                                 |, user_id varchar REFERENCES $schema.user (id) ON UPDATE CASCADE
                                 |);
@@ -52,13 +52,13 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     """
       | type List @pgTable(name: "list"){
       |   id: ID! @unique
-      |   name: String!
+      |   name: String! @unique
       |   todos: [Todo!]!
       | }
       |
       | type Todo @pgTable(name: "todo"){
       |   id: ID! @unique
-      |   title: String!
+      |   title: String! @unique
       |   list: List @pgRelation(column: "list_id")
       |   user: MyUser @pgRelation(column: "user_id")
       | }
@@ -85,7 +85,6 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   "A Create Mutation" should "created nested items" in {
     executeOnInternalDatabase(inlineRelationSchema)
-    // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
       s"""mutation {
          |  createTodo(data: {
@@ -118,6 +117,37 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
       project = inlineRelationProject
     )
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+  }
+
+  "A Create Mutation" should "create nested items 3" in {
+    executeOnInternalDatabase(inlineRelationSchema)
+    val res = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{ title: "the list" }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+    res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |  updateList(
+         |  where: {name:"the list"}
+         |  data: {
+         |    todos: {
+         |      create: [{ title: "the list 2" }]
+         |    }
+         |  }){ name todos{title} }
+         |}""",
+      project = inlineRelationProject
+    )
+    res2.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+
   }
 
   "Expanding 2 inline relations on a type" should "work" in {
