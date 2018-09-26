@@ -42,6 +42,10 @@ export interface RenderOptions {
 }
 
 export class GoGenerator extends Generator {
+  // Tracks which types we've already printed.
+  // At the moment, it only tracks FooParamsExec types.
+  printedTypes: { [key: string]: boolean } = {}
+
   scalarMapping = {
     Int: 'int32',
     String: 'string',
@@ -148,56 +152,62 @@ export class GoGenerator extends Generator {
           const { typeFields, typeName, isList } = this.extractFieldLikeType(
             field as GraphQLField<any, any>,
           )
-          return `
-          ${field.args.length > 0 ? `
-          type ${goCase(field.name)}ParamsExec struct {
-            ${args
-              .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
-            }
-          }
-          ` : ``}
 
-          // ${goCase(field.name)} docs - executable for types
-          func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
-            var args []prisma.GraphQLArg
+          let sTyp = ""
+          const meth = goCase(field.name) + "ParamsExec"
 
-            // XXX(dh): under what conditions can this method have arguments?
-            ${field.args.length > 0 ? `
-              if params != nil {
-                ${args.map(arg => `
-                if params.${goCase(arg.name)} != nil {
-                  args = append(args, prisma.GraphQLArg{
-                    Name: "${arg.name}",
-                    Key: "${arg.name}",
-                    TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
-                    Value: params.${goCase(arg.name)},
-                  })
+          if(!this.printedTypes[meth] && field.args.length > 0) {
+            this.printedTypes[meth] = true
+            sTyp = `
+              type ${meth} struct {
+                ${args
+                  .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
                 }
-                `).join('\n')}
-              }
-              ` : ``}
+              }`
+          }
 
-            stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
-            copy(stack, instance.exec.Stack)
-            stack = append(stack, prisma.Instruction{
-              Name: "${field.name}",
-              Field: prisma.GraphQLField{
+          return sTyp + `
+            // ${goCase(field.name)} docs - executable for types
+            func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
+              var args []prisma.GraphQLArg
+
+              // XXX(dh): under what conditions can this method have arguments? → it's a Where query when isList == true
+              ${field.args.length > 0 ? `
+                if params != nil {
+                  ${args.map(arg => `
+                  if params.${goCase(arg.name)} != nil {
+                    args = append(args, prisma.GraphQLArg{
+                      Name: "${arg.name}",
+                      Key: "${arg.name}",
+                      TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
+                      Value: params.${goCase(arg.name)},
+                    })
+                  }
+                  `).join('\n')}
+                }
+                ` : ``}
+
+              stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
+              copy(stack, instance.exec.Stack)
+              stack = append(stack, prisma.Instruction{
                 Name: "${field.name}",
-                TypeName: "${typeName}",
-                TypeFields: ${`[]string{${typeFields
-                  .map(f => f)
-                  .join(',')}}`},
-              },
-              Operation: "",
-              Args: args,
-            })
-            return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
-              exec: &prisma.Exec{
-                Client: instance.exec.Client,
-                Stack: stack,
-              },
-            }
-          }`
+                Field: prisma.GraphQLField{
+                  Name: "${field.name}",
+                  TypeName: "${typeName}",
+                  TypeFields: ${`[]string{${typeFields
+                    .map(f => f)
+                    .join(',')}}`},
+                },
+                Operation: "",
+                Args: args,
+              })
+              return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
+                exec: &prisma.Exec{
+                  Client: instance.exec.Client,
+                  Stack: stack,
+                },
+              }
+            }`
         }).join('\n')}
 
       // Exec docs
