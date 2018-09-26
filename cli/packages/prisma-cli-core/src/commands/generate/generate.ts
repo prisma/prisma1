@@ -206,15 +206,17 @@ export default class GenereateCommand extends Command {
   }
 
   replaceEnv(str) {
-    const regex = /\${env:(.*?)}/
-    const match = regex.exec(str)
+    const regex = /\${env:(.*?)}/;
+    const match = regex.exec(str);
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
-      return `\`${str.slice(0, match.index)}$\{process.env['${
-        match[1]
-      }']}${str.slice(match[0].length + match.index)}\``
+      return this.replaceEnv(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
+          match[0].length + match.index
+        )}`
+      );
     } else {
-      return `'${str}'`
+      return `\`${str}\``;
     }
   }
 }
