@@ -1,0 +1,80 @@
+import Collapse from "components/Markdown/Collapse"
+import Code from "components/Markdown/Code"
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: 'Prisma Binding Migration (JavaScript)',
+  position: 20,
+  technology: 'node',
+  technologyOrder: 1,
+  articleGroup: 'Binding Migration',
+}
+
+## Overview
+
+For Prisma 1.17 and greater, `Prisma Client` provides the next evolution of Prisma bindings.  Migrate from < 1.17 Prisma Bindings to Prisma Client with the following steps.
+
+`npm i -g prisma@beta`
+
+`npm uninstall prisma-binding`
+
+For `prisma.yml`, change `hooks` and add `generate` with the proper generator and path.  Typescript and Javascript are used as examples.  Only one is required.
+
+```yml
+
+// ...
+
+generate:
+  - generator: typescript-client
+    output: ./generated/prisma-client-ts
+  - generator: javascript-client
+    output: ./generated/prisma-client-js
+  - generator: graphql-schema
+    output: ./generated/prisma.graphql
+
+hooks:
+  post-deploy:
+    - prisma generate
+    - echo "Deployment finished"
+```
+
+Then in the file where you instantiate `prisma-binding`, remove:
+
+```js
+const { Prisma } = require("prisma-binding")
+
+// ...
+
+const db = new Prisma({
+  resolvers,
+  typeDefs: `./generated/prisma.graphql`,
+  // ...
+});
+```
+
+In that same file, add the following lines:
+
+```js
+const { Prisma } = require("./generated/prisma-js/index")
+
+// ...
+
+const prisma = new Prisma({})
+
+// ...
+
+const server = new GraphQLServer({
+  typeDefs: './schema.graphql',
+  resolvers,
+  context: {
+    db: prisma.$delegate 
+    prisma
+  },
+})
+```
+
+The code above assumes that you used the `db` convention for `prisma-binding`.  If not, please adjust accordingly so your previous binding object is `prisma.$delegate`.
+
+`prisma deploy`
+
+And start your server!
