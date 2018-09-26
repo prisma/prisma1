@@ -41,6 +41,8 @@ export interface RenderOptions {
   secret?: string
 }
 
+const whereArgs = 7
+
 export class GoGenerator extends Generator {
   // Tracks which types we've already printed.
   // At the moment, it only tracks FooParamsExec types.
@@ -166,10 +168,10 @@ export class GoGenerator extends Generator {
               }`
           }
 
-          if(field.args.length !== 0 && field.args.length !== 7) {
+          if(field.args.length !== 0 && field.args.length !== whereArgs) {
             throw new Error(`unexpected argument count ${field.args.length}`)
           }
-          if(field.args.length === 7 && !isList) {
+          if(field.args.length === whereArgs && !isList) {
             throw new Error("looks like a getMany query but doesn't return an array")
           }
 
@@ -178,7 +180,7 @@ export class GoGenerator extends Generator {
             func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
               var args []prisma.GraphQLArg
 
-              
+
 // XXX this code is identical to building wparams in opGetMany
               ${field.args.length > 0 ? `
                 if params != nil {
@@ -544,17 +546,15 @@ export class GoGenerator extends Generator {
           sOperation = this.opUpsert(field)
         } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
           sOperation = this.opGetOne(field)
-        } else if(operation === "query" && field.args.length === 7) {
+        } else if(operation === "query" && isList && field.args.length === whereArgs) {
           // XXX this query should check for isList
           // 7 arguments in a getMany query
           sOperation = this.opGetMany(field)
+        } else if(operation === "query" && !isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
+          // XXX connections were and are completely broken in this client.
         } else if(operation === "query" && field.name === "node") {
           sOperation = this.opNode()
         } else {
-          // XXX missing combination: !isList && fields.args.length === 7 –
-          // that's for example the case for FooConnection.
-          // it takes a where query, but Exec only returns a single connection.
-          // which seems weird.
           throw new Error(`Don't know how to handle operation ${operation} on field ${field.name}`)
         }
 
