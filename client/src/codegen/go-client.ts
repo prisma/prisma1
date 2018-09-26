@@ -60,7 +60,13 @@ export class GoGenerator extends Generator {
   }
 
   goTypeName(fieldType: FieldLikeType): string {
-    let typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
+    let typ: string
+    if(fieldType.isEnum) {
+      typ = goCase(fieldType.typeName)
+    } else {
+      typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
+    }
+
     if(fieldType.isList) {
       typ = "[]" + typ
     } else if(!fieldType.isNonNull) {
@@ -310,16 +316,14 @@ export class GoGenerator extends Generator {
 
     GraphQLEnumType: (type: GraphQLEnumType): string => {
       const enumValues = type.getValues()
+      const typ = goCase(type.name)
       return `
         // ${type.name} docs
-        type ${type.name} string
+        type ${typ} string
         const (
           ${enumValues
             .map(
-              v =>
-                `
-                // ${goCase(v.name)}${type.name} docs
-                ${goCase(v.name)}${type.name} ${type.name} = "${v.name}"`,
+              v => `${typ}${goCase(v.name)} ${typ} = "${v.name}"`,
             )
             .join('\n')}
           )`
