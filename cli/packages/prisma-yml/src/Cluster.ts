@@ -229,7 +229,7 @@ Original error: ${e.message}`,
     return null
   }
 
-  request(query: string) {
+  request(query: string, variables?: any) {
     return fetch(this.getDeployEndpoint(), {
       method: 'post',
       headers: {
@@ -237,6 +237,7 @@ Original error: ${e.message}`,
       } as any,
       body: JSON.stringify({
         query,
+        variables,
       }),
       agent: getProxyAgent(this.getDeployEndpoint()),
     } as any)

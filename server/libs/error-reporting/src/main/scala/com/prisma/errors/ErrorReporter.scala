@@ -3,7 +3,7 @@ package com.prisma.errors
 import scala.collection.immutable.Seq
 
 trait ErrorReporter {
-  def report(t: Throwable, meta: ErrorMetadata*)
+  def report(t: Throwable, meta: ErrorMetadata*): Unit
 }
 
 trait ErrorMetadata

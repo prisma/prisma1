@@ -11,7 +11,7 @@ case class PrismaSdl(typesFn: Vector[PrismaSdl => PrismaType], enumsFn: Vector[P
   val enums: Vector[PrismaEnum] = enumsFn.map(_.apply(this))
 }
 
-case class PrismaType(name: String, tableName: Option[String], fieldFn: Vector[PrismaType => PrismaField])(val sdl: PrismaSdl) {
+case class PrismaType(name: String, tableName: Option[String], isEmbedded: Boolean, fieldFn: Vector[PrismaType => PrismaField])(val sdl: PrismaSdl) {
   val fields: Vector[PrismaField] = fieldFn.map(_.apply(this))
 
   val relationalPrismaFields = fields.collect { case x: RelationalPrismaField => x }

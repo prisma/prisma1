@@ -1,11 +1,13 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "A deeply nested self relation create" should "be executed completely" in {
     val project: Project = SchemaDsl.fromString() { """type User {

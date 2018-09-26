@@ -54,11 +54,11 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
 }
 
 /**
-  *  CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
+  *  CoolArgs <-> PrismaArgs - This is used to transform from Coolargs for create on a model to typed PrismaArgs
   */
-case class GCCreateReallyCoolArgsConverter(model: Model) {
+case class GCCreatePrismaArgsConverter(model: Model) {
 
-  def toReallyCoolArgs(raw: Map[String, Any]): PrismaArgs = {
+  def toPrismaArgs(raw: Map[String, Any]): PrismaArgs = {
 
     val res = model.scalarNonListFields
       .filter { field =>
@@ -79,7 +79,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
     PrismaArgs(RootGCValue(res: _*))
   }
 
-  def toReallyCoolArgsFromJson(json: JsValue): PrismaArgs = {
+  def toPrismaArgsFromJson(json: JsValue): PrismaArgs = {
 
     def fromSingleJsValue(jsValue: JsValue, field: ScalarField): GCValue = jsValue match {
       case JsString(x)                                                    => StringGCValue(x)

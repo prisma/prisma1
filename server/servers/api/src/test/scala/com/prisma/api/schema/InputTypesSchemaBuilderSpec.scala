@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -8,8 +9,8 @@ import sangria.renderer.SchemaRenderer
 
 class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
-
-  override def runSuiteOnlyForActiveConnectors = true // a lot of the schemas omit the id field which is required for passive connectors
+  // a lot of the schemas omit the id field which is required for passive connectors
+  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
 
   "Sample schema with relation and id only types" should "be generated correctly" in {
 
@@ -309,34 +310,32 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input UserUpdateInput {
                        |  name: String
-                       |  friend: UserUpdateOneWithoutFriendOfInput
-                       |  friendOf: UserUpdateOneWithoutFriendInput
+                       |  friend: UserUpdateOneRequiredWithoutFriendOfInput
+                       |  friendOf: UserUpdateOneRequiredWithoutFriendInput
                        |}
                        |
-                       |input UserUpdateOneWithoutFriendInput {
+                       |input UserUpdateOneRequiredWithoutFriendInput {
                        |  create: UserCreateWithoutFriendInput
                        |  connect: UserWhereUniqueInput
-                       |  delete: Boolean
                        |  update: UserUpdateWithoutFriendDataInput
                        |  upsert: UserUpsertWithoutFriendInput
                        |}
                        |
-                       |input UserUpdateOneWithoutFriendOfInput {
+                       |input UserUpdateOneRequiredWithoutFriendOfInput {
                        |  create: UserCreateWithoutFriendOfInput
                        |  connect: UserWhereUniqueInput
-                       |  delete: Boolean
                        |  update: UserUpdateWithoutFriendOfDataInput
                        |  upsert: UserUpsertWithoutFriendOfInput
                        |}
                        |
                        |input UserUpdateWithoutFriendDataInput {
                        |  name: String
-                       |  friendOf: UserUpdateOneWithoutFriendInput
+                       |  friendOf: UserUpdateOneRequiredWithoutFriendInput
                        |}
                        |
                        |input UserUpdateWithoutFriendOfDataInput {
                        |  name: String
-                       |  friend: UserUpdateOneWithoutFriendOfInput
+                       |  friend: UserUpdateOneRequiredWithoutFriendOfInput
                        |}
                        |
                        |input UserUpsertWithoutFriendInput {
@@ -408,7 +407,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 
-  "Disconnect" should "not be generated on required to-One Relations" in {
+  "Disconnect and Delete" should "not be generated on required to-One Relations" in {
 
     val project = SchemaDsl.fromString() {
       """type Parent{
@@ -440,7 +439,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input ChildUpdateInput {
                        |  name: String
-                       |  parent: ParentUpdateOneWithoutChildInput
+                       |  parent: ParentUpdateOneRequiredWithoutChildInput
                        |}
                        |
                        |input ChildUpdateManyWithoutParentInput {
@@ -490,10 +489,9 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |  child: ChildUpdateManyWithoutParentInput
                        |}
                        |
-                       |input ParentUpdateOneWithoutChildInput {
+                       |input ParentUpdateOneRequiredWithoutChildInput {
                        |  create: ParentCreateWithoutChildInput
                        |  connect: ParentWhereUniqueInput
-                       |  delete: Boolean
                        |  update: ParentUpdateWithoutChildDataInput
                        |  upsert: ParentUpsertWithoutChildInput
                        |}
@@ -510,6 +508,163 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input ParentWhereUniqueInput {
                        |  name: String
                        |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "When a type is both required and non-required two separate types" should "be generated" in {
+
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |    field: Int
+        |}
+        |
+        |type B {
+        |    field: Int
+        |    a: A!
+        |}
+        |
+        |type C {
+        |    field: Int
+        |    a: A
+        |}"""
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input ACreateInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input ACreateOneInput {
+                       |  create: ACreateInput
+                       |}
+                       |
+                       |input AUpdateDataInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input AUpdateInput {
+                       |  field: Int
+                       |}
+                       |
+                       |input AUpdateOneInput {
+                       |  create: ACreateInput
+                       |  disconnect: Boolean
+                       |  delete: Boolean
+                       |  update: AUpdateDataInput
+                       |  upsert: AUpsertNestedInput
+                       |}
+                       |
+                       |input AUpdateOneRequiredInput {
+                       |  create: ACreateInput
+                       |  update: AUpdateDataInput
+                       |  upsert: AUpsertNestedInput
+                       |}
+                       |
+                       |input AUpsertNestedInput {
+                       |  update: AUpdateDataInput!
+                       |  create: ACreateInput!
+                       |}
+                       |
+                       |input BCreateInput {
+                       |  field: Int
+                       |  a: ACreateOneInput!
+                       |}
+                       |
+                       |input BUpdateInput {
+                       |  field: Int
+                       |  a: AUpdateOneRequiredInput
+                       |}
+                       |
+                       |input CCreateInput {
+                       |  field: Int
+                       |  a: ACreateOneInput
+                       |}
+                       |
+                       |input CUpdateInput {
+                       |  field: Int
+                       |  a: AUpdateOneInput
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "When a type is both required and non-required two separate types" should "be generated (changed order)" in {
+
+    val project = SchemaDsl.fromString() {
+      """type A {
+        |    field: Int
+        |}
+        |
+        |type B {
+        |    field: Int
+        |    a: A
+        |}
+        |
+        |type C {
+        |    field: Int
+        |    a: A!
+        |}"""
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes =
+      """input ACreateInput {
+        |  field: Int
+        |}
+        |
+        |input ACreateOneInput {
+        |  create: ACreateInput
+        |}
+        |
+        |input AUpdateDataInput {
+        |  field: Int
+        |}
+        |
+        |input AUpdateInput {
+        |  field: Int
+        |}
+        |
+        |input AUpdateOneInput {
+        |  create: ACreateInput
+        |  disconnect: Boolean
+        |  delete: Boolean
+        |  update: AUpdateDataInput
+        |  upsert: AUpsertNestedInput
+        |}
+        |
+        |input AUpdateOneRequiredInput {
+        |  create: ACreateInput
+        |  update: AUpdateDataInput
+        |  upsert: AUpsertNestedInput
+        |}
+        |
+        |input AUpsertNestedInput {
+        |  update: AUpdateDataInput!
+        |  create: ACreateInput!
+        |}
+        |
+        |input BCreateInput {
+        |  field: Int
+        |  a: ACreateOneInput
+        |}
+        |
+        |input BUpdateInput {
+        |  field: Int
+        |  a: AUpdateOneInput
+        |}
+        |
+        |input CCreateInput {
+        |  field: Int
+        |  a: ACreateOneInput!
+        |}
+        |
+        |input CUpdateInput {
+        |  field: Int
+        |  a: AUpdateOneRequiredInput
+        |}"""
 
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }

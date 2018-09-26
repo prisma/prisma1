@@ -1,0 +1,4 @@
+node_modules
+dist
+
+__tests__/**/*/generated.graphql

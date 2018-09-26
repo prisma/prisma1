@@ -1,7 +1,6 @@
 package com.prisma.api
 
 import com.prisma.metrics.{CustomTag, MetricsManager}
-import com.prisma.profiling.JvmProfiler
 
 object ApiMetrics extends MetricsManager {
   val projectCacheGetCount  = defineCounter("projectCache.get.count")

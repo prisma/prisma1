@@ -62,7 +62,7 @@ Once the command has finished, you need to run `docker-compose up -d` to start t
 
 #### 3. Define your data model
 
-Edit `datamodel.graphql` to define your data model using GraphQL SDL:
+Edit `datamodel.prisma` to define your data model using GraphQL SDL:
 
 ```graphql
 type Tweet {

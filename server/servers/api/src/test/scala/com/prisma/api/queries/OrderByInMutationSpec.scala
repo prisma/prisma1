@@ -1,11 +1,14 @@
 package com.prisma.api.queries
 
-import com.prisma.IgnorePassive
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability
+import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
 
   val project = SchemaDsl.fromString() {
     """
@@ -18,6 +21,7 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Bar {
       |    id: ID! @unique
       |    quantity: Int!
+      |    orderField: Int
       |}
     """
   }
@@ -27,21 +31,21 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
   }
 
-  "The order when not giving an order by" should "be by Id ascending and therefore oldest first" taggedAs (IgnorePassive) in {
+  "Using a field in the order by that is not part of the selected fields" should "work" in {
     val res = server.query(
       """mutation {
         |  createFoo(
         |    data: {
         |      bars: {
         |        create: [
-        |          { quantity: 1 }
-        |          { quantity: 2 }
+        |          { quantity: 1, orderField: 1}
+        |          { quantity: 2, orderField: 2}
         |        ]
         |      }
         |    }
         |  ) {
         |    test
-        |    bars(first: 1, orderBy: createdAt_DESC) {
+        |    bars(first: 1, orderBy: orderField_DESC) {
         |      quantity
         |    }
         |  }

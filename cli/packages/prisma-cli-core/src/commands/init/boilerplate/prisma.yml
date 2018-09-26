@@ -1,2 +1,2 @@
 endpoint: ENDPOINT
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma

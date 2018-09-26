@@ -137,7 +137,7 @@ sealed trait RelationCondition
 object EveryRelatedNode      extends RelationCondition
 object AtLeastOneRelatedNode extends RelationCondition
 object NoRelatedNode         extends RelationCondition
-object NoRelationCondition   extends RelationCondition
+object ToOneRelatedNode      extends RelationCondition
 
 object NodeSubscriptionFilter extends Filter
 object TrueFilter             extends Filter

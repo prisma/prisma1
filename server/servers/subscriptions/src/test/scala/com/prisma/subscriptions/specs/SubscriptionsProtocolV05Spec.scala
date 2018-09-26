@@ -9,6 +9,8 @@ import play.api.libs.json._
 import scala.concurrent.duration._
 
 class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SubscriptionSpecBase {
+  override def doNotRunForPrototypes: Boolean = true
+
   val project = SchemaDsl.fromBuilder { schema =>
     val todo = schema
       .model("Todo")

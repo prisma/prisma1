@@ -60,8 +60,9 @@ case class SchemaInferrerImpl(
 
       ModelTemplate(
         name = prismaType.name,
-        fieldTemplates = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         stableIdentifier = stableIdentifier,
+        isEmbedded = prismaType.isEmbedded,
+        fieldTemplates = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         manifestation = manifestation
       )
     }
