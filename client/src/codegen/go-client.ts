@@ -153,15 +153,16 @@ export class GoGenerator extends Generator {
           type ${goCase(field.name)}ParamsExec struct {
             ${args
               .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
+            }
           }
-        }
           ` : ``}
 
           // ${goCase(field.name)} docs - executable for types
-        func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
-              var args []prisma.GraphQLArg
+          func (instance *${type.name}Exec) ${goCase(field.name)}(${field.args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
+            var args []prisma.GraphQLArg
 
-              ${field.args.length > 0 ? `
+            // XXX(dh): under what conditions can this method have arguments?
+            ${field.args.length > 0 ? `
               if params != nil {
                 ${args.map(arg => `
                 if params.${goCase(arg.name)} != nil {
@@ -176,20 +177,20 @@ export class GoGenerator extends Generator {
               }
               ` : ``}
 
-              stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
-              copy(stack, instance.exec.Stack)
-              stack = append(stack, prisma.Instruction{
+            stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
+            copy(stack, instance.exec.Stack)
+            stack = append(stack, prisma.Instruction{
+              Name: "${field.name}",
+              Field: prisma.GraphQLField{
                 Name: "${field.name}",
-                Field: prisma.GraphQLField{
-                  Name: "${field.name}",
-                  TypeName: "${typeName}",
-                  TypeFields: ${`[]string{${typeFields
-                    .map(f => f)
-                    .join(',')}}`},
-                },
-                Operation: "",
-                Args: args,
-              })
+                TypeName: "${typeName}",
+                TypeFields: ${`[]string{${typeFields
+                  .map(f => f)
+                  .join(',')}}`},
+              },
+              Operation: "",
+              Args: args,
+            })
             return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
               exec: &prisma.Exec{
                 Client: instance.exec.Client,
@@ -197,8 +198,7 @@ export class GoGenerator extends Generator {
               },
             }
           }`
-        })
-        .join('\n')}
+        }).join('\n')}
 
       // Exec docs
       func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
@@ -276,19 +276,17 @@ export class GoGenerator extends Generator {
       const fieldMap = type.getFields()
       return `// ${type.name} input struct docs
       type ${type.name} struct {
-          ${Object.keys(fieldMap)
-            .map(key => {
-              const field = fieldMap[key]
-              const fieldType = this.extractFieldLikeType(
-                field as GraphQLField<any, any>,
-              )
+        ${Object.keys(fieldMap)
+          .map(key => {
+            const field = fieldMap[key]
+            const fieldType = this.extractFieldLikeType(
+              field as GraphQLField<any, any>,
+            )
 
-              const typ = this.goTypeName(fieldType)
-              return `${goCase(field.name)} ${typ} ${this.goStructTag(field as GraphQLField<any, any>)}`
-            })
-            .join('\n')}
-            }
-        `
+            const typ = this.goTypeName(fieldType)
+            return `${goCase(field.name)} ${typ} ${this.goStructTag(field as GraphQLField<any, any>)}`
+          }).join('\n')}
+          }`
     },
 
     GraphQLScalarType: (type: GraphQLScalarType): string => ``,
@@ -298,19 +296,18 @@ export class GoGenerator extends Generator {
     GraphQLEnumType: (type: GraphQLEnumType): string => {
       const enumValues = type.getValues()
       return `
-            // ${type.name} docs
-            type ${type.name} string
-            const (
-                ${enumValues
-                  .map(
-                    v =>
-                      `
-                      // ${goCase(v.name)}${type.name} docs
-                      ${goCase(v.name)}${type.name} ${type.name} = "${v.name}"`,
-                  )
-                  .join('\n')}
+        // ${type.name} docs
+        type ${type.name} string
+        const (
+          ${enumValues
+            .map(
+              v =>
+                `
+                // ${goCase(v.name)}${type.name} docs
+                ${goCase(v.name)}${type.name} ${type.name} = "${v.name}"`,
             )
-        `
+            .join('\n')}
+          )`
     },
   }
 
