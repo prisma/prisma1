@@ -131,8 +131,7 @@ export class GoGenerator extends Generator {
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
-        client    *prisma.Client
-        stack []prisma.Instruction
+        exec *prisma.Exec
       }
 
       ${Object.keys(fieldMap)
@@ -177,7 +176,9 @@ export class GoGenerator extends Generator {
               }
               ` : ``}
 
-              instance.stack = append(instance.stack, prisma.Instruction{
+              stack := make([]prisma.Instruction, len(instance.exec.Stack), len(instance.exec.Stack) + 1)
+              copy(stack, instance.exec.Stack)
+              stack = append(stack, prisma.Instruction{
                 Name: "${field.name}",
                 Field: prisma.GraphQLField{
                   Name: "${field.name}",
@@ -190,8 +191,10 @@ export class GoGenerator extends Generator {
                 Args: args,
               })
             return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
-              client: instance.client,
-              stack: instance.stack,
+              exec: &prisma.Exec{
+                Client: instance.exec.Client,
+                Stack: stack,
+              },
             }
           }`
         })
@@ -200,28 +203,19 @@ export class GoGenerator extends Generator {
       // Exec docs
       func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
         var v ${type.name}
-        e := &prisma.Exec{
-          Client: instance.client,
-          Stack: instance.stack,
-        }
-        err := e.Exec(ctx, &v)
+        err := instance.exec.Exec(ctx, &v)
         return v, err
       }
 
       // ${type.name}ExecArray docs
       type ${type.name}ExecArray struct {
-        client    *prisma.Client
-        stack []prisma.Instruction
+        exec *prisma.Exec
       }
 
       // Exec docs
       func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
         var v []${type.name}
-        e := &prisma.Exec{
-          Client: instance.client,
-          Stack: instance.stack,
-        }
-        err := e.ExecArray(ctx, &v)
+        err := instance.exec.ExecArray(ctx, &v)
         return v, err
       }
 
@@ -256,8 +250,7 @@ export class GoGenerator extends Generator {
       return `
       // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
-        client    *prisma.Client
-        stack []prisma.Instruction
+        exec *prisma.Exec
       }
 
       // ${goCase(type.name)} docs - generated with types in GraphQLInterfaceType
@@ -388,10 +381,7 @@ export class GoGenerator extends Generator {
                  "${field.name}",
                  []string{${typeFields.map(f => f).join(',')}})
 
-        return &${goCase(typeName)}Exec{
-          client: ret.Client,
-          stack: ret.Stack,
-        }
+        return &${goCase(typeName)}Exec{ret}
       }`
   }
 
@@ -412,10 +402,7 @@ export class GoGenerator extends Generator {
           "${field.name}",
           []string{${typeFields.map(f => f).join(',')}})
 
-        return &${goCase(typeName)}Exec{
-          client: ret.Client,
-          stack: ret.Stack,
-        }
+        return &${goCase(typeName)}Exec{ret}
       }`
   }
 
@@ -429,10 +416,7 @@ export class GoGenerator extends Generator {
           "${field.name}",
           []string{${typeFields.map(f => f).join(',')}})
 
-        return &${goCase(typeName)}Exec{
-          client: ret.Client,
-          stack: ret.Stack,
-        }
+        return &${goCase(typeName)}Exec{ret}
       }`
   }
 
@@ -460,8 +444,7 @@ export class GoGenerator extends Generator {
           []string{${typeFields.map(f => f).join(',')}})
 
         return &${goCase(typeName)}Exec${isList ? `Array` : ``} {
-          client: ret.Client,
-          stack: ret.Stack,
+          ret,
         }
       }`
   }
@@ -476,10 +459,7 @@ export class GoGenerator extends Generator {
           "${field.name}",
           []string{${typeFields.map(f => f).join(',')}})
 
-        return &${goCase(typeName)}Exec{
-          client: ret.Client,
-          stack: ret.Stack,
-        }
+        return &${goCase(typeName)}Exec{ret}
       }`
   }
 
@@ -501,10 +481,7 @@ export class GoGenerator extends Generator {
           "${field.name}",
           []string{${typeFields.map(f => f).join(',')}})
 
-        return &${goCase(typeName)}Exec{
-          client: ret.Client,
-          stack: ret.Stack,
-        }
+        return &${goCase(typeName)}Exec{ret}
       }`
   }
 
@@ -513,10 +490,7 @@ export class GoGenerator extends Generator {
     return `
       func (client *Client) Node(id *ID) *NodeExec {
         exec := client.Client.Node(id)
-        return &NodeExec{
-          client: exec.Client,
-          stack: exec.Stack,
-        }
+        return &NodeExec{exec}
       }`
   }
 
