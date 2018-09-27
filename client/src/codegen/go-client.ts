@@ -374,14 +374,16 @@ export class GoGenerator extends Generator {
 
   opUpdateMany(field) {
     return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *prisma.BatchPayloadExec {
-        return client.Client.UpdateMany(
+      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${goCase(field.name)}Params) (prisma.BatchPayload, error) {
+        ret := client.Client.UpdateMany(
           prisma.UpdateParams{
             Data: params.Data,
             Where: params.Where,
           },
           [2]string{"${field.args[0].type}", "${field.args[1].type}"},
           "${field.name}")
+
+        return ret.Exec(ctx)
       }`
   }
 
@@ -404,8 +406,9 @@ export class GoGenerator extends Generator {
 
   opDeleteMany(field) {
     return `
-      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *prisma.BatchPayloadExec {
-        return client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
+      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${this.getDeepType(field.args[0].type)}) (prisma.BatchPayload, error) {
+        ret := client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
+        return ret.Exec(ctx)
       }`
   }
 
