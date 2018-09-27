@@ -140,6 +140,9 @@ export type ${type.name}_Output = string`
     },
 
     GraphQLEnumType: (type: GraphQLEnumType): string => {
+      if (type.name === 'PrismaDatabase') {
+        return ``
+      }
       return `${this.renderDescription(type.description!)}export type ${
         type.name
       } = ${type
@@ -423,6 +426,10 @@ export const prisma = new Prisma()`
     isMutation = false,
   ): string {
     return Object.keys(fields)
+      .filter(f => {
+        const field = fields[f]
+        return !(field.name === 'executeRaw' && isMutation)
+      })
       .map(f => {
         const field = fields[f]
         return `    ${field.name}: (${this.renderArgs(
