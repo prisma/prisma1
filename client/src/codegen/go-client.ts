@@ -145,7 +145,6 @@ export class GoGenerator extends Generator {
       }
 
       return `
-      // ${type.name}Exec docs
       type ${type.name}Exec struct {
         exec *prisma.Exec
       }
@@ -238,7 +237,6 @@ export class GoGenerator extends Generator {
           }
         }).join('\n')}
 
-      // Exec docs
       func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
         var v ${type.name}
         err := instance.exec.Exec(ctx, &v)
@@ -249,7 +247,6 @@ export class GoGenerator extends Generator {
         return instance.exec.Exists(ctx)
       }
 
-      // ${type.name} docs - generated with types
       type ${type.name} struct {
           ${Object.keys(fieldMap)
             .filter(key => {
@@ -278,12 +275,10 @@ export class GoGenerator extends Generator {
     ): string => {
       const fieldMap = type.getFields()
       return `
-      // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
         exec *prisma.Exec
       }
 
-      // ${goCase(type.name)} docs - generated with types in GraphQLInterfaceType
       type ${goCase(type.name)} interface {
         ${Object.keys(fieldMap).map(key => {
           const field = fieldMap[key]
@@ -304,7 +299,7 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
-      return `// ${type.name} input struct docs
+      return `
       type ${type.name} struct {
         ${Object.keys(fieldMap)
           .map(key => {
@@ -327,7 +322,6 @@ export class GoGenerator extends Generator {
       const enumValues = type.getValues()
       const typ = goCase(type.name)
       return `
-        // ${type.name} docs
         type ${typ} string
         const (
           ${enumValues
@@ -517,7 +511,6 @@ export class GoGenerator extends Generator {
       }`
   }
 
-  // FIXME(dh): rename this, split it up, etc
   opNode() {
     return `
       func (client *Client) Node(id *ID) *NodeExec {
@@ -528,7 +521,6 @@ export class GoGenerator extends Generator {
 
   paramsType(field) {
     return `
-      // ${goCase(field.name)}Params docs
       type ${goCase(field.name)}Params struct {
         ${field.args
           .map(arg => {
@@ -642,10 +634,7 @@ type BatchPayload struct {
 	Count int64 \`json:"count"\`
 }
 
-// ID docs
 type ID struct{}
-
-// Types
 
 type Client struct {
 	Client *prisma.Client
@@ -663,10 +652,8 @@ func New(endpoint string, opts ...graphql.ClientOption) *Client {
 
 var DefaultEndpoint = ${this.printEndpoint(options)}
 
-// Queries
 ${this.printOperation(queryFields, 'query', options)}
 
-// Mutations
 ${this.printOperation(mutationFields, 'mutation', options)}
 
 ${typeNames
