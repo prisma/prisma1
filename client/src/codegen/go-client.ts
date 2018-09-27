@@ -140,6 +140,10 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
+      if(type.name === "BatchPayload") {
+        return ""
+      }
+
       return `
       // ${type.name}Exec docs
       type ${type.name}Exec struct {
@@ -625,6 +629,10 @@ import (
 
 	"github.com/machinebox/graphql"
 )
+
+type BatchPayload struct {
+	Count int64 \`json:"count"\`
+}
 
 // ID docs
 type ID struct{}
