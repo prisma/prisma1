@@ -5,7 +5,7 @@ import Code from 'components/Markdown/Code'
 export const meta = {
   title: 'Setting up Prisma',
   position: 1,
-  gettingStartedOrder: 1,
+  gettingStartedOrder: 3,
   gettingStartedTitle: 'Demo database',
   nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and regenerate your Prisma client.',
   technology: 'node',
@@ -38,7 +38,7 @@ npm install -g prisma@beta
 
 </Code>
 
-## Create a Prisma service configuration
+## Setup Prisma
 
 To bootstrap the configuration files for your Prisma setup, create a new directory and initalize it using the `prisma init` command:
 
@@ -68,13 +68,13 @@ After running `prisma init`, the Prisma CLI prompts you to select _how_ you want
 
 ## Deploy Prisma
 
-The `prisma init` command created the _minimal_ configuration needed to deploy Prisma: `prisma.yml` and `datamodel.prisma`. Prisma now needs to be _deployed_ so you can [use the Prisma API](nms2):
+The interactive wizard created the _minimal_ Prisma configuration based on a hosted demo database: `prisma.yml` and `datamodel.prisma`. Prisma now needs to be _deployed_ so you can [use the Prisma API](nms2):
 
 ```bash copy
 prisma deploy
 ```
 
-Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
+Congratulations, you have successfully deployed Prisma. You can now start using the Prisma client to talk to your database from code.
 
 ## Prepare Node application
 
@@ -93,7 +93,7 @@ npm install --save prisma-client-lib graphql@0.13
 
 ## Read and write data using the Prisma client
 
-Now type the following code in `index.js` and save it afterwards:
+Add the following code in `index.js` and save it afterwards:
 
 ```js copy
 const { prisma } = require('./generated/prisma')
@@ -119,7 +119,7 @@ Execute the script with the following command:
 node index.js
 ```
 
-Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`).
+Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
 
 Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
