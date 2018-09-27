@@ -91,6 +91,7 @@ object Dependencies {
     "org.jooq" % "jooq"        % "3.11.0",
     "org.jooq" %% "jooq-scala" % "3.11.0"
   )
+  lazy val jna = "net.java.dev.jna" % "jna" % "4.5.2"
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,

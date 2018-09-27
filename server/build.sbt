@@ -133,7 +133,7 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
   )
 
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
-  .dependsOn(deployConnector)
+  .dependsOn(deployConnector, jdbcNative)
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient)
   )
@@ -167,7 +167,7 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   )
 
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
-  .dependsOn(apiConnectorJdbc)
+  .dependsOn(apiConnectorJdbc, jdbcNative)
 
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
@@ -199,6 +199,14 @@ lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql
 // ####################
 //       LIBS
 // ####################
+
+lazy val jdbcNative = libProject("jdbc-native")
+  .settings(libraryDependencies ++= Seq(
+    jna,
+    scalaTest,
+    playJson,
+    postgresClient
+  ) ++ jooq)
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
@@ -358,7 +366,8 @@ val allLibProjects = List(
   errorReporting,
   sangriaUtils,
   prismaConfig,
-  mongoUtils
+  mongoUtils,
+  jdbcNative
 )
 
 val allIntegrationTestProjects = List(
