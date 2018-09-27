@@ -59,14 +59,14 @@ prisma deploy
 ```
 
 ## Regenerate your Prisma client
-
-Because the Prisma client is aware of your datamodel, you need to regenerate it every time after you deployed any changes to it:
+ 
+Because the Prisma client is based on your datamodel, it needs to be regenerated every time the datamodel is updated:
 
 ```bash copy
 prisma generate
 ```
 
-The Prisma client library in the `prisma-client` folder is now being updated and its API has been adjusted to use your new datamodel.
+The Prisma client library in the `/generated/prisma-client` directory is now being updated and its API has been adjusted to use the new datamodel.
 
 ## Read and write nested objects
 
@@ -75,7 +75,7 @@ The Prisma client API allows to write nested objects in a single transaction wit
 Update your `index.js` to look as follows:
 
 ```js copy
-const { prisma } = require('./prisma-client')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -84,6 +84,7 @@ async function main() {
   const newUser = await prisma
     .createUser({
       name: "Bob",
+      email: "bob@prisma.io",
       posts: {
         create: {
           title: "The data layer for modern apps",
@@ -105,7 +106,7 @@ main().catch(e => console.error(e))
 
 Run the script with the following command:
 
-```bash
+```bash copy
 node index.js
 ```
 
@@ -113,30 +114,17 @@ node index.js
 
 With the Prisma client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
 
-```js
-const { prisma } = require('./prisma-client')
+```js copy
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
 
-  // Create a new user with a new post
-  const newUser = await prisma
-    .createUser({
-      name: "Bob"
-      email: "bob@prisma.io"
-      posts: {
-        create: {
-          title: "The data layer for modern apps",
-        }
-      },
-    })
-  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
-
-  // Read the newly created user from the database and print their posts to the console
+  // Read the previously created user from the database and print their posts to the console
   const postsByUser = await prisma
     .user({ email: "bob@prisma.io" })
     .posts()
-  console.log(`All posts by that user: ${postsByUser}`)
+  console.log(`All posts by that user: ${JSON.stringify(postsByUser)}`)
 
 }
 

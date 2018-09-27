@@ -44,7 +44,7 @@ There will be six routes that provide the API for a simple blogging application:
 Replace the current contents of `index.js` with the following code:
 
 ```js lineNumbers,copy
-const { prisma } = require('./prisma-client')
+const { prisma } = require('./generated/prisma-client')
 const app = express()
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -142,3 +142,5 @@ curl -X POST \\
 ```
 
 </QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.

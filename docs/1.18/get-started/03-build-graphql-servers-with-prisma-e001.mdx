@@ -4,9 +4,9 @@ import Warning from 'components/Markdown/Warning'
 
 export const meta = {
   title: 'Build an App with Prisma',
+  gettingStartedTitle: 'GraphQL API',
   position: 3,
   gettingStartedOrder: 1,
-  gettingStartedTitle: 'GraphQL API',
   nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a GraphQL server.',
   technology: 'node',
   technologyOrder: 1,
@@ -76,7 +76,7 @@ type Post {
 Here is how you implement the resolver functions for the six API operations defined in the GraphQL schema. Replace the current contents of `index.js` entirely with the following code snippet:
 
 ```js lineNumbers,copy
-const { prisma } = require('./prisma-client')
+const { prisma } = require('./generated/prisma-client')
 const { GraphQLServer } = require('graphql-yoga')
 
 const resolvers = {
@@ -141,7 +141,9 @@ Each resolver invokes a method on the Prisma client instance which is called `pr
 
 ## Configure your GraphQL server
 
-Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the GraphQL schema along with its resolver functions. You're also attaching the imported `prisma` client instance to the `context` so that the resolvers can access it:
+Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the GraphQL schema along with its resolver functions. You're also attaching the imported `prisma` client instance to the `context` so that the resolvers can access it.
+
+Add the following code snippet to the bottom of `index.js`:
 
 ```js lineNumbers,copy
 const server = new GraphQLServer({
@@ -228,3 +230,5 @@ query {
 ```
 
 </QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.
