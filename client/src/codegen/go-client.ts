@@ -245,6 +245,10 @@ export class GoGenerator extends Generator {
         return v, err
       }
 
+      func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
+        return instance.exec.Exists(ctx)
+      }
+
       // ${type.name} docs - generated with types
       type ${type.name} struct {
           ${Object.keys(fieldMap)
