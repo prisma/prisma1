@@ -155,6 +155,10 @@ export class GoGenerator extends Generator {
           return !isScalar && !isEnum
         })
         .map(key => {
+          // XXX this code is responsible for things like
+          // previousValues, pageInfo, aggregate, edges, and relations.
+          // It should probably be specialised like the rest of our code generation.
+
           const field = fieldMap[key] as GraphQLField<any, any>
           const args = field.args
           const { typeFields, typeName, isList } = this.extractFieldLikeType(
@@ -164,6 +168,12 @@ export class GoGenerator extends Generator {
           let sTyp = ""
           const meth = goCase(field.name) + "ParamsExec"
 
+          // TODO(dh): This type (FooParamsExec) is redundant.
+          // If we have a relation article.authors -> [User],
+          // then we can reuse UsersParams.
+          // The only reason we can't do it right now
+          // is because we don't have the base type's plural name available
+          // (and appending a single s doesn't work for names like Mouse)
           if(!this.printedTypes[meth] && field.args.length > 0) {
             this.printedTypes[meth] = true
             sTyp = `
@@ -183,7 +193,7 @@ export class GoGenerator extends Generator {
 
           if (field.args.length > 0) {
             return sTyp + `
-              func (instance *${type.name}Exec) ${goCase(field.name)}(params *${goCase(field.name)}ParamsExec) *${goCase(typeName)}ExecArray {
+              func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context, params *${goCase(field.name)}ParamsExec) ([]${goCase(typeName)}, error) {
                 var wparams *prisma.WhereParams
                 if params != nil {
                   wparams = &prisma.WhereParams{
@@ -204,7 +214,10 @@ export class GoGenerator extends Generator {
                   "${field.name}",
                   []string{${typeFields.join(',')}})
 
-                  return &${goCase(typeName)}ExecArray{ret}
+
+                var v []${typeName}
+                err := ret.ExecArray(ctx, &v)
+                return v, err
               }`
           } else {
             return sTyp + `
@@ -225,18 +238,6 @@ export class GoGenerator extends Generator {
       func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
         var v ${type.name}
         err := instance.exec.Exec(ctx, &v)
-        return v, err
-      }
-
-      // ${type.name}ExecArray docs
-      type ${type.name}ExecArray struct {
-        exec *prisma.Exec
-      }
-
-      // Exec docs
-      func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
-        var v []${type.name}
-        err := instance.exec.ExecArray(ctx, &v)
         return v, err
       }
 
@@ -438,9 +439,9 @@ export class GoGenerator extends Generator {
   }
 
   opGetMany(field) {
-    const { typeFields, typeName, isList } = this.extractFieldLikeType(field)
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
     return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
+      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${goCase(field.name)}Params) ([]${goCase(typeName)}, error) {
         var wparams *prisma.WhereParams
         if params != nil {
           wparams = &prisma.WhereParams{
@@ -461,9 +462,9 @@ export class GoGenerator extends Generator {
           "${field.name}",
           []string{${typeFields.join(',')}})
 
-        return &${goCase(typeName)}Exec${isList ? `Array` : ``} {
-          ret,
-        }
+        var v []${goCase(typeName)}
+        err := ret.ExecArray(ctx, &v)
+        return v, err
       }`
   }
 
