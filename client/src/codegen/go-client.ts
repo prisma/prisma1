@@ -372,7 +372,7 @@ export class GoGenerator extends Generator {
   }
 
   opUpdateMany(field) {
-    return `
+    return this.paramsType(field) + `
       func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *prisma.BatchPayloadExec {
         return client.Client.UpdateMany(
           prisma.UpdateParams{
@@ -386,7 +386,7 @@ export class GoGenerator extends Generator {
 
   opUpdate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    return `
+    return this.paramsType(field) + `
       func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
         ret := client.Client.Update(
                  prisma.UpdateParams{
@@ -439,7 +439,7 @@ export class GoGenerator extends Generator {
 
   opGetMany(field) {
     const { typeFields, typeName, isList } = this.extractFieldLikeType(field)
-    return `
+    return this.paramsType(field) + `
       func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
         var wparams *prisma.WhereParams
         if params != nil {
@@ -483,7 +483,7 @@ export class GoGenerator extends Generator {
 
   opUpsert(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    return `
+    return this.paramsType(field) + `
       func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
         var uparams *prisma.UpsertParams
         if params != nil {
@@ -512,56 +512,55 @@ export class GoGenerator extends Generator {
       }`
   }
 
+  paramsType(field) {
+    return `
+      // ${goCase(field.name)}Params docs
+      type ${goCase(field.name)}Params struct {
+        ${field.args
+          .map(arg => {
+            const fieldType = this.extractFieldLikeType(arg)
+            const typ = this.goTypeName(fieldType)
+            return `${goCase(arg.name)} ${typ} ${this.goStructTag(arg)}`
+          })
+          .join('\n')}
+      }`
+  }
+
   printOperation(fields, operation: string, options: RenderOptions) {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
 
-        let sParams = `
-          // ${goCase(field.name)}Params docs
-          type ${goCase(field.name)}Params struct {
-            ${field.args
-              .map(arg => {
-                const fieldType = this.extractFieldLikeType(arg)
-                const typ = this.goTypeName(fieldType)
-                return `${goCase(arg.name)} ${typ} ${this.goStructTag(arg)}`
-              })
-              .join('\n')}
-          }`
-
         const { isList } = this.extractFieldLikeType(field)
-        let sOperation = ""
 
         // FIXME(dh): This is brittle. A model may conceivably be named "Many",
         // in which case updateMany would be updating a single instance of Many.
         // The same issue applies to many other prefixes.
         if(operation === "mutation" && field.name.startsWith("updateMany")) {
-          sOperation = this.opUpdateMany(field)
+          return this.opUpdateMany(field)
         } else if(operation === "mutation" && field.name.startsWith("update")) {
-          sOperation = this.opUpdate(field)
+          return this.opUpdate(field)
         } else if(operation === "mutation" && field.name.startsWith("deleteMany")) {
-          sOperation = this.opDeleteMany(field)
+          return this.opDeleteMany(field)
         } else if(operation === "mutation" && field.name.startsWith("delete")) {
-          sOperation = this.opDelete(field)
+          return this.opDelete(field)
         } else if(operation === "mutation" && field.name.startsWith("create")) {
-          sOperation = this.opCreate(field)
+          return this.opCreate(field)
         } else if(operation === "mutation" && field.name.startsWith("upsert")) {
-          sOperation = this.opUpsert(field)
+          return this.opUpsert(field)
         } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
-          sOperation = this.opGetOne(field)
+          return this.opGetOne(field)
         } else if(operation === "query" && isList && field.args.length === whereArgs) {
           // XXX this query should check for isList
           // 7 arguments in a getMany query
-          sOperation = this.opGetMany(field)
+          return this.opGetMany(field)
         } else if(operation === "query" && !isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
           // XXX connections were and are completely broken in this client.
         } else if(operation === "query" && field.name === "node") {
-          sOperation = this.opNode()
+          return this.opNode()
         } else {
           throw new Error(`Don't know how to handle operation ${operation} on field ${field.name}`)
         }
-
-        return sParams + sOperation
       })
       .join('\n')
   }
