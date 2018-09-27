@@ -756,7 +756,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: Middle @mongoRelation(field:"middle_Ids")
+        |   middle: Middle
         |}
         |
         |type Middle {
@@ -791,7 +791,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString should be("""{"data":{"createMiddle":{"unique":11111,"top":{"unique":111111}}}}""")
 
     server.query("query{middles{unique, top {unique}}}", project).toString should be("""{"data":{"middles":[{"unique":11111,"top":{"unique":111111}}]}}""")
-    server.query("query{tops{unique, middle {unique}}}", project).toString should be("""{"data":{"middles":[{"unique":11111,"top":{"unique":111111}}]}}""")
-
+    server.query("query{tops{unique, middle {unique}}}", project).toString should be("""{"data":{"tops":[{"unique":111111,"middle":{"unique":11111}}]}}""")
   }
 }

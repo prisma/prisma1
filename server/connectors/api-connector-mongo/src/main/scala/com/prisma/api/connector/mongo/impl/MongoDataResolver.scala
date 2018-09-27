@@ -87,13 +87,13 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     //Fixme add back all the pagination stuff from above
     val model                                 = fromField.relatedModel_!
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val manifestation                         = fromField.relation.manifestation.get
-    val filter                                = ScalarFilter(model.getScalarFieldByName_!("id").copy(name = "middle_id"), Equals(fromNodeIds.head))
+    val manifestation                         = fromField.relation.inlineManifestation.get
+    val filter                                = ScalarFilter(model.getScalarFieldByName_!("id").copy(manifestation.referencingColumn), Equals(fromNodeIds.head))
 
     val mongoFilter = buildConditionForFilter(Some(filter))
 
     collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
-      val documentGroupsByParentId: Map[CuidGCValue, Seq[Document]] = results.groupBy(x => CuidGCValue(x("middle_id").asString().getValue))
+      val documentGroupsByParentId: Map[CuidGCValue, Seq[Document]] = results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
 
       documentGroupsByParentId.map { group =>
         val parentId                                  = fromNodeIds.find(_ == group._1).get

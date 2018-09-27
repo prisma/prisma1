@@ -6,8 +6,7 @@ import scala.concurrent.{ExecutionContext, Future}
 // format: off
 trait AllActions
   extends NodeActions
-//    with RelationActions
-//    with ScalarListActions
+    with RelationActions
 //    with ValidationActions
 //    with RelayIdActions
 //    with ImportActions
@@ -17,7 +16,6 @@ trait AllQueries
   extends NodeSingleQueries
 //    with NodeManyQueries
 //    with RelationQueries
-//    with ScalarListQueries
 //    with MiscQueries
 // format: on
 

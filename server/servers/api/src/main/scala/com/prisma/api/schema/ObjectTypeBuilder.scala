@@ -9,7 +9,6 @@ import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapability
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
@@ -286,6 +285,25 @@ class ObjectTypeBuilder(
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
 
+      case f: RelationField if f.isList && f.relation.isInlineRelation =>
+        val manifestation = f.relation.inlineManifestation.get
+
+        item.data.map.get(manifestation.referencingColumn) match {
+          case None => Vector.empty[PrismaNode]
+
+          case Some(list: ListGCValue) =>
+            val filter         = ScalarFilter(f.relatedModel_!.idField_!, In(list.values))
+            val queryArguments = QueryArguments(None, None, None, None, None, Some(filter), None)
+
+            if (manifestation.inTableOfModelId == f.model.name) {
+              ManyModelDeferred(f.relatedModel_!, Some(queryArguments), SelectedFields.all(f.relatedModel_!))
+            } else {
+              ToManyDeferred(f, item.id, Some(queryArguments), ctx.getSelectedFields(f.relatedModel_!))
+            }
+
+          case _ => Vector.empty[PrismaNode]
+        }
+
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
@@ -300,11 +318,17 @@ class ObjectTypeBuilder(
 
         val manifestation = f.relation.inlineManifestation.get
 
-        if (manifestation.inTableOfModelId == f.model.name) {
-          val id = item.data.map("middle_id").asInstanceOf[IdGCValue]
-          OneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
-        } else {
-          ToOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
+        item.data.map.get(manifestation.referencingColumn) match {
+          case None => None
+
+          case Some(id: IdGCValue) =>
+            if (manifestation.inTableOfModelId == f.model.name) {
+              OneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
+            } else {
+              ToOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
+            }
+
+          case _ => None
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>

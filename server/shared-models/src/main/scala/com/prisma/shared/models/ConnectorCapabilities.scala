@@ -18,6 +18,7 @@ object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
   object TransactionalExecutionCapability    extends ConnectorCapability
   object SupportsExistingDatabasesCapability extends ConnectorCapability
   object MigrationsCapability                extends ConnectorCapability
+  object MongoRelationsCapability            extends ConnectorCapability
   // IntrospectionCapability
   // RawAccessCapability
 }

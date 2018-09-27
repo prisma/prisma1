@@ -41,10 +41,9 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
   )(implicit ec: ExecutionContext) = {
     relation.manifestation match {
 
-      //Fixme this needs to be a push in order not to overwrite
+      //Fixme this needs to be a push in order not to overwrite when top is an update
       case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
-        val inlineField    = relation.getFieldOnModel(model.name)
-        val inlineRelation = List((inlineField.name + "_id", parentId))
+        val inlineRelation = List((m.referencingColumn, parentId))
 
         for {
           mutactionResult <- mutationBuilder.createNode(mutaction, inlineRelation, includeRelayRow)
@@ -55,7 +54,7 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
         for {
           mutactionResult <- mutationBuilder.createNode(mutaction, List.empty, includeRelayRow)
           id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
-//          _  <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
+          x               <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
         } yield id
 
     }

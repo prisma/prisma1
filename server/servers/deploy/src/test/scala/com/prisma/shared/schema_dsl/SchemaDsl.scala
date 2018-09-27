@@ -4,6 +4,7 @@ import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBack
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
+import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation}
 import com.prisma.shared.models._
@@ -24,7 +25,7 @@ object SchemaDsl extends AwaitUtils {
     val project = schemaBuilder.build(id = projectId(suite))
 
     if (!deployConnector.isActive) {
-      addIdFields(addManifestations(project), cuidField)
+      addIdFields(addManifestations(project, deployConnector), cuidField)
     } else {
       addIdFields(project, cuidField)
     }
@@ -33,8 +34,8 @@ object SchemaDsl extends AwaitUtils {
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
 
-    if (true) { //Fixme s
-      addManifestations(project)
+    if (!deployConnector.isActive || deployConnector.hasCapability(MongoRelationsCapability)) {
+      addManifestations(project, deployConnector)
     } else {
       project
     }
@@ -80,10 +81,10 @@ object SchemaDsl extends AwaitUtils {
     TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 
-  private def addManifestations(project: Project): Project = {
+  private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if (relation.isManyToMany) { //Fixme this is not reading the MongoRelationstuff
+      if (relation.isManyToMany && !deployConnector.hasCapability(MongoRelationsCapability)) {
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)
