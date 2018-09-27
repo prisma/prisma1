@@ -536,31 +536,46 @@ export class GoGenerator extends Generator {
         // FIXME(dh): This is brittle. A model may conceivably be named "Many",
         // in which case updateMany would be updating a single instance of Many.
         // The same issue applies to many other prefixes.
-        if(operation === "mutation" && field.name.startsWith("updateMany")) {
-          return this.opUpdateMany(field)
-        } else if(operation === "mutation" && field.name.startsWith("update")) {
-          return this.opUpdate(field)
-        } else if(operation === "mutation" && field.name.startsWith("deleteMany")) {
-          return this.opDeleteMany(field)
-        } else if(operation === "mutation" && field.name.startsWith("delete")) {
-          return this.opDelete(field)
-        } else if(operation === "mutation" && field.name.startsWith("create")) {
-          return this.opCreate(field)
-        } else if(operation === "mutation" && field.name.startsWith("upsert")) {
-          return this.opUpsert(field)
-        } else if(operation === "query" && !isList && field.args.length === 1 && field.name !== "node") {
-          return this.opGetOne(field)
-        } else if(operation === "query" && isList && field.args.length === whereArgs) {
-          // XXX this query should check for isList
-          // 7 arguments in a getMany query
-          return this.opGetMany(field)
-        } else if(operation === "query" && !isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
-          // XXX connections were and are completely broken in this client.
-        } else if(operation === "query" && field.name === "node") {
-          return this.opNode()
-        } else {
-          throw new Error(`Don't know how to handle operation ${operation} on field ${field.name}`)
+        if(operation === "mutation") {
+          if(field.name.startsWith("updateMany")) {
+            return this.opUpdateMany(field)
+          }
+          if(field.name.startsWith("update")) {
+            return this.opUpdate(field)
+          }
+          if(field.name.startsWith("deleteMany")) {
+            return this.opDeleteMany(field)
+          }
+          if(field.name.startsWith("delete")) {
+            return this.opDelete(field)
+          }
+          if(field.name.startsWith("create")) {
+            return this.opCreate(field)
+          }
+          if(field.name.startsWith("upsert")) {
+            return this.opUpsert(field)
+          }
+          throw new Error("unsupported mutation operation on field " + field.name)
         }
+
+        if(operation === "query") {
+          if(!isList && field.args.length === 1 && field.name !== "node") {
+            return this.opGetOne(field)
+          }
+          if(isList && field.args.length === whereArgs) {
+            return this.opGetMany(field)
+          }
+          if(!isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
+            // XXX connections were and are completely broken in this client.
+            return ``
+          }
+          if(field.name === "node") {
+            return this.opNode()
+          }
+          throw new Error("unsupported query operation on field " + field.name)
+        }
+
+        throw new Error("unsupported operation " + operation)
       })
       .join('\n')
   }
