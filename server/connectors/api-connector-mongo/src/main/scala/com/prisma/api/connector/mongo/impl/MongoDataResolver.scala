@@ -93,6 +93,8 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     val mongoFilter = buildConditionForFilter(Some(filter))
 
     collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
+      //Fixme handle lists here for the grouping
+
       val documentGroupsByParentId: Map[CuidGCValue, Seq[Document]] = results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
 
       documentGroupsByParentId.map { group =>

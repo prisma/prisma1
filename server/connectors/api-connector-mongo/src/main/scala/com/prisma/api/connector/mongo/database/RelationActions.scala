@@ -22,7 +22,7 @@ trait RelationActions {
 
       val collection = database.getCollection(parentModel.dbName)
 
-      val update = relationField.relatedField.isList match {
+      val update = relationField.isList match {
         case false => set(inlineManifestation.referencingColumn, GCValueBsonTransformer(childId))
         case true  => push(inlineManifestation.referencingColumn, GCValueBsonTransformer(childId))
       }

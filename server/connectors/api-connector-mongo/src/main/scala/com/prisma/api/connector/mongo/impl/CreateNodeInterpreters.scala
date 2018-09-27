@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoActionsBuilder, SimpleMongoAction}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.gc_values.IdGCValue
+import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 
 import scala.concurrent.ExecutionContext
@@ -28,9 +28,9 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
 
       case false =>
         for {
-//          _  <- SequenceAction(requiredCheck(parentId), removalAction(parentId))
+//          _ <- SequenceAction(requiredCheck(parentId), removalAction(parentId))
           id <- createNodeAndConnectToParent(mutationBuilder, parentId)
-//          _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else MongoAction.successful(())
+          //          _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else MongoAction.successful(())
         } yield MutactionResults(Vector(CreateNodeResult(id, mutaction)))
     }
   }
@@ -43,7 +43,11 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
 
       //Fixme this needs to be a push in order not to overwrite when top is an update
       case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
-        val inlineRelation = List((m.referencingColumn, parentId))
+
+        val inlineRelation = mutaction.relationField.isList match {
+          case true  => List((m.referencingColumn, ListGCValue(Vector(parentId))))
+          case false => List((m.referencingColumn, parentId))
+        }
 
         for {
           mutactionResult <- mutationBuilder.createNode(mutaction, inlineRelation, includeRelayRow)
@@ -59,51 +63,52 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
 
     }
   }
-}
-//  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] = {
+//  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
 //    mutaction.topIsCreate match {
 //      case false =>
 //        (p.isList, p.isRequired, c.isList, c.isRequired) match {
-//          case (false, true, false, true)   => requiredRelationViolation
-//          case (false, true, false, false)  => noCheckRequired
-//          case (false, false, false, true)  => checkForOldChild(parentId)
+//          case (false, true, false, true) => requiredRelationViolation
+//          case (false, true, false, false) => noCheckRequired
+//          case (false, false, false, true) => checkForOldChild(parentId)
 //          case (false, false, false, false) => noCheckRequired
-//          case (true, false, false, true)   => noCheckRequired
-//          case (true, false, false, false)  => noCheckRequired
-//          case (false, true, true, false)   => noCheckRequired
-//          case (false, false, true, false)  => noCheckRequired
-//          case (true, false, true, false)   => noCheckRequired
-//          case _                            => errorBecauseManySideIsRequired
+//          case (true, false, false, true) => noCheckRequired
+//          case (true, false, false, false) => noCheckRequired
+//          case (false, true, true, false) => noCheckRequired
+//          case (false, false, true, false) => noCheckRequired
+//          case (true, false, true, false) => noCheckRequired
+//          case _ => errorBecauseManySideIsRequired
 //        }
 //
 //      case true =>
 //        noCheckRequired
 //    }
 //  }
-//
-//  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
-//    mutaction.topIsCreate match {
-//      case false =>
-//        (p.isList, c.isList) match {
-//          case (false, false) => removalByParent(parentId)
-//          case (true, false)  => noActionRequired
-//          case (false, true)  => removalByParent(parentId)
-//          case (true, true)   => noActionRequired
-//        }
-//
-//      case true =>
-//        noActionRequired
-//    }
-//
-//  override val errorMapper = {
-//    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-//      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
-//
-//    case e: PSQLException if e.getSQLState == "23503" =>
-//      APIErrors.NodeDoesNotExist("")
-//
-//    case e: SQLIntegrityConstraintViolationException
-//      if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
-//      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
-//  }
-//}
+
+  //
+  //  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
+  //    mutaction.topIsCreate match {
+  //      case false =>
+  //        (p.isList, c.isList) match {
+  //          case (false, false) => removalByParent(parentId)
+  //          case (true, false)  => noActionRequired
+  //          case (false, true)  => removalByParent(parentId)
+  //          case (true, true)   => noActionRequired
+  //        }
+  //
+  //      case true =>
+  //        noActionRequired
+  //    }
+  //
+  //  override val errorMapper = {
+  //    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+  //      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+  //
+  //    case e: PSQLException if e.getSQLState == "23503" =>
+  //      APIErrors.NodeDoesNotExist("")
+  //
+  //    case e: SQLIntegrityConstraintViolationException
+  //      if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
+  //      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+  //  }
+  //}
+}

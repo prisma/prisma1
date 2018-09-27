@@ -452,7 +452,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.createComment.todo.title"), "todo1")
   }
 
-  "a many to many relation" should "creatable through a nested mutation" in {
+  "a many to many relation" should "be creatable through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
