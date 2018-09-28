@@ -144,6 +144,11 @@ export class GoGenerator extends Generator {
         return ""
       }
 
+      if(type.name.startsWith("Aggregate")) {
+        // We're merging all Aggregate types into a single type
+        return ``
+      }
+
       return `
         type ${type.name}Exec struct {
           exec *prisma.Exec
@@ -223,6 +228,21 @@ export class GoGenerator extends Generator {
                   return v, err
                 }`
             } else {
+              if(type.name.endsWith("Connection") && field.name === "aggregate") {
+                return sTyp + `
+                  func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context) (Aggregate, error) {
+                    ret := instance.exec.Client.GetOne(
+                      instance.exec,
+                      nil,
+                      [2]string{"", "${typeName}"},
+                      "${field.name}",
+                      []string{${typeFields.join(',')}})
+
+                    var v Aggregate
+                    err := ret.Exec(ctx, &v)
+                    return v, err
+                  }`
+              }
               return sTyp + `
                 func (instance *${type.name}Exec) ${goCase(field.name)}() *${goCase(typeName)}Exec {
                   ret := instance.exec.Client.GetOne(
@@ -628,6 +648,10 @@ func Int32(v int32) *int32 { return &v }
 func Bool(v bool) *bool    { return &v }
 
 type BatchPayload struct {
+	Count int64 \`json:"count"\`
+}
+
+type Aggregate struct {
 	Count int64 \`json:"count"\`
 }
 
