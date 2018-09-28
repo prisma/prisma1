@@ -499,6 +499,15 @@ export class GoGenerator extends Generator {
       }`
   }
 
+  opGetConnection(field) {
+    // TODO(dh): Connections are not yet implemented
+    const { typeName } = this.extractFieldLikeType(field)
+    return this.paramsType(field) + `
+      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) (${goCase(typeName)}Exec) {
+        panic("not implemented")
+      }`
+  }
+
   opCreate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
@@ -588,8 +597,7 @@ export class GoGenerator extends Generator {
             return this.opGetMany(field)
           }
           if(!isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
-            // XXX connections were and are completely broken in this client.
-            return ``
+            return this.opGetConnection(field)
           }
           if(field.name === "node") {
             // Don't emit generic Node fetching
