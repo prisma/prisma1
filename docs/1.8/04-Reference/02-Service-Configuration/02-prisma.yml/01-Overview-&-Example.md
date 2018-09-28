@@ -48,7 +48,7 @@ hooks:
 
 # OPTIONAL
 # This service has one event subscription configured. The corresponding
-# subscription query is located in `database/subscriptions/welcomeEmail.graphql`.
+# subscription query is located in `database/subscriptions/sendWelcomeEmail.graphql`.
 # When the subscription fires, the specified `webhook` is invoked via HTTP.
 subscriptions:
   sendWelcomeEmail:
