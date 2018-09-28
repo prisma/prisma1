@@ -286,6 +286,8 @@ class ObjectTypeBuilder(
         item.data.map(field.name).value
 
       case f: RelationField if f.isList && f.relation.isInlineRelation =>
+//        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+
         val manifestation = f.relation.inlineManifestation.get
         if (manifestation.inTableOfModelId == f.model.name) {
 
@@ -312,6 +314,8 @@ class ObjectTypeBuilder(
         //Fixme only MongoInlineRelation
         //the postgres passive connector still handles that on the connector level
         //it should be handled for both here
+
+//        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
         val manifestation = f.relation.inlineManifestation.get
         if (manifestation.inTableOfModelId == f.model.name) {

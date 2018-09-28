@@ -1,5 +1,7 @@
 package com.prisma.api.connector.mongo.impl
 
+import java.util
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{CursorConditionBuilder, FilterConditionBuilder, OrderByClauseBuilder}
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
@@ -11,7 +13,7 @@ import org.bson.BsonString
 import org.mongodb.scala.bson.BsonValue
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, FindObservable, MongoClient, MongoCollection}
-
+import collection.JavaConverters._
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -93,11 +95,18 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     val mongoFilter = buildConditionForFilter(Some(filter))
 
     collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
-      //Fixme handle lists here for the grouping
+      val groups = fromField.relatedField.isList match {
+        case true =>
+          val tuples = for {
+            result <- results
+            id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => CuidGCValue(x.getValue))
+          } yield (id, result)
+          tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-      val documentGroupsByParentId: Map[CuidGCValue, Seq[Document]] = results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
+        case false => results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
+      }
 
-      documentGroupsByParentId.map { group =>
+      groups.map { group =>
         val parentId                                  = fromNodeIds.find(_ == group._1).get
         val roots                                     = group._2.map(DocumentToRoot(model, _))
         val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(parentId, PrismaNode(r.idField, r, Some(model.name)))).toVector

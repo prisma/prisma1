@@ -44,7 +44,7 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
       //Fixme this needs to be a push in order not to overwrite when top is an update
       case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
 
-        val inlineRelation = mutaction.relationField.isList match {
+        val inlineRelation = mutaction.relationField.relatedField.isList match {
           case true  => List((m.referencingColumn, ListGCValue(Vector(parentId))))
           case false => List((m.referencingColumn, parentId))
         }
