@@ -33,14 +33,13 @@ trait RelationActions {
         .map(_ => MutactionResults(Vector.empty))
     }
 
-//  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
+//  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = {
 //    assert(!relationField.relatedField.isList)
 //    val relation  = relationField.relation
 //    val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
 //
-//    relation.inlineManifestation match {
-//      case Some(manifestation) =>
-//        val query = sql
+//
+//    sql
 //          .update(relationTable(relation))
 //          .set(inlineRelationColumn(relation, manifestation), placeHolder)
 //          .where(condition)
@@ -52,15 +51,9 @@ trait RelationActions {
 //          }
 //        )
 //
-//      case None =>
-//        val query = sql
-//          .deleteFrom(relationTable(relation))
-//          .where(condition)
 //
-//        deleteToDBIO(query)(setParams = _.setGcValue(childId))
-//    }
 //  }
-//
+
 //  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[Unit] = {
 //    val relation = relationField.relation
 //    val condition = relationColumn(relation, relationField.oppositeRelationSide)
@@ -93,13 +86,11 @@ trait RelationActions {
 //        })
 //    }
 //  }
-//
-//  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
-//    assert(!relationField.isList)
-//    val relation  = relationField.relation
+
+  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue) = { ??? }
 //    val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
-//    relation.inlineManifestation match {
-//      case Some(manifestation) =>
+//
+//
 //        val query = sql
 //          .update(relationTable(relation))
 //          .set(inlineRelationColumn(relation, manifestation), placeHolder)
@@ -111,13 +102,26 @@ trait RelationActions {
 //            pp.setGcValue(parentId)
 //          }
 //        )
-//
-//      case None =>
-//        val query = sql
-//          .deleteFrom(relationTable(relation))
-//          .where(condition)
-//
-//        deleteToDBIO(query)(setParams = _.setGcValue(parentId))
-//    }
 //  }
+//  SimpleMongoAction { database =>
+//    assert(!relationField.isList)
+//    val relation = relationField.relation
+//
+//    val inlineManifestation = relation.inlineManifestation.get
+//    val parentModel         = relationField.model
+//    val parentWhere         = NodeSelector.forIdGCValue(parentModel, parentId)
+//
+//    val collection = database.getCollection(parentModel.dbName)
+//
+//    val update = relationField.isList match {
+//      case false => set(inlineManifestation.referencingColumn, GCValueBsonTransformer(childId))
+//      case true  => push(inlineManifestation.referencingColumn, GCValueBsonTransformer(childId))
+//    }
+//
+//    collection
+//      .updateOne(parentWhere, update)
+//      .toFuture()
+//      .map(_ => MutactionResults(Vector.empty))
+//  }
+
 }

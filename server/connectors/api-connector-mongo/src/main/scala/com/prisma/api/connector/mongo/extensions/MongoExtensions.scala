@@ -116,7 +116,6 @@ object DocumentToRoot {
         f.relation.inlineManifestation.get.referencingColumn
     }
 
-    //Fixme fetch inline relation data here
     val singleInlineIds = inlineIdFieldNamesWithSingles.map(x => x -> document.get(x).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue)) //Fixme this is a hack
     val listInlineIds = inlineIdFieldNamesWithLists.map(x =>
       x -> document.get(x).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue)) //Fixme this is a hack

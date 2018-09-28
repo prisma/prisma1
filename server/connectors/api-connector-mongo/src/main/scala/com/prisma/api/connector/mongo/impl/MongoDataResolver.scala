@@ -1,7 +1,5 @@
 package com.prisma.api.connector.mongo.impl
 
-import java.util
-
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{CursorConditionBuilder, FilterConditionBuilder, OrderByClauseBuilder}
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
@@ -9,12 +7,10 @@ import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whe
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values._
 import com.prisma.shared.models._
-import org.bson.BsonString
-import org.mongodb.scala.bson.BsonValue
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, FindObservable, MongoClient, MongoCollection}
-import collection.JavaConverters._
-import scala.collection.immutable
+
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver with FilterConditionBuilder {
@@ -134,11 +130,11 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   override def getRelationNodes(relationTableName: String, queryArguments: Option[QueryArguments]): Future[ResolverResult[RelationNode]] = ???
 
-  // these should never be used and are only in here due to the interface
-  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: Option[QueryArguments]): Future[ResolverResult[ScalarListValues]] = ???
-  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]            = ???
-
   override def countByModel(model: Model, queryArguments: Option[QueryArguments]): Future[Int] = {
     countByTable(model.dbName, queryArguments.flatMap(_.filter))
   }
+
+  // these should never be used and are only in here due to the interface
+  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: Option[QueryArguments]): Future[ResolverResult[ScalarListValues]] = ???
+  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]]            = ???
 }
