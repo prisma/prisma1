@@ -2,8 +2,8 @@ import QueryChooser from 'components/Markdown/QueryChooser'
 
 export const meta = {
   title: 'Build an App with Prisma',
-  step: 3,
-  position: 2,
+  position: 3,
+  gettingStartedOrder: 2,
   gettingStartedTitle: 'REST API',
   nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a REST API.',
   technology: 'node',
@@ -44,7 +44,7 @@ There will be six routes that provide the API for a simple blogging application:
 Replace the current contents of `index.js` with the following code:
 
 ```js lineNumbers,copy
-const { prisma } = require('./prisma-client')
+const { prisma } = require('./generated/prisma-client')
 const app = express()
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -142,3 +142,5 @@ curl -X POST \\
 ```
 
 </QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.

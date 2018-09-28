@@ -5,11 +5,11 @@ import Code from 'components/Markdown/Code'
 export const meta = {
   title: 'Setting up Prisma',
   position: 1,
-  step: 2,
+  gettingStartedOrder: 2,
   gettingStartedTitle: 'Existing database',
   nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
   technology: 'node',
-  technologyOrder: 3,
+  technologyOrder: 1,
   articleGroup: 'Setting up Prisma',
 }
 
@@ -54,7 +54,7 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma@beta
+npm install -g prisma
 ```
 
 </Code>
@@ -191,8 +191,9 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 ```yml copy
 generate:
   - generator: javascript-client
-    output: ./prisma-client/
+    output: ./generated/prisma-client/
 ```
+
 
 Now generate the client with this command:
 
@@ -200,7 +201,7 @@ Now generate the client with this command:
 prisma generate
 ```
 
-The CLI now stored your Prisma client inside the `prisma-client` folder as specified in `prisma.yml`.
+The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
 
 ## Prepare Node application
 
@@ -233,7 +234,7 @@ If you don't have such a `User` type, you need to adjust the following code snip
 Add the following code in `index.js` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./prisma-client')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
