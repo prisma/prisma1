@@ -145,109 +145,110 @@ export class GoGenerator extends Generator {
       }
 
       return `
-      type ${type.name}Exec struct {
-        exec *prisma.Exec
-      }
+        type ${type.name}Exec struct {
+          exec *prisma.Exec
+        }
 
-      ${Object.keys(fieldMap)
-        .filter(key => {
-          const field = fieldMap[key]
-          const { isScalar, isEnum } = this.extractFieldLikeType(
-            field as GraphQLField<any, any>,
-          )
-          return !isScalar && !isEnum
-        })
-        .map(key => {
-          // XXX this code is responsible for things like
-          // previousValues, pageInfo, aggregate, edges, and relations.
-          // It should probably be specialised like the rest of our code generation.
+        ${Object.keys(fieldMap)
+          .filter(key => {
+            const field = fieldMap[key]
+            const { isScalar, isEnum } = this.extractFieldLikeType(
+              field as GraphQLField<any, any>,
+            )
+            return !isScalar && !isEnum
+          })
+          .map(key => {
+            // XXX this code is responsible for things like
+            // previousValues, pageInfo, aggregate, edges, and relations.
+            // It should probably be specialised like the rest of our code generation.
 
-          const field = fieldMap[key] as GraphQLField<any, any>
-          const args = field.args
-          const { typeFields, typeName, isList } = this.extractFieldLikeType(
-            field as GraphQLField<any, any>,
-          )
+            const field = fieldMap[key] as GraphQLField<any, any>
+            const args = field.args
+            const { typeFields, typeName, isList } = this.extractFieldLikeType(
+              field as GraphQLField<any, any>,
+            )
 
-          let sTyp = ""
-          const meth = goCase(field.name) + "ParamsExec"
+            let sTyp = ""
+            const meth = goCase(field.name) + "ParamsExec"
 
-          // TODO(dh): This type (FooParamsExec) is redundant.
-          // If we have a relation article.authors -> [User],
-          // then we can reuse UsersParams.
-          // The only reason we can't do it right now
-          // is because we don't have the base type's plural name available
-          // (and appending a single s doesn't work for names like Mouse)
-          if(!this.printedTypes[meth] && field.args.length > 0) {
-            this.printedTypes[meth] = true
-            sTyp = `
-              type ${meth} struct {
-                ${args
-                  .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
-                }
-              }`
-          }
-
-          if(field.args.length !== 0 && field.args.length !== whereArgs) {
-            throw new Error(`unexpected argument count ${field.args.length}`)
-          }
-          if(field.args.length === whereArgs && !isList) {
-            throw new Error("looks like a getMany query but doesn't return an array")
-          }
-
-          if (field.args.length > 0) {
-            return sTyp + `
-              func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context, params *${goCase(field.name)}ParamsExec) ([]${goCase(typeName)}, error) {
-                var wparams *prisma.WhereParams
-                if params != nil {
-                  wparams = &prisma.WhereParams{
-                    Where: params.Where,
-                    OrderBy: (*string)(params.OrderBy),
-                    Skip: params.Skip,
-                    After: params.After,
-                    Before: params.Before,
-                    First: params.First,
-                    Last: params.Last,
+            // TODO(dh): This type (FooParamsExec) is redundant.
+            // If we have a relation article.authors -> [User],
+            // then we can reuse UsersParams.
+            // The only reason we can't do it right now
+            // is because we don't have the base type's plural name available
+            // (and appending a single s doesn't work for names like Mouse)
+            if(!this.printedTypes[meth] && field.args.length > 0) {
+              this.printedTypes[meth] = true
+              sTyp = `
+                type ${meth} struct {
+                  ${args
+                    .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
                   }
-                }
+                }`
+            }
 
-                ret := instance.exec.Client.GetMany(
-                  instance.exec,
-                  wparams,
-                  [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
-                  "${field.name}",
-                  []string{${typeFields.join(',')}})
+            if(field.args.length !== 0 && field.args.length !== whereArgs) {
+              throw new Error(`unexpected argument count ${field.args.length}`)
+            }
+            if(field.args.length === whereArgs && !isList) {
+              throw new Error("looks like a getMany query but doesn't return an array")
+            }
+
+            if (field.args.length > 0) {
+              return sTyp + `
+                func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context, params *${goCase(field.name)}ParamsExec) ([]${goCase(typeName)}, error) {
+                  var wparams *prisma.WhereParams
+                  if params != nil {
+                    wparams = &prisma.WhereParams{
+                      Where: params.Where,
+                      OrderBy: (*string)(params.OrderBy),
+                      Skip: params.Skip,
+                      After: params.After,
+                      Before: params.Before,
+                      First: params.First,
+                      Last: params.Last,
+                    }
+                  }
+
+                  ret := instance.exec.Client.GetMany(
+                    instance.exec,
+                    wparams,
+                    [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                    "${field.name}",
+                    []string{${typeFields.join(',')}})
 
 
-                var v []${typeName}
-                err := ret.ExecArray(ctx, &v)
-                return v, err
-              }`
-          } else {
-            return sTyp + `
-              func (instance *${type.name}Exec) ${goCase(field.name)}() *${goCase(typeName)}Exec {
-                ret := instance.exec.Client.GetOne(
-                  instance.exec,
-                  nil,
-                  [2]string{"", "${typeName}"},
-                  "${field.name}",
-                  []string{${typeFields.join(',')}})
+                  var v []${typeName}
+                  err := ret.ExecArray(ctx, &v)
+                  return v, err
+                }`
+            } else {
+              return sTyp + `
+                func (instance *${type.name}Exec) ${goCase(field.name)}() *${goCase(typeName)}Exec {
+                  ret := instance.exec.Client.GetOne(
+                    instance.exec,
+                    nil,
+                    [2]string{"", "${typeName}"},
+                    "${field.name}",
+                    []string{${typeFields.join(',')}})
 
-                return &${goCase(typeName)}Exec{ret}
-              }`
-          }
-        }).join('\n')}
+                  return &${goCase(typeName)}Exec{ret}
+                }`
+            }
+          }).join('\n')}
 
-      func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
-        var v ${type.name}
-        err := instance.exec.Exec(ctx, &v)
-        return v, err
-      }
+        func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
+          var v ${type.name}
+          err := instance.exec.Exec(ctx, &v)
+          return v, err
+        }
 
-      func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
-        return instance.exec.Exists(ctx)
-      }
+        func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
+          return instance.exec.Exists(ctx)
+        }
 
-      type ${type.name} struct {
+
+        type ${type.name} struct {
           ${Object.keys(fieldMap)
             .filter(key => {
               const field = fieldMap[key]
@@ -263,8 +264,7 @@ export class GoGenerator extends Generator {
               return `${goCase(field.name)} ${this.goTypeName(fieldType)} ${this.goStructTag(field as GraphQLField<any, any>)}`
             })
             .join('\n')}
-            }
-        `
+        }`
     },
 
     GraphQLInterfaceType: (
