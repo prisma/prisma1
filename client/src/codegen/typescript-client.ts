@@ -173,7 +173,7 @@ export interface Exists {\n${this.renderExists()}\n}
 export interface Node {}
 
 export interface Fragmentable {
-  $fragment<T>(fragment: string | Object): T
+  $fragment<T>(fragment: string | DocumentNode): Promise<T>
 }
 
 ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
@@ -232,7 +232,7 @@ ${this.renderExports(options)}
     return `\
 ${codeComment}
 
-import { GraphQLSchema } from 'graphql'
+import { DocumentNode, GraphQLSchema } from 'graphql'
 import { IResolvers } from 'graphql-tools/dist/Interfaces'
 import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
