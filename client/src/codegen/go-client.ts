@@ -273,6 +273,10 @@ export class GoGenerator extends Generator {
         | GraphQLInputObjectType
         | GraphQLInterfaceType,
     ): string => {
+      if(type.name === "Node") {
+        // Don't emit code relating to generic node fetching
+        return ""
+      }
       const fieldMap = type.getFields()
       return `
       type ${goCase(type.name)}Exec struct {
@@ -511,14 +515,6 @@ export class GoGenerator extends Generator {
       }`
   }
 
-  opNode() {
-    return `
-      func (client *Client) Node(id *ID) *NodeExec {
-        exec := client.Client.Node(id)
-        return &NodeExec{exec}
-      }`
-  }
-
   paramsType(field) {
     return `
       type ${goCase(field.name)}Params struct {
@@ -576,7 +572,8 @@ export class GoGenerator extends Generator {
             return ``
           }
           if(field.name === "node") {
-            return this.opNode()
+            // Don't emit generic Node fetching
+            return ``
           }
           throw new Error("unsupported query operation on field " + field.name)
         }
@@ -633,8 +630,6 @@ func Bool(v bool) *bool    { return &v }
 type BatchPayload struct {
 	Count int64 \`json:"count"\`
 }
-
-type ID struct{}
 
 type Client struct {
 	Client *prisma.Client
