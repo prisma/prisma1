@@ -69,16 +69,20 @@ trait NodeActions extends NodeSingleQueries {
         val (updates, arrayFilters, updateResults)  = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates)
         val (upserts, arrayFilters2, upsertResults) = embeddedNestedUpsertDocsAndResults(node, mutaction)
 
-        val combinedUpdates = customCombine(scalarUpdates ++ creates ++ deletes ++ updates ++ upserts)
-
-        val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
+        val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts
 
         val results = createResults ++ deleteResults ++ updateResults ++ upsertResults :+ UpdateNodeResult(node.id, node, mutaction)
+        if (allUpdates.isEmpty) {
+          Future.successful(MutactionResults(results))
+        } else {
+          val combinedUpdates = customCombine(allUpdates)
 
-        collection
-          .updateOne(mutaction.where, combinedUpdates, updateOptions)
-          .toFuture()
-          .map(_ => MutactionResults(results))
+          val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
+          collection
+            .updateOne(mutaction.where, combinedUpdates, updateOptions)
+            .toFuture()
+            .map(_ => MutactionResults(results))
+        }
     }
   }
 

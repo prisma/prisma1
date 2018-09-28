@@ -2,14 +2,19 @@ package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
-import com.prisma.api.connector.{MutactionResults, NodeSelector}
+import com.prisma.api.connector._
+import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
+import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.RelationField
+import org.mongodb.scala.Document
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-trait RelationActions {
+trait RelationActions extends FilterConditionBuilder {
 
   def createRelation(relationField: RelationField, parentId: IdGCValue, childId: IdGCValue)(
       implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
@@ -87,8 +92,32 @@ trait RelationActions {
 //    }
 //  }
 
-  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue) = { ??? }
-//    val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
+  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue) =
+    SimpleMongoAction { database =>
+      val model = relationField.model
+      relationField.relation.manifestation match {
+        case Some(m: InlineRelationManifestation) if m.inTableOfModelId != model.name =>
+          //stored on the other model
+          //find the other item that is storing the reference to this parent id
+          //update it to remove the parentId
+
+          val collection = database.getCollection(relationField.relatedModel_!.dbName)
+
+          val update: Bson = relationField.isList match {
+            case true  => pull(m.referencingColumn, GCValueBsonTransformer(parentId))
+            case false => unset(m.referencingColumn)
+          }
+
+//          collection.updateOne(NodeSelector.forIdGCValue(model, parentId), ).collect().toFuture
+          Future.successful(())
+        case Some(m: InlineRelationManifestation) =>
+          val x = 1
+          // stored on this model, set to null or remove f
+          Future.successful(())
+        case _ => sys.error("should not happen ")
+      }
+    }
+  //    val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
 //
 //
 //        val query = sql
@@ -122,6 +151,5 @@ trait RelationActions {
 //      .updateOne(parentWhere, update)
 //      .toFuture()
 //      .map(_ => MutactionResults(Vector.empty))
-//  }
 
 }

@@ -22,12 +22,10 @@ trait NestedRelationInterpreterBase extends NestedDatabaseMutactionInterpreter {
   def errorBecauseManySideIsRequired = sys.error("This should not happen, since it means a many side is required")
 
   def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
-//    mutationBuilder.deleteRelationRowByParentId(relationField, parentId)
-    ???
+    mutationBuilder.deleteRelationRowByParentId(relationField, parentId)
   }
 
   def checkForOldChild(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
-//    mutationBuilder.ensureThatNodeIsNotConnected(relationField.relatedField, parentId)
-    ???
+    mutationBuilder.ensureThatNodeIsNotConnected(relationField, parentId)
   }
 }

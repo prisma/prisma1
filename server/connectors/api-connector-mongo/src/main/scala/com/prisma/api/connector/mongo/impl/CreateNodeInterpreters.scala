@@ -20,14 +20,15 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
   override def relationField = mutaction.relationField
   val model                  = p.relatedModel_!
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) =
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+    implicit val mb: MongoActionsBuilder = mutationBuilder
+
     for {
-//      _  <- SequenceAction(requiredCheck(parentId), removalAction(parentId))
-      _  <- SequenceAction(Vector(requiredCheck(parentId)(mutationBuilder)))
+      _  <- SequenceAction(Vector(requiredCheck(parentId), removalAction(parentId)))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
       //          _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else MongoAction.successful(())
     } yield MutactionResults(Vector(CreateNodeResult(id, mutaction)))
-
+  }
   private def createNodeAndConnectToParent(
       mutationBuilder: MongoActionsBuilder,
       parentId: IdGCValue

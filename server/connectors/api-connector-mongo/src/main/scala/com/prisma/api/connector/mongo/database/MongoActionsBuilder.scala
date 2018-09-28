@@ -7,7 +7,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait AllActions
   extends NodeActions
     with RelationActions
-//    with ValidationActions
+    with ValidationActions
 //    with RelayIdActions
 //    with ImportActions
     with MiscActions
