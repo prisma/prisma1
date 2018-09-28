@@ -3,14 +3,13 @@
 extern crate serde;
 extern crate serde_json;
 extern crate postgres;
-//extern crate serde_derive;
+extern crate colored;
 
 use std::ffi::{CStr, CString};
 use std::mem;
 use std::os::raw::c_char;
 use std::str;
-use std::panic;
-use std::sync::Mutex;
+use colored::*;
 
 pub mod driver;
 
@@ -30,13 +29,9 @@ pub extern "C" fn sqlQuery(
 ) -> *const c_char {
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let params = driver::toGcValues(&paramsString).expect(&*format!(
-        "could not convert gc values successfully: {}",
-        &paramsString
-    ));
+    let result = conn.queryRawParams(queryString, paramsString);
 
-    let result = conn.query(queryString, params.iter().collect());
-    return to_ptr(result.to_string());
+    return to_ptr(handleResult(result, String::from("[]")).to_string());
 }
 
 #[no_mangle]
@@ -45,39 +40,23 @@ pub extern "C" fn sqlExecute(
     query: *const c_char,
     params: *const c_char,
 ) {
-    println!("Calling exec");
+    println!("[Rust] Calling exec");
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let mutex = Mutex::new(conn);
 
-    let result = panic::catch_unwind(||{
-        let x = mutex.lock().unwrap();
-
-        let params = driver::toGcValues(&paramsString).expect(&*format!(
-            "could not convert gc values successfully: {}",
-            &paramsString
-        ));
-        (*x).execute(queryString, params.iter().collect());
-    });
-
-    handle(result)
+    handleResult(conn.executeRawParams(queryString, paramsString), 0);
 }
 
-fn handle(r: std::thread::Result<()>) {
-    match r {
-        Ok(r) => println!("All is well! {:?}", r),
+fn handleResult<T>(result: driver::Result<T>, default: T) -> T {
+    match result {
+        Ok(v) => v,
         Err(e) => {
-//            println!("typeid of error: {:?}", e.get_type_id());
-            if let Some(e) = e.downcast_ref::<self::postgres::Error>() {
-                println!("Got an error: {}", e);
-            } else {
-                println!("Got an unknown error: {:?}", e);
-            }
-        }
+            let cstr = format!("[Rust ERROR] {:?}", e);
+            println!("{}", cstr.red());
+            default
+        },
     }
 }
-
-
 
 #[no_mangle]
 pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) {
@@ -88,25 +67,26 @@ pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) {
 #[no_mangle]
 pub extern "C" fn startTransaction<'a>(conn: *mut driver::PsqlConnection) {
     unsafe {
-        (*conn).startTransaction();
+        let res = (*conn).startTransaction();
+        handleResult(res, ())
     }
 }
 
 #[no_mangle]
 pub extern "C" fn commitTransaction(conn: *mut driver::PsqlConnection) {
     println!("[Rust] committing");
-    let wat = unsafe { Box::from_raw(conn) };
-    wat.commitTransaction();
-    mem::forget(wat);
+    let ptr = unsafe { Box::from_raw(conn) };
+    handleResult(ptr.commitTransaction(), ());
+    mem::forget(ptr);
     println!("[Rust] committed");
 }
 
 #[no_mangle]
 pub extern "C" fn rollbackTransaction(conn: *mut driver::PsqlConnection) {
     println!("[Rust] Rolling back");
-    let wat = unsafe { Box::from_raw(conn) };
-    wat.rollbackTransaction();
-    mem::forget(wat);
+    let ptr = unsafe { Box::from_raw(conn) };
+    handleResult(ptr.rollbackTransaction(), ());
+    mem::forget(ptr);
     println!("[Rust] Rolled back");
 }
 

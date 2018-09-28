@@ -6,13 +6,15 @@ extern crate serde_json;
 extern crate chrono;
 
 use self::postgres::transaction::Transaction;
-use self::postgres::{Connection, TlsMode};
+use self::postgres::{Connection, TlsMode, Result as PsqlResult};
 use std::cell::RefCell;
 use self::postgres::rows::Row;
 use self::postgres::types::{IsNull, ToSql, Type};
-use std::error::Error as stdErr;
+use std::error::Error as StdErr;
 use self::chrono::prelude::*;
 use std::boxed::Box;
+use std::result;
+use std::cell;
 
 #[repr(C)]
 #[no_mangle]
@@ -22,10 +24,19 @@ pub struct PsqlConnection<'a> {
     transaction: RefCell<Option<Transaction<'a>>>,
 }
 
-pub fn serializeToJson(row: Row) -> serde_json::Value {
+#[derive(Debug)]
+pub enum DriverError {
+    JsonError(serde_json::Error),
+    PsqlError(postgres::Error),
+    GenericError(String),
+}
+
+pub type Result<T> = result::Result<T, DriverError>;
+
+pub fn serializeToJson(row: Row) -> Result<serde_json::Value> {
     let mut map = serde_json::Map::new();
     for (i, column) in row.columns().iter().enumerate() {
-        let x: Option<Result<String, _>> = row.get_opt(i);
+        let x: Option<postgres::Result<String>> = row.get_opt(i);
         let isNull = match x {
             Some(Err(WasNull)) => true,
             _ => false,
@@ -49,7 +60,7 @@ pub fn serializeToJson(row: Row) -> serde_json::Value {
         }
     }
 
-    return serde_json::Value::Object(map);
+    return Ok(serde_json::Value::Object(map));
 }
 
 pub fn connect<'a>(url: String) -> PsqlConnection<'a> {
@@ -66,84 +77,112 @@ impl<'a> Drop for PsqlConnection<'a> {
     }
 }
 
+
+impl From<postgres::Error> for DriverError {
+    fn from(e: postgres::Error) -> Self {
+        DriverError::PsqlError(e)
+    }
+}
+
+impl From<serde_json::Error> for DriverError {
+    fn from(e: serde_json::Error) -> Self {
+        DriverError::JsonError(e)
+    }
+}
+
+impl From<cell::BorrowMutError> for DriverError {
+    fn from(e: cell::BorrowMutError) -> Self {
+        DriverError::GenericError(e.to_string())
+    }
+}
+
+
 impl<'a> PsqlConnection<'a> {
-    pub fn query(&self, query: String, params: Vec<&GcValue>) -> String {
-        println!("Query received the params: {:?}", params);
-        let mutRef = self.transaction.borrow_mut();
+
+    pub fn queryRawParams(&self, query: String, rawParams: String) -> Result<String> {
+        let params = toGcValues(&rawParams)?;
+        return self.query(query, params.iter().collect());
+    }
+
+    pub fn query(&self, query: String, params: Vec<&GcValue>) -> Result<String> {
+        println!("[Rust] Query received the params: {:?}", params);
+        let mutRef = self.transaction.try_borrow_mut()?;
         let rows = match *mutRef {
-            Some(ref t) => t.query(&*query, &gcValuesToToSql(params)).unwrap(),
+            Some(ref t) => t.query(&*query, &gcValuesToToSql(params))?,
             None => self
                 .connection
-                .query(&*query, &gcValuesToToSql(params))
-                .unwrap(),
+                .query(&*query, &gcValuesToToSql(params))?,
         };
 
-        println!("The result set has {} columns", rows.columns().len());
+        println!("[Rust] The result set has {} columns", rows.columns().len());
         for column in rows.columns() {
-            println!("column {} of type {}", column.name(), column.type_());
+            println!("[Rust] column {} of type {}", column.name(), column.type_());
         }
 
         let mut vec = Vec::new();
         for row in rows.iter() {
-            let json = serializeToJson(row);
+            let json = serializeToJson(row)?;
             vec.push(json);
         }
-        return serde_json::to_string(&vec).unwrap();
+
+        return Ok(serde_json::to_string(&vec)?);
     }
 
-    pub fn execute(&self, query: String, params: Vec<&GcValue>) {
-        println!("Execute received the params: {:?}", params);
+    pub fn executeRawParams(&self, query: String, rawParams: String) -> Result<u64> {
+        let params = toGcValues(&rawParams)?;
+        return self.execute(query, params.iter().collect());
+    }
 
-        let mutRef = self.transaction.borrow_mut();
-        match *mutRef {
+    pub fn execute(&self, query: String, params: Vec<&GcValue>) -> Result<u64> {
+        println!("[Rust] Execute received the params: {:?}", params);
+
+        let mutRef = self.transaction.try_borrow_mut()?;
+        let result = match *mutRef {
             Some(ref t) => {
                 println!("[Rust] Have transaction");
-                t.execute(&*query, &gcValuesToToSql(params)).unwrap()
+                t.execute(&*query, &gcValuesToToSql(params))?
             }
             None => self
                 .connection
-                .execute(&*query, &gcValuesToToSql(params))
-                .unwrap(),
+                .execute(&*query, &gcValuesToToSql(params))?,
         };
 
-        println!("EXEC DONE")
+
+        println!("[Rust] EXEC DONE");
+        return Ok(result);
     }
 
     pub fn close(self) {
-        // self.connection.finish().unwrap();
+        // Simply drops the moved var for now, which calls the drop Impl
     }
 
-    pub fn startTransaction(&'a mut self) {
-        let ta = self.connection.transaction().unwrap();
+    pub fn startTransaction(&'a mut self) -> Result<()> {
+        let ta = self.connection.transaction()?;
         self.transaction.replace(Some(ta));
+
+        return Ok(());
     }
 
-    pub fn commitTransaction(&self) {
-        // let ta = self.transaction.unwrap();
-        // ta.set_commit();
-        // ta.finish().unwrap();
-        // self.transaction = None;
-
+    pub fn commitTransaction(&self) -> Result<()> {
         let taOpt = self.transaction.replace(None);
         match taOpt {
             Some(ta) => {
                 println!("[Rust] Have transaction");
-                ta.commit().unwrap();
+                Ok(ta.commit()?)
             }
-            None => (),
+            None => Ok(()),
         }
     }
 
-    pub fn rollbackTransaction(&self) {
+    pub fn rollbackTransaction(&self) -> Result<()> {
         let taOpt = self.transaction.replace(None);
         match taOpt {
             Some(ta) => {
                 println!("[Rust] Have transaction");
-                ta.set_rollback();
-                //ta.finish().unwrap();
+                Ok(ta.set_rollback())
             }
 
-            None => (),
+            None => Ok(()),
         }
     }
 }
@@ -164,48 +203,32 @@ fn gcValueToToSql(value: &GcValue) -> &ToSql {
     }
 }
 
-//impl ToSql for DateTime<Utc> {
-//    fn to_sql(&self, ty: &Type, out: &mut Vec<u8>) -> Result<IsNull, Box<stdErr>> where
-//        Self: Sized {
-//        unimplemented!()
-//    }
-//
-//    fn accepts(ty: &Type) -> bool where
-//        Self: Sized {
-//        unimplemented!()
-//    }
-//
-//    fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>) -> Result<IsNull, Box<stdErr>> {
-//        unimplemented!()
-//    }
-//}
-
-pub fn toGcValues(str: &String) -> Result<Vec<GcValue>, String> {
+pub fn toGcValues(str: &String) -> Result<Vec<GcValue>> {
     match serde_json::from_str::<serde_json::Value>(&*str) {
         Ok(serde_json::Value::Array(elements)) => elements.iter().map(jsonToGcValue).collect(),
-        Ok(json) => Err(String::from(format!(
+        Ok(json) => Err(DriverError::GenericError(String::from(format!(
             "provided json was not an array: {}",
             json
-        ))),
-        Err(e) => Err(String::from(format!("json parsing failed: {}", e))),
+        )))),
+        Err(e) => Err(DriverError::GenericError(String::from(format!("json parsing failed: {}", e)))),
     }
 }
 
-pub fn toGcValue(str: String) -> Result<GcValue, String> {
+pub fn toGcValue(str: String) -> Result<GcValue> {
     match serde_json::from_str::<serde_json::Value>(&*str) {
         Ok(result) => jsonToGcValue(&result),
-        Err(e) => Err(String::from(format!("json parsing failed: {}", e))),
+        Err(e) => Err(DriverError::GenericError(String::from(format!("json parsing failed: {}", e)))),
     }
 }
 
-fn jsonToGcValue(json: &serde_json::Value) -> Result<GcValue, String> {
+fn jsonToGcValue(json: &serde_json::Value) -> Result<GcValue> {
     match json {
         &serde_json::Value::Object(ref map) => jsonObjecToGcValue(map),
-        x => Err(format!("{} is not a valid value for a GcValue", x)),
+        x => Err(DriverError::GenericError(format!("{} is not a valid value for a GcValue", x))),
     }
 }
 
-fn jsonObjecToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Result<GcValue, String> {
+fn jsonObjecToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Result<GcValue> {
     let discriminator = map.get("discriminator").unwrap().as_str().unwrap();
     let value = map.get("value").unwrap();
 
@@ -217,10 +240,10 @@ fn jsonObjecToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Resul
         ("Double", &serde_json::Value::Number(ref n)) => Ok(GcValue::Double(n.as_f64().unwrap())),
         ("DateTime", &serde_json::Value::Number(ref n)) => Ok(GcValue::DateTime(n.as_i64().unwrap())),
         ("Long", &serde_json::Value::Number(ref n)) => Ok(GcValue::Long(n.as_i64().unwrap())),
-        (d, v) => Err(format!(
+        (d, v) => Err(DriverError::GenericError(format!(
             "discriminator {} and value {} are invalid combinations",
             d, v
-        )),
+        ))),
     }
 }
 
@@ -236,7 +259,7 @@ pub enum GcValue {
 }
 
 impl ToSql for GcValue {
-    fn to_sql(&self, ty: &Type, out: & mut Vec<u8>) -> Result<IsNull, Box<stdErr + Sync + Send>> where
+    fn to_sql(&self, ty: &Type, out: &mut Vec<u8>) -> result::Result<IsNull, Box<StdErr + Sync + Send>> where
         Self: Sized {
         match self {
             GcValue::Null => Ok(IsNull::Yes),
@@ -246,12 +269,12 @@ impl ToSql for GcValue {
 
     }
 
-    fn accepts(ty: & Type) -> bool where
+    fn accepts(ty: &Type) -> bool where
         Self: Sized {
         true
     }
 
-    fn to_sql_checked(&self, ty: & Type, out: & mut Vec<u8>) -> Result<IsNull, Box<stdErr + Sync + Send>> {
+    fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>) -> result::Result<IsNull, Box<StdErr + Sync + Send>> {
         Ok(IsNull::Yes)
     }
 }
