@@ -2,12 +2,15 @@
 
 extern crate serde;
 extern crate serde_json;
+extern crate postgres;
 //extern crate serde_derive;
 
 use std::ffi::{CStr, CString};
 use std::mem;
 use std::os::raw::c_char;
 use std::str;
+use std::panic;
+use std::sync::Mutex;
 
 pub mod driver;
 
@@ -45,13 +48,36 @@ pub extern "C" fn sqlExecute(
     println!("Calling exec");
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let params = driver::toGcValues(&paramsString).expect(&*format!(
-        "could not convert gc values successfully: {}",
-        &paramsString
-    ));
+    let mutex = Mutex::new(conn);
 
-    conn.execute(queryString, params.iter().collect());
+    let result = panic::catch_unwind(||{
+        let x = mutex.lock().unwrap();
+
+        let params = driver::toGcValues(&paramsString).expect(&*format!(
+            "could not convert gc values successfully: {}",
+            &paramsString
+        ));
+        (*x).execute(queryString, params.iter().collect());
+    });
+
+    handle(result)
 }
+
+fn handle(r: std::thread::Result<()>) {
+    match r {
+        Ok(r) => println!("All is well! {:?}", r),
+        Err(e) => {
+//            println!("typeid of error: {:?}", e.get_type_id());
+            if let Some(e) = e.downcast_ref::<self::postgres::Error>() {
+                println!("Got an error: {}", e);
+            } else {
+                println!("Got an unknown error: {:?}", e);
+            }
+        }
+    }
+}
+
+
 
 #[no_mangle]
 pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) {
