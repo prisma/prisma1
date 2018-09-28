@@ -3,6 +3,20 @@ import sbt._
 
 import scala.sys.process.ProcessLogger
 
+val buildNativeLib = TaskKey[Unit]("buildNativeLib", "builds the native lib")
+buildNativeLib := {
+  import sys.process._
+  println("will build the native lib now")
+  val logger = ProcessLogger(println, println)
+  val nativePath = new java.io.File("libs/jdbc-native-rs/")
+  Process("make build", nativePath) !(logger)
+}
+
+compile in Compile := {
+  buildNativeLib.value
+  (compile in Compile).value
+}
+
 val nativeClasspath = taskKey[String]("The classpath.")
 nativeClasspath := {
   val baseDir = baseDirectory.value
