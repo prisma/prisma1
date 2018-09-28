@@ -286,6 +286,7 @@ class ObjectTypeBuilder(
         item.data.map(field.name).value
 
       case f: RelationField if f.isList && f.relation.isInlineRelation =>
+        // Fixme merge this with the new filter
 //        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
         val manifestation = f.relation.inlineManifestation.get

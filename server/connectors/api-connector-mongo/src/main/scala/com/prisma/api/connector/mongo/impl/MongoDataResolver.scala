@@ -86,15 +86,32 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: Option[QueryArguments],
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    //Fixme add back all the pagination stuff from above
+
     val model                                 = fromField.relatedModel_!
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val manifestation                         = fromField.relation.inlineManifestation.get
-    val filter                                = ScalarFilter(model.getScalarFieldByName_!("id").copy(manifestation.referencingColumn), Equals(fromNodeIds.head))
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val inFilter                              = ScalarFilter(model.getScalarFieldByName_!("id").copy(manifestation.referencingColumn), Equals(fromNodeIds.head))
+    val queryArgFilter = queryArguments match {
+      case Some(arg) => arg.filter
+      case None      => None
+    }
 
-    val mongoFilter = buildConditionForFilter(Some(filter))
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
-    collection.find(mongoFilter).collect().toFuture.map { results: Seq[Document] =>
+    val mongoFilter = buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArgFilter)))
+
+    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
+
+    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter, cursorCondition))
+    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
+    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+
+    val queryWithLimit = skipAndLimit.limit match {
+      case Some(limit) => queryWithSkip.limit(limit)
+      case None        => queryWithSkip
+    }
+
+    queryWithLimit.collect().toFuture.map { results: Seq[Document] =>
       val groups = fromField.relatedField.isList match {
         case true =>
           val tuples = for {
