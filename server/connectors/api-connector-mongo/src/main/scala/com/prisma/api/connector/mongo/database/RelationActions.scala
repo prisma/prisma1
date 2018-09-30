@@ -1,15 +1,12 @@
 package com.prisma.api.connector.mongo.database
 
+import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
-import com.prisma.api.connector._
-import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.RelationField
-import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,28 +35,26 @@ trait RelationActions extends FilterConditionBuilder {
         .map(_ => MutactionResults(Vector.empty))
     }
 
-//  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = {
-//    assert(!relationField.relatedField.isList)
-//    val relation  = relationField.relation
-//    val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
-//
-//
-//    sql
-//          .update(relationTable(relation))
-//          .set(inlineRelationColumn(relation, manifestation), placeHolder)
-//          .where(condition)
-//
-//        updateToDBIO(query)(
-//          setParams = { pp =>
-//            pp.setGcValue(NullGCValue)
-//            pp.setGcValue(childId)
-//          }
-//        )
-//
-//
-//  }
+  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = SimpleMongoAction { database =>
+    assert(!relationField.relatedField.isList)
+    val relation = relationField.relation
 
-//  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[Unit] = {
+    val manifestation = relation.inlineManifestation.get
+
+    manifestation match {
+      case m if m.inTableOfModelId == relationField.model.name => // either delete the child ID from all inlineRelationFields of old parents
+        val collection    = database.getCollection(relationField.model.dbName)
+        val filter        = ""
+        val update        = ""
+        val updateOptions = ""
+//        collection.updateMany().collect().toFuture()
+        ???
+      case m => // or if it is on the child id do nothing
+        ???
+    }
+  }
+
+  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue) = SimpleMongoAction { database =>
 //    val relation = relationField.relation
 //    val condition = relationColumn(relation, relationField.oppositeRelationSide)
 //      .equal(placeHolder)
@@ -90,7 +85,9 @@ trait RelationActions extends FilterConditionBuilder {
 //          pp.setGcValue(parentId)
 //        })
 //    }
-//  }
+
+    ???
+  }
 
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue) =
     SimpleMongoAction { database =>

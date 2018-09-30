@@ -41,7 +41,8 @@ trait ValidationActions extends FilterConditionBuilder {
       }
     }
 
-  def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+  def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext) = SimpleMongoAction {
+    database =>
 //    val relation = relationField.relation
 //    val idQuery = sql
 //      .select(relationColumn(relation, relationField.oppositeRelationSide))
@@ -67,13 +68,13 @@ trait ValidationActions extends FilterConditionBuilder {
 //          )
 //      }
 //    )
-    ???
+      ???
   }
 
   def ensureThatParentIsConnected(
       relationField: RelationField,
       parentId: IdGCValue
-  )(implicit ec: ExecutionContext) = {
+  )(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
 //    val relation = relationField.relation
 //    val idQuery = sql
 //      .select(relationColumn(relation, relationField.relationSide))
@@ -104,7 +105,7 @@ trait ValidationActions extends FilterConditionBuilder {
     errorIfNodesAreInRelation(Vector(parentId), field)
   }
 
-  def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext) = {
+  def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
 //    val relation = field.relation
 //    val query = sql
 //      .select(relationColumn(relation, field.oppositeRelationSide))

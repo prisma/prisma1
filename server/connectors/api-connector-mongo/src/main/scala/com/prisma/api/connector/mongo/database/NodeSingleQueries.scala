@@ -41,7 +41,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
-  def getNodeIdByWhere(where: NodeSelector, database: MongoDatabase) = {
+  def getNodeIdByWhere(where: NodeSelector) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
     collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
   }

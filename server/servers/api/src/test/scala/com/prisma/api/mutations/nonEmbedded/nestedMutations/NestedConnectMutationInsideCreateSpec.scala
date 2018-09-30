@@ -170,7 +170,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       .query(
         s"""
            |{
-           |  parent(where: {id: "${otherParentWithChildId}"}){
+           |  parent(where: {id: "$otherParentWithChildId"}){
            |    childReq {
            |      c
            |    }
@@ -185,7 +185,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       .query(
         s"""
            |{
-           |  child(where: {id: "${looseChildId}"}){
+           |  child(where: {id: "$looseChildId"}){
            |    c
            |  }
            |}

@@ -103,8 +103,8 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
     case m: NestedUpsertNode => NestedUpsertNodeInterpreter(mutaction = m) //might need relay flag
     case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m, shouldDeleteRelayIds = false)
-    case m: NestedConnect    => ??? //delayed
-    case m: NestedDisconnect => ??? //delayed
+    case m: NestedConnect    => NestedConnectInterpreter(mutaction = m)
+    case m: NestedDisconnect => NestedDisconnectInterpreter(mutaction = m)
   }
 
   override def executeRaw(query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))
