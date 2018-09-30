@@ -8,24 +8,11 @@ import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "a P1! to C1! relation" should "be possible" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childReq: Child!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentReq: Parent!
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1reqToC1req }
     database.setup(project)
 
     val res = server
@@ -52,20 +39,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1! to C1 relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childReq: Child!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentOpt: Parent
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1reqToC1opt }
     database.setup(project)
 
     val child1Id = server
@@ -90,20 +64,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1 to C1  relation" should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childOpt: Child
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentOpt: Parent
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val res = server
@@ -129,20 +90,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to C1! " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childrenOpt: [Child!]!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentReq: Parent!
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     val res = server
@@ -168,20 +116,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1 to C1!  relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childOpt: Child
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentReq: Parent!
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1optToC1req }
     database.setup(project)
 
     val res = server
@@ -207,20 +142,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to C1  relation" should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childrenOpt: [Child!]!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentOpt: Parent
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaPMToC1opt }
     database.setup(project)
 
     val res = server
@@ -246,20 +168,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1! to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childReq: Child!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentsOpt: [Parent!]!
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1reqToCM }
     database.setup(project)
 
     val res = server
@@ -285,20 +194,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1 to CM relation" should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-          |   id: ID! @unique
-          |   p: String! @unique
-          |   childOpt: Child
-          |}
-          |
-          |type Child{
-          |   id: ID! @unique
-          |   c: String! @unique
-          |   parentsOpt: [Parent!]!
-          |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1optToCM }
     database.setup(project)
 
     val res = server
@@ -340,20 +236,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childrenOpt: [Child!]!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentsOpt: [Parent!]!
-        |}"""
-    }
-
+    val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
     val res = server

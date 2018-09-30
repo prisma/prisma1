@@ -8,7 +8,7 @@ import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {

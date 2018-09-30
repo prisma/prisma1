@@ -6,7 +6,7 @@ import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
 
   "a one to many relation" should "be updateable by id through a nested mutation" in {
