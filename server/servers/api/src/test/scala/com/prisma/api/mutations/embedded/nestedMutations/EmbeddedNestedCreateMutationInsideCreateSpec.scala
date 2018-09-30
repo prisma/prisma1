@@ -1,28 +1,17 @@
 package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.NestedMutationBase
 import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a P1! relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() {
-      """
-         |type Parent{
-         | id: ID! @unique
-         | p: String! @unique
-         | childReq: Child!
-         |}
-         |
-         |type Child @embedded {
-         | c: String! @unique
-         |}
-       """
-    }
+    val project = SchemaDsl.fromString() { embeddedP1req }
 
     database.setup(project)
 
@@ -48,19 +37,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation" should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childOpt: Child
-        |}
-        |
-        |type Child @embedded {
-        | c: String! @unique
-        |}
-      """
-    }
+    val project = SchemaDsl.fromString() { embeddedP1opt }
     database.setup(project)
 
     val res = server
@@ -84,19 +61,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a PM relation" should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childrenOpt: [Child!]!
-        |}
-        |
-        |type Child @embedded {
-        | c: String! @unique
-        |}
-      """
-    }
+    val project = SchemaDsl.fromString() { embeddedPM }
     database.setup(project)
 
     val res = server

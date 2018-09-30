@@ -2,6 +2,8 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 trait NestedMutationBase {
 
+  //NON EMBEDDED
+
   val schemaP1reqToC1req = """type Parent{
                             id: ID! @unique
                             p: String! @unique
@@ -108,5 +110,37 @@ trait NestedMutationBase {
                             id: ID! @unique
                             c: String! @unique
                             parentsOpt: [Parent!]!
+                        }"""
+
+  //EMBEDDED
+
+  val embeddedP1req = """type Parent{
+                            id: ID! @unique
+                            p: String! @unique
+                            childReq: Child!
+                        }
+                        
+                        type Child @embedded {
+                            c: String! @unique
+                        }"""
+
+  val embeddedP1opt = """type Parent{
+                            id: ID! @unique
+                            p: String! @unique
+                            childOpt: Child
+                        }
+                        
+                        type Child @embedded {
+                            c: String! @unique
+                        }"""
+
+  val embeddedPM = """type Parent{
+                            id: ID! @unique
+                            p: String! @unique
+                            childOpt: Child
+                        }
+                        
+                        type Child @embedded{
+                            c: String! @unique
                         }"""
 }

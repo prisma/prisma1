@@ -48,18 +48,14 @@ trait RelationActions extends FilterConditionBuilder {
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = SimpleMongoAction { database =>
     assert(!relationField.relatedField.isList)
-    val model    = relationField.model
-    val relation = relationField.relation
-
-    val manifestation = relation.inlineManifestation.get
-
-    manifestation match {
-      case m if m.inTableOfModelId == model.name => // either delete the child ID from all inlineRelationFields of old parents
-        val collection    = database.getCollection(model.dbName)
-        val filter        = ScalarFilter(model.idField_!.copy(name = m.referencingColumn), Equals(childId))
+    relationField.relation.inlineManifestation match {
+      case Some(m) if m.inTableOfModelId == relationField.model.name => // either delete the child ID from all inlineRelationFields of old parents
+        val collection    = database.getCollection(relationField.model.dbName)
+        val filter        = ScalarFilter(relationField.model.idField_!.copy(name = m.referencingColumn), Equals(childId))
         val mongoFilter   = buildConditionForFilter(Some(filter))
         val update        = unset(m.referencingColumn)
         val updateOptions = UpdateOptions().arrayFilters(List.empty.asJava)
+
         collection.updateMany(mongoFilter, update, updateOptions).collect().toFuture()
       case m => Future.successful(()) // or if it is on the child id do nothing
     }
@@ -103,6 +99,7 @@ trait RelationActions extends FilterConditionBuilder {
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue) =
     SimpleMongoAction { database =>
       val model = relationField.model
+
       relationField.relation.manifestation match {
         case Some(m: InlineRelationManifestation) if m.inTableOfModelId != model.name =>
           //stored on the other model
