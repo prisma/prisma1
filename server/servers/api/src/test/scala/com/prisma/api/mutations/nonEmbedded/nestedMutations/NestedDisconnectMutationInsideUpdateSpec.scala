@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -288,7 +289,9 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
-  "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" in {
+  "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" taggedAs (IgnoreMongo) in {
+    //Fixme, this assumes transactionality and therefore fails on mongo
+
     val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
@@ -589,19 +592,13 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       s"""
          |mutation {
          |  updateNote(
-         |    where: {
-         |      id: "$noteId"
-         |    }
-         |    data: {
-         |      todo: {   disconnect: true}
-         |    }
+         |    where: { id: "$noteId"}
+         |    data: { todo: { disconnect: true } }
          |  ){
-         |    todo {
-         |      title
-         |    }
+         |    todo { title }
          |  }
          |}
-      """.stripMargin,
+      """,
       project
     )
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")

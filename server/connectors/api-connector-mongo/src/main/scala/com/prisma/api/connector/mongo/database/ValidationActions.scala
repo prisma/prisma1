@@ -7,6 +7,7 @@ import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.RelationField
 import org.mongodb.scala.Document
+import scala.collection.JavaConverters._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,9 +51,11 @@ trait ValidationActions extends FilterConditionBuilder {
           val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forIdGCValue(model, parentId)).collect().toFuture.map(_.headOption)
           futureResult.map(optionRes =>
             optionRes.foreach { res =>
-              res.get(m.referencingColumn) match {
-                case Some(x) if x.asArray().contains(childId.value) => Future.successful(())
-                case _                                              => throw NodesNotConnectedError(relationField.relation, model, None, relationField.relatedModel_!, None)
+              (relationField.isList, res.get(m.referencingColumn)) match {
+                case (true, Some(x)) if x.asArray().getValues.asScala.map(_.asString()).map(_.getValue).contains(childId.value.toString) =>
+                  Future.successful(())
+                case (false, Some(x)) if x.asString == childId.value => Future.successful(())
+                case (_, _)                                          => throw NodesNotConnectedError(relationField.relation, model, None, relationField.relatedModel_!, None)
               }
           })
         case Some(m: InlineRelationManifestation) =>
@@ -87,29 +90,29 @@ trait ValidationActions extends FilterConditionBuilder {
       parentId: IdGCValue
   )(implicit ec: ExecutionContext) =
     SimpleMongoAction { database =>
-      val model = relationField.model
+      val parentModel = relationField.model
+      val childModel  = relationField.relatedModel_!
       relationField.relation.manifestation match {
-        case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
-          val collection                             = database.getCollection(model.dbName)
-          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forIdGCValue(model, parentId)).collect().toFuture.map(_.headOption)
+        case Some(m: InlineRelationManifestation) if m.inTableOfModelId == parentModel.name =>
+          val collection                             = database.getCollection(parentModel.dbName)
+          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forIdGCValue(parentModel, parentId)).collect().toFuture.map(_.headOption)
           futureResult.map(optionRes =>
             optionRes.foreach { res =>
               res.get(m.referencingColumn) match {
-                case None => throw NodesNotConnectedError(relationField.relation, model, None, relationField.relatedModel_!, None)
+                case None => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
                 case _    => Future.successful(())
               }
           })
         case Some(m: InlineRelationManifestation) =>
-          val relatedModel = relationField.relatedModel_!
-          val collection   = database.getCollection(relatedModel.dbName)
+          val collection = database.getCollection(childModel.dbName)
           val mongoFilter = relationField.isList match {
-            case true  => ScalarFilter(model.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Contains(parentId))
-            case false => ScalarFilter(model.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Equals(parentId))
+            case true  => ScalarFilter(childModel.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Contains(parentId))
+            case false => ScalarFilter(childModel.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Equals(parentId))
           }
           val res = collection.find(buildConditionForFilter(Some(mongoFilter))).collect().toFuture
           res.map(
             list =>
-              if (list.nonEmpty)
+              if (list.isEmpty)
                 throw NodesNotConnectedError(
                   relation = relationField.relation,
                   parent = relationField.model,

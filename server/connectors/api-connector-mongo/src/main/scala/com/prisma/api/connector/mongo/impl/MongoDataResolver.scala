@@ -107,7 +107,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
       case None        => queryWithSkip
     }
 
-    queryWithLimit.collect().toFuture.map { results: Seq[Document] =>
+    val queryResult = queryWithLimit.collect().toFuture
+
+    queryResult.map { results: Seq[Document] =>
       val groups = fromField.relatedField.isList match {
         case true =>
           val tuples = for {
@@ -119,12 +121,20 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
         case false => results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
       }
 
-      groups.map { group =>
+      val res: Vector[ResolverResult[PrismaNodeWithParent]] = groups.map { group =>
         val parentId                                  = fromNodeIds.find(_ == group._1).get
         val roots                                     = group._2.map(DocumentToRoot(model, _))
         val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(parentId, PrismaNode(r.idField, r, Some(model.name)))).toVector
         ResolverResult(prismaNodes, hasPreviousPage = false, hasNextPage = false, parentModelId = Some(parentId))
       }.toVector
+
+      val ids = res.flatMap(_.parentModelId)
+
+      val idsNotCovered = fromNodeIds.filter(x => !ids.contains(x))
+      val emptyResultsForNotCoveredIds =
+        idsNotCovered.map(id => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id)))
+
+      res ++ emptyResultsForNotCoveredIds
     }
   }
 

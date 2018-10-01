@@ -289,19 +289,21 @@ class ObjectTypeBuilder(
         // Fixme merge this with the new filter
 //        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
-        val manifestation = f.relation.inlineManifestation.get
-        if (manifestation.inTableOfModelId == f.model.name) {
+        f.relation.inlineManifestation match {
+          case Some(m) if m.inTableOfModelId == f.model.name =>
+            item.data.map.get(m.referencingColumn) match {
+              case Some(list: ListGCValue) =>
+                val filter         = ScalarFilter(f.relatedModel_!.idField_!, In(list.values))
+                val queryArguments = QueryArguments(None, None, None, None, None, Some(filter), None)
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(queryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
 
-          item.data.map.get(manifestation.referencingColumn) match {
-            case Some(list: ListGCValue) =>
-              val filter         = ScalarFilter(f.relatedModel_!.idField_!, In(list.values))
-              val queryArguments = QueryArguments(None, None, None, None, None, Some(filter), None)
-              DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(queryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
-            case _ => Vector.empty[PrismaNode]
+              case _ => Vector.empty[PrismaNode]
 
-          }
-        } else {
-          DeferredValue(ToManyDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+            }
+          case Some(m) if m.inTableOfModelId == f.relatedModel_!.name =>
+            DeferredValue(ToManyDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+
+          case _ => sys.error("")
         }
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
