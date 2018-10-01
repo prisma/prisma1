@@ -54,8 +54,8 @@ trait ValidationActions extends FilterConditionBuilder {
               (relationField.isList, res.get(m.referencingColumn)) match {
                 case (true, Some(x)) if x.asArray().getValues.asScala.map(_.asString()).map(_.getValue).contains(childId.value.toString) =>
                   Future.successful(())
-                case (false, Some(x)) if x.asString == childId.value => Future.successful(())
-                case (_, _)                                          => throw NodesNotConnectedError(relationField.relation, model, None, relationField.relatedModel_!, None)
+                case (false, Some(x)) if x.asString.getValue == childId.value => Future.successful(())
+                case (_, _)                                                   => throw NodesNotConnectedError(relationField.relation, model, None, relationField.relatedModel_!, None)
               }
           })
         case Some(m: InlineRelationManifestation) =>
@@ -125,24 +125,36 @@ trait ValidationActions extends FilterConditionBuilder {
       }
     }
 
-  def errorIfNodeIsInRelation(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext) = {
-    errorIfNodesAreInRelation(Vector(parentId), field)
-  }
+//  def errorIfNodeIsInRelation(parentId: IdGCValue, field: RelationField)(implicit ec: ExecutionContext) = {
+//    errorIfNodesAreInRelation(Vector(parentId), field)
+//  }
 
-  def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
-//    val relation = field.relation
-//    val query = sql
-//      .select(relationColumn(relation, field.oppositeRelationSide))
-//      .from(relationTable(relation))
-//      .where(
-//        relationColumn(relation, field.oppositeRelationSide).in(placeHolders(parentIds)),
-//        relationColumn(relation, field.relationSide).isNotNull
-//      )
-//
-//    queryToDBIO(query)(
-//      setParams = pp => parentIds.foreach(pp.setGcValue),
-//      readResult = rs => if (rs.next) throw RequiredRelationWouldBeViolated(relation)
-//    )
-    ???
+//  def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], relationField: RelationField)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
+  def errorIfNodeIsInRelation(nodeId: IdGCValue, otherField: RelationField)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
+    val otherModel = otherField.model
+    val childModel = otherField.relatedModel_!
+    otherField.relation.manifestation match {
+      case Some(m: InlineRelationManifestation) if m.inTableOfModelId == otherModel.name =>
+        val collection = database.getCollection(otherModel.dbName)
+        val mongoFilter = otherField.isList match {
+          case true  => ScalarFilter(otherModel.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Contains(nodeId))
+          case false => ScalarFilter(otherModel.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Equals(nodeId))
+        }
+        val res = collection.find(buildConditionForFilter(Some(mongoFilter))).collect().toFuture
+        res.map(list => if (list.nonEmpty) throw RequiredRelationWouldBeViolated(otherField.relation))
+
+      case Some(m: InlineRelationManifestation) if m.inTableOfModelId == childModel.name =>
+        //Fixme check whether child with given id has entries for this relation
+
+        val collection = database.getCollection(childModel.dbName)
+        val mongoFilter = otherField.isList match {
+          case true  => ScalarFilter(childModel.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Contains(nodeId))
+          case false => ScalarFilter(childModel.getScalarFieldByName_!("id").copy(name = m.referencingColumn), Equals(nodeId))
+        }
+        val res = collection.find(buildConditionForFilter(Some(mongoFilter))).collect().toFuture
+        res.map(list => if (list.nonEmpty) throw RequiredRelationWouldBeViolated(otherField.relation))
+
+      case _ => sys.error("should not happen ")
+    }
   }
 }

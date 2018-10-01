@@ -175,26 +175,6 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
-//    val res2 = server.query(
-//      s"""
-//         |mutation {
-//         |  updateChild(
-//         |  where:{c: "c1"}
-//         |  data:{
-//         |    c: "c2"
-//         |    parentOpt: {delete: true}
-//         |  }){
-//         |    parentOpt {
-//         |      p
-//         |    }
-//         |  }
-//         |}
-//      """.stripMargin,
-//      project
-//    )
-//
-//    res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
-
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     // Verify existing data
@@ -264,8 +244,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       errorCode = 3041
     )
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
@@ -310,8 +290,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
   }
 
   "a P1 to C1!  relation " should "work" in {
@@ -354,8 +334,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(0)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(0)
   }
 
   "a PM to C1 " should "work" in {
@@ -401,8 +381,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
   }
 
   "a P1! to CM  relation" should "error " in {
@@ -495,6 +475,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
+  //Fixme transactionality again -.-
   "a PM to CM  relation" should "work" in {
     val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
