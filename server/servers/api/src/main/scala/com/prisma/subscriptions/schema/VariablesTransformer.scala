@@ -25,23 +25,31 @@ object VariablesTransformer {
       values.forall(_ == true)
     }
 
-    def removeInMemoryFilters(json: JsValue): JsObject = {
+    def removeInMemoryFilters(json: JsValue): Option[JsObject] = {
       val variables = json.as[JsObject]
-      JsObject(
-        variables.value.flatMap({
-          case ("mutation_in", _)                                                        => None
-          case ("updatedFields_contains", _)                                             => None
-          case ("updatedFields_contains_every", _)                                       => None
-          case ("updatedFields_contains_some", _)                                        => None
-          case (key, obj: JsObject)                                                      => Some(key -> removeInMemoryFilters(obj))
-          case (key, JsArray(eles)) if eles.nonEmpty && eles.head.isInstanceOf[JsObject] => Some(key -> JsArray(eles.map(removeInMemoryFilters)))
-        })
+      val obj = JsObject(
+        variables.value
+          .flatMap({
+            case ("mutation_in", _)                                                        => None
+            case ("updatedFields_contains", _)                                             => None
+            case ("updatedFields_contains_every", _)                                       => None
+            case ("updatedFields_contains_some", _)                                        => None
+            case (key, obj: JsObject)                                                      => removeInMemoryFilters(obj).map(key -> _)
+            case (key, JsArray(eles)) if eles.nonEmpty && eles.head.isInstanceOf[JsObject] => Some(key -> JsArray(eles.flatMap(removeInMemoryFilters)))
+            case x                                                                         => Some(x)
+          })
+          .filter {
+            case (_, obj: JsObject) => obj.fields.nonEmpty // filter out empty objects
+            case _                  => true
+          }
       )
+
+      if (obj.fields.isEmpty) None else Some(obj)
     }
 
     val matches      = collectInMemoryFilters(variables.as[JsObject])
     val newVariables = removeInMemoryFilters(variables)
-    (matches, newVariables)
+    (matches, newVariables.getOrElse(JsObject.empty))
   }
 
 }
