@@ -646,7 +646,7 @@ package prisma
 import (
 	"context"
 
-	"github.com/prisma/go-lib"
+	"github.com/prisma/prisma-client-lib-go"
 
 	"github.com/machinebox/graphql"
 )
