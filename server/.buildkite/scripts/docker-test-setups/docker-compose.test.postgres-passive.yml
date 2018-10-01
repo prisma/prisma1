@@ -1,7 +1,7 @@
 version: "3"
 services:
   app:
-    image: graphcool/scala-sbt-docker
+    image: graphcool/scala-sbt-docker:rust
     environment:
       CLUSTER_VERSION: "latest"
       COMMIT_SHA: "123abcd"
