@@ -18,7 +18,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
     val outer = project.models.map { model =>
-      val collection: MongoCollection[Document] = database.getCollection(model.name)
+      val collection: MongoCollection[Document] = database.getCollection(model.dbName)
       collection.find(Filters.eq("_id", globalId.value)).collect().toFuture.map { results: Seq[Document] =>
         if (results.nonEmpty) Vector(model) else Vector.empty
       }

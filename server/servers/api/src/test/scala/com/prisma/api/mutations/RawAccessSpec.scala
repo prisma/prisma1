@@ -14,6 +14,8 @@ import play.api.libs.json.JsValue
 import sangria.util.StringUtil
 
 class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def doNotRunForPrototypes: Boolean                   = true
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
