@@ -4,7 +4,7 @@ import com.mongodb.MongoClientSettings
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
-import com.prisma.api.connector.mongo.extensions.Path
+import com.prisma.api.connector.mongo.extensions.{DocumentToRoot, Path}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
@@ -143,21 +143,37 @@ trait NodeActions extends NodeSingleQueries {
       ???
     }
 
-  def nestedDeleteNode(mutaction: NestedDeleteNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+  def nestedDeleteNode(mutaction: NestedDeleteNode, parentId: IdGCValue)(implicit ec: ExecutionContext): MongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-//      mutaction.where match {
-//        case None => sys.error("Only toMany deletes should arrive here.")
-//        case Some(nodeSelector) =>
-//          val parentModel                           = mutaction.relationField.model
-//          val collection: MongoCollection[Document] = database.getCollection(parentModel.name)
-//
-//          collection
-//            .updateOne(equal("_id", parentId.value), pull(mutaction.relationField.name, nodeSelector))
-//            .toFuture()
-//            .map(_ => MutactionResults(Vector.empty))
-//
-//      }
-      ???
+      val childModel      = mutaction.model
+      val parentModel     = mutaction.relationField.model
+      val childCollection = database.getCollection(childModel.dbName)
+
+      mutaction.relationField.relation.inlineManifestation match {
+        case Some(m) if m.inTableOfModelId == childModel.name =>
+          val filter = ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
+
+          val mongoFilter = mutaction.where match {
+            case Some(where) => buildConditionForFilter(Some(AndFilter(Vector(filter, ScalarFilter(where.field, Equals(where.fieldGCValue))))))
+            case None        => buildConditionForFilter(Some(filter))
+          }
+
+          val previousValues = getNodeByFilter(childModel, mongoFilter, database)
+
+          previousValues.flatMap {
+            case Some(node) =>
+              childCollection.deleteOne(mongoFilter).toFuture().map(_ => MutactionResults(Vector(DeleteNodeResult(node.id, node, mutaction))))
+
+            case None => throw NodesNotConnectedError(mutaction.relationField.relation, parentModel, None, childModel, None)
+          }
+        case Some(m) if m.inTableOfModelId == parentModel.name =>
+          mutaction.where match {
+            case Some(where) => ??? // get the child ids from the parent and then delete the child that fits id + where
+            case None        => ??? // get the child Id from the parent and then delete the child by id
+          }
+
+        case _ => ???
+      }
     }
 
   def nestedUpdateNode(mutaction: NestedUpdateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
@@ -227,14 +243,14 @@ trait NodeActions extends NodeSingleQueries {
       case nested: NestedUpdateNode => nested.where
     }
 
-    val actionsAndResults = mutaction.nestedDeletes.map {
-      case toOneDelete @ NestedDeleteNode(_, rf, None) =>
+    val actionsAndResults = mutaction.nestedDeletes.collect {
+      case toOneDelete @ NestedDeleteNode(_, rf, None) if rf.relatedModel_!.isEmbedded =>
         node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toOneDelete.model, None)
           case Some(nestedNode) => (unset(path.stringForField(rf.name)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toOneDelete))
         }
 
-      case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) =>
+      case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) if rf.relatedModel_!.isEmbedded =>
         node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
           case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))

@@ -175,6 +175,26 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
 
+//    val res2 = server.query(
+//      s"""
+//         |mutation {
+//         |  updateChild(
+//         |  where:{c: "c1"}
+//         |  data:{
+//         |    c: "c2"
+//         |    parentOpt: {delete: true}
+//         |  }){
+//         |    parentOpt {
+//         |      p
+//         |    }
+//         |  }
+//         |}
+//      """.stripMargin,
+//      project
+//    )
+//
+//    res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
+
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     // Verify existing data

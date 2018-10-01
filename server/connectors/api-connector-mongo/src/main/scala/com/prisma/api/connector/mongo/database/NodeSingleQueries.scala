@@ -41,6 +41,15 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
+  def getNodeByFilter(model: Model, mongoFilter: Bson, database: MongoDatabase) = {
+    database.getCollection(model.dbName).find(mongoFilter).toFuture.map { results: Seq[Document] =>
+      results.headOption.map { result =>
+        val root = DocumentToRoot(model, result)
+        PrismaNode(root.idField, root, Some(model.name))
+      }
+    }
+  }
+
   def getNodeIdByWhere(where: NodeSelector) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
     collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
