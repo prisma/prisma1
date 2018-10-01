@@ -28,6 +28,10 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     sequence.map(_.flatten.headOption)
   }
 
+  def getNodeByWhere2(where: NodeSelector) = SimpleMongoAction { database =>
+    getNodeByWhere(where, database)
+  }
+
   def getNodeByWhere(where: NodeSelector, database: MongoDatabase): Future[Option[PrismaNode]] =
     getNodeByWhere(where, SelectedFields.all(where.model), database)
 

@@ -8,13 +8,13 @@ import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 
 import scala.concurrent.ExecutionContext
 
-case class CreateNodeInterpreter(mutaction: CreateNode, includeRelayRow: Boolean)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
   override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
-    mutationBuilder.createNode(mutaction, List.empty, includeRelayRow)
+    mutationBuilder.createNode(mutaction, List.empty)
   }
 }
 
-case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelayRow: Boolean)(implicit val ec: ExecutionContext)
+case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
   override def relationField = mutaction.relationField
@@ -41,13 +41,13 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode, includeRelay
       }
 
       for {
-        mutactionResult <- mutationBuilder.createNode(mutaction, inlineRelation, includeRelayRow)
+        mutactionResult <- mutationBuilder.createNode(mutaction, inlineRelation)
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
       } yield id
 
     case _ => // ID is stored on other node, we need to update the parent with the inline relation id after creating the child.
       for {
-        mutactionResult <- mutationBuilder.createNode(mutaction, List.empty, includeRelayRow)
+        mutactionResult <- mutationBuilder.createNode(mutaction, List.empty)
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
         _               <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
       } yield id

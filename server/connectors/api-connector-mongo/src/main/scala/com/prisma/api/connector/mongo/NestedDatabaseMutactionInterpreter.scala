@@ -9,7 +9,7 @@ trait DatabaseMutactionInterpreter {
 }
 
 trait TopLevelDatabaseMutactionInterpreter extends DatabaseMutactionInterpreter {
-  def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults]
+  def mongoAction(mutationBuilder: MongoActionsBuilder): MongoAction[MutactionResults]
 }
 
 trait NestedDatabaseMutactionInterpreter extends DatabaseMutactionInterpreter {

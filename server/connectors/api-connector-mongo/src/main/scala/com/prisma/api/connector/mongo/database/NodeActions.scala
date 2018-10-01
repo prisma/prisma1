@@ -4,11 +4,11 @@ import com.mongodb.MongoClientSettings
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
-import com.prisma.api.connector.mongo.extensions.{DocumentToRoot, Path}
+import com.prisma.api.connector.mongo.extensions.Path
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
-import com.prisma.shared.models.RelationField
+import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue, conversions}
 import org.mongodb.scala.model.Filters._
@@ -24,8 +24,7 @@ trait NodeActions extends NodeSingleQueries {
 
   //region Top Level
 
-  def createNode(mutaction: CreateNode, inlineRelations: List[(String, GCValue)], includeRelayRow: Boolean)(
-      implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+  def createNode(mutaction: CreateNode, inlineRelations: List[(String, GCValue)])(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
       val collection: MongoCollection[Document]                                = database.getCollection(mutaction.model.dbName)
       val (docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(inlineRelations, mutaction)
@@ -43,7 +42,7 @@ trait NodeActions extends NodeSingleQueries {
     }
   }
 
-  def deleteNodes(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
+  def deleteNodes(mutaction: DeleteNodes)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
       val collection                        = database.getCollection(mutaction.model.dbName)
       val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
@@ -357,6 +356,13 @@ trait NodeActions extends NodeSingleQueries {
         }.toVector
         (nestedCreates, nestedCreateResults)
     }
+  }
+
+  def deleteNodeById(model: Model, id: IdGCValue) = deleteNodesByIds(model, Vector(id))
+
+  def deleteNodesByIds(model: Model, ids: Vector[IdGCValue]) = SimpleMongoAction { database =>
+    val mongoFilter = buildConditionForFilter(Some(ScalarFilter(model.idField_!, In(ids))))
+    database.getCollection(model.dbName).deleteMany(mongoFilter).collect().toFuture()
   }
 
   // helpers
