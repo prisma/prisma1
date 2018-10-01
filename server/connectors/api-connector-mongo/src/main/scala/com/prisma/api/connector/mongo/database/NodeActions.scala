@@ -34,7 +34,7 @@ trait NodeActions extends NodeSingleQueries {
     }
 
   def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.name)
+    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.dbName)
     val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(mutaction.where, SelectedFields.all(mutaction.model), database)
 
     previousValues.flatMap {
@@ -45,7 +45,7 @@ trait NodeActions extends NodeSingleQueries {
 
   def deleteNodes(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      val collection                        = database.getCollection(mutaction.model.name)
+      val collection                        = database.getCollection(mutaction.model.dbName)
       val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
 
       futureIds.flatMap { ids =>
@@ -55,7 +55,7 @@ trait NodeActions extends NodeSingleQueries {
     }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.name)
+    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.dbName)
     val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(mutaction.where, database)
 
     previousValues.flatMap {
@@ -88,7 +88,7 @@ trait NodeActions extends NodeSingleQueries {
 
   def updateNodes(mutaction: UpdateNodes)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      val collection                        = database.getCollection(mutaction.model.name)
+      val collection                        = database.getCollection(mutaction.model.dbName)
       val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
       val scalarUpdates                     = scalarUpdateValues(mutaction)
       val combinedUpdates                   = customCombine(scalarUpdates)
@@ -100,7 +100,7 @@ trait NodeActions extends NodeSingleQueries {
     }
 
   def upsertNode(mutaction: TopLevelUpsertNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document]      = database.getCollection(mutaction.where.model.name)
+    val collection: MongoCollection[Document]      = database.getCollection(mutaction.where.model.dbName)
     val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(mutaction.where, database)
 
     previousValues.flatMap {

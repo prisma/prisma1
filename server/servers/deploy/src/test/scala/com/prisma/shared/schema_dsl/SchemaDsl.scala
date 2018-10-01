@@ -81,10 +81,11 @@ object SchemaDsl extends AwaitUtils {
     TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 
+  //Fixme this at the moment adds manifestations for relations that are embedded in Mongo, this breaks all embedded tests
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if (relation.isManyToMany && !deployConnector.hasCapability(MongoRelationsCapability)) {
+      if ((relation.isManyToMany && !deployConnector.hasCapability(MongoRelationsCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)
@@ -103,9 +104,7 @@ object SchemaDsl extends AwaitUtils {
     }
     val newModels = project.models.map { model =>
       val newFields = model.fields.map { field =>
-        val newRelation = field.relationOpt.flatMap { relation =>
-          newRelations.find(_.name == relation.name)
-        }
+        val newRelation = field.relationOpt.flatMap(relation => newRelations.find(_.name == relation.name))
         field.template.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
       }
 

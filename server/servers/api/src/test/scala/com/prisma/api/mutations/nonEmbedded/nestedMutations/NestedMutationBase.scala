@@ -137,7 +137,7 @@ trait NestedMutationBase {
   val embeddedPM = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childOpt: Child
+                            childrenOpt: [Child!]!
                         }
                         
                         type Child @embedded{

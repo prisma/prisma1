@@ -183,7 +183,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     res.toString should include(
       s"""The relation ChildToParent has no node for the model Parent with the value '$parent1Id' for the field 'id' connected to a node for the model Child on your mutation path.""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
   }
 
   "a PM relation " should "work" in {
@@ -228,7 +228,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     res2.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
