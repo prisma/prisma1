@@ -23,8 +23,6 @@ trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
 
 }
 
-// Fixme test if this works when adding to existing toMany relations because it looks like it just overwrites
-
 class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
 
   val inlineRelationSchema = s"""
@@ -126,7 +124,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |  createList(data: {
          |    name: "the list"
          |    todos: {
-         |      create: [{ title: "the list" }]
+         |      create: [{ title: "the todo" }]
          |    }
          |  }){ name }
          |}""".stripMargin,
@@ -140,13 +138,13 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |  where: {name:"the list"}
          |  data: {
          |    todos: {
-         |      create: [{ title: "the list 2" }]
+         |      create: [{ title: "the todo 2" }]
          |    }
          |  }){ name todos{title} }
          |}""",
       project = inlineRelationProject
     )
-    res2.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+    res2.toString should be(s"""{"data":{"updateList":{"name":"the list","todos":[{"title":"the todo"},{"title":"the todo 2"}]}}}""")
 
   }
 

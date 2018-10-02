@@ -65,6 +65,11 @@ case class SelectedFields(fields: Set[Field]) {
   val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
   val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
   val relationFields      = fields.collect { case f: RelationField            => f }
+  private val inlineRelationFields = relationFields.collect {
+    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelId == rf.model.name => rf
+  }
+
+  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.asScalarField)
 }
 
 object SortOrder extends Enumeration {

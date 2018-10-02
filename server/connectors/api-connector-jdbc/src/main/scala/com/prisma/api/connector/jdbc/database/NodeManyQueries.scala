@@ -16,7 +16,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     queryToDBIO(query)(
       setParams = pp => SetParams.setQueryArgs(pp, args),
       readResult = { rs =>
-        val result = rs.readWith(readsPrismaNode(model, selectedFields.scalarNonListFields))
+        val result = rs.readWith(readsPrismaNode(model, selectedFields.scalarDbFields))
         ResolverResult(args, result)
       }
     )
@@ -46,7 +46,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val skipAndLimit    = LimitClauseHelper.skipAndLimitValues(queryArguments)
-    val jooqFields      = selectedFields.scalarNonListFields.map(aliasColumn)
+    val jooqFields      = selectedFields.scalarDbFields.map(aliasColumn)
 
     val base = sql
       .select(jooqFields.toVector: _*)
@@ -89,7 +89,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
           }
         },
         readResult = { rs =>
-          val result              = rs.readWith(readPrismaNodeWithParent(fromField, selectedFields.scalarNonListFields))
+          val result              = rs.readWith(readPrismaNodeWithParent(fromField, selectedFields.scalarDbFields))
           val itemGroupsByModelId = result.groupBy(_.parentId)
           fromNodeIds.map { id =>
             itemGroupsByModelId.find(_._1 == id) match {
@@ -137,7 +137,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       }
 
       val rs                  = ps.executeQuery()
-      val result              = rs.readWith(readPrismaNodeWithParent(fromField, selectedFields.scalarNonListFields))
+      val result              = rs.readWith(readPrismaNodeWithParent(fromField, selectedFields.scalarDbFields))
       val itemGroupsByModelId = result.groupBy(_.parentId)
       fromModelIds.map { id =>
         itemGroupsByModelId.find(_._1 == id) match {

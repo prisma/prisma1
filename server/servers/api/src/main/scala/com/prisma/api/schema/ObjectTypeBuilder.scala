@@ -291,7 +291,7 @@ class ObjectTypeBuilder(
 
         f.relation.inlineManifestation match {
           case Some(m) if m.inTableOfModelId == f.model.name =>
-            item.data.map.get(m.referencingColumn) match {
+            item.data.map.get(f.name) match {
               case Some(list: ListGCValue) =>
                 val filter         = ScalarFilter(f.relatedModel_!.idField_!, In(list.values))
                 val queryArguments = QueryArguments(None, None, None, None, None, Some(filter), None)
@@ -307,7 +307,7 @@ class ObjectTypeBuilder(
         }
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
-        item.data.map(field.name) match {
+        item.data.map(f.name) match {
           case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
@@ -322,7 +322,7 @@ class ObjectTypeBuilder(
 
         val manifestation = f.relation.inlineManifestation.get
         if (manifestation.inTableOfModelId == f.model.name) {
-          item.data.map.get(manifestation.referencingColumn) match {
+          item.data.map.get(f.name) match {
             case Some(id: IdGCValue) => OneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
             case _                   => None
           }
