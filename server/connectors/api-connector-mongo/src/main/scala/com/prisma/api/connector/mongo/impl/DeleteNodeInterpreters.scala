@@ -79,8 +79,3 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
     SequenceAction(actions)
   }
 }
-//case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
-//  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue): MongoAction[MutactionResults] = {
-//    mutationBuilder.nestedDeleteNode(mutaction, parentId)
-//  }
-//}

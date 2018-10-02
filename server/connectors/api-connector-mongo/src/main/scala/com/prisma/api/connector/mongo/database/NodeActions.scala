@@ -137,44 +137,6 @@ trait NodeActions extends NodeSingleQueries {
       .map(_ => MutactionResults(results))
   }
 
-  def nestedCreateNode(mutaction: NestedCreateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): MongoAction[MutactionResults] =
-    SimpleMongoAction { database =>
-      ???
-    }
-
-  def nestedDeleteNode(mutaction: NestedDeleteNode, parentId: IdGCValue)(implicit ec: ExecutionContext): MongoAction[MutactionResults] =
-    SimpleMongoAction { database =>
-      val childModel      = mutaction.model
-      val parentModel     = mutaction.relationField.model
-      val childCollection = database.getCollection(childModel.dbName)
-
-      mutaction.relationField.relation.inlineManifestation match {
-        case Some(m) if m.inTableOfModelId == childModel.name =>
-          val filter = ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
-
-          val mongoFilter = mutaction.where match {
-            case Some(where) => buildConditionForFilter(Some(AndFilter(Vector(filter, ScalarFilter(where.field, Equals(where.fieldGCValue))))))
-            case None        => buildConditionForFilter(Some(filter))
-          }
-
-          val previousValues = getNodeByFilter(childModel, mongoFilter, database)
-
-          previousValues.flatMap {
-            case Some(node) =>
-              childCollection.deleteOne(mongoFilter).toFuture().map(_ => MutactionResults(Vector(DeleteNodeResult(node.id, node, mutaction))))
-
-            case None => throw NodesNotConnectedError(mutaction.relationField.relation, parentModel, None, childModel, None)
-          }
-        case Some(m) if m.inTableOfModelId == parentModel.name =>
-          mutaction.where match {
-            case Some(where) => ??? // get the child ids from the parent and then delete the child that fits id + where
-            case None        => ??? // get the child Id from the parent and then delete the child by id
-          }
-
-        case _ => ???
-      }
-    }
-
   def nestedUpdateNode(mutaction: NestedUpdateNode, parentId: IdGCValue)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
       ???
