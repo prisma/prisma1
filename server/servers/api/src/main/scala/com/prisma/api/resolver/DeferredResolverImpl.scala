@@ -20,12 +20,12 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
     // group orderedDeferreds by type
     val orderedDeferred = DeferredUtils.tagDeferredByOrder(deferred)
 
-    val oneDeferreds = orderedDeferred.collect {
+    val toOneDeferreds = orderedDeferred.collect {
       case OrderedDeferred(deferred: ToOneDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
-    val toOneDeferreds = orderedDeferred.collect {
+    val fromOneDeferreds = orderedDeferred.collect {
       case OrderedDeferred(deferred: FromOneDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
@@ -51,16 +51,17 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
     }
 
     // for every group, further break them down by their arguments
-    val toOneDeferredMap           = DeferredUtils.groupRelatedDeferred[FromOneDeferred](toOneDeferreds)
+    val fromOneDeferredMap         = DeferredUtils.groupRelatedDeferred[FromOneDeferred](fromOneDeferreds)
     val manyModelDeferredsMap      = DeferredUtils.groupModelDeferred[ManyModelDeferred](manyModelDeferreds)
     val toManyDeferredsMap         = DeferredUtils.groupRelatedDeferred[ToManyDeferred](toManyDeferreds)
     val countManyModelDeferredsMap = DeferredUtils.groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
     val scalarListDeferredsMap     = DeferredUtils.groupScalarListDeferreds(scalarListDeferreds)
 
     // for every group of deferreds, resolve them
-    val oneFutureResults = oneDeferreds.map(deferred => oneDeferredResolver.resolve(deferred))
+    // fixme: these must be grouped first
+    val toOneFutureResults = toOneDeferreds.map(deferred => oneDeferredResolver.resolve(deferred))
 
-    val toOneFutureResults = toOneDeferredMap
+    val fromOneFutureResults = fromOneDeferredMap
       .map {
         case (_, value) => toOneDeferredResolver.resolve(value)
       }
@@ -100,12 +101,13 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
         OrderedDeferredFutureResult(Future.successful(deferred.conn), order)
     }
 
-    (oneFutureResults ++
-      toOneFutureResults ++
+    (toOneFutureResults ++
+      fromOneFutureResults ++
       manyModelFutureResults ++
       toManyFutureResults ++
       countManyModelFutureResults ++
       scalarListFutureResult ++
       connectionFutureResult).sortBy(_.order).map(_.future)
+
   }
 }

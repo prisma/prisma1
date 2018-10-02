@@ -13,6 +13,6 @@ class ToOneDeferredResolver(resolver: DataResolver) {
     val where                 = deferred.deferred.where
     val futureResolverResults = resolver.getNodeByWhere(where, SelectedFields.all(model))
 
-    OrderedDeferredFutureResult(futureResolverResults, 1)
+    OrderedDeferredFutureResult(futureResolverResults, deferred.order)
   }
 }
