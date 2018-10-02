@@ -352,10 +352,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -406,10 +415,20 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String).field_!("alias", _.String, isUnique = true)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            alias: String! @unique
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -459,10 +478,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a many to one relation" should "be disconnectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").field("text", _.String).oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -510,10 +538,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to one relation" should "be disconnectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-    }
+    val schema = """type Note{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String!
+                            note: Note
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -559,10 +596,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by unique through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String, isUnique = true)
-      schema.model("Todo").field("title", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String @unique
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     server.query("""mutation { createTodo(data: {title: "todo"}){ id } }""", project).pathAsString("data.createTodo.id")

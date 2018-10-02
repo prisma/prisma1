@@ -11,6 +11,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
+  //Fixme this does an embedded insert at the moment
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
@@ -329,10 +330,18 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be upsertable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -384,10 +393,18 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "only update nodes that are connected" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -451,10 +468,20 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "generate helpful error messages" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String).field("uniqueComment", _.String, isUnique = true)
-      schema.model("Todo").field("uniqueTodo", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            uniqueComment: String! @unique
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            uniqueTodo: String! @unique
+                            comments: [Comment!]!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
