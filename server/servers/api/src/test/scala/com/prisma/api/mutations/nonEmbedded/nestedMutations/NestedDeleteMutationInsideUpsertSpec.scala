@@ -215,8 +215,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       errorCode = 3041
     )
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
@@ -263,8 +263,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(0)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(0)
   }
 
   "a P1 to C1!  relation " should "work" in {
@@ -309,8 +309,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(0)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(0)
   }
 
   "a PM to C1 " should "work" in {
@@ -358,8 +358,8 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     res.toString should be("""{"data":{"upsertParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
   }
 
   "a P1! to CM  relation" should "error " in {
