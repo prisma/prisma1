@@ -53,6 +53,7 @@ class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with 
       |subscription {
       |  todo(where: {
       |    mutation_in : [$mutation]
+      |    ${if (mutation == "UPDATED") """updatedFields_contains: "title"""" else ""}
       |    node: {
       |      status: ACTIVE
       |    }
