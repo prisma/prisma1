@@ -54,6 +54,7 @@ services:
             port: __YOUR_DATABASE_PORT__
             user: __YOUR_DATABASE_USER__
             password: __YOUR_DATABASE_PASSWORD__
+            connectionLimit: __YOUR_CONNECTION_LIMIT__
 ```
 
 Most notably most of your configuration takes place in the `PRISMA_CONFIG` environment variable.
@@ -65,7 +66,6 @@ Most notably most of your configuration takes place in the `PRISMA_CONFIG` envir
 #### Root properties
 
 These are the root properties of `PRISMA_CONFIG`:
-
 
 | Key | Type | Description | 
 | --- | --- | --- | 
@@ -79,10 +79,13 @@ Each _database object_ in the `databases` object needs to include the following 
 
 | Key | Type  | Description | 
 | --- | --- | --- | 
+| `connector` | `string` | Specifies which database connector to be used. [Learn more](jgfs).
+| `migrations` | `boolean` | Specifies if Prisma should be able to perform database migrations. [Learn more](jgfs#database-migrations).
 | `host` | `string` | The IP address or URL of the machine hosting the database. Example: `127.0.0.1` |
 | `port` | `number` | The post where the database is running. | 
 | `user ` | `string` | The database user. Example: `root` | 
 | `password ` | `string` | The password for the database user specified in `user`. Example: `myDBpassword42` | 
+| `connectionLimit` | `number` | The maximum number of database connections (must be at least **2**). [Learn more](jgfs#managing-database-connections).
 
 
 ## Debugging

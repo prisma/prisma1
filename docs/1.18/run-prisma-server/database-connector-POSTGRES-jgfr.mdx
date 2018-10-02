@@ -1,4 +1,5 @@
 import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
 
 export const meta = {
   title: "Database Connector (Postgres)",
@@ -35,6 +36,7 @@ PRISMA_CONFIG: |
       port: __YOUR_DATABASE_PORT__
       user: __YOUR_DATABASE_USER__
       password: __YOUR_DATABASE_PASSWORD__
+      connectionLimit: __YOUR_CONNECTION_LIMIT__
 ```
 
 </Code>
@@ -59,6 +61,7 @@ PRISMA_CONFIG: |
       port: __YOUR_DATABASE_PORT__
       user: __YOUR_DATABASE_USER__
       password: __YOUR_DATABASE_PASSWORD__
+      connectionLimit: __YOUR_CONNECTION_LIMIT__
 ```
 
 </Code>
@@ -69,3 +72,13 @@ PRISMA_CONFIG: |
 If `migrations` is set to `true`, deploying a Prisma service migrates the structure of the connected database. In these cases, the Prisma CLI will be the main interface to govern the structure of the database based on the datamodel of your Prisma services.
 
 If `migrations` is set to `false`, the database schema is "locked" and Prisma won't perform any changes on it.
+
+## Managing database connections
+
+The `connectionLimit` property in `PRISMA_CONFIG` determines the number of database connections a Prisma service is going to use.
+
+<Warning>
+
+The `connectionLimit` needs to be set to at least **2**. One connection is always reserved for the [Management API](foe1), all other connections are used for the Prisma service.
+
+</Warning>
