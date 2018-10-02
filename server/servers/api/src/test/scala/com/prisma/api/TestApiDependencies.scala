@@ -29,7 +29,7 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
 
   val config = ConfigLoader.load()
 
-  lazy val apiSchemaBuilder                  = SchemaBuilder()(system, this)
+  lazy val apiSchemaBuilder                  = SchemaBuilder()(this)
   lazy val projectFetcher: ProjectFetcher    = ???
   override lazy val maxImportExportSize: Int = 1000
   override val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = {

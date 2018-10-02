@@ -87,7 +87,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                      requestId: String = "CombinedTestDatabase.requestId",
                                      prismaHeader: Option[String] = None): JsValue = {
 
-    val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
+    val schemaBuilder  = SchemaBuilder()(dependencies)
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
