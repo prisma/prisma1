@@ -395,6 +395,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
   }
 
+  //Fixme Unique and Transactionality
   "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" in {
     val project = SchemaDsl.fromString() {
       """type User{

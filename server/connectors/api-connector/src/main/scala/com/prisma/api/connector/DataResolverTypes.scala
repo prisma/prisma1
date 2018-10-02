@@ -108,7 +108,7 @@ case class GreaterThanOrEquals(value: GCValue) extends ScalarCondition
 case class In(values: Vector[GCValue])         extends ScalarCondition
 case class NotIn(values: Vector[GCValue])      extends ScalarCondition
 
-case class ScalarListFilter(key: String, field: Field, condition: ScalarListCondition) extends Filter
+case class ScalarListFilter(field: ScalarField, condition: ScalarListCondition) extends Filter
 
 sealed trait ScalarListCondition
 case class ListContains(value: GCValue)              extends ScalarListCondition

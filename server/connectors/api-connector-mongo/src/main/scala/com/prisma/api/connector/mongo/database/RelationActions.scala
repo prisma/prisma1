@@ -69,11 +69,16 @@ trait RelationActions extends FilterConditionBuilder {
 
     relationField.relation.inlineManifestation match {
       case Some(m) if m.inTableOfModelId == parentModel.name => //delete the child ID from all inlineRelationFields of old parents
-        val collection    = database.getCollection(parentModel.dbName)
-        val filter        = ScalarFilter(parentModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(childId))
-        val whereFilter   = ScalarFilter(parentModel.idField_!, Equals(parentId))
-        val mongoFilter   = buildConditionForFilter(Some(AndFilter(Vector(filter, whereFilter))))
-        val update        = pull(m.referencingColumn, GCValueBsonTransformer(childId))
+        val collection  = database.getCollection(parentModel.dbName)
+        val filter      = ScalarFilter(parentModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(childId))
+        val whereFilter = ScalarFilter(parentModel.idField_!, Equals(parentId))
+        val mongoFilter = buildConditionForFilter(Some(AndFilter(Vector(filter, whereFilter))))
+
+        val update = relationField.isList match {
+          case false => unset(m.referencingColumn)
+          case true  => pull(m.referencingColumn, GCValueBsonTransformer(childId))
+        }
+
         val updateOptions = UpdateOptions().arrayFilters(List.empty.asJava)
 
         collection.updateMany(mongoFilter, update, updateOptions).collect().toFuture()

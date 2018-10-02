@@ -86,7 +86,8 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     val model                                 = fromField.relatedModel_!
     val manifestation                         = fromField.relation.inlineManifestation.get
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val inFilter                              = ScalarFilter(model.getScalarFieldByName_!("id").copy(manifestation.referencingColumn), Equals(fromNodeIds.head))
+    val inFilter =
+      ScalarListFilter(model.getScalarFieldByName_!("id").copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
     val queryArgFilter = queryArguments match {
       case Some(arg) => arg.filter
       case None      => None

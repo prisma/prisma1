@@ -197,7 +197,7 @@ class ObjectTypeBuilder(
         def isFilterList(value: Seq[Any], filterName: String): Boolean         = value.nonEmpty && value.head.isInstanceOf[Map[_, _]] && filter.name == filterName
         def getGCValue(value: Any): GCValue                                    = GCAnyConverter(field.get.typeIdentifier, isList = false).toGCValue(unwrapSome(value)).get
         def scalarFilter(condition: ScalarCondition): ScalarFilter             = ScalarFilter(asScalarField, condition)
-        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(key, field.get, condition)
+        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(asScalarField, condition)
         def generateSubFilter(value: Map[_, _], model: Model): Filter          = generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
         def generateSubFilters(values: Seq[Any]): Vector[Filter]               = values.map(x => generateSubFilter(x.asInstanceOf[Map[String, Any]], model)).toVector
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =

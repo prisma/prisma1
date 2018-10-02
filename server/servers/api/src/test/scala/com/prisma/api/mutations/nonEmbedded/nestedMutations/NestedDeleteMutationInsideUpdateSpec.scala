@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -475,8 +476,8 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
-  //Fixme transactionality again -.-
-  "a PM to CM  relation" should "work" in {
+  // transactionality again -.-
+  "a PM to CM  relation" should "work" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
@@ -550,6 +551,132 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     )
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c3"}]}}}""")
+
+    server.query(s"""query{child(where:{c:"c3"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"c3","parentsOpt":[{"p":"p1"}]}}}""")
+
+    server.query(s"""query{child(where:{c:"otherChild"}){c, parentsOpt{p}}}""", project).toString should be(
+      """{"data":{"child":{"c":"otherChild","parentsOpt":[{"p":"otherParent"}]}}}""")
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+  }
+
+  "a PM to CM  relation" should "error on invalid child" in {
+    val project = SchemaDsl.fromString() { schemaPMToCM }
+    database.setup(project)
+
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "otherParent"
+        |    childrenOpt: {
+        |      create: [{c: "otherChild"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |    childrenOpt: {
+        |      create: [{c: "c1"},{c: "c2"},{c: "c3"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where: { p: "p1"}
+         |  data:{
+         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}, {c: "otherChild"}]}
+         |  }){
+         |    childrenOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      3041
+    )
+  }
+
+  "a PM to CM  relation" should "work for correct children" in {
+    val project = SchemaDsl.fromString() { schemaPMToCM }
+    database.setup(project)
+
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "otherParent"
+        |    childrenOpt: {
+        |      create: [{c: "otherChild"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |    childrenOpt: {
+        |      create: [{c: "c1"},{c: "c2"},{c: "c3"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+
+    val res = server.query(
+      s"""
+         |mutation {
+         |  updateParent(
+         |  where: { p: "p1"}
+         |  data:{
+         |    childrenOpt: {delete: [{c: "c1"}, {c: "c2"}]}
+         |  }){
+         |    childrenOpt{
+         |      c
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c3"}]}}}""")
+
+    server.query(s"""query{parents {p, childrenOpt{c}}}""", project).toString should be(
+      """{"data":{"parents":[{"p":"otherParent","childrenOpt":[{"c":"otherChild"}]},{"p":"p1","childrenOpt":[{"c":"c3"}]}]}}""")
 
     server.query(s"""query{child(where:{c:"c3"}){c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"child":{"c":"c3","parentsOpt":[{"p":"p1"}]}}}""")

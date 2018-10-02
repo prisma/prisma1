@@ -48,6 +48,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
 //      _       <- performCascadingDelete(mutationBuilder, child, childId)
       _ <- checkForRequiredRelationsViolations(mutationBuilder, childId)
       _ <- mutationBuilder.deleteNodeById(child, childId)
+      _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, childId, parentId)
     } yield MutactionResults(Vector.empty)
   }
 

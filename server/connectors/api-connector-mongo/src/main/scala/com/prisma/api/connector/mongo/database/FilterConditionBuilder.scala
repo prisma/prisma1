@@ -52,8 +52,13 @@ trait FilterConditionBuilder {
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(combineTwo(path, renameId(scalarField)), null))
       case ScalarFilter(scalarField, In(values))                 => in(combineTwo(path, renameId(scalarField)), values.map(fromGCValue): _*)
       case ScalarFilter(scalarField, NotIn(values))              => not(in(combineTwo(path, renameId(scalarField)), values.map(fromGCValue): _*))
-      case OneRelationIsNullFilter(field)                        => equal(combineTwo(path, field.name), null)
-      case x                                                     => sys.error(s"Not supported: $x")
+      //Fixme test this thoroughly
+      case ScalarListFilter(scalarListField, ListContains(value)) => all(combineTwo(path, renameId(scalarListField)), fromGCValue(value))
+      case ScalarListFilter(scalarListField, ListContainsSome(values)) =>
+        or(values.map(value => all(combineTwo(path, renameId(scalarListField)), fromGCValue(value))): _*)
+      case ScalarListFilter(scalarListField, ListContainsEvery(values)) => all(combineTwo(path, renameId(scalarListField)), values.map(fromGCValue): _*)
+      case OneRelationIsNullFilter(field)                               => equal(combineTwo(path, field.name), null)
+      case x                                                            => sys.error(s"Not supported: $x")
     }
   }
 
