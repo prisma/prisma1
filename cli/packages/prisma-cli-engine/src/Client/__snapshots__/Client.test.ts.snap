@@ -1,3 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`should log that url could not be open and keep listening for login 1`] = `
+"Opening https://app.prisma.io/cli-auth?secret=my-secret in the browser
+
+Could not open url. Please open https://app.prisma.io/cli-auth?secret=my-secret manually
+"
+`;
+
 exports[`throws when no cluster provided 1`] = `[Error: No cluster set. Please set the "cluster" property in your prisma.yml]`;
