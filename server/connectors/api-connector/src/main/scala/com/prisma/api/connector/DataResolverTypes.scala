@@ -88,6 +88,9 @@ object LogicalKeyWords {
   def isLogicFilter(key: String) = logicCombinators.contains(key)
 }
 
+object Filter {
+  val empty = TrueFilter
+}
 sealed trait Filter
 
 case class AndFilter(filters: Vector[Filter])  extends Filter

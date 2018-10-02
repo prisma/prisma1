@@ -287,21 +287,23 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList && f.relation.isInlineRelation =>
         // Fixme merge this with the new filter
-//        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        val arguments: Option[QueryArguments] = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
         f.relation.inlineManifestation match {
           case Some(m) if m.inTableOfModelId == f.model.name =>
             item.data.map.get(f.name) match {
               case Some(list: ListGCValue) =>
-                val filter         = ScalarFilter(f.relatedModel_!.idField_!, In(list.values))
-                val queryArguments = QueryArguments(None, None, None, None, None, Some(filter), None)
-                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(queryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
+                val queryArguments         = arguments.getOrElse(QueryArguments.empty)
+                val existingFilter: Filter = queryArguments.filter.getOrElse(Filter.empty)
+                val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
+                val newQueryArguments      = queryArguments.copy(filter = Some(newFilter))
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(newQueryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
 
               case _ => Vector.empty[PrismaNode]
 
             }
           case Some(m) if m.inTableOfModelId == f.relatedModel_!.name =>
-            DeferredValue(ToManyDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
           case _ => sys.error("")
         }
@@ -314,20 +316,14 @@ class ObjectTypeBuilder(
         }
 
       case f: RelationField if !f.isList && f.relation.isInlineRelation =>
-        //Fixme only MongoInlineRelation
-        //the postgres passive connector still handles that on the connector level
-        //it should be handled for both here
-
-//        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-
         val manifestation = f.relation.inlineManifestation.get
         if (manifestation.inTableOfModelId == f.model.name) {
           item.data.map.get(f.name) match {
-            case Some(id: IdGCValue) => OneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
+            case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
             case _                   => None
           }
         } else {
-          ToOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
+          FromOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
@@ -342,7 +338,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        FromOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
     }
   }
 

@@ -8,8 +8,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends DeferredResolver[CtxType] {
 
-  val oneDeferredResolver                                  = new OneDeferredResolver(dataResolver)
-  val toOneDeferredResolver                                = new ToOneDeferredResolver(dataResolver)
+  val oneDeferredResolver                                  = new ToOneDeferredResolver(dataResolver)
+  val toOneDeferredResolver                                = new FromOneDeferredResolver(dataResolver)
   val manyModelDeferredResolver: ManyModelDeferredResolver = new ManyModelDeferredResolver(dataResolver)
   val toManyDeferredResolver: ToManyDeferredResolver       = new ToManyDeferredResolver(dataResolver)
   val countManyModelDeferredResolver                       = new CountManyModelDeferredResolver(dataResolver)
@@ -21,12 +21,12 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
     val orderedDeferred = DeferredUtils.tagDeferredByOrder(deferred)
 
     val oneDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: OneDeferred, order) =>
+      case OrderedDeferred(deferred: ToOneDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
     val toOneDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: ToOneDeferred, order) =>
+      case OrderedDeferred(deferred: FromOneDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
@@ -51,7 +51,7 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
     }
 
     // for every group, further break them down by their arguments
-    val toOneDeferredMap           = DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
+    val toOneDeferredMap           = DeferredUtils.groupRelatedDeferred[FromOneDeferred](toOneDeferreds)
     val manyModelDeferredsMap      = DeferredUtils.groupModelDeferred[ManyModelDeferred](manyModelDeferreds)
     val toManyDeferredsMap         = DeferredUtils.groupRelatedDeferred[ToManyDeferred](toManyDeferreds)
     val countManyModelDeferredsMap = DeferredUtils.groupModelDeferred[CountManyModelDeferred](countManyModelDeferreds)
