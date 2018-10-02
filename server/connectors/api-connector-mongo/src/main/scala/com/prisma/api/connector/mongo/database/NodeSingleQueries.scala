@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
 import com.prisma.shared.models.{Model, RelationField, Schema}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
@@ -91,44 +91,53 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
   def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]) = ???
 
-  def getNodeIdsByFilter(model: Model, filter: Option[Filter], database: MongoDatabase) = {
+  def getNodeIdsByFilter(model: Model, filter: Option[Filter], database: MongoDatabase): Future[Seq[IdGCValue]] = {
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
     collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
   }
 
-  def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector) = SimpleMongoAction { database =>
-    val parentModel = parentField.model
-    val childModel  = parentField.relatedModel_!
+  def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): SimpleMongoAction[Option[IdGCValue]] =
+    SimpleMongoAction { database =>
+      val parentModel = parentField.model
+      val childModel  = parentField.relatedModel_!
 
-    //Fixme
-    parentField.relation.inlineManifestation match { //parent contains a list of ids, one of them matches the child returned for the where
-      case Some(m) if m.inTableOfModelId == parentModel.name =>
-        val parentNode = getNodeByWhere(NodeSelector.forIdGCValue(parentModel, parentId), database)
-        val childNode  = getNodeByWhere(where, database)
+      parentField.relation.inlineManifestation match { //parent contains one or more ids, one of them matches the child returned for the where
+        case Some(m) if m.inTableOfModelId == parentModel.name =>
+          getNodeByWhere(NodeSelector.forIdGCValue(parentModel, parentId), database).flatMap {
+            case None =>
+              Future(None)
 
-        parentNode.map {
-          case None => None
-          case Some(n) =>
-            n.data.map(m.referencingColumn) match {
-              case x: CuidGCValue => Some(x)
-              case _              => None
-            }
-        }
+            case Some(n) =>
+              (parentField.isList, n.data.map(m.referencingColumn)) match {
+                case (false, idInParent: CuidGCValue) =>
+                  getNodeByWhere(where, database).map {
+                    case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
+                    case _                                                     => None
+                  }
 
-      case Some(m) if m.inTableOfModelId == childModel.name => //child id that matches the where contains the parent
-        val parentFilter = parentField.relatedField.isList match {
-          case false => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
-          case true  => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(parentId))
-        }
-        val whereFilter = ScalarFilter(where.field, Equals(where.fieldGCValue))
+                case (true, ListGCValue(values)) =>
+                  getNodeByWhere(where, database).map {
+                    case Some(childForWhere) if values.contains(childForWhere.id) => Some(childForWhere.id)
+                    case _                                                        => None
+                  }
 
-        val filter = Some(AndFilter(Vector(parentFilter, whereFilter)))
+                case _ =>
+                  Future(None)
+              }
+          }
+        case Some(m) if m.inTableOfModelId == childModel.name => //child id that matches the where contains the parent
+          val parentFilter = parentField.relatedField.isList match {
+            case false => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
+            case true  => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(parentId))
+          }
+          val whereFilter = ScalarFilter(where.field, Equals(where.fieldGCValue))
+          val filter      = Some(AndFilter(Vector(parentFilter, whereFilter)))
 
-        getNodeIdsByFilter(childModel, filter, database).map(_.headOption)
+          getNodeIdsByFilter(childModel, filter, database).map(_.headOption)
 
-      case _ => sys.error("""""")
+        case _ => sys.error("""""")
+      }
     }
-  }
 
 }
