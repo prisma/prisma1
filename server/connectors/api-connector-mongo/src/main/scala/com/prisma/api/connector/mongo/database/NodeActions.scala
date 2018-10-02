@@ -85,6 +85,39 @@ trait NodeActions extends NodeSingleQueries {
     }
   }
 
+  def updateNodeById(mutaction: UpdateNode, id: IdGCValue)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
+    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.dbName)
+    val idWhere                                    = NodeSelector.forIdGCValue(mutaction.model, id)
+    val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(idWhere, database)
+
+    previousValues.flatMap {
+      case None =>
+        throw APIErrors.NodeNotFoundForWhereError(idWhere)
+
+      case Some(node) =>
+        val scalarUpdates                           = scalarUpdateValues(mutaction)
+        val (creates, createResults)                = embeddedNestedCreateActionsAndResults(mutaction)
+        val (deletes, deleteResults)                = embeddedNestedDeleteActionsAndResults(node, mutaction)
+        val (updates, arrayFilters, updateResults)  = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates)
+        val (upserts, arrayFilters2, upsertResults) = embeddedNestedUpsertDocsAndResults(node, mutaction)
+
+        val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts
+
+        val results = createResults ++ deleteResults ++ updateResults ++ upsertResults :+ UpdateNodeResult(node.id, node, mutaction)
+        if (allUpdates.isEmpty) {
+          Future.successful(MutactionResults(results))
+        } else {
+          val combinedUpdates = customCombine(allUpdates)
+
+          val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
+          collection
+            .updateOne(idWhere, combinedUpdates, updateOptions)
+            .toFuture()
+            .map(_ => id)
+        }
+    }
+  }
+
   def updateNodes(mutaction: UpdateNodes)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
       val collection                        = database.getCollection(mutaction.model.dbName)
@@ -236,7 +269,7 @@ trait NodeActions extends NodeSingleQueries {
                                                  path: Path = Path.empty): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
 
     val actionsArrayFiltersAndResults = mutactions.collect {
-      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) =>
+      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
         val updatedPath = path.append(rf)
         val subNode = node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
@@ -251,7 +284,7 @@ trait NodeActions extends NodeSingleQueries {
 
         (scalars ++ creates ++ deletes ++ updates, arrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
 
-      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) =>
+      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
         val updatedPath = path.append(rf, where)
         val subNode = node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))

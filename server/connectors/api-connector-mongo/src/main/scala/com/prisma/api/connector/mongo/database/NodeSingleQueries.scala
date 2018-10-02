@@ -97,6 +97,38 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
   }
 
-  def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector) = ???
+  def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector) = SimpleMongoAction { database =>
+    val parentModel = parentField.model
+    val childModel  = parentField.relatedModel_!
+
+    //Fixme
+    parentField.relation.inlineManifestation match { //parent contains a list of ids, one of them matches the child returned for the where
+      case Some(m) if m.inTableOfModelId == parentModel.name =>
+        val parentNode = getNodeByWhere(NodeSelector.forIdGCValue(parentModel, parentId), database)
+        val childNode  = getNodeByWhere(where, database)
+
+        parentNode.map {
+          case None => None
+          case Some(n) =>
+            n.data.map(m.referencingColumn) match {
+              case x: CuidGCValue => Some(x)
+              case _              => None
+            }
+        }
+
+      case Some(m) if m.inTableOfModelId == childModel.name => //child id that matches the where contains the parent
+        val parentFilter = parentField.relatedField.isList match {
+          case false => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
+          case true  => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(parentId))
+        }
+        val whereFilter = ScalarFilter(where.field, Equals(where.fieldGCValue))
+
+        val filter = Some(AndFilter(Vector(parentFilter, whereFilter)))
+
+        getNodeIdsByFilter(childModel, filter, database).map(_.headOption)
+
+      case _ => sys.error("""""")
+    }
+  }
 
 }
