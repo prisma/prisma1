@@ -1,6 +1,5 @@
 package com.prisma.deploy.schema
 
-import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.SchemaMapper
@@ -23,15 +22,15 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, dependencies: DeployDependencies): SchemaBuilder =
+  def apply()(implicit dependencies: DeployDependencies): SchemaBuilder =
     (userContext: SystemUserContext) => { SchemaBuilderImpl(userContext).build() }
 }
 
 case class SchemaBuilderImpl(
     userContext: SystemUserContext
-)(implicit system: ActorSystem, dependencies: DeployDependencies) {
+)(implicit dependencies: DeployDependencies) {
   import ManualMarshallerHelpers._
-  import system.dispatcher
+  import dependencies.executionContext
 
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence

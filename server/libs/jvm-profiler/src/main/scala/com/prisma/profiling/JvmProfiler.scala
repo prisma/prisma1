@@ -12,8 +12,10 @@ object JvmProfiler {
       interval: FiniteDuration = 5.seconds
   )(implicit as: ActorSystem): Cancellable = {
     import as.dispatcher
+
     val memoryProfiler = MemoryProfiler(metricsManager)
     val cpuProfiler    = CpuProfiler(metricsManager)
+
     as.scheduler.schedule(initialDelay, interval) {
       memoryProfiler.profile()
       cpuProfiler.profile()

@@ -36,7 +36,7 @@ case class RequestHandler(
 
   def handleRawRequestForPrivateApi(projectId: String, rawRequest: RawRequest): Future[(StatusCode, JsValue)] = {
     handleRawRequestWithSchemaBuilder(projectId, rawRequest) { project =>
-      PrivateSchemaBuilder(project)(apiDependencies, apiDependencies.system).build()
+      PrivateSchemaBuilder(project)(apiDependencies).build()
     }
   }
 

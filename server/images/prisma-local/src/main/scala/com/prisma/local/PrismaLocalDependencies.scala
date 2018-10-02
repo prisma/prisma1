@@ -22,9 +22,10 @@ import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
-import com.prisma.websocket.protocol.{Request => WebsocketRequest}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
+
+import scala.concurrent.ExecutionContext
 
 case class PrismaLocalDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends DeployDependencies
@@ -32,6 +33,8 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with WorkerDependencies
     with SubscriptionDependencies {
   override implicit def self = this
+
+  override implicit lazy val executionContext: ExecutionContext = system.dispatcher
 
   val config: PrismaConfig = ConfigLoader.load()
   MetricsRegistry.init(deployConnector.cloudSecretPersistence)

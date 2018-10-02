@@ -16,29 +16,26 @@ import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
+import com.prisma.image.{FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus._
-import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
-import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
 import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import com.prisma.subscriptions.protocol.SubscriptionRequest
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
-import com.prisma.websocket.protocol.{Request => WebsocketRequest}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
-import play.api.libs.json.Json
+
+import scala.concurrent.ExecutionContext
 
 case class PrismaProdDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends DeployDependencies
     with ApiDependencies
     with SubscriptionDependencies
     with WorkerDependencies {
+
+  override implicit lazy val executionContext: ExecutionContext = system.dispatcher
 
   val config: PrismaConfig = ConfigLoader.load()
   MetricsRegistry.init(deployConnector.cloudSecretPersistence)

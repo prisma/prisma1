@@ -1,7 +1,5 @@
 package com.prisma.api.mutations
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
 import com.prisma.api.mutactions.DatabaseMutactions
@@ -19,10 +17,6 @@ case class Update(
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends SingleItemClientMutation {
-
-  implicit val system: ActorSystem             = apiDependencies.system
-  implicit val materializer: ActorMaterializer = apiDependencies.materializer
-
   val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
   val where    = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
@@ -36,5 +30,4 @@ case class Update(
     val updateResult = results.results.collectFirst { case r: UpdateNodeResult if r.mutaction == updateMutaction => r }.head
     returnValueByUnique(NodeSelector.forIdGCValue(model, updateResult.id), selectedFields)
   }
-
 }

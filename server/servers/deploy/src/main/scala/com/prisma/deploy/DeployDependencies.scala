@@ -22,6 +22,7 @@ trait DeployDependencies extends AwaitUtils {
   implicit val reporter: ErrorReporter
 
   implicit def self: DeployDependencies
+  implicit lazy val executionContext: ExecutionContext = system.dispatcher
 
   def config: PrismaConfig
   def migrator: Migrator

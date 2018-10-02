@@ -22,8 +22,9 @@ import scala.concurrent.ExecutionContext
 
 trait ApiDependencies extends AwaitUtils {
   implicit def self: ApiDependencies
-
   implicit val system: ActorSystem
+  implicit lazy val executionContext: ExecutionContext = system.dispatcher
+
   val materializer: ActorMaterializer
   def config: PrismaConfig
   def projectFetcher: ProjectFetcher
@@ -37,7 +38,6 @@ trait ApiDependencies extends AwaitUtils {
   def projectIdEncoder: ProjectIdEncoder
   def capabilities: Set[ApiConnectorCapability] = apiConnector.capabilities
 
-  implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
   lazy val auth: Auth                                   = AuthImpl

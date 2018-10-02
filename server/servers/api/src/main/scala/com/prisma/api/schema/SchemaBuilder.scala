@@ -16,7 +16,7 @@ import sangria.ast
 import sangria.relay._
 import sangria.schema._
 
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
 import scala.concurrent.Future
 
 case class ApiUserContext(clientId: String)
@@ -26,7 +26,7 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
+  def apply()(implicit apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
     SchemaBuilderImpl(
       project = project,
       capabilities = apiDependencies.capabilities,
@@ -39,9 +39,9 @@ case class SchemaBuilderImpl(
     project: Project,
     capabilities: Set[ApiConnectorCapability] = Set.empty,
     enableRawAccess: Boolean = false
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem)
+)(implicit apiDependencies: ApiDependencies)
     extends SangriaExtensions {
-  import system.dispatcher
+  import apiDependencies.executionContext
 
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
   val dataResolver                         = apiDependencies.dataResolver(project)
