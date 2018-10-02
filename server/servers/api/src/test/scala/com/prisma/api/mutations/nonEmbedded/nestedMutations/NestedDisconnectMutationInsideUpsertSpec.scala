@@ -598,7 +598,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   "a one to many relation" should "be disconnectable by unique through a nested mutation" in {
     val schema = """type Comment{
                             id: ID! @unique
-                            text: String
+                            text: String @unique
                             todo: Todo
                         }
 

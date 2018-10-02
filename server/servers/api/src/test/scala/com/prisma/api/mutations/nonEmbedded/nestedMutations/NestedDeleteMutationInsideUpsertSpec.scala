@@ -538,7 +538,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ReqOtherToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToReqOther").await should be(1) }
 
     server.query(
       """mutation {
@@ -579,7 +579,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_ReqOtherToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToReqOther").await should be(1) }
 
   }
 
@@ -620,7 +620,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_OptOtherToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOptOther").await should be(1) }
 
     server.query(
       """mutation {
@@ -662,7 +662,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_OptOtherToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOptOther").await should be(0) }
   }
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
