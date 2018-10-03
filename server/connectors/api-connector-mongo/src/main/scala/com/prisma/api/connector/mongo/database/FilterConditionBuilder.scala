@@ -2,6 +2,7 @@ package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.gc_values.{DateTimeGCValue, GCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField
@@ -69,10 +70,7 @@ trait FilterConditionBuilder {
     case x              => x
   }
 
-  def fromGCValue(value: GCValue): Any = value match {
-    case DateTimeGCValue(value) => BsonDateTime(value.getMillis)
-    case x: GCValue             => x.value
-  }
+  def fromGCValue(value: GCValue): Any = GCValueBsonTransformer.apply(value)
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
     val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)

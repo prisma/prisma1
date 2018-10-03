@@ -8,7 +8,8 @@ import org.scalatest._
 
 class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities         = Set(JoinRelationsCapability)
 
   val project = SchemaDsl.fromString() { """type Artist {
                                          |  id: ID! @unique
