@@ -126,7 +126,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
         val parentId                                  = fromNodeIds.find(_ == group._1).get
         val roots                                     = group._2.map(DocumentToRoot(model, _))
         val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(parentId, PrismaNode(r.idField, r, Some(model.name)))).toVector
-        ResolverResult(prismaNodes, hasPreviousPage = false, hasNextPage = false, parentModelId = Some(parentId))
+        ResolverResult(queryArguments, prismaNodes, parentModelId = Some(parentId))
       }.toVector
 
       val ids = res.flatMap(_.parentModelId)

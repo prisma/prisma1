@@ -768,7 +768,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_StepChildToParent").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToStepChild").await should be(1) }
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     server.query(
@@ -785,7 +785,7 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_StepChildToParent").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToStepChild").await should be(0) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(0)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     dataResolver(project).countByTable(project.schema.getModelByName_!("StepChild").dbName).await should be(1)
