@@ -6,7 +6,7 @@ import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
+class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
 
   "a P1! to C1! relation with the child already in a relation" should "error when connecting by id since old required parent relation would be broken" in {

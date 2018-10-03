@@ -130,6 +130,7 @@ trait ValidationActions extends FilterConditionBuilder {
 //  }
 
 //  def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], relationField: RelationField)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
+
   def errorIfNodeIsInRelation(nodeId: IdGCValue, otherField: RelationField)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
     val otherModel = otherField.model
     val childModel = otherField.relatedModel_!

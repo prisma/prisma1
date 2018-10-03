@@ -8,7 +8,7 @@ import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
+class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "a P1! to C1! relation" should "be possible" in {

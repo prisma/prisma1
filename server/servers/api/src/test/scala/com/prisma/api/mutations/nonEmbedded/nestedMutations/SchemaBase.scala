@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-trait NestedMutationBase {
+trait SchemaBase {
 
   //NON EMBEDDED
 

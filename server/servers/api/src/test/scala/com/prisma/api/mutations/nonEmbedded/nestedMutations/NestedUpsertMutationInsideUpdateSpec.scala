@@ -2,16 +2,15 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import java.util.UUID
 
-import com.prisma.IgnoreMySql
+import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
+class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
-  //Fixme this does an embedded insert at the moment
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
@@ -60,8 +59,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
@@ -111,8 +110,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"}]}}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
@@ -163,8 +162,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"new C"}]}}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(3)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
@@ -215,8 +214,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
@@ -269,8 +268,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
@@ -323,8 +322,8 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
       """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"c2","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(3)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
@@ -467,6 +466,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """new comment3""")
   }
 
+  //Fixme failing due to missing unique constraint
   "a one to many relation" should "generate helpful error messages" in {
     val schema = """type Comment{
                             id: ID! @unique
@@ -530,14 +530,27 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("name", _.String)
-      val todo = schema.model("Todo").field_!("title", _.String)
-      val tag  = schema.model("Tag").field_!("name", _.String)
 
-      list.oneToManyRelation("todos", "list", todo)
-      todo.oneToManyRelation("tags", "todo", tag)
-    }
+    val schema = """     type List{
+                            id: ID! @unique
+                            name: String!
+                            todos: [Todo!]!
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String!
+                            list: List
+                            tags: [Tag!]!
+                        }
+
+                        type Tag{
+                            id: ID! @unique
+                            name: String!
+                            todo: Todo
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createMutation =
@@ -625,14 +638,26 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation with upsert" should "work on miss on id" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("name", _.String)
-      val todo = schema.model("Todo").field_!("title", _.String)
-      val tag  = schema.model("Tag").field_!("name", _.String)
+    val schema = """     type List{
+                            id: ID! @unique
+                            name: String!
+                            todos: [Todo!]!
+                        }
 
-      list.oneToManyRelation("todos", "list", todo)
-      todo.oneToManyRelation("tags", "todo", tag)
-    }
+                        type Todo{
+                            id: ID! @unique
+                            title: String!
+                            list: List
+                            tags: [Tag!]!
+                        }
+
+                        type Tag{
+                            id: ID! @unique
+                            name: String!
+                            todo: Todo
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createMutation =
@@ -1703,7 +1728,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"created bottom"}]}}""")
   }
 
-  "a nested upsert for a type with an id field of type uuid" should "work" taggedAs (IgnoreMySql) in {
+  "a nested upsert for a type with an id field of type uuid" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       s"""
          |type List {

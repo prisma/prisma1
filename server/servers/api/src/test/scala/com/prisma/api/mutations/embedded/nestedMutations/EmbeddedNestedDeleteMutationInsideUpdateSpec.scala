@@ -2,12 +2,12 @@ package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.NestedMutationBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
 import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with NestedMutationBase {
+class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
   //Fixme
