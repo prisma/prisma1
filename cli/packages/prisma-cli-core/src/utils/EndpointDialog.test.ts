@@ -29,7 +29,7 @@ describe('endpoint dialog', () => {
     const input = {
       choice: 'local',
       loggedIn: false,
-      folderName: 'some-folder',
+      serviceName: 'some-folder',
       localClusterRunning: false,
       existingData: false,
     }
@@ -40,7 +40,7 @@ describe('endpoint dialog', () => {
     const input = {
       choice: 'local',
       loggedIn: false,
-      folderName: 'some-folder',
+      serviceName: 'some-folder',
       localClusterRunning: true,
       existingData: false,
     }

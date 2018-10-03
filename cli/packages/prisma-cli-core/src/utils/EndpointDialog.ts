@@ -52,7 +52,7 @@ export interface GetEndpointResult {
 export interface HandleChoiceInput {
   choice: string
   loggedIn: boolean
-  folderName: string
+  serviceName: string
   localClusterRunning: boolean
   clusters?: Cluster[]
 }
@@ -134,7 +134,7 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    const folderName = path.basename(this.config.definitionDir)
+    const serviceName = path.basename(this.config.definitionDir)
     const loggedIn = await this.client.isAuthenticated()
     const clusters = this.getCloudClusters()
     const files = this.listFiles()
@@ -150,7 +150,7 @@ export class EndpointDialog {
     return this.handleChoice({
       choice: this.decodeName(choice),
       loggedIn,
-      folderName,
+      serviceName,
       localClusterRunning,
       clusters,
     })
@@ -209,7 +209,7 @@ export class EndpointDialog {
   async handleChoice({
     choice,
     loggedIn,
-    folderName,
+    serviceName,
     localClusterRunning,
     clusters = this.getCloudClusters(),
   }: HandleChoiceInput): Promise<GetEndpointResult> {
@@ -241,7 +241,7 @@ export class EndpointDialog {
         service = await this.ask({
           message: 'Choose a name for your service',
           key: 'serviceName',
-          defaultValue: folderName,
+          defaultValue: serviceName,
         })
 
         stage = await this.ask({
@@ -355,12 +355,12 @@ export class EndpointDialog {
 
     this.env.setActiveCluster(cluster!)
 
-    // TODO propose alternatives if folderName already taken to ensure global uniqueness
+    // TODO propose alternatives if serviceName already taken to ensure global uniqueness
     if (
       !cluster.local ||
       (await this.projectExists(cluster, service, stage, workspace))
     ) {
-      service = await this.askForService(folderName)
+      service = await this.askForService(serviceName)
     }
 
     if (
