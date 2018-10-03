@@ -8,7 +8,6 @@ import com.prisma.gc_values.IdGCValue
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import play.api.libs.json.{JsValue, Json}
 
-import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {

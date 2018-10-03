@@ -26,32 +26,21 @@ trait NodeActions extends NodeSingleQueries {
 
   def createNode(mutaction: CreateNode, inlineRelations: List[(String, GCValue)])(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
     SimpleMongoAction { database =>
-      val collection: MongoCollection[Document]                                = database.getCollection(mutaction.model.dbName)
       val (docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(inlineRelations, mutaction)
 
-      collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(childResults))
+      database.getCollection(mutaction.model.dbName).insertOne(docWithId).toFuture().map(_ => MutactionResults(childResults))
     }
 
-  def deleteNode(mutaction: TopLevelDeleteNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.dbName)
-    val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(mutaction.where, SelectedFields.all(mutaction.model), database)
+  def deleteNodeById(model: Model, id: IdGCValue) = deleteNodesByIds(model, Vector(id))
 
-    previousValues.flatMap {
-      case Some(node) => collection.deleteOne(mutaction.where).toFuture().map(_ => MutactionResults(Vector(DeleteNodeResult(node.id, node, mutaction))))
-      case None       => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
-    }
+  def deleteNodesByIds(model: Model, ids: Vector[IdGCValue]) = SimpleMongoAction { database =>
+    val mongoFilter = buildConditionForFilter(Some(ScalarFilter(model.idField_!, In(ids))))
+    database.getCollection(model.dbName).deleteMany(mongoFilter).collect().toFuture()
   }
 
-  def deleteNodes(mutaction: DeleteNodes)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
-    SimpleMongoAction { database =>
-      val collection                        = database.getCollection(mutaction.model.dbName)
-      val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
-
-      futureIds.flatMap { ids =>
-        val results = ManyNodesResult(mutaction, ids.size)
-        collection.deleteMany(in("_id", ids.map(_.value): _*)).toFuture().map(_ => MutactionResults(Vector(results)))
-      }
-    }
+  def deleteNodes(model: Model, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
+    database.getCollection(model.dbName).deleteMany(in("_id", ids.map(_.value): _*)).toFuture()
+  }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = {
     updateNodeByWhere(mutaction, mutaction.where)
@@ -62,7 +51,6 @@ trait NodeActions extends NodeSingleQueries {
   }
 
   def updateNodeByWhere(mutaction: UpdateNode, where: NodeSelector)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document]      = database.getCollection(mutaction.model.dbName)
     val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(where, database)
 
     previousValues.flatMap {
@@ -85,7 +73,8 @@ trait NodeActions extends NodeSingleQueries {
           val combinedUpdates = customCombine(allUpdates)
 
           val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
-          collection
+          database
+            .getCollection(mutaction.model.dbName)
             .updateOne(where, combinedUpdates, updateOptions)
             .toFuture()
             .map(_ => MutactionResults(results))
@@ -94,34 +83,11 @@ trait NodeActions extends NodeSingleQueries {
     }
   }
 
-  def updateNodes(mutaction: UpdateNodes)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
-    SimpleMongoAction { database =>
-      val collection                        = database.getCollection(mutaction.model.dbName)
-      val futureIds: Future[Seq[IdGCValue]] = getNodeIdsByFilter(mutaction.model, mutaction.whereFilter, database)
-      val scalarUpdates                     = scalarUpdateValues(mutaction)
-      val combinedUpdates                   = customCombine(scalarUpdates)
+  def updateNodes(mutaction: UpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
+    val scalarUpdates   = scalarUpdateValues(mutaction)
+    val combinedUpdates = customCombine(scalarUpdates)
 
-      futureIds.flatMap { ids =>
-        val results = ManyNodesResult(mutaction, ids.size)
-        collection.updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture().map(_ => MutactionResults(Vector(results)))
-      }
-    }
-
-  def upsertNode(mutaction: TopLevelUpsertNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document]      = database.getCollection(mutaction.where.model.dbName)
-    val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(mutaction.where, database)
-
-    previousValues.flatMap {
-      case None =>
-        val (docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(List.empty, mutaction.create)
-
-        collection.insertOne(docWithId).toFuture().map(_ => MutactionResults(Vector(UpsertNodeResult(mutaction.create, mutaction)) ++ childResults))
-
-      //how does returning the created id work?
-
-      case Some(node) =>
-        topLevelUpdateHelper(mutaction.update, collection, node)
-    }
+    database.getCollection(mutaction.model.dbName).updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture()
   }
 
   //endregion
@@ -311,13 +277,6 @@ trait NodeActions extends NodeSingleQueries {
         }.toVector
         (nestedCreates, nestedCreateResults)
     }
-  }
-
-  def deleteNodeById(model: Model, id: IdGCValue) = deleteNodesByIds(model, Vector(id))
-
-  def deleteNodesByIds(model: Model, ids: Vector[IdGCValue]) = SimpleMongoAction { database =>
-    val mongoFilter = buildConditionForFilter(Some(ScalarFilter(model.idField_!, In(ids))))
-    database.getCollection(model.dbName).deleteMany(mongoFilter).collect().toFuture()
   }
 
   // helpers

@@ -83,6 +83,12 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
   }
 
+  def getNodeIdsByFilter2(model: Model, filter: Option[Filter]) = SimpleMongoAction { database =>
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val bsonFilter: Bson                      = buildConditionForFilter(filter)
+    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
+  }
+
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): SimpleMongoAction[Option[IdGCValue]] =
     SimpleMongoAction { database =>
       val parentModel = parentField.model
