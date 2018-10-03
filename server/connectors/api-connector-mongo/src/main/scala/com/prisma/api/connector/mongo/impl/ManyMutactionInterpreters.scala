@@ -12,16 +12,15 @@ case class DeleteNodesInterpreter(mutaction: DeleteNodes)(implicit ec: Execution
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {
       ids <- mutationBuilder.getNodeIdsByFilter2(mutaction.model, mutaction.whereFilter)
-//      _   <- SequenceAction(checkForRequiredRelationsViolations(mutationBuilder, ids))
-      _ <- mutationBuilder.deleteNodes(mutaction.model, ids)
+      _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
+      _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
     } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.size)))
 
-  private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, nodeIds: Vector[IdGCValue]) = {
-//    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.model)
-//    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelation(nodeIds, field)).toVector
-//
-//    SequenceAction(actions)
-    ???
+  private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, nodeIds: Seq[IdGCValue]) = {
+    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.model)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelation(nodeIds.toVector, field))
+
+    SequenceAction(actions.toVector)
   }
 }
 
