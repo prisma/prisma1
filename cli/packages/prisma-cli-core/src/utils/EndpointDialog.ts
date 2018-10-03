@@ -134,7 +134,7 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    const serviceName = path.basename(this.config.definitionDir)
+    const serviceName = this.proposeServiceName(this.config.definitionDir)
     const loggedIn = await this.client.isAuthenticated()
     const clusters = this.getCloudClusters()
     const files = this.listFiles()
@@ -154,6 +154,14 @@ export class EndpointDialog {
       localClusterRunning,
       clusters,
     })
+  }
+
+  proposeServiceName(definitionDir: string) {
+    let serviceName = path.basename(definitionDir)
+    if(serviceName === 'prisma') {
+      serviceName = path.basename(path.dirname(definitionDir))
+    }
+    return serviceName
   }
 
   encodeName(name) {

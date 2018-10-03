@@ -47,6 +47,11 @@ describe('endpoint dialog', () => {
     const result = await dialog.handleChoice(input)
     expect({ input, result: normalizeResult(result) }).toMatchSnapshot()
   })
+  test('propose service name', () => {
+    const endpointDialog = makeDialog()
+    expect(endpointDialog.proposeServiceName('/Users/Peter/workspace/webshop')).toBe('webshop')
+    expect(endpointDialog.proposeServiceName('/Users/Peter/workspace/webshop/prisma')).toBe('webshop')
+  })
 })
 
 export function normalizeResult({ dockerComposeYml, ...result }) {
