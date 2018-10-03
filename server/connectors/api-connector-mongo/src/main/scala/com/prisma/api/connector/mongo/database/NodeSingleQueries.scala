@@ -4,9 +4,8 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
-import com.prisma.shared.models.{Model, RelationField, Schema}
+import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 
@@ -15,19 +14,6 @@ import scala.concurrent.Future
 import scala.language.existentials
 
 trait NodeSingleQueries extends FilterConditionBuilder {
-
-  def getModelForGlobalId(schema: Schema, idGCValue: IdGCValue, database: MongoDatabase) = {
-    val outer = schema.models.map { model =>
-      val collection: MongoCollection[Document] = database.getCollection(model.name)
-      collection.find(Filters.eq("_id", idGCValue.value)).collect().toFuture.map { results: Seq[Document] =>
-        if (results.nonEmpty) Vector(model) else Vector.empty
-      }
-    }
-    val sequence: Future[List[Vector[Model]]] = Future.sequence(outer)
-
-    sequence.map(_.flatten.headOption)
-  }
-
   def getNodeByWhere2(where: NodeSelector) = SimpleMongoAction { database =>
     getNodeByWhere(where, database)
   }
@@ -71,7 +57,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
           node.map {
             case None => None
             case Some(n) =>
-              n.data.map(m.referencingColumn) match {
+              n.data.map(parentField.name) match {
                 case x: CuidGCValue => Some(x)
                 case _              => None
               }
@@ -79,8 +65,8 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
         case Some(m) if m.inTableOfModelId == childModel.name =>
           val filter = parentField.relatedField.isList match {
-            case false => Some(ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId)))
-            case true  => Some(ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(parentId)))
+            case false => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId)))
+            case true  => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId)))
           }
 
           getNodeIdsByFilter(childModel, filter, database).map(_.headOption)
@@ -109,7 +95,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
               Future(None)
 
             case Some(n) =>
-              (parentField.isList, n.data.map(m.referencingColumn)) match {
+              (parentField.isList, n.data.map(parentField.name)) match {
                 case (false, idInParent: CuidGCValue) =>
                   getNodeByWhere(where, database).map {
                     case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
@@ -128,8 +114,8 @@ trait NodeSingleQueries extends FilterConditionBuilder {
           }
         case Some(m) if m.inTableOfModelId == childModel.name => //child id that matches the where contains the parent
           val parentFilter = parentField.relatedField.isList match {
-            case false => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
-            case true  => ScalarFilter(childModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(parentId))
+            case false => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId))
+            case true  => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId))
           }
           val whereFilter = ScalarFilter(where.field, Equals(where.fieldGCValue))
           val filter      = Some(AndFilter(Vector(parentFilter, whereFilter)))
