@@ -7,8 +7,9 @@ import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models.RelationField
 import org.mongodb.scala.Document
-import scala.collection.JavaConverters._
+import sun.security.util.Cache.EqualByteArray
 
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait ValidationActions extends FilterConditionBuilder {
@@ -157,23 +158,21 @@ trait ValidationActions extends FilterConditionBuilder {
 
     otherField.relation.manifestation match {
       case Some(m: InlineRelationManifestation) if m.inTableOfModelId == otherModel.name =>
-        val collection = database.getCollection(otherModel.dbName)
         val mongoFilter = otherField.isList match {
           case true  => ScalarFilter(otherModel.idField_!.copy(name = m.referencingColumn), Contains(nodeId))
           case false => ScalarFilter(otherModel.idField_!.copy(name = m.referencingColumn), Equals(nodeId))
         }
-        val res = collection.find(buildConditionForFilter(Some(mongoFilter))).collect().toFuture
+        val res = database.getCollection(otherModel.dbName).find(buildConditionForFilter(Some(mongoFilter))).collect().toFuture
         res.map(list => if (list.nonEmpty) throw RequiredRelationWouldBeViolated(otherField.relation))
 
-      case Some(m: InlineRelationManifestation) if m.inTableOfModelId == relatedModel.name => //Fixme rework this case like above
-        val collection = database.getCollection(relatedModel.dbName)
-        val mongoFilter = otherField.isList match {
-          case true  => ScalarFilter(relatedModel.idField_!.copy(name = m.referencingColumn), Contains(nodeId))
-          case false => ScalarFilter(relatedModel.idField_!.copy(name = m.referencingColumn), Equals(nodeId))
+      case Some(m: InlineRelationManifestation) if m.inTableOfModelId == relatedModel.name =>
+        val filter = ScalarFilter(relatedModel.idField_!, Equals(nodeId))
+        val res    = database.getCollection(relatedModel.dbName).find(buildConditionForFilter(Some(filter))).collect().toFuture
+        res.map { list =>
+          list.foreach { doc =>
+            if (!otherField.relatedField.isList && doc.get(m.referencingColumn).isDefined) throw RequiredRelationWouldBeViolated(otherField.relation)
+          }
         }
-        val res = collection.find(buildConditionForFilter(Some(mongoFilter))).collect().toFuture
-        res.map(list => if (list.nonEmpty) throw RequiredRelationWouldBeViolated(otherField.relation))
-
       case _ => sys.error("should not happen ")
     }
   }

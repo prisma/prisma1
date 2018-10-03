@@ -233,7 +233,7 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBas
   }
 
   "a PM to C1!  relation " should "error when deleting the parent" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1opt }
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     server.query(
