@@ -201,7 +201,7 @@ export class GoGenerator extends Generator {
 
             if (field.args.length > 0) {
               return sTyp + `
-                func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context, params *${goCase(field.name)}ParamsExec) ([]${goCase(typeName)}, error) {
+                func (instance *${type.name}Exec) ${goCase(field.name)}(params *${goCase(field.name)}ParamsExec) *${goCase(typeName)}ExecArray {
                   var wparams *prisma.WhereParams
                   if params != nil {
                     wparams = &prisma.WhereParams{
@@ -222,10 +222,7 @@ export class GoGenerator extends Generator {
                     "${field.name}",
                     []string{${typeFields.join(',')}})
 
-
-                  var v []${typeName}
-                  err := ret.ExecArray(ctx, &v)
-                  return v, err
+                  return &${goCase(typeName)}ExecArray{ret}
                 }`
             } else {
               if(type.name.endsWith("Connection") && field.name === "aggregate") {
@@ -257,16 +254,25 @@ export class GoGenerator extends Generator {
             }
           }).join('\n')}
 
-        func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
-          var v ${type.name}
-          err := instance.exec.Exec(ctx, &v)
-          return v, err
-        }
+          func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
+            var v ${type.name}
+            err := instance.exec.Exec(ctx, &v)
+            return v, err
+          }
 
-        func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
-          return instance.exec.Exists(ctx)
-        }
+          func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
+            return instance.exec.Exists(ctx)
+          }
 
+          type ${type.name}ExecArray struct {
+            exec *prisma.Exec
+          }
+
+          func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
+            var v []${type.name}
+            err := instance.exec.ExecArray(ctx, &v)
+            return v, err
+          }
 
         type ${type.name} struct {
           ${Object.keys(fieldMap)
@@ -475,7 +481,7 @@ export class GoGenerator extends Generator {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field)
     return param.code + `
-      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${param.type}) ([]${goCase(typeName)}, error) {
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}ExecArray {
         var wparams *prisma.WhereParams
         if params != nil {
           wparams = &prisma.WhereParams{
@@ -496,9 +502,7 @@ export class GoGenerator extends Generator {
           "${field.name}",
           []string{${typeFields.join(',')}})
 
-        var v []${goCase(typeName)}
-        err := ret.ExecArray(ctx, &v)
-        return v, err
+        return &${goCase(typeName)}ExecArray{ret}
       }`
   }
 
