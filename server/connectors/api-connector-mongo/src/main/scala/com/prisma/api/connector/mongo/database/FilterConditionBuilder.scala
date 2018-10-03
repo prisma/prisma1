@@ -27,7 +27,7 @@ trait FilterConditionBuilder {
       case NodeSubscriptionFilter => and(hackForTrue)
       case AndFilter(filters)     => and(nonEmptyConditions(path, filters): _*)
       case OrFilter(filters)      => or(nonEmptyConditions(path, filters): _*)
-      case NotFilter(filters)     => not(and(filters.map(f => buildConditionForFilter(path, f)): _*))
+      case NotFilter(filters)     => nor(filters.map(f => buildConditionForFilter(path, f)): _*) //not can only negate equality comparisons not filters
       case NodeFilter(filters)    => buildConditionForFilter(path, OrFilter(filters))
       case x: RelationFilter      => relationFilterStatement(path, x)
 
