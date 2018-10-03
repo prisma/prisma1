@@ -107,7 +107,6 @@ object DocumentToRoot {
     }
 
     //inline Ids, needs to fetch lists or single values
-    //Fixme this needs to store the values under the fieldName
 
     val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
       case f if f.isList && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
@@ -118,10 +117,10 @@ object DocumentToRoot {
     }
 
     val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>
-      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue)) //Fixme this is a hack
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
 
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
-      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue)) //Fixme this is a hack
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
 
     RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ createdAt :+ updatedAt :+ id).toMap)
   }

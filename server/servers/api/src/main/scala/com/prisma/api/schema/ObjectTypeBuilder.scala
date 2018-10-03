@@ -314,7 +314,7 @@ class ObjectTypeBuilder(
           case x                   => sys.error("not handled yet" + x)
         }
 
-      case f: RelationField if !f.isList && f.relation.isInlineRelation =>
+      case f: RelationField if !f.isList && f.relation.isInlineRelation => //Fixme what about self relations? Doesnt it need to check in both?
         val manifestation = f.relation.inlineManifestation.get
         if (manifestation.inTableOfModelId == f.model.name) {
           item.data.map.get(f.name) match {

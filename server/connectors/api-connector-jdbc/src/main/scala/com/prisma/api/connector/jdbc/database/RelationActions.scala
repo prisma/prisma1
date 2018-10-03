@@ -18,6 +18,8 @@ trait RelationActions extends BuilderBase {
       val childWhereCondition  = idField(childModel).equal(placeHolder)
       val parentWhereCondition = idField(parentModel).equal(placeHolder)
 
+      //Fixme ask Marcus about this
+
       val (idToLinkTo, idToUpdate, rowToUpdateCondition) = if (relation.isSameModelRelation) {
         if (relationField.relationSide == RelationSide.B) {
           (childId, parentId, childWhereCondition)

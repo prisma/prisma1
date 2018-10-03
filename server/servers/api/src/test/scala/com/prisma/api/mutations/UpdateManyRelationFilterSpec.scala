@@ -12,20 +12,20 @@ class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
   val schema =
     """type Top{
       |   id: ID! @unique
-      |   top: String! @unique
+      |   top: String!
       |   bottom: Bottom
       |}
       |
       |type Bottom{
       |   id: ID! @unique
-      |   bottom: String! @unique
+      |   bottom: String!
       |   top: Top
       |   veryBottom: VeryBottom
       |}
       |
       |type VeryBottom{
       |   id: ID! @unique
-      |   veryBottom: String! @unique
+      |   veryBottom: String!
       |   bottom: Bottom
       |}""".stripMargin
 

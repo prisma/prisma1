@@ -79,6 +79,7 @@ class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matcher
 
     server.query("{post(where:{identifier: 1}){identifier, related{identifier}}}", project).toString should be(
       """{"data":{"post":{"identifier":1,"related":{"identifier":2}}}}""")
+
     server.query("{post(where:{identifier: 2}){identifier, related{identifier}}}", project).toString should be(
       """{"data":{"post":{"identifier":2,"related":null}}}""")
 
