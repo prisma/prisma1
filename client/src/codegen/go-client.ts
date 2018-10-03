@@ -399,8 +399,9 @@ export class GoGenerator extends Generator {
   }
 
   opUpdateMany(field) {
-    return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${goCase(field.name)}Params) (BatchPayload, error) {
+    const param = this.paramsType(field, "updateMany")
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${param.type}) (BatchPayload, error) {
         ret := client.Client.UpdateMany(
           prisma.UpdateParams{
             Data: params.Data,
@@ -416,8 +417,9 @@ export class GoGenerator extends Generator {
 
   opUpdate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
+    const param = this.paramsType(field, "update")
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}Exec {
         ret := client.Client.Update(
                  prisma.UpdateParams{
                    Data: params.Data,
@@ -471,8 +473,9 @@ export class GoGenerator extends Generator {
 
   opGetMany(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${goCase(field.name)}Params) ([]${goCase(typeName)}, error) {
+    const param = this.paramsType(field)
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${param.type}) ([]${goCase(typeName)}, error) {
         var wparams *prisma.WhereParams
         if params != nil {
           wparams = &prisma.WhereParams{
@@ -502,8 +505,9 @@ export class GoGenerator extends Generator {
   opGetConnection(field) {
     // TODO(dh): Connections are not yet implemented
     const { typeName } = this.extractFieldLikeType(field)
-    return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) (${goCase(typeName)}Exec) {
+    const param = this.paramsType(field)
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) (${goCase(typeName)}Exec) {
         panic("not implemented")
       }`
   }
@@ -524,8 +528,9 @@ export class GoGenerator extends Generator {
 
   opUpsert(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    return this.paramsType(field) + `
-      func (client *Client) ${goCase(field.name)} (params *${goCase(field.name)}Params) *${goCase(typeName)}Exec {
+    const param = this.paramsType(field, "upsert")
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}Exec {
         var uparams *prisma.UpsertParams
         if params != nil {
           uparams = &prisma.UpsertParams{
@@ -544,9 +549,24 @@ export class GoGenerator extends Generator {
       }`
   }
 
-  paramsType(field) {
-    return `
-      type ${goCase(field.name)}Params struct {
+  paramsType(field, verb?: string) {
+    let type = goCase(field.name) + "Params"
+    if(verb) {
+      // Mangle the name from <verb><noun>Params to <noun><verb>Params.
+      // When the noun is in its plural form, turn it into its singular form.
+
+      let arg = field.args.find(arg => { return arg.name === "where" })
+      if(!arg) {
+        throw new Error("couldn't find expected 'where' argument")
+      }
+      let match = arg.type.toString().match("^(.+)Where(?:Unique)?Input!?$")
+      if(match === null) {
+        throw new Error("couldn't determine type name")
+      }
+      type = match[1] + goCase(verb) + "Params"
+    }
+    let code = `
+      type ${type} struct {
         ${field.args
           .map(arg => {
             const fieldType = this.extractFieldLikeType(arg)
@@ -555,6 +575,7 @@ export class GoGenerator extends Generator {
           })
           .join('\n')}
       }`
+    return { code: code, type: type }
   }
 
   printOperation(fields, operation: string, options: RenderOptions) {
