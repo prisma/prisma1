@@ -688,10 +688,18 @@ type Client struct {
 	Client *prisma.Client
 }
 
-func New(endpoint string, opts ...graphql.ClientOption) *Client {
-  return &Client{
-    Client: prisma.New(endpoint, opts...),
-  }
+type Options struct {
+	Endpoint string
+}
+
+func New(options *Options, opts ...graphql.ClientOption) *Client {
+	endpoint := DefaultEndpoint
+	if options != nil {
+		endpoint = options.Endpoint
+	}
+	return &Client{
+		Client: prisma.New(endpoint, opts...),
+	}
 }
 `
 
