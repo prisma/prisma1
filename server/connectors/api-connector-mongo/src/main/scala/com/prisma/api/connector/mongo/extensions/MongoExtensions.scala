@@ -100,10 +100,10 @@ object DocumentToRoot {
     val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.fields.find(_.name == "id").get, v)).getOrElse("id" -> CuidGCValue.random)
 
     val scalarList: List[(String, GCValue)] =
-      model.scalarListFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
+      model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
     val relationFields: List[(String, GCValue)] = model.relationFields.collect {
-      case f if !f.relation.isInlineRelation => f.name -> document.get(f.dbName).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+      case f if !f.relation.isInlineRelation => f.name -> document.get(f.name).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
     }
 
     //inline Ids, needs to fetch lists or single values

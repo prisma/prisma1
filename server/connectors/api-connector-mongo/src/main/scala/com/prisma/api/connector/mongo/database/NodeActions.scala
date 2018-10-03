@@ -268,7 +268,7 @@ trait NodeActions extends NodeSingleQueries {
                                                  mutaction: UpdateNode,
                                                  path: Path = Path.empty): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
     val actionsArrayFiltersAndResults = mutaction.nestedUpserts.collect {
-      case toOneUpsert @ NestedUpsertNode(_, rf, None, create, update) =>
+      case toOneUpsert @ NestedUpsertNode(_, rf, None, create, update) if rf.relatedModel_!.isEmbedded =>
         node.getToOneChild(rf) match {
           case None =>
             val (createDoc, createResults) = createToDoc(List.empty, create)
@@ -279,7 +279,7 @@ trait NodeActions extends NodeSingleQueries {
             (updates, arrayFilters, updateResults :+ UpsertNodeResult(toOneUpsert, toOneUpsert))
         }
 
-      case toManyUpsert @ NestedUpsertNode(_, rf, Some(where), create, update) =>
+      case toManyUpsert @ NestedUpsertNode(_, rf, Some(where), create, update) if rf.relatedModel_!.isEmbedded =>
         node.getToManyChild(rf, where) match {
           case None =>
             val (createDoc, createResults) = createToDoc(List.empty, create)
