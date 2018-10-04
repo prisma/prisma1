@@ -17,11 +17,10 @@ trait RelationActions extends FilterConditionBuilder {
 
   def createRelation(relationField: RelationField, parentId: IdGCValue, childId: IdGCValue)(implicit ec: ExecutionContext) =
     SimpleMongoAction { database =>
-      val parentModel = relationField.model
-      val childModel  = relationField.relatedModel_!
-      val parentWhere = NodeSelector.forIdGCValue(parentModel, parentId)
-      val childWhere  = NodeSelector.forIdGCValue(childModel, childId)
-
+      val parentModel   = relationField.model
+      val childModel    = relationField.relatedModel_!
+      val parentWhere   = NodeSelector.forIdGCValue(parentModel, parentId)
+      val childWhere    = NodeSelector.forIdGCValue(childModel, childId)
       val manifestation = relationField.relation.inlineManifestation.get
       val collection = manifestation.inTableOfModelId match {
         case x if x == parentModel.name => database.getCollection(parentModel.dbName)
@@ -43,7 +42,6 @@ trait RelationActions extends FilterConditionBuilder {
       collection
         .updateOne(where, update)
         .toFuture()
-        .map(_ => MutactionResults(Vector.empty))
     }
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = SimpleMongoAction { database =>

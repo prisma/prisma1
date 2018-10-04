@@ -46,28 +46,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   // Fixme this does not use selected fields
   override def getNodes(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val filter = queryArguments match {
-      case Some(arg) => arg.filter
-      case None      => None
-    }
-
-    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
-
-    val mongoFilter = buildConditionForFilter(filter)
-
-    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
-
-    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter, cursorCondition))
-    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
-    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
-
-    val queryWithLimit = skipAndLimit.limit match {
-      case Some(limit) => queryWithSkip.limit(limit)
-      case None        => queryWithSkip
-    }
-
-    val nodes: Future[Seq[PrismaNode]] = queryWithLimit.collect().toFuture.map { results: Seq[Document] =>
+    val nodes: Future[Seq[PrismaNode]] = helper(model, queryArguments).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))
@@ -77,17 +56,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
-  //these are only used for relations between non-embedded types
-  override def getRelatedNodes(fromField: RelationField,
-                               fromNodeIds: Vector[IdGCValue],
-                               queryArguments: Option[QueryArguments],
-                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+  def helper(model: Model, queryArguments: Option[QueryArguments], extraFilter: Option[Filter] = None) = {
 
-    val model                                 = fromField.relatedModel_!
-    val manifestation                         = fromField.relation.inlineManifestation.get
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val inFilter =
-      ScalarListFilter(model.getScalarFieldByName_!("id").copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
     val queryArgFilter = queryArguments match {
       case Some(arg) => arg.filter
       case None      => None
@@ -95,7 +66,10 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
     val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
-    val mongoFilter = buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArgFilter)))
+    val mongoFilter = extraFilter match {
+      case Some(inFilter) => buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArgFilter)))
+      case None           => buildConditionForFilter(queryArgFilter)
+    }
 
     val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
 
@@ -108,9 +82,20 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
       case None        => queryWithSkip
     }
 
-    val queryResult = queryWithLimit.collect().toFuture
+    queryWithLimit.collect().toFuture
+  }
 
-    queryResult.map { results: Seq[Document] =>
+  //these are only used for relations between non-embedded types
+  override def getRelatedNodes(fromField: RelationField,
+                               fromNodeIds: Vector[IdGCValue],
+                               queryArguments: Option[QueryArguments],
+                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+
+    val manifestation = fromField.relation.inlineManifestation.get
+    val model         = fromField.relatedModel_!
+
+    val inFilter: Filter = ScalarListFilter(model.idField_!.copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
+    helper(model, queryArguments, Some(inFilter)).map { results: Seq[Document] =>
       val groups: Map[CuidGCValue, Seq[Document]] = fromField.relatedField.isList match {
         case true =>
           val tuples = for {
