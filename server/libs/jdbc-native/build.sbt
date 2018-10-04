@@ -6,8 +6,7 @@ buildNativeLib := {
   println("will build the native lib now")
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jdbc-native-rs/")
-  Process("env", nativePath) !(logger)
-  Process("make build", nativePath) !(logger)
+  Process("make build", nativePath, "PATH" -> sys.env.getOrElse("PATH", "PATH env var required")) !(logger)
 }
 
 compile in Compile := {
