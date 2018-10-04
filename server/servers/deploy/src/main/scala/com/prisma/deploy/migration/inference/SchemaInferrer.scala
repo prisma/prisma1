@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective,
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, MongoRelationsCapability}
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.await.AwaitUtils
@@ -235,7 +235,7 @@ case class SchemaInferrerImpl(
   }
 
   def relationManifestationOnFieldOrRelatedField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
-    if (!capabilities.contains(MigrationsCapability)) {
+    if (!capabilities.contains(MigrationsCapability) || capabilities.contains(MongoRelationsCapability)) {
       val manifestationOnThisField = relationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
