@@ -1,7 +1,4 @@
-import Dependencies._
 import sbt._
-
-import scala.sys.process.ProcessLogger
 
 val buildNativeLib = TaskKey[Unit]("buildNativeLib", "builds the native lib")
 buildNativeLib := {
@@ -9,6 +6,7 @@ buildNativeLib := {
   println("will build the native lib now")
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jdbc-native-rs/")
+  Process("whoami", nativePath) !(logger)
   Process("make build", nativePath) !(logger)
 }
 
