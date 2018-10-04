@@ -407,17 +407,15 @@ export class GoGenerator extends Generator {
   opUpdateMany(field) {
     const param = this.paramsType(field, "updateMany")
     return param.code + `
-      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${param.type}) (BatchPayload, error) {
-        ret := client.Client.UpdateMany(
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) *BatchPayloadExec {
+        exec := client.Client.UpdateMany(
           prisma.UpdateParams{
             Data: params.Data,
             Where: params.Where,
           },
           [2]string{"${field.args[0].type}", "${field.args[1].type}"},
           "${field.name}")
-
-        p, err := ret.Exec(ctx)
-        return BatchPayload(p), err
+        return &BatchPayloadExec{exec}
       }`
   }
 
@@ -441,10 +439,9 @@ export class GoGenerator extends Generator {
 
   opDeleteMany(field) {
     return `
-      func (client *Client) ${goCase(field.name)} (ctx context.Context, params *${this.getDeepType(field.args[0].type)}) (BatchPayload, error) {
-        ret := client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
-        p, err := ret.Exec(ctx)
-        return BatchPayload(p), err
+      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *BatchPayloadExec {
+        exec := client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
+        return &BatchPayloadExec{exec}
       }`
   }
 
@@ -679,6 +676,15 @@ import (
 func Str(v string) *string { return &v }
 func Int32(v int32) *int32 { return &v }
 func Bool(v bool) *bool    { return &v }
+
+type BatchPayloadExec struct {
+	exec *prisma.BatchPayloadExec
+}
+
+func (exec *BatchPayloadExec) Exec(ctx context.Context) (BatchPayload, error) {
+	bp, err := exec.exec.Exec(ctx)
+    return BatchPayload(bp), err
+}
 
 type BatchPayload struct {
 	Count int64 \`json:"count"\`
