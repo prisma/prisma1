@@ -27,14 +27,15 @@ trait RelationActions extends FilterConditionBuilder {
         case x if x == childModel.name  => database.getCollection(childModel.dbName)
       }
 
-      val (where, updateId) = () match {
-        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.B => (parentWhere, childId)
-        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.A => (childWhere, parentId)
-        case _ if manifestation.inTableOfModelId == parentModel.name                                    => (parentWhere, childId)
-        case _ if manifestation.inTableOfModelId == childModel.name                                     => (childWhere, parentId)
+      val (where, updateId, list) = () match {
+        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.B => (parentWhere, childId, relationField.isList)
+        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.A =>
+          (childWhere, parentId, relationField.relatedField.isList)
+        case _ if manifestation.inTableOfModelId == parentModel.name => (parentWhere, childId, relationField.isList)
+        case _ if manifestation.inTableOfModelId == childModel.name  => (childWhere, parentId, relationField.relatedField.isList)
       }
 
-      val update = relationField.isList match {
+      val update = list match {
         case false => set(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
         case true  => push(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
       }

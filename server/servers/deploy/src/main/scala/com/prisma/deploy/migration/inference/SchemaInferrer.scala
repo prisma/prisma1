@@ -89,7 +89,7 @@ case class SchemaInferrerImpl(
         def oldRelationSidesNotBothEqual(oldField: RelationField) = oldField.relationSide != oldField.relatedField.relationSide
 
         relation.map { relation =>
-          if (relation.isSameModelRelation) {
+          if (relation.isSelfRelation) {
             val oldFieldName = schemaMapping.getPreviousFieldName(prismaType.name, prismaField.name)
             val oldModelName = schemaMapping.getPreviousModelName(prismaType.name)
             val oldField     = baseSchema.getFieldByName(oldModelName, oldFieldName)

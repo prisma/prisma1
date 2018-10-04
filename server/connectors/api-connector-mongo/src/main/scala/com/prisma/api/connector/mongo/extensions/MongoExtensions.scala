@@ -4,7 +4,7 @@ import com.prisma.api.connector.NodeSelector
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, RelationField, TypeIdentifier}
+import com.prisma.shared.models._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
@@ -108,14 +108,14 @@ object DocumentToRoot {
 
     //inline Ids, needs to fetch lists or single values
 
-    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields
-      .collect {
-        case f if f.isList && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
-      }
-      .filter(!_.isHidden) //this excludes the magical backrelationFields
+    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
+      case f if f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
+      case f if f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                                                                  => f
+    }
 
     val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
-      case f if !f.isList && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
+      case f if !f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
+      case f if !f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                                                                  => f
     }
 
     val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>

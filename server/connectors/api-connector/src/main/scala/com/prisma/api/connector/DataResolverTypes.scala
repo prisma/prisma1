@@ -66,7 +66,8 @@ case class SelectedFields(fields: Set[Field]) {
   val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
   val relationFields      = fields.collect { case f: RelationField            => f }
   private val inlineRelationFields = relationFields.collect {
-    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelId == rf.model.name => rf
+    case rf if rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.B                                      => rf
+    case rf if rf.relation.isInlineRelation && !rf.relation.isSelfRelation && rf.relation.inlineManifestation.get.inTableOfModelId == rf.model.name => rf
   }
 
   val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.asScalarField)
