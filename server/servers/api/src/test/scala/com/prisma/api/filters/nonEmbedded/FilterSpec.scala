@@ -1,7 +1,8 @@
 package com.prisma.api.filters.nonEmbedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -72,7 +73,7 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     userUniques(filter) should be(Vector(1, 2, 3, 4))
   }
 
-  "Relation Null filter" should "work" in {
+  "Relation Null filter" should "work" taggedAs (IgnoreMongo) in {
 
     val filter = "(where: {ride: null})"
 
@@ -128,7 +129,7 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     userUniques(filter) should be(Vector(4))
   }
 
-  "Nested filter" should "work" in {
+  "Nested filter" should "work" taggedAs (IgnoreMongo) in {
 
     val filter = """(where: {ride:{brand_starts_with: "P"}})"""
 

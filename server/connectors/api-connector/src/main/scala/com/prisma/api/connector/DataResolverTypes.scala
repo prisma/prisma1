@@ -66,11 +66,18 @@ case class SelectedFields(fields: Set[Field]) {
   val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
   val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
   val relationFields      = fields.collect { case f: RelationField            => f }
+  private val inlineRelationFields = relationFields.collect {
+    case rf if !rf.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.B                      => rf
+    case rf if rf.relatedField.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.A          => rf
+    case rf if rf.relation.isInlineRelation && !rf.relation.isSelfRelation && rf.relation.inlineManifestation.get.inTableOfModelId == rf.model.name => rf
+  }
+
+  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.asScalarField)
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 
-  def includeOrderBy(args: Option[QueryArguments]): SelectedFields = {
-    args match {
+  def includeOrderBy(queryArguments: Option[QueryArguments]): SelectedFields = {
+    queryArguments match {
       case None => this
       case Some(arguments) =>
         arguments.orderBy match {
@@ -97,6 +104,9 @@ object LogicalKeyWords {
   def isLogicFilter(key: String) = logicCombinators.contains(key)
 }
 
+object Filter {
+  val empty = TrueFilter
+}
 sealed trait Filter
 
 case class AndFilter(filters: Vector[Filter])  extends Filter
@@ -122,7 +132,7 @@ case class GreaterThanOrEquals(value: GCValue) extends ScalarCondition
 case class In(values: Vector[GCValue])         extends ScalarCondition
 case class NotIn(values: Vector[GCValue])      extends ScalarCondition
 
-case class ScalarListFilter(key: String, field: Field, condition: ScalarListCondition) extends Filter
+case class ScalarListFilter(field: ScalarField, condition: ScalarListCondition) extends Filter
 
 sealed trait ScalarListCondition
 case class ListContains(value: GCValue)              extends ScalarListCondition

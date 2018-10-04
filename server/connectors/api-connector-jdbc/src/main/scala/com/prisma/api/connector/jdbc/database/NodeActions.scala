@@ -62,8 +62,6 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
         .setColumnsWithPlaceHolders(columns)
         .where(aliasColumn(model.dbNameOfIdField_!).in(placeHolders(ids)))
 
-      println(query)
-
       updateToDBIO(query)(
         setParams = pp => {
           args.rootGCMap.foreach { case (_, v) => pp.setGcValue(v) }

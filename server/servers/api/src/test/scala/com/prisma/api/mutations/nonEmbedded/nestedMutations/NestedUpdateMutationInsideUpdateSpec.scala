@@ -1,13 +1,14 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
+class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
 
   "a one to many relation" should "be updateable by id through a nested mutation" in {
     val project = SchemaDsl.fromString() {
@@ -310,7 +311,8 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
 
-  "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
+  //Transactionality
+  "TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
@@ -374,6 +376,69 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     server.query(s"""query{note(where:{id: "$noteId"}){text}}""", project, dataContains = """{"note":{"text":"Some Text"}}""")
     server.query(s"""query{todo(where:{id: "$todoId"}){title}}""", project, dataContains = """{"todo":{"title":"the title"}}""")
+  }
+
+  "NON-TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo) in {
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | title: String!
+        | notes: [Note!]!
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | text: String
+        | todoes: [Todo!]!
+        |}
+      """.stripMargin
+    }
+    database.setup(project)
+
+    val createResult = server.query(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Some Text"
+        |      todoes: {
+        |        create: { title: "the title" }
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todoes { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val noteId = createResult.pathAsString("data.createNote.id")
+    val todoId = createResult.pathAsString("data.createNote.todoes.[0].id")
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      id: "$noteId"
+         |    }
+         |    data: {
+         |      text: "Some Changed Text"
+         |      todoes: {
+         |        update: {
+         |          where: {id: "DOES NOT EXIST"},
+         |          data:{title: "updated title"}
+         |        }
+         |      }
+         |    }
+         |  ){
+         |    text
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3039,
+      errorContains = "No Node for the model Todo with value DOES NOT EXIST for id found."
+    )
   }
 
   "a many to many relation" should "handle null in unique fields" in {

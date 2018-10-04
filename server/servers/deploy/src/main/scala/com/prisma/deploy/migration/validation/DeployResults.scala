@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.deploy.connector.FieldRequirement
 import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
 
 object DeployWarnings {

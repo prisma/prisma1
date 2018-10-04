@@ -2,6 +2,7 @@ package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.gc_values.{DateTimeGCValue, GCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField
@@ -27,7 +28,7 @@ trait FilterConditionBuilder {
       case NodeSubscriptionFilter => and(hackForTrue)
       case AndFilter(filters)     => and(nonEmptyConditions(path, filters): _*)
       case OrFilter(filters)      => or(nonEmptyConditions(path, filters): _*)
-      case NotFilter(filters)     => not(and(filters.map(f => buildConditionForFilter(path, f)): _*))
+      case NotFilter(filters)     => nor(filters.map(f => buildConditionForFilter(path, f)): _*) //not can only negate equality comparisons not filters
       case NodeFilter(filters)    => buildConditionForFilter(path, OrFilter(filters))
       case x: RelationFilter      => relationFilterStatement(path, x)
 
@@ -52,8 +53,13 @@ trait FilterConditionBuilder {
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(combineTwo(path, renameId(scalarField)), null))
       case ScalarFilter(scalarField, In(values))                 => in(combineTwo(path, renameId(scalarField)), values.map(fromGCValue): _*)
       case ScalarFilter(scalarField, NotIn(values))              => not(in(combineTwo(path, renameId(scalarField)), values.map(fromGCValue): _*))
-      case OneRelationIsNullFilter(field)                        => equal(combineTwo(path, field.name), null)
-      case x                                                     => sys.error(s"Not supported: $x")
+      //Fixme test this thoroughly
+      case ScalarListFilter(scalarListField, ListContains(value)) => all(combineTwo(path, renameId(scalarListField)), fromGCValue(value))
+      case ScalarListFilter(scalarListField, ListContainsSome(values)) =>
+        or(values.map(value => all(combineTwo(path, renameId(scalarListField)), fromGCValue(value))): _*)
+      case ScalarListFilter(scalarListField, ListContainsEvery(values)) => all(combineTwo(path, renameId(scalarListField)), values.map(fromGCValue): _*)
+      case OneRelationIsNullFilter(field)                               => equal(combineTwo(path, field.name), null)
+      case x                                                            => sys.error(s"Not supported: $x")
     }
   }
 
@@ -64,10 +70,7 @@ trait FilterConditionBuilder {
     case x              => x
   }
 
-  def fromGCValue(value: GCValue): Any = value match {
-    case DateTimeGCValue(value) => BsonDateTime(value.getMillis)
-    case x: GCValue             => x.value
-  }
+  def fromGCValue(value: GCValue): Any = GCValueBsonTransformer.apply(value)
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
     val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)

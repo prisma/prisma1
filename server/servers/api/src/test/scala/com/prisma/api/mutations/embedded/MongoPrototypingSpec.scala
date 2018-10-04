@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -748,4 +748,49 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"updateTop":{"unique":1,"middle":[{"unique":11,"name":"MiddleNew","bottom":[]},{"unique":12,"name":"Middle2","bottom":[{"unique":112}]}]}}}""")
   }
 
+  "Creating nested inline relations" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   top: Top
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createMiddle(data: {
+         |   unique: 11111,
+         |   name: "MiddleNonEmbeddedReversed",
+         |   top: {create:{
+         |      unique: 111111,
+         |      name: "TopNonEmbeddedReversed"
+         |    }
+         |   }
+         |}){
+         |  unique,
+         |  top{
+         |    unique
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createMiddle":{"unique":11111,"top":{"unique":111111}}}}""")
+
+    server.query("query{middles{unique, top {unique}}}", project).toString should be("""{"data":{"middles":[{"unique":11111,"top":{"unique":111111}}]}}""")
+    server.query("query{tops{unique, middle {unique}}}", project).toString should be("""{"data":{"tops":[{"unique":111111,"middle":{"unique":11111}}]}}""")
+  }
 }

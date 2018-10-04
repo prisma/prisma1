@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
@@ -9,6 +8,7 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
@@ -20,7 +20,7 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false,
-    capabilities: Set[ApiConnectorCapability]
+    capabilities: Set[ConnectorCapability]
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -191,7 +191,7 @@ class ObjectTypeBuilder(
         def isFilterList(value: Seq[Any], filterName: String): Boolean         = value.nonEmpty && value.head.isInstanceOf[Map[_, _]] && filter.name == filterName
         def getGCValue(value: Any): GCValue                                    = GCAnyConverter(field.get.typeIdentifier, isList = false).toGCValue(unwrapSome(value)).get
         def scalarFilter(condition: ScalarCondition): ScalarFilter             = ScalarFilter(asScalarField, condition)
-        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(key, field.get, condition)
+        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(asScalarField, condition)
         def generateSubFilter(value: Map[_, _], model: Model): Filter          = generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
         def generateSubFilters(values: Seq[Any]): Vector[Filter]               = values.map(x => generateSubFilter(x.asInstanceOf[Map[String, Any]], model)).toVector
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
@@ -273,20 +273,76 @@ class ObjectTypeBuilder(
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
 
     field match {
-      case f: ScalarField if f.isList =>
+      case f: ScalarField if f.isList => //Fixme have the way to resolve the field on the field itself
         if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
 
-      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
-        item.data.map(field.name) match {
+      case f: RelationField if f.isList && f.relation.isInlineRelation =>
+        val arguments: Option[QueryArguments] = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        val manifestation                     = f.relation.inlineManifestation.get
+
+        () match {
+          case _ if f.relation.isSelfRelation && (f.relationSide == RelationSide.B || f.relatedField.isHidden) =>
+            item.data.map.get(f.name) match {
+              case Some(list: ListGCValue) =>
+                val queryArguments         = arguments.getOrElse(QueryArguments.empty)
+                val existingFilter: Filter = queryArguments.filter.getOrElse(Filter.empty)
+                val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
+                val newQueryArguments      = queryArguments.copy(filter = Some(newFilter))
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(newQueryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
+
+              case _ => Vector.empty[PrismaNode]
+            }
+          case _ if f.relation.isSelfRelation && f.relationSide == RelationSide.A =>
+            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+          case _ if manifestation.inTableOfModelId == f.model.name =>
+            item.data.map.get(f.name) match {
+              case Some(list: ListGCValue) =>
+                val queryArguments         = arguments.getOrElse(QueryArguments.empty)
+                val existingFilter: Filter = queryArguments.filter.getOrElse(Filter.empty)
+                val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
+                val newQueryArguments      = queryArguments.copy(filter = Some(newFilter))
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(newQueryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
+
+              case _ => Vector.empty[PrismaNode]
+            }
+          case _ if manifestation.inTableOfModelId == f.relatedModel_!.name =>
+            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+        }
+
+      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
+        item.data.map(f.name) match {
           case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
 
-      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
+      case f: RelationField if !f.isList && f.relation.isInlineRelation =>
+        val manifestation = f.relation.inlineManifestation.get
+
+        () match {
+          case _ if f.relation.isSelfRelation && (f.relationSide == RelationSide.B || f.relatedField.isHidden) =>
+            item.data.map.get(f.name) match {
+              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
+              case _                   => None
+            }
+
+          case _ if f.relation.isSelfRelation && f.relationSide == RelationSide.A =>
+            FromOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
+
+          case _ if manifestation.inTableOfModelId == f.model.name =>
+            item.data.map.get(f.name) match {
+              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
+              case _                   => None
+            }
+
+          case _ if manifestation.inTableOfModelId == f.relatedModel_!.name =>
+            FromOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
+        }
+
+      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case NullGCValue => None
           case value       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot))
@@ -298,7 +354,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        FromOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
     }
   }
 

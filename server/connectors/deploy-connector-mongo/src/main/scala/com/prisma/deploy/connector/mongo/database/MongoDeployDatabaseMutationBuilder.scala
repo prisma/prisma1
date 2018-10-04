@@ -29,6 +29,10 @@ object MongoDeployDatabaseMutationBuilder {
     database.drop().toFuture().map(_ -> Unit)
   }
 
+  def createTable(projectId: String, tableName: String) = DeployMongoAction { database =>
+    database.createCollection(tableName).toFuture().map(_ -> Unit)
+  }
+
   def dropTable(projectId: String, tableName: String) = DeployMongoAction { database =>
     database.getCollection(tableName).drop().toFuture().map(_ -> Unit)
   }

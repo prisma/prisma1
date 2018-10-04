@@ -4,7 +4,7 @@ import com.prisma.api.connector.NodeSelector
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, RelationField, TypeIdentifier}
+import com.prisma.shared.models._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
@@ -102,10 +102,38 @@ object DocumentToRoot {
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
-    val relationFields: List[(String, GCValue)] =
-      model.relationFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+    val relationFields: List[(String, GCValue)] = model.relationFields.collect {
+      case f if !f.relation.isInlineRelation => f.name -> document.get(f.name).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+    }
 
-    RootGCValue((scalarNonList ++ scalarList ++ relationFields :+ createdAt :+ updatedAt :+ id).toMap)
+    //inline Ids, needs to fetch lists or single values
+
+    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields
+      .collect {
+        case f if f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name =>
+          f
+        case f if f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                            => f
+        case f if f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.A && f.relatedField.isHidden => f
+      }
+      .filter(!_.isHidden)
+
+    val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationFields
+      .collect {
+        case f if !f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name =>
+          f
+        case f if !f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                            => f
+        case f if !f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.A && f.relatedField.isHidden => f
+
+      }
+      .filter(!_.isHidden)
+
+    val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
+
+    val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
+
+    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ createdAt :+ updatedAt :+ id).toMap)
   }
 }
 

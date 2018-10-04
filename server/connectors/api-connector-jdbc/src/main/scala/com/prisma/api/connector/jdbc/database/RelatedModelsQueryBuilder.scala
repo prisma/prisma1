@@ -35,7 +35,7 @@ case class RelatedModelsQueryBuilder(
   val relatedModelSide = relation.columnForRelationSide(fromField.oppositeRelationSide)
   val parentModelSide  = relation.columnForRelationSide(fromField.relationSide)
 
-  val selectedJooqFields = selectedFields.scalarNonListFields.map(aliasColumn).toVector :+
+  val selectedJooqFields = selectedFields.scalarDbFields.map(aliasColumn).toVector :+
     field(name(relationTableAlias, relatedModelSide)).as(relatedModelAlias) :+
     field(name(relationTableAlias, parentModelSide)).as(parentModelAlias)
 
