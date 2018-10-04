@@ -5,12 +5,12 @@ import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonT
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
-import com.prisma.shared.models.RelationField
+import com.prisma.shared.models.{RelationField, RelationSide}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait RelationActions extends FilterConditionBuilder {
@@ -19,27 +19,25 @@ trait RelationActions extends FilterConditionBuilder {
     SimpleMongoAction { database =>
       val parentModel = relationField.model
       val childModel  = relationField.relatedModel_!
+      val parentWhere = NodeSelector.forIdGCValue(parentModel, parentId)
+      val childWhere  = NodeSelector.forIdGCValue(childModel, childId)
 
-      val (collection, where, update) = relationField.relation.inlineManifestation match {
-        case Some(m) if m.inTableOfModelId == parentModel.name =>
-          val parentWhere = NodeSelector.forIdGCValue(parentModel, parentId)
-          val collection  = database.getCollection(parentModel.dbName)
-          val update = relationField.isList match {
-            case false => set(m.referencingColumn, GCValueBsonTransformer(childId))
-            case true  => push(m.referencingColumn, GCValueBsonTransformer(childId))
-          }
-          (collection, parentWhere, update)
+      val manifestation = relationField.relation.inlineManifestation.get
+      val collection = manifestation.inTableOfModelId match {
+        case x if x == parentModel.name => database.getCollection(parentModel.dbName)
+        case x if x == childModel.name  => database.getCollection(childModel.dbName)
+      }
 
-        case Some(m) if m.inTableOfModelId == childModel.name =>
-          val childWhere = NodeSelector.forIdGCValue(childModel, childId)
-          val collection = database.getCollection(childModel.dbName)
-          val update = relationField.relatedField.isList match {
-            case false => set(m.referencingColumn, GCValueBsonTransformer(parentId))
-            case true  => push(m.referencingColumn, GCValueBsonTransformer(parentId))
-          }
+      val (where, updateId) = () match {
+        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.B => (parentWhere, childId)
+        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.A => (childWhere, parentId)
+        case _ if manifestation.inTableOfModelId == parentModel.name                                    => (parentWhere, childId)
+        case _ if manifestation.inTableOfModelId == childModel.name                                     => (childWhere, parentId)
+      }
 
-          (collection, childWhere, update)
-        case _ => sys.error("There should always be an inline relation manifestation")
+      val update = relationField.isList match {
+        case false => set(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
+        case true  => push(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
       }
 
       collection
