@@ -25,7 +25,6 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override def capabilities: Set[ConnectorCapability] =
     if (isActive) Set(MigrationsCapability, EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability)
     else Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability)
-//  override def capabilities: Set[DeployConnectorCapability] = Set.empty
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer

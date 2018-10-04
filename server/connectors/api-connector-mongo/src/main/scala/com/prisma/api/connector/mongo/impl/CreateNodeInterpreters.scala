@@ -26,7 +26,6 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
     for {
       _  <- SequenceAction(Vector(requiredCheck(parentId), removalAction(parentId)))
       id <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      //          _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else MongoAction.successful(())
     } yield MutactionResults(Vector(CreateNodeResult(id, mutaction)))
   }
   private def createNodeAndConnectToParent(
