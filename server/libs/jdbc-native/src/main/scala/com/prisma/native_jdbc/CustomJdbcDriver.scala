@@ -1,6 +1,5 @@
 package com.prisma.native_jdbc
 
-import java.net.URI
 import java.sql.Driver
 import java.util.Properties
 
