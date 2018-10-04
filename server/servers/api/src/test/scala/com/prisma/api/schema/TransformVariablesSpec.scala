@@ -21,12 +21,15 @@ class TransformVariablesSpec extends FlatSpec with Matchers {
         |}""".stripMargin).as[JsObject]
 
     val mutationName  = com.prisma.shared.models.ModelMutationType.Created
-    val updatedFields = None
+    val updatedFields = Set.empty[String]
 
-    val converted = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationName, updatedFields)
+    val (matches, newVariables) = VariablesTransformer.evaluateInMemoryFilters(variables, mutationName, updatedFields)
 
-    converted.toString should be(
-      """{"_where":{"AND":[{"boolean":true},{"boolean":false},{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"float":1.2323}]}}""")
+    matches should be(false)
+
+    println(newVariables)
+
+    newVariables.toString should be("""{"_where":{"AND":[{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"float":1.2323}]}}""")
   }
 
   "Created with array" should "work with variables and return no errors if the query is valid" in {
@@ -45,11 +48,11 @@ class TransformVariablesSpec extends FlatSpec with Matchers {
                                            |}""".stripMargin).as[JsObject]
 
     val mutationName  = com.prisma.shared.models.ModelMutationType.Created
-    val updatedFields = None
+    val updatedFields = Set.empty[String]
 
-    val converted = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationName, updatedFields)
-    converted.toString should be(
-      """{"_where":{"AND":[{"boolean":true},{"boolean":false},{"boolean":false},{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"float":1.2323}]}}""")
+    val (matches, newVariables) = VariablesTransformer.evaluateInMemoryFilters(variables, mutationName, updatedFields)
+    matches should be(false)
+    newVariables.toString should be("""{"_where":{"AND":[{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"float":1.2323}]}}""")
   }
 
   "Updated with some updated fields" should "work with variables and return no errors if the query is valid" in {
@@ -75,11 +78,11 @@ class TransformVariablesSpec extends FlatSpec with Matchers {
                                            |}""".stripMargin).as[JsObject]
 
     val mutationName  = com.prisma.shared.models.ModelMutationType.Updated
-    val updatedFields = Some(List("updated1", "updated2", "updated3"))
+    val updatedFields = Set("updated1", "updated2", "updated3")
 
-    val converted = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationName, updatedFields)
-    converted.toString should be(
-      """{"_where":{"AND":[{"boolean":false},{"boolean":true},{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"OR":[{"boolean":true},{"boolean":false},{"boolean":true},{"boolean":false},{"boolean":true},{"boolean":false}]},{"float":1.2323}]}}""")
+    val (matches, newVariables) = VariablesTransformer.evaluateInMemoryFilters(variables, mutationName, updatedFields)
+    matches should be(false)
+    newVariables.toString should be("""{"_where":{"AND":[{"field":"value"},{"listField":[1,2,3,4]},{"booleans":true},{"OR":[]},{"float":1.2323}]}}""")
 
   }
 }

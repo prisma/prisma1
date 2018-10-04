@@ -40,6 +40,7 @@ class ServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase
       |subscription {
       |  todo(where: {
       |    mutation_in : [$mutation]
+      |    ${if (mutation == "UPDATED") """updatedFields_contains: "title"""" else ""}
       |    node: {
       |      status: Active
       |    }
