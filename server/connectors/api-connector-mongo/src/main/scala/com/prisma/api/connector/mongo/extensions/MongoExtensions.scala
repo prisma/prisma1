@@ -108,9 +108,11 @@ object DocumentToRoot {
 
     //inline Ids, needs to fetch lists or single values
 
-    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
-      case f if f.isList && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
-    }
+    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields
+      .collect {
+        case f if f.isList && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
+      }
+      .filter(!_.isHidden) //this excludes the magical backrelationFields
 
     val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
       case f if !f.isList && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f

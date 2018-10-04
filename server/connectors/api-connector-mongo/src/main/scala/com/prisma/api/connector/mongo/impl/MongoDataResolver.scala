@@ -111,7 +111,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     val queryResult = queryWithLimit.collect().toFuture
 
     queryResult.map { results: Seq[Document] =>
-      val groups = fromField.relatedField.isList match {
+      val groups: Map[CuidGCValue, Seq[Document]] = fromField.relatedField.isList match {
         case true =>
           val tuples = for {
             result <- results
@@ -122,20 +122,17 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
         case false => results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
       }
 
-      val res: Vector[ResolverResult[PrismaNodeWithParent]] = groups.map { group =>
-        val parentId                                  = fromNodeIds.find(_ == group._1).get
-        val roots                                     = group._2.map(DocumentToRoot(model, _))
-        val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(parentId, PrismaNode(r.idField, r, Some(model.name)))).toVector
-        ResolverResult(queryArguments, prismaNodes, parentModelId = Some(parentId))
-      }.toVector
+      fromNodeIds.map { id =>
+        groups.get(id.asInstanceOf[CuidGCValue]) match {
+          case Some(group) =>
+            val roots                                     = group.map(DocumentToRoot(model, _))
+            val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idField, r, Some(model.name)))).toVector
+            ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
 
-      val ids = res.flatMap(_.parentModelId)
-
-      val idsNotCovered = fromNodeIds.filter(x => !ids.contains(x))
-      val emptyResultsForNotCoveredIds =
-        idsNotCovered.map(id => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id)))
-
-      res ++ emptyResultsForNotCoveredIds
+          case None =>
+            ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+        }
+      }
     }
   }
 
