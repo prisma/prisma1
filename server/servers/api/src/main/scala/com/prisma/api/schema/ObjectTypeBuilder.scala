@@ -290,7 +290,7 @@ class ObjectTypeBuilder(
         val manifestation                     = f.relation.inlineManifestation.get
 
         () match {
-          case _ if f.relation.isSelfRelation && f.relationSide == RelationSide.B =>
+          case _ if f.relation.isSelfRelation && (f.relationSide == RelationSide.B || f.relatedField.isHidden) =>
             item.data.map.get(f.name) match {
               case Some(list: ListGCValue) =>
                 val queryArguments         = arguments.getOrElse(QueryArguments.empty)
@@ -329,7 +329,7 @@ class ObjectTypeBuilder(
         val manifestation = f.relation.inlineManifestation.get
 
         () match {
-          case _ if f.relation.isSelfRelation && f.relationSide == RelationSide.B =>
+          case _ if f.relation.isSelfRelation && (f.relationSide == RelationSide.B || f.relatedField.isHidden) =>
             item.data.map.get(f.name) match {
               case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
               case _                   => None

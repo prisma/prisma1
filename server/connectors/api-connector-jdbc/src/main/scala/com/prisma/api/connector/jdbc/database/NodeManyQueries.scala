@@ -67,12 +67,14 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       args: Option[QueryArguments],
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    if (isMySql && args.exists(_.isWithPagination)) {
-      selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, args, selectedFields)
-    } else {
-      val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds, selectedFields)
-      val query   = if (args.exists(_.isWithPagination)) builder.queryWithPagination else builder.queryWithoutPagination
 
+    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.scalarDbFields ++ Set(fromField))
+
+    if (isMySql && args.exists(_.isWithPagination)) {
+      selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, args, selectedFieldsWithAddedRelationField)
+    } else {
+      val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, args, fromNodeIds, selectedFieldsWithAddedRelationField)
+      val query   = if (args.exists(_.isWithPagination)) builder.queryWithPagination else builder.queryWithoutPagination
       queryToDBIO(query)(
         setParams = { pp =>
           fromNodeIds.foreach(pp.setGcValue)
@@ -89,7 +91,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
           }
         },
         readResult = { rs =>
-          val result              = rs.readWith(readPrismaNodeWithParent(fromField, selectedFields.scalarDbFields))
+          val result              = rs.readWith(readPrismaNodeWithParent(fromField, selectedFieldsWithAddedRelationField.scalarDbFields))
           val itemGroupsByModelId = result.groupBy(_.parentId)
           fromNodeIds.map { id =>
             itemGroupsByModelId.find(_._1 == id) match {

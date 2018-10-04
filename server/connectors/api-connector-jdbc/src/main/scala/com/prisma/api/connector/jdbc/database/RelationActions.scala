@@ -21,8 +21,8 @@ trait RelationActions extends BuilderBase {
       val (idToLinkTo, idToUpdate, rowToUpdateCondition) = () match {
         case _ if relation.isSelfRelation && relationField.relationSide == RelationSide.B => (parentId, childId, parentWhereCondition)
         case _ if relation.isSelfRelation && relationField.relationSide == RelationSide.A => (childId, parentId, childWhereCondition)
-        case _ if inlineManifestation.inTableOfModelId == childModel.name                 => (parentId, childId, childWhereCondition)
         case _ if inlineManifestation.inTableOfModelId == parentModel.name                => (childId, parentId, parentWhereCondition)
+        case _ if inlineManifestation.inTableOfModelId == childModel.name                 => (parentId, childId, childWhereCondition)
       }
 
       val query = sql

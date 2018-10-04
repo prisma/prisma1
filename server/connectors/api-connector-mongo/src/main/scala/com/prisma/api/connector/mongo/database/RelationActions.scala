@@ -28,9 +28,10 @@ trait RelationActions extends FilterConditionBuilder {
       }
 
       val (where, updateId, list) = () match {
-        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.B => (parentWhere, childId, relationField.isList)
-        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.A =>
+        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.B =>
           (childWhere, parentId, relationField.relatedField.isList)
+        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.A =>
+          (parentWhere, childId, relationField.isList)
         case _ if manifestation.inTableOfModelId == parentModel.name => (parentWhere, childId, relationField.isList)
         case _ if manifestation.inTableOfModelId == childModel.name  => (childWhere, parentId, relationField.relatedField.isList)
       }

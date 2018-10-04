@@ -108,15 +108,24 @@ object DocumentToRoot {
 
     //inline Ids, needs to fetch lists or single values
 
-    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
-      case f if f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
-      case f if f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                                                                  => f
-    }
+    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationFields
+      .collect {
+        case f if f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name =>
+          f
+        case f if f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                            => f
+        case f if f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.A && f.relatedField.isHidden => f
+      }
+      .filter(!_.isHidden)
 
-    val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationFields.collect {
-      case f if !f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name => f
-      case f if !f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                                                                  => f
-    }
+    val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationFields
+      .collect {
+        case f if !f.isList && !f.relation.isSelfRelation && f.relation.isInlineRelation && f.relation.inlineManifestation.get.inTableOfModelId == model.name =>
+          f
+        case f if !f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.B                            => f
+        case f if !f.isList && f.relation.isSelfRelation && f.relationSide == RelationSide.A && f.relatedField.isHidden => f
+
+      }
+      .filter(!_.isHidden)
 
     val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
