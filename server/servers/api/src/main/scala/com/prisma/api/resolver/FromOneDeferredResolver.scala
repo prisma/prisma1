@@ -1,7 +1,7 @@
 package com.prisma.api.resolver
 
-import com.prisma.api.connector.{DataResolver, PrismaNode, PrismaNodeWithParent}
-import com.prisma.api.resolver.DeferredTypes.{OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult, FromOneDeferred}
+import com.prisma.api.connector.{DataResolver, PrismaNode, PrismaNodeWithParent, SelectedFields}
+import com.prisma.api.resolver.DeferredTypes.{FromOneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
 import com.prisma.shared.models.Project
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,7 +18,7 @@ class FromOneDeferredResolver(dataResolver: DataResolver) {
     val headDeferred   = deferreds.head
     val relatedField   = headDeferred.relationField
     val args           = headDeferred.args
-    val selectedFields = headDeferred.selectedFields
+    val selectedFields = deferreds.foldLeft(SelectedFields.empty)(_ ++ _.selectedFields)
 
     // get ids of prismaNodes in related model we need to fetch
     val relatedModelIds = deferreds.map(deferred => deferred.parentNodeId)
