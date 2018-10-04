@@ -4,11 +4,10 @@ val buildNativeLib = TaskKey[Unit]("buildNativeLib", "builds the native JDBC dri
 buildNativeLib := {
   import sys.process._
   println("Building JDBC native driver & lib.")
+
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jdbc-native-rs/")
 
-  Process("env", nativePath) !(logger)
-  Process("ls -lisah /bin", nativePath) !(logger)
   Process("make build", nativePath) !(logger)
 }
 

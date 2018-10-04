@@ -223,12 +223,12 @@ pub fn toGcValue(str: String) -> Result<GcValue> {
 
 fn jsonToGcValue(json: &serde_json::Value) -> Result<GcValue> {
     match json {
-        &serde_json::Value::Object(ref map) => jsonObjecToGcValue(map),
+        &serde_json::Value::Object(ref map) => jsonObjectToGcValue(map),
         x => Err(DriverError::GenericError(format!("{} is not a valid value for a GcValue", x))),
     }
 }
 
-fn jsonObjecToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Result<GcValue> {
+fn jsonObjectToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Result<GcValue> {
     let discriminator = map.get("discriminator").unwrap().as_str().unwrap();
     let value = map.get("value").unwrap();
 
