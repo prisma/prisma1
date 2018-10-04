@@ -6,8 +6,9 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
-  override def runOnlyForCapabilities  = Set(JoinRelationsCapability)
+  override def doNotRunForPrototypes: Boolean = true
+  override def doNotRunForCapabilities        = Set(SupportsExistingDatabasesCapability)
+  override def runOnlyForCapabilities         = Set(JoinRelationsCapability)
 
   val project = SchemaDsl.fromBuilder { schema =>
     val human: SchemaDsl.ModelBuilder = schema
