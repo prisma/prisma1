@@ -194,7 +194,7 @@ project:
       prisma: prisma.yml
 ```
 
-Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prima.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
+Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prisma.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
 
 ### A note on the application schema
 
