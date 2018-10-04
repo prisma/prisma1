@@ -6,9 +6,9 @@ buildNativeLib := {
   println("Building JDBC native driver & lib.")
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jdbc-native-rs/")
-  
+
   Process("env", nativePath) !(logger)
-  Process("ls -lisah /usr/local/bin", nativePath) !(logger)
+  Process("ls -lisah /bin", nativePath) !(logger)
   Process("make build", nativePath) !(logger)
 }
 
