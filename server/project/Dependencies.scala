@@ -52,7 +52,7 @@ object Dependencies {
   )
 
   val jsr305        = "com.google.code.findbugs"      % "jsr305"                % "3.0.0"
-  val caffeine      = "com.github.ben-manes.caffeine" % "caffeine"              % "2.5.5"
+  val caffeine      = "com.github.ben-manes.caffeine" % "caffeine"              % "2.6.2"
   val finagle       = "com.twitter"                   %% "finagle-http"         % "6.44.0"
   val guava         = "com.google.guava"              % "guava"                 % "19.0"
   val datadogStatsd = "com.datadoghq"                 % "java-dogstatsd-client" % "2.3"

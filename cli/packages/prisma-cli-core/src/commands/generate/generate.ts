@@ -6,12 +6,14 @@ import * as path from 'path'
 import { buildSchema } from 'graphql'
 import {
   TypescriptGenerator,
+  TypescriptDefinitionsGenerator,
   JavascriptGenerator,
   GoGenerator,
   FlowGenerator,
 } from 'prisma-client-lib'
 import { spawnSync } from 'npm-run'
 import generateCRUDSchemaString from 'prisma-generate-schema'
+import { fetchAndPrintSchema } from '../deploy/printSchema'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -20,6 +22,10 @@ export default class GenereateCommand extends Command {
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
+    }),
+    ['endpoint']: flags.boolean({
+      description: 'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
+      required: false
     }),
   }
   async run() {
@@ -33,19 +39,48 @@ export default class GenereateCommand extends Command {
       this.definition.definition!.generate!.length > 0
     ) {
       const before = Date.now()
-      this.out.action.start(`Generating schema`)
 
-      if (!this.definition.definition!.datamodel) {
-        await this.out.error(
-          `The property ${chalk.bold(
-            'datamodel',
-          )} is missing in your prisma.yml`,
+      let schemaString;
+      if (this.flags.endpoint) {
+        this.out.action.start(`Downloading schema`)
+        const serviceName = this.definition.service!
+        const stageName = this.definition.stage!
+        const token = this.definition.getToken(serviceName, stageName)
+        const cluster = this.definition.getCluster()
+        const workspace = this.definition.getWorkspace()
+        this.env.setActiveCluster(cluster!)
+         await this.client.initClusterClient(
+          cluster!,
+          serviceName,
+          stageName,
+          workspace,
+        )
+        schemaString = await fetchAndPrintSchema(
+          this.client,
+          serviceName,
+          stageName!,
+          token,
+          workspace!,
+        )
+      } else {
+        this.out.action.start(`Generating schema`)
+        if (!this.definition.definition!.datamodel) {
+          await this.out.error(
+            `The property ${chalk.bold(
+              'datamodel',
+            )} is missing in your prisma.yml`,
+          )
+        }
+        schemaString = generateCRUDSchemaString(
+          this.definition.typesString!,
         )
       }
 
-      const schemaString = generateCRUDSchemaString(
-        this.definition.typesString!,
-      )
+      if (!schemaString) {
+        await this.out.error(
+          chalk.red(`Failed to download/generate the schema`),
+        )
+      }
 
       this.out.action.stop(prettyTime(Date.now() - before))
 
@@ -57,7 +92,7 @@ export default class GenereateCommand extends Command {
 
         fs.mkdirpSync(resolvedOutput)
 
-        if (generator === 'schema') {
+        if (generator === 'graphql-schema') {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
@@ -78,7 +113,7 @@ export default class GenereateCommand extends Command {
         }
 
         const generators = [
-          'schema-client',
+          'graphql-schema',
           'typescript-client',
           'javascript-client',
           'go-client',
@@ -116,7 +151,7 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.ts'), code)
 
     const typeDefs = generator.renderTypedefs()
-    fs.writeFileSync(path.join(output, 'graphql.ts'), typeDefs)
+    fs.writeFileSync(path.join(output, 'prisma-schema.ts'), typeDefs)
 
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
@@ -125,7 +160,7 @@ export default class GenereateCommand extends Command {
     const schema = buildSchema(schemaString)
 
     const generator = new JavascriptGenerator({ schema })
-    const generatorTS = new TypescriptGenerator({ schema })
+    const generatorTS = new TypescriptDefinitionsGenerator({ schema })
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
@@ -139,13 +174,13 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.js'), javascript)
 
     const typescript = generatorTS.render(options)
-    fs.writeFileSync(path.join(output, 'index.ts'), typescript)
+    fs.writeFileSync(path.join(output, 'index.d.ts'), typescript)
 
     const typeDefs = generatorTS
       .renderTypedefs()
       .replace('export const typeDefs = ', '')
     fs.writeFileSync(
-      path.join(output, 'graphql.js'),
+      path.join(output, 'prisma-schema.js'),
       `module.exports = {
         typeDefs: ${typeDefs}
       }
@@ -199,19 +234,23 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'index.js'), flowCode)
 
     const typeDefs = generator.renderTypedefs()
-    fs.writeFileSync(path.join(output, 'graphql.js'), typeDefs)
+    fs.writeFileSync(path.join(output, 'prisma-schema.js'), typeDefs)
 
     this.out.log(`Saving Prisma Client (Flow) at ${output}`)
   }
 
   replaceEnv(str) {
-    const regex = /\${env:(.*?)}/
-    const match = regex.exec(str)
+    const regex = /\${env:(.*?)}/;
+    const match = regex.exec(str);
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
-      return `process.env['${match[1]}']`
+      return this.replaceEnv(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
+          match[0].length + match.index
+        )}`
+      );
     } else {
-      return `'${str}'`
+      return `\`${str}\``;
     }
   }
 }

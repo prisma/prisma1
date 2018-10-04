@@ -1,6 +1,6 @@
-import { ArgumentsGenerator, RelatedGeneratorArgs } from "../generator"
-import { IGQLField, IGQLType } from "../../datamodel/model"
-import { GraphQLFieldConfigArgumentMap, GraphQLInteger, GraphQLString, GraphQLNonNull } from 'graphql/type'
+import { ArgumentsGenerator } from "../generator"
+import { IGQLType } from "../../datamodel/model"
+import { GraphQLFieldConfigArgumentMap, GraphQLNonNull } from 'graphql/type'
 
 export default class UniqueQueryArgumentsGenerator extends ArgumentsGenerator {
   public wouldBeEmpty(model: IGQLType, args: {}) {

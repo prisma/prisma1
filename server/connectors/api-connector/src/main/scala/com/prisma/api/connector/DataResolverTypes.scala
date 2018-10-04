@@ -59,6 +59,7 @@ object QueryArguments {
 }
 
 object SelectedFields {
+  val empty             = SelectedFields(Set.empty)
   def all(model: Model) = SelectedFields(model.fields.toSet)
 }
 case class SelectedFields(fields: Set[Field]) {
@@ -72,6 +73,19 @@ case class SelectedFields(fields: Set[Field]) {
   }
 
   val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.asScalarField)
+
+  def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
+
+  def includeOrderBy(queryArguments: Option[QueryArguments]): SelectedFields = {
+    queryArguments match {
+      case None => this
+      case Some(arguments) =>
+        arguments.orderBy match {
+          case None          => this
+          case Some(orderBy) => this ++ SelectedFields(Set(orderBy.field))
+        }
+    }
+  }
 }
 
 object SortOrder extends Enumeration {

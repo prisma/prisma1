@@ -18,7 +18,7 @@ export default class ModelSubscriptionPayloadGenerator extends ModelObjectTypeGe
       updatedFields: {
         type: new GraphQLList(new GraphQLNonNull(GraphQLString)),
       },
-    } as GraphQLFieldConfigMap
+    } as GraphQLFieldConfigMap<any, any>
 
     if (this.hasScalarField(input.fields)) {
       payload.previousValues = { type: this.generators.modelPreviousValues.generate(input, {}) }

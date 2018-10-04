@@ -29,6 +29,11 @@ export default abstract class AstTools {
     let errors = 0
     for(const typeName of Object.keys(typeMapA)) {
       const bType = typeMapB[typeName]
+
+      if(bType === undefined && typeName === 'Json') {
+        continue // TODO: We are generating Json only if it is used. Sync Prisma and generation
+      }
+
       if(bType === undefined) {
         errors = errors + 1
         if(aIsOriginal) {

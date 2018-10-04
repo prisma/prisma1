@@ -52,7 +52,7 @@ export default abstract class DatamodelParser {
             const relationName = relationDirective.length > 0 ? relationDirective[0].arguments[0].value.value : null
    
             fields.push({
-              name: field.name.value,
+              name,
               type: fieldType,
               relationName,
               defaultValue,
@@ -127,9 +127,6 @@ export default abstract class DatamodelParser {
               fieldB.relatedField = fieldA
               break
             }
-          }
-          if(fieldA.relatedField === null) {
-            throw new Error(`Opposite side of relation directive "${fieldA.relationName}" found at "${typeA.name}.${fieldA.name}" is missing on type "${fieldA.type.name}"`)
           }
         }
       }

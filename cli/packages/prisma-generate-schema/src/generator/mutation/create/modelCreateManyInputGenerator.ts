@@ -9,7 +9,7 @@ export abstract class ModelCreateOneOrManyInputGenerator extends ModelInputObjec
       !TypeFromModelGenerator.hasUniqueField(model.fields)
   }
 
-  protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLInputObjectType
+  protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType
 
   protected generateFields(model: IGQLType, args: {}) {
     const fields = {} as GraphQLInputFieldConfigMap
@@ -33,7 +33,7 @@ export default class ModelCreateManyInputGenerator extends ModelCreateOneOrManyI
     return `${input.name}CreateManyInput`
   }
 
-  protected maybeWrapList(input: GraphQLInputObjectType) {
+  protected maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType {
     return this.generators.scalarTypeGenerator.wrapList(input)
   }
 }

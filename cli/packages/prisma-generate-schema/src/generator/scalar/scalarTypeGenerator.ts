@@ -2,10 +2,11 @@ import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, ModelEnumT
 import { IGQLType, IGQLField } from '../../datamodel/model'
 import GQLAssert from '../../util/gqlAssert'
 import { GraphQLList, GraphQLEnumType, GraphQLType, GraphQLEnumValueConfigMap, GraphQLScalarType, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID, GraphQLNonNull } from "graphql/type"
+import { GraphQLObjectType } from 'graphql/type/definition';
 
 
 function createGraphQLScalarType(typeName: string) {
-  return new GraphQLScalarType<any>({ name: typeName, serialize: () => null })
+  return new GraphQLScalarType({ name: typeName, serialize: () => null })
 }
 
 // Theoretically, we could add properties like
@@ -90,7 +91,7 @@ export default class ScalarTypeGenerator extends ScalarTypeGeneratorBase {
    * @param field 
    * @param type 
    */
-  public wraphWithModifiers(field: IGQLField, type: GraphQLType) {
+  public wraphWithModifiers<T extends GraphQLType>(field: IGQLField, type: T): T | GraphQLList<GraphQLNonNull<T>> | GraphQLNonNull<T> {
     if (field.isList) {
       return this.wrapList(type)
     } else {
@@ -98,12 +99,12 @@ export default class ScalarTypeGenerator extends ScalarTypeGeneratorBase {
     }
   }
 
-  public wrapList(type: GraphQLType) {
+  public wrapList<T extends GraphQLType>(type: T): GraphQLList<GraphQLNonNull<T>> {
     return new GraphQLList(
       new GraphQLNonNull(type))
   }
 
-  public requiredIf(required: boolean, type: GraphQLType) {
+  public requiredIf<T extends GraphQLType>(required: boolean, type: T): GraphQLNonNull<T> | T {
     if (required) {
       return new GraphQLNonNull(type)
     } else {

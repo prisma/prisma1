@@ -14,6 +14,7 @@ import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
+import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 
 export default class Deploy extends Command {
@@ -354,7 +355,9 @@ ${chalk.gray(
     for (const hook of hooks) {
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const child = spawnSync(splittedHook[0], splittedHook.slice(1))
+      const isPackaged = fs.existsSync('/snapshot')
+      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+      const child = spawnPath(splittedHook[0], splittedHook.slice(1))
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
         this.out.log(chalk.red(stderr))
@@ -400,12 +403,16 @@ ${chalk.gray(
       this.config,
     )
     const before = Date.now()
-    const from =
-      this.definition.definition!.seed &&
-      this.definition.definition!.seed!.import
-        ? ` from \`${this.definition.definition!.seed!.import}\``
-        : ''
-    this.out.action.start(`Importing seed dataset${from}`)
+    const seedSource =
+      this.definition.definition!.seed!.import ||
+      this.definition.definition!.seed!.run
+    if (!seedSource) {
+      this.out.log(
+        chalk.yellow('Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional')
+      )
+    } else {
+      this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)
+    }
     await seeder.seed(concatName(cluster, serviceName, workspace), stageName)
     this.out.action.stop(prettyTime(Date.now() - before))
   }

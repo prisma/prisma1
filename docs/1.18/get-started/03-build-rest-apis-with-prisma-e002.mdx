@@ -1,0 +1,146 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+
+export const meta = {
+  title: 'Build an App with Prisma',
+  position: 3,
+  gettingStartedOrder: 2,
+  gettingStartedTitle: 'REST API',
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a REST API.',
+  technology: 'node',
+  technologyOrder: 2,
+  articleGroup: 'Build an App with Prisma',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Configure a Node app
+- Implement a REST API using [Express.js](https://expressjs.com/) & Prisma client
+- Test your REST API using `curl`
+
+## Configure project
+
+You'll use Express.js as your web server. Add the `express` and `body-parser` dependencies to your project with this command:
+
+```bash
+npm install --save express body-parser
+```
+
+## Define and implement API
+
+There will be six routes that provide the API for a simple blogging application:
+
+- `GET`
+  - `/posts/published`: Returns all _published_ posts
+  - `/post/:postId`: Returns a specific post by its id
+  - `/posts/user/:userId`: Returns all the post written by a specific user
+- `POST`
+  - `/user`: Create a new user
+  - `/post/draft`: Create a new _unpublished_ post
+- `PUT`
+  - `/post/publish`: _Publish_ a post
+
+Replace the current contents of `index.js` with the following code:
+
+```js lineNumbers,copy
+const { prisma } = require('./generated/prisma-client')
+const app = express()
+const express = require('express')
+const bodyParser = require('body-parser')
+
+app.use(bodyParser.json())
+
+app.get(`/posts/published`, async (req, res) => {
+  const publishedPosts = await prisma.posts({ where: { published: true } })
+  res.json(publishedPosts)
+})
+
+app.get('/post/:postId', async (req, res) => {
+  const { postId } = req.params
+  const post = await prisma.post({ id: postId })
+  res.json(post)
+})
+
+app.get('/posts/user/:userId', async (req, res) => {
+  const { userId } = req.params
+  const postsByUser = await prisma
+    .user({ id: userId })
+    .posts()
+  res.json(postsByUser)
+})
+
+app.post('/user', async (req, res) => {
+  const newUser = await prisma.createUser(req.body)
+  res.json(newUser)
+})
+
+app.post('/post/draft', async (req, res) => {
+  const newPost = await prisma.createPost(req.body)
+  res.json(newPost)
+})
+
+app.put(`/post/publish/:postId`, async (req, res) => {
+  const { postId } = req.params
+  const updatedPost = await prisma.updatePost(
+    {
+      where: { id: postId },
+      data: { published: true },
+    },
+
+  )
+  res.json(updatedPost)
+})
+
+app.listen(3000, () => console.log('Server is running on http://localhost:3000'))
+```
+
+## Start the server
+
+Start the server with this command:
+
+```js
+node index.js
+```
+
+You can now use a tool like `curl` or [Postman](https://www.getpostman.com/) to explore your the functionlity of the routes.
+
+## Testing the REST API using `curl`
+
+<QueryChooser titles={["Create new draft", "Publish a draft", "Fetch post by ID", "Create user"]}>
+
+```bash copy
+curl -X POST \\
+  http://localhost:3000/post/draft \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "title": "Awesome Post"
+}'
+```
+
+```bash copy
+curl -X PUT \\
+  http://localhost:3000/post/publish \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "id": "__POST_ID__"
+}'
+```
+
+```bash copy
+curl -X GET \\
+  http://localhost:3000/post/__POST_ID__
+```
+
+```bash copy
+curl -X POST \\
+  http://localhost:3000/user \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "name": "Alice"
+}'
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.

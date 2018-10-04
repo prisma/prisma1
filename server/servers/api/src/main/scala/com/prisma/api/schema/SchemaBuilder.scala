@@ -16,7 +16,7 @@ import sangria.ast
 import sangria.relay._
 import sangria.schema._
 
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.concurrent.Future
 
 case class ApiUserContext(clientId: String)
@@ -60,12 +60,14 @@ case class SchemaBuilderImpl(
     val mutation     = buildMutation()
     val subscription = buildSubscription()
 
-    Schema(
-      query = query,
-      mutation = mutation,
-      subscription = subscription,
-      validationRules = SchemaValidationRule.empty
-    )
+    FilterOutEmptyInputTypes(
+      Schema(
+        query = query,
+        mutation = mutation,
+        subscription = subscription,
+        validationRules = SchemaValidationRule.empty
+      )
+    ).applyFilter()
   }
 
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {

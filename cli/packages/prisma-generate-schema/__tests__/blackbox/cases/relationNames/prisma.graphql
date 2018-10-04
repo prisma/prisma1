@@ -4,12 +4,17 @@ type A {
   toC: C
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type AConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [AEdge]!
   aggregate: AggregateA!
 }
@@ -47,12 +52,17 @@ input ACreateWithoutToCInput {
   toB2: BCreateOneWithoutToA2Input!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type AEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: A!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -84,30 +94,30 @@ type ASubscriptionPayload {
 }
 
 input ASubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [ASubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [ASubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [ASubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -116,8 +126,8 @@ input ASubscriptionWhereInput {
 }
 
 input AUpdateInput {
-  toB: BUpdateOneWithoutToAInput
-  toB2: BUpdateOneWithoutToA2Input
+  toB: BUpdateOneRequiredWithoutToAInput
+  toB2: BUpdateOneRequiredWithoutToA2Input
   toC: CUpdateOneWithoutToAInput
 }
 
@@ -125,27 +135,25 @@ input AUpdateManyWithoutToCInput {
   create: [ACreateWithoutToCInput!]
 }
 
-input AUpdateOneWithoutToB2Input {
+input AUpdateOneRequiredWithoutToB2Input {
   create: ACreateWithoutToB2Input
-  delete: Boolean
   update: AUpdateWithoutToB2DataInput
   upsert: AUpsertWithoutToB2Input
 }
 
-input AUpdateOneWithoutToBInput {
+input AUpdateOneRequiredWithoutToBInput {
   create: ACreateWithoutToBInput
-  delete: Boolean
   update: AUpdateWithoutToBDataInput
   upsert: AUpsertWithoutToBInput
 }
 
 input AUpdateWithoutToB2DataInput {
-  toB: BUpdateOneWithoutToAInput
+  toB: BUpdateOneRequiredWithoutToAInput
   toC: CUpdateOneWithoutToAInput
 }
 
 input AUpdateWithoutToBDataInput {
-  toB2: BUpdateOneWithoutToA2Input
+  toB2: BUpdateOneRequiredWithoutToA2Input
   toC: CUpdateOneWithoutToAInput
 }
 
@@ -160,13 +168,17 @@ input AUpsertWithoutToBInput {
 }
 
 input AWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [AWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [AWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [AWhereInput!]
   toB: BWhereInput
   toB2: BWhereInput
@@ -180,16 +192,23 @@ type B {
 }
 
 type BatchPayload {
-  """The number of nodes that have been affected by the Batch operation."""
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
   count: Long!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type BConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [BEdge]!
   aggregate: AggregateB!
 }
@@ -227,12 +246,17 @@ input BCreateWithoutToCInput {
   toA2: ACreateOneWithoutToB2Input!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type BEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: B!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -252,30 +276,30 @@ type BSubscriptionPayload {
 }
 
 input BSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [BSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [BSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [BSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -284,37 +308,35 @@ input BSubscriptionWhereInput {
 }
 
 input BUpdateInput {
-  toA: AUpdateOneWithoutToBInput
-  toA2: AUpdateOneWithoutToB2Input
-  toC: CUpdateOneWithoutToBInput
+  toA: AUpdateOneRequiredWithoutToBInput
+  toA2: AUpdateOneRequiredWithoutToB2Input
+  toC: CUpdateOneRequiredWithoutToBInput
 }
 
 input BUpdateManyWithoutToCInput {
   create: [BCreateWithoutToCInput!]
 }
 
-input BUpdateOneWithoutToA2Input {
+input BUpdateOneRequiredWithoutToA2Input {
   create: BCreateWithoutToA2Input
-  delete: Boolean
   update: BUpdateWithoutToA2DataInput
   upsert: BUpsertWithoutToA2Input
 }
 
-input BUpdateOneWithoutToAInput {
+input BUpdateOneRequiredWithoutToAInput {
   create: BCreateWithoutToAInput
-  delete: Boolean
   update: BUpdateWithoutToADataInput
   upsert: BUpsertWithoutToAInput
 }
 
 input BUpdateWithoutToA2DataInput {
-  toA: AUpdateOneWithoutToBInput
-  toC: CUpdateOneWithoutToBInput
+  toA: AUpdateOneRequiredWithoutToBInput
+  toC: CUpdateOneRequiredWithoutToBInput
 }
 
 input BUpdateWithoutToADataInput {
-  toA2: AUpdateOneWithoutToB2Input
-  toC: CUpdateOneWithoutToBInput
+  toA2: AUpdateOneRequiredWithoutToB2Input
+  toC: CUpdateOneRequiredWithoutToBInput
 }
 
 input BUpsertWithoutToA2Input {
@@ -328,13 +350,17 @@ input BUpsertWithoutToAInput {
 }
 
 input BWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [BWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [BWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [BWhereInput!]
   toA: AWhereInput
   toA2: AWhereInput
@@ -346,12 +372,17 @@ type C {
   toA(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type CConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [CEdge]!
   aggregate: AggregateC!
 }
@@ -377,12 +408,17 @@ input CCreateWithoutToBInput {
   toA: ACreateManyWithoutToCInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type CEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: C!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -402,30 +438,30 @@ type CSubscriptionPayload {
 }
 
 input CSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [CSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [CSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [CSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -438,19 +474,18 @@ input CUpdateInput {
   toA: AUpdateManyWithoutToCInput
 }
 
+input CUpdateOneRequiredWithoutToBInput {
+  create: CCreateWithoutToBInput
+  update: CUpdateWithoutToBDataInput
+  upsert: CUpsertWithoutToBInput
+}
+
 input CUpdateOneWithoutToAInput {
   create: CCreateWithoutToAInput
   disconnect: Boolean
   delete: Boolean
   update: CUpdateWithoutToADataInput
   upsert: CUpsertWithoutToAInput
-}
-
-input CUpdateOneWithoutToBInput {
-  create: CCreateWithoutToBInput
-  delete: Boolean
-  update: CUpdateWithoutToBDataInput
-  upsert: CUpsertWithoutToBInput
 }
 
 input CUpdateWithoutToADataInput {
@@ -472,13 +507,17 @@ input CUpsertWithoutToBInput {
 }
 
 input CWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [CWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [CWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [CWhereInput!]
   toB_every: BWhereInput
   toB_some: BWhereInput
@@ -487,6 +526,11 @@ input CWhereInput {
   toA_some: AWhereInput
   toA_none: AWhereInput
 }
+
+"""
+Raw JSON value
+"""
+scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -512,24 +556,35 @@ enum MutationType {
   DELETED
 }
 
-"""An object with an ID"""
+"""
+An object with an ID
+"""
 interface Node {
-  """The id of the object."""
+  """
+  The id of the object.
+  """
   id: ID!
 }
 
-"""Information about pagination in a connection."""
+"""
+Information about pagination in a connection.
+"""
 type PageInfo {
-  """When paginating forwards, are there more items?"""
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
-
-  """When paginating backwards, are there more items?"""
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
-
-  """When paginating backwards, the cursor to continue."""
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
-
-  """When paginating forwards, the cursor to continue."""
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
 }
 
@@ -540,10 +595,13 @@ type Query {
   asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
   csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
-
-  """Fetches an object given its ID"""
+  """
+  Fetches an object given its ID
+  """
   node(
-    """The ID of an object"""
+    """
+    The ID of an object
+    """
     id: ID!
   ): Node
 }

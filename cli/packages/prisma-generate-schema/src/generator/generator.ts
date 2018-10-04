@@ -1,6 +1,21 @@
-
-import { GraphQLScalarType, GraphQLType, GraphQLInterfaceType, GraphQLSchema, GraphQLFieldConfigMap, GraphQLInputObjectType, GraphQLFieldConfig, GraphQLObjectTypeConfig, GraphQLObjectType, GraphQLEnum, GraphQLInputFieldConfigMap, GraphQLInputFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLEnumType, GraphQLEnumValueConfig, GraphQLEnumValueConfigMap } from "graphql/type"
-import { IGQLType, IGQLField } from "../datamodel/model"
+import {
+  GraphQLScalarType,
+  GraphQLType,
+  GraphQLInterfaceType,
+  GraphQLSchema,
+  GraphQLFieldConfigMap,
+  GraphQLInputObjectType,
+  GraphQLFieldConfig,
+  GraphQLObjectType,
+  GraphQLInputFieldConfigMap,
+  GraphQLInputFieldConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLEnumType,
+  GraphQLEnumValueConfig,
+  GraphQLEnumValueConfigMap,
+} from 'graphql/type'
+import { IGQLType, IGQLField } from '../datamodel/model'
+import { GraphQLList, GraphQLNonNull } from 'graphql';
 
 // tslint:disable:max-classes-per-file
 
@@ -8,13 +23,13 @@ import { IGQLType, IGQLField } from "../datamodel/model"
  * Type cache for object types.
  */
 export class TypeRegistry {
-  [typeName: string]: GraphQLObjectType
+  [typeName: string]: GraphQLType
 }
 
 /**
- * Base class of all generators, 
+ * Base class of all generators,
  * has a reference to the set of generators we need
- * and a type registry. 
+ * and a type registry.
  */
 export abstract class Generator<In, Args, Out> {
   protected knownTypes: TypeRegistry
@@ -26,25 +41,26 @@ export abstract class Generator<In, Args, Out> {
   }
 
   /**
-   * Generates the thing this generator is generating. 
-   * @param model 
-   * @param args 
+   * Generates the thing this generator is generating.
+   * @param model
+   * @param args
    */
   public abstract generate(model: In, args: Args): Out
 }
 
 /**
- * Base class for all generators that create types. 
- * This class implements caching via the given TypeRegistry. 
+ * Base class for all generators that create types.
+ * This class implements caching via the given TypeRegistry.
  */
-export abstract class TypeGenerator<In, Args, Type extends GraphQLObjectType> extends Generator<In, Args, Type> {
+export abstract class TypeGenerator<In, Args, Type extends GraphQLType> extends Generator<In, Args, Type> {
   public abstract getTypeName(input: In, args: Args)
 
   public generate(input: In, args: Args): Type {
     const name = this.getTypeName(input, args)
-
+    
     if (this.knownTypes.hasOwnProperty(name)) {
-      return this.knownTypes[name]
+      // Force cast should be safe because of the name lookup.
+      return this.knownTypes[name] as Type
     } else {
       const type = this.generateInternal(input, args)
       this.knownTypes[name] = type
@@ -56,63 +72,66 @@ export abstract class TypeGenerator<In, Args, Type extends GraphQLObjectType> ex
 }
 
 /**
- * Base class for all generators which map 
- * a type from the datamodel to some object type. 
- * 
+ * Base class for all generators which map
+ * a type from the datamodel to some object type.
+ *
  * This class adds provides methods that assemble
- * a GraphQLObject type, for code re-use. 
- * 
+ * a GraphQLObject type, for code re-use.
+ *
  * Ideally a deriving class would override the
- * generateScalarFieldType or generateRelationFieldType methods. 
+ * generateScalarFieldType or generateRelationFieldType methods.
  */
 export abstract class TypeFromModelGenerator<
-  Args, Type extends GraphQLObjectType,
-  FieldConfig extends GraphQLFieldConfigMap,
-  FieldConfigMap extends GraphQLFieldConfigMap> extends TypeGenerator<IGQLType, Args, Type> {
+    Args, Type extends GraphQLType,
+    FieldConfig extends GraphQLFieldConfig<any, any> | GraphQLEnumValueConfig | GraphQLInputFieldConfig,
+    FieldConfigMap extends GraphQLFieldConfigMap<any, any> | GraphQLEnumValueConfigMap | GraphQLInputFieldConfigMap
+  > extends TypeGenerator<IGQLType, Args, Type> {
 
   public static reservedFields = ['id', 'createdAt', 'updatedAt']
 
   /**
-   * Checks if the given list of fields has 
+   * Checks if the given list of fields has
    * a unique field.
-   * @param fields 
+   * @param fields
    */
   public static hasUniqueField(fields: IGQLField[]) {
     return fields.filter(field => field.isUnique).length > 0
   }
 
   /**
-   * Checks if the given liest of fields has
+   * Checks if the given list of fields has
    * other fields than the fields given in the second
-   * parameter. 
-   * @param fields 
-   * @param fieldNames 
+   * parameter.
+   * @param fields
+   * @param fieldNames
    */
   public static hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
     return fields.filter(field => !fieldNames.includes(field.name)).length > 0
   }
 
   /**
-   * Indicates if the resulting type would be empty. 
-   * @param model 
-   * @param args 
+   * Indicates if the resulting type would be empty.
+   * @param model
+   * @param args
    */
   public wouldBeEmpty(model: IGQLType, args: Args): boolean {
     return false
   }
 
   /**
-   * Generates all fields of this type. 
-   * @param model 
-   * @param args 
+   * Generates all fields of this type.
+   * @param model
+   * @param args
    */
   protected generateFields(model: IGQLType, args: Args): FieldConfigMap {
     const fields = {} as FieldConfigMap
 
     for (const field of model.fields) {
-      const fieldSchema: FieldConfig | null = this.generators.scalarTypeGenerator.isScalarField(field) ?
-        this.generateScalarField(model, args, field) :
-        this.generateRelationField(model, args, field)
+      const fieldSchema: FieldConfig | null = this.generators.scalarTypeGenerator.isScalarField(
+        field,
+      )
+        ? this.generateScalarField(model, args, field)
+        : this.generateRelationField(model, args, field)
 
       if (fieldSchema !== null) {
         fields[field.name] = fieldSchema
@@ -125,74 +144,104 @@ export abstract class TypeFromModelGenerator<
   /**
    * Responsible to instantiate the correct GraphQL type
    * for building the ast.
-   * @param name 
-   * @param fields 
+   * @param name
+   * @param fields
    */
-  protected abstract instantiateObjectType(name: string, fields: () => FieldConfigMap)
+  protected abstract instantiateObjectType(
+    name: string,
+    fields: () => FieldConfigMap,
+  )
 
   /**
-   * Calls generateFields and wraps the result into a function. 
-   * Then calls instantiateObjectType to create the actual AST node. 
+   * Calls generateFields and wraps the result into a function.
+   * Then calls instantiateObjectType to create the actual AST node.
    * @param model
-   * @param args 
+   * @param args
    */
   protected generateInternal(model: IGQLType, args: Args): Type {
     const fieldFunction = () => this.generateFields(model, args)
 
-    return this.instantiateObjectType(this.getTypeName(model, args), fieldFunction)
+    return this.instantiateObjectType(
+      this.getTypeName(model, args),
+      fieldFunction,
+    )
   }
 
-  protected generateScalarField(model: IGQLType, args: Args, field: IGQLField): FieldConfig | null {
+  protected generateScalarField(
+    model: IGQLType,
+    args: Args,
+    field: IGQLField,
+  ): FieldConfig | null {
     const type = this.generateScalarFieldType(model, args, field)
     if (type === null) {
       return null
     } else {
-      // We need a force-cast with any here, since we would need a type constraint for a type that depends on 
-      // FieldConfig, which is something that TS cannot do. 
-      return { type } as any as FieldConfig
+      // We need a force-cast with any here, since we would need a type constraint for a type that depends on
+      // FieldConfig, which is something that TS cannot do.
+      return ({ type } as any) as FieldConfig
     }
   }
 
-  protected generateRelationField(model: IGQLType, args: Args, field: IGQLField): FieldConfig | null {
+  protected generateRelationField(
+    model: IGQLType,
+    args: Args,
+    field: IGQLField,
+  ): FieldConfig | null {
     const type = this.generateRelationFieldType(model, args, field)
     if (type === null) {
       return null
     } else {
-      // We need a force-cast with any here, since we would need a type constraint for a type that depends on 
-      // FieldConfig, which is something that TS cannot do. 
-      return { type } as any as FieldConfig
+      // We need a force-cast with any here, since we would need a type constraint for a type that depends on
+      // FieldConfig, which is something that TS cannot do.
+      return ({ type } as any) as FieldConfig
     }
   }
 
-  protected generateScalarFieldType(model: IGQLType, args: Args, field: IGQLField): Type | null {
+  protected generateScalarFieldType(model: IGQLType, args: Args, field: IGQLField): GraphQLType | null {
     return this.generators.scalarTypeGenerator.mapToScalarFieldType(field)
   }
 
-  protected generateRelationFieldType(model: IGQLType, args: Args, field: IGQLField): Type | null {
+  protected generateRelationFieldType(model: IGQLType, args: Args, field: IGQLField): GraphQLType | null {
     throw new Error("Method not implemented.");
   }
 }
 
 /**
- * Base class for all generators that generate GraphQLEnums. 
+ * Base class for all generators that generate GraphQLEnums.
  */
-export abstract class ModelEnumTypeGeneratorBase extends TypeFromModelGenerator<{}, GraphQLEnumType, GraphQLEnumValueConfig, GraphQLEnumValueConfigMap> {
-  protected instantiateObjectType(name: string, values: () => GraphQLEnumValueConfigMap) {
+export abstract class ModelEnumTypeGeneratorBase extends TypeFromModelGenerator<
+  {},
+  GraphQLEnumType,
+  GraphQLEnumValueConfig,
+  GraphQLEnumValueConfigMap
+  > {
+  protected instantiateObjectType(
+    name: string,
+    values: () => GraphQLEnumValueConfigMap,
+  ) {
     return new GraphQLEnumType({
       name,
-      values
+      values: values()
     })
   }
 }
 
 /**
- * Base class for all generators that generate GraphQLObjectTypes. 
+ * Base class for all generators that generate GraphQLObjectTypes.
  */
-export abstract class ModelObjectTypeGeneratorBase<Args> extends TypeFromModelGenerator<Args, GraphQLObjectType, GraphQLFieldConfig, GraphQLFieldConfigMap> {
-  protected instantiateObjectType(name: string, fields: () => GraphQLFieldConfigMap) {
+export abstract class ModelObjectTypeGeneratorBase<
+Args
+> extends 
+TypeFromModelGenerator<
+Args,
+GraphQLObjectType, 
+GraphQLFieldConfig<any, any>, 
+GraphQLFieldConfigMap<any, any>
+> {
+  protected instantiateObjectType(name: string, fields: () => GraphQLFieldConfigMap<any, any>) {
     return new GraphQLObjectType({
       name,
-      fields
+      fields,
     })
   }
 }
@@ -201,67 +250,93 @@ export abstract class ModelObjectTypeGenerator extends ModelObjectTypeGeneratorB
 /**
  * Base class for all generators that generate GraphQLInputObjectTypes.
  */
-export abstract class ModelInputObjectTypeGeneratorBase<Args> extends TypeFromModelGenerator<Args, GraphQLInputObjectType, GraphQLInputFieldConfig, GraphQLInputFieldConfigMap> {
-  protected instantiateObjectType(name: string, fields: () => GraphQLInputFieldConfigMap) {
+export abstract class ModelInputObjectTypeGeneratorBase<
+  Args
+  > extends TypeFromModelGenerator<
+  Args,
+  GraphQLInputObjectType,
+  GraphQLInputFieldConfig,
+  GraphQLInputFieldConfigMap
+  > {
+  protected instantiateObjectType(
+    name: string,
+    fields: () => GraphQLInputFieldConfigMap,
+  ) {
     return new GraphQLInputObjectType({
       name,
-      fields
+      fields,
     })
   }
 }
 export abstract class ModelInputObjectTypeGenerator extends ModelInputObjectTypeGeneratorBase<{}> { }
 
 /**
- * Special base class for the scalar field generator. 
+ * Special base class for the scalar field generator.
  */
-export abstract class ScalarTypeGeneratorBase extends TypeGenerator<string | IGQLType, {}, GraphQLScalarType> {
+export abstract class ScalarTypeGeneratorBase extends TypeGenerator<
+  string | IGQLType,
+  {},
+  GraphQLScalarType
+  > {
   abstract isScalarField(field: IGQLField): boolean
   /**
-   * Maps a field to the scalar field type for output objects. 
-   * @param field 
+   * Maps a field to the scalar field type for output objects.
+   * @param field
    */
-  abstract mapToScalarFieldType(field: IGQLField): GraphQLScalarType
+  abstract mapToScalarFieldType(field: IGQLField): GraphQLType
   /**
-   * Maps a field to the scalar field type for input objects. 
-   * @param field 
+   * Maps a field to the scalar field type for input objects.
+   * @param field
    */
-  abstract mapToScalarFieldTypeForInput(field: IGQLField): GraphQLScalarType
+  abstract mapToScalarFieldTypeForInput(field: IGQLField): GraphQLType
   /**
    * Maps a field to the scalar field type, forces the field to be not nullable.
-   * @param field 
+   * @param field
    */
-  abstract mapToScalarFieldTypeForceRequired(field: IGQLField): GraphQLScalarType
+  abstract mapToScalarFieldTypeForceRequired(
+    field: IGQLField,
+  ): GraphQLType
   /**
    * Maps a field to the scalar field type, forces the field to be nullable.
-   * @param field 
+   * @param field
    */
-  abstract mapToScalarFieldTypeForceOptional(field: IGQLField): GraphQLScalarType
+  abstract mapToScalarFieldTypeForceOptional(
+    field: IGQLField,
+  ): GraphQLType
   /**
    * Transforms a given GraphQLScalarType into a list of the given type, according
-   * to the OpenCRUD spec. 
-   * @param field 
+   * to the OpenCRUD spec.
+   * @param field
    */
-  abstract wrapList(field: GraphQLScalarType): GraphQLScalarType
-  abstract requiredIf(condition: boolean, field: GraphQLScalarType): GraphQLScalarType
-  abstract wraphWithModifiers(field: IGQLField, type: GraphQLType): GraphQLType
+  abstract wrapList<T extends GraphQLType>(field: T): GraphQLList<GraphQLNonNull<T>>
+  abstract requiredIf<T extends GraphQLType>(condition: boolean, field: T): T |  GraphQLNonNull<T>
+  abstract wraphWithModifiers<T extends GraphQLType>(field: IGQLField, type: T): T | GraphQLList<GraphQLNonNull<T>> | GraphQLNonNull<T>
 }
 
 /**
- * Abstract base class for all generators that generate scalar input fields. 
+ * Abstract base class for all generators that generate scalar input fields.
  */
-export abstract class ScalarInputGenerator extends TypeGenerator<IGQLType, IGQLField, GraphQLObjectType> { }
+export abstract class ScalarInputGenerator extends TypeGenerator<
+  IGQLType,
+  IGQLField,
+  GraphQLObjectType
+  > { }
 
 /**
- * Base class for generators that generate argument lists. 
+ * Base class for generators that generate argument lists.
  */
-export abstract class ArgumentsGenerator extends Generator<IGQLType, {}, GraphQLFieldConfigArgumentMap> {
+export abstract class ArgumentsGenerator extends Generator<
+  IGQLType,
+  {},
+  GraphQLFieldConfigArgumentMap
+  > {
   public wouldBeEmpty(model: IGQLType, args: {}): boolean {
     return false
   }
 }
 
 /**
- * Arguments passed to generators that need to take a related field into account. 
+ * Arguments passed to generators that need to take a related field into account.
  */
 export class RelatedGeneratorArgs {
   relatedField: IGQLField
@@ -272,44 +347,65 @@ export class RelatedGeneratorArgs {
 /**
  * Base class for generators that generate GraphQLObject types which take a related field into account.
  */
-export abstract class RelatedModelInputObjectTypeGenerator extends ModelInputObjectTypeGeneratorBase<RelatedGeneratorArgs> { }
+export abstract class RelatedModelInputObjectTypeGenerator extends ModelInputObjectTypeGeneratorBase<
+  RelatedGeneratorArgs
+  > { }
 
 /**
- * Base class for generators that generate a GraphQLObjectType without taking any input. 
+ * Base class for generators that generate a GraphQLObjectType without taking any input.
  */
-export abstract class AuxillaryObjectTypeGenerator extends TypeGenerator<null, {}, GraphQLObjectType> { }
+export abstract class AuxillaryObjectTypeGenerator extends TypeGenerator<
+  null,
+  {},
+  GraphQLObjectType
+  > { }
 
 /**
- * Base class for generators that generate a GraphQLInterfaceType without taking any input. 
+ * Base class for generators that generate a GraphQLInterfaceType without taking any input.
  */
-export abstract class AuxillaryInterfaceGenerator extends TypeGenerator<null, {}, GraphQLInterfaceType> { }
+export abstract class AuxillaryInterfaceGenerator extends TypeGenerator<
+  null,
+  {},
+  GraphQLInterfaceType
+  > { }
 
 /**
- * Base class for generators that generate a GraphQLInputObjectType without taking any input. 
+ * Base class for generators that generate a GraphQLInputObjectType without taking any input.
  */
-export abstract class AuxillaryInputObjectTypeGenerator extends TypeGenerator<null, {}, GraphQLInputObjectType> { }
+export abstract class AuxillaryInputObjectTypeGenerator extends TypeGenerator<
+  null,
+  {},
+  GraphQLInputObjectType
+  > { }
 
 /**
- * Base class for generators that generate a GraphQLEnumType without taking any input. 
+ * Base class for generators that generate a GraphQLEnumType without taking any input.
  */
-export abstract class AuxillaryEnumGenerator extends TypeGenerator<null, {}, GraphQLEnumType> { }
+export abstract class AuxillaryEnumGenerator extends TypeGenerator<
+  null,
+  {},
+  GraphQLEnumType
+  > { }
 
 /**
- * Base class for generators that generate a query, mutation or subscription object from 
- * a list of datamodel types. 
+ * Base class for generators that generate a query, mutation or subscription object from
+ * a list of datamodel types.
  */
-export abstract class RootGenerator extends TypeGenerator<IGQLType[], {}, GraphQLObjectType> { }
+export abstract class RootGenerator extends TypeGenerator<
+  IGQLType[],
+  {},
+  GraphQLObjectType
+  > { }
 
 /**
- * Base class for generators that generate a schema from a list of datamodel types. 
+ * Base class for generators that generate a schema from a list of datamodel types.
  */
-export abstract class SchemaGeneratorBase extends TypeGenerator<IGQLType[], {}, GraphQLSchema> { }
+export abstract class SchemaGeneratorBase extends Generator<IGQLType[], {}, GraphQLSchema> { }
 
 /**
- * Base class specifying a list of generators to implement. 
+ * Base class specifying a list of generators to implement.
  */
 export interface IGenerators {
-
   // Create
   modelCreateInput: ModelInputObjectTypeGenerator
   modelCreateOneInput: ModelInputObjectTypeGenerator
@@ -323,9 +419,11 @@ export interface IGenerators {
   modelUpdateInput: ModelInputObjectTypeGenerator
   modelUpdateDataInput: ModelInputObjectTypeGenerator
   modelUpdateOneInput: ModelInputObjectTypeGenerator
+  modelUpdateOneRequiredInput: ModelInputObjectTypeGenerator
   modelUpdateManyInput: ModelInputObjectTypeGenerator
   modelUpdateWithoutRelatedDataInput: RelatedModelInputObjectTypeGenerator
   modelUpdateOneWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
+  modelUpdateOneRequiredWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
   modelUpdateManyWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
   scalarListUpdateInput: ScalarInputGenerator
 
@@ -375,15 +473,19 @@ export interface IGenerators {
 }
 
 /**
- * Utility class that merges field configration. 
+ * Utility class that merges field configration.
  */
 export class FieldConfigUtils {
   /**
    * Merges all given field config maps.
-   * @param fieldMaps The field config maps to merge. 
+   * @param fieldMaps The field config maps to merge.
    */
-  public static merge(...fieldMaps: GraphQLFieldConfigMap[]): GraphQLFieldConfigMap {
-    const newMap = {} as GraphQLFieldConfigMap
+  public static merge<
+  T extends GraphQLFieldConfigMap<any, any> | 
+  GraphQLInputFieldConfigMap
+  >
+  (...fieldMaps: T[]): T {
+    const newMap = {} as T
 
     for (const fieldMap of fieldMaps) {
       if (fieldMap === null) {
@@ -391,10 +493,12 @@ export class FieldConfigUtils {
       }
 
       Object.keys(fieldMap).forEach((name: string) => {
-        const field: GraphQLFieldConfig = fieldMap[name]
+        const field = fieldMap[name]
         if (name in newMap) {
           console.dir(fieldMaps)
-          throw new Error('Field configuration to merge has duplicate field names.')
+          throw new Error(
+            'Field configuration to merge has duplicate field names.',
+          )
         }
         newMap[name] = field
       })

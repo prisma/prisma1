@@ -1,7 +1,5 @@
 import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, TypeFromModelGenerator } from '../../generator'
 import { IGQLType, IGQLField } from '../../../datamodel/model'
-import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GrqphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
-
 
 export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTypeGenerator {
   public static generateScalarFieldTypeForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
@@ -27,14 +25,22 @@ export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTy
       if (field.isList) {
         return generators.modelUpdateManyWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
       } else {
-        return generators.modelUpdateOneWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
+        if (field.isRequired) {
+          return generators.modelUpdateOneRequiredWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
+        } else {
+          return generators.modelUpdateOneWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
+        }
       }
     } else {
       const relationInfo = { relatedField: field, relatedType: model, relationName: null }
       if (field.isList) {
         return generators.modelUpdateManyInput.generate(field.type as IGQLType, relationInfo)
       } else {
-        return generators.modelUpdateOneInput.generate(field.type as IGQLType, relationInfo)
+        if (field.isRequired) {
+          return generators.modelUpdateOneRequiredInput.generate(field.type as IGQLType, relationInfo)
+        } else {
+          return generators.modelUpdateOneInput.generate(field.type as IGQLType, relationInfo)
+        }
       }
     }
   }

@@ -5,7 +5,7 @@ export const meta = {
 
 ## Overview
 
-Prisma introduces a few changes to the way how your datamodel is written as well as to the generated GraphQL API.
+Prisma introduces a few changes to the way how your data model is written as well as to the generated GraphQL API.
 
 ## Data modeling
 
@@ -33,7 +33,7 @@ type User {
 
 ### `@relation` directive becomes optional on unambiguous relations
 
-When a relation in your datamodel is unambiguous, you can omit the `@relation` directive.
+When a relation in your data model is unambiguous, you can omit the `@relation` directive.
 
 #### Before
 
@@ -69,7 +69,7 @@ type Post @model {
 
 ### `id` field is optional
 
-The `id` field is now optional on the model types in your datamodel (similar to `createdAt` and `updatedAt`), you can remove it if it's not needed on a type.
+The `id` field is now optional on the model types in your data model (similar to `createdAt` and `updatedAt`), you can remove it if it's not needed on a type.
 
 ### `@isUnique` is renamed to `@unique`
 
@@ -232,7 +232,7 @@ query {
 
 In the Graphcool Framework GraphQL API, it was only possible to update and delete nodes by selecting them via their `id` field. With Prisma, you can use any field that's annotated with the `@unique` directive for that.
 
-Consider this datamodel:
+Consider this data model:
 
 ```graphql
 type User {

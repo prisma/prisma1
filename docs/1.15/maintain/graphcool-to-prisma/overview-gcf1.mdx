@@ -25,7 +25,7 @@ The core idea when building GraphQL servers with Prisma is that you have **two G
 
 In that new architecture, the application layer is entirely responsible for business logic and other common workflows such as authentication, permissions or file handling. Rather than writing [Resolver](https://www.graph.cool/docs/reference/functions/resolvers-su6wu3yoo2) or [Hook](https://www.graph.cool/docs/reference/functions/hooks-pa6guruhaf) functions, you are now simply implementing traditional GraphQL resolvers.
 
-Implementing resolvers in your application layer doesn't require a lot of overhead since incoming requests can simply be delegated to the underlying Prisma API using the [`prisma-binding`](https://github.com/prismagraphql/prisma-binding) package.
+Implementing resolvers in your application layer doesn't require a lot of overhead since incoming requests can simply be delegated to the underlying Prisma API using the [`prisma-binding`](https://github.com/prisma/prisma-binding) package.
 
 ## Deployment
 
