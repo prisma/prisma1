@@ -396,7 +396,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   //Fixme Unique and Transactionality
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" in {
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       """type User{
         |   id: ID! @unique

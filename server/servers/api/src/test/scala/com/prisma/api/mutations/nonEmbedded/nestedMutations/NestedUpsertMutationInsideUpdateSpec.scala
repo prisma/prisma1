@@ -467,7 +467,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   //Fixme failing due to missing unique constraint
-  "a one to many relation" should "generate helpful error messages" in {
+  "a one to many relation" should "generate helpful error messages" taggedAs (IgnoreMongo) in {
     val schema = """type Comment{
                             id: ID! @unique
                             text: String

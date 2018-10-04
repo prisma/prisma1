@@ -1293,7 +1293,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     server.query("query{bottoms{nameBottom}}", project).toString should be("""{"data":{"bottoms":[{"nameBottom":"the bottom"}]}}""")
   }
 
-  "Nested disconnect on self relations" should "only disconnect the specified nodes" in {
+  "Nested disconnect on self relations" should "only disconnect the specified nodes" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique
