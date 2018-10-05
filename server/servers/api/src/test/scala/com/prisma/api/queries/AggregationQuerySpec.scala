@@ -94,7 +94,7 @@ class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
       .pathAsLong("data.todoesConnection.aggregate.count") should be(1)
   }
 
-  "the count query" should "obey pagination" taggedAs (IgnoreMongo) in {
+  "the count query" should "obey pagination" in {
     val emptyResult = server.query(
       """{
         |  todoesConnection(first: 3){
