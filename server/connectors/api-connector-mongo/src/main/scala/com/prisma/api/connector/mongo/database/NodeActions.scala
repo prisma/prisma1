@@ -31,12 +31,7 @@ trait NodeActions extends NodeSingleQueries {
       database.getCollection(mutaction.model.dbName).insertOne(docWithId).toFuture().map(_ => MutactionResults(childResults))
     }
 
-  def deleteNodeById(model: Model, id: IdGCValue) = deleteNodesByIds(model, Vector(id))
-
-  def deleteNodesByIds(model: Model, ids: Vector[IdGCValue]) = SimpleMongoAction { database =>
-    val mongoFilter = buildConditionForFilter(Some(ScalarFilter(model.idField_!, In(ids))))
-    database.getCollection(model.dbName).deleteMany(mongoFilter).collect().toFuture()
-  }
+  def deleteNodeById(model: Model, id: IdGCValue) = deleteNodes(model, Vector(id))
 
   def deleteNodes(model: Model, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
     database.getCollection(model.dbName).deleteMany(in("_id", ids.map(_.value): _*)).toFuture()
@@ -92,24 +87,6 @@ trait NodeActions extends NodeSingleQueries {
   }
 
   //endregion
-
-  private def topLevelUpdateHelper(mutaction: TopLevelUpdateNode, collection: MongoCollection[Document], node: PrismaNode)(implicit ec: ExecutionContext) = {
-    val scalarUpdates                          = scalarUpdateValues(mutaction)
-    val (creates, createResults)               = embeddedNestedCreateActionsAndResults(mutaction)
-    val (deletes, deleteResults)               = embeddedNestedDeleteActionsAndResults(node, mutaction)
-    val (updates, arrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates)
-
-    val combinedUpdates = customCombine(scalarUpdates ++ creates ++ deletes ++ updates)
-
-    val updateOptions = UpdateOptions().arrayFilters(arrayFilters.toList.asJava)
-
-    val results = createResults ++ deleteResults ++ updateResults :+ UpdateNodeResult(node.id, node, mutaction)
-
-    collection
-      .updateOne(mutaction.where, combinedUpdates, updateOptions)
-      .toFuture()
-      .map(_ => MutactionResults(results))
-  }
 
   private def createToDoc(inlineRelations: List[(String, GCValue)],
                           mutaction: CreateNode,
@@ -218,15 +195,13 @@ trait NodeActions extends NodeSingleQueries {
           case Some(prismaNode) => prismaNode
         }
 
-        val arrayFilters = updatedPath.arrayFilter //Fixme this is not always needed i think, check if this errors if it is unused
-
         val scalars                                      = scalarUpdateValues(toManyUpdate, updatedPath)
         val (creates, createResults)                     = embeddedNestedCreateActionsAndResults(toManyUpdate, updatedPath)
         val (updates, nestedArrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(subNode, toManyUpdate.nestedUpdates, updatedPath)
         val (deletes, deleteResults)                     = embeddedNestedDeleteActionsAndResults(subNode, toManyUpdate, updatedPath)
         val thisResult                                   = UpdateNodeResult(subNode.id, subNode, toManyUpdate)
 
-        (scalars ++ creates ++ deletes ++ updates, arrayFilters ++ nestedArrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
+        (scalars ++ creates ++ deletes ++ updates, updatedPath.arrayFilter ++ nestedArrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
     }
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }
@@ -262,7 +237,8 @@ trait NodeActions extends NodeSingleQueries {
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }
 
-  def embeddedNestedCreateActionsAndResults(mutaction: FurtherNestedMutaction, path: Path = Path.empty): (Vector[Bson], Vector[DatabaseMutactionResult]) = {
+  private def embeddedNestedCreateActionsAndResults(mutaction: FurtherNestedMutaction,
+                                                    path: Path = Path.empty): (Vector[Bson], Vector[DatabaseMutactionResult]) = {
     mutaction match {
       case x: CreateNode =>
         val (nestedCreateFields, nestedCreateResults) = embeddedNestedCreateDocsAndResults(mutaction)
@@ -300,13 +276,13 @@ trait NodeActions extends NodeSingleQueries {
     combine(others.map(_._2) ++ changedPulls: _*)
   }
 
-  def bsonDocumentFilter(keys: List[String], array: BsonArray): Document = keys match {
+  private def bsonDocumentFilter(keys: List[String], array: BsonArray): Document = keys match {
     case Nil          => sys.error("should not happen")
     case head :: Nil  => BsonDocument(head -> BsonDocument("$in" -> array))
     case head :: tail => BsonDocument(head -> bsonDocumentFilter(tail, array))
   }
 
-  def documentToCombinedPullDefinition(doc: Document, keys: Vector[String] = Vector.empty): CombinedPullDefinition = {
+  private def documentToCombinedPullDefinition(doc: Document, keys: Vector[String] = Vector.empty): CombinedPullDefinition = {
     val key     = doc.keys.head
     val value   = doc.get(key).get
     val newKeys = keys :+ key

@@ -8,7 +8,7 @@ import com.prisma.shared.models.{Model, Project, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections._
-import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
+import org.mongodb.scala.{Document, MongoCollection}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -39,20 +39,12 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
-  def getNodeByFilter(model: Model, mongoFilter: Bson, database: MongoDatabase) = {
-    database.getCollection(model.dbName).find(mongoFilter).toFuture.map { results: Seq[Document] =>
-      results.headOption.map { result =>
-        val root = DocumentToRoot(model, result)
-        PrismaNode(root.idField, root, Some(model.name))
-      }
-    }
-  }
-
   def getNodeIdByWhere(where: NodeSelector) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
     collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
   }
 
+  //Fixme Selfrelation cleanup
   def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue): MongoAction[Option[IdGCValue]] = {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
@@ -88,12 +80,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
   }
 
-  def getNodeIdsByFilter2(model: Model, filter: Option[Filter]) = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
-  }
-
+  //Fixme self relation cleanup here
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): MongoAction[Option[IdGCValue]] = {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
