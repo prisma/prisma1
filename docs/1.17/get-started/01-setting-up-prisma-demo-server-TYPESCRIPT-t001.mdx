@@ -18,7 +18,7 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Setup Prisma with a sandboxed demo database
+- Setup a Prisma Demo server with a sandboxed database
 - Read and write data using the Prisma client
 
 ## Install the Prisma CLI
@@ -76,27 +76,37 @@ prisma deploy
 
 Congratulations, you have successfully deployed Prisma. You can now start using the Prisma client to talk to your database from code.
 
-## Prepare Node application
+## Prepare TypeScript application
 
-Run the following command to create an empty Node script:
+Run the following command to create an empty TypeScript script:
 
 ```bash copy
-touch index.js
+touch index.ts
+```
+
+Create a `tsconfig.json` file with the following configuration:
+
+```json copy
+{
+  "compilerOptions": {
+    "lib": ["es2016", "esnext.asynciterable"]
+  }
+}
 ```
 
 Next, initialize an empty NPM project in the current directory and install the required dependencies:
 
 ```bash copy
 npm init -y
-npm install --save prisma-client-lib graphql@0.13
+npm install --save typescript ts-node prisma-client-lib graphql@0.13
 ```
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.js` and save it afterwards:
+Add the following code in `index.ts` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./generated/prisma')
+import { prisma } from './generated/prisma'
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -116,7 +126,7 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-node index.js
+ts-node index.ts
 ```
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
