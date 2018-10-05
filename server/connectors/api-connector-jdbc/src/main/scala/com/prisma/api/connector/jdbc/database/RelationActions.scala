@@ -18,12 +18,8 @@ trait RelationActions extends BuilderBase {
       val childWhereCondition  = idField(childModel).equal(placeHolder)
       val parentWhereCondition = idField(parentModel).equal(placeHolder)
 
-      val (idToLinkTo, idToUpdate, rowToUpdateCondition) = () match {
-        case _ if relation.isSelfRelation && relationField.relationSide == RelationSide.B => (parentId, childId, parentWhereCondition)
-        case _ if relation.isSelfRelation && relationField.relationSide == RelationSide.A => (childId, parentId, childWhereCondition)
-        case _ if inlineManifestation.inTableOfModelId == parentModel.name                => (childId, parentId, parentWhereCondition)
-        case _ if inlineManifestation.inTableOfModelId == childModel.name                 => (parentId, childId, childWhereCondition)
-      }
+      val (idToLinkTo, idToUpdate, rowToUpdateCondition) =
+        if (relationField.findName) (parentId, childId, parentWhereCondition) else (childId, parentId, childWhereCondition)
 
       val query = sql
         .update(relationTable(relation))

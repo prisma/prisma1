@@ -42,7 +42,7 @@ class Model(
   lazy val nonListFields                                 = fields.filter(!_.isList)
   lazy val idField                                       = getScalarFieldByName("id")
   lazy val idField_!                                     = getScalarFieldByName_!("id")
-  lazy val dbNameOfIdField_!                             = idField_!.dbName
+  lazy val dbNameOfIdField_!                             = idField_!.dbName_!
   lazy val hasUpdatedAtField                             = getFieldByName("updatedAt").isDefined
   lazy val hasCreatedAtField                             = getFieldByName("createdAt").isDefined
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
