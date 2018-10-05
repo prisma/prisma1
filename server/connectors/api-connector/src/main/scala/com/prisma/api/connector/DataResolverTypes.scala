@@ -18,14 +18,9 @@ object ResolverResult {
     ResolverResult(nodes, hasNextPage = false, hasPreviousPage = false, parentModelId = None)
   }
 
-  def apply[T](queryArguments: Option[QueryArguments], vector: Vector[T], parentModelId: Option[IdGCValue] = None): ResolverResult[T] = queryArguments match {
-    case Some(args) => apply(args, vector, parentModelId)
-    case None       => ResolverResult(vector, hasPreviousPage = false, hasNextPage = false, parentModelId = parentModelId)
-  }
-
   // If order is inverted we have to reverse the returned data items. We do this in-mem to keep the sql query simple.
   // Also, remove excess items from limit + 1 queries and set page info (hasNext, hasPrevious).
-  def apply[T](queryArguments: QueryArguments, vector: Vector[T], parentModelId: Option[IdGCValue]): ResolverResult[T] = {
+  def apply[T](queryArguments: QueryArguments, vector: Vector[T], parentModelId: Option[IdGCValue] = None): ResolverResult[T] = {
     val isReverseOrder = queryArguments.last.isDefined
     val items = isReverseOrder match {
       case true  => vector.reverse
@@ -76,16 +71,11 @@ case class SelectedFields(fields: Set[Field]) {
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 
-  def includeOrderBy(queryArguments: Option[QueryArguments]): SelectedFields = {
-    queryArguments match {
-      case None => this
-      case Some(arguments) =>
-        arguments.orderBy match {
-          case None          => this
-          case Some(orderBy) => this ++ SelectedFields(Set(orderBy.field))
-        }
-    }
+  def includeOrderBy(queryArguments: QueryArguments): SelectedFields = queryArguments.orderBy match {
+    case None          => this
+    case Some(orderBy) => this ++ SelectedFields(Set(orderBy.field))
   }
+
 }
 
 object SortOrder extends Enumeration {

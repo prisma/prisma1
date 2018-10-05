@@ -10,7 +10,7 @@ case class RelatedModelsQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     fromField: RelationField,
-    queryArguments: Option[QueryArguments],
+    queryArguments: QueryArguments,
     relatedNodeIds: Vector[IdGCValue],
     selectedFields: SelectedFields
 ) extends BuilderBase
@@ -30,7 +30,7 @@ case class RelatedModelsQueryBuilder(
   val aliasedTable            = modelTable(relatedModel).as(topLevelAlias)
   val relationTable2          = relationTable(relation).as(relationTableAlias)
   val relatedNodesCondition   = field(name(relationTableAlias, modelRelationSideColumn)).in(placeHolders(relatedNodeIds))
-  val queryArgumentsCondition = buildConditionForFilter(queryArguments.flatMap(_.filter))
+  val queryArgumentsCondition = buildConditionForFilter(queryArguments.filter)
 
   val relatedModelSide = relation.columnForRelationSide(fromField.oppositeRelationSide)
   val parentModelSide  = relation.columnForRelationSide(fromField.relationSide)

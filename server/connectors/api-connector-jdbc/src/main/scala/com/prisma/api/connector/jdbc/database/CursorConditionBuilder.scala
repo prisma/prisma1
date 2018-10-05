@@ -10,12 +10,7 @@ trait CursorConditionBuilder extends BuilderBase {
   // The subquery Q fetches all the ID's defined by the cursors and order.
   // On invalid cursor params, no error is thrown. The result set will just be empty.
 
-  def buildCursorCondition(queryArguments: Option[QueryArguments], model: Model): Condition = queryArguments match {
-    case Some(args) => buildCursorCondition(args, model)
-    case None       => noCondition()
-  }
-
-  private def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
+  def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return noCondition()

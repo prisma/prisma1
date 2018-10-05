@@ -15,7 +15,7 @@ import scala.language.existentials
 
 trait NodeManyQueries extends FilterConditionBuilder {
   // Fixme this does not use selected fields
-  def getNodes(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields) = SimpleMongoAction { database =>
+  def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
@@ -26,19 +26,14 @@ trait NodeManyQueries extends FilterConditionBuilder {
     nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
-  def helper(model: Model, queryArguments: Option[QueryArguments], extraFilter: Option[Filter] = None, database: MongoDatabase) = {
+  def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
 
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val queryArgFilter = queryArguments match {
-      case Some(arg) => arg.filter
-      case None      => None
-    }
-
-    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
+    val skipAndLimit                          = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
     val mongoFilter = extraFilter match {
-      case Some(inFilter) => buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArgFilter)))
-      case None           => buildConditionForFilter(queryArgFilter)
+      case Some(inFilter) => buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
+      case None           => buildConditionForFilter(queryArguments.filter)
     }
 
     val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
@@ -56,7 +51,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
   }
 
   //these are only used for relations between non-embedded types
-  def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: Option[QueryArguments], selectedFields: SelectedFields) =
+  def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: QueryArguments, selectedFields: SelectedFields) =
     SimpleMongoAction { database =>
       val manifestation = fromField.relation.inlineManifestation.get
       val model         = fromField.relatedModel_!
@@ -89,7 +84,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
     }
 
   //Fixme this does not use all queryarguments
-  def countFromModel(model: Model, queryArguments: Option[QueryArguments]) = SimpleMongoAction { database =>
+  def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
 
     //    val queryArgFilter = queryArguments match {
@@ -114,7 +109,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
 //
 //    queryWithLimit.collect().toFuture
 
-    collection.countDocuments(buildConditionForFilter(queryArguments.flatMap(_.filter))).toFuture.map(_.toInt)
+    collection.countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
 
   }
 
