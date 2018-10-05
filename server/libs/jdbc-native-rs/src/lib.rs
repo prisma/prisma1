@@ -2,8 +2,14 @@
 
 extern crate serde;
 extern crate serde_json;
+
+//#[macro_use]
 extern crate postgres;
 extern crate colored;
+extern crate chrono;
+extern crate byteorder;
+extern crate rust_decimal;
+extern crate num_traits;
 
 use std::ffi::{CStr, CString};
 use std::mem;

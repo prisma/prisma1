@@ -8,7 +8,11 @@ buildNativeLib := {
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jdbc-native-rs/")
 
-  Process("make build", nativePath) !(logger)
+  Process("make build", nativePath) ! logger
+
+  if ((Process("make build", nativePath) ! logger) != 0) {
+    sys.error("Rust library build failed.")
+  }
 }
 
 compile in Compile := {
@@ -30,11 +34,9 @@ nativeClasspath := {
       inManaged.relativeTo(baseDir)
     }
   }
+
   val classpath = (deps :+ packagedFile).flatten
-
   def relativePath(path: File): String = path.toString.replaceAll("\\\\", "/")
-
   val classpathStr = classpath.map(relativePath).mkString(":")
-  println(classpathStr)
   classpathStr
 }

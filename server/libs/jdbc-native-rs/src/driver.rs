@@ -1,20 +1,19 @@
 #![allow(unused, unused_mut)]
 
-extern crate postgres;
-extern crate serde;
-extern crate serde_json;
-extern crate chrono;
-
-use self::postgres::transaction::Transaction;
-use self::postgres::{Connection, TlsMode, Result as PsqlResult};
+use postgres;
+use postgres::transaction::Transaction;
+use postgres::{Connection, TlsMode, Result as PsqlResult};
 use std::cell::RefCell;
-use self::postgres::rows::Row;
-use self::postgres::types::{IsNull, ToSql, Type};
+use postgres::rows::Row;
+use postgres::types::{IsNull, ToSql, Type};
 use std::error::Error as StdErr;
-use self::chrono::prelude::*;
+use chrono::prelude::*;
 use std::boxed::Box;
 use std::result;
 use std::cell;
+use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian};
+use serde_json;
+use rust_decimal::Decimal;
 
 #[repr(C)]
 #[no_mangle]
@@ -194,10 +193,10 @@ pub fn gcValuesToToSql(values: Vec<&GcValue>) -> Vec<&ToSql> {
 fn gcValueToToSql(value: &GcValue) -> &ToSql {
     match value {
         &GcValue::Int(ref i) => i,
-        &GcValue::String(ref str) => str,
+        &GcValue::String(ref s) => s,
         &GcValue::Boolean(ref b) => b,
         &GcValue::Null => value,
-        &GcValue::Double(ref d) => d,
+        &GcValue::Double(ref d) => value,
         &GcValue::Long(ref d) => d,
         &GcValue::DateTime(ref i) => value,
     }
@@ -237,7 +236,7 @@ fn jsonObjectToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Resu
         ("String", &serde_json::Value::String(ref s)) => Ok(GcValue::String(s.to_string())),
         ("Boolean", &serde_json::Value::Bool(b)) => Ok(GcValue::Boolean(b)),
         ("Null", &serde_json::Value::Null) => Ok(GcValue::Null),
-        ("Double", &serde_json::Value::Number(ref n)) => Ok(GcValue::Double(n.as_f64().unwrap())),
+        ("Double", &serde_json::Value::Number(ref n)) => Ok(GcValue::Double(MagicFloat { value: n.as_f64().unwrap(), underlying: RefCell::new(None) })),
         ("DateTime", &serde_json::Value::Number(ref n)) => Ok(GcValue::DateTime(n.as_i64().unwrap())),
         ("Long", &serde_json::Value::Number(ref n)) => Ok(GcValue::Long(n.as_i64().unwrap())),
         (d, v) => Err(DriverError::GenericError(format!(
@@ -253,10 +252,23 @@ pub enum GcValue {
     String(String),
     Boolean(bool),
     Null,
-    Double(f64),
+    Double(MagicFloat),
     DateTime(i64),
     Long(i64),
 }
+
+#[derive(Debug, PartialEq)]
+pub struct MagicFloat {
+    value: f64,
+    underlying: RefCell<Option<Type>>,
+}
+
+impl MagicFloat {
+    fn setType(&self, ty: Type) {
+        self.underlying.replace(Some(ty));
+    }
+}
+use num_traits::cast::FromPrimitive;
 
 impl ToSql for GcValue {
     fn to_sql(&self, ty: &Type, out: &mut Vec<u8>) -> result::Result<IsNull, Box<StdErr + Sync + Send>> where
@@ -264,17 +276,38 @@ impl ToSql for GcValue {
         match self {
             GcValue::Null => Ok(IsNull::Yes),
             GcValue::DateTime(ref i) => Utc.timestamp(i / 1000, 0).naive_utc().to_sql(ty, out),
-            x => panic!("ToSql match non null / datetime: {:?}", x)
-        }
+            GcValue::Double(ref magic) => {
+                let val = magic.underlying.replace(None); // todo replace because I'm not smart enough to get it otherwise
+                match val {
+                    Some(ref t) => {
+                        println!("[Rust] Writing MagicFloat with OID: {}", t.oid());
+                        match t.oid() {
+                            701 => out.write_f64::<BigEndian>(magic.value).unwrap(), // Float8
+                            1700 => {
+                                Decimal::from_f64(magic.value).unwrap().to_sql(ty, out); // todo unwrap
+                            }, // Numeric
+                            x => println!("[Rust] Unhandled MagicFloat OID: {}", t.oid()),
+                        }
+                    },
+                    x => panic!("[Rust] No underlying type present for MagicFloat."),
+                }
 
+                Ok(IsNull::No)
+            }
+            x => panic!("ToSql no match {:?}", x)
+        }
     }
 
-    fn accepts(ty: &Type) -> bool where
-        Self: Sized {
+    fn accepts(ty: &Type) -> bool where Self: Sized {
         true
     }
 
     fn to_sql_checked(&self, ty: &Type, out: &mut Vec<u8>) -> result::Result<IsNull, Box<StdErr + Sync + Send>> {
-        Ok(IsNull::Yes)
+        match self {
+            GcValue::Double(ref magic) => magic.setType(ty.clone()), // Todo: Cloning is inefficient. Alternative?
+            _ => (),
+        };
+
+        self.to_sql(ty, out)
     }
 }
