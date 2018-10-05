@@ -18,16 +18,8 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   val database = client.getDatabase(project.id)
 
   override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
-    val outer = project.models.map { model =>
-      val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-      collection.find(Filters.eq("_id", globalId.value)).collect().toFuture.map { results: Seq[Document] =>
-        if (results.nonEmpty) Vector(model) else Vector.empty
-      }
-    }
-
-    val sequence: Future[List[Vector[Model]]] = Future.sequence(outer)
-
-    sequence.map(_.flatten.headOption)
+    val query = queryBuilder.getModelForGlobalId(project, globalId)
+    SlickReplacement.run(database, query)
   }
 
   //Fixme this does not use selected fields

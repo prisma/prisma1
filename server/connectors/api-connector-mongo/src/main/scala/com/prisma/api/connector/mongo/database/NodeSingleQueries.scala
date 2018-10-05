@@ -4,8 +4,9 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
-import com.prisma.shared.models.{Model, RelationField}
+import com.prisma.shared.models.{Model, Project, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 
@@ -14,6 +15,20 @@ import scala.concurrent.Future
 import scala.language.existentials
 
 trait NodeSingleQueries extends FilterConditionBuilder {
+
+  def getModelForGlobalId(project: Project, globalId: CuidGCValue) = SimpleMongoAction { database =>
+    val outer = project.models.map { model =>
+      val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+      collection.find(Filters.eq("_id", globalId.value)).collect().toFuture.map { results: Seq[Document] =>
+        if (results.nonEmpty) Vector(model) else Vector.empty
+      }
+    }
+
+    val sequence: Future[List[Vector[Model]]] = Future.sequence(outer)
+
+    sequence.map(_.flatten.headOption)
+  }
+
   def getNodeByWhere2(where: NodeSelector) = SimpleMongoAction { database =>
     getNodeByWhere(where, database)
   }
