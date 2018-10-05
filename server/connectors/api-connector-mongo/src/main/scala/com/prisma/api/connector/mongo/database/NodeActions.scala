@@ -42,45 +42,46 @@ trait NodeActions extends NodeSingleQueries {
     database.getCollection(model.dbName).deleteMany(in("_id", ids.map(_.value): _*)).toFuture()
   }
 
-  def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = {
+  def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): MongoAction[MutactionResults] = {
     updateNodeByWhere(mutaction, mutaction.where)
   }
 
-  def updateNodeById(mutaction: UpdateNode, id: IdGCValue)(implicit ec: ExecutionContext) = {
-    updateNodeByWhere(mutaction, NodeSelector.forId(mutaction.model, id)).map(_ => id)
+  def updateNodeByWhere(mutaction: UpdateNode, where: NodeSelector)(implicit ec: ExecutionContext) = {
+    for {
+      previousValues <- getNodeByWhere(where, SelectedFields.all(mutaction.model))
+      results        <- updateHelper(mutaction, where, previousValues)
+    } yield results
   }
 
-  def updateNodeByWhere(mutaction: UpdateNode, where: NodeSelector)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>
-    val previousValues: Future[Option[PrismaNode]] = getNodeByWhere(where, database)
+  def updateHelper(mutaction: UpdateNode, where: NodeSelector, previousValues: Option[PrismaNode])(implicit ec: ExecutionContext) = SimpleMongoAction {
+    database =>
+      previousValues match {
+        case None =>
+          throw APIErrors.NodeNotFoundForWhereError(where)
 
-    previousValues.flatMap {
-      case None =>
-        throw APIErrors.NodeNotFoundForWhereError(where)
+        case Some(node) =>
+          val scalarUpdates                           = scalarUpdateValues(mutaction)
+          val (creates, createResults)                = embeddedNestedCreateActionsAndResults(mutaction)
+          val (deletes, deleteResults)                = embeddedNestedDeleteActionsAndResults(node, mutaction)
+          val (updates, arrayFilters, updateResults)  = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates)
+          val (upserts, arrayFilters2, upsertResults) = embeddedNestedUpsertDocsAndResults(node, mutaction)
 
-      case Some(node) =>
-        val scalarUpdates                           = scalarUpdateValues(mutaction)
-        val (creates, createResults)                = embeddedNestedCreateActionsAndResults(mutaction)
-        val (deletes, deleteResults)                = embeddedNestedDeleteActionsAndResults(node, mutaction)
-        val (updates, arrayFilters, updateResults)  = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates)
-        val (upserts, arrayFilters2, upsertResults) = embeddedNestedUpsertDocsAndResults(node, mutaction)
+          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts
 
-        val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts
+          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults :+ UpdateNodeResult(node.id, node, mutaction)
+          if (allUpdates.isEmpty) {
+            Future.successful(MutactionResults(results))
+          } else {
+            val combinedUpdates = customCombine(allUpdates)
 
-        val results = createResults ++ deleteResults ++ updateResults ++ upsertResults :+ UpdateNodeResult(node.id, node, mutaction)
-        if (allUpdates.isEmpty) {
-          Future.successful(MutactionResults(results))
-        } else {
-          val combinedUpdates = customCombine(allUpdates)
-
-          val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
-          database
-            .getCollection(mutaction.model.dbName)
-            .updateOne(where, combinedUpdates, updateOptions)
-            .toFuture()
-            .map(_ => MutactionResults(results))
-
-        }
-    }
+            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
+            database
+              .getCollection(mutaction.model.dbName)
+              .updateOne(where, combinedUpdates, updateOptions)
+              .toFuture()
+              .map(_ => MutactionResults(results))
+          }
+      }
   }
 
   def updateNodes(mutaction: UpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>

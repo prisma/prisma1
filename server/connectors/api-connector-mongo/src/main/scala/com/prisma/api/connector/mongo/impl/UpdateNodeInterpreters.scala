@@ -9,7 +9,7 @@ import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import scala.concurrent.ExecutionContext
 
 case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
-  override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder): MongoAction[MutactionResults] = {
     mutationBuilder.updateNode(mutaction)
   }
 }
@@ -28,7 +28,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
                   case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
                 }
       id <- childId match {
-             case Some(id) => mutationBuilder.updateNodeById(mutaction, id).map(_ => id)
+             case Some(id) => mutationBuilder.updateNodeByWhere(mutaction, NodeSelector.forId(mutaction.model, id)).map(_ => id)
              case None =>
                throw APIErrors.NodesNotConnectedError(
                  relation = mutaction.relationField.relation,

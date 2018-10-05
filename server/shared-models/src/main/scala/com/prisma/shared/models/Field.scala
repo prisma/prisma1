@@ -155,17 +155,6 @@ case class RelationField(
   override def defaultValue    = None
   override def schema          = model.schema
 
-//  lazy val dbName: Option[String] = relation.manifestation match {
-//    case Some(m: InlineRelationManifestation) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) =>
-//      Some(m.referencingColumn)
-//    case Some(m: InlineRelationManifestation) if relation.isSelfRelation && relationSide == RelationSide.A => None
-//    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name                          => Some(m.referencingColumn)
-//    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == relatedModel_!.name                 => None
-//    case _                                                                                                 => None
-//  }
-
-//  lazy val relationIsInlinedInParent = dbName.isDefined
-
   lazy val dbName: String = relation.manifestation match {
     case Some(m: InlineRelationManifestation) => m.referencingColumn
 
