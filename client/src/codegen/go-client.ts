@@ -708,6 +708,10 @@ func New(options *Options, opts ...graphql.ClientOption) *Client {
 		Client: prisma.New(endpoint, opts...),
 	}
 }
+
+func (client *Client) GraphQL(ctx context.Context, query string, variables map[string]interface{}) (map[string]interface{}, error) {
+	return client.Client.GraphQL(ctx, query, variables)
+}
 `
 
     // Dynamic contains the parts of the generated code that are dynamically generated.
