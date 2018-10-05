@@ -308,7 +308,7 @@ case class SchemaBuilderImpl(
         idGcValue = CuidGCValue(id)
         modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
         resultOpt <- modelOpt match {
-                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forIdGCValue(model, idGcValue), ctx.getSelectedFields(model))
+                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model))
                       case None        => Future.successful(None)
                     }
       } yield resultOpt
