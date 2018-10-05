@@ -87,4 +87,35 @@ trait NodeManyQueries extends FilterConditionBuilder {
         }
       }
     }
+
+  //Fixme this does not use all queryarguments
+  def countFromModel(model: Model, queryArguments: Option[QueryArguments]) = SimpleMongoAction { database =>
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+
+    //    val queryArgFilter = queryArguments match {
+//      case Some(arg) => arg.filter
+//      case None      => None
+//    }
+//
+//    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
+//
+//    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
+//    We could try passing the other args into countoptions, but not sure about order
+//    val baseQuery2                               = collection.countDocuments(Filters.and(buildConditionForFilter(queryArgFilter), cursorCondition)).toFuture()
+//
+//    val baseQuery: FindObservable[Document]      = collection(Filters.and(buildConditionForFilter(queryArgFilter), cursorCondition))
+//    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
+//    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+//
+//    val queryWithLimit = skipAndLimit.limit match {
+//      case Some(limit) => queryWithSkip.limit(limit)
+//      case None        => queryWithSkip
+//    }
+//
+//    queryWithLimit.collect().toFuture
+
+    collection.countDocuments(buildConditionForFilter(queryArguments.flatMap(_.filter))).toFuture.map(_.toInt)
+
+  }
+
 }

@@ -38,9 +38,9 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     SlickReplacement.run(database, query)
   }
 
-  //Fixme this needs to use all the queryarguments
   override def countByModel(model: Model, queryArguments: Option[QueryArguments]): Future[Int] = {
-    database.getCollection(model.dbName).countDocuments(buildConditionForFilter(queryArguments.flatMap(_.filter))).toFuture.map(_.toInt)
+    val query = queryBuilder.countFromModel(model, queryArguments)
+    SlickReplacement.run(database, query)
   }
 
   override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = {
