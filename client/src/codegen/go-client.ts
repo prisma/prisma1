@@ -407,7 +407,7 @@ export class GoGenerator extends Generator {
   opUpdateMany(field) {
     const param = this.paramsType(field, "updateMany")
     return param.code + `
-      func (client *Client) ${goCase(field.name)} (params *${param.type}) *BatchPayloadExec {
+      func (client *Client) ${goCase(field.name)} (params ${param.type}) *BatchPayloadExec {
         exec := client.Client.UpdateMany(
           prisma.UpdateParams{
             Data: params.Data,
@@ -423,7 +423,7 @@ export class GoGenerator extends Generator {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field, "update")
     return param.code + `
-      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${param.type}) *${goCase(typeName)}Exec {
         ret := client.Client.Update(
                  prisma.UpdateParams{
                    Data: params.Data,
@@ -448,7 +448,7 @@ export class GoGenerator extends Generator {
   opDelete(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
         ret := client.Client.Delete(
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
@@ -462,7 +462,7 @@ export class GoGenerator extends Generator {
   opGetOne(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
         ret := client.Client.GetOne(
           nil,
           params,
@@ -516,7 +516,7 @@ export class GoGenerator extends Generator {
   opCreate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params * ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
         ret := client.Client.Create(
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
@@ -531,14 +531,11 @@ export class GoGenerator extends Generator {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field, "upsert")
     return param.code + `
-      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}Exec {
-        var uparams *prisma.UpsertParams
-        if params != nil {
-          uparams = &prisma.UpsertParams{
-            Where:  params.Where,
-            Create: params.Create,
-            Update: params.Update,
-          }
+      func (client *Client) ${goCase(field.name)} (params ${param.type}) *${goCase(typeName)}Exec {
+        uparams := &prisma.UpsertParams{
+          Where:  params.Where,
+          Create: params.Create,
+          Update: params.Update,
         }
         ret := client.Client.Upsert(
           uparams,
