@@ -1767,7 +1767,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
   }
 
-  "Nested delete on self relations" should "only delete the specified nodes" taggedAs (IgnoreMongo) in {
+  "Nested delete on self relations" should "only delete the specified nodes" in {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique

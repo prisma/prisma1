@@ -49,8 +49,8 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
 
-    parentField.relation.inlineManifestation match {
-      case Some(m) if m.inTableOfModelId == parentModel.name =>
+    parentField.relationIsInlinedInParent match {
+      case true =>
         getNodeByWhere(NodeSelector.forId(parentModel, parentId), SelectedFields.all(parentModel)).map {
           case None => None
           case Some(n) =>
@@ -60,15 +60,13 @@ trait NodeSingleQueries extends FilterConditionBuilder {
             }
         }
 
-      case Some(m) if m.inTableOfModelId == childModel.name =>
+      case false =>
         val filter = parentField.relatedField.isList match {
           case false => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId)))
           case true  => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId)))
         }
 
         getNodeIdsByFilter(childModel, filter).map(_.headOption)
-
-      case _ => sys.error("""""")
     }
   }
 
@@ -85,8 +83,8 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
 
-    parentField.relation.inlineManifestation match { //parent contains one or more ids, one of them matches the child returned for the where
-      case Some(m) if m.inTableOfModelId == parentModel.name =>
+    parentField.relationIsInlinedInParent match { //parent contains one or more ids, one of them matches the child returned for the where
+      case true =>
         getNodeByWhere(NodeSelector.forId(parentModel, parentId), SelectedFields.all(parentModel)).flatMap {
           case None =>
             noneHelper
@@ -109,7 +107,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
                 noneHelper
             }
         }
-      case Some(m) if m.inTableOfModelId == childModel.name => //child id that matches the where contains the parent
+      case false => //child id that matches the where contains the parent
         val parentFilter = parentField.relatedField.isList match {
           case false => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId))
           case true  => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId))
@@ -118,8 +116,6 @@ trait NodeSingleQueries extends FilterConditionBuilder {
         val filter      = Some(AndFilter(Vector(parentFilter, whereFilter)))
 
         getNodeIdsByFilter(childModel, filter).map(_.headOption)
-
-      case _ => sys.error("""""")
     }
   }
 
