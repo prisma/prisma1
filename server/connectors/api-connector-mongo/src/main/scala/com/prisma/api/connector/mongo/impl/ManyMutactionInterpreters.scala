@@ -11,7 +11,7 @@ case class DeleteNodesInterpreter(mutaction: DeleteNodes)(implicit ec: Execution
 
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {
-      ids <- mutationBuilder.getNodeIdsByFilter2(mutaction.model, mutaction.whereFilter)
+      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
       _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
       _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
     } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.size)))
@@ -28,7 +28,7 @@ case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: Execution
 
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {
-      ids <- mutationBuilder.getNodeIdsByFilter2(mutaction.model, mutaction.whereFilter)
+      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
       _   <- mutationBuilder.updateNodes(mutaction, ids)
     } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.size)))
 }

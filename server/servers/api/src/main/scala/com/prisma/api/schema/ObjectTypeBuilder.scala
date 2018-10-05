@@ -54,7 +54,7 @@ class ObjectTypeBuilder(
           SangriaField(
             "aggregate",
             aggregateTypeForModel(model),
-            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[PrismaNode]]) => ctx.value.parent.args.getOrElse(QueryArguments.empty)
+            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[PrismaNode]]) => ctx.value.parent.args
           )
         )
       }
@@ -68,7 +68,7 @@ class ObjectTypeBuilder(
         SangriaField(
           "count",
           IntType,
-          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, Some(ctx.value))
+          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, ctx.value)
         )
       )
     )
@@ -246,15 +246,15 @@ class ObjectTypeBuilder(
     case x       => x
   }
 
-  def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {
+  def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): QueryArguments = {
     extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = false)
   }
 
-  def extractQueryArgumentsFromContextForSubscription(model: Model, ctx: Context[_, Unit]): Option[QueryArguments] = {
+  def extractQueryArgumentsFromContextForSubscription(model: Model, ctx: Context[_, Unit]): QueryArguments = {
     extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = true)
   }
 
-  private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): Option[QueryArguments] = {
+  private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): QueryArguments = {
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
     val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
@@ -264,7 +264,7 @@ class ObjectTypeBuilder(
     val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
     val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
-    Some(QueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
+    QueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt)
   }
 
   def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
@@ -280,17 +280,16 @@ class ObjectTypeBuilder(
         item.data.map(field.name).value
 
       case f: RelationField if f.isList && f.relation.isInlineRelation =>
-        val arguments: Option[QueryArguments] = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
 
         f.relationIsInlinedInParent match {
           case true =>
             item.data.map.get(f.name) match {
               case Some(list: ListGCValue) =>
-                val queryArguments         = arguments.getOrElse(QueryArguments.empty)
-                val existingFilter: Filter = queryArguments.filter.getOrElse(Filter.empty)
+                val existingFilter: Filter = arguments.filter.getOrElse(Filter.empty)
                 val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
-                val newQueryArguments      = queryArguments.copy(filter = Some(newFilter))
-                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(newQueryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
+                val newQueryArguments      = arguments.copy(filter = Some(newFilter))
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, newQueryArguments, SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
 
               case _ => Vector.empty[PrismaNode]
             }
@@ -314,7 +313,7 @@ class ObjectTypeBuilder(
             }
 
           case false =>
-            FromOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
+            FromOneDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>

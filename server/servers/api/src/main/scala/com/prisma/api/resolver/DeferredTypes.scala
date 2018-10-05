@@ -18,12 +18,12 @@ object DeferredTypes {
 
   trait ModelDeferred[+T] extends Deferred[T] {
     def model: Model
-    def args: Option[QueryArguments]
+    def args: QueryArguments
   }
 
   case class ManyModelDeferred(
       model: Model,
-      args: Option[QueryArguments],
+      args: QueryArguments,
       selectedFields: SelectedFields
   ) extends ModelDeferred[RelayConnectionOutputType]
 
@@ -34,26 +34,26 @@ object DeferredTypes {
 
   case class CountManyModelDeferred(
       model: Model,
-      args: Option[QueryArguments]
+      args: QueryArguments
   ) extends ModelDeferred[Int]
 
   trait RelationDeferred[+T] extends Deferred[T] {
     def relationField: RelationField
     def parentNodeId: IdGCValue
-    def args: Option[QueryArguments]
+    def args: QueryArguments
   }
 
   case class FromOneDeferred(
       relationField: RelationField,
       parentNodeId: IdGCValue,
-      args: Option[QueryArguments],
+      args: QueryArguments,
       selectedFields: SelectedFields
   ) extends RelationDeferred[OneDeferredResultType]
 
   case class ToManyDeferred(
       relationField: RelationField,
       parentNodeId: IdGCValue,
-      args: Option[QueryArguments],
+      args: QueryArguments,
       selectedFields: SelectedFields
   ) extends RelationDeferred[RelayConnectionOutputType]
 

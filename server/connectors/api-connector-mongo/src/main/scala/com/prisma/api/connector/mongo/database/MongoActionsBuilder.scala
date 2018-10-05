@@ -14,7 +14,7 @@ trait AllActions
 
 trait AllQueries
   extends NodeSingleQueries
-//    with NodeManyQueries
+    with NodeManyQueries
 //    with RelationQueries
 //    with MiscQueries
 // format: on

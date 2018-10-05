@@ -13,7 +13,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
 
   override def mongoAction(mutationBuilder: MongoActionsBuilder) = {
     for {
-      nodeOpt <- mutationBuilder.getNodeByWhere2(mutaction.where)
+      nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where, SelectedFields.all(mutaction.model))
       node <- nodeOpt match {
                case Some(node) =>
                  for {

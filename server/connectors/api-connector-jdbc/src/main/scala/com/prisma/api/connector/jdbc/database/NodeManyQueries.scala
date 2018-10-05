@@ -11,7 +11,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
   import slickDatabase.profile.api._
   import LimitClauseHelper._
 
-  def getNodes(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): DBIO[ResolverResult[PrismaNode]] = {
+  def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): DBIO[ResolverResult[PrismaNode]] = {
     val query = modelQuery(model, queryArguments, selectedFields)
 
     queryToDBIO(query)(
@@ -23,7 +23,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     )
   }
 
-  def countFromModel(model: Model, queryArguments: Option[QueryArguments]): DBIO[Int] = {
+  def countFromModel(model: Model, queryArguments: QueryArguments): DBIO[Int] = {
     val baseQuery = modelQuery(model, queryArguments, SelectedFields(Set(model.idField_!)))
     val query     = sql.selectCount().from(baseQuery)
 
@@ -42,8 +42,8 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     )
   }
 
-  private def modelQuery(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): SelectForUpdateStep[Record] = {
-    val condition       = buildConditionForFilter(queryArguments.flatMap(_.filter))
+  private def modelQuery(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): SelectForUpdateStep[Record] = {
+    val condition       = buildConditionForFilter(queryArguments.filter)
     val cursorCondition = buildCursorCondition(queryArguments, model)
     val order           = orderByForModel(model, topLevelAlias, queryArguments)
     val skipAndLimit    = LimitClauseHelper.skipAndLimitValues(queryArguments)
@@ -65,13 +65,13 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
   def getRelatedNodes(
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
-      queryArguments: Option[QueryArguments],
+      queryArguments: QueryArguments,
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
 
     val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.scalarDbFields ++ Set(fromField))
 
-    if (isMySql && queryArguments.exists(_.isWithPagination)) {
+    if (isMySql && queryArguments.isWithPagination) {
       selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, queryArguments, selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))
     } else {
       val builder = RelatedModelsQueryBuilder(slickDatabase,
@@ -80,21 +80,19 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
                                               queryArguments,
                                               fromNodeIds,
                                               selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))
-      val query = if (queryArguments.exists(_.isWithPagination)) builder.queryWithPagination else builder.queryWithoutPagination
+      val query = if (queryArguments.isWithPagination) builder.queryWithPagination else builder.queryWithoutPagination
 
       queryToDBIO(query)(
         setParams = { pp =>
           fromNodeIds.foreach(pp.setGcValue)
-          queryArguments.foreach { arg =>
-            arg.filter.foreach(filter => SetParams.setFilter(pp, filter))
+          queryArguments.filter.foreach(filter => SetParams.setFilter(pp, filter))
 
-            SetParams.setCursor(pp, arg)
+          SetParams.setCursor(pp, queryArguments)
 
-            if (arg.isWithPagination) {
-              val params = limitClauseForWindowFunction(queryArguments)
-              pp.setInt(params._1)
-              pp.setInt(params._2)
-            }
+          if (queryArguments.isWithPagination) {
+            val params = limitClauseForWindowFunction(queryArguments)
+            pp.setInt(params._1)
+            pp.setInt(params._2)
           }
         },
         readResult = { rs =>
@@ -114,10 +112,10 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
   private def selectAllFromRelatedWithPaginationForMySQL(
       fromField: RelationField,
       fromModelIds: Vector[IdGCValue],
-      queryArguments: Option[QueryArguments],
+      queryArguments: QueryArguments,
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    require(queryArguments.exists(_.isWithPagination))
+    require(queryArguments.isWithPagination)
     val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, queryArguments, fromModelIds, selectedFields)
 
     SimpleDBIO { ctx =>
@@ -132,16 +130,14 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       distinctModelIds.foreach { id =>
         pp.setGcValue(id)
 
-        queryArguments.foreach { arg =>
-          arg.filter.foreach(filter => SetParams.setFilter(pp, filter))
+        queryArguments.filter.foreach(filter => SetParams.setFilter(pp, filter))
 
-          SetParams.setCursor(pp, arg)
+        SetParams.setCursor(pp, queryArguments)
 
-          if (arg.isWithPagination) {
-            val skipAndLimit = skipAndLimitValues(queryArguments)
-            skipAndLimit.limit.foreach(pp.setInt)
-            pp.setInt(skipAndLimit.skip)
-          }
+        if (queryArguments.isWithPagination) {
+          val skipAndLimit = skipAndLimitValues(queryArguments)
+          skipAndLimit.limit.foreach(pp.setInt)
+          pp.setInt(skipAndLimit.skip)
         }
       }
 

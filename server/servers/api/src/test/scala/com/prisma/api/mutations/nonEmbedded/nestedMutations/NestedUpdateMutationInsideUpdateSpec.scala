@@ -378,7 +378,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{todo(where:{id: "$todoId"}){title}}""", project, dataContains = """{"todo":{"title":"the title"}}""")
   }
 
-  "NON-TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo) in {
+  "NON-TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
