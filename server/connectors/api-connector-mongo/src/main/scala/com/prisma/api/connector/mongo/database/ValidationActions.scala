@@ -46,26 +46,26 @@ trait ValidationActions extends FilterConditionBuilder {
   def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext) = SimpleMongoAction {
     database =>
       val model = relationField.model
-      relationField.relation.manifestation match {
-        case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
+      relationField.relationIsInlinedInParent match {
+        case true =>
           val collection                             = database.getCollection(model.dbName)
           val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forId(model, parentId)).collect().toFuture.map(_.headOption)
           futureResult.map(optionRes =>
             optionRes.foreach { res =>
-              (relationField.isList, res.get(m.referencingColumn)) match {
+              (relationField.isList, res.get(relationField.dbName)) match {
                 case (true, Some(x)) if x.asArray().getValues.asScala.map(_.asString()).map(_.getValue).contains(childId.value.toString) =>
                   Future.successful(())
                 case (false, Some(x)) if x.asString.getValue == childId.value => Future.successful(())
                 case (_, _)                                                   => throw NodesNotConnectedError(relationField.relation, model, None, relationField.relatedModel_!, None)
               }
           })
-        case Some(m: InlineRelationManifestation) =>
+        case false =>
           val relatedModel = relationField.relatedModel_!
           val collection   = database.getCollection(relatedModel.dbName)
 
-          val filter = relationField.isList match {
-            case true  => ScalarFilter(relatedModel.idField_!.copy(name = m.referencingColumn), Contains(parentId))
-            case false => ScalarFilter(relatedModel.idField_!.copy(name = m.referencingColumn), Equals(parentId))
+          val filter = relationField.relatedField.isList match {
+            case true  => ScalarFilter(relatedModel.idField_!.copy(name = relationField.relatedField.dbName), Contains(parentId))
+            case false => ScalarFilter(relatedModel.idField_!.copy(name = relationField.relatedField.dbName), Equals(parentId))
           }
 
           val whereFilter = ScalarFilter(relatedModel.idField_!, Equals(childId))
@@ -81,8 +81,6 @@ trait ValidationActions extends FilterConditionBuilder {
                   child = relationField.relatedModel_!,
                   childWhere = None
               ))
-
-        case _ => sys.error("should not happen ")
       }
   }
 
