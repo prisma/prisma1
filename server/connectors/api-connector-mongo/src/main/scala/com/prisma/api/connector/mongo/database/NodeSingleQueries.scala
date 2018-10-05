@@ -52,7 +52,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
       parentField.relation.inlineManifestation match {
         case Some(m) if m.inTableOfModelId == parentModel.name =>
-          val node = getNodeByWhere(NodeSelector.forIdGCValue(parentModel, parentId), database)
+          val node = getNodeByWhere(NodeSelector.forId(parentModel, parentId), database)
 
           node.map {
             case None => None
@@ -96,7 +96,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
       parentField.relation.inlineManifestation match { //parent contains one or more ids, one of them matches the child returned for the where
         case Some(m) if m.inTableOfModelId == parentModel.name =>
-          getNodeByWhere(NodeSelector.forIdGCValue(parentModel, parentId), database).flatMap {
+          getNodeByWhere(NodeSelector.forId(parentModel, parentId), database).flatMap {
             case None =>
               Future(None)
 

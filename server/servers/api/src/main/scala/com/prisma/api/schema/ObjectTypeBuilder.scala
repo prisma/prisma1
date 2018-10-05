@@ -281,10 +281,9 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList && f.relation.isInlineRelation =>
         val arguments: Option[QueryArguments] = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        val manifestation                     = f.relation.inlineManifestation.get
 
-        () match {
-          case _ if f.relation.isSelfRelation && (f.relationSide == RelationSide.B || f.relatedField.isHidden) =>
+        f.relationIsInlinedInParent match {
+          case true =>
             item.data.map.get(f.name) match {
               case Some(list: ListGCValue) =>
                 val queryArguments         = arguments.getOrElse(QueryArguments.empty)
@@ -295,20 +294,7 @@ class ObjectTypeBuilder(
 
               case _ => Vector.empty[PrismaNode]
             }
-          case _ if f.relation.isSelfRelation && f.relationSide == RelationSide.A =>
-            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
-          case _ if manifestation.inTableOfModelId == f.model.name =>
-            item.data.map.get(f.name) match {
-              case Some(list: ListGCValue) =>
-                val queryArguments         = arguments.getOrElse(QueryArguments.empty)
-                val existingFilter: Filter = queryArguments.filter.getOrElse(Filter.empty)
-                val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
-                val newQueryArguments      = queryArguments.copy(filter = Some(newFilter))
-                DeferredValue(ManyModelDeferred(f.relatedModel_!, Some(newQueryArguments), SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
-
-              case _ => Vector.empty[PrismaNode]
-            }
-          case _ if manifestation.inTableOfModelId == f.relatedModel_!.name =>
+          case false =>
             DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
         }
 
@@ -320,25 +306,14 @@ class ObjectTypeBuilder(
         }
 
       case f: RelationField if !f.isList && f.relation.isInlineRelation =>
-        val manifestation = f.relation.inlineManifestation.get
-
-        () match {
-          case _ if f.relation.isSelfRelation && (f.relationSide == RelationSide.B || f.relatedField.isHidden) =>
+        f.relationIsInlinedInParent match {
+          case true =>
             item.data.map.get(f.name) match {
-              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
+              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id))
               case _                   => None
             }
 
-          case _ if f.relation.isSelfRelation && f.relationSide == RelationSide.A =>
-            FromOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
-
-          case _ if manifestation.inTableOfModelId == f.model.name =>
-            item.data.map.get(f.name) match {
-              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forIdGCValue(f.relatedModel_!, id))
-              case _                   => None
-            }
-
-          case _ if manifestation.inTableOfModelId == f.relatedModel_!.name =>
+          case false =>
             FromOneDeferred(f, item.id, None, ctx.getSelectedFields(f.relatedModel_!))
         }
 

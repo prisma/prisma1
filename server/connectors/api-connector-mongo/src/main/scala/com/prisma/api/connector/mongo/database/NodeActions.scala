@@ -47,7 +47,7 @@ trait NodeActions extends NodeSingleQueries {
   }
 
   def updateNodeById(mutaction: UpdateNode, id: IdGCValue)(implicit ec: ExecutionContext) = {
-    updateNodeByWhere(mutaction, NodeSelector.forIdGCValue(mutaction.model, id)).map(_ => id)
+    updateNodeByWhere(mutaction, NodeSelector.forId(mutaction.model, id)).map(_ => id)
   }
 
   def updateNodeByWhere(mutaction: UpdateNode, where: NodeSelector)(implicit ec: ExecutionContext) = SimpleMongoAction { database =>

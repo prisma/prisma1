@@ -13,13 +13,13 @@ trait RelationActions extends BuilderBase {
     if (relation.isInlineRelation) {
       val inlineManifestation  = relation.inlineManifestation.get
       val referencingColumn    = inlineManifestation.referencingColumn
-      val childModel           = relationField.relatedModel_!
-      val parentModel          = relationField.model
-      val childWhereCondition  = idField(childModel).equal(placeHolder)
-      val parentWhereCondition = idField(parentModel).equal(placeHolder)
+      val childWhereCondition  = idField(relationField.relatedModel_!).equal(placeHolder)
+      val parentWhereCondition = idField(relationField.model).equal(placeHolder)
 
-      val (idToLinkTo, idToUpdate, rowToUpdateCondition) =
-        if (relationField.findName) (parentId, childId, parentWhereCondition) else (childId, parentId, childWhereCondition)
+      val (rowToUpdateCondition, idToUpdate, idToLinkTo) = relationField.relationIsInlinedInParent match {
+        case true  => (parentWhereCondition, parentId, childId)
+        case false => (childWhereCondition, childId, parentId)
+      }
 
       val query = sql
         .update(relationTable(relation))
