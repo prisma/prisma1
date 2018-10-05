@@ -19,24 +19,19 @@ trait RelationActions extends FilterConditionBuilder {
     SimpleMongoAction { database =>
       val parentModel   = relationField.model
       val childModel    = relationField.relatedModel_!
-      val parentWhere   = NodeSelector.forIdGCValue(parentModel, parentId)
-      val childWhere    = NodeSelector.forIdGCValue(childModel, childId)
       val manifestation = relationField.relation.inlineManifestation.get
+
       val collection = manifestation.inTableOfModelId match {
         case x if x == parentModel.name => database.getCollection(parentModel.dbName)
         case x if x == childModel.name  => database.getCollection(childModel.dbName)
       }
 
-      val (where, updateId, list) = () match {
-        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.B =>
-          (childWhere, parentId, relationField.relatedField.isList)
-        case _ if relationField.relation.isSelfRelation && relationField.relationSide == RelationSide.A =>
-          (parentWhere, childId, relationField.isList)
-        case _ if manifestation.inTableOfModelId == parentModel.name => (parentWhere, childId, relationField.isList)
-        case _ if manifestation.inTableOfModelId == childModel.name  => (childWhere, parentId, relationField.relatedField.isList)
+      val (where, updateId, field) = relationField.relationIsInlinedInParent match {
+        case true  => (NodeSelector.forId(parentModel, parentId), childId, relationField)
+        case false => (NodeSelector.forId(childModel, childId), parentId, relationField.relatedField)
       }
 
-      val update = list match {
+      val update = field.isList match {
         case false => set(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
         case true  => push(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
       }
@@ -109,7 +104,7 @@ trait RelationActions extends FilterConditionBuilder {
             case false => unset(m.referencingColumn)
           }
 
-          collection.updateOne(NodeSelector.forIdGCValue(parentModel, parentId), update).collect().toFuture.map(_ => Unit)
+          collection.updateOne(NodeSelector.forId(parentModel, parentId), update).collect().toFuture.map(_ => Unit)
 
         case Some(m: InlineRelationManifestation) if m.inTableOfModelId == childModel.name =>
           val collection = database.getCollection(childModel.dbName)

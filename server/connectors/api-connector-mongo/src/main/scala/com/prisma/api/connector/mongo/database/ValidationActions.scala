@@ -20,7 +20,7 @@ trait ValidationActions extends FilterConditionBuilder {
       relationField.relation.manifestation match {
         case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
           val collection                             = database.getCollection(model.dbName)
-          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forIdGCValue(model, id)).collect().toFuture.map(_.headOption)
+          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forId(model, id)).collect().toFuture.map(_.headOption)
           futureResult.map(optionRes =>
             optionRes.foreach { res =>
               (relationField.isList, res.get(m.referencingColumn)) match {
@@ -49,7 +49,7 @@ trait ValidationActions extends FilterConditionBuilder {
       relationField.relation.manifestation match {
         case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
           val collection                             = database.getCollection(model.dbName)
-          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forIdGCValue(model, parentId)).collect().toFuture.map(_.headOption)
+          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forId(model, parentId)).collect().toFuture.map(_.headOption)
           futureResult.map(optionRes =>
             optionRes.foreach { res =>
               (relationField.isList, res.get(m.referencingColumn)) match {
@@ -77,7 +77,7 @@ trait ValidationActions extends FilterConditionBuilder {
                 throw NodesNotConnectedError(
                   relation = relationField.relation,
                   parent = relationField.model,
-                  parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+                  parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
                   child = relationField.relatedModel_!,
                   childWhere = None
               ))
@@ -96,7 +96,7 @@ trait ValidationActions extends FilterConditionBuilder {
       relationField.relation.manifestation match {
         case Some(m: InlineRelationManifestation) if m.inTableOfModelId == parentModel.name =>
           val collection                             = database.getCollection(parentModel.dbName)
-          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forIdGCValue(parentModel, parentId)).collect().toFuture.map(_.headOption)
+          val futureResult: Future[Option[Document]] = collection.find(NodeSelector.forId(parentModel, parentId)).collect().toFuture.map(_.headOption)
           futureResult.map(optionRes =>
             optionRes.foreach { res =>
               res.get(m.referencingColumn) match {
@@ -117,7 +117,7 @@ trait ValidationActions extends FilterConditionBuilder {
                 throw NodesNotConnectedError(
                   relation = relationField.relation,
                   parent = relationField.model,
-                  parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+                  parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
                   child = relationField.relatedModel_!,
                   childWhere = None
               ))

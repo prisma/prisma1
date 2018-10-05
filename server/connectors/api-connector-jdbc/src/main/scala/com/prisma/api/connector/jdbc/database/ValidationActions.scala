@@ -49,9 +49,9 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
           throw NodesNotConnectedError(
             relation = relationField.relation,
             parent = relationField.model,
-            parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+            parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
             child = relationField.relatedModel_!,
-            childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
+            childWhere = Some(NodeSelector.forId(relationField.relatedModel_!, childId))
           )
       }
     )
@@ -77,7 +77,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
           throw NodesNotConnectedError(
             relation = relationField.relation,
             parent = relationField.model,
-            parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+            parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
             child = relationField.relatedModel_!,
             childWhere = None
           )

@@ -5,7 +5,7 @@ import com.prisma.shared.models.{Model, ScalarField}
 
 object NodeSelector {
   def forCuid(model: Model, id: String): NodeSelector              = NodeSelector(model, model.idField_!, CuidGCValue(id))
-  def forIdGCValue(model: Model, gcValue: IdGCValue): NodeSelector = NodeSelector(model, model.idField_!, gcValue)
+  def forId(model: Model, gcValue: IdGCValue): NodeSelector        = NodeSelector(model, model.idField_!, gcValue)
   def forGCValue(model: Model, field: ScalarField, value: GCValue) = NodeSelector(model, field, value)
 }
 
