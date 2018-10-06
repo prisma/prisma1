@@ -1,16 +1,17 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.DocumentToRoot
+import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{CuidGCValue, IdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.{Document, FindObservable, MongoCollection, MongoDatabase}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.language.existentials
 
 trait NodeManyQueries extends FilterConditionBuilder {
@@ -24,6 +25,19 @@ trait NodeManyQueries extends FilterConditionBuilder {
     }
 
     nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
+  }
+
+  //Fixme only get Id here
+  def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val bsonFilter: Bson                      = buildConditionForFilter(filter)
+    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
+  }
+
+  def getNodesByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[Document]] = SimpleMongoAction { database =>
+    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
+    val bsonFilter: Bson                      = buildConditionForFilter(filter)
+    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture
   }
 
   def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
