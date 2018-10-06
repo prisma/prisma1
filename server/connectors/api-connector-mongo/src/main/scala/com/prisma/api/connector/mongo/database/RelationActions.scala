@@ -1,58 +1,47 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
-import com.prisma.shared.models.{RelationField, RelationSide}
+import com.prisma.shared.models.RelationField
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
 
-import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait RelationActions extends FilterConditionBuilder {
 
   def createRelation(relationField: RelationField, parentId: IdGCValue, childId: IdGCValue)(implicit ec: ExecutionContext) =
     SimpleMongoAction { database =>
-      val parentModel   = relationField.model
-      val childModel    = relationField.relatedModel_!
-      val manifestation = relationField.relation.inlineManifestation.get
+      val parentModel  = relationField.model
+      val childModel   = relationField.relatedModel_!
+      val relatedField = relationField.relatedField
 
-      val collection = manifestation.inTableOfModelId match {
-        case x if x == parentModel.name => database.getCollection(parentModel.dbName)
-        case x if x == childModel.name  => database.getCollection(childModel.dbName)
+      val (collectionName, where, update) = relationField.relationIsInlinedInParent match {
+        case true if !relationField.isList => (parentModel.dbName, NodeSelector.forId(parentModel, parentId), set(relationField.dbName, GCToBson(childId)))
+        case true if relationField.isList  => (parentModel.dbName, NodeSelector.forId(parentModel, parentId), push(relationField.dbName, GCToBson(childId)))
+        case false if !relatedField.isList => (childModel.dbName, NodeSelector.forId(childModel, childId), set(relatedField.dbName, GCToBson(parentId)))
+        case false if relatedField.isList  => (childModel.dbName, NodeSelector.forId(childModel, childId), push(relatedField.dbName, GCToBson(parentId)))
       }
 
-      val (where, updateId, field) = relationField.relationIsInlinedInParent match {
-        case true  => (NodeSelector.forId(parentModel, parentId), childId, relationField)
-        case false => (NodeSelector.forId(childModel, childId), parentId, relationField.relatedField)
-      }
-
-      val update = field.isList match {
-        case false => set(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
-        case true  => push(manifestation.referencingColumn, GCValueBsonTransformer(updateId))
-      }
-
-      collection
+      database
+        .getCollection(collectionName)
         .updateOne(where, update)
         .toFuture()
     }
 
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = SimpleMongoAction { database =>
     assert(!relationField.relatedField.isList)
-    relationField.relation.inlineManifestation match {
-      case Some(m) if m.inTableOfModelId == relationField.model.name => //delete the child ID from all inlineRelationFields of old parents
-        val collection    = database.getCollection(relationField.model.dbName)
-        val filter        = ScalarFilter(relationField.model.idField_!.copy(name = m.referencingColumn), Equals(childId))
-        val mongoFilter   = buildConditionForFilter(Some(filter))
-        val update        = unset(m.referencingColumn)
-        val updateOptions = UpdateOptions().arrayFilters(List.empty.asJava)
+    relationField.relationIsInlinedInParent match {
+      case true =>
+        val filter      = ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Equals(childId))
+        val mongoFilter = buildConditionForFilter(Some(filter))
+        val update      = unset(relationField.dbName)
 
-        collection.updateMany(mongoFilter, update, updateOptions).collect().toFuture()
-      case m => Future.successful(()) //do nothing
+        database.getCollection(relationField.model.dbName).updateMany(mongoFilter, update).collect().toFuture()
+      case false =>
+        Future.successful(())
     }
   }
 
@@ -60,67 +49,50 @@ trait RelationActions extends FilterConditionBuilder {
     val parentModel = relationField.model
     val childModel  = relationField.relatedModel_!
 
-    relationField.relation.inlineManifestation match {
-      case Some(m) if m.inTableOfModelId == parentModel.name => //delete the child ID from all inlineRelationFields of old parents
-        val collection  = database.getCollection(parentModel.dbName)
-        val filter      = ScalarFilter(parentModel.idField_!.copy(name = m.referencingColumn, isList = true), Contains(childId))
+    relationField.relationIsInlinedInParent match {
+      case true =>
+        val filter      = ScalarFilter(parentModel.idField_!.copy(name = relationField.dbName, isList = true), Contains(childId))
         val whereFilter = ScalarFilter(parentModel.idField_!, Equals(parentId))
         val mongoFilter = buildConditionForFilter(Some(AndFilter(Vector(filter, whereFilter))))
+        val update      = if (relationField.isList) pull(relationField.dbName, GCToBson(childId)) else unset(relationField.dbName)
 
-        val update = relationField.isList match {
-          case false => unset(m.referencingColumn)
-          case true  => pull(m.referencingColumn, GCValueBsonTransformer(childId))
-        }
+        database.getCollection(parentModel.dbName).updateMany(mongoFilter, update).collect().toFuture()
 
-        val updateOptions = UpdateOptions().arrayFilters(List.empty.asJava)
-
-        collection.updateMany(mongoFilter, update, updateOptions).collect().toFuture()
-
-      case Some(m) if m.inTableOfModelId == childModel.name => // remove it from the child inline relation
-        val collection  = database.getCollection(childModel.dbName)
+      case false =>
         val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!, Equals(childId))))
         val update = relationField.relatedField.isList match {
-          case false => unset(m.referencingColumn)
-          case true  => pull(m.referencingColumn, GCValueBsonTransformer(parentId))
+          case false => unset(relationField.relatedField.dbName)
+          case true  => pull(relationField.relatedField.dbName, GCToBson(parentId))
         }
 
-        collection.updateOne(mongoFilter, update).collect().toFuture()
-
-      case _ => sys.error("Should not happen")
+        database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture()
     }
   }
 
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext) =
     SimpleMongoAction { database =>
-      val parentModel = relationField.model
-      val childModel  = relationField.relatedModel_!
+      val parentModel  = relationField.model
+      val childModel   = relationField.relatedModel_!
+      val relatedField = relationField.relatedField
 
-      relationField.relation.manifestation match {
-        case Some(m: InlineRelationManifestation) if m.inTableOfModelId == parentModel.name => // stored on this model, set to null or remove from list
-          val collection = database.getCollection(parentModel.dbName)
+      relationField.relationIsInlinedInParent match {
+        case true =>
+          val update: Bson = if (relationField.isList) pull(relationField.dbName, GCToBson(parentId)) else unset(relationField.dbName)
 
-          val update: Bson = relationField.isList match {
-            case true  => pull(m.referencingColumn, GCValueBsonTransformer(parentId))
-            case false => unset(m.referencingColumn)
-          }
+          database.getCollection(parentModel.dbName).updateOne(NodeSelector.forId(parentModel, parentId), update).collect().toFuture
 
-          collection.updateOne(NodeSelector.forId(parentModel, parentId), update).collect().toFuture.map(_ => Unit)
-
-        case Some(m: InlineRelationManifestation) if m.inTableOfModelId == childModel.name =>
-          val collection = database.getCollection(childModel.dbName)
-          relationField.relatedField.isList match {
+        case false =>
+          relatedField.isList match {
             case false =>
-              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!.copy(m.referencingColumn, isList = false), Equals(parentId))))
-              val update      = unset(m.referencingColumn)
-              collection.updateOne(mongoFilter, update).collect().toFuture()
+              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!.copy(relatedField.dbName, isList = false), Equals(parentId))))
+              val update      = unset(relatedField.dbName)
+              database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture
 
             case true =>
-              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!.copy(m.referencingColumn, isList = true), Contains(parentId))))
-              val update      = pull(m.referencingColumn, GCValueBsonTransformer(parentId))
-              collection.updateMany(mongoFilter, update).collect().toFuture()
+              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!.copy(relatedField.dbName, isList = true), Contains(parentId))))
+              val update      = pull(relatedField.dbName, GCToBson(parentId))
+              database.getCollection(childModel.dbName).updateMany(mongoFilter, update).collect().toFuture
           }
-
-        case _ => sys.error("should not happen ")
       }
     }
 }

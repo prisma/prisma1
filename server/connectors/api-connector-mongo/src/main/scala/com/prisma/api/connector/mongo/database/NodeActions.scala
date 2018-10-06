@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
 import com.prisma.api.connector.mongo.extensions.Path
 import com.prisma.api.schema.APIErrors
@@ -161,8 +161,8 @@ trait NodeActions extends NodeSingleQueries {
     val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
     if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
 
-    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }.toVector
-    val listValues    = mutaction.listArgs.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }
+    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(path.stringForField(f), GCToBson(v)) }.toVector
+    val listValues    = mutaction.listArgs.map { case (f, v) => set(path.stringForField(f), GCToBson(v)) }
 
     nonListValues ++ listValues
   }
