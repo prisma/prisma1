@@ -1,20 +1,19 @@
 package com.prisma.api.connector.mongo.database
 
-import com.mongodb.MongoClientSettings
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
 import com.prisma.api.connector.mongo.extensions.Path
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, RelationField}
+import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue, conversions}
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.{Document, MongoCollection}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable
@@ -67,7 +66,7 @@ trait NodeActions extends NodeSingleQueries {
           if (allUpdates.isEmpty) {
             Future.successful(MutactionResults(results))
           } else {
-            val combinedUpdates = customCombine(allUpdates)
+            val combinedUpdates = CustomUpdateCombiner.customCombine(allUpdates)
 
             val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
             database
@@ -81,7 +80,7 @@ trait NodeActions extends NodeSingleQueries {
 
   def updateNodes(mutaction: UpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
     val scalarUpdates   = scalarUpdateValues(mutaction)
-    val combinedUpdates = customCombine(scalarUpdates)
+    val combinedUpdates = CustomUpdateCombiner.customCombine(scalarUpdates)
 
     database.getCollection(mutaction.model.dbName).updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture()
   }
@@ -162,8 +161,8 @@ trait NodeActions extends NodeSingleQueries {
     val invalidUpdates = mutaction.nonListArgs.raw.asRoot.map.collect { case (k, v) if v == NullGCValue && mutaction.model.getFieldByName_!(k).isRequired => k }
     if (invalidUpdates.nonEmpty) throw FieldCannotBeNull(invalidUpdates.head)
 
-    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }.toVector
-    val listValues    = mutaction.listArgs.map { case (f, v) => set(path.stringForField(f), GCValueBsonTransformer(v)) }
+    val nonListValues = mutaction.nonListArgs.raw.asRoot.map.map { case (f, v) => set(path.stringForField(f), GCToBson(v)) }.toVector
+    val listValues    = mutaction.listArgs.map { case (f, v) => set(path.stringForField(f), GCToBson(v)) }
 
     nonListValues ++ listValues
   }
@@ -252,46 +251,8 @@ trait NodeActions extends NodeSingleQueries {
           case (f, v) if !f.isList => set(path.stringForField(f.name), v.head)
           case (f, v) if f.isList  => pushEach(path.stringForField(f.name), v: _*)
         }.toVector
+
         (nestedCreates, nestedCreateResults)
     }
   }
-
-  // helpers
-
-  private def customCombine(updates: Vector[conversions.Bson]): conversions.Bson = {
-    val rawUpdates = updates.map(update => (update.toBsonDocument(classOf[Document], MongoClientSettings.getDefaultCodecRegistry), update))
-
-    val pulls  = rawUpdates.filter(_._1.getFirstKey == "$pull")
-    val others = rawUpdates.filter(_._1.getFirstKey != "$pull")
-
-    val convertedPulls                                                    = pulls.map(x => documentToCombinedPullDefinition(x._1))
-    val groupedPulls: Map[Vector[String], Vector[CombinedPullDefinition]] = convertedPulls.groupBy(_.keys)
-
-    val changedPulls = groupedPulls.map { group =>
-      val array = BsonArray(group._2.map(_.value))
-
-      bsonDocumentFilter(group._1.toList, array)
-    }
-
-    combine(others.map(_._2) ++ changedPulls: _*)
-  }
-
-  private def bsonDocumentFilter(keys: List[String], array: BsonArray): Document = keys match {
-    case Nil          => sys.error("should not happen")
-    case head :: Nil  => BsonDocument(head -> BsonDocument("$in" -> array))
-    case head :: tail => BsonDocument(head -> bsonDocumentFilter(tail, array))
-  }
-
-  private def documentToCombinedPullDefinition(doc: Document, keys: Vector[String] = Vector.empty): CombinedPullDefinition = {
-    val key     = doc.keys.head
-    val value   = doc.get(key).get
-    val newKeys = keys :+ key
-    if (value.isDocument) {
-      documentToCombinedPullDefinition(value.asDocument(), newKeys)
-    } else {
-      CombinedPullDefinition(newKeys, value)
-    }
-  }
-
-  case class CombinedPullDefinition(keys: Vector[String], value: BsonValue)
 }

@@ -3,21 +3,16 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-// format: off
 trait AllActions
-  extends NodeActions
+    extends NodeActions
     with RelationActions
     with ValidationActions
-//    with RelayIdActions
 //    with ImportActions
     with MiscActions
 
-trait AllQueries
-  extends NodeSingleQueries
-    with NodeManyQueries
+trait AllQueries extends NodeSingleQueries with NodeManyQueries
 //    with RelationQueries
 //    with MiscQueries
-// format: on
 
 case class MongoActionsBuilder(
     schemaName: String,

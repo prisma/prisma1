@@ -44,7 +44,8 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
   }
 
   override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = {
-    database.getCollection(table).countDocuments(buildConditionForFilter(whereFilter)).toFuture.map(_.toInt)
+    val query = queryBuilder.countFromTable(table, whereFilter)
+    SlickReplacement.run(database, query)
   }
 
   //Export

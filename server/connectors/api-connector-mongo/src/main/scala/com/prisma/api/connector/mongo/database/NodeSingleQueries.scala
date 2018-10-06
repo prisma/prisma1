@@ -4,8 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
-import com.prisma.shared.models.{Model, Project, RelationField}
-import org.mongodb.scala.bson.conversions.Bson
+import com.prisma.shared.models.{Project, RelationField}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.{Document, MongoCollection}
@@ -14,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeSingleQueries extends FilterConditionBuilder {
+trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
   def getModelForGlobalId(project: Project, globalId: CuidGCValue) = SimpleMongoAction { database =>
     val outer = project.models.map { model =>
@@ -24,10 +23,10 @@ trait NodeSingleQueries extends FilterConditionBuilder {
       }
     }
 
-    val sequence: Future[List[Vector[Model]]] = Future.sequence(outer)
-
-    sequence.map(_.flatten.headOption)
+    Future.sequence(outer).map(_.flatten.headOption)
   }
+
+  def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
@@ -39,12 +38,12 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
+  //Fixme only get Id here
   def getNodeIdByWhere(where: NodeSelector) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
     collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
   }
 
-  //Fixme Selfrelation cleanup
   def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue): MongoAction[Option[IdGCValue]] = {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
@@ -60,30 +59,18 @@ trait NodeSingleQueries extends FilterConditionBuilder {
             }
         }
 
-      case false =>
-        val filter = parentField.relatedField.isList match {
-          case false => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId)))
-          case true  => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId)))
-        }
+      case false => //Fixme replace this with filter helper
+        val filter = generateFilterForFieldAndId(parentField.relatedField, parentId)
 
-        getNodeIdsByFilter(childModel, filter).map(_.headOption)
+        getNodeIdsByFilter(childModel, Some(filter)).map(_.headOption)
     }
   }
 
-  def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]) = ???
-
-  def getNodeIdsByFilter(model: Model, filter: Option[Filter]) = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
-  }
-
-  //Fixme self relation cleanup here
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): MongoAction[Option[IdGCValue]] = {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
 
-    parentField.relationIsInlinedInParent match { //parent contains one or more ids, one of them matches the child returned for the where
+    parentField.relationIsInlinedInParent match {
       case true =>
         getNodeByWhere(NodeSelector.forId(parentModel, parentId), SelectedFields.all(parentModel)).flatMap {
           case None =>
@@ -107,13 +94,10 @@ trait NodeSingleQueries extends FilterConditionBuilder {
                 noneHelper
             }
         }
-      case false => //child id that matches the where contains the parent
-        val parentFilter = parentField.relatedField.isList match {
-          case false => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId))
-          case true  => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId))
-        }
-        val whereFilter = ScalarFilter(where.field, Equals(where.fieldGCValue))
-        val filter      = Some(AndFilter(Vector(parentFilter, whereFilter)))
+      case false =>
+        val parentFilter = generateFilterForFieldAndId(parentField.relatedField, parentId)
+        val whereFilter  = ScalarFilter(where.field, Equals(where.fieldGCValue))
+        val filter       = Some(AndFilter(Vector(parentFilter, whereFilter)))
 
         getNodeIdsByFilter(childModel, filter).map(_.headOption)
     }
@@ -121,6 +105,11 @@ trait NodeSingleQueries extends FilterConditionBuilder {
 
   def noneHelper = SimpleMongoAction { database =>
     Future(Option.empty[IdGCValue])
+  }
+
+  def generateFilterForFieldAndId(relationField: RelationField, id: IdGCValue) = relationField.isList match {
+    case true  => ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Contains(id))
+    case false => ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Equals(id))
   }
 
 }
