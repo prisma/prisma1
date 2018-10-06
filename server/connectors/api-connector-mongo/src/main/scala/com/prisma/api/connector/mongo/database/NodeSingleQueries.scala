@@ -24,10 +24,10 @@ trait NodeSingleQueries extends FilterConditionBuilder {
       }
     }
 
-    val sequence: Future[List[Vector[Model]]] = Future.sequence(outer)
-
-    sequence.map(_.flatten.headOption)
+    Future.sequence(outer).map(_.flatten.headOption)
   }
+
+  def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
@@ -39,6 +39,7 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
+  //Fixme only get Id here
   def getNodeIdByWhere(where: NodeSelector) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(where.model.dbName)
     collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
@@ -69,7 +70,8 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
-  def getNodeIdsByFilter(model: Model, filter: Option[Filter]) = SimpleMongoAction { database =>
+  //Fixme only get Id here
+  def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
     collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))

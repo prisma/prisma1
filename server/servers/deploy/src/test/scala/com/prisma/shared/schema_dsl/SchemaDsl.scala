@@ -81,7 +81,6 @@ object SchemaDsl extends AwaitUtils {
     TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 
-  //Fixme this at the moment adds manifestations for relations that are embedded in Mongo, this breaks all embedded tests
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>

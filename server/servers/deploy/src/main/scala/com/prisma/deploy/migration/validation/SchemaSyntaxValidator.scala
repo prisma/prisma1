@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
-import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, ScalarListsCapability}
 import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast._
@@ -266,7 +266,7 @@ case class SchemaSyntaxValidator(
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
-    if (capabilities.contains(MigrationsCapability)) { //Fixme ScalarListCapability
+    if (capabilities.exists(_.isInstanceOf[ScalarListsCapability])) {
       scalarFields.collect {
         case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
       }

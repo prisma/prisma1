@@ -27,7 +27,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
-  //Fixme how does this work?
+  //Fixme how does this work with self relations?
   private def createRelationTable(project: Project, relation: Relation) = {
     val mutaction = relation.manifestation match {
       case Some(m: InlineRelationManifestation) =>
