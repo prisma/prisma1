@@ -27,17 +27,16 @@ trait NodeManyQueries extends FilterConditionBuilder {
     nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
-  //Fixme only get Id here
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
+    collection.find(bsonFilter).projection(include("_id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
   }
 
   def getNodesByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[Document]] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_.id")).collect().toFuture
+    collection.find(bsonFilter).collect().toFuture
   }
 
   def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {

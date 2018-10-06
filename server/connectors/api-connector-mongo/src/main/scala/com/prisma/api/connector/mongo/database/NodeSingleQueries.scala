@@ -60,12 +60,9 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
         }
 
       case false => //Fixme replace this with filter helper
-        val filter = parentField.relatedField.isList match {
-          case false => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId)))
-          case true  => Some(ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId)))
-        }
+        val filter = generateFilterForFieldAndId(parentField.relatedField, parentId)
 
-        getNodeIdsByFilter(childModel, filter).map(_.headOption)
+        getNodeIdsByFilter(childModel, Some(filter)).map(_.headOption)
     }
   }
 
@@ -97,13 +94,10 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
                 noneHelper
             }
         }
-      case false => //Fixme replace this with filter helper
-        val parentFilter = parentField.relatedField.isList match {
-          case false => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName), Equals(parentId))
-          case true  => ScalarFilter(childModel.idField_!.copy(name = parentField.relatedField.dbName, isList = true), Contains(parentId))
-        }
-        val whereFilter = ScalarFilter(where.field, Equals(where.fieldGCValue))
-        val filter      = Some(AndFilter(Vector(parentFilter, whereFilter)))
+      case false =>
+        val parentFilter = generateFilterForFieldAndId(parentField.relatedField, parentId)
+        val whereFilter  = ScalarFilter(where.field, Equals(where.fieldGCValue))
+        val filter       = Some(AndFilter(Vector(parentFilter, whereFilter)))
 
         getNodeIdsByFilter(childModel, filter).map(_.headOption)
     }
@@ -111,6 +105,11 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
   def noneHelper = SimpleMongoAction { database =>
     Future(Option.empty[IdGCValue])
+  }
+
+  def generateFilterForFieldAndId(relationField: RelationField, id: IdGCValue) = relationField.isList match {
+    case true  => ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Contains(id))
+    case false => ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Equals(id))
   }
 
 }
