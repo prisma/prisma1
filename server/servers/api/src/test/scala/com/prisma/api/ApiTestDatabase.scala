@@ -27,18 +27,15 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
+  //Fixme how does this work?
   private def createRelationTable(project: Project, relation: Relation) = {
     val mutaction = relation.manifestation match {
       case Some(m: InlineRelationManifestation) =>
-        val modelA = relation.modelA
-        val modelB = relation.modelB
+        val modelA              = relation.modelA
+        val modelB              = relation.modelB
+        val (model, references) = if (m.inTableOfModelId == modelA.name) (modelA, modelB) else (modelB, modelA)
+        val field               = relation.getFieldOnModel(m.inTableOfModelId)
 
-        val (model, references) = if (m.inTableOfModelId == modelA.name) {
-          (modelA, modelB)
-        } else {
-          (modelB, modelA)
-        }
-        val field = relation.getFieldOnModel(m.inTableOfModelId)
         CreateInlineRelation(project.id, model, field, references, m.referencingColumn)
       case _ =>
         CreateRelationTable(project.id, project.schema, relation = relation)

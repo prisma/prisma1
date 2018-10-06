@@ -113,4 +113,8 @@ trait NodeManyQueries extends FilterConditionBuilder {
 
   }
 
+  def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { database =>
+    database.getCollection(table).countDocuments(buildConditionForFilter(filter)).toFuture.map(_.toInt)
+  }
+
 }

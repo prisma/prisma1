@@ -44,7 +44,6 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     collection.find(where).projection(include("_.id")).collect().toFuture.map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
   }
 
-  //Fixme Selfrelation cleanup
   def getNodeIdByParentId(parentField: RelationField, parentId: IdGCValue): MongoAction[Option[IdGCValue]] = {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
@@ -70,15 +69,12 @@ trait NodeSingleQueries extends FilterConditionBuilder {
     }
   }
 
-  def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]) = ???
-
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]) = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
     collection.find(bsonFilter).projection(include("_.id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
   }
 
-  //Fixme self relation cleanup here
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): MongoAction[Option[IdGCValue]] = {
     val parentModel = parentField.model
     val childModel  = parentField.relatedModel_!
