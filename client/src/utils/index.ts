@@ -80,18 +80,18 @@ export function forwardTo(bindingName: string) {
     context: CONTEXT,
     info: GraphQLResolveInfo,
   ) => {
-    let message = `Forward to '${bindingName}.${info.parentType.name.toLowerCase()}.${
+    let message = `Forward to '${bindingName}.${info.parentType.name}.${
       info.fieldName
     }' failed. `
     if (context[bindingName]) {
       if (
-        context[bindingName][info.parentType.name.toLowerCase()][info.fieldName]
+        context[bindingName]['types'][info.parentType.name][info.fieldName]
       ) {
-        return context[bindingName][info.parentType.name.toLowerCase()][
+        return context[bindingName]['types'][info.parentType.name][
           info.fieldName
         ](args, info)
       } else {
-        message += `Field '${info.parentType.name.toLowerCase()}.${
+        message += `Field '${info.parentType.name}.${
           info.fieldName
         }' not found on binding '${bindingName}'.`
       }
