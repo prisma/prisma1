@@ -688,7 +688,7 @@ A self-relation can also be bidirectional:
 ```graphql
 type User {
   id: ID! @unique
-  following: [User!]! @relation(name: "Followers")
+  following: [User!]! @relation(name: "Following")
   followers: [User!]! @relation(name: "Followers")
 }
 ```
