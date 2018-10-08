@@ -7,14 +7,14 @@ import java.util.{Calendar, TimeZone}
 
 import play.api.libs.json._
 
-case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with DefaultReads {
+case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with DefaultReads {
   import DefaultValues._
   private var cursor: Int    = -1
   private var lastColWasNull = false
 
   override def next(): Boolean = {
     cursor += 1
-    cursor < rows.size
+    cursor < rustResultSet.data.size
   }
 
   /**
@@ -62,23 +62,56 @@ case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with Defa
   /**
     * DATA RETRIEVAL METHODS
     */
-  override def getDouble(columnIndex: Int)    = ???
-  override def getDouble(columnLabel: String) = readColumnAs[Double](columnLabel)
-
-  override def getString(columnIndex: Int)              = ???
+  override def getDouble(columnIndex: Int)              = readColumnAs[Double](columnIndex)
+  override def getDouble(columnLabel: String)           = readColumnAs[Double](columnLabel)
+  override def getString(columnIndex: Int)              = readColumnAs[String](columnIndex)
   override def getString(columnLabel: String)           = readColumnAs[String](columnLabel)
-  override def getBoolean(columnIndex: Int): Boolean    = ???
+  override def getBoolean(columnIndex: Int): Boolean    = readColumnAs[Boolean](columnIndex)
   override def getBoolean(columnLabel: String): Boolean = readColumnAs[Boolean](columnLabel)
-  override def getInt(columnIndex: Int)                 = ???
+  override def getInt(columnIndex: Int)                 = readColumnAs[Int](columnIndex)
   override def getInt(columnLabel: String)              = readColumnAs[Int](columnLabel)
+  override def getLong(columnIndex: Int)                = readColumnAs[Long](columnIndex)
+  override def getLong(columnLabel: String)             = readColumnAs[Long](columnLabel)
+
+  override def getTimestamp(columnIndex: Int, cal: Calendar) = {
+    if (cal.getTimeZone() != TimeZone.getTimeZone("UTC")) {
+      sys.error("Can only handle UTC.")
+    }
+
+    new Timestamp(readColumnAs[Long](columnIndex))
+  }
+
+  override def getTimestamp(columnIndex: Int) = ???
+
+  override def getTimestamp(columnLabel: String) = {
+    new Timestamp(readColumnAs[Long](columnLabel))
+  }
+
+  override def getTimestamp(columnLabel: String, cal: Calendar) = {
+    val labelPos = rustResultSet.columns.indexOf(columnLabel)
+    if (labelPos <= -1) {
+      sys.error("Column label not found")
+    }
+
+    getTimestamp(labelPos + 1, cal)
+  }
 
   private def readColumnAs[T](columnLabel: String)(implicit reads: Reads[T], default: DefaultValue[T]): T = {
-    val row         = rows(cursor)
-    val columnValue = row.value.get(columnLabel)
+    val labelPos = rustResultSet.columns.indexOf(columnLabel)
+    if (labelPos <= -1) {
+      sys.error("Column label not found")
+    }
+
+    readColumnAs[T](labelPos + 1)
+  }
+
+  private def readColumnAs[T](index: Int)(implicit reads: Reads[T], default: DefaultValue[T]): T = {
+    val row         = rustResultSet.data(cursor)
+    val columnValue = row.value(index - 1)
+
     columnValue match {
-      case Some(JsNull) => lastColWasNull = true; default.default
-      case Some(value)  => lastColWasNull = false; value.validate[T].getOrElse(sys.error(s"received incompatible value $value"))
-      case None         => println("[WAT] SHOULD NOT HAPPEN"); default.default
+      case JsNull => lastColWasNull = true; default.default
+      case value  => lastColWasNull = false; value.validate[T].getOrElse(sys.error(s"received incompatible value $value"))
     }
   }
 
@@ -141,10 +174,6 @@ case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with Defa
 
   override def getBlob(columnLabel: String) = ???
 
-  override def getLong(columnIndex: Int) = ???
-
-  override def getLong(columnLabel: String) = ???
-
   override def getUnicodeStream(columnIndex: Int) = ???
 
   override def getUnicodeStream(columnLabel: String) = ???
@@ -191,18 +220,6 @@ case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with Defa
 
   override def getRef(columnLabel: String) = ???
 
-  override def getTimestamp(columnLabel: String) = {
-    new Timestamp(readColumnAs[Long](columnLabel))
-  }
-
-  override def getTimestamp(columnLabel: String, cal: Calendar) = {
-    if (cal.getTimeZone() != TimeZone.getTimeZone("UTC")) {
-      sys.error("Can only handle UTC.")
-    }
-
-    new Timestamp(readColumnAs[Long](columnLabel))
-  }
-
   override def getShort(columnIndex: Int) = ???
 
   override def getShort(columnLabel: String) = ???
@@ -210,8 +227,6 @@ case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with Defa
   /**
     * Intentionally unimplemented because we don't need it
     */
-  override def getTimestamp(columnIndex: Int, cal: Calendar)                             = ???
-  override def getTimestamp(columnIndex: Int)                                            = ???
   override def updateShort(columnIndex: Int, x: Short)                                   = ???
   override def updateShort(columnLabel: String, x: Short)                                = ???
   override def updateBytes(columnIndex: Int, x: Array[Byte])                             = ???

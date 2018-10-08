@@ -47,7 +47,24 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
     result.toResultSet
   }
 
-  override def getGeneratedKeys: ResultSet = JsonResultSet(IndexedSeq.empty)
+  override def executeUpdate() = {
+    val paramsString = JsArray(params.toSeq.sortBy(_._1).map(_._2)).toString()
+    val result = binding.sqlExecute(
+      conn,
+      rawSqlString,
+      paramsString
+    )
+
+    if (!result.isCount) {
+      throw new SQLException(s"No count was returned by the update. $result", PSQLState.TOO_MANY_RESULTS.toString)
+    }
+
+    result.count.get
+  }
+
+  override def addBatch() = {}
+
+  override def getGeneratedKeys: ResultSet = JsonResultSet(RustResultSet.empty)
 
   override def setShort(parameterIndex: Int, x: Short) = ???
 
@@ -76,8 +93,6 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setTime(parameterIndex: Int, x: Time, cal: Calendar) = ???
 
   override def setUnicodeStream(parameterIndex: Int, x: InputStream, length: Int) = ???
-
-  override def addBatch() = ???
 
   override def setArray(parameterIndex: Int, x: sql.Array) = ???
 
@@ -116,8 +131,6 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setNString(parameterIndex: Int, value: String) = ???
 
   override def getMetaData = ???
-
-  override def executeUpdate() = ???
 
   override def setByte(parameterIndex: Int, x: Byte) = ???
 

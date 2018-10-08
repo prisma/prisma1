@@ -3,7 +3,7 @@ package com.prisma.native_jdbc
 import java.sql.SQLException
 
 import com.sun.jna.{Native, Pointer}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsArray, JsObject, Json}
 
 import scala.util.Try
 
@@ -22,8 +22,9 @@ trait RustBinding[T <: RustConnection] {
 }
 
 object RustCallResult {
-  implicit val errorFormat    = Json.format[RustError]
-  implicit val protocolFormat = Json.format[RustCallResult]
+  implicit val resultSetFormat = Json.format[RustResultSet]
+  implicit val errorFormat     = Json.format[RustError]
+  implicit val protocolFormat  = Json.format[RustCallResult]
 
   def fromString(str: String): RustCallResult = {
     (for {
@@ -38,13 +39,19 @@ object RustCallResult {
 
 case class RustError(code: String, message: String)
 
-case class RustCallResult(ty: String, count: Option[Int], rows: Option[IndexedSeq[JsObject]], error: Option[RustError]) {
+case class RustCallResult(ty: String, count: Option[Int], rows: Option[RustResultSet], error: Option[RustError]) {
   def isResultSet = ty == "RESULT_SET"
   def isError     = ty == "ERROR"
   def isCount     = ty == "COUNT"
   def isEmpty     = ty == "EMPTY"
   def toResultSet = JsonResultSet(rows.get)
 }
+
+object RustResultSet {
+  val empty = RustResultSet(Vector.empty, IndexedSeq.empty)
+}
+
+case class RustResultSet(columns: Vector[String], data: IndexedSeq[JsArray])
 
 //object RustGraalImpl extends RustBinding[RustConnectionGraal] {
 //  def toJavaString(str: CCharPointer) = CTypeConversion.toJavaString(str)

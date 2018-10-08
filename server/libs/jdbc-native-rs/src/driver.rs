@@ -4,7 +4,7 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use chrono::prelude::*;
 use num_traits::ToPrimitive;
 use postgres;
-use postgres::rows::Row;
+use postgres::rows::{Row, Rows};
 use postgres::transaction::Transaction;
 use postgres::types::{IsNull, ToSql, Type};
 use postgres::{Connection, Result as PsqlResult, TlsMode};
@@ -32,50 +32,6 @@ pub enum DriverError {
 }
 
 pub type Result<T> = result::Result<T, DriverError>;
-
-pub fn serializeToJson(row: Row) -> Result<serde_json::Value> {
-    let mut map = serde_json::Map::new();
-    for (i, column) in row.columns().iter().enumerate() {
-        let isNull = row.get_bytes(i).is_none();
-        if !isNull {
-            let json_value: serde_json::Value = match column.type_() {
-                &postgres::types::BOOL => serde_json::Value::Bool(row.get(i)),
-                &postgres::types::INT4 => {
-                    let value: i32 = row.get(i);
-                    let number = serde_json::Number::from_f64(value as f64).unwrap();
-                    serde_json::Value::Number(number)
-                }
-                &postgres::types::VARCHAR => serde_json::Value::String(row.get(i)),
-                &postgres::types::TEXT => serde_json::Value::String(row.get(i)),
-                &postgres::types::NUMERIC => {
-                    let value: Decimal = row.get(i);
-                    let number = serde_json::Number::from_f64(value.to_f64().unwrap()).unwrap();
-                    serde_json::Value::Number(number)
-                }
-                &postgres::types::TIMESTAMP => {
-                    let value: NaiveDateTime = row.get(i);
-//                    let x = Local.offset_from_utc_datetime(&value);
-//
-//                    let dt: DateTime<Local> = DateTime::from_utc(value, x);
-                    let number =
-                        serde_json::Number::from_f64(value.timestamp_millis() as f64).unwrap();
-                    serde_json::Value::Number(number)
-                }
-                x => {
-                    return Err(DriverError::GenericError(format!(
-                        "Unhandled type in json serialize: {}",
-                        x
-                    )))
-                }
-            };
-            map.insert(String::from(column.name()), json_value);
-        } else {
-            map.insert(String::from(column.name()), serde_json::Value::Null);
-        }
-    }
-
-    return Ok(serde_json::Value::Object(map));
-}
 
 pub fn connect<'a>(url: String) -> PsqlConnection<'a> {
     let conn = Connection::connect(url, TlsMode::None).unwrap();
@@ -110,12 +66,12 @@ impl From<cell::BorrowMutError> for DriverError {
 }
 
 impl<'a> PsqlConnection<'a> {
-    pub fn queryRawParams(&self, query: String, rawParams: String) -> Result<serde_json::Value> {
+    pub fn queryRawParams(&self, query: String, rawParams: String) -> Result<Rows> {
         let params = toGcValues(&rawParams)?;
         return self.query(query, params.iter().collect());
     }
 
-    pub fn query(&self, query: String, params: Vec<&GcValue>) -> Result<serde_json::Value> {
+    pub fn query(&self, query: String, params: Vec<&GcValue>) -> Result<Rows> {
         println!("[Rust] Query received the params: {:?}", params);
         let mutRef = self.transaction.try_borrow_mut()?;
         let rows = match *mutRef {
@@ -128,13 +84,7 @@ impl<'a> PsqlConnection<'a> {
             println!("[Rust] column {} of type {}", column.name(), column.type_());
         }
 
-        let mut vec = Vec::new();
-        for row in rows.iter() {
-            let json = serializeToJson(row)?;
-            vec.push(json);
-        }
-
-        return Ok(serde_json::Value::Array(vec));
+        return Ok(rows);
     }
 
     pub fn executeRawParams(&self, query: String, rawParams: String) -> Result<u64> {

@@ -17,8 +17,12 @@ use std::mem;
 use std::os::raw::c_char;
 use std::str;
 use colored::*;
+use postgres::rows::Rows;
 
-pub mod driver;
+mod driver;
+mod serialization;
+
+use serialization::ResultSet;
 
 #[no_mangle]
 pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
@@ -36,9 +40,11 @@ pub extern "C" fn sqlQuery(
 ) -> *const c_char {
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let callResult = conn.queryRawParams(queryString, paramsString).map(|rows| { CallResult::result_set(rows) });
+    let callResult = conn.queryRawParams(queryString, paramsString).and_then(|rows| {
+        CallResult::result_set(rows)
+    });
 
-    return createJsonresult(callResult);
+    return serializeCallResult(callResult);
 }
 
 #[no_mangle]
@@ -53,13 +59,13 @@ pub extern "C" fn sqlExecute(
     let result = conn.executeRawParams(queryString, paramsString);
     let callResult = result.map(|x| { CallResult::count(x as i32) });
 
-    return createJsonresult(callResult);
+    return serializeCallResult(callResult);
 }
 
 #[derive(Serialize)]
 struct CallResult {
     ty: String,
-    rows: Option<serde_json::Value>,
+    rows: Option<ResultSet>,
     error: Option<CallError>,
     count: Option<i32>
 }
@@ -74,13 +80,14 @@ impl CallResult {
         }
     }
 
-    pub fn result_set(rows: serde_json::Value) -> CallResult {
-        CallResult {
+    pub fn result_set(rows: Rows) -> driver::Result<CallResult> {
+        let data = ResultSet::create(rows)?;
+        Ok(CallResult {
             ty: String::from("RESULT_SET"),
-            rows: Some(rows),
+            rows: Some(data),
             error: None,
             count: None
-        }
+        })
     }
 
     pub fn empty() -> CallResult {
@@ -88,6 +95,18 @@ impl CallResult {
             ty: String::from("EMPTY"),
             rows: None,
             error: None,
+            count: None
+        }
+    }
+
+    pub fn error(code: String, message: String) -> CallResult {
+        CallResult {
+            ty: String::from("ERROR"),
+            rows: None,
+            error: Some(CallError {
+                code: code,
+                message: message,
+            }),
             count: None
         }
     }
@@ -99,7 +118,7 @@ struct CallError {
     message: String
 }
 
-fn createJsonresult(res: driver::Result<CallResult>) -> *const c_char {
+fn serializeCallResult(res: driver::Result<CallResult>) -> *const c_char {
     let result = handleResult(res);
     let serialized = serde_json::to_string(&result).unwrap();
     to_ptr(serialized)
@@ -114,20 +133,11 @@ fn handleResult(result: driver::Result<CallResult>) -> CallResult {
 
             match e {
                 driver::DriverError::PsqlError(ref err) => match err.as_db() {
-                  Some(dbErr) => CallResult {
-                      ty: String::from("ERROR"),
-                      rows: None,
-                      error: Some(CallError {
-                          code: String::from(dbErr.code.code()),
-                          message: dbErr.message.clone(),
-                      }),
-                      count: None
-                  },
-
+                  Some(dbErr) => CallResult::error(String::from(dbErr.code.code()), dbErr.message.clone()),
                   None =>panic!("No PSQL error, something else: {:?}", e),
                 },
 
-                x => panic!("No PSQL error, something else: {:?}", x),
+                _ => CallResult::error(String::from("-1"), err),
             }
         }
     }
@@ -138,14 +148,14 @@ pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c
     let connection = unsafe { Box::from_raw(conn) };
     connection.close();
 
-    return createJsonresult(Ok(CallResult::empty()));
+    return serializeCallResult(Ok(CallResult::empty()));
 }
 
 #[no_mangle]
 pub extern "C" fn startTransaction<'a>(conn: *mut driver::PsqlConnection) -> *const c_char  {
     unsafe {
         let res = (*conn).startTransaction();
-        return createJsonresult(res.map(|_| { CallResult::empty() }));
+        return serializeCallResult(res.map(|_| { CallResult::empty() }));
     }
 }
 
@@ -153,7 +163,7 @@ pub extern "C" fn startTransaction<'a>(conn: *mut driver::PsqlConnection) -> *co
 pub extern "C" fn commitTransaction(conn: *mut driver::PsqlConnection) -> *const c_char  {
     println!("[Rust] committing");
     let ptr = unsafe { Box::from_raw(conn) };
-    let ret = createJsonresult(ptr.commitTransaction().map(|_| { CallResult::empty() }));
+    let ret = serializeCallResult(ptr.commitTransaction().map(|_| { CallResult::empty() }));
     mem::forget(ptr);
     println!("[Rust] committed");
 
@@ -164,7 +174,7 @@ pub extern "C" fn commitTransaction(conn: *mut driver::PsqlConnection) -> *const
 pub extern "C" fn rollbackTransaction(conn: *mut driver::PsqlConnection) -> *const c_char  {
     println!("[Rust] Rolling back");
     let ptr = unsafe { Box::from_raw(conn) };
-    let ret = createJsonresult(ptr.rollbackTransaction().map(|_| { CallResult::empty() }));
+    let ret = serializeCallResult(ptr.rollbackTransaction().map(|_| { CallResult::empty() }));
 
     mem::forget(ptr);
     println!("[Rust] Rolled back");
