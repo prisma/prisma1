@@ -159,9 +159,13 @@ export class Config {
   }
   private setDefinitionPaths() {
     const definitionPath = path.join(this.cwd, 'prisma.yml')
+    const definitionPathWithPrisma = path.join(this.cwd, 'prisma', 'prisma.yml')
     if (fs.pathExistsSync(definitionPath)) {
       this.definitionDir = this.cwd
       this.definitionPath = definitionPath
+    } else if (fs.pathExistsSync(definitionPathWithPrisma)) {
+      this.definitionDir = path.join(this.cwd, 'prisma') 
+      this.definitionPath = definitionPathWithPrisma
     } else {
       this.definitionPath = this.getDefinitionPathByGraphQLConfig()
       if (this.definitionPath) {
