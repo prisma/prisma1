@@ -236,7 +236,7 @@ export class GoGenerator extends Generator {
                       []string{${typeFields.join(',')}})
 
                     var v Aggregate
-                    err := ret.Exec(ctx, &v)
+                    _, err := ret.Exec(ctx, &v)
                     return v, err
                   }`
               }
@@ -254,10 +254,16 @@ export class GoGenerator extends Generator {
             }
           }).join('\n')}
 
-          func (instance ${type.name}Exec) Exec(ctx context.Context) (${type.name}, error) {
+          func (instance ${type.name}Exec) Exec(ctx context.Context) (*${type.name}, error) {
             var v ${type.name}
-            err := instance.exec.Exec(ctx, &v)
-            return v, err
+            ok, err := instance.exec.Exec(ctx, &v)
+            if err != nil {
+              return nil, err
+            }
+            if !ok {
+              return nil, ErrNoResult
+            }
+            return &v, nil
           }
 
           func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
@@ -664,11 +670,14 @@ package prisma
 
 import (
 	"context"
+	"errors"
 
 	"github.com/prisma/prisma-client-lib-go"
 
 	"github.com/machinebox/graphql"
 )
+
+var ErrNoResult = errors.New("query returned no result")
 
 func Str(v string) *string { return &v }
 func Int32(v int32) *int32 { return &v }
