@@ -2,7 +2,7 @@ package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, SequenceAction, SimpleMongoAction}
-import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, NestedResult, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 
