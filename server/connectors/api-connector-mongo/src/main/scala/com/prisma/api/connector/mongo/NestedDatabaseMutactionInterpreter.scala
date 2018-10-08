@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mongo
 
-import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, SimpleMongoAction}
+import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder}
 import com.prisma.api.connector.{MutactionResults, UnitDatabaseMutactionResult}
 import com.prisma.gc_values.IdGCValue
 

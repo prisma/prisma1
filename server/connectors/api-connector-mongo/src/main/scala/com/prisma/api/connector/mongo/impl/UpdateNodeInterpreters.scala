@@ -1,10 +1,10 @@
 package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, SimpleMongoAction}
+import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{IdGCValue, RootGCValue}
+import com.prisma.gc_values.IdGCValue
 
 import scala.concurrent.ExecutionContext
 
@@ -27,18 +27,19 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
                   case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
                   case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
                 }
-      id <- childId match {
-             case Some(id) => mutationBuilder.updateNodeByWhere(mutaction, NodeSelector.forId(mutaction.model, id)).map(_ => id)
-             case None =>
-               throw APIErrors.NodesNotConnectedError(
-                 relation = mutaction.relationField.relation,
-                 parent = parent,
-                 parentWhere = None,
-                 child = model,
-                 childWhere = mutaction.where
-               )
-           }
-    } yield MutactionResults(Vector(UpdateNodeResult(id, PrismaNode(id, RootGCValue.empty), mutaction)))
+      results <- childId match {
+                  case Some(id) =>
+                    mutationBuilder.updateNodeByWhere(mutaction, NodeSelector.forId(mutaction.model, id))
+                  case None =>
+                    throw APIErrors.NodesNotConnectedError(
+                      relation = mutaction.relationField.relation,
+                      parent = parent,
+                      parentWhere = None,
+                      child = model,
+                      childWhere = mutaction.where
+                    )
+                }
+    } yield results
   }
 
   def verifyChildWhere(mutationBuilder: MongoActionsBuilder, where: Option[NodeSelector])(implicit ec: ExecutionContext) = {

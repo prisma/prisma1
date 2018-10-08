@@ -2,7 +2,7 @@ package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, SequenceAction, SimpleMongoAction}
-import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, NestedResult, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 
@@ -25,13 +25,13 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
 
     for {
       _       <- SequenceAction(Vector(requiredCheck(parentId), removalAction(parentId)))
-      wrapper <- createNodeAndConnectToParent(mutationBuilder, parentId)
-    } yield MutactionResults(Vector(CreateNodeResult(wrapper.id, mutaction)) ++ wrapper.results)
+      results <- createNodeAndConnectToParent(mutationBuilder, parentId)
+    } yield results
   }
   private def createNodeAndConnectToParent(
       mutationBuilder: MongoActionsBuilder,
       parentId: IdGCValue
-  )(implicit ec: ExecutionContext): MongoAction[Wrapper] = relation.manifestation match {
+  )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relation.manifestation match {
     case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
 
       val inlineRelation = c.isList match {
@@ -42,17 +42,15 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
       for {
         mutactionResult <- mutationBuilder.createNode(mutaction, inlineRelation)
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
-      } yield Wrapper(id, mutactionResult.results)
+      } yield mutactionResult
 
     case _ => // ID is stored on other node, we need to update the parent with the inline relation id after creating the child.
       for {
         mutactionResult <- mutationBuilder.createNode(mutaction, List.empty)
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
         _               <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
-      } yield Wrapper(id, mutactionResult.results)
+      } yield mutactionResult
   }
-
-  case class Wrapper(id: IdGCValue, results: Vector[DatabaseMutactionResult])
 
   def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = mutaction.topIsCreate match {
     case false =>
