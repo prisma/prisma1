@@ -9,6 +9,9 @@ extern crate byteorder;
 extern crate rust_decimal;
 extern crate num_traits;
 
+#[macro_use]
+extern crate serde_derive;
+
 use std::ffi::{CStr, CString};
 use std::mem;
 use std::os::raw::c_char;
@@ -33,9 +36,9 @@ pub extern "C" fn sqlQuery(
 ) -> *const c_char {
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let result = conn.queryRawParams(queryString, paramsString);
+    let callResult = conn.queryRawParams(queryString, paramsString).map(|rows| { CallResult::result_set(rows) });
 
-    return to_ptr(handleResult(result, String::from("[]")).to_string());
+    return createJsonresult(callResult);
 }
 
 #[no_mangle]
@@ -43,55 +46,130 @@ pub extern "C" fn sqlExecute(
     conn: &driver::PsqlConnection,
     query: *const c_char,
     params: *const c_char,
-) {
+) -> *const c_char {
     println!("[Rust] Calling exec");
     let queryString = to_string(query);
     let paramsString = to_string(params);
+    let result = conn.executeRawParams(queryString, paramsString);
+    let callResult = result.map(|x| { CallResult::count(x as i32) });
 
-    handleResult(conn.executeRawParams(queryString, paramsString), 0);
+    return createJsonresult(callResult);
 }
 
-fn handleResult<T>(result: driver::Result<T>, default: T) -> T {
+#[derive(Serialize)]
+struct CallResult {
+    ty: String,
+    rows: Option<serde_json::Value>,
+    error: Option<CallError>,
+    count: Option<i32>
+}
+
+impl CallResult {
+    pub fn count(c: i32) -> CallResult {
+        CallResult {
+            ty: String::from("COUNT"),
+            rows: None,
+            error: None,
+            count: Some(c)
+        }
+    }
+
+    pub fn result_set(rows: serde_json::Value) -> CallResult {
+        CallResult {
+            ty: String::from("RESULT_SET"),
+            rows: Some(rows),
+            error: None,
+            count: None
+        }
+    }
+
+    pub fn empty() -> CallResult {
+        CallResult {
+            ty: String::from("EMPTY"),
+            rows: None,
+            error: None,
+            count: None
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct CallError {
+    code: String,
+    message: String
+}
+
+fn createJsonresult(res: driver::Result<CallResult>) -> *const c_char {
+    let result = handleResult(res);
+    let serialized = serde_json::to_string(&result).unwrap();
+    to_ptr(serialized)
+}
+
+fn handleResult(result: driver::Result<CallResult>) -> CallResult {
     match result {
         Ok(v) => v,
         Err(e) => {
-            let cstr = format!("[Rust ERROR] {:?}", e);
-            println!("{}", cstr.red());
-            default
-        },
+            let err = format!("[Rust ERROR] {:?}", e);
+            println!("{}", err.red());
+
+            match e {
+                driver::DriverError::PsqlError(ref err) => match err.as_db() {
+                  Some(dbErr) => CallResult {
+                      ty: String::from("ERROR"),
+                      rows: None,
+                      error: Some(CallError {
+                          code: String::from(dbErr.code.code()),
+                          message: dbErr.message.clone(),
+                      }),
+                      count: None
+                  },
+
+                  None =>panic!("No PSQL error, something else: {:?}", e),
+                },
+
+                x => panic!("No PSQL error, something else: {:?}", x),
+            }
+        }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) {
-    let wat = unsafe { Box::from_raw(conn) };
-    wat.close();
+pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c_char  {
+    let connection = unsafe { Box::from_raw(conn) };
+    connection.close();
+
+    return createJsonresult(Ok(CallResult::empty()));
 }
 
 #[no_mangle]
-pub extern "C" fn startTransaction<'a>(conn: *mut driver::PsqlConnection) {
+pub extern "C" fn startTransaction<'a>(conn: *mut driver::PsqlConnection) -> *const c_char  {
     unsafe {
         let res = (*conn).startTransaction();
-        handleResult(res, ())
+        return createJsonresult(res.map(|_| { CallResult::empty() }));
     }
 }
 
 #[no_mangle]
-pub extern "C" fn commitTransaction(conn: *mut driver::PsqlConnection) {
+pub extern "C" fn commitTransaction(conn: *mut driver::PsqlConnection) -> *const c_char  {
     println!("[Rust] committing");
     let ptr = unsafe { Box::from_raw(conn) };
-    handleResult(ptr.commitTransaction(), ());
+    let ret = createJsonresult(ptr.commitTransaction().map(|_| { CallResult::empty() }));
     mem::forget(ptr);
     println!("[Rust] committed");
+
+    ret
 }
 
 #[no_mangle]
-pub extern "C" fn rollbackTransaction(conn: *mut driver::PsqlConnection) {
+pub extern "C" fn rollbackTransaction(conn: *mut driver::PsqlConnection) -> *const c_char  {
     println!("[Rust] Rolling back");
     let ptr = unsafe { Box::from_raw(conn) };
-    handleResult(ptr.rollbackTransaction(), ());
+    let ret = createJsonresult(ptr.rollbackTransaction().map(|_| { CallResult::empty() }));
+
     mem::forget(ptr);
     println!("[Rust] Rolled back");
+
+    ret
 }
 
 /// Convert a native string to a Rust string

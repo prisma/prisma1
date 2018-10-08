@@ -1,12 +1,11 @@
 package com.prisma.api.connector.jdbc.impl
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
-import com.prisma.shared.models.{Field, Model}
-import org.postgresql.util.PSQLException
+import com.prisma.shared.models.Model
 
 object GetFieldFromSQLUniqueException {
 
-  def getFieldOption(model: Model, e: PSQLException): Option[String] = {
+  def getFieldOption(model: Model, e: SQLException): Option[String] = {
     model.scalarFields.filter { field =>
       val constraintNameThatMightBeTooLong = model.dbName + "." + field.dbName + "._UNIQUE"
       val constraintName                   = constraintNameThatMightBeTooLong.substring(0, Math.min(30, constraintNameThatMightBeTooLong.length))

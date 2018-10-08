@@ -6,15 +6,15 @@ import com.sun.jna.Pointer;
 public interface JnaRustBridge extends Library {
     Pointer newConnection(String url);
 
-    void startTransaction(Pointer connection);
+    String startTransaction(Pointer connection);
 
-    void commitTransaction(Pointer connection);
+    String commitTransaction(Pointer connection);
 
-    void rollbackTransaction(Pointer connection);
+    String rollbackTransaction(Pointer connection);
 
-    void closeConnection(Pointer connection);
+    String closeConnection(Pointer connection);
 
-    void sqlExecute(Pointer connection, String query, String params);
+    String sqlExecute(Pointer connection, String query, String params);
 
     String sqlQuery(Pointer connection, String query, String params);
 }

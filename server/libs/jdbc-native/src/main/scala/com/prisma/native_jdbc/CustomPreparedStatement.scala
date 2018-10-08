@@ -3,10 +3,11 @@ package com.prisma.native_jdbc
 import java.io.{InputStream, Reader}
 import java.net.URL
 import java.sql
-import java.sql.{Blob, Clob, Date, NClob, PreparedStatement, Ref, ResultSet, RowId, SQLXML, Time, Timestamp}
+import java.sql.{Blob, Clob, Date, NClob, PreparedStatement, Ref, ResultSet, RowId, SQLException, SQLXML, Time, Timestamp}
 import java.util.Calendar
 
 import org.postgresql.core.Parser
+import org.postgresql.util.PSQLState
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
 import scala.collection.mutable
@@ -22,13 +23,13 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
 
   override def execute() = {
     val paramsString = JsArray(params.toSeq.sortBy(_._1).map(_._2)).toString()
-    binding.sqlExecute(
+    val result = binding.sqlExecute(
       conn,
       rawSqlString,
       paramsString
     )
 
-    false
+    result.isResultSet
   }
 
   override def executeQuery(): ResultSet = {
@@ -39,10 +40,14 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
       paramsString
     )
 
-    JsonResultSet.fromString(result).get
+    if (!result.isResultSet) {
+      throw new SQLException("No results were returned by the query.", PSQLState.NO_DATA.toString)
+    }
+
+    result.toResultSet
   }
 
-  override def getGeneratedKeys: ResultSet = JsonResultSet.fromString("[]").get
+  override def getGeneratedKeys: ResultSet = JsonResultSet(IndexedSeq.empty)
 
   override def setShort(parameterIndex: Int, x: Short) = ???
 

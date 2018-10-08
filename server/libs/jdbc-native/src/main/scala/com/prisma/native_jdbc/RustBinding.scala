@@ -1,6 +1,11 @@
 package com.prisma.native_jdbc
 
+import java.sql.SQLException
+
 import com.sun.jna.{Native, Pointer}
+import play.api.libs.json.{JsObject, Json}
+
+import scala.util.Try
 
 sealed trait RustConnection
 //class RustConnectionGraal(val conn: CIntegration.RustConnection) extends RustConnection
@@ -8,12 +13,37 @@ class RustConnectionJna(val conn: Pointer) extends RustConnection
 
 trait RustBinding[T <: RustConnection] {
   def newConnection(url: String): T
-  def startTransaction(connection: T): Unit
-  def commitTransaction(connection: T): Unit
-  def rollbackTransaction(connection: T): Unit
-  def closeConnection(connection: T): Unit
-  def sqlExecute(connection: T, query: String, params: String): Unit
-  def sqlQuery(connection: T, query: String, params: String): String
+  def startTransaction(connection: T): RustCallResult
+  def commitTransaction(connection: T): RustCallResult
+  def rollbackTransaction(connection: T): RustCallResult
+  def closeConnection(connection: T): RustCallResult
+  def sqlExecute(connection: T, query: String, params: String): RustCallResult
+  def sqlQuery(connection: T, query: String, params: String): RustCallResult
+}
+
+object RustCallResult {
+  implicit val errorFormat    = Json.format[RustError]
+  implicit val protocolFormat = Json.format[RustCallResult]
+
+  def fromString(str: String): RustCallResult = {
+    (for {
+      json     <- Try { Json.parse(str) }
+      protocol <- Try { json.as[RustCallResult] }
+    } yield {
+      protocol.error.foreach(err => throw new SQLException(err.message, err.code))
+      protocol
+    }).get
+  }
+}
+
+case class RustError(code: String, message: String)
+
+case class RustCallResult(ty: String, count: Option[Int], rows: Option[IndexedSeq[JsObject]], error: Option[RustError]) {
+  def isResultSet = ty == "RESULT_SET"
+  def isError     = ty == "ERROR"
+  def isCount     = ty == "COUNT"
+  def isEmpty     = ty == "EMPTY"
+  def toResultSet = JsonResultSet(rows.get)
 }
 
 //object RustGraalImpl extends RustBinding[RustConnectionGraal] {
@@ -33,28 +63,43 @@ trait RustBinding[T <: RustConnection] {
 
 object RustJnaImpl extends RustBinding[RustConnectionJna] {
   val currentDir = System.getProperty("user.dir")
+
   System.setProperty("jna.debug_load.jna", "true")
-//  System.setProperty("jna.boot.library.path", s"$currentDir/jnalib/")
   System.setProperty("jna.debug_load", "true")
-//  System.setProperty("jna.library.path", s"$currentDir/hello-rs/target/debug")
+
   val library = Native.loadLibrary("jdbc_native", classOf[JnaRustBridge])
+
   override def newConnection(url: String): RustConnectionJna = {
     new RustConnectionJna(library.newConnection(url))
   }
 
-  override def startTransaction(connection: RustConnectionJna): Unit    = library.startTransaction(connection.conn)
-  override def commitTransaction(connection: RustConnectionJna): Unit   = library.commitTransaction(connection.conn)
-  override def rollbackTransaction(connection: RustConnectionJna): Unit = library.rollbackTransaction(connection.conn)
-  override def closeConnection(connection: RustConnectionJna): Unit     = library.closeConnection(connection.conn)
-  override def sqlExecute(connection: RustConnectionJna, query: String, params: String): Unit = {
-    println(s"[JNA] Execute: '$query' with params: $params")
-    library.sqlExecute(connection.conn, query, params)
+  override def startTransaction(connection: RustConnectionJna): RustCallResult = {
+    RustCallResult.fromString(library.startTransaction(connection.conn))
   }
 
-  override def sqlQuery(connection: RustConnectionJna, query: String, params: String): String = {
+  override def commitTransaction(connection: RustConnectionJna): RustCallResult = {
+    RustCallResult.fromString(library.commitTransaction(connection.conn))
+  }
+
+  override def rollbackTransaction(connection: RustConnectionJna): RustCallResult = {
+    RustCallResult.fromString(library.rollbackTransaction(connection.conn))
+  }
+
+  override def closeConnection(connection: RustConnectionJna): RustCallResult = {
+    RustCallResult.fromString(library.closeConnection(connection.conn))
+  }
+
+  override def sqlExecute(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
+    println(s"[JNA] Execute: '$query' with params: $params")
+    val result = library.sqlExecute(connection.conn, query, params)
+    println(s"[JNA] Result: $result")
+    RustCallResult.fromString(result)
+  }
+
+  override def sqlQuery(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
     println(s"[JNA] Query: '$query' with params: $params")
     val result = library.sqlQuery(connection.conn, query, params)
     println(s"[JNA] Result: $result")
-    result
+    RustCallResult.fromString(result)
   }
 }

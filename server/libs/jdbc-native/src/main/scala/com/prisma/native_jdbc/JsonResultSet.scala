@@ -7,18 +7,6 @@ import java.util.{Calendar, TimeZone}
 
 import play.api.libs.json._
 
-import scala.util.Try
-
-object JsonResultSet {
-  def fromString(str: String): Try[JsonResultSet] = {
-    for {
-      json      <- Try { Json.parse(str) }
-      jsArray   <- Try { json.asInstanceOf[JsArray] }
-      jsObjects = jsArray.value.collect { case obj: JsObject => obj }
-    } yield JsonResultSet(jsObjects)
-  }
-}
-
 case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with DefaultReads {
   import DefaultValues._
   private var cursor: Int    = -1

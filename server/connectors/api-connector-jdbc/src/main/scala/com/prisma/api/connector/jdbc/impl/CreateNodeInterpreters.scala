@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.impl
 
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
@@ -8,7 +8,6 @@ import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLev
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
-import org.postgresql.util.PSQLException
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
@@ -29,10 +28,10 @@ case class CreateNodeInterpreter(
   }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).isDefined =>
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).get)
 
-    case e: PSQLException if e.getSQLState == "23503" =>
+    case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException
@@ -117,10 +116,10 @@ case class NestedCreateNodeInterpreter(
     }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
-    case e: PSQLException if e.getSQLState == "23503" =>
+    case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException

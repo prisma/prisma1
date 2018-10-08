@@ -110,12 +110,12 @@ impl From<cell::BorrowMutError> for DriverError {
 }
 
 impl<'a> PsqlConnection<'a> {
-    pub fn queryRawParams(&self, query: String, rawParams: String) -> Result<String> {
+    pub fn queryRawParams(&self, query: String, rawParams: String) -> Result<serde_json::Value> {
         let params = toGcValues(&rawParams)?;
         return self.query(query, params.iter().collect());
     }
 
-    pub fn query(&self, query: String, params: Vec<&GcValue>) -> Result<String> {
+    pub fn query(&self, query: String, params: Vec<&GcValue>) -> Result<serde_json::Value> {
         println!("[Rust] Query received the params: {:?}", params);
         let mutRef = self.transaction.try_borrow_mut()?;
         let rows = match *mutRef {
@@ -134,7 +134,7 @@ impl<'a> PsqlConnection<'a> {
             vec.push(json);
         }
 
-        return Ok(serde_json::to_string(&vec)?);
+        return Ok(serde_json::Value::Array(vec));
     }
 
     pub fn executeRawParams(&self, query: String, rawParams: String) -> Result<u64> {
