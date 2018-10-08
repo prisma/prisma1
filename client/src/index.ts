@@ -1,6 +1,5 @@
 export { Client } from './Client'
 export { ClientOptions, BaseClientOptions } from './types'
-export { forwardTo } from './utils'
 export { Generator } from './codegen/Generator'
 export { JavascriptGenerator } from './codegen/javascript-client'
 export { TypescriptGenerator } from './codegen/typescript-client'
