@@ -491,7 +491,7 @@ export class Client {
     try {
       await opn(url)
     } catch (e) {
-      this.out.log(`Could not open url. Please open ${url} manually`)
+      this.out.log(`Please open this url in your browser to authenticate: ${url}`)
     }
     while (!token) {
       const cloud = await this.cloudTokenRequest(secret)
