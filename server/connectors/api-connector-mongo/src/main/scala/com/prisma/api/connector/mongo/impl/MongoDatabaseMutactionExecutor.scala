@@ -31,7 +31,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     mutaction match {
       case m: TopLevelUpsertNode =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
           childResult <- generateTopLevelMutaction(database,
                                                    result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction],
                                                    mutationBuilder)
@@ -39,7 +39,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
                            case results: MutactionResults =>
                              val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
@@ -53,7 +53,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
         } yield result
 
       case _ => sys.error("not implemented yet")
@@ -69,7 +69,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     mutaction match {
       case m: NestedUpsertNode =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
           childResult <- generateNestedMutaction(database,
                                                  result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
                                                  parentId,
@@ -78,7 +78,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
       case m: FurtherNestedMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- result match {
                            case results: MutactionResults =>
                              val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
@@ -92,7 +92,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
       case m: FinalMutaction =>
         for {
-          result <- interpreterFor(m).mongoAction(mutationBuilder, parentId)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
         } yield result
 
       case _ => sys.error("not implemented yet")

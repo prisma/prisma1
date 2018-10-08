@@ -52,7 +52,7 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
     res.toString() should be("""{"data":{"updateOwner":{"ownerName":"jon","cat":{"catName":"azrael"}}}}""")
   }
 
-  "Nested Upsert" should "work for models with missing backrelations for update " taggedAs (IgnoreMongo) in {
+  "Nested Upsert" should "work for models with missing backrelations for update " in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
@@ -100,7 +100,7 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
     res.toString should be("""{"data":{"updateOwner":{"ownerName":"jon","cats":[{"catName":"azrael"}]}}}""")
   }
 
-  "Nested Upsert" should "work for models with missing backrelations for create" taggedAs (IgnoreMongo) in {
+  "Nested Upsert" should "work for models with missing backrelations for create" in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {

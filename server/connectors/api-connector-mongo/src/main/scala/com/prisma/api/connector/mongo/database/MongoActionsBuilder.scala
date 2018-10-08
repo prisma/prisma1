@@ -2,6 +2,7 @@ package com.prisma.api.connector.mongo.database
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 trait AllActions
     extends NodeActions
@@ -27,6 +28,8 @@ sealed trait MongoAction[+A] {
   def map[B](f: A => B): MongoAction[B] = MapAction(this, f)
 
   def flatMap[B](f: A => MongoAction[B]): MongoAction[B] = FlatMapAction(this, f)
+
+  def asTry: MongoAction[Try[A]] = AsTryAction(this)
 }
 
 object MongoAction {
@@ -34,7 +37,8 @@ object MongoAction {
     SequenceAction(actions)
   }
 
-  def successful[A](value: A) = SuccessAction(value)
+  def successful[A](value: A)  = SuccessAction(value)
+  def failed(error: Throwable) = FailedAction(error)
 }
 
 case class MapAction[A, B](source: MongoAction[A], fn: A => B)                  extends MongoAction[B]
@@ -44,3 +48,5 @@ case class SimpleMongoAction[+A](fn: MongoDatabase => Future[A]) extends MongoAc
 
 case class SequenceAction[A](actions: Vector[MongoAction[A]]) extends MongoAction[Vector[A]]
 case class SuccessAction[A](value: A)                         extends MongoAction[A]
+case class FailedAction(error: Throwable)                     extends MongoAction[Nothing]
+case class AsTryAction[A](action: MongoAction[A])             extends MongoAction[Try[A]]

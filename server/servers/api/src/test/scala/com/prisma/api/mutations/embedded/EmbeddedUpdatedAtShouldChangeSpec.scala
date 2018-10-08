@@ -54,7 +54,7 @@ class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiS
     updatedAt should not equal changedUpdatedAt
   }
 
-  "Upserting a nested data item" should "change it's updatedAt value" taggedAs (IgnoreMongo) in {
+  "Upserting a nested data item" should "change it's updatedAt value" in {
     database.setup(project)
 
     val updatedAt = server

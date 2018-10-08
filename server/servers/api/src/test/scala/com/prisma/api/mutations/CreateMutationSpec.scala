@@ -174,7 +174,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "A Create Mutation" should "gracefully fail when a unique violation occurs" taggedAs (IgnoreMongo) in {
+  "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
     server.query(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
     server.queryThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
   }

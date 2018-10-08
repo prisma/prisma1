@@ -111,7 +111,7 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
     result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
   }
 
-  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" taggedAs (IgnoreMongo) in {
+  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
     val project = SchemaDsl.fromString() {
       s"""type List{

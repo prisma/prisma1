@@ -793,4 +793,43 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("query{middles{unique, top {unique}}}", project).toString should be("""{"data":{"middles":[{"unique":11111,"top":{"unique":111111}}]}}""")
     server.query("query{tops{unique, middle {unique}}}", project).toString should be("""{"data":{"tops":[{"unique":111111,"middle":{"unique":11111}}]}}""")
   }
+
+  "Simple unique index" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 11111,
+         |   name: "Top"
+         |}){
+         |  unique,
+         |  name
+         |}}""",
+      project
+    )
+
+    server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 11111,
+         |   name: "Top"
+         |}){
+         |  unique,
+         |  name
+         |}}""",
+      project
+    )
+
+  }
 }

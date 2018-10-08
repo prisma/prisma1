@@ -5,11 +5,11 @@ import com.prisma.deploy.connector.mongo.database.MongoDeployDatabaseMutationBui
 
 object CreateProjectInterpreter extends MongoMutactionInterpreter[CreateProject] {
   override def execute(mutaction: CreateProject) = {
-    MongoDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
+    MongoDeployDatabaseMutationBuilder.createClientDatabaseForProject
   }
 
   override def rollback(mutaction: CreateProject) = {
-    MongoDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
+    MongoDeployDatabaseMutationBuilder.deleteProjectDatabase
   }
 }
 
@@ -25,10 +25,10 @@ object TruncateProjectInterpreter extends MongoMutactionInterpreter[TruncateProj
 
 object DeleteProjectInterpreter extends MongoMutactionInterpreter[DeleteProject] {
   override def execute(mutaction: DeleteProject) = {
-    MongoDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = mutaction.projectId)
+    MongoDeployDatabaseMutationBuilder.deleteProjectDatabase
   }
 
   override def rollback(mutaction: DeleteProject) = {
-    MongoDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = mutaction.projectId)
+    MongoDeployDatabaseMutationBuilder.createClientDatabaseForProject
   }
 }
