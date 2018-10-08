@@ -2,8 +2,6 @@
 
 extern crate serde;
 extern crate serde_json;
-
-//#[macro_use]
 extern crate postgres;
 extern crate colored;
 extern crate chrono;

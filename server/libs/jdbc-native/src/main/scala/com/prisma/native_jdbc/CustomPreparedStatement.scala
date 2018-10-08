@@ -146,7 +146,9 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
     params.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
   }
 
-  override def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar) = ???
+  override def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar) = {
+    params.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
+  }
 
   override def setBytes(parameterIndex: Int, x: Array[Byte]) = ???
 

@@ -23,8 +23,12 @@ trait JdbcExtensions {
 object JdbcExtensionsValueClasses {
   val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
-  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp =
-    Timestamp.valueOf(java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateTime.getMillis), ZoneOffset.UTC))
+  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
+    val milis = dateTime.getMillis
+    new Timestamp(milis)
+
+//    Timestamp.valueOf(java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateTime.getMillis), ZoneOffset.UTC))
+  }
 
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
 
@@ -43,7 +47,7 @@ object JdbcExtensionsValueClasses {
         case FloatGCValue(float)       => ps.setDouble(index, float)
         case CuidGCValue(id)           => ps.setString(index, id)
         case UuidGCValue(uuid)         => ps.setObject(index, uuid)
-        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime))
+        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime), calendar)
         case EnumGCValue(enum)         => ps.setString(index, enum)
         case JsonGCValue(json)         => ps.setString(index, json.toString)
         case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)

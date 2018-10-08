@@ -37,29 +37,6 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  "Test" should "Test" in {
-
-    val res = server.query(
-      s"""mutation {
-         |  createScalarModel(data: {
-         |    optFloat: 1.234
-         |  }){id, optFloat}
-         |}""".stripMargin,
-      project = project
-    )
-    val id = res.pathAsString("data.createScalarModel.id")
-
-    res should be(s"""{"data":{"createScalarModel":{"id":"$id","optInt":1337}}}""".parseJson)
-
-//    testDependencies.sssEventsPubSub.expectPublishedMsg(
-//      Message(s"subscription:event:${project.id}:createScalarModel", s"""{"nodeId":"$id","modelId":"ScalarModel","mutationType":"CreateNode"}"""))
-//
-//    val queryRes = server.query("""{ scalarModels{optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""", project = project)
-//
-//    queryRes.toString should be(
-//      s"""{"data":{"scalarModels":[{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}]}}""")
-  }
-
   "A Create Mutation" should "create and return item" in {
 
     val res = server.query(

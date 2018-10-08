@@ -3,7 +3,8 @@ package com.prisma.native_jdbc
 import java.io.{InputStream, Reader}
 import java.sql
 import java.sql.{Blob, Clob, Date, NClob, Ref, ResultSet, RowId, SQLXML, Time, Timestamp}
-import java.util.Calendar
+import java.util.{Calendar, TimeZone}
+
 import play.api.libs.json._
 
 import scala.util.Try
@@ -202,13 +203,17 @@ case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with Defa
 
   override def getRef(columnLabel: String) = ???
 
-  override def getTimestamp(columnIndex: Int) = ???
+  override def getTimestamp(columnLabel: String) = {
+    new Timestamp(readColumnAs[Long](columnLabel))
+  }
 
-  override def getTimestamp(columnLabel: String) = ???
+  override def getTimestamp(columnLabel: String, cal: Calendar) = {
+    if (cal.getTimeZone() != TimeZone.getTimeZone("UTC")) {
+      sys.error("Can only handle UTC.")
+    }
 
-  override def getTimestamp(columnIndex: Int, cal: Calendar) = ???
-
-  override def getTimestamp(columnLabel: String, cal: Calendar) = ???
+    new Timestamp(readColumnAs[Long](columnLabel))
+  }
 
   override def getShort(columnIndex: Int) = ???
 
@@ -217,6 +222,8 @@ case class JsonResultSet(rows: IndexedSeq[JsObject]) extends ResultSet with Defa
   /**
     * Intentionally unimplemented because we don't need it
     */
+  override def getTimestamp(columnIndex: Int, cal: Calendar)                             = ???
+  override def getTimestamp(columnIndex: Int)                                            = ???
   override def updateShort(columnIndex: Int, x: Short)                                   = ???
   override def updateShort(columnLabel: String, x: Short)                                = ???
   override def updateBytes(columnIndex: Int, x: Array[Byte])                             = ???
