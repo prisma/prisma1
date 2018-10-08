@@ -158,7 +158,7 @@ case class RelationField(
   lazy val dbName: String = relation.manifestation match {
     case Some(m: InlineRelationManifestation) => m.referencingColumn
 
-    case _ => sys.error("")
+    case _ => this.name
   }
 
   lazy val relationIsInlinedInParent = relation.manifestation match {
