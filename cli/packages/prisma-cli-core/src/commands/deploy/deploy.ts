@@ -367,7 +367,7 @@ ${chalk.gray(
         this.out.log(stdout)
       }
       const { status, error } = child
-      if (error || status != 0) {
+      if (error || status !== 0) {
         if (error) {
           this.out.log(chalk.red(error.message))
         }
