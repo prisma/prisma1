@@ -819,7 +819,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    server.query(
+    server.queryThatMustFail(
       s"""mutation {
          |   createTop(data: {
          |   unique: 11111,
@@ -828,8 +828,9 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |  unique,
          |  name
          |}}""",
-      project
+      project,
+      3010,
+      errorContains = """A unique constraint would be violated on Top. Details: Field name = unique"""
     )
-
   }
 }

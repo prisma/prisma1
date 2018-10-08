@@ -16,13 +16,17 @@ object CreateColumnInterpreter extends MongoMutactionInterpreter[CreateColumn] {
   }
 
   override def rollback(mutaction: CreateColumn) = {
-//    MongoDeployDatabaseMutationBuilder.deleteField(
-//      projectId = mutaction.projectId,
-//      collectionName = mutaction.model.dbName,
-//      fieldName = mutaction.field.dbName
-//    )
+    if (mutaction.field.isUnique) {
 
-    NoAction.unit
+      MongoDeployDatabaseMutationBuilder.deleteField(
+        projectId = mutaction.projectId,
+        collectionName = mutaction.model.dbName,
+        fieldName = mutaction.field.dbName
+      )
+    } else {
+
+      NoAction.unit
+    }
   }
 }
 

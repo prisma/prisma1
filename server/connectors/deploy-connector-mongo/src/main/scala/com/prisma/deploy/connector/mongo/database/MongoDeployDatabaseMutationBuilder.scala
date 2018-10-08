@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mongo.database
 
 import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Model, Project}
 import org.mongodb.scala.bson.BsonNull
 import org.mongodb.scala.{MongoNamespace, _}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
@@ -25,9 +25,17 @@ object MongoDeployDatabaseMutationBuilder {
     database.listCollectionNames().toFuture().map(_ => ())
   }
 
-  //Fixme This deletes all indexes
   def truncateProjectTables(project: Project) = DeployMongoAction { database =>
-    database.drop().toFuture().map(_ -> Unit)
+    val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
+
+    for {
+      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
+      _ <- Future.sequence(nonEmbeddedModels.map { model =>
+            val fieldsWithUniqueConstraint = model.scalarNonListFields.filter(_.isUnique)
+            Future.sequence(fieldsWithUniqueConstraint.map(field => addUniqueConstraint(database, model.dbName, field.name)))
+          })
+    } yield ()
+
   }
 
   def deleteProjectDatabase = DeployMongoAction { database =>
@@ -48,23 +56,31 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   //Fields
-  def createField(collectionName: String, fieldName: String) = addUniqueConstraint(collectionName, fieldName)
+  def createField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
+    addUniqueConstraint(database, collectionName, fieldName)
+  }
 
-//  def deleteField(collectionName: String) = DeployMongoAction { database =>
-//    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
-//  }
+  def deleteField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
+    removeUniqueConstraint(database, collectionName, fieldName)
+  }
 //
 //  def updateField(name: String, newName: String) = DeployMongoAction { database =>
 //    database.getCollection(name).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
 //  }
 
-  def addUniqueConstraint(collectionName: String, fieldName: String) = DeployMongoAction { database =>
+  def addUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
     database
       .getCollection(collectionName)
       .createIndex(ascending(fieldName), IndexOptions().unique(true).sparse(true).name(s"${collectionName}_${fieldName}_UNIQUE"))
       .toFuture()
-      .map(_ => Unit)
+      .map(_ => ())
   }
 
-  def removeUniqueConstraint(collectionName: String, fieldName: String) = NoAction.unit
+  def removeUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
+    database
+      .getCollection(collectionName)
+      .dropIndex(s"${collectionName}_${fieldName}_UNIQUE")
+      .toFuture()
+      .map(_ => ())
+  }
 }
