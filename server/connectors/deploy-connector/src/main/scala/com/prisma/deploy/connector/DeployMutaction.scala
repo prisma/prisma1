@@ -26,4 +26,4 @@ case class RenameRelationTable(projectId: String, previousName: String, nextName
 case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
 case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction // based on migration settings;  set relation fields to null in document
 
-case class CreateInlineRelation(projectId: String, model: Model, field: RelationField, references: Model, column: String) extends DeployMutaction
+case class CreateInlineRelationForTests(projectId: String, model: Model, field: RelationField, references: Model, column: String) extends DeployMutaction

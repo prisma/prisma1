@@ -3,8 +3,11 @@ package com.prisma.api.connector.mongo.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, SequenceAction, SimpleMongoAction}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Model
+import org.mongodb.scala.MongoWriteException
 
 import scala.concurrent.ExecutionContext
 
@@ -12,6 +15,26 @@ case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionCo
   override def mongoAction(mutationBuilder: MongoActionsBuilder): SimpleMongoAction[MutactionResults] = {
     mutationBuilder.createNode(mutaction, List.empty)
   }
+
+  override val errorMapper = {
+    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
+
+  }
+}
+
+object MongoErrorMessageHelper {
+
+  def getFieldOption(model: Model, e: MongoWriteException): Option[String] = {
+    model.scalarFields.filter { field =>
+      val constraintName = field.name + "_U"
+      e.getMessage.contains(constraintName)
+    } match {
+      case x +: _ => Some("Field name = " + x.name)
+      case _      => None
+    }
+  }
+
 }
 
 case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val ec: ExecutionContext)
@@ -82,5 +105,10 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
 
     case true =>
       noActionRequired
+  }
+
+  override val errorMapper = {
+    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
   }
 }

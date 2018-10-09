@@ -5,12 +5,18 @@ import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.IdGCValue
+import org.mongodb.scala.MongoWriteException
 
 import scala.concurrent.ExecutionContext
 
 case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
   override def mongoAction(mutationBuilder: MongoActionsBuilder): MongoAction[MutactionResults] = {
     mutationBuilder.updateNode(mutaction)
+  }
+
+  override val errorMapper = {
+    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
   }
 }
 
@@ -53,6 +59,11 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
       case None =>
         MongoAction.successful(())
     }
+  }
+
+  override val errorMapper = {
+    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
   }
 
 }
