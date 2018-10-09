@@ -20,18 +20,24 @@ object DeleteRelationInterpreter extends MongoMutactionInterpreter[DeleteRelatio
 
 object Indexhelper {
   def add(relation: Relation) = DeployMongoAction { database =>
-    (relation.isInlineRelation, relation.modelAField.relationIsInlinedInParent) match {
-      case (true, true)  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-      case (true, false) => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
-      case (_, _)        => Future.successful(())
+    if (relation.isInlineRelation) {
+      relation.modelAField.relationIsInlinedInParent match {
+        case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+        case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+      }
+    } else {
+      Future.successful(())
     }
   }
 
   def remove(relation: Relation) = DeployMongoAction { database =>
-    (relation.isInlineRelation, relation.modelAField.relationIsInlinedInParent) match {
-      case (true, true)  => removeRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-      case (true, false) => removeRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
-      case (_, _)        => Future.successful(())
+    if (relation.isInlineRelation) {
+      relation.modelAField.relationIsInlinedInParent match {
+        case true  => removeRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+        case false => removeRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+      }
+    } else {
+      Future.successful(())
     }
   }
 }

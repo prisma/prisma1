@@ -10,16 +10,16 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: TruncateProject              => TruncateProjectInterpreter.execute(x)
       case x: DeleteProject                => DeleteProjectInterpreter.execute(x)
       case x: CreateColumn                 => CreateColumnInterpreter.execute(x)
-      case x: UpdateColumn                 => NoAction.unit
-      case x: DeleteColumn                 => NoAction.unit
+      case x: UpdateColumn                 => UpdateColumnInterpreter.execute(x)
+      case x: DeleteColumn                 => DeleteColumnInterpreter.execute(x)
       case x: CreateScalarListTable        => NoAction.unit
       case x: UpdateScalarListTable        => NoAction.unit
       case x: DeleteScalarListTable        => NoAction.unit
       case x: CreateModelTable             => CreateModelInterpreter.execute(x)
       case x: RenameTable                  => RenameModelInterpreter.execute(x)
       case x: DeleteModelTable             => DeleteModelInterpreter.execute(x)
-      case x: CreateRelationTable          => NoAction.unit
-      case x: DeleteRelationTable          => NoAction.unit //DeleteRelationInterpreter.execute(x)
+      case x: CreateRelationTable          => CreateRelationInterpreter.execute(x)
+      case x: DeleteRelationTable          => DeleteRelationInterpreter.execute(x)
       case x: RenameRelationTable          => NoAction.unit
       case x: CreateInlineRelationForTests => NoAction.unit
     }
@@ -30,17 +30,17 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: CreateProject                => CreateProjectInterpreter.rollback(x)
       case x: TruncateProject              => TruncateProjectInterpreter.rollback(x)
       case x: DeleteProject                => DeleteProjectInterpreter.rollback(x)
-      case x: CreateColumn                 => NoAction.unit
-      case x: UpdateColumn                 => NoAction.unit
-      case x: DeleteColumn                 => NoAction.unit
+      case x: CreateColumn                 => CreateColumnInterpreter.execute(x)
+      case x: UpdateColumn                 => UpdateColumnInterpreter.execute(x)
+      case x: DeleteColumn                 => DeleteColumnInterpreter.execute(x)
       case x: CreateScalarListTable        => NoAction.unit
       case x: UpdateScalarListTable        => NoAction.unit
       case x: DeleteScalarListTable        => NoAction.unit
       case x: CreateModelTable             => CreateModelInterpreter.rollback(x)
       case x: RenameTable                  => RenameModelInterpreter.rollback(x)
       case x: DeleteModelTable             => DeleteModelInterpreter.rollback(x)
-      case x: CreateRelationTable          => NoAction.unit
-      case x: DeleteRelationTable          => NoAction.unit //DeleteRelationInterpreter.rollback(x)
+      case x: CreateRelationTable          => CreateRelationInterpreter.execute(x)
+      case x: DeleteRelationTable          => DeleteRelationInterpreter.execute(x)
       case x: RenameRelationTable          => NoAction.unit
       case x: CreateInlineRelationForTests => NoAction.unit
     }
