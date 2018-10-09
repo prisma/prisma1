@@ -78,6 +78,7 @@ export class Client {
           Authorization: `Bearer ${token}`,
         },
         inactivityTimeout: 60000,
+        lazy: true,
       },
       WS,
     )
