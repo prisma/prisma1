@@ -3,10 +3,9 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.deploy.connector.DeployConnectorCapability
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
-import com.prisma.shared.models.{Migration, Project}
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.{ConnectorCapability, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -14,12 +13,8 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase
-    extends ConnectorAwareTest[DeployConnectorCapability]
-    with BeforeAndAfterEach
-    with BeforeAndAfterAll
-    with AwaitUtils
-    with PlayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions {
+  self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
@@ -32,7 +27,7 @@ trait DeploySpecBase
   val projectsToCleanUp                                      = new ArrayBuffer[String]
   def capabilities                                           = deployConnector.capabilities
 
-  def connectorHasCapability(capability: DeployConnectorCapability) = deployConnector.hasCapability(capability)
+  def connectorHasCapability(capability: ConnectorCapability) = deployConnector.hasCapability(capability)
 
   val basicTypesGql =
     """

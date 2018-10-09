@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.messagebus.pubsub.Message
@@ -10,25 +9,25 @@ import play.api.libs.json._
 
 class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val enum = schema.enum(
-      name = "MyEnum",
-      values = Vector(
-        "A",
-        "ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ"
-      )
-    )
-    schema
-      .model("ScalarModel")
-      .field("optString", _.String)
-      .field("optInt", _.Int)
-      .field("optFloat", _.Float)
-      .field("optBoolean", _.Boolean)
-      .field("optEnum", _.Enum, enum = Some(enum))
-      .field("optDateTime", _.DateTime)
-      .field("optJson", _.Json)
-      .field("optUnique", _.String, isUnique = true)
-  }
+  val schema =
+    """type ScalarModel{
+    |   id: ID! @unique
+    |   optString: String
+    |   optInt: Int
+    |   optFloat: Float
+    |   optBoolean: Boolean
+    |   optEnum: MyEnum
+    |   optDateTime: DateTime
+    |   optJson: Json
+    |   optUnique: String @unique
+    |}
+    |
+    |enum MyEnum{
+    |   A
+    |   B
+    |}""".stripMargin
+
+  val project = SchemaDsl.fromString() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -166,15 +165,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should include("Int value expected")
   }
 
-  "A Create Mutation" should "gracefully fail when an Enum is over 191 chars long long" in {
-    server.queryThatMustFail(
-      s"""mutation {createScalarModel(data: {optString: "test", optInt: 1337, optFloat: 1.234, optBoolean: true, optEnum: ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ, optDateTime: "2016-07-31T23:59:01.000Z", optJson: "[\\\"test\\\",\\\"is\\\",\\\"json\\\"]"}){optString, optInt, optFloat, optBoolean, optEnum, optDateTime, optJson}}""",
-      project = project,
-      errorCode = 3007
-    )
-  }
-
-  "A Create Mutation" should "gracefully fail when a unique violation occurs" taggedAs (IgnoreMongo) in {
+  "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
     server.query(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
     server.queryThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
   }

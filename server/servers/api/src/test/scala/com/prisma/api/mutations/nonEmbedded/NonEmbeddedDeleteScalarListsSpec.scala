@@ -1,7 +1,8 @@
 package com.prisma.api.mutations.nonEmbedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -45,7 +46,7 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
     res.toString should be("""{"data":{"updateTop":{"name":"test","bottom":null}}}""")
   }
 
-  "A cascading delete  mutation" should "also delete ListTable entries" in {
+  "A cascading delete  mutation" should "also delete ListTable entries" taggedAs (IgnoreMongo) in {
 
     val project: Project = SchemaDsl.fromString() {
       """type Top {

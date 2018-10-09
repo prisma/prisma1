@@ -2,11 +2,12 @@ package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
   //Fixme
@@ -14,19 +15,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   //test nestedDeleteMany (whereFilter instead of where) -> for no hit/ partial hit / full hit
 
   "a P1! relation " should "error due to the operation not being in the schema anymore" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childReq: Child!
-        |}
-        |
-        |type Child @embedded {
-        | c: String! @unique
-        |}
-      """
-    }
+    val project = SchemaDsl.fromString() { embeddedP1req }
 
     database.setup(project)
 
@@ -73,19 +62,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation " should "work through a nested mutation by id" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childOpt: Child
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        |}
-      """
-    }
+    val project = SchemaDsl.fromString() { embeddedP1opt }
 
     database.setup(project)
 
@@ -168,19 +145,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation" should "error if there is no child connected" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childOpt: Child
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        |}
-      """
-    }
+    val project = SchemaDsl.fromString() { embeddedP1opt }
 
     database.setup(project)
 
@@ -218,23 +183,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     res.toString should include(
       s"""The relation ChildToParent has no node for the model Parent with the value '$parent1Id' for the field 'id' connected to a node for the model Child on your mutation path.""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
   }
 
   "a PM relation " should "work" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Parent{
-        | id: ID! @unique
-        | p: String! @unique
-        | childrenOpt: [Child!]!
-        |}
-        |
-        |type Child @embedded{
-        | c: String! @unique
-        |}
-      """
-    }
+    val project = SchemaDsl.fromString() { embeddedPM }
 
     database.setup(project)
 
@@ -275,7 +228,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     res2.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable("Parent").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {

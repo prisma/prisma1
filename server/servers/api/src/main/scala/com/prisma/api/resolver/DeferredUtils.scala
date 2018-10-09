@@ -18,7 +18,7 @@ object DeferredUtils {
     modelExistsDeferred.groupBy(ordered => (ordered.deferred.model, ordered.deferred.args))
   }
 
-  def groupOneDeferred[T <: OneDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
+  def groupOneDeferred[T <: ToOneDeferred](oneDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
     oneDeferred.groupBy(ordered => ordered.deferred.model)
   }
 
@@ -62,7 +62,7 @@ object DeferredUtils {
     }
   }
 
-  def checkSimilarityOfOneDeferredsAndThrow(deferreds: Vector[OneDeferred]) = {
+  def checkSimilarityOfOneDeferredsAndThrow(deferreds: Vector[ToOneDeferred]) = {
     val headDeferred = deferreds.head
 
     val countSimilarDeferreds = deferreds.count { d =>
