@@ -4,6 +4,7 @@ import java.sql.PreparedStatement
 
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
+import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
 
@@ -33,7 +34,7 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
   }
 
   def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    val skipAndLimit = skipAndLimitValues(queryArguments)
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
     skipAndLimit.limit.foreach(pp.setInt)
     pp.setInt(skipAndLimit.skip)
   }

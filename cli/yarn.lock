@@ -5517,9 +5517,9 @@ prisma-cli@^1.0.7:
     semver "^5.4.1"
     source-map-support "^0.4.18"
 
-prisma-client-lib@0.2.58:
-  version "0.2.58"
-  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-0.2.58.tgz#08226917cd3959f4d1ae4624db6ed7b2cb366909"
+prisma-client-lib@1.17.1:
+  version "1.17.1"
+  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-1.17.1.tgz#5fcc386a493e89ab650d8a9d4ca42817091d35a9"
   dependencies:
     "@types/node" "^10.9.4"
     debug "^4.0.1"

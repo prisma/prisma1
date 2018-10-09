@@ -73,36 +73,6 @@ export function getTypeForRootFieldName(
   return rootField.type
 }
 
-export function forwardTo(bindingName: string) {
-  return <PARENT, ARGS, CONTEXT>(
-    parent: PARENT,
-    args: ARGS,
-    context: CONTEXT,
-    info: GraphQLResolveInfo,
-  ) => {
-    let message = `Forward to '${bindingName}.${info.parentType.name.toLowerCase()}.${
-      info.fieldName
-    }' failed. `
-    if (context[bindingName]) {
-      if (
-        context[bindingName][info.parentType.name.toLowerCase()][info.fieldName]
-      ) {
-        return context[bindingName][info.parentType.name.toLowerCase()][
-          info.fieldName
-        ](args, info)
-      } else {
-        message += `Field '${info.parentType.name.toLowerCase()}.${
-          info.fieldName
-        }' not found on binding '${bindingName}'.`
-      }
-    } else {
-      message += `Client '${bindingName}' not found.`
-    }
-
-    throw new Error(message)
-  }
-}
-
 export function printDocumentFromInfo(info: GraphQLResolveInfo) {
   const fragments = Object.keys(info.fragments).map(
     fragment => info.fragments[fragment],

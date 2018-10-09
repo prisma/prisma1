@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
+import com.prisma.api.helpers.{LimitClauseHelper, SkipAndLimit}
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Model, RelationField}
 import org.jooq.{Record, SelectForUpdateStep}
@@ -8,6 +9,7 @@ import slick.jdbc.PositionedParameters
 
 trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with CursorConditionBuilder with OrderByClauseBuilder with LimitClauseBuilder {
   import slickDatabase.profile.api._
+  import LimitClauseHelper._
 
   def getNodes(model: Model, queryArguments: Option[QueryArguments], selectedFields: SelectedFields): DBIO[ResolverResult[PrismaNode]] = {
     val query = modelQuery(model, queryArguments, selectedFields)

@@ -12,3 +12,4 @@ ts-node scripts/fetchSchemaFromEndpoint.ts http://localhost:4466/schema-generato
 ts-node scripts/fetchSchemaFromEndpoint.ts http://localhost:4466/schema-generator/oneSidedConnection > __tests__/blackbox/cases/oneSidedConnection/prisma.graphql
 ts-node scripts/fetchSchemaFromEndpoint.ts http://localhost:4466/schema-generator/scalars > __tests__/blackbox/cases/scalars/prisma.graphql
 ts-node scripts/fetchSchemaFromEndpoint.ts http://localhost:4466/schema-generator/todo  > __tests__/blackbox/cases/todo/prisma.graphql
+ts-node scripts/fetchSchemaFromEndpoint.ts http://localhost:4466/schema-generator/prisma-3143 > __tests__/blackbox/cases/prisma-3143/prisma.graphql
