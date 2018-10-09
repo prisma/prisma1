@@ -4,7 +4,7 @@ import java.sql.{Connection, PreparedStatement, Savepoint}
 import java.util.Properties
 import java.util.concurrent.Executor
 
-class CustomJdbcConnection(url: String, binding: RustBinding[RustConnection]) extends Connection {
+class CustomJdbcConnection(url: String, binding: RustBinding[RustConnection, RustPreparedStatement]) extends Connection {
 
   val connection = binding.newConnection(url)
   var autoCommit = true

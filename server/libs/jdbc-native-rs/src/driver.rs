@@ -47,6 +47,10 @@ impl<'a> PsqlPreparedStatement<'a> {
         let res = results?.iter().fold(0 as u64, |x, y| { x + y });
         Ok(res)
     }
+
+    pub fn query(&self, params: Vec<&jdbc_params::JdbcParameter>) -> Result<Rows> {
+        self.statement.query(&jdbc_params::JdbcParameter::paramsToSql(params)[..]).map_err(DriverError::from)
+    }
 }
 
 

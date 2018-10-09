@@ -11,14 +11,20 @@ sealed trait RustConnection
 //class RustConnectionGraal(val conn: CIntegration.RustConnection) extends RustConnection
 class RustConnectionJna(val conn: Pointer) extends RustConnection
 
-trait RustBinding[T <: RustConnection] {
+sealed trait RustPreparedStatement
+class RustPreparedStatementJna(val stmt: Pointer) extends RustPreparedStatement
+
+trait RustBinding[T <: RustConnection, U <: RustPreparedStatement] {
   def newConnection(url: String): T
+  def prepareStatement(connection: T, query: String): RustPreparedStatement
   def startTransaction(connection: T): RustCallResult
   def commitTransaction(connection: T): RustCallResult
   def rollbackTransaction(connection: T): RustCallResult
   def closeConnection(connection: T): RustCallResult
   def sqlExecute(connection: T, query: String, params: String): RustCallResult
   def sqlQuery(connection: T, query: String, params: String): RustCallResult
+  def executePreparedstatement(stmt: U, params: String): RustCallResult
+  def queryPreparedstatement(stmt: U, params: String): RustCallResult
 }
 
 object RustCallResult {
@@ -68,13 +74,17 @@ case class RustResultSet(columns: Vector[String], data: IndexedSeq[JsArray])
 //    toJavaString(RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params)))
 //}
 
-object RustJnaImpl extends RustBinding[RustConnectionJna] {
+object RustJnaImpl extends RustBinding[RustConnectionJna, RustPreparedStatementJna] {
   val currentDir = System.getProperty("user.dir")
 
   System.setProperty("jna.debug_load.jna", "true")
   System.setProperty("jna.debug_load", "true")
 
   val library = Native.loadLibrary("jdbc_native", classOf[JnaRustBridge])
+
+  override def prepareStatement(connection: RustConnectionJna, query: String): RustPreparedStatementJna = {
+    new RustPreparedStatementJna(library.prepareStatement(connection.conn, query))
+  }
 
   override def newConnection(url: String): RustConnectionJna = {
     new RustConnectionJna(library.newConnection(url))
@@ -106,6 +116,20 @@ object RustJnaImpl extends RustBinding[RustConnectionJna] {
   override def sqlQuery(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
     println(s"[JNA] Query: '$query' with params: $params")
     val result = library.sqlQuery(connection.conn, query, params)
+    println(s"[JNA] Result: $result")
+    RustCallResult.fromString(result)
+  }
+
+  override def executePreparedstatement(stmt: RustPreparedStatementJna, params: String): RustCallResult = {
+    println(s"[JNA] PreparedStatement: Executing with params: $params")
+    val result = library.executePreparedstatement(stmt.stmt, params)
+    println(s"[JNA] Result: $result")
+    RustCallResult.fromString(result)
+  }
+
+  override def queryPreparedstatement(stmt: RustPreparedStatementJna, params: String): RustCallResult = {
+    println(s"[JNA] PreparedStatement: Querying with params: $params")
+    val result = library.queryPreparedstatement(stmt.stmt, params)
     println(s"[JNA] Result: $result")
     RustCallResult.fromString(result)
   }

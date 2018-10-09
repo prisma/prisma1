@@ -42,6 +42,37 @@ pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, que
 }
 
 #[no_mangle]
+pub extern "C" fn executePreparedstatement(
+    stmt: &driver::PsqlPreparedStatement,
+    params: *const c_char,
+) -> *const c_char {
+    println!("[Rust] Calling exec on prepared statement");
+    let paramsString = to_string(params);
+    let callResult = jdbc_params::toJdbcParameterList(&paramsString).and_then(|p| {
+        stmt.execute(p.iter().map(|x| x.iter().collect()).collect())
+    }).map(|x| {
+        CallResult::count(x as i32)
+    });
+
+    return serializeCallResult(callResult);
+}
+
+#[no_mangle]
+pub extern "C" fn queryPreparedstatement(
+    stmt: &driver::PsqlPreparedStatement,
+    params: *const c_char,
+) -> *const c_char {
+    let paramsString = to_string(params);
+    let callResult = jdbc_params::toJdbcParameters(&paramsString).and_then(|p| {
+        stmt.query(p.iter().collect())
+    }).and_then(|rows| {
+        CallResult::result_set(rows)
+    });
+
+    return serializeCallResult(callResult);
+}
+
+#[no_mangle]
 pub extern "C" fn sqlQuery(
     conn: &driver::PsqlConnection,
     query: *const c_char,
@@ -53,22 +84,6 @@ pub extern "C" fn sqlQuery(
         conn.query(queryString, p.iter().collect())
     }).and_then(|rows| {
         CallResult::result_set(rows)
-    });
-
-    return serializeCallResult(callResult);
-}
-
-#[no_mangle]
-pub extern "C" fn executePreparedstatement(
-    stmt: &driver::PsqlPreparedStatement,
-    params: *const c_char,
-) -> *const c_char {
-    println!("[Rust] Calling exec on prepared statement");
-    let paramsString = to_string(params);
-    let callResult = jdbc_params::toJdbcParameterList(&paramsString).and_then(|p| {
-        stmt.execute(p.iter().map(|x| x.iter().collect()).collect())
-    }).map(|x| {
-        CallResult::count(x as i32)
     });
 
     return serializeCallResult(callResult);

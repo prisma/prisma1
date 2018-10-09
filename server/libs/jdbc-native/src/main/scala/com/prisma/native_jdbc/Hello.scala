@@ -7,7 +7,7 @@ import org.postgresql.core.Parser
 
 object Hello {
   val binding = RustJnaImpl
-  val driver  = CustomJdbcDriver(binding.asInstanceOf[RustBinding[RustConnection]])
+  val driver  = CustomJdbcDriver(binding.asInstanceOf[RustBinding[RustConnection, RustPreparedStatement]])
 
   def main(args: Array[String]): Unit = {
     testSqlViaGraal()

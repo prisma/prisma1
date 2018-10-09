@@ -4,6 +4,8 @@ import com.sun.jna.Library;
 import com.sun.jna.Pointer;
 
 public interface JnaRustBridge extends Library {
+    Pointer prepareStatement(Pointer connection, String query);
+
     Pointer newConnection(String url);
 
     String startTransaction(Pointer connection);
@@ -17,5 +19,9 @@ public interface JnaRustBridge extends Library {
     String sqlExecute(Pointer connection, String query, String params);
 
     String sqlQuery(Pointer connection, String query, String params);
+
+    String executePreparedstatement(Pointer stmt, String params);
+
+    String queryPreparedstatement(Pointer stmt, String params);
 }
 

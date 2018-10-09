@@ -12,32 +12,55 @@ import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
 import scala.collection.mutable
 
-class CustomPreparedStatement(conn: RustConnection, query: String, binding: RustBinding[RustConnection]) extends PreparedStatement {
-  val params = mutable.HashMap.empty[Int, JsValue]
+object CustomPreparedStatement {
+  type Params = mutable.HashMap[Int, JsValue]
+}
+
+class CustomPreparedStatement(conn: RustConnection, query: String, binding: RustBinding[RustConnection, RustPreparedStatement]) extends PreparedStatement {
+  import CustomPreparedStatement._
 
   val standardConformingStrings  = true
   val withParameters             = true
   val splitStatements            = true
   val isBatchedReWriteConfigured = false
   val rawSqlString               = Parser.parseJdbcSql(query, standardConformingStrings, withParameters, splitStatements, isBatchedReWriteConfigured).get(0).nativeSql
+  val stmt = binding.prepareStatement(conn match {
+    case x: RustConnectionJna => x
+    case x                    => sys.error(s"Got: $x, required RustConnectionJna")
+  }, rawSqlString)
+
+  val currentParams = new Params
+  val paramList     = mutable.ArrayBuffer.empty[Params]
+
+  // WIP, just to make it work again for working tree
+  def renderParams(ary: Boolean): String = {
+//    if (paramList.nonEmpty) {
+//      JsArray(paramList.map(x => JsArray(x.toSeq.sortBy(_._1).map(_._2)).toString()))
+//    } else {
+//      JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)).toString()
+//    }
+
+    if (ary) {
+      JsArray(Seq(JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)))).toString
+    } else {
+      JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)).toString()
+    }
+
+  }
 
   override def execute() = {
-    val paramsString = JsArray(params.toSeq.sortBy(_._1).map(_._2)).toString()
-    val result = binding.sqlExecute(
-      conn,
-      rawSqlString,
-      paramsString
+    val result = binding.executePreparedstatement(
+      stmt,
+      renderParams(true)
     )
 
     result.isResultSet
   }
 
   override def executeQuery(): ResultSet = {
-    val paramsString = JsArray(params.toSeq.sortBy(_._1).map(_._2)).toString()
-    val result = binding.sqlQuery(
-      conn,
-      rawSqlString,
-      paramsString
+    val result = binding.queryPreparedstatement(
+      stmt,
+      renderParams(false)
     )
 
     if (!result.isResultSet) {
@@ -48,11 +71,9 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   }
 
   override def executeUpdate() = {
-    val paramsString = JsArray(params.toSeq.sortBy(_._1).map(_._2)).toString()
-    val result = binding.sqlExecute(
-      conn,
-      rawSqlString,
-      paramsString
+    val result = binding.executePreparedstatement(
+      stmt,
+      renderParams(true)
     )
 
     if (!result.isCount) {
@@ -77,7 +98,7 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setObject(parameterIndex: Int, x: scala.Any, targetSqlType: Int, scaleOrLength: Int) = ???
 
   override def setDouble(parameterIndex: Int, x: Double) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "Double", "value" -> x))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "Double", "value" -> x))
   }
 
   override def setNClob(parameterIndex: Int, value: NClob) = ???
@@ -99,15 +120,15 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setURL(parameterIndex: Int, x: URL) = ???
 
   override def setInt(parameterIndex: Int, x: Int): Unit = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "Int", "value" -> x))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "Int", "value" -> x))
   }
 
   override def setString(parameterIndex: Int, x: String) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "String", "value" -> x))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "String", "value" -> x))
   }
 
   override def setLong(parameterIndex: Int, x: Long) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "Long", "value" -> x))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "Long", "value" -> x))
   }
 
   override def setAsciiStream(parameterIndex: Int, x: InputStream, length: Int) = ???
@@ -135,7 +156,7 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setByte(parameterIndex: Int, x: Byte) = ???
 
   override def setNull(parameterIndex: Int, sqlType: Int) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "Null", "value" -> JsNull))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "Null", "value" -> JsNull))
   }
 
   override def setNull(parameterIndex: Int, sqlType: Int, typeName: String) = ???
@@ -161,11 +182,11 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setBlob(parameterIndex: Int, inputStream: InputStream) = ???
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
   }
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
   }
 
   override def setBytes(parameterIndex: Int, x: Array[Byte]) = ???
@@ -183,7 +204,7 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def clearParameters() = ???
 
   override def setBoolean(parameterIndex: Int, x: Boolean) = {
-    params.put(parameterIndex, Json.obj("discriminator" -> "Boolean", "value" -> x))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "Boolean", "value" -> x))
   }
 
   override def cancel() = ???
