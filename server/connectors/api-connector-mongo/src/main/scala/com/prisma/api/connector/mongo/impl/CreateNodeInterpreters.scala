@@ -27,7 +27,7 @@ object MongoErrorMessageHelper {
 
   def getFieldOption(model: Model, e: MongoWriteException): Option[String] = {
     model.scalarFields.filter { field =>
-      val constraintName = model.dbName + "_" + field.name + "_UNIQUE"
+      val constraintName = field.name + "_U"
       e.getMessage.contains(constraintName)
     } match {
       case x +: _ => Some("Field name = " + x.name)

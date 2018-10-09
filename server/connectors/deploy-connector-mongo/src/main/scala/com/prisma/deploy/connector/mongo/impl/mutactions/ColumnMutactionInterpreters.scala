@@ -20,7 +20,7 @@ object CreateColumnInterpreter extends MongoMutactionInterpreter[CreateColumn] {
 
       MongoDeployDatabaseMutationBuilder.deleteField(
         collectionName = mutaction.model.dbName,
-        fieldName = mutaction.field.dbName
+        fieldName = mutaction.field.name
       )
     } else {
       NoAction.unit
@@ -33,7 +33,7 @@ object DeleteColumnInterpreter extends MongoMutactionInterpreter[DeleteColumn] {
     if (mutaction.field.isUnique && !mutaction.model.isEmbedded) {
       MongoDeployDatabaseMutationBuilder.deleteField(
         collectionName = mutaction.model.dbName,
-        fieldName = mutaction.field.dbName
+        fieldName = mutaction.field.name
       )
     } else {
       NoAction.unit
