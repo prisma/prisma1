@@ -6,7 +6,6 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
-import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName, defaultDockerCompose } from '../../util'
 import * as sillyname from 'sillyname'
