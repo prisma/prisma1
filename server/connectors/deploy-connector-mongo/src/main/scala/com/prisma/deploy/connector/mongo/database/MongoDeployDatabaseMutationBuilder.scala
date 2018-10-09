@@ -1,11 +1,10 @@
 package com.prisma.deploy.connector.mongo.database
 
 import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
-import com.prisma.shared.models.{Model, Project}
-import org.mongodb.scala.bson.BsonNull
-import org.mongodb.scala.{MongoNamespace, _}
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
+import com.prisma.shared.models.Project
+import org.mongodb.scala.model.IndexOptions
 import org.mongodb.scala.model.Sorts.ascending
+import org.mongodb.scala.{MongoNamespace, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -63,10 +62,8 @@ object MongoDeployDatabaseMutationBuilder {
   def deleteField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
     removeUniqueConstraint(database, collectionName, fieldName)
   }
-//
-//  def updateField(name: String, newName: String) = DeployMongoAction { database =>
-//    database.getCollection(name).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
-//  }
+
+  def updateField(name: String, newName: String) = NoAction.unit
 
   def addUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
     database
@@ -83,4 +80,21 @@ object MongoDeployDatabaseMutationBuilder {
       .toFuture()
       .map(_ => ())
   }
+
+  def addRelationIndex(database: MongoDatabase, collectionName: String, fieldName: String) = {
+    database
+      .getCollection(collectionName)
+      .createIndex(ascending(fieldName), IndexOptions().name(s"${collectionName}_${fieldName}_RELATION"))
+      .toFuture()
+      .map(_ => ())
+  }
+
+  def removeRelationIndex(database: MongoDatabase, collectionName: String, fieldName: String) = {
+    database
+      .getCollection(collectionName)
+      .dropIndex(s"${collectionName}_${fieldName}_RELATION")
+      .toFuture()
+      .map(_ => ())
+  }
+
 }
