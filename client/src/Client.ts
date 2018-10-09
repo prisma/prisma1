@@ -41,6 +41,7 @@ export class Client {
   types: any
   query: any
   $subscribe: any
+  $raw: any
   $exists: any
   debug
   mutation: any
@@ -62,6 +63,7 @@ export class Client {
 
     const token = secret ? sign({}, secret!) : undefined
 
+    this.$raw = this.buildRaw()
     this.$exists = this.buildExists()
     this.token = token
     this.client = new BatchedGraphQLClient(endpoint, {
@@ -415,6 +417,25 @@ export class Client {
     }
 
     return type
+  }
+
+  private buildRaw(): any {
+    return async (query: string) => {
+      // TODO: Generate TS etc types for $raw
+      // TODO: Add $raw.default API as per spec https://github.com/prisma/prisma/issues/2052
+      const response = await this.client.request(`
+        mutation ExecuteRaw {
+          executeRaw(database: default, 
+          query: "${query}")
+        }        
+      `)
+      if ((response as any).executeRaw) {
+        // TODO: Fix types
+        return (response as any).executeRaw
+      } else {
+        return response
+      }
+    }
   }
 
   private buildExists(): Exists {
