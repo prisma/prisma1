@@ -48,7 +48,6 @@ your pull request should be accepted quickly.
 Here are further contribution instructions:
 
 * [`cli`](./cli/CONTRIBUTING.md)
-* [`docs`](./docs/CONTRIBUTING.md)
 * [`examples`](./examples/CONTRIBUTING.md)
 * [`server`](./server/CONTRIBUTING.md)
 
