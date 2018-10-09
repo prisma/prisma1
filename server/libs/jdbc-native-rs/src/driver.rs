@@ -2,19 +2,26 @@
 
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use chrono::prelude::*;
-use num_traits::ToPrimitive;
+use rust_decimal::Decimal;
+use serde_json;
+
 use postgres;
 use postgres::rows::{Row, Rows};
+use postgres::stmt::Statement;
 use postgres::transaction::Transaction;
 use postgres::types::{IsNull, ToSql, Type};
 use postgres::{Connection, Result as PsqlResult, TlsMode};
-use rust_decimal::Decimal;
-use serde_json;
+
 use std::boxed::Box;
 use std::cell;
 use std::cell::RefCell;
 use std::error::Error as StdErr;
 use std::result;
+
+use num_traits::ToPrimitive;
+use num_traits::cast::FromPrimitive;
+
+use jdbc_params;
 
 #[repr(C)]
 #[no_mangle]
@@ -23,6 +30,25 @@ pub struct PsqlConnection<'a> {
     connection: Connection,
     transaction: RefCell<Option<Transaction<'a>>>,
 }
+
+#[repr(C)]
+#[no_mangle]
+#[allow(non_snake_case)]
+pub struct PsqlPreparedStatement<'a> {
+    statement: Statement<'a>,
+}
+
+impl<'a> PsqlPreparedStatement<'a> {
+    pub fn execute(&self, params: Vec<Vec<&jdbc_params::JdbcParameter>>) -> Result<u64> {
+        let results: Result<Vec<u64>> = params.into_iter().map(|p| {
+            self.statement.execute(&jdbc_params::JdbcParameter::paramsToSql(p)[..]).map_err(DriverError::from)
+        }).collect();
+
+        let res = results?.iter().fold(0 as u64, |x, y| { x + y });
+        Ok(res)
+    }
+}
+
 
 #[derive(Debug)]
 pub enum DriverError {
@@ -66,17 +92,17 @@ impl From<cell::BorrowMutError> for DriverError {
 }
 
 impl<'a> PsqlConnection<'a> {
-    pub fn queryRawParams(&self, query: String, rawParams: String) -> Result<Rows> {
-        let params = toGcValues(&rawParams)?;
-        return self.query(query, params.iter().collect());
+    pub fn prepareStatement(&self, query: String) -> Result<PsqlPreparedStatement> {
+        let stmt = self.connection.prepare(query.as_str())?;
+        Ok(PsqlPreparedStatement{ statement: stmt })
     }
 
-    pub fn query(&self, query: String, params: Vec<&GcValue>) -> Result<Rows> {
+    pub fn query(&self, query: String, params: Vec<&jdbc_params::JdbcParameter>) -> Result<Rows> {
         println!("[Rust] Query received the params: {:?}", params);
         let mutRef = self.transaction.try_borrow_mut()?;
         let rows = match *mutRef {
-            Some(ref t) => t.query(&*query, &gcValuesToToSql(params))?,
-            None => self.connection.query(&*query, &gcValuesToToSql(params))?,
+            Some(ref t) => t.query(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?,
+            None => self.connection.query(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?,
         };
 
         println!("[Rust] The result set has {} columns", rows.columns().len());
@@ -87,21 +113,16 @@ impl<'a> PsqlConnection<'a> {
         return Ok(rows);
     }
 
-    pub fn executeRawParams(&self, query: String, rawParams: String) -> Result<u64> {
-        let params = toGcValues(&rawParams)?;
-        return self.execute(query, params.iter().collect());
-    }
-
-    pub fn execute(&self, query: String, params: Vec<&GcValue>) -> Result<u64> {
+    pub fn execute(&self, query: String, params: Vec<&jdbc_params::JdbcParameter>) -> Result<u64> {
         println!("[Rust] Execute received the params: {:?}", params);
 
         let mutRef = self.transaction.try_borrow_mut()?;
         let result = match *mutRef {
             Some(ref t) => {
                 println!("[Rust] Have transaction");
-                t.execute(&*query, &gcValuesToToSql(params))?
+                t.execute(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?
             }
-            None => self.connection.execute(&*query, &gcValuesToToSql(params))?,
+            None => self.connection.execute(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?,
         };
 
         println!("[Rust] EXEC DONE");
@@ -140,195 +161,5 @@ impl<'a> PsqlConnection<'a> {
 
             None => Ok(()),
         }
-    }
-}
-
-pub fn gcValuesToToSql(values: Vec<&GcValue>) -> Vec<&ToSql> {
-    values.into_iter().map(gcValueToToSql).collect()
-}
-
-fn gcValueToToSql(value: &GcValue) -> &ToSql {
-    match value {
-        &GcValue::Int(ref i) => value,
-        &GcValue::String(ref s) => s,
-        &GcValue::Boolean(ref b) => b,
-        &GcValue::Null => value,
-        &GcValue::Double(ref d) => value,
-        &GcValue::Long(ref d) => d,
-        &GcValue::DateTime(ref i) => value,
-    }
-}
-
-pub fn toGcValues(str: &String) -> Result<Vec<GcValue>> {
-    match serde_json::from_str::<serde_json::Value>(&*str) {
-        Ok(serde_json::Value::Array(elements)) => elements.iter().map(jsonToGcValue).collect(),
-        Ok(json) => Err(DriverError::GenericError(String::from(format!(
-            "provided json was not an array: {}",
-            json
-        )))),
-        Err(e) => Err(DriverError::GenericError(String::from(format!(
-            "json parsing failed: {}",
-            e
-        )))),
-    }
-}
-
-pub fn toGcValue(str: String) -> Result<GcValue> {
-    match serde_json::from_str::<serde_json::Value>(&*str) {
-        Ok(result) => jsonToGcValue(&result),
-        Err(e) => Err(DriverError::GenericError(String::from(format!(
-            "json parsing failed: {}",
-            e
-        )))),
-    }
-}
-
-fn jsonToGcValue(json: &serde_json::Value) -> Result<GcValue> {
-    match json {
-        &serde_json::Value::Object(ref map) => jsonObjectToGcValue(map),
-        x => Err(DriverError::GenericError(format!(
-            "{} is not a valid value for a GcValue",
-            x
-        ))),
-    }
-}
-
-fn jsonObjectToGcValue(map: &serde_json::Map<String, serde_json::Value>) -> Result<GcValue> {
-    let discriminator = map.get("discriminator").unwrap().as_str().unwrap();
-    let value = map.get("value").unwrap();
-
-    match (discriminator, value) {
-        ("Int", &serde_json::Value::Number(ref n)) => Ok(GcValue::Int(MagicInt {
-            value: n.as_i64().unwrap(),
-            underlying: RefCell::new(None),
-        })),
-        ("String", &serde_json::Value::String(ref s)) => Ok(GcValue::String(s.to_string())),
-        ("Boolean", &serde_json::Value::Bool(b)) => Ok(GcValue::Boolean(b)),
-        ("Null", &serde_json::Value::Null) => Ok(GcValue::Null),
-        ("Double", &serde_json::Value::Number(ref n)) => Ok(GcValue::Double(MagicFloat {
-            value: n.as_f64().unwrap(),
-            underlying: RefCell::new(None),
-        })),
-        ("DateTime", &serde_json::Value::Number(ref n)) => {
-            Ok(GcValue::DateTime(n.as_i64().unwrap()))
-        }
-        ("Long", &serde_json::Value::Number(ref n)) => Ok(GcValue::Long(n.as_i64().unwrap())),
-        (d, v) => Err(DriverError::GenericError(format!(
-            "discriminator {} and value {} are invalid combinations",
-            d, v
-        ))),
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum GcValue {
-    Int(MagicInt),
-    String(String),
-    Boolean(bool),
-    Null,
-    Double(MagicFloat),
-    DateTime(i64),
-    Long(i64),
-}
-
-#[derive(Debug, PartialEq)]
-pub struct MagicFloat {
-    value: f64,
-    underlying: RefCell<Option<Type>>,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct MagicInt {
-    value: i64,
-    underlying: RefCell<Option<Type>>,
-}
-
-impl MagicFloat {
-    fn setType(&self, ty: Type) {
-        self.underlying.replace(Some(ty));
-    }
-}
-
-impl MagicInt {
-    fn setType(&self, ty: Type) {
-        self.underlying.replace(Some(ty));
-    }
-}
-
-use num_traits::cast::FromPrimitive;
-
-impl ToSql for GcValue {
-    fn to_sql(
-        &self,
-        ty: &Type,
-        out: &mut Vec<u8>,
-    ) -> result::Result<IsNull, Box<StdErr + Sync + Send>>
-    where
-        Self: Sized,
-    {
-        match self {
-            GcValue::Null => Ok(IsNull::Yes),
-            GcValue::DateTime(ref i) => {
-                let ts = Utc.timestamp(i / 1000, 0).naive_utc();
-                println!("DATETIME time {:?} date {:?} ???????? {:?}", ts.time(), ts.date(), Utc.timestamp(i / 1000, 0));
-                ts.to_sql(ty, out)
-            }
-            GcValue::Int(ref magic) => {
-                let val = magic.underlying.replace(None);
-                match val {
-                    Some(t) => {
-                        match t {
-                            postgres::types::INT2 => out.write_i16::<BigEndian>(magic.value as i16).unwrap(),
-                            postgres::types::INT4 => out.write_i32::<BigEndian>(magic.value as i32).unwrap(),
-                            postgres::types::INT8 => out.write_i64::<BigEndian>(magic.value).unwrap(),
-                            x => println!("[Rust] Unhandled MagicInt OID: {}", x),
-                        }
-                    }
-                    x => panic!("[Rust] No underlying type present for MagicInt."),
-                }
-
-                Ok(IsNull::No)
-            }
-            GcValue::Double(ref magic) => {
-                let val = magic.underlying.replace(None);
-                match val {
-                    Some(t) => {
-                        match t {
-                            postgres::types::FLOAT8 => out.write_f64::<BigEndian>(magic.value).unwrap(), // Float8
-                            postgres::types::NUMERIC => {
-                                Decimal::from_f64(magic.value).unwrap().to_sql(ty, out);
-                            },
-                            x => println!("[Rust] Unhandled MagicFloat OID: {}", x),
-                        }
-                    }
-                    x => panic!("[Rust] No underlying type present for MagicFloat."),
-                }
-
-                Ok(IsNull::No)
-            }
-            x => panic!("ToSql no match {:?}", x),
-        }
-    }
-
-    fn accepts(ty: &Type) -> bool
-    where
-        Self: Sized,
-    {
-        true
-    }
-
-    fn to_sql_checked(
-        &self,
-        ty: &Type,
-        out: &mut Vec<u8>,
-    ) -> result::Result<IsNull, Box<StdErr + Sync + Send>> {
-        match self {
-            // Todo: Cloning is inefficient. Alternative?
-            GcValue::Int(ref magic) => magic.setType(ty.clone()),
-            GcValue::Double(ref magic) => magic.setType(ty.clone()),
-            _ => (),
-        };
-
-        self.to_sql(ty, out)
     }
 }

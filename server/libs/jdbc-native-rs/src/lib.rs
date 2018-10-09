@@ -21,6 +21,7 @@ use postgres::rows::Rows;
 
 mod driver;
 mod serialization;
+mod jdbc_params;
 
 use serialization::ResultSet;
 
@@ -33,6 +34,14 @@ pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConn
 }
 
 #[no_mangle]
+pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> *mut driver::PsqlPreparedStatement<'a> {
+    let mut stmt = conn.prepareStatement(to_string(query)).unwrap(); // todo req better err handling struct { ptr string }
+    let ptr = Box::into_raw(Box::new(stmt));
+
+    return ptr;
+}
+
+#[no_mangle]
 pub extern "C" fn sqlQuery(
     conn: &driver::PsqlConnection,
     query: *const c_char,
@@ -40,8 +49,26 @@ pub extern "C" fn sqlQuery(
 ) -> *const c_char {
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let callResult = conn.queryRawParams(queryString, paramsString).and_then(|rows| {
+    let callResult = jdbc_params::toJdbcParameters(&paramsString).and_then(|p| {
+        conn.query(queryString, p.iter().collect())
+    }).and_then(|rows| {
         CallResult::result_set(rows)
+    });
+
+    return serializeCallResult(callResult);
+}
+
+#[no_mangle]
+pub extern "C" fn executePreparedstatement(
+    stmt: &driver::PsqlPreparedStatement,
+    params: *const c_char,
+) -> *const c_char {
+    println!("[Rust] Calling exec on prepared statement");
+    let paramsString = to_string(params);
+    let callResult = jdbc_params::toJdbcParameterList(&paramsString).and_then(|p| {
+        stmt.execute(p.iter().map(|x| x.iter().collect()).collect())
+    }).map(|x| {
+        CallResult::count(x as i32)
     });
 
     return serializeCallResult(callResult);
@@ -56,8 +83,11 @@ pub extern "C" fn sqlExecute(
     println!("[Rust] Calling exec");
     let queryString = to_string(query);
     let paramsString = to_string(params);
-    let result = conn.executeRawParams(queryString, paramsString);
-    let callResult = result.map(|x| { CallResult::count(x as i32) });
+    let callResult = jdbc_params::toJdbcParameters(&paramsString).and_then(|p| {
+        conn.execute(queryString, p.iter().collect())
+    }).map(|x| {
+        CallResult::count(x as i32)
+    });
 
     return serializeCallResult(callResult);
 }
