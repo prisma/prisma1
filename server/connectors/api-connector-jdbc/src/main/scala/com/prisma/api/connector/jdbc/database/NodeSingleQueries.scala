@@ -2,7 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Model, RelationField, Schema}
+import com.prisma.shared.models.{Model, RelationField, ScalarField, Schema}
 import org.jooq.impl.DSL.{field, name}
 import org.jooq.{Condition, Record1, SelectConditionStep}
 
@@ -32,7 +32,8 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = {
     val model      = where.model
-    val jooqFields = selectedFields.scalarNonListFields.map(modelColumn)
+    val fieldsInDB = selectedFields.scalarDbFields
+    val jooqFields = fieldsInDB.map(modelColumn)
     val query = sql
       .select(jooqFields.toVector: _*)
       .from(modelTable(model))
@@ -41,8 +42,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
       readResult = rs => {
-        val fieldsToRead = selectedFields.scalarNonListFields
-        rs.readWith(readsPrismaNode(model, fieldsToRead)).headOption
+        rs.readWith(readsPrismaNode(model, fieldsInDB)).headOption
       }
     )
   }

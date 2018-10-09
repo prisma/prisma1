@@ -14,7 +14,7 @@ trait MiscActions {
 
     val actions = (relationNames ++ modelNames).map { name =>
       val collection: MongoCollection[Document] = database.getCollection(name)
-      collection.drop().toFuture()
+      collection.drop().toFuture() //Fixme This will drop indexes, remove is slower but will keep them, we could drop and then recreate the indexes
     }
 
     Future.sequence(actions).map(_ => MutactionResults(Vector(UnitDatabaseMutactionResult)))

@@ -2,7 +2,7 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability, DataResolver, DatabaseMutactionExecutor}
+import com.prisma.api.connector.{ApiConnector, DataResolver, DatabaseMutactionExecutor}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverImpl
@@ -14,7 +14,7 @@ import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.messages.SchemaInvalidatedMessage
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
 
@@ -35,7 +35,7 @@ trait ApiDependencies extends AwaitUtils {
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Set[ApiConnectorCapability] = apiConnector.capabilities
+  def capabilities: Set[ConnectorCapability] = apiConnector.capabilities
 
   implicit lazy val executionContext: ExecutionContext  = system.dispatcher
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))

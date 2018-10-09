@@ -1,10 +1,10 @@
 package com.prisma.api.connector.mongo.extensions
 
 import com.prisma.api.connector.NodeSelector
-import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCValueBsonTransformer
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import com.prisma.shared.models.{Field, Model, RelationField, TypeIdentifier}
+import com.prisma.shared.models._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
@@ -17,7 +17,7 @@ import scala.collection.mutable
 
 object GCBisonTransformer {
 
-  implicit object GCValueBsonTransformer extends BsonTransformer[GCValue] {
+  implicit object GCToBson extends BsonTransformer[GCValue] {
     override def apply(value: GCValue): BsonValue = value match {
       case StringGCValue(v)   => BsonString(v)
       case IntGCValue(v)      => BsonInt32(v)
@@ -28,7 +28,7 @@ object GCBisonTransformer {
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
       case BooleanGCValue(v)  => BsonBoolean(v)
-      case ListGCValue(list)  => BsonArray(list.map(x => GCValueBsonTransformer(x)))
+      case ListGCValue(list)  => BsonArray(list.map(x => GCToBson(x)))
       case NullGCValue        => null
       case _: RootGCValue     => sys.error("not implemented")
     }
@@ -38,7 +38,7 @@ object GCBisonTransformer {
 object NodeSelectorBsonTransformer {
   implicit def whereToBson(where: NodeSelector): Bson = {
     val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
-    val value     = GCValueBsonTransformer(where.fieldGCValue)
+    val value     = GCToBson(where.fieldGCValue)
 
     Filters.eq(fieldName, value)
   }
@@ -102,10 +102,23 @@ object DocumentToRoot {
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
-    val relationFields: List[(String, GCValue)] =
-      model.relationFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+    val relationFields: List[(String, GCValue)] = model.relationFields.collect {
+      case f if !f.relation.isInlineRelation => f.name -> document.get(f.name).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+    }
 
-    RootGCValue((scalarNonList ++ scalarList ++ relationFields :+ createdAt :+ updatedAt :+ id).toMap)
+    //inline Ids, needs to fetch lists or single values
+
+    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
+
+    val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationNonListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
+
+    val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
+
+    val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
+
+    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ createdAt :+ updatedAt :+ id).toMap)
   }
 }
 
@@ -149,7 +162,7 @@ case class Path(segments: List[PathSegment]) {
 
   def arrayFilter: Vector[Bson] = segments.last match {
     case ToOneSegment(_)          => sys.error("")
-    case ToManySegment(rf, where) => Vector(Filters.equal(s"${operatorName(rf, where)}.${where.fieldName}", GCValueBsonTransformer(where.fieldGCValue)))
+    case ToManySegment(rf, where) => Vector(Filters.equal(s"${operatorName(rf, where)}.${where.fieldName}", GCToBson(where.fieldGCValue)))
   }
 
   def operatorName(field: RelationField, where: NodeSelector) = s"${field.name}X${where.fieldName}X${where.hashCode().toString.replace("-", "M")}"

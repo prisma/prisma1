@@ -20,7 +20,8 @@ object FilteredResolver {
 
     val filterInput: AndFilter = modelObjectTypes
       .extractQueryArgumentsFromContextForSubscription(model = model, ctx = ctx)
-      .flatMap(_.filter.map(_.asInstanceOf[AndFilter]))
+      .filter
+      .map(_.asInstanceOf[AndFilter])
       .getOrElse(AndFilter(Vector.empty))
 
     def removeTopLevelIdFilter(element: Filter) =
@@ -31,6 +32,6 @@ object FilteredResolver {
 
     val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(id)))
     val filter       = AndFilter(filterValues)
-    dataResolver.getNodes(model, Some(QueryArguments.withFilter(filter = filter)), SelectedFields.all(model)).map(_.nodes.headOption)
+    dataResolver.getNodes(model, QueryArguments.withFilter(filter = filter), SelectedFields.all(model)).map(_.nodes.headOption)
   }
 }

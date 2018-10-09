@@ -12,13 +12,13 @@ trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with Ord
   def getScalarListValues(
       model: Model,
       field: ScalarField,
-      args: Option[QueryArguments]
+      args: QueryArguments
   ): DBIO[ResolverResult[ScalarListValues]] = {
 
     require(field.isList, "This must be called only with scalar list fields")
 
     lazy val query = {
-      val condition    = buildConditionForFilter(args.flatMap(_.filter))
+      val condition    = buildConditionForFilter(args.filter)
       val order        = orderByForScalarListField(topLevelAlias, args)
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
 
