@@ -103,15 +103,10 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   def dataItemToExportList(dataItems: Vector[ScalarListValues], info: ListInfo): Vector[JsValue] = {
     dataItems.map { listValues =>
-      // the old implementation directly passed the JSON as String instead of directly embedding it as JSON. Reproducing this behaviour here.
-      val blackMagic = ListGCValue(listValues.value.values.map {
-        case x: JsonGCValue => StringGCValue(x.value.toString)
-        case x              => x
-      })
       Json.obj(
         "_typeName"       -> info.currentModel,
         "id"              -> Json.toJson(listValues.nodeId),
-        info.currentField -> Json.toJson(blackMagic)(GCValueJsonFormatter.GcValueWrites)
+        info.currentField -> Json.toJson(listValues.value)(GCValueJsonFormatter.GcValueWrites)
       )
     }
   }

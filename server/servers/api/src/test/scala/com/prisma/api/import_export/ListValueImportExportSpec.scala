@@ -161,11 +161,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
 
     importer.executeImport(nodes).await().toString should be("[]")
 
-    val lists =
-      """{"valueType": "lists", "values": [
-        |{"_typeName": "Model1", "id": "2", "jsonList": [[{"_typeName": "STRING", "id": "STRING", "fieldName": "STRING" },{"_typeName": "STRING", "id": "STRING", "fieldName": "STRING" }]]}
-        |]}
-        |""".stripMargin.parseJson
+    val jsonString =
+      """{"_typeName":"Model1","id":"2","jsonList":[[{"_typeName":"STRING","id":"STRING","fieldName":"STRING"},{"_typeName":"STRING","id":"STRING","fieldName":"STRING"}]]}"""
+
+    val lists = s"""{"valueType": "lists", "values": [$jsonString]}""".stripMargin.parseJson
 
     importer.executeImport(lists).await().toString should be("[]")
 
@@ -174,10 +173,9 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
     val exportResult = exporter.executeExport(dataResolver, request).await()
     val firstChunk   = exportResult.as[ResultFormat]
 
-    JsArray(firstChunk.out.jsonElements).toString should be(
-      "[" ++
-        """{"_typeName":"Model1","id":"2","jsonList":["[{\"_typeName\":\"STRING\",\"id\":\"STRING\",\"fieldName\":\"STRING\"},{\"_typeName\":\"STRING\",\"id\":\"STRING\",\"fieldName\":\"STRING\"}]"]}""" ++
-        "]")
+    println(firstChunk.out.jsonElements)
+
+    JsArray(firstChunk.out.jsonElements).toString should be("[" ++ s"""$jsonString""" ++ "]")
     firstChunk.cursor.table should be(-1)
     firstChunk.cursor.row should be(-1)
   }
