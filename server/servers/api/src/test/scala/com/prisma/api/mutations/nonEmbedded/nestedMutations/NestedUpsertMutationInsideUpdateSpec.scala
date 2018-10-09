@@ -466,7 +466,6 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """new comment3""")
   }
 
-  //Fixme failing due to missing unique constraint
   "a one to many relation" should "generate helpful error messages" in {
     val schema = """type Comment{
                             id: ID! @unique

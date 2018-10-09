@@ -66,35 +66,54 @@ object MongoDeployDatabaseMutationBuilder {
   def updateField(name: String, newName: String) = NoAction.unit
 
   def addUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
+    val shortenedName = indexNameHelper(collectionName, fieldName, true)
+
     database
       .getCollection(collectionName)
-      .createIndex(ascending(fieldName), IndexOptions().unique(true).sparse(true).name(s"${collectionName}_${fieldName}_UNIQUE"))
+      .createIndex(ascending(fieldName), IndexOptions().unique(true).sparse(true).name(shortenedName))
       .toFuture()
       .map(_ => ())
   }
 
   def removeUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
+    val shortenedName = indexNameHelper(collectionName, fieldName, true)
+
     database
       .getCollection(collectionName)
-      .dropIndex(s"${collectionName}_${fieldName}_UNIQUE")
+      .dropIndex(shortenedName)
       .toFuture()
       .map(_ => ())
   }
 
   def addRelationIndex(database: MongoDatabase, collectionName: String, fieldName: String) = {
+
+    val shortenedName = indexNameHelper(collectionName, fieldName, false)
+
     database
       .getCollection(collectionName)
-      .createIndex(ascending(fieldName), IndexOptions().name(s"${collectionName}_${fieldName}_RELATION"))
+      .createIndex(ascending(fieldName), IndexOptions().name(shortenedName))
       .toFuture()
       .map(_ => ())
   }
 
   def removeRelationIndex(database: MongoDatabase, collectionName: String, fieldName: String) = {
+    val shortenedName = indexNameHelper(collectionName, fieldName, false)
+
     database
       .getCollection(collectionName)
-      .dropIndex(s"${collectionName}_${fieldName}_RELATION")
+      .dropIndex(shortenedName)
       .toFuture()
       .map(_ => ())
+  }
+
+  def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
+    val shortenedName = fieldName.substring(0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+
+    unique match {
+      case false => shortenedName + "_R"
+      case true  => shortenedName + "_U"
+    }
+
   }
 
 }

@@ -2,10 +2,10 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import java.util.UUID
 
-import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
+import com.prisma.{IgnoreMongo, IgnoreMySql}
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
@@ -395,8 +395,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
   }
 
-  //Fixme Unique and Transactionality
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" taggedAs (IgnoreMongo) in {
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute first direction" in {
     val project = SchemaDsl.fromString() {
       """type User{
         |   id: ID! @unique
@@ -450,6 +449,43 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
+  }
+
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute second direction" in {
+    val project = SchemaDsl.fromString() {
+      """type User{
+        |   id: ID! @unique
+        |   name: String!
+        |   unique: String @unique
+        |   post: Post
+        |}
+        |
+        |type Post{
+        |   id: ID! @unique
+        |   title: String!
+        |   uniquePost: String @unique
+        |   user: User
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      """mutation{
+        |  createUser(data:{
+        |    name: "Paul"
+        |    unique: "uniqueUser"
+        |    post: {create:{title: "test"    uniquePost: "uniquePost"}
+        |    }
+        |  })
+        |    {id}
+        |  }
+      """.stripMargin,
+      project
+    )
+
+    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
 
     server.queryThatMustFail(
       """mutation{
@@ -467,7 +503,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "A unique constraint would be violated on Post. Details: Field name = uniquePost"
     )
 
-    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    ifConnectorIsNotMongo(server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1))
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
