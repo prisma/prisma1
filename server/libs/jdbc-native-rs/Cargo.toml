@@ -16,4 +16,4 @@ colored = "1.6"
 byteorder = "*" # Already defined in postgres as dep
 rust_decimal = { version = "0.10", features = ["postgres"] }
 num-traits = "0.2"
-uuid = "0.7"
+uuid = "0.5"

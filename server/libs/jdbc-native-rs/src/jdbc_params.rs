@@ -246,6 +246,7 @@ fn jsonObjectToJdbcParameter(map: &serde_json::Map<String, serde_json::Value>) -
             Ok(JdbcParameter::DateTime(n.as_i64().unwrap()))
         }
         (JdbcParameterType::Long, &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Long(n.as_i64().unwrap())),
+        (JdbcParameterType::UUID, &serde_json::Value::String(ref uuid)) => Ok(JdbcParameter::UUID(Uuid::parse_str(uuid)?)),
         (d, v) => Err(DriverError::GenericError(format!("Invalid combination: {:?} value {}", d, v)))
     }
 }

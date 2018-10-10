@@ -29,7 +29,7 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
     createVeryManyTops
   }
 
-  "The delete many Mutation" should "delete the items matching the where clause" in {
+  "The delete many Mutation" should "delete the items matching the where clause" ignore {
 
     val result = server.query("""mutation {deleteManyMiddles(where: { int_gt: 100 }){count}}""", project)
 

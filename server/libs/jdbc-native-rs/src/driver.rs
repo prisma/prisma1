@@ -4,6 +4,7 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use chrono::prelude::*;
 use rust_decimal::Decimal;
 use serde_json;
+use uuid;
 
 use postgres;
 use postgres::rows::{Row, Rows};
@@ -91,6 +92,12 @@ impl From<serde_json::Error> for DriverError {
 
 impl From<cell::BorrowMutError> for DriverError {
     fn from(e: cell::BorrowMutError) -> Self {
+        DriverError::GenericError(e.to_string())
+    }
+}
+
+impl From<uuid::ParseError> for DriverError {
+    fn from(e: uuid::ParseError) -> Self {
         DriverError::GenericError(e.to_string())
     }
 }

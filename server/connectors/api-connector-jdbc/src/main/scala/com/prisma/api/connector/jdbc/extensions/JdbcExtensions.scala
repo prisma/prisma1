@@ -26,8 +26,6 @@ object JdbcExtensionsValueClasses {
   def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
     val milis = dateTime.getMillis
     new Timestamp(milis)
-
-//    Timestamp.valueOf(java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateTime.getMillis), ZoneOffset.UTC))
   }
 
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {

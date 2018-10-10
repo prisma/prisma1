@@ -8,6 +8,7 @@ use chrono::prelude::*;
 use driver::DriverError;
 use num_traits::ToPrimitive;
 use jdbc_params::JdbcParameterType;
+use uuid::Uuid;
 
 #[derive(Serialize)]
 pub struct ResultSet {
@@ -25,10 +26,12 @@ fn mapColumn(col: &Column) -> Result<ResultColumn> {
         &postgres::types::BOOL => Ok(JdbcParameterType::Boolean),
         &postgres::types::INT4 => Ok(JdbcParameterType::Int),
         &postgres::types::INT8 => Ok(JdbcParameterType::Long),
+        &postgres::types::NUMERIC => Ok(JdbcParameterType::Double),
         &postgres::types::VARCHAR => Ok(JdbcParameterType::String),
         &postgres::types::TEXT => Ok(JdbcParameterType::String),
-        &postgres::types::NUMERIC => Ok(JdbcParameterType::Double),
+        &postgres::types::BPCHAR => Ok(JdbcParameterType::String),
         &postgres::types::TIMESTAMP => Ok(JdbcParameterType::DateTime),
+        &postgres::types::UUID => Ok(JdbcParameterType::UUID),
         x =>  Err(DriverError::GenericError(format!(
             "Unhandled type in map column: {}",
             x
@@ -81,6 +84,11 @@ impl ResultSet {
                         let number = serde_json::Number::from_f64(value.timestamp_millis() as f64).unwrap();
                         serde_json::Value::Number(number)
                     }
+                    &postgres::types::UUID => {
+                        let uuid: Uuid = row.get(i);
+                        serde_json::Value::String(uuid.to_string())
+                    },
+                    &postgres::types::BPCHAR => serde_json::Value::String(row.get(i)),
                     x => {
                         return Err(DriverError::GenericError(format!(
                             "Unhandled type in json serialize: {}",
