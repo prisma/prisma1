@@ -4,12 +4,16 @@ import java.sql.{Connection, PreparedStatement, Savepoint}
 import java.util.Properties
 import java.util.concurrent.Executor
 
-class CustomJdbcConnection(url: String, binding: RustBinding[RustConnection, RustPreparedStatement]) extends Connection {
-
-  val connection = binding.newConnection(url)
+class CustomJdbcConnection(url: String, outerBinding: RustBinding) extends Connection {
+  val bindingAndConnection = new BindingAndConnection {
+    override val binding: RustBinding     = outerBinding
+    override val connection: binding.Conn = binding.newConnection(url)
+  }
+  import bindingAndConnection._
   var autoCommit = true
 
-  override def prepareStatement(sql: String): PreparedStatement = new CustomPreparedStatement(connection, sql, binding)
+  override def prepareStatement(sql: String): PreparedStatement =
+    new CustomPreparedStatement(sql, bindingAndConnection)
 
   override def commit() = {
     if (autoCommit) {

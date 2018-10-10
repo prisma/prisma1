@@ -1,4 +1,4 @@
-#![allow(non_snake_case, unused_mut)]
+#![allow(non_snake_case, unused, unused_mut)]
 
 extern crate serde;
 extern crate serde_json;
@@ -8,6 +8,7 @@ extern crate chrono;
 extern crate byteorder;
 extern crate rust_decimal;
 extern crate num_traits;
+extern crate uuid;
 
 #[macro_use]
 extern crate serde_derive;
@@ -25,6 +26,14 @@ mod jdbc_params;
 
 use serialization::ResultSet;
 
+// todo pointerandresult
+#[repr(C)]
+#[no_mangle]
+pub struct PointerAndError<T> {
+    error: *const c_char,
+    pointer: *mut T
+}
+
 #[no_mangle]
 pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
     let mut connection = driver::connect(to_string(url));
@@ -34,11 +43,18 @@ pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConn
 }
 
 #[no_mangle]
-pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> *mut driver::PsqlPreparedStatement<'a> {
-    let mut stmt = conn.prepareStatement(to_string(query)).unwrap(); // todo req better err handling struct { ptr string }
-    let ptr = Box::into_raw(Box::new(stmt));
+pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> PointerAndError<driver::PsqlPreparedStatement<'a>> {
+    match conn.prepareStatement(to_string(query)) {
+        Ok(pStmt) => PointerAndError {
+            error: serializeCallResult(Ok(CallResult::empty())),
+            pointer: Box::into_raw(Box::new(pStmt)),
+        },
 
-    return ptr;
+        Err(e) => PointerAndError {
+            error: serializeCallResult(Ok(errorToCallResult(e))),
+            pointer: std::ptr::null_mut(),
+        }
+    }
 }
 
 #[no_mangle]
@@ -172,20 +188,23 @@ fn serializeCallResult(res: driver::Result<CallResult>) -> *const c_char {
 fn handleResult(result: driver::Result<CallResult>) -> CallResult {
     match result {
         Ok(v) => v,
-        Err(e) => {
-            let err = format!("[Rust ERROR] {:?}", e);
-            println!("{}", err.red());
-
-            match e {
-                driver::DriverError::PsqlError(ref err) => match err.as_db() {
-                  Some(dbErr) => CallResult::error(String::from(dbErr.code.code()), dbErr.message.clone()),
-                  None =>panic!("No PSQL error, something else: {:?}", e),
-                },
-
-                _ => CallResult::error(String::from("-1"), err),
-            }
-        }
+        Err(e) => errorToCallResult(e),
     }
+}
+
+fn errorToCallResult(e: driver::DriverError) -> CallResult {
+    let err = format!("[Rust ERROR] {:?}", e);
+    println!("{}", err.red());
+
+    match e {
+        driver::DriverError::PsqlError(ref err) => match err.as_db() {
+            Some(dbErr) => CallResult::error(String::from(dbErr.code.code()), dbErr.message.clone()),
+            None =>panic!("No PSQL error, something else: {:?}", e),
+        },
+
+        _ => CallResult::error(String::from("-1"), err),
+    }
+
 }
 
 #[no_mangle]

@@ -4,7 +4,7 @@ import java.io.{InputStream, Reader}
 import java.net.URL
 import java.sql
 import java.sql.{Blob, Clob, Date, NClob, PreparedStatement, Ref, ResultSet, RowId, SQLException, SQLXML, Time, Timestamp}
-import java.util.Calendar
+import java.util.{Calendar, UUID}
 
 import org.postgresql.core.Parser
 import org.postgresql.util.PSQLState
@@ -16,74 +16,113 @@ object CustomPreparedStatement {
   type Params = mutable.HashMap[Int, JsValue]
 }
 
-class CustomPreparedStatement(conn: RustConnection, query: String, binding: RustBinding[RustConnection, RustPreparedStatement]) extends PreparedStatement {
+abstract class BindingAndConnection {
+  val binding: RustBinding
+  val connection: binding.Conn
+}
+
+class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAndConnection) extends PreparedStatement {
   import CustomPreparedStatement._
+  import bindingAndConnection._
 
-  val standardConformingStrings  = true
-  val withParameters             = true
-  val splitStatements            = true
-  val isBatchedReWriteConfigured = false
-  val rawSqlString               = Parser.parseJdbcSql(query, standardConformingStrings, withParameters, splitStatements, isBatchedReWriteConfigured).get(0).nativeSql
-  val stmt = binding.prepareStatement(conn match {
-    case x: RustConnectionJna => x
-    case x                    => sys.error(s"Got: $x, required RustConnectionJna")
-  }, rawSqlString)
+  val standardConformingStrings      = true
+  val withParameters                 = true
+  val splitStatements                = true
+  val isBatchedReWriteConfigured     = false
+  val parsedQuery                    = Parser.parseJdbcSql(query, standardConformingStrings, withParameters, splitStatements, isBatchedReWriteConfigured).get(0)
+  val rawSqlString                   = parsedQuery.nativeSql
+  val stmt                           = binding.prepareStatement(connection, rawSqlString)
+  var currentParams                  = new Params
+  val paramList                      = mutable.ArrayBuffer.empty[Params]
+  var lastCallResult: RustCallResult = null
 
-  val currentParams = new Params
-  val paramList     = mutable.ArrayBuffer.empty[Params]
-
-  // WIP, just to make it work again for working tree
-  def renderParams(ary: Boolean): String = {
-//    if (paramList.nonEmpty) {
-//      JsArray(paramList.map(x => JsArray(x.toSeq.sortBy(_._1).map(_._2)).toString()))
-//    } else {
-//      JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)).toString()
-//    }
-
-    if (ary) {
-      JsArray(Seq(JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)))).toString
+  def renderParams(asArray: Boolean): String = {
+    if (paramList.nonEmpty) {
+      JsArray(
+        paramList.toVector.map(x => JsArray(x.toSeq.sortBy(_._1).map(_._2)))
+      ).toString()
+    } else if (asArray) {
+      JsArray(Seq(JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)))).toString()
     } else {
       JsArray(currentParams.toSeq.sortBy(_._1).map(_._2)).toString()
     }
+  }
 
+  def clearParams() = {
+    currentParams = new Params
+    paramList.clear()
   }
 
   override def execute() = {
-    val result = binding.executePreparedstatement(
-      stmt,
-      renderParams(true)
-    )
+    val result = if (parsedQuery.command.returnsRows()) {
+      val params = renderParams(asArray = false)
+      clearParams()
 
+      binding.queryPreparedstatement(
+        stmt,
+        params
+      )
+    } else {
+      val params = renderParams(asArray = true)
+      clearParams()
+
+      binding.executePreparedstatement(
+        stmt,
+        params
+      )
+    }
+
+    lastCallResult = result
     result.isResultSet
   }
 
   override def executeQuery(): ResultSet = {
+    val params = renderParams(asArray = false)
+    clearParams()
+
     val result = binding.queryPreparedstatement(
       stmt,
-      renderParams(false)
+      params
     )
 
     if (!result.isResultSet) {
       throw new SQLException("No results were returned by the query.", PSQLState.NO_DATA.toString)
     }
 
+    lastCallResult = result
     result.toResultSet
   }
 
   override def executeUpdate() = {
+    val params = renderParams(asArray = true)
+    clearParams()
+
     val result = binding.executePreparedstatement(
       stmt,
-      renderParams(true)
+      params
     )
 
     if (!result.isCount) {
       throw new SQLException(s"No count was returned by the update. $result", PSQLState.TOO_MANY_RESULTS.toString)
     }
 
+    lastCallResult = result
     result.count.get
   }
 
-  override def addBatch() = {}
+  override def executeBatch(): Array[Int] = {
+    if (paramList.isEmpty) {
+      return Array(0)
+    }
+
+    Array(executeUpdate())
+  }
+
+  override def addBatch() = {
+    println("Adding batch")
+    paramList += currentParams
+    currentParams = new Params
+  }
 
   override def getGeneratedKeys: ResultSet = JsonResultSet(RustResultSet.empty)
 
@@ -92,7 +131,10 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def setObject(parameterIndex: Int, x: scala.Any, targetSqlType: Int) = ???
 
   override def setObject(parameterIndex: Int, x: scala.Any) = {
-    ???
+    x match {
+      case uuid: UUID => currentParams.put(parameterIndex, Json.obj("discriminator" -> "UUID", "value" -> uuid.toString))
+      case _          => sys.error(s"SetObject not implemented for $x")
+    }
   }
 
   override def setObject(parameterIndex: Int, x: scala.Any, targetSqlType: Int, scaleOrLength: Int) = ???
@@ -213,7 +255,7 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
 
   override def getMaxFieldSize = ???
 
-  override def getUpdateCount = ???
+  override def getUpdateCount = lastCallResult.count.get
 
   override def setPoolable(poolable: Boolean) = ???
 
@@ -249,7 +291,7 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
 
   override def isCloseOnCompletion = ???
 
-  override def getResultSet = ???
+  override def getResultSet = lastCallResult.toResultSet
 
   override def getMaxRows = ???
 
@@ -278,8 +320,6 @@ class CustomPreparedStatement(conn: RustConnection, query: String, binding: Rust
   override def close() = ???
 
   override def closeOnCompletion() = ???
-
-  override def executeBatch() = ???
 
   override def setFetchSize(rows: Int) = ???
 

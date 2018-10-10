@@ -4,11 +4,11 @@ import java.sql.Driver
 import java.util.Properties
 
 object CustomJdbcDriver {
-  def jna(): CustomJdbcDriver = new CustomJdbcDriver(RustJnaImpl.asInstanceOf[RustBinding[RustConnection, RustPreparedStatement]])
+  def jna(): CustomJdbcDriver = new CustomJdbcDriver(RustJnaImpl.asInstanceOf[RustBinding])
 //  def graal
 }
 
-case class CustomJdbcDriver(binding: RustBinding[RustConnection, RustPreparedStatement]) extends Driver {
+case class CustomJdbcDriver(binding: RustBinding) extends Driver {
   override def getParentLogger = ???
 
   override def getMajorVersion                                = 1

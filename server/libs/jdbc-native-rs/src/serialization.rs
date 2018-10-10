@@ -1,24 +1,53 @@
 use serde_json;
 use postgres;
 use postgres::rows::{Row, Rows};
+use postgres::stmt::Column;
 use driver::Result;
 use rust_decimal::Decimal;
 use chrono::prelude::*;
 use driver::DriverError;
 use num_traits::ToPrimitive;
+use jdbc_params::JdbcParameterType;
 
 #[derive(Serialize)]
 pub struct ResultSet {
-    columns: Vec<String>,
+    columns: Vec<ResultColumn>,
     data: Vec<serde_json::Value>
+}
+#[derive(Serialize)]
+pub struct ResultColumn {
+    name: String,
+    discriminator: JdbcParameterType
+}
+
+fn mapColumn(col: &Column) -> Result<ResultColumn> {
+    let discriminator = match col.type_() {
+        &postgres::types::BOOL => Ok(JdbcParameterType::Boolean),
+        &postgres::types::INT4 => Ok(JdbcParameterType::Int),
+        &postgres::types::INT8 => Ok(JdbcParameterType::Long),
+        &postgres::types::VARCHAR => Ok(JdbcParameterType::String),
+        &postgres::types::TEXT => Ok(JdbcParameterType::String),
+        &postgres::types::NUMERIC => Ok(JdbcParameterType::Double),
+        &postgres::types::TIMESTAMP => Ok(JdbcParameterType::DateTime),
+        x =>  Err(DriverError::GenericError(format!(
+            "Unhandled type in map column: {}",
+            x
+        )))
+    }?;
+
+    Ok(ResultColumn {
+        name: String::from(col.name()),
+        discriminator: discriminator,
+    })
 }
 
 impl ResultSet {
     pub fn create(rows: Rows) -> Result<ResultSet> {
         let data: Result<Vec<serde_json::Value>> = rows.iter().map(|r| ResultSet::serializeToJson(r)).collect();
+        let columns: Result<Vec<ResultColumn>> = rows.columns().iter().map(mapColumn).collect();
 
         Ok(ResultSet {
-            columns: rows.columns().iter().map(|c| String::from(c.name())).collect(),
+            columns: columns?,
             data: data?,
         })
     }

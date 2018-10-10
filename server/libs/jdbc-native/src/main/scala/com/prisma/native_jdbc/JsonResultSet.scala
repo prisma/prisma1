@@ -1,9 +1,9 @@
 package com.prisma.native_jdbc
 
 import java.io.{InputStream, Reader}
-import java.sql
+import java.{lang, sql}
 import java.sql.{Blob, Clob, Date, NClob, Ref, ResultSet, RowId, SQLXML, Time, Timestamp}
-import java.util.{Calendar, TimeZone}
+import java.util.{Calendar, TimeZone, UUID}
 
 import play.api.libs.json._
 
@@ -26,7 +26,7 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
   override def beforeFirst()                     = ???
   override def afterLast()                       = ???
   override def refreshRow()                      = ???
-  override def getMetaData                       = ???
+  override def getMetaData                       = RustResultSetMetaData(rustResultSet)
   override def getRow                            = ???
   override def getType                           = ???
   override def relative(rows: Int)               = ???
@@ -88,7 +88,7 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
   }
 
   override def getTimestamp(columnLabel: String, cal: Calendar) = {
-    val labelPos = rustResultSet.columns.indexOf(columnLabel)
+    val labelPos = rustResultSet.columns.indexWhere(c => c.name == columnLabel)
     if (labelPos <= -1) {
       sys.error("Column label not found")
     }
@@ -96,8 +96,27 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
     getTimestamp(labelPos + 1, cal)
   }
 
+  override def getObject(columnIndex: Int): java.lang.Object = {
+    val column = rustResultSet.columns.lift(columnIndex - 1).getOrElse(sys.error(s"Column not found at $columnIndex"))
+
+    column.discriminator match {
+      case "String"   => getString(columnIndex)
+      case "Int"      => new Integer(getInt(columnIndex))
+      case "Long"     => new java.lang.Long(getLong(columnIndex))
+      case "Double"   => new java.lang.Double(getDouble(columnIndex))
+      case "DateTime" => getTimestamp(columnIndex)
+      case "Boolean"  => new lang.Boolean(getBoolean(columnIndex))
+      case "Null"     => null
+      case "UUID"     => ??? //readColumnAs[UUID](columnIndex)
+    }
+  }
+
+  override def getObject(columnLabel: String) = {
+    ???
+  }
+
   private def readColumnAs[T](columnLabel: String)(implicit reads: Reads[T], default: DefaultValue[T]): T = {
-    val labelPos = rustResultSet.columns.indexOf(columnLabel)
+    val labelPos = rustResultSet.columns.indexWhere(c => c.name == columnLabel)
     if (labelPos <= -1) {
       sys.error("Column label not found")
     }
@@ -131,7 +150,8 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
 
   override def getClob(columnLabel: String) = ???
 
-  override def getAsciiStream(columnIndex: Int)    = ???
+  override def getAsciiStream(columnIndex: Int) = ???
+
   override def getAsciiStream(columnLabel: String) = ???
 
   override def getNString(columnIndex: Int) = ???
@@ -141,10 +161,6 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
   override def getNClob(columnIndex: Int) = ???
 
   override def getNClob(columnLabel: String) = ???
-
-  override def getObject(columnIndex: Int) = ???
-
-  override def getObject(columnLabel: String) = ???
 
   override def getObject(columnIndex: Int, map: java.util.Map[String, Class[_]]) = ???
 

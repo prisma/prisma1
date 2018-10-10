@@ -6,6 +6,7 @@ use num_traits::ToPrimitive;
 use num_traits::cast::FromPrimitive;
 use rust_decimal::Decimal;
 use serde_json;
+use uuid::Uuid;
 
 use postgres;
 use postgres::rows::{Row, Rows};
@@ -32,6 +33,19 @@ pub enum JdbcParameter {
     Double(MagicFloat),
     DateTime(i64),
     Long(i64),
+    UUID(Uuid),
+}
+
+#[derive(Serialize, Debug)]
+pub enum JdbcParameterType {
+    Int,
+    String,
+    Boolean,
+    Null,
+    Double,
+    DateTime,
+    Long,
+    UUID,
 }
 
 impl JdbcParameter {
@@ -48,6 +62,7 @@ impl JdbcParameter {
             JdbcParameter::String(ref s) => s,
             JdbcParameter::Boolean(ref b) => b,
             JdbcParameter::Long(ref d) => d,
+            JdbcParameter::UUID(ref uid) => uid,
         }
     }
 }
@@ -197,30 +212,41 @@ fn jsonToJdbcParameter(json: &serde_json::Value) -> Result<JdbcParameter> {
     }
 }
 
+fn parseDiscriminator(d: &str) -> Result<JdbcParameterType> {
+    match d {
+        "Int" => Ok(JdbcParameterType::Int),
+        "String" => Ok(JdbcParameterType::String),
+        "Boolean" => Ok(JdbcParameterType::Boolean),
+        "Null" => Ok(JdbcParameterType::Null),
+        "Double" => Ok(JdbcParameterType::Double),
+        "DateTime" => Ok(JdbcParameterType::DateTime),
+        "Long" => Ok(JdbcParameterType::Long),
+        "UUID" => Ok(JdbcParameterType::UUID),
+        x => Err(DriverError::GenericError(format!("discriminator {} is unhandled",d)))
+    }
+}
+
 fn jsonObjectToJdbcParameter(map: &serde_json::Map<String, serde_json::Value>) -> Result<JdbcParameter> {
-    let discriminator = map.get("discriminator").unwrap().as_str().unwrap();
+    let discriminator = parseDiscriminator(map.get("discriminator").unwrap().as_str().unwrap())?;
     let value = map.get("value").unwrap();
 
     match (discriminator, value) {
-        ("Int", &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Int(MagicInt {
+        (JdbcParameterType::Int, &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Int(MagicInt {
             value: n.as_i64().unwrap(),
             underlying: RefCell::new(None),
         })),
-        ("String", &serde_json::Value::String(ref s)) => Ok(JdbcParameter::String(s.to_string())),
-        ("Boolean", &serde_json::Value::Bool(b)) => Ok(JdbcParameter::Boolean(b)),
-        ("Null", &serde_json::Value::Null) => Ok(JdbcParameter::Null),
-        ("Double", &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Double(MagicFloat {
+        (JdbcParameterType::String, &serde_json::Value::String(ref s)) => Ok(JdbcParameter::String(s.to_string())),
+        (JdbcParameterType::Boolean, &serde_json::Value::Bool(b)) => Ok(JdbcParameter::Boolean(b)),
+        (JdbcParameterType::Null, &serde_json::Value::Null) => Ok(JdbcParameter::Null),
+        (JdbcParameterType::Double, &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Double(MagicFloat {
             value: n.as_f64().unwrap(),
             underlying: RefCell::new(None),
         })),
-        ("DateTime", &serde_json::Value::Number(ref n)) => {
+        (JdbcParameterType::DateTime, &serde_json::Value::Number(ref n)) => {
             Ok(JdbcParameter::DateTime(n.as_i64().unwrap()))
         }
-        ("Long", &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Long(n.as_i64().unwrap())),
-        (d, v) => Err(DriverError::GenericError(format!(
-            "discriminator {} and value {} are invalid combinations",
-            d, v
-        ))),
+        (JdbcParameterType::Long, &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Long(n.as_i64().unwrap())),
+        (d, v) => Err(DriverError::GenericError(format!("Invalid combination: {:?} value {}", d, v)))
     }
 }
 

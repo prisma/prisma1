@@ -1,10 +1,8 @@
 package com.prisma.native_jdbc
 
 import java.sql.SQLException
-
 import com.sun.jna.{Native, Pointer}
-import play.api.libs.json.{JsArray, JsObject, Json}
-
+import play.api.libs.json.{JsArray, Json}
 import scala.util.Try
 
 sealed trait RustConnection
@@ -14,23 +12,27 @@ class RustConnectionJna(val conn: Pointer) extends RustConnection
 sealed trait RustPreparedStatement
 class RustPreparedStatementJna(val stmt: Pointer) extends RustPreparedStatement
 
-trait RustBinding[T <: RustConnection, U <: RustPreparedStatement] {
-  def newConnection(url: String): T
-  def prepareStatement(connection: T, query: String): RustPreparedStatement
-  def startTransaction(connection: T): RustCallResult
-  def commitTransaction(connection: T): RustCallResult
-  def rollbackTransaction(connection: T): RustCallResult
-  def closeConnection(connection: T): RustCallResult
-  def sqlExecute(connection: T, query: String, params: String): RustCallResult
-  def sqlQuery(connection: T, query: String, params: String): RustCallResult
-  def executePreparedstatement(stmt: U, params: String): RustCallResult
-  def queryPreparedstatement(stmt: U, params: String): RustCallResult
+trait RustBinding {
+  type Conn <: RustConnection
+  type Stmt <: RustPreparedStatement
+
+  def newConnection(url: String): Conn
+  def prepareStatement(connection: Conn, query: String): Stmt
+  def startTransaction(connection: Conn): RustCallResult
+  def commitTransaction(connection: Conn): RustCallResult
+  def rollbackTransaction(connection: Conn): RustCallResult
+  def closeConnection(connection: Conn): RustCallResult
+  def sqlExecute(connection: Conn, query: String, params: String): RustCallResult
+  def sqlQuery(connection: Conn, query: String, params: String): RustCallResult
+  def executePreparedstatement(stmt: Stmt, params: String): RustCallResult
+  def queryPreparedstatement(stmt: Stmt, params: String): RustCallResult
 }
 
 object RustCallResult {
-  implicit val resultSetFormat = Json.format[RustResultSet]
-  implicit val errorFormat     = Json.format[RustError]
-  implicit val protocolFormat  = Json.format[RustCallResult]
+  implicit val resultColumnFormat = Json.format[ResultColumn]
+  implicit val resultSetFormat    = Json.format[RustResultSet]
+  implicit val errorFormat        = Json.format[RustError]
+  implicit val protocolFormat     = Json.format[RustCallResult]
 
   def fromString(str: String): RustCallResult = {
     (for {
@@ -57,7 +59,9 @@ object RustResultSet {
   val empty = RustResultSet(Vector.empty, IndexedSeq.empty)
 }
 
-case class RustResultSet(columns: Vector[String], data: IndexedSeq[JsArray])
+case class RustResultSet(columns: Vector[ResultColumn], data: IndexedSeq[JsArray])
+
+case class ResultColumn(name: String, discriminator: String)
 
 //object RustGraalImpl extends RustBinding[RustConnectionGraal] {
 //  def toJavaString(str: CCharPointer) = CTypeConversion.toJavaString(str)
@@ -74,7 +78,10 @@ case class RustResultSet(columns: Vector[String], data: IndexedSeq[JsArray])
 //    toJavaString(RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params)))
 //}
 
-object RustJnaImpl extends RustBinding[RustConnectionJna, RustPreparedStatementJna] {
+object RustJnaImpl extends RustBinding {
+  type Conn = RustConnectionJna
+  type Stmt = RustPreparedStatementJna
+
   val currentDir = System.getProperty("user.dir")
 
   System.setProperty("jna.debug_load.jna", "true")
@@ -83,7 +90,10 @@ object RustJnaImpl extends RustBinding[RustConnectionJna, RustPreparedStatementJ
   val library = Native.loadLibrary("jdbc_native", classOf[JnaRustBridge])
 
   override def prepareStatement(connection: RustConnectionJna, query: String): RustPreparedStatementJna = {
-    new RustPreparedStatementJna(library.prepareStatement(connection.conn, query))
+    val ptrAndErr = library.prepareStatement(connection.conn, query)
+    println(s"[Jna] Prepare result: ${ptrAndErr.error}")
+    RustCallResult.fromString(ptrAndErr.error)
+    new RustPreparedStatementJna(ptrAndErr.pointer)
   }
 
   override def newConnection(url: String): RustConnectionJna = {
