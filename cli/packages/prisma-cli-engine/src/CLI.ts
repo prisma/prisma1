@@ -232,16 +232,7 @@ export class CLI {
       })
     }
 
-    if (
-      !(
-        this.config.argv.includes('playground') ||
-        this.config.argv.includes('logs') ||
-        this.config.argv.includes('logs:function') ||
-        (this.config.argv.includes('deploy') &&
-          (this.config.argv.includes('-w') ||
-            this.config.argv.includes('--watch')))
-      )
-    ) {
+    if (!this.config.argv.includes('playground')) {
       const { timeout } = require('./util')
       await timeout(this.flush(), 1000)
 
