@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.impl
 
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
@@ -8,7 +8,6 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.Model
-import org.postgresql.util.PSQLException
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
@@ -32,13 +31,13 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
-    case e: PSQLException if e.getSQLState == "23503" =>
+    case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeNotFoundForWhereError(mutaction.where)
 
-    case e: PSQLException if e.getSQLState == "23502" =>
+    case e: SQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
 
     case e: SQLIntegrityConstraintViolationException
@@ -82,10 +81,10 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
 
   override val errorMapper = {
     // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
-    case e: PSQLException if e.getSQLState == "23502" =>
+    case e: SQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
 
     case e: SQLIntegrityConstraintViolationException
