@@ -66,8 +66,8 @@ pub extern "C" fn executePreparedstatement(
     let paramsString = to_string(params);
     let callResult = jdbc_params::toJdbcParameterList(&paramsString).and_then(|p| {
         stmt.execute(p.iter().map(|x| x.iter().collect()).collect())
-    }).map(|x| {
-        CallResult::count(x as i32)
+    }).map(|x: Vec<i32>| {
+        CallResult::count(x)
     });
 
     return serializeCallResult(callResult);
@@ -117,7 +117,7 @@ pub extern "C" fn sqlExecute(
     let callResult = jdbc_params::toJdbcParameters(&paramsString).and_then(|p| {
         conn.execute(queryString, p.iter().collect())
     }).map(|x| {
-        CallResult::count(x as i32)
+        CallResult::count(vec!(x as i32))
     });
 
     return serializeCallResult(callResult);
@@ -128,16 +128,16 @@ struct CallResult {
     ty: String,
     rows: Option<ResultSet>,
     error: Option<CallError>,
-    count: Option<i32>
+    counts: Vec<i32>,
 }
 
 impl CallResult {
-    pub fn count(c: i32) -> CallResult {
+    pub fn count(c: Vec<i32>) -> CallResult {
         CallResult {
             ty: String::from("COUNT"),
             rows: None,
             error: None,
-            count: Some(c)
+            counts: c
         }
     }
 
@@ -147,7 +147,7 @@ impl CallResult {
             ty: String::from("RESULT_SET"),
             rows: Some(data),
             error: None,
-            count: None
+            counts: Vec::new()
         })
     }
 
@@ -156,7 +156,7 @@ impl CallResult {
             ty: String::from("EMPTY"),
             rows: None,
             error: None,
-            count: None
+            counts: Vec::new()
         }
     }
 
@@ -168,7 +168,7 @@ impl CallResult {
                 code: code,
                 message: message,
             }),
-            count: None
+            counts: Vec::new()
         }
     }
 }
@@ -197,14 +197,13 @@ fn errorToCallResult(e: driver::DriverError) -> CallResult {
     println!("{}", err.red());
 
     match e {
-        driver::DriverError::PsqlError(ref err) => match err.as_db() {
+        driver::DriverError::PsqlError(ref e) => match e.as_db() {
             Some(dbErr) => CallResult::error(String::from(dbErr.code.code()), dbErr.message.clone()),
-            None =>panic!("No PSQL error, something else: {:?}", e),
+            None => CallResult::error(String::from("-1"), err),
         },
 
-        _ => CallResult::error(String::from("-1"), err),
+        _ => CallResult::error(String::from("-2"), err),
     }
-
 }
 
 #[no_mangle]

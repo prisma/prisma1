@@ -81,8 +81,9 @@ impl ResultSet {
                     }
                     &postgres::types::TIMESTAMP => {
                         let value: NaiveDateTime = row.get(i);
-                        let number = serde_json::Number::from_f64(value.timestamp_millis() as f64).unwrap();
-                        serde_json::Value::Number(number)
+                        let date: DateTime<Utc> = DateTime::from_utc(value, Utc);
+
+                        serde_json::Value::String(date.to_rfc3339())
                     }
                     &postgres::types::UUID => {
                         let uuid: Uuid = row.get(i);

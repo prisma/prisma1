@@ -31,7 +31,7 @@ pub enum JdbcParameter {
     Boolean(bool),
     Null,
     Double(MagicFloat),
-    DateTime(i64),
+    DateTime(String),
     Long(i64),
     UUID(Uuid),
 }
@@ -103,8 +103,12 @@ impl ToSql for JdbcParameter {
         match self {
             JdbcParameter::Null => Ok(IsNull::Yes),
             JdbcParameter::DateTime(ref i) => {
-                let ts = Utc.timestamp(i / 1000, 0).naive_utc();
-                ts.to_sql(ty, out)
+                let x = DateTime::parse_from_rfc3339(i)?;
+
+//                let nanos = (i % 1000) * 1000000;
+//                let ts = Utc.timestamp(i / 1000, nanos as u32).naive_utc();
+
+                x.to_sql(ty, out)
             }
 
             JdbcParameter::Int(ref magic) => {
@@ -242,9 +246,7 @@ fn jsonObjectToJdbcParameter(map: &serde_json::Map<String, serde_json::Value>) -
             value: n.as_f64().unwrap(),
             underlying: RefCell::new(None),
         })),
-        (JdbcParameterType::DateTime, &serde_json::Value::Number(ref n)) => {
-            Ok(JdbcParameter::DateTime(n.as_i64().unwrap()))
-        }
+        (JdbcParameterType::DateTime, &serde_json::Value::String(ref s)) => Ok(JdbcParameter::DateTime(s.to_string())),
         (JdbcParameterType::Long, &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Long(n.as_i64().unwrap())),
         (JdbcParameterType::UUID, &serde_json::Value::String(ref uuid)) => Ok(JdbcParameter::UUID(Uuid::parse_str(uuid)?)),
         (d, v) => Err(DriverError::GenericError(format!("Invalid combination: {:?} value {}", d, v)))

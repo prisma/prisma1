@@ -4,8 +4,10 @@ import java.io.{InputStream, Reader}
 import java.net.URL
 import java.sql
 import java.sql.{Blob, Clob, Date, NClob, PreparedStatement, Ref, ResultSet, RowId, SQLException, SQLXML, Time, Timestamp}
+import java.time.format.DateTimeFormatter
 import java.util.{Calendar, UUID}
 
+import org.joda.time.format.ISODateTimeFormat
 import org.postgresql.core.Parser
 import org.postgresql.util.PSQLState
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
@@ -107,7 +109,7 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
     }
 
     lastCallResult = result
-    result.count.get
+    result.counts.head
   }
 
   override def executeBatch(): Array[Int] = {
@@ -115,7 +117,20 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
       return Array(0)
     }
 
-    Array(executeUpdate())
+    val params = renderParams(asArray = true)
+    clearParams()
+
+    val result = binding.executePreparedstatement(
+      stmt,
+      params
+    )
+
+    if (!result.isCount) {
+      throw new SQLException(s"No count was returned by the update. $result", PSQLState.TOO_MANY_RESULTS.toString)
+    }
+
+    lastCallResult = result
+    result.counts.toArray
   }
 
   override def addBatch() = {
@@ -224,11 +239,16 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   override def setBlob(parameterIndex: Int, inputStream: InputStream) = ???
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp) = {
-    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
+//    val isoDate = DateTimeFormatter.ISO_DATE_TIME.format(new Date(x.getTime))
+    val isoDate = ISODateTimeFormat.basicDateTime().print(x.getTime)
+
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> isoDate))
   }
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar) = {
-    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> x.toInstant.toEpochMilli))
+//    val isoDate = DateTimeFormatter.ISO_DATE_TIME.format(x.toInstant)
+    val isoDate = ISODateTimeFormat.basicDateTime().print(x.getTime)
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> isoDate))
   }
 
   override def setBytes(parameterIndex: Int, x: Array[Byte]) = ???
@@ -255,7 +275,7 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
 
   override def getMaxFieldSize = ???
 
-  override def getUpdateCount = lastCallResult.count.get
+  override def getUpdateCount = lastCallResult.counts.head
 
   override def setPoolable(poolable: Boolean) = ???
 

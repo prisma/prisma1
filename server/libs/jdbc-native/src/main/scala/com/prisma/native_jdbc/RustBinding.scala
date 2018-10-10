@@ -1,8 +1,10 @@
 package com.prisma.native_jdbc
 
-import java.sql.SQLException
+import java.sql.{BatchUpdateException, SQLException}
+
 import com.sun.jna.{Native, Pointer}
 import play.api.libs.json.{JsArray, Json}
+
 import scala.util.Try
 
 sealed trait RustConnection
@@ -39,7 +41,14 @@ object RustCallResult {
       json     <- Try { Json.parse(str) }
       protocol <- Try { json.as[RustCallResult] }
     } yield {
-      protocol.error.foreach(err => throw new SQLException(err.message, err.code))
+      protocol.error.foreach { err =>
+        throw new SQLException(err.message, err.code)
+      }
+
+      if (protocol.isCount && protocol.counts.contains(-3)) {
+        throw new BatchUpdateException(protocol.counts.toArray)
+      }
+
       protocol
     }).get
   }
@@ -47,7 +56,7 @@ object RustCallResult {
 
 case class RustError(code: String, message: String)
 
-case class RustCallResult(ty: String, count: Option[Int], rows: Option[RustResultSet], error: Option[RustError]) {
+case class RustCallResult(ty: String, counts: Vector[Int], rows: Option[RustResultSet], error: Option[RustError]) {
   def isResultSet = ty == "RESULT_SET"
   def isError     = ty == "ERROR"
   def isCount     = ty == "COUNT"

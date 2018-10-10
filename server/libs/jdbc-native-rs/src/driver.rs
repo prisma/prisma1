@@ -2,6 +2,7 @@
 
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use chrono::prelude::*;
+use chrono::format;
 use rust_decimal::Decimal;
 use serde_json;
 use uuid;
@@ -40,13 +41,23 @@ pub struct PsqlPreparedStatement<'a> {
 }
 
 impl<'a> PsqlPreparedStatement<'a> {
-    pub fn execute(&self, params: Vec<Vec<&jdbc_params::JdbcParameter>>) -> Result<u64> {
-        let results: Result<Vec<u64>> = params.into_iter().map(|p| {
-            self.statement.execute(&jdbc_params::JdbcParameter::paramsToSql(p)[..]).map_err(DriverError::from)
-        }).collect();
+    pub fn execute(&self, params: Vec<Vec<&jdbc_params::JdbcParameter>>) -> Result<Vec<i32>> {
+        let paramLength = params.len();
+        let mut counts = Vec::new();
 
-        let res = results?.iter().fold(0 as u64, |x, y| { x + y });
-        Ok(res)
+        for param in params {
+            let res = self.statement.execute(&jdbc_params::JdbcParameter::paramsToSql(param)[..]).map_err(DriverError::from);
+            match res {
+                Ok(count) => counts.push(count as i32),
+                Err(ref e) if paramLength > 1 => {
+                    println!("[Rust] Error during prep exec: {:?}", e);
+                    counts.push(-3)
+                },
+                Err(_) => return res.map(|v| vec!(v as i32))
+            }
+        }
+
+        Ok(counts)
     }
 
     pub fn query(&self, params: Vec<&jdbc_params::JdbcParameter>) -> Result<Rows> {
@@ -92,6 +103,12 @@ impl From<serde_json::Error> for DriverError {
 
 impl From<cell::BorrowMutError> for DriverError {
     fn from(e: cell::BorrowMutError) -> Self {
+        DriverError::GenericError(e.to_string())
+    }
+}
+
+impl From<format::ParseError> for DriverError {
+    fn from(e: format::ParseError) -> Self {
         DriverError::GenericError(e.to_string())
     }
 }

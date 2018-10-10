@@ -78,13 +78,23 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
       sys.error("Can only handle UTC.")
     }
 
-    new Timestamp(readColumnAs[Long](columnIndex))
+    val readValue = readColumnAs[String](columnIndex)
+    if (readValue == null) {
+      null
+    } else {
+      Timestamp.valueOf(readValue)
+    }
   }
 
   override def getTimestamp(columnIndex: Int) = ???
 
   override def getTimestamp(columnLabel: String) = {
-    new Timestamp(readColumnAs[Long](columnLabel))
+    val readValue = readColumnAs[String](columnLabel)
+    if (readValue == null) {
+      null
+    } else {
+      Timestamp.valueOf(readValue)
+    }
   }
 
   override def getTimestamp(columnLabel: String, cal: Calendar) = {
