@@ -159,4 +159,77 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query {bottoms{int}}""", project).toString should be("""{"data":{"bottoms":[]}}""")
 
   }
+
+  "A cascading delete" should "not hit the parameter limit 2" in {
+
+    val project: Project = SchemaDsl.fromString() {
+      """
+        |type Top{
+        |   int: Int @unique
+        |   as: [A!]! @relation(name: "Top" onDelete: CASCADE)
+        |}
+        |
+        |type A {
+        |   int: Int @unique
+        |   bs:[B!]!  @relation(name: "A" onDelete: CASCADE)
+        |}
+        |
+        |type B {
+        |   int: Int
+        |   cs: [C!]! @relation(name: "B" onDelete: CASCADE)
+        |}
+        |
+        |type C {
+        |   int: Int
+        |   ds: [D!]! @relation(name: "C" onDelete: CASCADE)
+        |}
+        |
+        |type D {
+        |   int: Int
+        |}
+      """
+    }
+    database.setup(project)
+
+    def createAs(int: Int) = {
+
+      val d = s"{int:1}"
+      val c = s"{int: 1, ds: {create:[$d,$d,$d,$d,$d,$d,$d,$d,$d,$d]}}"
+      val b = s"{int: 1, cs: {create:[$c,$c,$c,$c,$c,$c,$c,$c,$c,$c]}}"
+
+      val as = s"""
+                        |mutation {createA(data:{
+                        |   int: $int
+                        |   bs: {create:[$b,$b,$b,$b,$b,$b,$b,$b,$b,$b]}
+                        |}){int}}"""
+
+      server.query(as.stripMargin, project)
+    }
+
+    for (int <- 1 to 40) {
+      createAs(int)
+    }
+
+    def as(string: String, int: Int = 40): String = int match {
+      case 1 => string ++ s"{int: $int}"
+      case _ => as(string ++ s"{int: $int},", int - 1)
+    }
+
+    val topQuery = s"""
+                      |mutation {createTop(data:{
+                      |   int: 1
+                      |   as: {connect:[${as("")}]}
+                      |}){int}}"""
+
+    server.query(topQuery.stripMargin, project)
+
+    server.query("""mutation {deleteTop(where:{int: 1}){int}}""", project)
+
+    server.query("""query {tops{int}}""", project).toString should be("""{"data":{"tops":[]}}""")
+    server.query("""query {as{int}}""", project).toString should be("""{"data":{"as":[]}}""")
+    server.query("""query {bs{int}}""", project).toString should be("""{"data":{"bs":[]}}""")
+    server.query("""query {cs{int}}""", project).toString should be("""{"data":{"cs":[]}}""")
+    server.query("""query {ds{int}}""", project).toString should be("""{"data":{"ds":[]}}""")
+  }
+
 }
