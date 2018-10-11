@@ -208,6 +208,13 @@ lazy val jdbcNative = libProject("jdbc-native")
     postgresClient
   ) ++ jooq)
 
+lazy val jwtNative = libProject("jwt-native")
+  .settings(libraryDependencies ++= Seq(
+    jna,
+    scalaTest,
+    playJson
+  ) ++ jooq)
+
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(
     playJson,
@@ -367,7 +374,8 @@ val allLibProjects = List(
   sangriaUtils,
   prismaConfig,
   mongoUtils,
-  jdbcNative
+  jdbcNative,
+  jwtNative
 )
 
 val allIntegrationTestProjects = List(

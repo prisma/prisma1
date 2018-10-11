@@ -45,6 +45,7 @@ object AuthImpl extends Auth {
         val nowInSeconds = Instant.now().toEpochMilli / 1000
         val claim        = JwtClaim(expiration = Some(nowInSeconds + expirationInSeconds), notBefore = Some(nowInSeconds))
         Jwt.encode(claim, secret, algorithm)
+
       case None =>
         ""
     }
