@@ -111,16 +111,18 @@ trait CascadingDeleteSharedStuff {
       parentIds: Vector[IdGCValue],
       visitedModels: Vector[Model]
   ): DBIO[Unit] = {
+
     for {
       ids            <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
+      groupedIds     = ids.grouped(10000).toVector
       model          = parentField.relatedModel_!
       _              = if (visitedModels.contains(model)) throw APIErrors.CascadingDeletePathLoops()
       nextCascadings = model.cascadingRelationFields.filter(_ != parentField)
-      childActions   = nextCascadings.map(field => recurse(mutationBuilder, field, ids, visitedModels :+ model))
+      childActions   = nextCascadings.map(field => DBIO.seq(groupedIds.map(recurse(mutationBuilder, field, _, visitedModels :+ model)): _*))
       _              <- DBIO.seq(childActions: _*)
       // eigentliche Actions
-      _ <- checkTheseOnes(mutationBuilder, parentField, ids)
-      _ <- mutationBuilder.deleteNodes(model, ids, shouldDeleteRelayIds)
+      _ <- DBIO.seq(groupedIds.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
+      _ <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
     } yield ()
   }
 
