@@ -1,10 +1,12 @@
 package com.prisma.native_jdbc
 
 import java.io.{InputStream, Reader}
-import java.{lang, sql}
 import java.sql.{Blob, Clob, Date, NClob, Ref, ResultSet, RowId, SQLXML, Time, Timestamp}
-import java.util.{Calendar, TimeZone, UUID}
+import java.util.{Calendar, TimeZone}
+import java.{lang, sql}
 
+import com.prisma.native_jdbc.CustomPreparedStatement._
+import org.joda.time.DateTime
 import play.api.libs.json._
 
 case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with DefaultReads {
@@ -74,15 +76,25 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
   override def getLong(columnLabel: String)             = readColumnAs[Long](columnLabel)
 
   override def getTimestamp(columnIndex: Int, cal: Calendar) = {
-    if (cal.getTimeZone() != TimeZone.getTimeZone("UTC")) {
+    if (cal.getTimeZone != TimeZone.getTimeZone("UTC")) {
       sys.error("Can only handle UTC.")
     }
 
-    val readValue = readColumnAs[String](columnIndex)
+    val readValue = readColumnAs[MagicDateTime](columnIndex)
     if (readValue == null) {
       null
     } else {
-      Timestamp.valueOf(readValue)
+      val dt = new DateTime(
+        readValue.year,
+        readValue.month,
+        readValue.day,
+        readValue.hour,
+        readValue.minute,
+        readValue.seconds,
+        readValue.millis
+      )
+
+      new Timestamp(dt.toInstant.getMillis)
     }
   }
 

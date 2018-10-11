@@ -7,7 +7,7 @@ use rust_decimal::Decimal;
 use chrono::prelude::*;
 use driver::DriverError;
 use num_traits::ToPrimitive;
-use jdbc_params::JdbcParameterType;
+use jdbc_params::{JdbcParameterType, MagicDateTime};
 use uuid::Uuid;
 
 #[derive(Serialize)]
@@ -82,8 +82,17 @@ impl ResultSet {
                     &postgres::types::TIMESTAMP => {
                         let value: NaiveDateTime = row.get(i);
                         let date: DateTime<Utc> = DateTime::from_utc(value, Utc);
+                        let mdt = MagicDateTime {
+                            year: date.year(),
+                            month: date.month(),
+                            day: date.day(),
+                            hour: date.hour(),
+                            minute: date.minute(),
+                            seconds: date.second(),
+                            millis: date.timestamp_subsec_millis(),
+                        };
 
-                        serde_json::Value::String(date.to_rfc3339())
+                        serde_json::to_value(mdt)?
                     }
                     &postgres::types::UUID => {
                         let uuid: Uuid = row.get(i);

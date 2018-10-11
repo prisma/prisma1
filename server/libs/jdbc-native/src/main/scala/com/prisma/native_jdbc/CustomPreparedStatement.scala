@@ -4,10 +4,9 @@ import java.io.{InputStream, Reader}
 import java.net.URL
 import java.sql
 import java.sql.{Blob, Clob, Date, NClob, PreparedStatement, Ref, ResultSet, RowId, SQLException, SQLXML, Time, Timestamp}
-import java.time.format.DateTimeFormatter
 import java.util.{Calendar, UUID}
 
-import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.DateTime
 import org.postgresql.core.Parser
 import org.postgresql.util.PSQLState
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
@@ -16,6 +15,9 @@ import scala.collection.mutable
 
 object CustomPreparedStatement {
   type Params = mutable.HashMap[Int, JsValue]
+
+  implicit val magicDateTimeFormat = Json.format[MagicDateTime]
+  case class MagicDateTime(year: Int, month: Int, day: Int, hour: Int, minute: Int, seconds: Int, millis: Int)
 }
 
 abstract class BindingAndConnection {
@@ -239,16 +241,22 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   override def setBlob(parameterIndex: Int, inputStream: InputStream) = ???
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp) = {
-//    val isoDate = DateTimeFormatter.ISO_DATE_TIME.format(new Date(x.getTime))
-    val isoDate = ISODateTimeFormat.basicDateTime().print(x.getTime)
+    val isoDate = new DateTime(x.getTime)
+    val date = MagicDateTime(
+      isoDate.year().get(),
+      isoDate.monthOfYear().get(),
+      isoDate.dayOfMonth().get(),
+      isoDate.hourOfDay().get(),
+      isoDate.minuteOfHour().get(),
+      isoDate.secondOfMinute().get(),
+      isoDate.millisOfSecond().get()
+    )
 
-    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> isoDate))
+    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> Json.toJson(date)))
   }
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar) = {
-//    val isoDate = DateTimeFormatter.ISO_DATE_TIME.format(x.toInstant)
-    val isoDate = ISODateTimeFormat.basicDateTime().print(x.getTime)
-    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> isoDate))
+    setTimestamp(parameterIndex, x)
   }
 
   override def setBytes(parameterIndex: Int, x: Array[Byte]) = ???

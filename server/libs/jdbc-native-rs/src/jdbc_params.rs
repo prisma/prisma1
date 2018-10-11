@@ -31,7 +31,7 @@ pub enum JdbcParameter {
     Boolean(bool),
     Null,
     Double(MagicFloat),
-    DateTime(String),
+    DateTime(DateTime<Utc>),
     Long(i64),
     UUID(Uuid),
 }
@@ -46,6 +46,17 @@ pub enum JdbcParameterType {
     DateTime,
     Long,
     UUID,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MagicDateTime {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub seconds: u32,
+    pub millis: u32,
 }
 
 impl JdbcParameter {
@@ -102,13 +113,8 @@ impl ToSql for JdbcParameter {
     {
         match self {
             JdbcParameter::Null => Ok(IsNull::Yes),
-            JdbcParameter::DateTime(ref i) => {
-                let x = DateTime::parse_from_rfc3339(i)?;
-
-//                let nanos = (i % 1000) * 1000000;
-//                let ts = Utc.timestamp(i / 1000, nanos as u32).naive_utc();
-
-                x.to_sql(ty, out)
+            JdbcParameter::DateTime(ref dt) => {
+                dt.to_sql(ty, out)
             }
 
             JdbcParameter::Int(ref magic) => {
@@ -246,7 +252,11 @@ fn jsonObjectToJdbcParameter(map: &serde_json::Map<String, serde_json::Value>) -
             value: n.as_f64().unwrap(),
             underlying: RefCell::new(None),
         })),
-        (JdbcParameterType::DateTime, &serde_json::Value::String(ref s)) => Ok(JdbcParameter::DateTime(s.to_string())),
+        (JdbcParameterType::DateTime, x @ &serde_json::Value::Object(_)) => {
+            let date: MagicDateTime = serde_json::from_value(x.clone())?;
+            let dateTime = Utc.ymd(date.year, date.month, date.day).and_hms_milli(date.hour, date.minute, date.seconds, date.millis);
+            Ok(JdbcParameter::DateTime(dateTime))
+        },
         (JdbcParameterType::Long, &serde_json::Value::Number(ref n)) => Ok(JdbcParameter::Long(n.as_i64().unwrap())),
         (JdbcParameterType::UUID, &serde_json::Value::String(ref uuid)) => Ok(JdbcParameter::UUID(Uuid::parse_str(uuid)?)),
         (d, v) => Err(DriverError::GenericError(format!("Invalid combination: {:?} value {}", d, v)))
