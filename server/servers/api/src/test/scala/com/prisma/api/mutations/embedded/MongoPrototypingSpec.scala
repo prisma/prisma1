@@ -833,4 +833,48 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = """A unique constraint would be violated on Top. Details: Field name = unique"""
     )
   }
+
+  "Relations from embedded to Non-Embedded" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    child: Child @mongoRelation(field: "childId")
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friend: Friend @mongoRelation(field: "friendId")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{
+         |      name: "Daughter"
+         |      friend: {create:{name: "Buddy"}}
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+  }
+
 }
