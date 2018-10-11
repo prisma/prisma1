@@ -78,27 +78,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val sssEventsPubSub: PubSub[String]               = theSssEventsPubSub
   override lazy val sssEventsSubscriber: PubSubSubscriber[String] = theSssEventsPubSub
 
-  // Note: The subscription stuff can be in memory
-  private lazy val requestsQueue: InMemoryAkkaQueue[WebsocketRequest]         = InMemoryAkkaQueue[WebsocketRequest]()
-  override lazy val requestsQueuePublisher: QueuePublisher[WebsocketRequest]  = requestsQueue
-  override lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueue.map(Converters.websocketRequest2SubscriptionRequest)
-
-  private lazy val responsePubSub: InMemoryAkkaPubSub[String]          = InMemoryAkkaPubSub[String]()
-  override lazy val responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSub
-
-  private lazy val converterResponse07ToString: SubscriptionSessionResponse => String = (response: SubscriptionSessionResponse) => {
-    import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
-    Json.toJson(response).toString
-  }
-
-  private lazy val converterResponse05ToString: SubscriptionSessionResponseV05 => String = (response: SubscriptionSessionResponseV05) => {
-    import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
-    Json.toJson(response).toString
-  }
-
-  override lazy val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] = responsePubSub.map(converterResponse05ToString)
-  override lazy val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]    = responsePubSub.map(converterResponse07ToString)
-
   override lazy val keepAliveIntervalSeconds = 10
 
   override lazy val webhookPublisher: QueuePublisher[Webhook] =

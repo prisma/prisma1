@@ -23,7 +23,6 @@
     "graphql": "^14.0.2",
     "pluralize": "^7.0.0",
     "popsicle": "^10.0.1",
-    "prisma-cli": "^1.0.7",
     "tslint-config-prettier": "^1.15.0",
     "tslint-eslint-rules": "^5.4.0"
   },

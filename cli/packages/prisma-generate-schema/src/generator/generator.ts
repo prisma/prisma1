@@ -57,9 +57,9 @@ export abstract class TypeGenerator<In, Args, Type extends GraphQLType> extends 
 
   public generate(input: In, args: Args): Type {
     const name = this.getTypeName(input, args)
-
+    
     if (this.knownTypes.hasOwnProperty(name)) {
-      // Force cast should be safe because of the name lookip.
+      // Force cast should be safe because of the name lookup.
       return this.knownTypes[name] as Type
     } else {
       const type = this.generateInternal(input, args)
@@ -99,7 +99,7 @@ export abstract class TypeFromModelGenerator<
   }
 
   /**
-   * Checks if the given liest of fields has
+   * Checks if the given list of fields has
    * other fields than the fields given in the second
    * parameter.
    * @param fields

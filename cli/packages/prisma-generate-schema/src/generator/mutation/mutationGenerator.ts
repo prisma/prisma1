@@ -29,13 +29,17 @@ export default class MutationGenerator extends RootGenerator {
   private generateCreateField(model: IGQLType) {
     const fields = {} as GraphQLFieldConfigMap<null, null>
 
-    if (this.generators.modelCreateInput.wouldBeEmpty(model, {})) {
+    // TODO: model.fields.length === 0 should be encapuslated in the respective "wouldBeEmpty" or another helper function
+    const wouldBeEmpty = model.fields.length === 0 && this.generators.modelCreateInput.wouldBeEmpty(model, {});
+    const nonIdFields = model.fields.filter(field => field.name !== 'id')
+
+    if (wouldBeEmpty) {
       return fields
     }
 
     fields[`create${model.name}`] = {
       type: new GraphQLNonNull(this.generators.model.generate(model, {})),
-      args: {
+      args: nonIdFields.length === 0 ? {} : {
         data: { type: new GraphQLNonNull(this.generators.modelCreateInput.generate(model, {})) }
       }
     }

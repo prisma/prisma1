@@ -13,6 +13,7 @@ import {
 } from 'prisma-client-lib'
 import { spawnSync } from 'npm-run'
 import generateCRUDSchemaString from 'prisma-generate-schema'
+import { fetchAndPrintSchema } from '../deploy/printSchema'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -21,6 +22,10 @@ export default class GenereateCommand extends Command {
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
+    }),
+    ['endpoint']: flags.boolean({
+      description: 'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
+      required: false
     }),
   }
   async run() {
@@ -34,19 +39,48 @@ export default class GenereateCommand extends Command {
       this.definition.definition!.generate!.length > 0
     ) {
       const before = Date.now()
-      this.out.action.start(`Generating schema`)
 
-      if (!this.definition.definition!.datamodel) {
-        await this.out.error(
-          `The property ${chalk.bold(
-            'datamodel',
-          )} is missing in your prisma.yml`,
+      let schemaString;
+      if (this.flags.endpoint) {
+        this.out.action.start(`Downloading schema`)
+        const serviceName = this.definition.service!
+        const stageName = this.definition.stage!
+        const token = this.definition.getToken(serviceName, stageName)
+        const cluster = this.definition.getCluster()
+        const workspace = this.definition.getWorkspace()
+        this.env.setActiveCluster(cluster!)
+         await this.client.initClusterClient(
+          cluster!,
+          serviceName,
+          stageName,
+          workspace,
+        )
+        schemaString = await fetchAndPrintSchema(
+          this.client,
+          serviceName,
+          stageName!,
+          token,
+          workspace!,
+        )
+      } else {
+        this.out.action.start(`Generating schema`)
+        if (!this.definition.definition!.datamodel) {
+          await this.out.error(
+            `The property ${chalk.bold(
+              'datamodel',
+            )} is missing in your prisma.yml`,
+          )
+        }
+        schemaString = generateCRUDSchemaString(
+          this.definition.typesString!,
         )
       }
 
-      const schemaString = generateCRUDSchemaString(
-        this.definition.typesString!,
-      )
+      if (!schemaString) {
+        await this.out.error(
+          chalk.red(`Failed to download/generate the schema`),
+        )
+      }
 
       this.out.action.stop(prettyTime(Date.now() - before))
 
@@ -206,15 +240,17 @@ export default class GenereateCommand extends Command {
   }
 
   replaceEnv(str) {
-    const regex = /\${env:(.*?)}/
-    const match = regex.exec(str)
+    const regex = /\${env:(.*?)}/;
+    const match = regex.exec(str);
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
-      return `\`${str.slice(0, match.index)}$\{process.env['${
-        match[1]
-      }']}${str.slice(match[0].length + match.index)}\``
+      return this.replaceEnv(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
+          match[0].length + match.index
+        )}`
+      );
     } else {
-      return `'${str}'`
+      return `\`${str}\``;
     }
   }
 }

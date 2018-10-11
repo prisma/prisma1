@@ -14,7 +14,6 @@ import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder
 import com.prisma.errors.RequestMetadata
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.sangria.utils.ErrorHandler
-import com.prisma.shared.models.ProjectWithClientId
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
@@ -26,7 +25,7 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-case class ManagementServer(prefix: String = "", server2serverSecret: Option[String])(
+case class ManagementServer(prefix: String = "")(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
@@ -40,7 +39,6 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
   val projectPersistence: ProjectPersistence = dependencies.projectPersistence
   val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
-  val schemaManagerSecured                   = server2serverSecret.exists(_.nonEmpty)
   val projectIdEncoder                       = dependencies.projectIdEncoder
   val telemetryActor                         = dependencies.telemetryActor
 
@@ -125,53 +123,11 @@ case class ManagementServer(prefix: String = "", server2serverSecret: Option[Str
           get {
             pathEnd {
               getFromResource("graphiql.html")
-            } ~ pathPrefix("schema") {
-              pathPrefix(Segment) { projectId =>
-                optionalHeaderValueByName("Authorization") {
-                  case None if !schemaManagerSecured =>
-                    parameters('forceRefresh ? false) { forceRefresh =>
-                      complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
-                    }
-
-                  case Some(authorizationHeader) if !schemaManagerSecured || authorizationHeader == s"Bearer $server2serverSecret" =>
-                    parameters('forceRefresh ? false) { forceRefresh =>
-                      complete(performSchemaRequest(projectId, forceRefresh, logRequestEnd))
-                    }
-
-                  case Some(h) =>
-                    complete(Unauthorized -> "Wrong Authorization Header supplied")
-
-                  case None =>
-                    complete(Unauthorized -> "Authorization header required but not supplied")
-                }
-              }
             }
           }
       }
     }
   }
-
-  def performSchemaRequest(projectId: String, forceRefresh: Boolean, requestEnd: (Option[String], Option[String]) => Unit) = {
-    getSchema(projectId, forceRefresh)
-      .map(res => OK -> res)
-      .andThen {
-        case _ => requestEnd(Some(projectId), None)
-      }
-      .recover {
-        case error: Throwable => BadRequest -> error.toString
-      }
-  }
-
-  def getSchema(projectId: String, forceRefresh: Boolean): Future[String] = {
-    import com.prisma.shared.models.ProjectJsonFormatter._
-    projectPersistence
-      .load(projectId)
-      .flatMap {
-        case None    => Future.failed(InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
-        case Some(p) => Future.successful(Json.toJson(ProjectWithClientId(p, p.ownerId)).toString)
-      }
-  }
-
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: DeployApiError =>
       complete(OK -> Json.obj("code" -> e.code, "requestId" -> requestId, "error" -> e.getMessage))

@@ -149,7 +149,7 @@ class ObjectTypeBuilder(
     case f if f.isHidden               => List.empty
     case _: ScalarField                => List.empty
     case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
-    case f: RelationField if !f.isList => mapToSingleConnectionArguments(f.relatedModel_!)
+    case f: RelationField if !f.isList => List.empty
   }
 
   def mapToListConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
@@ -173,12 +173,6 @@ class ObjectTypeBuilder(
     model.scalarNonListFields
       .filter(_.isUnique)
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field)))
-  }
-
-  def mapToSingleConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
-    import SangriaQueryArguments._
-
-    List(whereArgument(model, project))
   }
 
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {

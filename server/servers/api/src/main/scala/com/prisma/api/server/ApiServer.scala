@@ -15,7 +15,7 @@ import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
-import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
+import com.prisma.shared.models.ProjectId
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
@@ -198,15 +198,6 @@ case class ApiServer(
       (elements.dropRight(1), elements.lastOption)
     } else {
       (elements, None)
-    }
-  }
-
-  def fetchProject(projectId: String): Future[ProjectWithClientId] = {
-    val result = projectFetcher.fetch(projectIdOrAlias = projectId)
-
-    result map {
-      case None         => throw ProjectNotFound(projectId)
-      case Some(schema) => schema
     }
   }
 

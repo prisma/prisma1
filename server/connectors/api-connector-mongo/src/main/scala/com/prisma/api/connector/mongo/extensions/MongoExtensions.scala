@@ -10,6 +10,7 @@ import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Filters.notEqual
 import play.api.libs.json.Json
 
 import scala.collection.mutable
@@ -143,13 +144,15 @@ case class Path(segments: List[PathSegment]) {
   private def stringGen2(field: String, segments: List[PathSegment]): Vector[String] = segments match {
     case Nil                              => Vector(field)
     case ToOneSegment(rf) :: tail         => rf.name +: stringGen2(field, tail)
-    case ToManySegment(rf, where) :: tail => Vector(rf.name, "$[" + s"${rf.name}X${where.fieldName}]") ++ stringGen2(field, tail)
+    case ToManySegment(rf, where) :: tail => Vector(rf.name, "$[" + operatorName(rf, where) + "]") ++ stringGen2(field, tail)
   }
 
   def arrayFilter: Vector[Bson] = segments.last match {
     case ToOneSegment(_)          => sys.error("")
-    case ToManySegment(rf, where) => Vector(Filters.equal(s"${rf.name}X${where.fieldName}.${where.fieldName}", GCValueBsonTransformer(where.fieldGCValue)))
+    case ToManySegment(rf, where) => Vector(Filters.equal(s"${operatorName(rf, where)}.${where.fieldName}", GCValueBsonTransformer(where.fieldGCValue)))
   }
+
+  def operatorName(field: RelationField, where: NodeSelector) = s"${field.name}X${where.fieldName}X${where.hashCode().toString.replace("-", "M")}"
 
 }
 
@@ -159,3 +162,7 @@ sealed trait PathSegment {
 
 case class ToOneSegment(rf: RelationField)                       extends PathSegment
 case class ToManySegment(rf: RelationField, where: NodeSelector) extends PathSegment
+
+object HackforTrue {
+  val hackForTrue = notEqual("_id", -1)
+}
