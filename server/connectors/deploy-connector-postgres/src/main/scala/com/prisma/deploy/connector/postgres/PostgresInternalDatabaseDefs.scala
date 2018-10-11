@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
+import com.prisma.native_jdbc.CustomJdbcDriver
 import com.typesafe.config.{Config, ConfigFactory}
 
 case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
@@ -14,7 +15,7 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   lazy val managementSchemaName = dbConfig.managementSchema.getOrElse("management")
   lazy val managementDatabase   = getDatabase(dbName, managementSchemaName)
 
-  private lazy val dbDriver = new org.postgresql.Driver
+  private lazy val dbDriver = CustomJdbcDriver.jna()
 
   def getDatabase(dbToUse: String, schemaToUse: String) = {
     val config = typeSafeConfigFromDatabaseConfig(dbToUse, schemaToUse, dbConfig)

@@ -1,10 +1,9 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.{Filter, PrismaArgs}
+import com.prisma.api.connector.PrismaArgs
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import com.prisma.shared.models.{Model, TypeIdentifier}
-import slick.dbio.DBIOAction
 
 import scala.concurrent.ExecutionContext
 
@@ -20,6 +19,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       .insertInto(modelTable(model))
       .columns(fields.map(modelColumn): _*)
       .values(placeHolders(fields))
+      .returning(modelColumn(model.idField_!))
 
     insertReturningGeneratedKeysToDBIO(query)(
       setParams = { pp =>

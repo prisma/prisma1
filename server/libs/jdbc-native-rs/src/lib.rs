@@ -44,6 +44,7 @@ pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConn
 
 #[no_mangle]
 pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> PointerAndError<driver::PsqlPreparedStatement<'a>> {
+    println!("Preparing: {}", to_string(query));
     match conn.prepareStatement(to_string(query)) {
         Ok(pStmt) => PointerAndError {
             error: serializeCallResult(Ok(CallResult::empty())),
