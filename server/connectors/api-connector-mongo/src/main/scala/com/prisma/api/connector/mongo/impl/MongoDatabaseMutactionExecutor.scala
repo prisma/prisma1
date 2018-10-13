@@ -42,6 +42,10 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
           result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
                            case results: MutactionResults =>
+                             //Fixme this needs to be recursive to not ignore stuff that is more deeply nested
+                             //the results should already contain all nested results
+                             //important for Parent-[embedded]- Child - [Inline] - Friend
+
                              val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
                              val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
 

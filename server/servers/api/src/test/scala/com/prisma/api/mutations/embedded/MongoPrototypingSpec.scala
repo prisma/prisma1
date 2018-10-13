@@ -840,7 +840,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String
-        |    child: Child @mongoRelation(field: "childId")
+        |    child: Child
         |}
         |
         |type Friend{
@@ -849,7 +849,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |
         |type Child @embedded {
         |    name: String
-        |    friend: Friend @mongoRelation(field: "friendId")
+        |    friend: Friend @mongoRelation(field: "friend")
         |}"""
     }
 
@@ -861,7 +861,10 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |   name: "Dad",
          |   child: {create:{
          |      name: "Daughter"
-         |      friend: {create:{name: "Buddy"}}
+         |      friend: {create:{
+         |          name: "Buddy"
+         |      }
+         |      }
          |   }}
          |}){
          |  name,
