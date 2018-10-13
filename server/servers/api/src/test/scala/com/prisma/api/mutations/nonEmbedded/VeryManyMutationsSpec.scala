@@ -165,26 +165,31 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
     val project: Project = SchemaDsl.fromString() {
       """
         |type Top{
+        |   id: ID! @unique
         |   int: Int @unique
         |   as: [A!]! @relation(name: "Top" onDelete: CASCADE)
         |}
         |
         |type A {
+        |   id: ID! @unique
         |   int: Int @unique
         |   bs:[B!]!  @relation(name: "A" onDelete: CASCADE)
         |}
         |
         |type B {
+        |   id: ID! @unique
         |   int: Int
         |   cs: [C!]! @relation(name: "B" onDelete: CASCADE)
         |}
         |
         |type C {
+        |   id: ID! @unique
         |   int: Int
         |   ds: [D!]! @relation(name: "C" onDelete: CASCADE)
         |}
         |
         |type D {
+        |   id: ID! @unique
         |   int: Int
         |}
       """
