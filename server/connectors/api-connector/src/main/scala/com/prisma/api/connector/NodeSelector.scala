@@ -21,5 +21,6 @@ object NodeAddress {
 }
 
 case class NodeAddress(where: NodeSelector, path: Path = Path.empty) {
-  def idValue: IdGCValue = where.fieldGCValue.asInstanceOf[IdGCValue]
+  def idValue: IdGCValue                  = where.fieldGCValue.asInstanceOf[IdGCValue]
+  def newPath(newPath: Path): NodeAddress = this.copy(path = newPath)
 }
