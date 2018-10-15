@@ -70,7 +70,7 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
-    SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive).validateSyntax
+    SchemaSyntaxValidator(args.types, deployConnector.fieldRequirements, deployConnector.capabilities).validateSyntax
   }
 
   private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
@@ -78,7 +78,7 @@ case class DeployMutation(
   }
 
   private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (deployConnector.isPassive) {
+    if (!deployConnector.isActive) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
         Future.successful(Good(()))

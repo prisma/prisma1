@@ -47,6 +47,10 @@ class Model(
   lazy val hasCreatedAtField                             = getFieldByName("createdAt").isDefined
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
 
+  lazy val inlineFields = relationFields.collect {
+    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelId == this.name => rf
+  }
+
   def filterScalarFields(fn: ScalarField => Boolean): Model = {
     val newFields         = this.scalarFields.filter(fn).map(_.template)
     val newModel          = copy(fieldTemplates = newFields)

@@ -15,30 +15,30 @@ case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient)(i
   }
 
   def existsByRelation(relationId: String): Future[Boolean] = {
-    val query = MongoDeployDatabaseQueryBuilder.existsByRelation(project.id, relationId)
+//    val query = MongoDeployDatabaseQueryBuilder.existsByRelation(project.id, relationId)
     Future.successful(false)
   }
 
   def existsDuplicateByRelationAndSide(relationId: String, relationSide: RelationSide): Future[Boolean] = {
-    val query = MongoDeployDatabaseQueryBuilder.existsDuplicateByRelationAndSide(project.id, relationId, relationSide)
+//    val query = MongoDeployDatabaseQueryBuilder.existsDuplicateByRelationAndSide(project.id, relationId, relationSide)
     Future.successful(false)
   }
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
-    val query = field match {
-      case f: ScalarField   => MongoDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, f.name)
-      case f: RelationField => MongoDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, f)
-    }
+//    val query = field match {
+//      case f: ScalarField   => MongoDeployDatabaseQueryBuilder.existsNullByModelAndScalarField(project.id, model.name, f.name)
+//      case f: RelationField => MongoDeployDatabaseQueryBuilder.existsNullByModelAndRelationField(project.id, model.name, f)
+//    }
     Future.successful(false)
   }
 
   def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean] = {
-    val query = MongoDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model.name, field.name)
+//    val query = MongoDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model.name, field.name)
     Future.successful(false)
   }
 
   override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
-    val query = MongoDeployDatabaseQueryBuilder.enumValueIsInUse(project.id, models, enumName, value)
+//    val query = MongoDeployDatabaseQueryBuilder.enumValueIsInUse(project.id, models, enumName, value)
     Future.successful(false)
   }
 

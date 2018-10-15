@@ -1,5 +1,6 @@
 package com.prisma.deploy.database.schema.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
@@ -710,7 +711,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations2.head.revision shouldEqual 4 // order is DESC
   }
 
-  "DeployMutation" should "succeed with id fields of type UUID" in {
+  "DeployMutation" should "succeed with id fields of type UUID" taggedAs (IgnoreMongo) in {
     val (project, _) = setupProject(basicTypesGql)
     val schema =
       """

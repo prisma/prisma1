@@ -5,8 +5,7 @@ import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, W
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.api.ApiTestDatabase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.websocket.WebsocketServer
@@ -16,7 +15,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import scala.concurrent.ExecutionContextExecutor
 
 trait SubscriptionSpecBase
-    extends ConnectorAwareTest[ApiConnectorCapability]
+    extends ConnectorAwareTest[ConnectorCapability]
     with AwaitUtils
     with TestFrameworkInterface
     with BeforeAndAfterEach
@@ -35,8 +34,8 @@ trait SubscriptionSpecBase
   val invalidationTestKit                   = dependencies.invalidationTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
 
-  override def capabilities                                               = dependencies.apiConnector.capabilities
-  override def connectorHasCapability(capability: ApiConnectorCapability) = dependencies.apiConnector.hasCapability(capability)
+  override def capabilities                                            = dependencies.apiConnector.capabilities
+  override def connectorHasCapability(capability: ConnectorCapability) = dependencies.apiConnector.hasCapability(capability)
 
   override def prismaConfig = dependencies.config
 

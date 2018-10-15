@@ -34,7 +34,7 @@ case class Upsert(
     val firstResult = results.results.collectFirst {
       case r: FurtherNestedMutactionResult if r.mutaction == upsertMutaction.create || r.mutaction == upsertMutaction.update => r
     }.get
-    val selector   = NodeSelector.forIdGCValue(model, firstResult.id)
+    val selector   = NodeSelector.forId(model, firstResult.id)
     val itemFuture = dataResolver.getNodeByWhere(selector, selectedFields)
     itemFuture.map {
       case Some(prismaNode) => ReturnValue(prismaNode)

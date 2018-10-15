@@ -5,8 +5,8 @@ import com.prisma.api.helpers.LimitClauseHelper
 
 trait LimitClauseBuilder {
   // Increase by 1 to know if we have a next page / previous page
-  def limitClauseForWindowFunction(args: Option[QueryArguments]): (Int, Int) = {
-    val (firstOpt, lastOpt, skipOpt) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.skip))
+  def limitClauseForWindowFunction(args: QueryArguments): (Int, Int) = {
+    val (firstOpt, lastOpt, skipOpt) = (args.first, args.last, args.skip)
     LimitClauseHelper.validate(args)
 
     lastOpt.orElse(firstOpt) match {
