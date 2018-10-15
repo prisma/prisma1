@@ -147,7 +147,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
               ))
           case false => Vector.empty
         }
-      } else if (oldField.isRequired && newField.isRequired && typeChanges) {
+      } else if (newField.isRequired && typeChanges) {
         clientDataResolver.existsByModel(model.name).map {
           case true =>
             Vector(
