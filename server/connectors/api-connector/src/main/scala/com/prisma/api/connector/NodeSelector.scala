@@ -15,3 +15,11 @@ case class NodeSelector(model: Model, field: ScalarField, fieldGCValue: GCValue)
   lazy val fieldName     = field.name
   lazy val isId: Boolean = field.name == "id"
 }
+
+object NodeAddress {
+  def forId(model: Model, gCValue: IdGCValue, path: Path = Path.empty) = NodeAddress(NodeSelector.forId(model, gCValue), path)
+}
+
+case class NodeAddress(where: NodeSelector, path: Path = Path.empty) {
+  def idValue: IdGCValue = where.fieldGCValue.asInstanceOf[IdGCValue]
+}

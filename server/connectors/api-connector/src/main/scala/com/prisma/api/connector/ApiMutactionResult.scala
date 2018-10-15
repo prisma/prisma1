@@ -6,13 +6,29 @@ sealed trait ApiMutactionResult
 sealed trait DatabaseMutactionResult {
   def mutaction: DatabaseMutaction
 }
+
 sealed trait FurtherNestedMutactionResult extends DatabaseMutactionResult {
   def id: IdGCValue
+  def nodeAddress: NodeAddress
 }
 
-case class CreateNodeResult(id: IdGCValue, mutaction: CreateNode) extends FurtherNestedMutactionResult
-case class UpdateNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction: UpdateNode) extends FurtherNestedMutactionResult {
+object CreateNodeResult {
+  def apply(id: IdGCValue, mutaction: CreateNode): CreateNodeResult =
+    CreateNodeResult(NodeAddress.forId(mutaction.model, id), mutaction)
+}
+
+case class CreateNodeResult(nodeAddress: NodeAddress, mutaction: CreateNode) extends FurtherNestedMutactionResult {
+  val id: IdGCValue = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+}
+
+object UpdateNodeResult {
+  def apply(id: IdGCValue, previousValues: PrismaNode, mutaction: UpdateNode): UpdateNodeResult =
+    UpdateNodeResult(NodeAddress.forId(mutaction.model, id), previousValues, mutaction)
+}
+
+case class UpdateNodeResult(nodeAddress: NodeAddress, previousValues: PrismaNode, mutaction: UpdateNode) extends FurtherNestedMutactionResult {
   val namesOfUpdatedFields = mutaction.nonListArgs.keys ++ mutaction.listArgs.map(_._1)
+  val id: IdGCValue        = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
 }
 
 case class DeleteNodeResult(previousValues: PrismaNode, mutaction: DeleteNode) extends DatabaseMutactionResult

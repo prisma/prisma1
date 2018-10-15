@@ -834,7 +834,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "Relations from embedded to Non-Embedded" should "work" in {
+  "Relations from embedded to Non-Embedded" should "work 1" in {
 
     val project = SchemaDsl.fromString() {
       """
@@ -869,6 +869,70 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}){
          |  name,
          |  child{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 2" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String @unique
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String @unique
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:{
+         |      name: "Daughter"
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where:{name: "Dad"}
+         |   data: {
+         |   children: {update:{
+         |      where: {name: "Daughter"}
+         |      data: {
+         |          friend:{create:{name: "Buddy"}}
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  children{
          |    name
          |    friend{
          |      name

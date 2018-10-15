@@ -13,7 +13,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
 
   override def mongoAction(mutationBuilder: MongoActionsBuilder) = {
     for {
-      nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where, SelectedFields.all(mutaction.model))
+      nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
       node <- nodeOpt match {
                case Some(node) =>
                  for {
@@ -41,18 +41,18 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
   val parent      = mutaction.relationField.model
   val child       = mutaction.relationField.relatedModel_!
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     for {
-      childId <- getChildId(mutationBuilder, parentId)
-      _       <- mutationBuilder.ensureThatNodesAreConnected(parentField, childId, parentId)
+      childId <- getChildId(mutationBuilder, parent)
+      _       <- mutationBuilder.ensureThatNodesAreConnected(parentField, childId, parent)
 //      _       <- performCascadingDelete(mutationBuilder, child, childId)
       _ <- checkForRequiredRelationsViolations(mutationBuilder, childId)
       _ <- mutationBuilder.deleteNodeById(child, childId)
-      _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, childId, parentId)
+      _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, childId, parent)
     } yield MutactionResults(Vector.empty)
   }
 
-  private def getChildId(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  private def getChildId(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     mutaction.where match {
       case Some(where) =>
         mutationBuilder.getNodeIdByWhere(where).map {
@@ -60,13 +60,13 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
           case None     => throw APIErrors.NodeNotFoundForWhereError(where)
         }
       case None =>
-        mutationBuilder.getNodeIdByParentId(parentField, parentId).map {
+        mutationBuilder.getNodeIdByParent(parentField, parent).map {
           case Some(id) => id
           case None =>
             throw NodesNotConnectedError(
               relation = parentField.relation,
               parent = parentField.model,
-              parentWhere = Some(NodeSelector.forId(parent, parentId)),
+              parentWhere = Some(parent.where),
               child = parentField.relatedModel_!,
               childWhere = None
             )
