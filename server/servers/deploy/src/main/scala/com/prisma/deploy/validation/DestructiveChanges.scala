@@ -116,6 +116,7 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
   private def updateFieldValidation(x: UpdateField) = {
     val model                    = previousSchema.getModelByName_!(x.model)
     val oldField                 = model.getFieldByName_!(x.name)
+    val newField                 = nextSchema.getModelByName_!(x.newModel).getFieldByName_!(x.finalName)
     val cardinalityChanges       = x.isList.isDefined
     val typeChanges              = x.typeName.isDefined
     val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
@@ -134,8 +135,8 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         validationSuccessful
     }
 
-    def requiredErrors: Future[Vector[DeployError]] = becomesRequired match {
-      case true =>
+    def requiredErrors: Future[Vector[DeployError]] = {
+      if (becomesRequired) {
         clientDataResolver.existsNullByModelAndField(model, oldField).map {
           case true =>
             Vector(
@@ -146,22 +147,20 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
               ))
           case false => Vector.empty
         }
-
-      case false =>
-        if (typeChanges) {
-          clientDataResolver.existsByModel(model.name).map {
-            case true =>
-              Vector(
-                DeployError(
-                  `type` = model.name,
-                  field = oldField.name,
-                  "You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."
-                ))
-            case false => Vector.empty
-          }
-        } else {
-          validationSuccessful
+      } else if (oldField.isRequired && newField.isRequired && typeChanges) {
+        clientDataResolver.existsByModel(model.name).map {
+          case true =>
+            Vector(
+              DeployError(
+                `type` = model.name,
+                field = oldField.name,
+                "You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."
+              ))
+          case false => Vector.empty
         }
+      } else {
+        validationSuccessful
+      }
     }
 
     def uniqueErrors: Future[Vector[DeployError]] = becomesUnique match {
