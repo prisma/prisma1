@@ -298,6 +298,28 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
       """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
+  "Updating the type of a required scalar field" should "throw an error if there are nodes for that type" in {
+
+    val schema =
+      """|type A {
+         | name: String! @unique
+         | value: String!
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "A", value: "A"}){name}}""", project)
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int!
+        |}"""
+
+    deployServer.deploySchemaThatMustError(project, schema2, force = true).toString should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."}],"warnings":[]}}}""")
+  }
+
   "Updating a relation field to required" should "not throw an error if there is no data yet" in {
 
     val schema =

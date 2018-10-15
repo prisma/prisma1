@@ -139,14 +139,29 @@ case class DestructiveChanges(deployConnector: DeployConnector, project: Project
         clientDataResolver.existsNullByModelAndField(model, oldField).map {
           case true =>
             Vector(
-              DeployError(`type` = model.name,
-                          field = oldField.name,
-                          "You are making a field required, but there are already nodes that would violate that constraint."))
+              DeployError(
+                `type` = model.name,
+                field = oldField.name,
+                "You are making a field required, but there are already nodes that would violate that constraint."
+              ))
           case false => Vector.empty
         }
 
       case false =>
-        validationSuccessful
+        if (typeChanges) {
+          clientDataResolver.existsByModel(model.name).map {
+            case true =>
+              Vector(
+                DeployError(
+                  `type` = model.name,
+                  field = oldField.name,
+                  "You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."
+                ))
+            case false => Vector.empty
+          }
+        } else {
+          validationSuccessful
+        }
     }
 
     def uniqueErrors: Future[Vector[DeployError]] = becomesUnique match {
