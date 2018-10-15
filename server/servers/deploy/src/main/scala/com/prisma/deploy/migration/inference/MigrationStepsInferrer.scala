@@ -203,8 +203,9 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         modelBOnDelete = diff(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
       )
     }
+    def isContainedInDeletes(update: UpdateRelation) = relationsToDelete.map(_.name).contains(update.name)
 
-    updates.filter(isAnyOptionSet)
+    updates.filter(isAnyOptionSet).filterNot(isContainedInDeletes)
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
