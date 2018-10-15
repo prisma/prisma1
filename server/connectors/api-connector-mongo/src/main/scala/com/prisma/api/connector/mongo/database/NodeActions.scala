@@ -1,9 +1,9 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.extensions.ArrayFilter
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
-import com.prisma.api.connector.mongo.extensions.Path
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
@@ -200,7 +200,9 @@ trait NodeActions extends NodeSingleQueries {
         val (deletes, deleteResults)                     = embeddedNestedDeleteActionsAndResults(subNode, toManyUpdate, updatedPath)
         val thisResult                                   = UpdateNodeResult(subNode.id, subNode, toManyUpdate)
 
-        (scalars ++ creates ++ deletes ++ updates, updatedPath.arrayFilter ++ nestedArrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
+        (scalars ++ creates ++ deletes ++ updates,
+         ArrayFilter.arrayFilter(updatedPath) ++ nestedArrayFilters,
+         createResults ++ deleteResults ++ updateResults :+ thisResult)
     }
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }

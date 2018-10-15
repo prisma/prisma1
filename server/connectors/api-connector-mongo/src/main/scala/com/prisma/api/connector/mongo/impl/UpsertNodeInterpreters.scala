@@ -25,11 +25,11 @@ case class UpsertNodeInterpreter(mutaction: TopLevelUpsertNode)(implicit ec: Exe
 case class NestedUpsertNodeInterpreter(mutaction: NestedUpsertNode)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
   val model = mutaction.relationField.relatedModel_!
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     for {
       id <- mutaction.where match {
-             case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
-             case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
+             case Some(where) => mutationBuilder.getNodeIdByParentAndWhere(mutaction.relationField, parent, where)
+             case None        => mutationBuilder.getNodeIdByParent(mutaction.relationField, parent)
            }
     } yield
       id match {

@@ -1,9 +1,8 @@
 package com.prisma.api.connector.mongo
 
-import com.prisma.api.connector.MutactionResults
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder}
+import com.prisma.api.connector.{MutactionResults, NodeAddress}
 import com.prisma.api.schema.UserFacingError
-import com.prisma.gc_values.IdGCValue
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -34,9 +33,9 @@ trait TopLevelDatabaseMutactionInterpreter extends DatabaseMutactionInterpreter 
 
 trait NestedDatabaseMutactionInterpreter extends DatabaseMutactionInterpreter {
 
-  def mongoActionWithErrorMapped(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
-    applyErrorMapper(mongoAction(mutationBuilder, parentId))
+  def mongoActionWithErrorMapped(mutationBuilder: MongoActionsBuilder, parent: NodeAddress)(implicit ec: ExecutionContext) = {
+    applyErrorMapper(mongoAction(mutationBuilder, parent))
   }
 
-  protected def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue): MongoAction[MutactionResults]
+  protected def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress): MongoAction[MutactionResults]
 }
