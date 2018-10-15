@@ -1,0 +1,199 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Setting up Prisma',
+  gettingStartedTitle: 'New database',
+  gettingStartedOrder: 2,
+  position: 1,
+  nextText: 'Great work! 👏  Move on to learn how you can extend your data model and make changes to your Prisma API.'
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Start a local Prisma server using Docker
+- Create a Prisma service configuration
+- Deploy a Prisma service to the local Prisma server
+- Explore the Prisma API in a GraphQL Playground
+
+## Install the Prisma CLI
+
+The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
+
+```bash copy
+npm install -g prisma
+```
+
+## Install Docker
+
+To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
+
+## Set up database and Prisma server
+
+### Create Docker Compose file
+
+To launch a Prisma server on your machine, you need a Docker Compose file that configures the Prisma server and specifies the database it can connect to.
+
+```bash copy
+touch docker-compose.yml
+```
+
+### Add Prisma and database Docker images
+
+Paste the following contents into the Docker Compose file you just created:
+
+<Code languages={["MySQL", "PostgreSQL"]}>
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.15
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: mysql
+            port: 3306
+            user: root
+            password: prisma
+            migrations: true
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
+```
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.15
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: postgres
+            host: postgres
+            port: 5432
+            user: prisma
+            password: prisma
+            migrations: true
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
+```
+
+</Code>
+
+
+> You can switch between MySQL and PostgreSQL by using the tabs above the code block.
+
+### Start database and Prisma server
+
+To start the Prisma server and launch the connected database, run the following command:
+
+```bash copy
+docker-compose up -d
+```
+
+## Create a Prisma service
+
+To bootstrap the service configuration files for your first Prisma service, create a new directory and initalize it using the `prisma init` command:
+
+```bash copy
+mkdir hello-world
+cd hello-world
+prisma init --endpoint http://localhost:4466
+```
+
+## Deploy the Prisma service
+
+The `prisma init` command created the _minimal_ service configuration needed to deploy a Prisma service: `prisma.yml` and `datamodel.graphql`. 
+
+This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
+
+```bash copy
+prisma deploy
+```
+
+## Explore the Prisma API in a Playground
+
+The Prisma API of your service exposes CRUD and realtime operations for the `User` type defined in `datamodel.graphql`. You can explore the API in a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
+
+```bash copy
+prisma playground
+```
+
+Here are a few sample queries and mutations you can send to explore the API.
+
+
+<QueryChooser titles={["Create a new User", "Query all Users", "Update a User's name", "Delete a User"]}>
+
+```graphql lineNumbers,copy
+mutation {
+  createUser(data: {
+    name: "Alice"
+  }) {
+    id
+  }
+}
+```
+
+```graphql lineNumbers,copy
+query {
+  users {
+    id
+    name
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  updateUser(
+    where: { id: "__USER_ID__" },
+    data: { name: "Sarah" }
+  ) {
+    id
+    name
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  deleteUser(where: {
+    id: "__USER_ID__"
+  }) {
+    id
+    name
+  }
+}
+```
+
+</QueryChooser>

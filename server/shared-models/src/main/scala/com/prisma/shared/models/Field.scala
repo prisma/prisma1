@@ -7,10 +7,8 @@ import scala.language.implicitConversions
 
 object RelationSide extends Enumeration {
   type RelationSide = Value
-  val A                    = Value("A")
-  val B                    = Value("B")
-  val relationColumnAliasA = "__Relation__A"
-  val relationColumnAliasB = "__Relation__B"
+  val A = Value("A")
+  val B = Value("B")
 
   def opposite(side: RelationSide.Value) = if (side == A) B else A
 }

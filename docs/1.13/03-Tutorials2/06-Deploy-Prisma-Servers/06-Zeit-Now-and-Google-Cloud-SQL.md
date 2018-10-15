@@ -139,6 +139,9 @@ Create `now.json`. This file contains our build environment variables and refere
   "env": {
     "INSTANCE_CONNECTION_NAME": "@instance-connection-name"
   },
+  "features": {
+    "cloud": "v1"
+  },
   "build": {
     "env": {
       "SQL_PASSWORD": "@sql-password",

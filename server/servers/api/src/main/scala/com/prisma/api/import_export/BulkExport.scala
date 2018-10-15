@@ -68,7 +68,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: NodeInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.getNodes(info.current, Some(queryArguments)).map { resolverResult =>
+    info.dataResolver.getNodes(info.current, Some(queryArguments), SelectedFields.all(info.current)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => prismaNodeToExportNode(node, info))
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }
@@ -103,15 +103,10 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   def dataItemToExportList(dataItems: Vector[ScalarListValues], info: ListInfo): Vector[JsValue] = {
     dataItems.map { listValues =>
-      // the old implementation directly passed the JSON as String instead of directly embedding it as JSON. Reproducing this behaviour here.
-      val blackMagic = ListGCValue(listValues.value.values.map {
-        case x: JsonGCValue => StringGCValue(x.value.toString)
-        case x              => x
-      })
       Json.obj(
         "_typeName"       -> info.currentModel,
         "id"              -> Json.toJson(listValues.nodeId),
-        info.currentField -> Json.toJson(blackMagic)(GCValueJsonFormatter.GcValueWrites)
+        info.currentField -> Json.toJson(listValues.value)(GCValueJsonFormatter.GcValueWrites)
       )
     }
   }

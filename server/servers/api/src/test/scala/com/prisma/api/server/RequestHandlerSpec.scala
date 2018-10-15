@@ -6,7 +6,7 @@ import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.auth.AuthImpl
-import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -65,7 +65,5 @@ object EmptySchemaBuilder extends SchemaBuilder {
 }
 
 case class ProjectFetcherStub(project: Project) extends ProjectFetcher {
-  override def fetch(projectIdOrAlias: String) = Future.successful {
-    Some(ProjectWithClientId(project, project.ownerId))
-  }
+  override def fetch(projectIdOrAlias: String) = Future.successful(Some(project))
 }

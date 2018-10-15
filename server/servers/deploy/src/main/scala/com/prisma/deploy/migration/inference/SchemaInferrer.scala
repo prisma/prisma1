@@ -38,8 +38,6 @@ case class SchemaInferrerImpl(
     inferredTables: InferredTables
 ) extends AwaitUtils {
 
-  val isPassive = !isActive
-
   def infer(): Schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
 
   lazy val nextModels: Vector[ModelTemplate] = {
@@ -60,8 +58,9 @@ case class SchemaInferrerImpl(
 
       ModelTemplate(
         name = prismaType.name,
-        fieldTemplates = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         stableIdentifier = stableIdentifier,
+        isEmbedded = prismaType.isEmbedded,
+        fieldTemplates = fieldsForType(prismaType).toList ++ hiddenReservedFields,
         manifestation = manifestation
       )
     }
@@ -237,7 +236,7 @@ case class SchemaInferrerImpl(
   }
 
   def relationManifestationOnFieldOrRelatedField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
-    if (isPassive && shouldCheckAgainstInferredTables) { // todo try to get rid of this
+    if (!isActive && shouldCheckAgainstInferredTables) { // todo try to get rid of this
       val manifestationOnThisField = relationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get

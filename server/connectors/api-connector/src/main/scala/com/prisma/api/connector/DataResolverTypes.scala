@@ -49,12 +49,36 @@ case class QueryArguments(
     filter: Option[Filter],
     orderBy: Option[OrderBy]
 ) {
-  val isWithPagination = last.orElse(first).isDefined
+  val isWithPagination = last.orElse(first).orElse(skip).isDefined
 }
 
 object QueryArguments {
-  def empty                      = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
-  def withFilter(filter: Filter) = QueryArguments.empty.copy(filter = Some(filter))
+  def empty                                              = QueryArguments(skip = None, after = None, first = None, before = None, last = None, filter = None, orderBy = None)
+  def withFilter(filter: Filter): QueryArguments         = QueryArguments.empty.copy(filter = Some(filter))
+  def withFilter(filter: Option[Filter]): QueryArguments = QueryArguments.empty.copy(filter = filter)
+}
+
+object SelectedFields {
+  val empty             = SelectedFields(Set.empty)
+  def all(model: Model) = SelectedFields(model.fields.toSet)
+}
+case class SelectedFields(fields: Set[Field]) {
+  val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
+  val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
+  val relationFields      = fields.collect { case f: RelationField            => f }
+
+  def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
+
+  def includeOrderBy(args: Option[QueryArguments]): SelectedFields = {
+    args match {
+      case None => this
+      case Some(arguments) =>
+        arguments.orderBy match {
+          case None          => this
+          case Some(orderBy) => this ++ SelectedFields(Set(orderBy.field))
+        }
+    }
+  }
 }
 
 object SortOrder extends Enumeration {
@@ -113,7 +137,7 @@ sealed trait RelationCondition
 object EveryRelatedNode      extends RelationCondition
 object AtLeastOneRelatedNode extends RelationCondition
 object NoRelatedNode         extends RelationCondition
-object NoRelationCondition   extends RelationCondition
+object ToOneRelatedNode      extends RelationCondition
 
 object NodeSubscriptionFilter extends Filter
 object TrueFilter             extends Filter

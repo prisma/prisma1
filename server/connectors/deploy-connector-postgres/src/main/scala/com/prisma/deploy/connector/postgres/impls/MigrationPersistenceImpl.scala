@@ -21,9 +21,9 @@ case class MigrationPersistenceImpl(
 
   val table = TableQuery[MigrationTable]
 
-  def lock(): Future[Int] = {
+  def lock(): Future[Unit] = {
     internalDatabase.run(sql"SELECT pg_advisory_lock(1000);".as[String].head.withPinnedSession).transformWith {
-      case Success(_)   => Future.successful(1)
+      case Success(_)   => Future.successful(())
       case Failure(err) => Future.failed(err)
     }
   }

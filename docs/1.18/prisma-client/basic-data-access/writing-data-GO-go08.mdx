@@ -1,0 +1,83 @@
+import Collapse from 'components/Markdown/Collapse'
+import Code from "components/Markdown/Code"
+
+export const meta = {
+  title: 'Writing Data (Go)',
+  position: 60,
+  technology: "go",
+  technologyOrder: 3,
+  articleGroup: "Writing Data",
+}
+
+## Overview
+
+The Prisma client is based on the operations defined in the GraphQL schema of your Prisma API. For _writing_ data, it basically _mirrors_ the [GraphQL mutations](qwe2) of your Prisma service.
+
+For this page, we'll assume your Prisma API is based on the following [datamodel](knul):
+
+```graphql
+type Link {
+  id: ID! @unique
+  createdAt: DateTime!
+  description: String!
+  url: String!
+  postedBy: User
+  votes: [Vote!]!
+}
+
+type User {
+  id: ID! @unique
+  name: String!
+  email: String! @unique
+  password: String!
+  links: [Link!]!
+  votes: [Vote!]!
+}
+
+type Vote {
+  id: ID! @unique
+  link: Link!
+  user: User!
+}
+```
+
+## Creating objects
+
+When creating new records in the database, the `create`-method takes one input object which wraps all the scalar fields of the record to be created. It also provides a way to create relational data for the model, this can be supplied using [nested object writes](#nested-object-writes).
+
+Each method call returns an object that contains all the scalar fields of the model that was just created.
+
+### Examples
+
+_Create a new user_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```go
+name := "Alice",
+email := "alice@prisma.io",
+password := "IlikeTurtles"
+newUser, err := db.CreateUser(&prisma.UserCreateInput{
+  Name: &name,
+  Email: &email,
+  Password: &password,
+}).Exec()
+```
+
+```graphql
+# generated mutation
+mutation {
+  createUser(data: {
+    name: "Alice"
+    email: "alice@prisma.io"
+    password: "IlikeTurtles"
+  }) {
+    id
+    name
+    email
+    password
+  }
+}
+```
+
+</Code>

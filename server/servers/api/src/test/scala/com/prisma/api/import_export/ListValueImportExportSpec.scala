@@ -1,6 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ImportExportCapability
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
@@ -11,6 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json._
 
 class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum("Enum", Vector("AB", "CD", "\uD83D\uDE0B", "\uD83D\uDCA9"))
@@ -159,11 +161,10 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
 
     importer.executeImport(nodes).await().toString should be("[]")
 
-    val lists =
-      """{"valueType": "lists", "values": [
-        |{"_typeName": "Model1", "id": "2", "jsonList": [[{"_typeName": "STRING", "id": "STRING", "fieldName": "STRING" },{"_typeName": "STRING", "id": "STRING", "fieldName": "STRING" }]]}
-        |]}
-        |""".stripMargin.parseJson
+    val jsonString =
+      """{"_typeName":"Model1","id":"2","jsonList":[[{"_typeName":"STRING","id":"STRING","fieldName":"STRING"},{"_typeName":"STRING","id":"STRING","fieldName":"STRING"}]]}"""
+
+    val lists = s"""{"valueType": "lists", "values": [$jsonString]}""".stripMargin.parseJson
 
     importer.executeImport(lists).await().toString should be("[]")
 
@@ -172,10 +173,9 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
     val exportResult = exporter.executeExport(dataResolver, request).await()
     val firstChunk   = exportResult.as[ResultFormat]
 
-    JsArray(firstChunk.out.jsonElements).toString should be(
-      "[" ++
-        """{"_typeName":"Model1","id":"2","jsonList":["[{\"_typeName\":\"STRING\",\"id\":\"STRING\",\"fieldName\":\"STRING\"},{\"_typeName\":\"STRING\",\"id\":\"STRING\",\"fieldName\":\"STRING\"}]"]}""" ++
-        "]")
+    println(firstChunk.out.jsonElements)
+
+    JsArray(firstChunk.out.jsonElements).toString should be("[" ++ s"""$jsonString""" ++ "]")
     firstChunk.cursor.table should be(-1)
     firstChunk.cursor.row should be(-1)
   }

@@ -50,5 +50,16 @@ class GeneralSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
       schema shouldNot containType("TodoCreateInput")
     }
+
+    "not include the *PreviousValues type if there a type has no scalar field" in {
+      val project = SchemaDsl.fromBuilder { schema =>
+        val todo    = schema.model("Todo")
+        val comment = schema.model("Comment")
+        todo.fields.clear()
+        todo.field("id", _.Cuid, isUnique = true, isHidden = true).oneToManyRelation("comments", "todo", comment)
+      }
+      val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+      schema shouldNot include("TodoPreviousValues")
+    }
   }
 }

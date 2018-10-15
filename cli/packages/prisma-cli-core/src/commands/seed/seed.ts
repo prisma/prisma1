@@ -58,6 +58,13 @@ export default class Seed extends Command {
       this.definition.definition!.seed!.import ||
       this.definition.definition!.seed!.run
 
+    if (!seedSource) {
+      // Await on error to wait for it to set the exit code to 1
+      await this.out.error(
+        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional'
+      )
+    }
+
     this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)
     const before = Date.now()
     await seeder.seed(

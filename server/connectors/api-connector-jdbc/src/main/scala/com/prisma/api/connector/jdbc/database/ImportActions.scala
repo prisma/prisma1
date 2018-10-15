@@ -21,7 +21,7 @@ trait ImportActions extends BuilderBase {
       val argsWithIndex = mutaction.args.zipWithIndex
 
       val nodeResult: Vector[String] = try {
-        val fields = model.scalarNonListFields.map(modelColumn(model, _)).toVector
+        val fields = model.scalarNonListFields.map(modelColumn).toVector
 
         val query = sql
           .insertInto(modelTable(model))
@@ -32,10 +32,9 @@ trait ImportActions extends BuilderBase {
         val currentTimeStamp              = currentSqlTimestampUTC
 
         mutaction.args.foreach { arg =>
-          val argsAsRoot = arg.raw.asRoot
           model.scalarNonListFields.zipWithIndex.foreach {
             case (field, index) =>
-              argsAsRoot.map.get(field.name) match {
+              arg.rootGCMap.get(field.name) match {
                 case Some(NullGCValue) if field.name == createdAtField || field.name == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStamp)
                 case Some(gCValue)                                                                     => itemInsert.setGcValue(index + 1, gCValue)
                 case None if field.name == createdAtField || field.name == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
@@ -53,7 +52,7 @@ trait ImportActions extends BuilderBase {
           e.getUpdateCounts.zipWithIndex
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
               s"Failure inserting ${model.dbName} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector
@@ -69,7 +68,7 @@ trait ImportActions extends BuilderBase {
         val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
 
         mutaction.args.foreach { arg =>
-          relayInsert.setGcValue(1, arg.raw.asRoot.idField)
+          relayInsert.setGcValue(1, arg.rootGC.idField)
           relayInsert.setString(2, model.stableIdentifier)
           relayInsert.addBatch()
         }
@@ -81,7 +80,7 @@ trait ImportActions extends BuilderBase {
           e.getUpdateCounts.zipWithIndex
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.raw.asRoot.idField.value
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
               s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
             }
             .toVector

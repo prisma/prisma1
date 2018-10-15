@@ -1,13 +1,15 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
-  val project: Project = SchemaDsl.fromString() { """
+  lazy val project: Project = SchemaDsl.fromString() { """
                                                   |type MyObject {
                                                   |  id: ID! @unique
                                                   |  name: String! @unique

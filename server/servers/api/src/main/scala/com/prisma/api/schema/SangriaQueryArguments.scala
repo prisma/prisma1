@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.{Filter, OrderBy, QueryArguments, SortOrder}
+import com.prisma.api.connector.{OrderBy, SortOrder}
 import com.prisma.shared.models
 import com.prisma.shared.models.Model
 import sangria.schema.{EnumType, EnumValue, _}

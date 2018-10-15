@@ -15,7 +15,7 @@ import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
-import com.prisma.shared.models.{ProjectId, ProjectWithClientId}
+import com.prisma.shared.models.ProjectId
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
@@ -37,11 +37,13 @@ case class ApiServer(
     with LazyLogging {
   import system.dispatcher
 
-  val log: String => Unit = (msg: String) => logger.info(msg)
-  val requestPrefix       = sys.env.getOrElse("ENV", "local")
-  val projectFetcher      = apiDependencies.projectFetcher
-  val reservedSegments    = Set("private", "import", "export")
-  val projectIdEncoder    = apiDependencies.projectIdEncoder
+  val log: String => Unit   = (msg: String) => logger.info(msg)
+  val requestPrefix         = sys.env.getOrElse("ENV", "local")
+  val projectFetcher        = apiDependencies.projectFetcher
+  val reservedSegments      = Set("private", "import", "export")
+  val projectIdEncoder      = apiDependencies.projectIdEncoder
+  val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
+  val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
 
   import scala.concurrent.duration._
 
@@ -77,22 +79,16 @@ case class ApiServer(
 
       ApiMetrics.requestDuration.record(actualDuration, Seq(metricKey))
       ApiMetrics.requestCounter.inc(metricKey)
+      actualDuration
+    }
 
-//      log(
-//        Json
-//          .toJson(
-//            LogData(
-//              key = LogKey.RequestComplete,
-//              requestId = requestId,
-//              projectId = Some(projectId),
-//              payload = Some(
-//                Map(
-//                  "request_duration" -> (end - requestBeginningTime),
-//                  "throttled_by"     -> throttledBy
-//                ))
-//            )
-//          )
-//          .toString())
+    def logRequestEndAndQueryIfEnabled(projectId: String, json: JsValue, throttledBy: Long = 0) = {
+      val actualDuration = logRequestEnd(projectId, throttledBy)
+
+      if (logSlowQueries && actualDuration > slowQueryLogThreshold) {
+        println("SLOW QUERY - DURATION: " + actualDuration)
+        println("QUERY: " + json)
+      }
     }
 
     def throttleApiCallIfNeeded(projectId: ProjectId, rawRequest: RawRequest) = {
@@ -128,7 +124,7 @@ case class ApiServer(
     def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
       val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest)
       result.onComplete { res =>
-        logRequestEnd(projectIdEncoder.toEncodedString(projectId))
+        logRequestEndAndQueryIfEnabled(projectIdEncoder.toEncodedString(projectId), rawRequest.json)
       }
       result
 
@@ -202,15 +198,6 @@ case class ApiServer(
       (elements.dropRight(1), elements.lastOption)
     } else {
       (elements, None)
-    }
-  }
-
-  def fetchProject(projectId: String): Future[ProjectWithClientId] = {
-    val result = projectFetcher.fetch(projectIdOrAlias = projectId)
-
-    result map {
-      case None         => throw ProjectNotFound(projectId)
-      case Some(schema) => schema
     }
   }
 

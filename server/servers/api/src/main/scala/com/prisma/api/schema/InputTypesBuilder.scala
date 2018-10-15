@@ -40,6 +40,8 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 }
 
 abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBuilder {
+  import com.prisma.utils.boolean.BooleanUtils._
+
   override def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForCreate(model, parentField)
   }
@@ -64,9 +66,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       Some(
         InputObjectType[Any](
           name = inputObjectTypeName,
-          fieldsFn = () => {
-            fields
-          }
+          fieldsFn = () => fields
         )
       )
     } else {
@@ -253,12 +253,17 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       val relatedField = field.relatedField
 
       val inputObjectTypeName = {
-        val arityPart = if (field.isList) "Many" else "One"
+        val arityAndRequiredPart = (field.isList, field.isRequired) match {
+          case (true, _)      => "Many"
+          case (false, true)  => "OneRequired"
+          case (false, false) => "One"
+        }
+
         val withoutPart = relatedField.isHidden match {
           case false => s"Without${relatedField.name.capitalize}"
           case true  => ""
         }
-        s"${subModel.name}Update${arityPart}${withoutPart}Input"
+        s"${subModel.name}Update${arityAndRequiredPart}${withoutPart}Input"
       }
 
       val fieldIsOppositeRelationField = parentField.map(_.relatedField).contains(field)
@@ -267,14 +272,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
         None
       } else {
 
-        val disconnectIfPossible = if (!field.isList && field.isRequired) None else nestedDisconnectInputField(field)
-
         val inputObjectType = InputObjectType[Any](
           name = inputObjectTypeName,
           fieldsFn = () =>
             nestedCreateInputField(field).toList ++
               nestedConnectInputField(field) ++
-              disconnectIfPossible ++
+              nestedDisconnectInputField(field) ++
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
               nestedUpsertInputField(field)
@@ -335,14 +338,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = whereInputField(field, name = "connect")
 
-  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = field.isList match {
-    case true  => whereInputField(field, name = "disconnect")
-    case false => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
+  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.isList, field.isRequired) match {
+    case (true, _)      => whereInputField(field, name = "disconnect")
+    case (false, false) => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
+    case (false, true)  => None
   }
 
-  def nestedDeleteInputField(field: RelationField): Option[InputField[Any]] = field.isList match {
-    case true  => whereInputField(field, name = "delete")
-    case false => Some(InputField[Any]("delete", OptionInputType(BooleanType)))
+  def nestedDeleteInputField(field: RelationField): Option[InputField[Any]] = (field.isList, field.isRequired) match {
+    case (true, _)      => whereInputField(field, name = "delete")
+    case (false, false) => Some(InputField[Any]("delete", OptionInputType(BooleanType)))
+    case (false, true)  => None
   }
 
   def trueInputFlag(field: RelationField, name: String): Option[InputField[Any]] = {

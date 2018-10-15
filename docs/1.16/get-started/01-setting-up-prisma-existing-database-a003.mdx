@@ -1,0 +1,218 @@
+import Warning from 'components/Markdown/Warning'
+import QueryChooser from 'components/Markdown/QueryChooser'
+
+export const meta = {
+  title: 'Setting up Prisma',
+  gettingStartedTitle: 'Existing database',
+  gettingStartedOrder: 3,
+  position: 1,
+  nextText: 'Great work! 👏  Move on to learn how you can extend your data model and make changes to your Prisma API.'
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Start a local Prisma server using Docker
+- Introspect your existing database and generate a service configuration
+- Deploy a Prisma service to the local Prisma server
+- Explore the Prisma API in a GraphQL Playground
+
+<Warning>
+
+Using your existing database with Prisma currently only works when using **PostgreSQL** databases.
+
+</Warning>
+
+## Prerequisites
+
+Make sure to have connection details for your database at hand. This includes the following pieces of information:
+
+- **Host**: The host of your Postgres server, e.g. `localhost`.
+- **Port**: The port where your Postgres server listens, e.g. `5432`.
+- **User & Password**: The credentials for your Postgres server.
+- **Name of existing _database_**: The name of the Postgres _database_.
+- **Name of existing _schema_**: The name of the Postgres _schema_, e.g. `public`.
+
+You also need to know whether your database server uses **SSL**.
+
+## Install the Prisma CLI
+
+The [Prisma CLI](https://www.npmjs.com/package/prisma) is used to deploy and manage Prisma services. You can install it using NPM:
+
+```bash copy
+npm install -g prisma
+```
+
+## Install Docker
+
+To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
+
+## Set up Prisma server
+
+### Create Docker Compose file
+
+To launch a Prisma server on your machine, you need a Docker Compose file that configures the Prisma server and specifies to which database it can connect:
+
+```bash copy
+touch docker-compose.yml
+```
+
+### Add Prisma Docker image
+
+Paste the following contents into the Docker Compose file you just created:
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.15
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: postgres
+            host: __YOUR_POSTGRES_HOST__
+            port: __YOUR_POSTGRES_PORT__
+            database: __YOUR_POSTGRES_DB__
+            schema: __YOUR_POSTGRES_SCHEMA__
+            user: __YOUR_POSTGRES_USER__
+            password: __YOUR_POSTGRES_PASSWORD__
+            migrations: false
+            ssl: __SSL_CONNECTION__
+```
+
+### Specify database connection
+
+To specify the database to which your Prisma server should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
+
+- `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`.
+- `__YOUR_POSTGRES_PORT__`: The port where your Postgres server listens, e.g. `5432`.
+- `__YOUR_POSTGRES_DB__`: The name of your Postgres database.
+- `__YOUR_POSTGRES_SCHEMA__`: The name of your Postgres schema, e.g. `public`.
+- `__YOUR_POSTGRES_USER__`: The database user.
+- `__YOUR_POSTGRES_PASSWORD__`: The password for the database user.
+- `__SSL_CONNECTION__`: Whether your database server uses SSL, possible values are `true` and `false`.
+
+### Start Prisma server
+
+To start the Prisma server and launch the connected database, run the following command:
+
+```bash copy
+docker-compose up -d
+```
+
+## Introspect your database
+
+You now need to introspect your database schema to generate the data model for your Prisma service:
+
+```bash copy
+prisma introspect
+```
+
+In the interactive wizard, provide the same database connection details you specified in the Docker Compose file.
+
+The CLI will generate the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema.
+
+## Deploy the Prisma service
+
+### Create prisma.yml
+
+Before deploying the Prisma service, you need to create a prisma.yml:
+
+```bash copy
+touch prisma.yml
+```
+
+Now add the following contents to it:
+
+```yml copy
+endpoint: http://localhost:4466
+datamodel: __PATH_TO_YOUR_DATA_MODEL__
+```
+
+Replace the `__PATH_TO_YOUR_DATA_MODEL__` placeholder with the name of the file that contains the data model, e.g. `datamodel-1533886167692.graphql`.
+
+### Deploy the service configuration to the local Prisma server
+
+This service configuration now needs to be _deployed_ so you can use the Prisma API of your service:
+
+```bash copy
+prisma deploy
+```
+
+<Warning>
+
+Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
+
+</Warning>
+
+## Explore the Prisma API in a Playground
+
+The Prisma API of your service exposes CRUD and realtime operations for the types defined in your data model. You can explore the API in a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
+
+```bash copy
+prisma playground
+```
+
+The queries and mutations you can send depend on the data model that was generated from the database introspection. The following sample queries assume there is a `User` type in the data model defined as follows:
+
+```graphql
+type User @pgTable(name: "User") {
+  id: Int! @unique
+  name: String!
+}
+```
+
+Depending on what your data model looks like, you can derive equivalent queries and mutations for your case. You can also use the auto-generated API documentation in the Playground to learn about the available API operations.
+
+<QueryChooser titles={["Create new user", "Query all users", "Update a user's name", "Delete user"]}>
+
+```graphql lineNumbers,copy
+mutation {
+  createUser(data: {
+    name: "Alice"
+  }) {
+    id
+  }
+}
+```
+
+```graphql lineNumbers,copy
+query {
+  users {
+    id
+    name
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  updateUser(
+    where: { id: __USER_ID__ },
+    data: { name: "Sarah" }
+  ) {
+    id
+    name
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  deleteUser(where: {
+    id: __USER_ID__
+  }) {
+    id
+    name
+  }
+}
+```
+
+</QueryChooser>

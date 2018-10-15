@@ -5,12 +5,10 @@ import com.prisma.api.resolver.DeferredTypes.{CountManyModelDeferred, OrderedDef
 
 class CountManyModelDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[CountManyModelDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {
-    val deferreds = orderedDeferreds.map(_.deferred)
+    val deferreds    = orderedDeferreds.map(_.deferred)
+    val headDeferred = deferreds.head
+    val countFuture  = dataResolver.countByModel(headDeferred.model, headDeferred.args)
 
-    val headDeferred      = deferreds.head
-    val whereFilter       = headDeferred.args.flatMap(_.filter)
-    val futurePrismaNodes = dataResolver.countByModel(headDeferred.model, whereFilter)
-
-    orderedDeferreds.map { case OrderedDeferred(deferred, order) => OrderedDeferredFutureResult[Int](futurePrismaNodes, order) }
+    orderedDeferreds.map { case OrderedDeferred(_, order) => OrderedDeferredFutureResult[Int](countFuture, order) }
   }
 }
