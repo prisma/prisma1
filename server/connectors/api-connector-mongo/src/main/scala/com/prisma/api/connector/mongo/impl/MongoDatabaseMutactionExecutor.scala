@@ -35,25 +35,19 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
           childResult <- generateTopLevelMutaction(database,
                                                    result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction],
                                                    mutationBuilder)
-        } yield MutactionResults(result.results ++ childResult.results)
+        } yield result.merge(childResult)
 
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
                            case results: MutactionResults =>
-                             //Fixme this needs to be recursive to not ignore stuff that is more deeply nested
-                             //the results should already contain all nested results
-                             //important for Parent-[embedded]- Child - [Inline] - Friend
-
-                             val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
-                             val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
-
-                             val nestedMutactionsStillToRun = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
-                             MongoAction.seq(nestedMutactionsStillToRun)
+                             val resultOfM        = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
+                             val nestedMutactions = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, results, resultOfM.id, mutationBuilder))
+                             MongoAction.seq(nestedMutactions)
                            case _ => MongoAction.successful(Vector.empty)
                          }
-        } yield MutactionResults(result.results ++ childResults.flatMap(_.results))
+        } yield result.merge(childResults)
 
       case m: FinalMutaction =>
         for {
@@ -67,6 +61,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   def generateNestedMutaction(
       database: MongoDatabase,
       mutaction: NestedDatabaseMutaction,
+      previousResults: MutactionResults,
       parentId: IdGCValue,
       mutationBuilder: MongoActionsBuilder
   ): MongoAction[MutactionResults] = {
@@ -74,31 +69,46 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
       case m: NestedUpsertNode =>
         for {
           result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
-          childResult <- generateNestedMutaction(database,
-                                                 result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
-                                                 parentId,
-                                                 mutationBuilder)
-        } yield MutactionResults(result.results ++ childResult.results)
+          childResult <- generateNestedMutaction(
+                          database,
+                          result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
+                          previousResults.merge(result),
+                          parentId,
+                          mutationBuilder
+                        )
+        } yield previousResults.merge(result).merge(childResult)
 
       case m: FurtherNestedMutaction =>
-        for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
-          childResults <- result match {
-                           case results: MutactionResults =>
-                             val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
-                             val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
+        if (previousResults.results.map(_.mutaction).contains(m)) {
+          val resultOfM        = previousResults.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
+          val nestedMutactions = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, previousResults, resultOfM.id, mutationBuilder))
 
-                             val nestedMutactionsStillToRun = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
-                             MongoAction.seq(nestedMutactionsStillToRun)
-                           case _ => MongoAction.successful(Vector.empty)
-                         }
-        } yield MutactionResults(result.results ++ childResults.flatMap(_.results))
+          for {
+            childResults <- MongoAction.seq(nestedMutactions)
+          } yield previousResults.merge(childResults)
 
+        } else {
+          for {
+            result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
+            childResults <- result match {
+                             case results: MutactionResults =>
+                               val resultOfM = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
+                               val nestedMutactions =
+                                 m.allNestedMutactions.map(x =>
+                                   generateNestedMutaction(database, x, previousResults.merge(result), resultOfM.id, mutationBuilder))
+                               MongoAction.seq(nestedMutactions)
+                             case _ => MongoAction.successful(Vector.empty)
+                           }
+          } yield previousResults.merge(result).merge(childResults)
+        }
       case m: FinalMutaction =>
-        for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
-        } yield result
-
+        if (previousResults.results.map(_.mutaction).contains(m)) {
+          MongoAction.successful(previousResults)
+        } else {
+          for {
+            result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
+          } yield result
+        }
       case _ => sys.error("not implemented yet")
     }
   }

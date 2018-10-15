@@ -877,7 +877,5 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}}""",
       project
     )
-
   }
-
 }
