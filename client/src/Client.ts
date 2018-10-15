@@ -364,7 +364,7 @@ export class Client {
                           if (fieldName.startsWith('delete')) {
                             realArgs = { where: realArgs }
                           }
-                        } else if (name === 'Query') {
+                        } else if (name === 'Query' || name === 'Subscription') {
                           if (field.args.length === 1) {
                             realArgs = { where: realArgs }
                           }
