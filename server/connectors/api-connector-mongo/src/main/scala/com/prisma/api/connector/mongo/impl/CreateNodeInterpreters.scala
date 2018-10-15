@@ -56,7 +56,6 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
       parentId: IdGCValue
   )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relation.manifestation match {
     case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
-
       val inlineRelation = c.isList match {
         case true  => List((m.referencingColumn, ListGCValue(Vector(parentId))))
         case false => List((m.referencingColumn, parentId))
