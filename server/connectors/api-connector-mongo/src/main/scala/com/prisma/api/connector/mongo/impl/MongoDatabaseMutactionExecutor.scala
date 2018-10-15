@@ -42,8 +42,8 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
           result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
                            case results: MutactionResults =>
-                             val resultOfM        = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
-                             val nestedMutactions = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, results, resultOfM.id, mutationBuilder))
+                             val nestedMutactions =
+                               m.allNestedMutactions.map(x => generateNestedMutaction(database, x, results, results.find(m).id, mutationBuilder))
                              MongoAction.seq(nestedMutactions)
                            case _ => MongoAction.successful(Vector.empty)
                          }
@@ -79,9 +79,9 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
         } yield previousResults.merge(result).merge(childResult)
 
       case m: FurtherNestedMutaction =>
-        if (previousResults.results.map(_.mutaction).contains(m)) {
-          val resultOfM        = previousResults.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
-          val nestedMutactions = m.allNestedMutactions.map(x => generateNestedMutaction(database, x, previousResults, resultOfM.id, mutationBuilder))
+        if (previousResults.contains(m)) {
+          val nestedMutactions =
+            m.allNestedMutactions.map(x => generateNestedMutaction(database, x, previousResults, previousResults.find(m).id, mutationBuilder))
 
           for {
             childResults <- MongoAction.seq(nestedMutactions)
@@ -92,17 +92,16 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
             result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
             childResults <- result match {
                              case results: MutactionResults =>
-                               val resultOfM = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
                                val nestedMutactions =
                                  m.allNestedMutactions.map(x =>
-                                   generateNestedMutaction(database, x, previousResults.merge(result), resultOfM.id, mutationBuilder))
+                                   generateNestedMutaction(database, x, previousResults.merge(result), results.find(m).id, mutationBuilder))
                                MongoAction.seq(nestedMutactions)
                              case _ => MongoAction.successful(Vector.empty)
                            }
           } yield previousResults.merge(result).merge(childResults)
         }
       case m: FinalMutaction =>
-        if (previousResults.results.map(_.mutaction).contains(m)) {
+        if (previousResults.contains(m)) {
           MongoAction.successful(previousResults)
         } else {
           for {

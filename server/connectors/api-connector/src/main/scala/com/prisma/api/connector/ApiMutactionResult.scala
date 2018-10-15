@@ -14,9 +14,10 @@ case class CreateNodeResult(id: IdGCValue, mutaction: CreateNode) extends Furthe
 case class UpdateNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction: UpdateNode) extends FurtherNestedMutactionResult {
   val namesOfUpdatedFields = mutaction.nonListArgs.keys ++ mutaction.listArgs.map(_._1)
 }
-case class DeleteNodeResult(id: IdGCValue, previousValues: PrismaNode, mutaction: DeleteNode) extends FurtherNestedMutactionResult
-case class UpsertNodeResult(result: DatabaseMutaction, mutaction: UpsertNode)                 extends DatabaseMutactionResult
-case class ManyNodesResult(mutaction: FinalMutaction, count: Int)                             extends DatabaseMutactionResult
+
+case class DeleteNodeResult(previousValues: PrismaNode, mutaction: DeleteNode) extends DatabaseMutactionResult
+case class UpsertNodeResult(result: DatabaseMutaction, mutaction: UpsertNode)  extends DatabaseMutactionResult
+case class ManyNodesResult(mutaction: FinalMutaction, count: Int)              extends DatabaseMutactionResult
 
 object UnitDatabaseMutactionResult extends DatabaseMutactionResult {
   override def mutaction: DatabaseMutaction = ???
