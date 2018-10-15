@@ -24,7 +24,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
                case None =>
                  throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
              }
-    } yield MutactionResults(Vector(DeleteNodeResult(node.id, node, mutaction)))
+    } yield MutactionResults(Vector(DeleteNodeResult(node, mutaction)))
   }
 
   private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, id: IdGCValue) = {
