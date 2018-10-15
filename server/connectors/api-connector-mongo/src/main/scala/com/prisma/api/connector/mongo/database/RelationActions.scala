@@ -1,12 +1,15 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.extensions.ArrayFilter
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer._
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.RelationField
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
+import scala.collection.JavaConverters._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -14,20 +17,31 @@ trait RelationActions extends FilterConditionBuilder {
 
   def createRelation(relationField: RelationField, parent: NodeAddress, childId: IdGCValue)(implicit ec: ExecutionContext) =
     SimpleMongoAction { database =>
-      val parentModel  = relationField.model
       val childModel   = relationField.relatedModel_!
       val relatedField = relationField.relatedField
 
+      val parentField = parent.path.segments.isEmpty match {
+        case true  => relationField.dbName
+        case false => parent.path.stringForField(relationField.name)
+      }
+
+      val arrayFilters = parent.path.segments.isEmpty match {
+        case true  => Vector.empty
+        case false => ArrayFilter.arrayFilter(parent.path)
+      }
+
       val (collectionName, where, update) = relationField.relationIsInlinedInParent match {
-        case true if !relationField.isList => (parentModel.dbName, parent.where, set(relationField.dbName, GCToBson(childId)))
-        case true if relationField.isList  => (parentModel.dbName, parent.where, push(relationField.dbName, GCToBson(childId)))
+        case true if !relationField.isList => (parent.where.model.dbName, parent.where, set(parentField, GCToBson(childId))) //needs a path
+        case true if relationField.isList  => (parent.where.model.dbName, parent.where, push(parentField, GCToBson(childId))) //needs a path
         case false if !relatedField.isList => (childModel.dbName, NodeSelector.forId(childModel, childId), set(relatedField.dbName, GCToBson(parent.idValue)))
         case false if relatedField.isList  => (childModel.dbName, NodeSelector.forId(childModel, childId), push(relatedField.dbName, GCToBson(parent.idValue)))
       }
 
+      val updateOptions = UpdateOptions().arrayFilters(arrayFilters.toList.asJava)
+
       database
         .getCollection(collectionName)
-        .updateOne(where, update)
+        .updateOne(where, update, updateOptions)
         .toFuture()
     }
 

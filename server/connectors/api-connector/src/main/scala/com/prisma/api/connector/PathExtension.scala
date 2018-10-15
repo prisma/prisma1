@@ -10,7 +10,7 @@ case class Path(segments: List[PathSegment]) {
   def append(rF: RelationField, where: NodeSelector): Path = this.copy(segments = this.segments :+ ToManySegment(rF, where))
   def append(rF: RelationField): Path                      = this.copy(segments = this.segments :+ ToOneSegment(rF))
 
-  def string: String = stringGen(segments).mkString(".")
+//  def string: String = stringGen(segments).mkString(".")
 
   private def stringGen(segments: List[PathSegment]): Vector[String] = segments match {
     case Nil                          => Vector.empty
