@@ -142,7 +142,7 @@ object DataSchemaAstExtensions {
       fieldDefinition.directiveArgumentAsString("pgRelation", "column").map(value => PGInlineRelationDirective(value))
 
     def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
-      fieldDefinition.directiveArgumentAsString("mongoRelation", "fieldName").map(value => MongoInlineRelationDirective(value))
+      fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
