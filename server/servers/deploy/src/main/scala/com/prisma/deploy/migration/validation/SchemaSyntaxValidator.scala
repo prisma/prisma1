@@ -151,6 +151,7 @@ case class SchemaSyntaxValidator(
     val relationFieldValidations  = tryValidation(validateRelationFields(allFieldAndTypes))
     val scalarFieldValidations    = tryValidation(validateScalarFields(allFieldAndTypes))
     val fieldDirectiveValidations = tryValidation(allFieldAndTypes.flatMap(validateFieldDirectives))
+    val enumValidations           = tryValidation(validateEnumTypes)
 
     val allValidations = Vector(
       reservedFieldsValidations,
@@ -160,7 +161,8 @@ case class SchemaSyntaxValidator(
       missingTypeValidations,
       relationFieldValidations,
       scalarFieldValidations,
-      fieldDirectiveValidations
+      fieldDirectiveValidations,
+      enumValidations
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
