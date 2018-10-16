@@ -29,7 +29,6 @@ case class MutactionResults(results: Vector[DatabaseMutactionResult]) {
   def id(m: FurtherNestedMutaction): IdGCValue                        = results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult].id
   def nodeAddress(m: FurtherNestedMutaction): NodeAddress             = results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult].nodeAddress
   def contains(m: DatabaseMutaction): Boolean                         = results.map(_.mutaction).contains(m)
-
 }
 
 trait DatabaseMutactionExecutor {
