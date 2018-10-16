@@ -650,6 +650,24 @@ export class GoGenerator extends Generator {
     }
   }
 
+  printSecret(options: RenderOptions): string | null {
+    if (!options.secret) {
+      return `""`
+    } else {
+      if (options.secret!.startsWith('${process.env')) {
+        // Find a better way to generate Go env construct
+        const envVariable = `${options.secret!
+          .replace('${process.env[', '')
+          .replace(']}', '')}`
+          .replace("'", '')
+          .replace("'", '')
+        return `os.Getenv("${envVariable}")`
+      } else {
+        return `\"${options.secret.replace("'", '').replace("'", '')}\"`
+      }
+    }
+  }
+  
   render(options: RenderOptions) {
     const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
@@ -670,7 +688,8 @@ package prisma
 
 import (
 	"context"
-	"errors"
+  "errors"
+  "os"
 
 	"github.com/prisma/prisma-client-lib-go"
 
@@ -705,16 +724,19 @@ type Client struct {
 }
 
 type Options struct {
-	Endpoint string
+  Endpoint  string
+  Secret    string
 }
 
 func New(options *Options, opts ...graphql.ClientOption) *Client {
-	endpoint := DefaultEndpoint
+  endpoint := DefaultEndpoint
+  secret   := Secret
 	if options != nil {
-		endpoint = options.Endpoint
+    endpoint = options.Endpoint
+    secret = options.Secret
 	}
 	return &Client{
-		Client: prisma.New(endpoint, opts...),
+		Client: prisma.New(endpoint, secret, opts...),
 	}
 }
 
@@ -727,6 +749,7 @@ func (client *Client) GraphQL(ctx context.Context, query string, variables map[s
     const dynamic = `
 
 var DefaultEndpoint = ${this.printEndpoint(options)}
+var Secret          = ${this.printSecret(options)}
 
 ${this.printOperation(queryFields, 'query', options)}
 
