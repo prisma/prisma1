@@ -21,7 +21,7 @@ object PostgresDeployDatabaseQueryBuilder {
 
   def existsNullByModelAndScalarField(projectId: String, model: Model, fieldName: String) = {
     sql"""SELECT EXISTS(Select "#${model.dbNameOfIdField_!}" FROM "#$projectId"."#${model.dbName}"
-          WHERE "#$projectId"."#${model.dbName}".#$fieldName IS NULL)"""
+          WHERE "#$projectId"."#${model.dbName}"."#$fieldName" IS NULL)"""
   }
 
   def existsDuplicateValueByModelAndField(projectId: String, model: Model, fieldName: String) = {
