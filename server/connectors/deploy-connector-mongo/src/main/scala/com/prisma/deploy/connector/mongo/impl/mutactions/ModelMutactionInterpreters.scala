@@ -7,7 +7,6 @@ object CreateModelInterpreter extends MongoMutactionInterpreter[CreateModelTable
   override def execute(mutaction: CreateModelTable) = mutaction.model.isEmbedded match {
     case true  => NoAction.unit
     case false => MongoDeployDatabaseMutationBuilder.createCollection(collectionName = mutaction.model.dbName)
-
   }
 
   override def rollback(mutaction: CreateModelTable) = mutaction.model.isEmbedded match {

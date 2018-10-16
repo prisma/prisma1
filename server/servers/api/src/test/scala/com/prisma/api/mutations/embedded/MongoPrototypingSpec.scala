@@ -833,4 +833,209 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = """A unique constraint would be violated on Top. Details: Field name = unique"""
     )
   }
+
+  "Relations from embedded to Non-Embedded" should "work 1" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    child: Child
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{
+         |      name: "Daughter"
+         |      friend: {create:{
+         |          name: "Buddy"
+         |      }
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter","friend":{"name":"Buddy"}}}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 2" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String @unique
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String @unique
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:{
+         |      name: "Daughter"
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    val res = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where:{name: "Dad"}
+         |   data: {
+         |   children: {update:{
+         |      where: {name: "Daughter"}
+         |      data: {
+         |          friend:{create:{name: "Buddy"}}
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 3" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:{
+         |      name: "Daughter"
+         |      friend: {create:{
+         |          name: "Buddy"
+         |      }
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 4" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friends: [Friend!]! @mongoRelation(field: "friends")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[
+         |   {name: "Daughter", friends: {create:[{name: "Buddy"},{name: "Buddy2"}]}},
+         |   {name: "Daughter2", friends: {create:[{name: "Buddy3"},{name: "Buddy4"}]}}
+         |   ]}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friends{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friends":[{"name":"Buddy"},{"name":"Buddy2"}]},{"name":"Daughter2","friends":[{"name":"Buddy3"},{"name":"Buddy4"}]}]}}}""")
+  }
 }

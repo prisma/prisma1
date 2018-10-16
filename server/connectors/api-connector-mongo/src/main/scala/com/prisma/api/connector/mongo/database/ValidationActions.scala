@@ -9,10 +9,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries with NodeManyQueries {
 
-  def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue)(implicit ec: ExecutionContext) = {
+  def ensureThatNodeIsNotConnected(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) = {
     relationField.relationIsInlinedInParent match {
-      case true =>
-        getNodeByWhere(NodeSelector.forId(relationField.model, id)).map(optionRes =>
+      case true if parent.path.segments.isEmpty =>
+        getNodeByWhere(parent.where).map(optionRes =>
           optionRes.foreach { res =>
             (relationField.isList, res.data.map.get(relationField.name)) match {
               case (true, Some(ListGCValue(values))) if values.isEmpty => throw RequiredRelationWouldBeViolated(relationField.relation)
@@ -21,21 +21,23 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
             }
         })
 
-      case false =>
-        val filter = generateFilterForFieldAndId(relationField.relatedField, id)
+      case true => sys.error("not implemented yet")
+      case false if parent.path.segments.isEmpty =>
+        val filter = generateFilterForFieldAndId(relationField.relatedField, parent.where.fieldGCValue.asInstanceOf[IdGCValue])
 
         getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
           if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
+      case false => sys.error("not implemented yet")
     }
   }
 
-  def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+  def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parent: NodeAddress)(implicit ec: ExecutionContext) = {
     val parentModel = relationField.model
     val childModel  = relationField.relatedModel_!
 
     relationField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(NodeSelector.forId(parentModel, parentId)).map(optionRes =>
+        getNodeByWhere(parent.where).map(optionRes =>
           optionRes.foreach { res =>
             (relationField.isList, res.data.map.get(relationField.name)) match {
               case (true, Some(ListGCValue(values))) if values.contains(childId) => Future.successful(())
@@ -45,7 +47,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
         })
 
       case false =>
-        val filter      = generateFilterForFieldAndId(relationField.relatedField, parentId)
+        val filter      = generateFilterForFieldAndId(relationField.relatedField, parent.idValue)
         val whereFilter = ScalarFilter(childModel.idField_!, Equals(childId))
 
         getNodeIdsByFilter(relationField.relatedModel_!, Some(AndFilter(Vector(filter, whereFilter)))).map(
@@ -54,20 +56,20 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
               throw NodesNotConnectedError(
                 relation = relationField.relation,
                 parent = relationField.model,
-                parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
+                parentWhere = Some(parent.where),
                 child = relationField.relatedModel_!,
                 childWhere = None
             ))
     }
   }
 
-  def ensureThatParentIsConnected(relationField: RelationField, parentId: IdGCValue)(implicit ec: ExecutionContext) = {
+  def ensureThatParentIsConnected(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) = {
     val parentModel = relationField.model
     val childModel  = relationField.relatedModel_!
 
     relationField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(NodeSelector.forId(parentModel, parentId)).map(optionRes =>
+        getNodeByWhere(parent.where).map(optionRes =>
           optionRes.foreach { res =>
             res.data.map.get(relationField.name) match {
               case None              => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
@@ -77,7 +79,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
         })
 
       case false =>
-        val filter = generateFilterForFieldAndId(relationField.relatedField, parentId)
+        val filter = generateFilterForFieldAndId(relationField.relatedField, parent.idValue)
 
         getNodeIdsByFilter(childModel, Some(filter)).map(
           list =>
@@ -85,7 +87,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
               throw NodesNotConnectedError(
                 relation = relationField.relation,
                 parent = relationField.model,
-                parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
+                parentWhere = Some(parent.where),
                 child = relationField.relatedModel_!,
                 childWhere = None
             ))
