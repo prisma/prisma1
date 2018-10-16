@@ -29,6 +29,22 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     result.head.`type` should equal("Global")
   }
 
+  "fail if the schema is missing a type" in {
+    // the relation directive is there as this used to cause an exception
+    val schema =
+      """
+        |type Todo  {
+        |  title: String
+        |  owner: User @relation(name: "Test", onDelete: CASCADE)
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    result should have(size(1))
+    result.head.`type` should equal("Todo")
+    result.head.field should equal(Some("owner"))
+    result.head.description should equal("The field `owner` has the type `User` but there's no type or enum declaration with that name.")
+  }
+
   "succeed if an unambiguous relation field does not specify the relation directive" in {
     val schema =
       """
