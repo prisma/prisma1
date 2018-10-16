@@ -5,11 +5,15 @@ import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, ScalarListsCapability}
 import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast._
+import sangria.ast.{Argument => _, _}
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
 case class RequiredArg(name: String, mustBeAString: Boolean)
@@ -123,25 +127,45 @@ case class SchemaSyntaxValidator(
       field      <- objectType.fields
     } yield FieldAndType(objectType, field)
 
-    val reservedFieldsValidations = validateReservedFields(allFieldAndTypes)
-    val requiredFieldValidations  = validateRequiredReservedFields(doc.objectTypes)
-    val duplicateTypeValidations  = validateDuplicateTypes(doc.objectTypes, allFieldAndTypes)
-    val duplicateFieldValidations = validateDuplicateFields(allFieldAndTypes)
-    val missingTypeValidations    = validateMissingTypes(allFieldAndTypes)
-    val relationFieldValidations  = validateRelationFields(allFieldAndTypes)
-    val scalarFieldValidations    = validateScalarFields(allFieldAndTypes)
-    val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
+    val reservedFieldsValidations = tryValidation(validateReservedFields(allFieldAndTypes))
+    val requiredFieldValidations  = tryValidation(validateRequiredReservedFields(doc.objectTypes))
+    val duplicateTypeValidations  = tryValidation(validateDuplicateTypes(doc.objectTypes, allFieldAndTypes))
+    val duplicateFieldValidations = tryValidation(validateDuplicateFields(allFieldAndTypes))
+    val missingTypeValidations    = tryValidation(validateMissingTypes(allFieldAndTypes))
+    val relationFieldValidations  = tryValidation(validateRelationFields(allFieldAndTypes))
+    val scalarFieldValidations    = tryValidation(validateScalarFields(allFieldAndTypes))
+    val fieldDirectiveValidations = tryValidation(allFieldAndTypes.flatMap(validateFieldDirectives))
+    val enumValidations           = tryValidation(validateEnumTypes)
 
-    reservedFieldsValidations ++
-      requiredFieldValidations ++
-      duplicateTypeValidations ++
-      duplicateFieldValidations ++
-      missingTypeValidations ++
-      relationFieldValidations ++
-      scalarFieldValidations ++
-      fieldDirectiveValidations ++
-      validateEnumTypes
+    val allValidations = Vector(
+      reservedFieldsValidations,
+      requiredFieldValidations,
+      duplicateFieldValidations,
+      duplicateTypeValidations,
+      missingTypeValidations,
+      relationFieldValidations,
+      scalarFieldValidations,
+      fieldDirectiveValidations,
+      enumValidations
+    )
+
+    val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
+    val validationFailures: Vector[Throwable] = allValidations.collect { case Bad(e) => e }
+
+    // We don't want to return unhelpful exception messages to the user if there are normal validation errors. It is likely that the exceptions won't occur if those get fixed first.
+    val errors = if (validationErrors.nonEmpty) {
+      validationErrors
+    } else {
+      validationFailures.map { throwable =>
+        throwable.printStackTrace()
+        DeployError.global(s"An unknown error happened: $throwable")
+      }
+    }
+
+    errors.distinct
   }
+
+  def tryValidation(block: => Seq[DeployError]): Or[Seq[DeployError], Throwable] = Or.from(Try(block))
 
   def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     for {
@@ -161,20 +185,25 @@ case class SchemaSyntaxValidator(
   }
 
   def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
-    val typeNames          = objectTypes.map(_.name)
+    val typeNames          = objectTypes.map(_.name.toLowerCase)
     val duplicateTypeNames = typeNames.filter(name => typeNames.count(_ == name) > 1)
 
-    duplicateTypeNames.map(name => DeployErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
+    for {
+      duplicateTypeName <- duplicateTypeNames
+      objectType        <- objectTypes.find(_.name.equalsIgnoreCase(duplicateTypeName))
+    } yield {
+      DeployErrors.duplicateTypeName(objectType)
+    }
   }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     for {
       objectType <- fieldAndTypes.map(_.objectType).distinct
-      fieldNames = objectType.fields.map(_.name)
+      fieldNames = objectType.fields.map(_.name.toLowerCase)
       fieldName  <- fieldNames
       if fieldNames.count(_ == fieldName) > 1
     } yield {
-      DeployErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == fieldName).get)
+      DeployErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name.equalsIgnoreCase(fieldName)).get)
     }
   }
 

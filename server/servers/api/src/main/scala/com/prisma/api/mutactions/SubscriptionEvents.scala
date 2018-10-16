@@ -56,6 +56,7 @@ object SubscriptionEvents {
     val previousValues = result.previousValues.data
       .filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue])
       .toMapStringAny + ("id" -> result.previousValues.id)
+
     val model = result.mutaction.model
 
     PublishSubscriptionEvent(
