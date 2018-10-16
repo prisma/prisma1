@@ -160,6 +160,66 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
     )
   }
 
+  "they" should "not propose an Update and Delete at the same time when renaming a relation" in {
+    val previousSchema =
+      """
+        |type Todo {
+        |  comments: [Comment!]! @relation(name: "ManualRelationName1")
+        |}
+        |type Comment {
+        |  text: String
+        |  todo: Todo @relation(name: "ManualRelationName1")
+        |}
+      """.stripMargin
+    val project = inferSchema(previousSchema)
+
+    val nextSchema =
+      """
+        |type Todo {
+        |  comments: [Comment!]! @relation(name: "ManualRelationName2")
+        |}
+        |type Comment {
+        |  text: String
+        |  todo: Todo @relation(name: "ManualRelationName2")
+        |}
+      """.stripMargin
+    val steps = inferSteps(previousSchema = project, next = nextSchema)
+
+    steps should have(size(4))
+    steps should contain allOf (
+      DeleteRelation("ManualRelationName1"),
+      CreateRelation("ManualRelationName2", "Comment", "Todo", OnDelete.SetNull, OnDelete.SetNull),
+      UpdateField(
+        model = "Todo",
+        newModel = "Todo",
+        name = "comments",
+        newName = None,
+        typeName = None,
+        isRequired = None,
+        isList = None,
+        isHidden = None,
+        isUnique = None,
+        relation = Some(Some("_ManualRelationName2")),
+        defaultValue = None,
+        enum = None
+      ),
+      UpdateField(
+        model = "Comment",
+        newModel = "Comment",
+        name = "todo",
+        newName = None,
+        typeName = None,
+        isRequired = None,
+        isList = None,
+        isHidden = None,
+        isUnique = None,
+        relation = Some(Some("_ManualRelationName2")),
+        defaultValue = None,
+        enum = None
+      )
+    )
+  }
+
   "they" should "handle ambiguous relations correctly" in {
     val previousSchema =
       """
@@ -307,14 +367,14 @@ class InfererIntegrationSpec extends FlatSpec with Matchers {
 
     val nextSchema = SchemaInferrer().infer(previous, SchemaMapping.empty, prismaSdl, InferredTables.empty)
 
-    println(s"Relations of infered schema:\n  " + nextSchema.relations)
+//    println(s"Relations of infered schema:\n  " + nextSchema.relations)
     nextSchema
   }
 
   def inferSteps(previousSchema: Schema, next: String): Vector[MigrationStep] = {
     val nextSchema = inferSchema(previousSchema, next)
-    println(s"fields of next project:")
-    nextSchema.allFields.foreach(println)
+//    println(s"fields of next project:")
+//    nextSchema.allFields.foreach(println)
     MigrationStepsInferrer().infer(
       previousSchema = previousSchema,
       nextSchema = nextSchema,

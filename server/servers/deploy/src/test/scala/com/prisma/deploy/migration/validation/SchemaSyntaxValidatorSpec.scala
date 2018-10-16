@@ -542,6 +542,42 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers {
     error1.description should include(s"The enum type `Privacy` is defined twice in the schema. Enum names must be unique.")
   }
 
+  "fail if there are duplicate fields in a type" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: ID! @unique
+        |  title: String!
+        |  TITLE: String!
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    result should have(size(1))
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("title"))
+    error1.description should include(s"The type `Todo` has a duplicate fieldName. The detection of duplicates is performed case insensitive.")
+  }
+
+  "fail if there are duplicate types" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: ID! @unique
+        |}
+        |
+        |type TODO {
+        |  id: ID! @unique
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, isActive = true).validate
+    println(result)
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(None)
+    error1.description should include(s"The name of the type `Todo` occurs more than once. The detection of duplicates is performed case insensitive.")
+  }
+
   def missingDirectiveArgument(directive: String, argument: String) = {
     s"the directive `@$directive` but it's missing the required argument `$argument`"
   }

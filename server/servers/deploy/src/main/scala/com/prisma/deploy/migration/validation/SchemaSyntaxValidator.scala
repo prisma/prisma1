@@ -151,7 +151,7 @@ case class SchemaSyntaxValidator(
     val scalarFieldValidations    = validateScalarFields(allFieldAndTypes)
     val fieldDirectiveValidations = allFieldAndTypes.flatMap(validateFieldDirectives)
 
-    reservedFieldsValidations ++
+    val errors = reservedFieldsValidations ++
       requiredFieldValidations ++
       duplicateTypeValidations ++
       duplicateFieldValidations ++
@@ -160,6 +160,8 @@ case class SchemaSyntaxValidator(
       scalarFieldValidations ++
       fieldDirectiveValidations ++
       validateEnumTypes
+
+    errors.distinct
   }
 
   def validateReservedFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
@@ -180,20 +182,25 @@ case class SchemaSyntaxValidator(
   }
 
   def validateDuplicateTypes(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
-    val typeNames          = objectTypes.map(_.name)
+    val typeNames          = objectTypes.map(_.name.toLowerCase)
     val duplicateTypeNames = typeNames.filter(name => typeNames.count(_ == name) > 1)
 
-    duplicateTypeNames.map(name => DeployErrors.duplicateTypeName(fieldAndTypes.find(_.objectType.name == name).head)).distinct
+    for {
+      duplicateTypeName <- duplicateTypeNames
+      objectType        <- objectTypes.find(_.name.equalsIgnoreCase(duplicateTypeName))
+    } yield {
+      DeployErrors.duplicateTypeName(objectType)
+    }
   }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     for {
       objectType <- fieldAndTypes.map(_.objectType).distinct
-      fieldNames = objectType.fields.map(_.name)
+      fieldNames = objectType.fields.map(_.name.toLowerCase)
       fieldName  <- fieldNames
       if fieldNames.count(_ == fieldName) > 1
     } yield {
-      DeployErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name == fieldName).get)
+      DeployErrors.duplicateFieldName(fieldAndTypes.find(ft => ft.objectType == objectType & ft.fieldDef.name.equalsIgnoreCase(fieldName)).get)
     }
   }
 
