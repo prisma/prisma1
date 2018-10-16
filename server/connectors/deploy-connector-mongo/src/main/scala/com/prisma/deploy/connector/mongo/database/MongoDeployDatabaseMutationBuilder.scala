@@ -86,7 +86,6 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   def addRelationIndex(database: MongoDatabase, collectionName: String, fieldName: String) = {
-
     val shortenedName = indexNameHelper(collectionName, fieldName, false)
 
     database
