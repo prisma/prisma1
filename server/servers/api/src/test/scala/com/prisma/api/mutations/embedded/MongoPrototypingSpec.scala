@@ -993,4 +993,95 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     res.toString should be("""{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
   }
+
+  "Relations from embedded to Non-Embedded" should "work 4" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friends: [Friend!]! @mongoRelation(field: "friends")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[
+         |   {name: "Daughter", friends: {create:[{name: "Buddy"},{name: "Buddy2"}]}},
+         |   {name: "Daughter2", friends: {create:[{name: "Buddy3"},{name: "Buddy4"}]}}
+         |   ]}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friends{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friends":[{"name":"Buddy"},{"name":"Buddy2"}]},{"name":"Daughter2","friends":[{"name":"Buddy3"},{"name":"Buddy4"}]}]}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 4" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friends: [Friend!]! @mongoRelation(field: "friends")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[
+         |   {name: "Daughter", friends: {create:[{name: "Buddy"},{name: "Buddy2"}]}},
+         |   {name: "Daughter2", friends: {create:[{name: "Buddy3"},{name: "Buddy4"}]}}
+         |   ]}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friends{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friends":[{"name":"Buddy"},{"name":"Buddy2"}]},{"name":"Daughter2","friends":[{"name":"Buddy3"},{"name":"Buddy4"}]}]}}}""")
+  }
+
 }
