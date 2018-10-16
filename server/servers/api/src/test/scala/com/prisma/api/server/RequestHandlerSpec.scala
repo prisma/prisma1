@@ -3,7 +3,7 @@ package com.prisma.api.server
 import akka.http.scaladsl.model.StatusCodes
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.project.ProjectFetcher
-import com.prisma.api.schema.APIErrors.InvalidToken
+import com.prisma.api.schema.APIErrors.AuthFailure
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.shared.models.Project
@@ -22,7 +22,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiSpecBase with Aw
 
   "a request without token" should "result in an InvalidToken error" in {
     val error = handler(projectWithSecret).handleRawRequestForPublicApi(projectWithSecret.id, request("header")).failed.await
-    error shouldBe an[InvalidToken]
+    error shouldBe an[AuthFailure]
   }
 
   "request with a proper token" should "result in a successful query" in {

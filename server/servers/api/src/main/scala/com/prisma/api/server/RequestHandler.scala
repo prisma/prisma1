@@ -5,7 +5,7 @@ import akka.http.scaladsl.model._
 import com.prisma.api.ApiDependencies
 import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.project.ProjectFetcher
-import com.prisma.api.schema.APIErrors.InvalidToken
+import com.prisma.api.schema.APIErrors.AuthFailure
 import com.prisma.api.schema._
 import com.prisma.auth.Auth
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
@@ -81,7 +81,7 @@ case class RequestHandler(
 
   def verifyAuth(project: Project, rawRequest: RawRequest): Future[Unit] = {
     val authResult = auth.verify(project.secrets, rawRequest.authorizationHeader)
-    if (authResult.isSuccess) Future.unit else Future.failed(InvalidToken())
+    if (authResult.isSuccess) Future.unit else Future.failed(AuthFailure())
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {

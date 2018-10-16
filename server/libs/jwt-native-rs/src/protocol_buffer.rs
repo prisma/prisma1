@@ -44,7 +44,6 @@ impl Drop for ProtocolBuffer {
 impl From<String> for ProtocolBuffer {
     fn from(s: String) -> Self {
         let len = s.len() + 1; // todo do we need the +1?
-        println!("FROM {}", len);
         let ptr = ffi_utils::string_to_ptr(s);
 
         ProtocolBuffer { error: ::std::ptr::null(), data: ptr, data_len: len }
@@ -72,15 +71,6 @@ impl From<bool> for ProtocolBuffer {
             data_len: size_of::<bool>()
         }
     }
-}
-
-fn write_error(msg: String) -> Box<ProtocolBuffer> {
-    let ptr = ffi_utils::string_to_ptr(msg);
-    Box::new(ProtocolBuffer {
-        error: ptr,
-        data: ::std::ptr::null(),
-        data_len: 0
-    })
 }
 
 //fn write_string_buffer(success: bool, data: String) -> Box<ProtocolBuffer> {
