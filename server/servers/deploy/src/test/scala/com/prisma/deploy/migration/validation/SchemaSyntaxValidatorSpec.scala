@@ -53,6 +53,22 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
     result.head.`type` should equal("Global")
   }
 
+  "fail if the schema is missing a type" in {
+    // the relation directive is there as this used to cause an exception
+    val schema =
+      """
+        |type Todo  {
+        |  title: String
+        |  owner: User @relation(name: "Test", onDelete: CASCADE)
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    result should have(size(1))
+    result.head.`type` should equal("Todo")
+    result.head.field should equal(Some("owner"))
+    result.head.description should equal("The field `owner` has the type `User` but there's no type or enum declaration with that name.")
+  }
+
   "succeed if an unambiguous relation field does not specify the relation directive" in {
     val schema =
       """
@@ -564,6 +580,42 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
     error1.`type` should equal("Privacy")
     error1.field should equal(None)
     error1.description should include(s"The enum type `Privacy` is defined twice in the schema. Enum names must be unique.")
+  }
+
+  "fail if there are duplicate fields in a type" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: ID! @unique
+        |  title: String!
+        |  TITLE: String!
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    result should have(size(1))
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(Some("title"))
+    error1.description should include(s"The type `Todo` has a duplicate fieldName. The detection of duplicates is performed case insensitive.")
+  }
+
+  "fail if there are duplicate types" in {
+    val schema =
+      """
+        |type Todo {
+        |  id: ID! @unique
+        |}
+        |
+        |type TODO {
+        |  id: ID! @unique
+        |}
+      """.stripMargin
+    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    println(result)
+    val error1 = result.head
+    error1.`type` should equal("Todo")
+    error1.field should equal(None)
+    error1.description should include(s"The name of the type `Todo` occurs more than once. The detection of duplicates is performed case insensitive.")
   }
 
   def missingDirectiveArgument(directive: String, argument: String) = {

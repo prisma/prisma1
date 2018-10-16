@@ -1,0 +1,348 @@
+import Warning from 'components/Markdown/Warning'
+import Playground from 'components/Markdown/Playground'
+
+export const meta = {
+  title: "Concepts",
+  position: 20,
+}
+
+## Overview
+
+This page explains a number of important concepts to be aware of when working with the Prisma API.
+
+Unless otherwise stated, the examples on this page are based on a Prisma API with the following datamodel:
+
+```graphql
+type User {
+  id: ID! @unique
+  email: String @unique
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
+}
+```
+
+## Prisma GraphQL schema
+
+The Prisma database is the [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defining the data types and operations of a Prisma API. It is auto-generated and specifies CRUD and realtime operations for the models specified in the service's datamodel.
+
+![](https://i.imgur.com/jHkNjKU.png)
+
+## Node selection
+
+Many operations in the Prisma API only affect a subset of the existing nodes, sometimes only a single node, such as updating or deleting nodes.
+
+In these case, you need a way to ask for _specific_ nodes in the API. This is what the `where` filter argument is being used for. It lets you specify _conditions_ for selecting the nodes to which an operation should be applied.
+
+Nodes can be selected via any field that's annotated with the `@unique` directive.
+
+Here are a few scenarios where node selection is required.
+
+**Retrieve a single `User` node by its `email`**:
+
+```graphql
+query {
+  user(where: {
+    email: "alice@prisma.io"
+  }) {
+    id
+  }
+}
+```
+```js
+{
+  "data": {
+    "user": {
+      "id": "cjkawhcz44a4c0a84un9a86wt"
+    }
+  }
+}
+```
+
+**Update the `title` of a single `Post` node**:
+
+```graphql
+mutation {
+  updatePost(
+    where: {
+      id: "ohco0iewee6eizidohwigheif"
+    }
+    data: {
+      title: "GraphQL is awesome"
+    }
+  ) {
+    id
+  }
+}
+```
+```js
+{
+  "data": {
+    "updatePost": {
+      "id": "ohco0iewee6eizidohwigheif"
+    }
+  }
+}
+```
+
+**Update `published` of a many `Post` nodes at once** (also see [Batch mutations](#batch-mutations)):
+
+```graphql
+mutation {
+  updateManyPosts(
+    where: {
+      id_in: ["ohco0iewee6eizidohwigheif", "phah4ooqueengij0kan4sahlo", "chae8keizohmiothuewuvahpa"]
+    }
+    data: {
+      published: true
+    }
+  ) {
+    count
+  }
+}
+```
+```js
+{
+  "data": {
+    "updateManyPosts": {
+      "count": 3
+    }
+  }
+}
+```
+
+## Batch mutations
+
+One application of the node selection concept are the [batch mutations](qwe2#batch-mutations) exposed by the Prisma API. Batch updating or deleting is optimized for making changes to a large number of nodes. As such, these mutations only return _how many_ nodes have been affected, rather than full information on specific nodes.
+
+For example, the mutations `updateManyPosts` and `deleteManyPosts` provide a `where` argument to select specific nodes, and return a `count` field with the number of affected nodes (see the example above).
+
+```graphql
+mutation {
+  deleteManyUsers(
+    where: {
+      email_in: ["alice@prisma.io", "bob@prisma.io"]
+    }
+  ) {
+    count
+  }
+}
+```
+```js
+{
+  "data": {
+    "deleteManyUsers": {
+      "count": 2
+    }
+  }
+}
+```
+
+<Warning>
+
+Note that no [subscription](qwe3) events are triggered for batch mutations!
+
+</Warning>
+
+## Connections (Relay Pagination & Aggregations)
+
+Prisma offers two approaches to retrieve a list of nodes via a relation field:
+
+- Simple relation queries (_direct_ node retrieval):
+
+  ```graphql
+  query {
+    posts {
+      id
+      title
+      published
+    }
+  }
+  ```
+
+- Connections queries:
+
+  ```graphql
+  query {
+    postsConnection {
+      edges {
+        node {
+          id
+          title
+          published
+        }
+      }
+    }
+  }
+  ```
+
+
+In contrast to the simple relation queries that _directly_ return a list of nodes, connection queries are based on the [Relay Connection](https://facebook.github.io/relay/graphql/connections.htm) model. In addition to pagination information, connections in the Prisma API also have advanced features, like _aggregation_.
+
+For example, while the `posts` query allows you to select specific `Post` nodes, sort them by some field and paginate over the result, the `postsConnection` query additionally allows you to _count_ all unpublished posts:
+
+```graphql
+query {
+  postsConnection {
+    # `aggregate` allows to perform common aggregation operations
+    aggregate {
+      count
+    }
+    edges {
+      # each `node` refers to a single `Post` node
+      node {
+        title
+      }
+    }
+  }
+}
+```
+```js
+{
+  "data": {
+    "postsConnection": {
+      "aggregate": {
+        "count": 1
+      },
+      "edges": [
+        {
+          "node": {
+            "title": "Watch all the talks from GraphQL Europe: bit.ly/gql-eu"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+> Check [this](https://github.com/prisma/prisma/issues/1312) feature request to learn about the upcoming aggregation operations.
+
+## Transactions & Nested mutations
+
+Single mutations in the Prisma API that are not batch operations are always executed _transactionally_, even if they consist of many actions that potentially spread across multiple related nodes. This is especially useful for [nested mutations](qwe2#nested-mutations) that perform several database writes on multiple types.
+
+Nested mutations are mutations that are touching _at least_ two nodes, each of a different type. Here is a simple example:
+
+```graphql
+mutation {
+  createUser(data: {
+    name: "Sarah"
+    posts: {
+      create: [
+        { title: "GraphQL is great" }
+        { title: "Prisma is a data access layer" }
+      ],
+      connect: [
+        { id: "cjk1e3t7i1ark0b299pvrge5m" }
+      ]
+    }
+  }) {
+    id
+    posts {
+      id
+    }
+  }
+}
+```
+
+This mutation touches **four** nodes in total:
+
+- It _creates_ **one** new `User` node.
+- It _creates_ **two** `Post` nodes. Both `Post` nodes are also directly _connected_ to the new `User` node.
+- It _connects_ the new `User` node with **one** existing `Post` node.
+
+This mutation performs **six** single actions in total:
+
+- _Creating_ **one** `User` node.
+- _Creating_ **two** `Post` nodes.
+- _Connecting_ **three** `Post` nodes to the new `User` node.
+
+If any of the mentioned actions fail (for example because of a violated `@unique` field constraint), the _entire_ mutation is rolled back!
+
+Mutations are _transactional_, meaning they are [_atomic_](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) and [_isolated_](https://en.wikipedia.org/wiki/Isolation_(database_systems)). This means that between two separate actions of the same nested mutation, no other mutations can alter the data. Also the result of a single action cannot be observed until the complete mutation has been processed.
+
+## Cascading deletes
+
+Prisma supports different _deletion behaviours_ for _relations_ in your datamodel. There are two major deletion behaviours:
+
+- `CASCADE`: When a node with a relation to one or more other nodes gets deleted, these nodes will be deleted as well.
+- `SET_NULL`:  When a node with a relation to one or more other nodes gets deleted, the fields referring to the deleted node are set to `null`.
+
+As mentioned above, you can specify a dedicated deletion behaviour for the related nodes. That's what the `onDelete` argument of the `@relation` directive is for.
+
+Consider the following example:
+
+```graphql
+type User {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "CommentAuthor", onDelete: CASCADE)
+  blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE)
+}
+
+type Blog {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "Comments", onDelete: CASCADE)
+  owner: User! @relation(name: "BlogOwner", onDelete: SET_NULL)
+}
+
+type Comment {
+  id: ID! @unique
+  blog: Blog! @relation(name: "Comments", onDelete: SET_NULL)
+  author: User @relation(name: "CommentAuthor", onDelete: SET_NULL)
+}
+```
+
+Let's investigate the deletion behaviour for the three types:
+
+- When a `User` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `Blog` node will be deleted.
+- When a `Blog` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `User` node will have its `blog` field set to `null`.
+- When a `Comment` node gets deleted,
+  - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+  - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+
+You can find more detailled info about the `@relation` directive and its usage [here](knul#the-@relation-directive).
+
+## Authentication
+
+A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
+
+```yml
+secret: my-secret-42
+```
+
+As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a prisma.yml that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
+
+![](https://i.imgur.com/cCmp8JI.png)
+
+The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your prisma.yml is located:
+
+```bash
+$ prisma token
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1ODgzNzAsImV4cCI6MTUzMzE5MzE3MH0.Nv8coqsiwdwoSfWCBJHYfnr0WK2GRyqO5xTN6Q3IVkw
+```
+
+The generated token needs to be attached to the `Autorization` header of the HTTP requests made to the Prisma API:
+
+```bash
+curl '__YOUR_PRISMA_ENDPOINT__' \\
+-H 'Content-Type: application/json' \\
+-H 'Authorization: Bearer __YOUR_SERVICE_TOKEN__' \\
+--data-binary '{"query":"mutation { createUser(data: { name: "Sarah" }) { id } }"'
+```
+
+<Warning>
+
+The service secret and service tokens are not to be confused with the Prisma Management API secret used to protect the Management API of your Prisma server.
+
+</Warning>
