@@ -55,10 +55,10 @@ object DeleteColumnInterpreter extends MongoMutactionInterpreter[DeleteColumn] {
 //Fixme index names cannot be changed in Mongo/ This is a problem after renames since we derive the index name from modelname and fieldname
 object UpdateColumnInterpreter extends MongoMutactionInterpreter[UpdateColumn] {
   override def execute(mutaction: UpdateColumn) = {
-    NoAction.unit
+    NoAction.unit //Fixme -> add/remove unique index
   }
 
   override def rollback(mutaction: UpdateColumn) = {
-    NoAction.unit
+    NoAction.unit //Fixme -> remove/add unique index
   }
 }
