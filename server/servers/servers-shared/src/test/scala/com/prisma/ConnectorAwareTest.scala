@@ -42,9 +42,10 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   def runOnlyForCapabilities: Set[CapabilityType]  = Set.empty
   def doNotRunForCapabilities: Set[CapabilityType] = Set.empty
   def doNotRunForPrototypes: Boolean               = false
+  def doNotRun: Boolean                            = false
 
   abstract override def tags: Map[String, Set[String]] = { // this must NOT be a val. Otherwise ScalaTest does not behave correctly.
-    if (shouldSuiteBeIgnored) {
+    if (shouldSuiteBeIgnored || doNotRun) {
       ignoreAllTests
     } else {
       ignoredTestsBasedOnIndividualTagging(connector)
