@@ -855,7 +855,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     database.setup(project)
 
-    server.query(
+    val res = server.query(
       s"""mutation {
          |   createParent(data: {
          |   name: "Dad",
@@ -877,6 +877,8 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}}""",
       project
     )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter","friend":{"name":"Buddy"}}}}}""")
   }
 
   "Relations from embedded to Non-Embedded" should "work 2" in {
@@ -919,7 +921,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    server.query(
+    val res = server.query(
       s"""mutation {
          |   updateParent(
          |   where:{name: "Dad"}
@@ -941,5 +943,54 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |}}""",
       project
     )
+
+    res.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 3" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:{
+         |      name: "Daughter"
+         |      friend: {create:{
+         |          name: "Buddy"
+         |      }
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
   }
 }

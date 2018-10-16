@@ -25,10 +25,7 @@ trait RelationActions extends FilterConditionBuilder {
         case false => parent.path.stringForField(relationField.name)
       }
 
-      val arrayFilters = parent.path.segments.isEmpty match {
-        case true  => Vector.empty
-        case false => ArrayFilter.arrayFilter(parent.path)
-      }
+      val arrayFilters = ArrayFilter.arrayFilter(parent.path)
 
       val (collectionName, where, update) = relationField.relationIsInlinedInParent match {
         case true if !relationField.isList => (parent.where.model.dbName, parent.where, set(parentField, GCToBson(childId))) //needs a path

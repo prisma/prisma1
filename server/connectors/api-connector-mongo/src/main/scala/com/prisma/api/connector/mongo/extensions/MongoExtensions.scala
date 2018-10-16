@@ -141,8 +141,14 @@ object HackforTrue {
 }
 
 object ArrayFilter {
-  def arrayFilter(path: Path): Vector[Bson] = path.segments.last match {
-    case ToOneSegment(_)          => sys.error("")
-    case ToManySegment(rf, where) => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${where.fieldName}", GCToBson(where.fieldGCValue)))
+  def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
+    case None                           => Vector.empty
+    case Some(ToOneSegment(_))          => Vector.empty
+    case Some(ToManySegment(rf, where)) => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
+  }
+
+  def fieldName(where: NodeSelector): String = where.fieldName match {
+    case "id" => "_id"
+    case x    => x
   }
 }
