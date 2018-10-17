@@ -1,12 +1,20 @@
 use ProtocolError;
 use Result;
+use std::os::raw::c_char;
+use ffi_utils::to_str;
 
+/// External Grant for passing a grant into Rust
 #[repr(C)]
 #[no_mangle]
+pub struct ExtGrant {
+    target: *const c_char,
+    action: *const c_char,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Grant {
-    target: String,
-    action: String,
+    pub target: String,
+    pub action: String,
 }
 
 impl Grant {
@@ -31,6 +39,16 @@ impl Grant {
             Err(ProtocolError::GenericError(format!("Invalid grant target: {}, expected format <service name>/<stage>", self.target)))
         } else {
             Ok((splitted[0], splitted[1]))
+        }
+    }
+
+    pub fn from_ext(ext_grant: *const ExtGrant) -> Option<Grant> {
+        if ext_grant.is_null() { return None; }
+        unsafe {
+            Some(Grant {
+                target: to_str((*ext_grant).target).to_owned(),
+                action: to_str((*ext_grant).action).to_owned(),
+            })
         }
     }
 }

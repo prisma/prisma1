@@ -56,7 +56,6 @@ impl From<ProtocolError> for ProtocolBuffer {
     }
 }
 
-
 impl From<bool> for ProtocolBuffer {
     fn from(b: bool) -> Self {
         let x: Vec<bool> = vec!(b);

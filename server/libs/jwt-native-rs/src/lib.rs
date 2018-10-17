@@ -16,7 +16,7 @@ use jwt::{decode, encode, Header, Validation, Algorithm};
 use chrono::prelude::*;
 use ffi_utils::{to_str, to_string, to_str_vector};
 use protocol_buffer::ProtocolBuffer;
-use grant::Grant;
+use grant::{Grant, ExtGrant};
 
 pub type Result<T> = std::result::Result<T, ProtocolError>;
 
@@ -36,9 +36,8 @@ pub struct Claims {
     grants: Option<Vec<Grant>>,
 }
 
-
 #[no_mangle]
-pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, expiration_in_seconds: i64) -> *mut ProtocolBuffer {
+pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, expiration_in_seconds: i64, grant: *const ExtGrant) -> *mut ProtocolBuffer {
     let alg_string = to_str(algorithm);
     let use_algorithm = match Algorithm::from_str(alg_string) {
         Ok(a) => a,
@@ -52,12 +51,13 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
         Some(expiration_in_seconds)
     };
 
+    let grant_to_encode = Grant::from_ext(grant).map(|g| vec!(g));
     let now = Utc::now().timestamp();
     let claims = Claims {
         iat: now,
         nbf: now,
         exp: expiration,
-        grants: None,
+        grants: grant_to_encode,
     };
 
     let header = Header::new(use_algorithm);
@@ -68,7 +68,7 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
 
 // Todo this definitely needs some refactoring love.
 #[no_mangle]
-pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num_secrets: i64, grant: *const Grant) -> *mut ProtocolBuffer {
+pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num_secrets: i64, grant: *const ExtGrant) -> *mut ProtocolBuffer {
     let parsed_token = to_str(token);
     let parsed_secrets = to_str_vector(secrets, num_secrets);
     let mut last_error: String = String::from("");
@@ -81,8 +81,8 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num
                     return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is expired"))).into_boxed_ptr();
                 }
 
-                match contains_valid_grant(grant, x.claims.grants) {
-                    Ok(valid) if !valid =>  return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is expired"))).into_boxed_ptr(),
+                match contains_valid_grant(Grant::from_ext(grant), x.claims.grants) {
+                    Ok(valid) if !valid =>  return ProtocolBuffer::from(ProtocolError::GenericError(String::from("Token grants do not satisfy the request."))).into_boxed_ptr(),
                     Err(e) => return ProtocolBuffer::from(e).into_boxed_ptr(),
                     _ => (),
                 }
@@ -113,14 +113,12 @@ fn is_expired(exp_claim: Option<i64>) -> bool {
     }
 }
 
-fn contains_valid_grant(expected: *const Grant, contained: Option<Vec<Grant>>) -> Result<bool> {
-    if expected.is_null() { return Ok(true); }
-    let grant = unsafe { &*expected };
-
-    match contained {
-        Some(ref grants) if grants.len() > 0 => {
+fn contains_valid_grant(expected: Option<Grant>, contained: Option<Vec<Grant>>) -> Result<bool> {
+    match (expected, contained) {
+        (None, _) => Ok(true),
+        (Some(ref ex), Some(ref grants)) if grants.len() > 0 => {
             for g in grants {
-                if g.fulfills(grant)? { return Ok(true); }
+                if g.fulfills(ex)? { return Ok(true); }
             }
 
             return Ok(false);

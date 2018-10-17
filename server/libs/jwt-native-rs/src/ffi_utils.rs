@@ -19,7 +19,7 @@ pub fn string_to_ptr(s: String) -> *mut c_char {
 /// ONLY use for Rust owned memory and stack parameters, never for JVM owned memory.
 pub fn to_string(pointer: *const c_char) -> String {
     unsafe {
-        String::from_utf8_unchecked(CString::from_raw(pointer as *mut c_char).into_bytes())
+        String::from_utf8(CString::from_raw(pointer as *mut c_char).into_bytes()).unwrap()
     }
 }
 
@@ -37,9 +37,8 @@ pub fn to_str_vector<'a>(raw: *const c_char, num_elements: i64) -> Vec<&'a str> 
     unsafe {
         for i in 0..num_elements {
             let ptr = { raw.offset(offset as isize) };
-            println!("Str {} begins at: {:?}", i, ptr);
             let s = to_str(ptr);
-            println!("s at {:?}", s.as_ptr());
+
             offset += s.len() + 1; // Include NULL termination
             vec.push(s)
         }
