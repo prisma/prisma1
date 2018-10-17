@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector.{MutactionResults, ResetData, UnitDatabaseMutactionResult}
-import org.mongodb.scala.MongoDatabase
+import org.mongodb.scala.{Completed, MongoDatabase}
 import org.mongodb.scala.model.IndexOptions
 import org.mongodb.scala.model.Sorts.ascending
 
@@ -13,23 +13,29 @@ trait MiscActions {
     val project           = mutaction.project
     val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
 
+    def dropTables: Future[List[Completed]] = Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
+
+    def recreateUniques(drops: List[Completed]): Future[List[List[Any]]] =
+      Future.sequence(nonEmbeddedModels.map { model =>
+        Future.sequence(
+          database.createCollection(model.dbName).toFuture() +: model.scalarNonListFields
+            .filter(_.isUnique)
+            .map(field => addUniqueConstraint(database, model.dbName, field.name)))
+      })
+
+    def recreateRelationIndexes(uniques: List[List[Any]]) =
+      Future.sequence(project.relations.collect {
+        case relation if relation.isInlineRelation =>
+          relation.modelAField.relationIsInlinedInParent match {
+            case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+            case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+          }
+      })
+
     for {
-      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
-      _ <- Future.sequence(nonEmbeddedModels.map { model =>
-            val fieldsWithUniqueConstraint = model.scalarNonListFields.filter(_.isUnique)
-            Future.sequence(database.createCollection(model.dbName).toFuture() +: fieldsWithUniqueConstraint.map(field =>
-              addUniqueConstraint(database, model.dbName, field.name)))
-          })
-      _ <- Future.sequence(project.relations.map { relation =>
-            if (relation.isInlineRelation) {
-              relation.modelAField.relationIsInlinedInParent match {
-                case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-                case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
-              }
-            } else {
-              Future.successful(())
-            }
-          })
+      drops: List[Completed] <- dropTables
+      uniques                <- recreateUniques(drops)
+      relations              <- recreateRelationIndexes(uniques)
     } yield MutactionResults(Vector(UnitDatabaseMutactionResult))
   }
 
