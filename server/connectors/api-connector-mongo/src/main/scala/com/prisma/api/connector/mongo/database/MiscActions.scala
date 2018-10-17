@@ -15,15 +15,15 @@ trait MiscActions {
 
     def dropTables: Future[List[Completed]] = Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
 
-    def recreateUniques(drops: List[Completed]): Future[List[List[Any]]] =
+    def createTables(drops: List[Completed]): Future[List[Completed]] =
+      Future.sequence(nonEmbeddedModels.map(model => database.createCollection(model.dbName).toFuture()))
+
+    def createUniques(creates: List[Completed]): Future[List[List[Any]]] =
       Future.sequence(nonEmbeddedModels.map { model =>
-        Future.sequence(
-          database.createCollection(model.dbName).toFuture() +: model.scalarNonListFields
-            .filter(_.isUnique)
-            .map(field => addUniqueConstraint(database, model.dbName, field.name)))
+        Future.sequence(model.scalarNonListFields.filter(_.isUnique).map(field => addUniqueConstraint(database, model.dbName, field.name)))
       })
 
-    def recreateRelationIndexes(uniques: List[List[Any]]) =
+    def createRelationIndexes(uniques: List[List[Any]]) =
       Future.sequence(project.relations.collect {
         case relation if relation.isInlineRelation =>
           relation.modelAField.relationIsInlinedInParent match {
@@ -33,9 +33,10 @@ trait MiscActions {
       })
 
     for {
-      drops: List[Completed] <- dropTables
-      uniques                <- recreateUniques(drops)
-      relations              <- recreateRelationIndexes(uniques)
+      drops: List[Completed]   <- dropTables
+      creates: List[Completed] <- createTables(drops)
+      uniques                  <- createUniques(creates)
+      relations                <- createRelationIndexes(uniques)
     } yield MutactionResults(Vector(UnitDatabaseMutactionResult))
   }
 
