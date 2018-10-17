@@ -15,7 +15,7 @@ trait Auth {
 
   def createToken(secret: String, expirationOffset: Option[Int]): Try[String]
   def verifyToken(token: String, secrets: Vector[String]): Try[Unit]
-  def verifyTokenGrant(expectedGrant: String, token: String, secrets: Vector[String]): Try[Unit]
+  def verifyTokenGrant(expectedGrant: JwtGrant, token: String, secrets: Vector[String]): Try[Unit]
 }
 
 case class AuthFailure(msg: String) extends Exception(msg)

@@ -2,17 +2,14 @@ use std::os::raw::c_char;
 use ffi_utils;
 use std::mem::size_of;
 use std::slice::from_raw_parts_mut;
+use ProtocolError;
 
 #[repr(C)]
 #[no_mangle]
 pub struct ProtocolBuffer {
-    error: *const c_char,
-    data: *const c_char,
-    data_len: usize,
-}
-
-pub enum ProtocolError {
-    GenericError(String)
+    error: *mut c_char, // Always use a CString here (ffi_utils::string_to_ptr).
+    data: *mut u8,      // Always use raw pointers to Box<[u8]> here
+    data_len: usize,    // Data length of all bytes in the data buffer (also including termination for strings!)
 }
 
 impl ProtocolBuffer {
@@ -32,10 +29,8 @@ impl Drop for ProtocolBuffer {
 
         if self.data_len > 0 {
             println!("[Rust] Dropping contained data");
-            // Note: This is not really a good solution, I'd like to avoid casting to mut, if possible.
-            let raw_buffer = unsafe { from_raw_parts_mut(self.data as *mut c_char, self.data_len) }.as_mut_ptr();
             unsafe {
-                drop(Box::from_raw(raw_buffer));
+                drop(Box::from_raw(self.data));
             };
         }
     }
@@ -43,10 +38,10 @@ impl Drop for ProtocolBuffer {
 
 impl From<String> for ProtocolBuffer {
     fn from(s: String) -> Self {
-        let len = s.len() + 1; // todo do we need the +1?
-        let ptr = ffi_utils::string_to_ptr(s);
+        let len = s.len() + 1;
+        let ptr = ffi_utils::string_to_ptr(s) as *mut u8;
 
-        ProtocolBuffer { error: ::std::ptr::null(), data: ptr, data_len: len }
+        ProtocolBuffer { error: ::std::ptr::null_mut(), data: ptr, data_len: len }
     }
 }
 
@@ -57,25 +52,20 @@ impl From<ProtocolError> for ProtocolBuffer {
         };
 
         let ptr = ffi_utils::string_to_ptr(s);
-        ProtocolBuffer { error: ptr, data: ::std::ptr::null(), data_len: 0 }
+        ProtocolBuffer { error: ptr, data: ::std::ptr::null_mut(), data_len: 0 }
     }
 }
 
 
 impl From<bool> for ProtocolBuffer {
     fn from(b: bool) -> Self {
-        let ptr = Box::into_raw(Box::new(b));
+        let x: Vec<bool> = vec!(b);
+        let ptr = Box::into_raw(x.into_boxed_slice()) as *mut u8;
+
         ProtocolBuffer {
-            error: ::std::ptr::null(),
-            data: ptr as *const c_char,
+            error: ::std::ptr::null_mut(),
+            data: ptr,
             data_len: size_of::<bool>()
         }
     }
 }
-
-//fn write_string_buffer(success: bool, data: String) -> Box<ProtocolBuffer> {
-//    let len = data.len();
-//    let ptr = string_to_ptr(data);
-//
-//    Box::new(ProtocolBuffer { success: success as u8, len: len, data: ptr })
-//}

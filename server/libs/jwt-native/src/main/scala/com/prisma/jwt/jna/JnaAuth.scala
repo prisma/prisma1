@@ -1,7 +1,7 @@
 package com.prisma.jwt.jna
 
 import com.prisma.jwt.Algorithm.Algorithm
-import com.prisma.jwt.{Auth, AuthFailure}
+import com.prisma.jwt.{Auth, AuthFailure, Grant, JwtGrant}
 import com.sun.jna.Native
 import org.joda.time.{DateTime, DateTimeZone}
 
@@ -25,13 +25,15 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
 
   // expirationOffset is the offset in seconds to the current timestamp. None is no expiration at all.
   def createToken(secret: String, expirationOffset: Option[Int]): Try[String] = Try {
-    val buffer = library.create_token(algorithm.toString,
-                                      secret,
-                                      expirationOffset
-                                        .map { e =>
-                                          DateTime.now(DateTimeZone.UTC).plusSeconds(e).getMillis / 1000
-                                        }
-                                        .getOrElse(NO_EXP))
+    val buffer = library.create_token(
+      algorithm.toString,
+      secret,
+      expirationOffset
+        .map { e =>
+          DateTime.now(DateTimeZone.UTC).plusSeconds(e).getMillis / 1000
+        }
+        .getOrElse(NO_EXP)
+    )
 
     debug(buffer)
     throwOnError(buffer)
@@ -44,7 +46,7 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
 
   override def verifyToken(token: String, secrets: Vector[String]): Try[Unit] = Try {
     val nativeArray = JnaUtils.copyToNativeStringArray(secrets)
-    val buffer      = library.verify_token(token, nativeArray, secrets.length)
+    val buffer      = library.verify_token(token, nativeArray, secrets.length, null)
 
     debug(buffer)
     throwOnError(buffer)
@@ -62,8 +64,25 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
     }
   }
 
-  override def verifyTokenGrant(expectedGrant: String, token: String, secrets: Vector[String]): Try[Unit] = {
-    ???
+  override def verifyTokenGrant(expectedGrant: JwtGrant, token: String, secrets: Vector[String]): Try[Unit] = Try {
+    val jnaGrant    = new JnaJwtGrant(expectedGrant.target, expectedGrant.grant)
+    val nativeArray = JnaUtils.copyToNativeStringArray(secrets)
+    val buffer      = library.verify_token(token, nativeArray, secrets.length, null)
+
+    debug(buffer)
+    throwOnError(buffer)
+
+    if (buffer.data_len.intValue() > 1) {
+      throw AuthFailure(s"Boolean with size ${buffer.data_len.intValue()} found.")
+    }
+
+    val failed = buffer.data.getByteArray(0, 1).head == 0
+    library.destroy_buffer(buffer)
+
+    if (failed) {
+      // Only here as a safeguard, it is not expected to happen. If this ever pops up the rust impl needs to be checked again.
+      throw AuthFailure(s"Verification failed.")
+    }
   }
 
   private def throwOnError(buffer: ProtocolBufferJna.ByReference): Unit = {
