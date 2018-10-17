@@ -1,4 +1,4 @@
-package com.prisma.api.mutations.embedded.nestedMutations
+package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbeddedToNonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
@@ -6,7 +6,7 @@ import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a P1! relation" should "be possible" in {

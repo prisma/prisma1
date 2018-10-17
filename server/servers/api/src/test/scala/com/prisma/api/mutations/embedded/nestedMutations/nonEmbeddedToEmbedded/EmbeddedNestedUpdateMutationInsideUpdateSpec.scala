@@ -1,251 +1,27 @@
-package com.prisma.api.mutations.embedded.nestedMutations
+package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
 import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(EmbeddedTypesCapability)
 
-  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
-  //Fixme
-  //verify results using normal queries
-  //test nestedDeleteMany (whereFilter instead of where) -> for no hit/ partial hit / full hit
-
-  "a P1! relation " should "error due to the operation not being in the schema anymore" in {
-    val project = SchemaDsl.fromString() { embeddedP1req }
-
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    id
-          |    childReq{
-          |       c
-          |    }
-          |  }
-          |}""",
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    server.queryThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where: {id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childReq: {delete: true}
-         |  }){
-         |    childReq {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-      project,
-      errorCode = 0,
-      errorContains = "Argument 'data' expected type 'ParentUpdateInput!'"
-    )
-
-  }
-
-  "a P1 relation " should "work through a nested mutation by id" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
-
-    database.setup(project)
-
-    val existingDataRes = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "existingParent"
-          |    childOpt: {
-          |      create: {c: "existingChild"}
-          |    }
-          |  }){
-          |    id
-          |    childOpt{
-          |       c
-          |    }
-          |  }
-          |}""",
-        project
-      )
-
-    val existingParentId = existingDataRes.pathAsString("data.createParent.id")
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childOpt: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    id
-          |    childOpt{
-          |       c
-          |    }
-          |  }
-          |}""",
-        project
-      )
-
-    val parentId = res.pathAsString("data.createParent.id")
-
-    val res2 = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parentId"}
-         |  data:{
-         |    p: "p2"
-         |    childOpt: {delete: true}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"childOpt":null}}}""")
-
-    // Verify existing data
-
-    server
-      .query(
-        s"""
-         |{
-         |  parent(where:{id: "$existingParentId"}){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-        project
-      )
-      .toString should be(s"""{"data":{"parent":{"childOpt":{"c":"existingChild"}}}}""")
-  }
-
-  "a P1 relation" should "error if there is no child connected" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
-
-    database.setup(project)
-
-    val parent1Id = server
-      .query(
-        """mutation {
-          |  createParent(data: {p: "p1"})
-          |  {
-          |    id
-          |  }
-          |}""",
-        project
-      )
-      .pathAsString("data.createParent.id")
-
-    val res = server.queryThatMustFail(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parent1Id"}
-         |  data:{
-         |    p: "p2"
-         |    childOpt: {delete: true}
-         |  }){
-         |    childOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-      project,
-      errorCode = 3041
-    )
-
-    res.toString should include(
-      s"""The relation ChildToParent has no node for the model Parent with the value '$parent1Id' for the field 'id' connected to a node for the model Child on your mutation path.""")
-
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-  }
-
-  "a PM relation " should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
-
-    database.setup(project)
-
-    val res1 = server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""",
-      project
-    )
-
-    res1.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
-
-    val res2 = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |    where: {p: "p1"}
-         |    data:{
-         |    childrenOpt: {delete: {c: "c1"}}
-         |  }){
-         |    childrenOpt {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-
-    res2.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c2"}]}}}""")
-
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-  }
-
-  "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
+  "Several many relations" should "be updateable by any unique argument through a nested mutation" in {
     val project = SchemaDsl.fromString() {
-      """
-        |type Todo{
+      """type Todo {
         | id: ID! @unique
         | comments: [Comment!]!
         |}
         |
-        |type Comment @embedded{
-        | text: String
+        |type Comment @embedded {
         | alias: String! @unique
+        | text: String
         |}
       """
     }
-
     database.setup(project)
 
     val createResult = server.query(
@@ -258,7 +34,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
-        |    comments { text }
         |  }
         |}""",
       project
@@ -273,7 +48,10 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |    data:{
          |      comments: {
-         |        delete: [{alias: "alias1"}, {alias: "alias2"}]
+         |        update: [
+         |          {where: {alias: "alias1"}, data: {text: "update comment1"}},
+         |          {where: {alias: "alias2"}, data: {text: "update comment2"}}
+         |        ]
          |      }
          |    }
          |  ){
@@ -286,24 +64,79 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
-    mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
+    mustBeEqual(result.pathAsString("data.updateTodo.comments.[0].text").toString, """update comment1""")
+    mustBeEqual(result.pathAsString("data.updateTodo.comments.[1].text").toString, """update comment2""")
   }
 
-  "one2one relation both exist and are connected" should "be deletable through a nested mutation" in {
+  "A many relation" should "be updateable by any unique argument through a nested mutation" in {
     val project = SchemaDsl.fromString() {
-      """
-        |type Note {
+      """type List {
+        | id: ID! @unique
+        | listUnique: String! @unique
+        | todoes: [Todo!]!
+        |}
+        |
+        |type Todo @embedded{
+        | todoUnique: String! @unique
+        |}
+      """.stripMargin
+    }
+    database.setup(project)
+
+    server.query(
+      """mutation {
+        |  createList(
+        |    data: {
+        |      listUnique : "list",
+        |      todoes: {
+        |        create: [{todoUnique: "todo"}]
+        |      }
+        |    }
+        |  ){
+        |    listUnique
+        |    todoes { todoUnique }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val result = server.query(
+      s"""mutation {
+         |  updateList(
+         |    where: {
+         |      listUnique: "list"
+         |    }
+         |    data:{
+         |      todoes: {
+         |        update: [{where: {todoUnique: "todo"}, data: {todoUnique: "new todo"}}]
+         |      }
+         |    }
+         |  ){
+         |    listUnique
+         |    todoes{
+         |      todoUnique
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    mustBeEqual(result.pathAsString("data.updateList.todoes.[0].todoUnique").toString, """new todo""")
+  }
+
+  "A to one relation" should "be updateable by id through a nested mutation" in {
+    val project = SchemaDsl.fromString() {
+      """type Todo @embedded {
+        | title: String!
+        |}
+        |
+        |type Note  {
         | id: ID! @unique
         | text: String
         | todo: Todo
         |}
-        |
-        |type Todo @embedded{
-        | title: String
-        |}
       """
     }
-
     database.setup(project)
 
     val createResult = server.query(
@@ -316,7 +149,6 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
-        |    todo { title }
         |  }
         |}""",
       project
@@ -332,7 +164,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |    data: {
          |      todo: {
-         |        delete: true
+         |        update: { title: "updated title" }
          |      }
          |    }
          |  ){
@@ -344,22 +176,22 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       """,
       project
     )
-    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
+    mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
 
-  "one2one relation where both sides exist and are connected" should "be deletable through a nested mutation" in {
+  "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
     val project = SchemaDsl.fromString() {
-      """
-        |type Note {
-        | id: ID! @unique
-        | text: String! @unique
-        | todo: Todo
+      """type Todo @embedded {
+        | title: String!
+        | t: String! @unique
         |}
         |
-        |type Todo @embedded{
-        | title: String! @unique
+        |type Note {
+        | id: ID! @unique
+        | text: String
+        | todoes: [Todo!]!
         |}
-        |"""
+      """
     }
     database.setup(project)
 
@@ -367,101 +199,111 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       """mutation {
         |  createNote(
         |    data: {
-        |      text: "FirstUnique"
-        |      todo: {
-        |        create: { title: "the title" }
+        |      text: "Some Text"
+        |      todoes: {
+        |        create: { title: "the title", t: "Unique" }
         |      }
         |    }
         |  ){
-        |    text
-        |  }
-        |}""",
-      project
-    )
-
-    val result = server.query(
-      s"""
-         |mutation {
-         |  updateNote(
-         |    where: {
-         |      text: "FirstUnique"
-         |    }
-         |    data: {
-         |      todo: {
-         |        delete: true
-         |      }
-         |    }
-         |  ){
-         |    todo {
-         |      title
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-
-    mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
-
-    val query = server.query("""{ notes { text }}""", project)
-    mustBeEqual(query.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
-  }
-
-  "a one to one relation" should "not do a nested delete if the nested node does not exist" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Note {
-        | id: ID! @unique
-        | text: String! @unique
-        | todo: Todo
-        |}
-        |
-        |type Todo @embedded{
-        | title: String! @unique
-        |}"""
-    }
-    database.setup(project)
-
-    val createResult = server.query(
-      """mutation {
-        |  createNote(
-        |    data: {
-        |      text: "Note"
-        |    }
-        |  ){
         |    id
-        |    todo { title }
         |  }
-        |}""",
+        |}""".stripMargin,
       project
     )
     val noteId = createResult.pathAsString("data.createNote.id")
 
-    val result = server.queryThatMustFail(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateNote(
-         |    where: {id: "$noteId"}
+         |    where: {
+         |      id: "$noteId"
+         |    }
          |    data: {
-         |      todo: {
-         |        delete: true
+         |      text: "Some Changed Text"
+         |      todoes: {
+         |        update: {
+         |          where: {t: "DOES NOT EXIST"},
+         |          data:{title: "updated title"}
+         |        }
          |      }
          |    }
          |  ){
-         |    todo {
-         |      title
-         |    }
+         |    text
          |  }
          |}
       """,
       project,
       errorCode = 3041,
       errorContains =
-        s"The relation NoteToTodo has no node for the model Note with the value '$noteId' for the field 'id' connected to a node for the model Todo on your mutation path."
+        "The relation NoteToTodo has no node for the model Note connected to a Node for the model Todo with the value 'DOES NOT EXIST' for the field 't' on your mutation path."
     )
 
-    val query2 = server.query("""{ notes { text }}""", project)
-    mustBeEqual(query2.toString, """{"data":{"notes":[{"text":"Note"}]}}""")
+    server.query(s"""query{note(where:{id: "$noteId"}){text}}""", project, dataContains = """{"note":{"text":"Some Text"}}""")
+  }
+
+  "a many to many relation" should "handle null in unique fields" in {
+    val project = SchemaDsl.fromString() {
+      """type Note {
+        | id: ID! @unique
+        | text: String @unique
+        | todos: [Todo!]!
+        |}
+        |
+        |type Todo @embedded{
+        | title: String! @unique
+        | unique: String @unique
+        |}
+      """
+    }
+    database.setup(project)
+
+    val createResult = server.query(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Some Text"
+        |      todos:
+        |      {
+        |       create: [{ title: "the title", unique: "test"},{ title: "the other title"}]
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todos { title }
+        |  }
+        |}""",
+      project
+    )
+
+    val result = server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      text: "Some Text"
+         |    }
+         |    data: {
+         |      text: "Some Changed Text"
+         |      todos: {
+         |        update: {
+         |          where: {unique: null},
+         |          data:{title: "updated title"}
+         |        }
+         |      }
+         |    }
+         |  ){
+         |    text
+         |    todos {
+         |      title
+         |    }
+         |  }
+         |}
+      """,
+      project,
+      errorCode = 3040,
+      errorContains = "You provided an invalid argument for the where selector on Todo."
+    )
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path" in {
@@ -518,9 +360,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |        update: [{
          |              where: {nameMiddle: "the middle"},
          |              data:{  nameMiddle: "updated middle"
-         |                      bottoms: {delete: [{nameBottom: "the bottom"}]
+         |                      bottoms: {update: [{ where: {nameBottom: "the bottom"},
+         |                                           data:  {nameBottom: "updated bottom"}
+         |                      }]
          |              }
-         |       }}]
+         |              }}]
          |     }
          |   }
          |  ) {
@@ -538,7 +382,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val result = server.query(updateMutation, project)
 
     result.toString should be(
-      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path and there are no backrelations" in {
@@ -581,7 +425,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }) {id}
         |}
-      """
+      """.stripMargin
 
     server.query(createMutation, project)
 
@@ -595,9 +439,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |        update: [{
          |              where: {nameMiddle: "the middle"},
          |              data:{  nameMiddle: "updated middle"
-         |                      bottoms: {delete: [{nameBottom: "the bottom"}]
+         |                      bottoms: {update: [{ where: {nameBottom: "the bottom"},
+         |                                           data:  {nameBottom: "updated bottom"}
+         |                      }]
          |              }
-         |       }}]
+         |              }}]
          |     }
          |   }
          |  ) {
@@ -610,12 +456,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """
+      """.stripMargin
 
     val result = server.query(updateMutation, project)
 
     result.toString should be(
-      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottoms":[{"nameBottom":"updated bottom"},{"nameBottom":"the second bottom"}]},{"nameMiddle":"the second middle","bottoms":[{"nameBottom":"the third bottom"},{"nameBottom":"the fourth bottom"}]}]}}}""")
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path " in {
@@ -668,7 +514,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |        update: [{
          |              where: {nameMiddle: "the middle"},
          |              data:{  nameMiddle: "updated middle"
-         |                      bottom: {delete: true}
+         |                      bottom: {update: {nameBottom: "updated bottom"}}
          |              }
          |              }]
          |     }
@@ -688,7 +534,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val result = server.query(updateMutation, project)
 
     result.toString should be(
-      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":null},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
+      """{"data":{"updateTop":{"nameTop":"updated top","middles":[{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}},{"nameMiddle":"the second middle","bottom":{"nameBottom":"the second bottom"}}]}}}""")
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges" in {
@@ -746,8 +592,118 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |               bottom: {
          |                update: {
          |                  nameBottom: "updated bottom"
-         |                  below: { delete: {nameBelow: "below"}
+         |                  below: { update: {
+         |                    where: {nameBelow: "below"}
+         |                    data:{nameBelow: "updated below"}
+         |                  }
+         |          }
+         |                }
+         |          }
+         |       }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |        below{
+         |           nameBelow
+         |        }
          |
+         |      }
+         |    }
+         |  }
+         |}
+      """.stripMargin
+
+    val result = server.query(updateMutation, project)
+
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}}}}""")
+  }
+
+  "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" in {
+    val project = SchemaDsl.fromString() { """type Top {
+                                             |  id: ID! @unique
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle @embedded{
+                                             |  nameMiddle: String! @unique
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom @embedded{
+                                             |  nameBottom: String! @unique
+                                             |  below: [Below!]!
+                                             |}
+                                             |
+                                             |type Below @embedded{
+                                             |  nameBelow: String! @unique
+                                             |}""" }
+    database.setup(project)
+
+    val createMutation =
+      """
+        |mutation a {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create:
+        |        {
+        |          nameMiddle: "the middle"
+        |          bottom: {
+        |            create: { nameBottom: "the bottom"
+        |            below: {
+        |            create: [{ nameBelow: "below"}, { nameBelow: "second below"}]}
+        |        }}}
+        |        }
+        |  }) {id}
+        |}
+      """
+
+    server.query(createMutation, project)
+
+    val createMutation2 =
+      """
+        |mutation a {
+        |  createTop(data: {
+        |    nameTop: "the second top",
+        |    middle: {
+        |      create:
+        |        {
+        |          nameMiddle: "the second middle"
+        |          bottom: {
+        |            create: { nameBottom: "the second bottom"
+        |            below: {
+        |            create: [{ nameBelow: "other below"}, { nameBelow: "second other below"}]}
+        |        }}}
+        |        }
+        |  }) {id}
+        |}
+      """
+
+    server.query(createMutation2, project)
+
+    val updateMutation =
+      s"""mutation b {
+         |  updateTop(
+         |    where: {nameTop: "the top"},
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |               nameMiddle: "updated middle"
+         |               bottom: {
+         |                update: {
+         |                  nameBottom: "updated bottom"
+         |                  below: { update: {
+         |                    where: {nameBelow: "other below"}
+         |                    data:{nameBelow: "updated below"}
+         |                  }
          |          }
          |                }
          |          }
@@ -770,10 +726,13 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |}
       """
 
-    val result = server.query(updateMutation, project)
-
-    result.toString should be(
-      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"second below"}]}}}}}""")
+    server.queryThatMustFail(
+      updateMutation,
+      project,
+      errorCode = 3041,
+      errorContains =
+        """The relation BelowToBottom has no node for the model Bottom connected to a Node for the model Below with the value 'other below' for the field 'nameBelow' on your mutation path."""
+    )
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path" in {
@@ -827,7 +786,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      middle: {
          |        update: {
          |              nameMiddle: "updated middle"
-         |              bottom: {delete: true}
+         |              bottom: {update: {nameBottom: "updated bottom"}}
          |      }
          |     }
          |   }
@@ -841,11 +800,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |  }
          |}
-      """
+      """.stripMargin
 
     val result = server.query(updateMutation, project)
 
-    result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}}}}}""")
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" in {
@@ -862,7 +822,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |}""" }
+                                             |}""".stripMargin }
     database.setup(project)
 
     val createMutation =
@@ -899,7 +859,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      middle: {
          |        update: {
          |              nameMiddle: "updated middle"
-         |              bottom: {delete: true}
+         |              bottom: {update: {nameBottom: "updated bottom"}}
          |      }
          |     }
          |   }
@@ -917,77 +877,74 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
     val result = server.query(updateMutation, project)
 
-    result.toString should be("""{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":null}}}}""")
+    result.toString should be(
+      """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom"}}}}}""")
   }
 
-  //Fixme Think about Self Relations and embedded types
-  // would need to be nested within a normal type
-  "Nested delete on self relations" should "only delete the specified nodes" taggedAs (IgnoreMongo) in {
-    val project = SchemaDsl.fromString() { """type User {
+  "a deeply nested mutation" should "fail if there are only model edges on the path but there is no connected item to update at the end" in {
+    val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
-                                             |  name: String! @unique
-                                             |  follower: [User!]! @relation(name: "UserFollow")
-                                             |  following: [User!]! @relation(name: "UserFollow")
+                                             |  nameTop: String! @unique
+                                             |  middle: Middle
+                                             |}
+                                             |
+                                             |type Middle @embedded {
+                                             |  nameMiddle: String! @unique
+                                             |  bottom: Bottom
+                                             |}
+                                             |
+                                             |type Bottom @embedded{
+                                             |  nameBottom: String! @unique
                                              |}""" }
     database.setup(project)
 
-    server.query("""mutation  {createUser(data: {name: "X"}) {id}}""", project)
-    server.query("""mutation  {createUser(data: {name: "Y"}) {id}}""", project)
-    server.query("""mutation  {createUser(data: {name: "Z"}) {id}}""", project)
+    val createMutation =
+      """
+        |mutation  {
+        |  createTop(data: {
+        |    nameTop: "the top",
+        |    middle: {
+        |      create:{ nameMiddle: "the middle"}
+        |    }
+        |  }) {id}
+        |}
+      """
+
+    server.query(createMutation, project)
 
     val updateMutation =
-      s""" mutation {
-         |  updateUser(data:{
-         |    following: {
-         |      connect: [{ name: "Y" }, { name: "Z"}]
+      s"""
+         |mutation  {
+         |  updateTop(
+         |    where: {
+         |      nameTop: "the top"
          |    }
-         |  },where:{
-         |    name:"X"
-         |  }) {
-         |    name
-         |    following{
-         |      name
-         |    }
-         |    follower{
-         |      name
-         |    }
-         |  }
-         |}
-      """
-
-    val result = server.query(updateMutation, project)
-
-    result.toString should be("""{"data":{"updateUser":{"name":"X","following":[{"name":"Y"},{"name":"Z"}],"follower":[]}}}""")
-
-    val check = server.query("""query{users{name, following{name}}}""", project)
-
-    check.toString should be(
-      """{"data":{"users":[{"name":"X","following":[{"name":"Y"},{"name":"Z"}]},{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
-
-    val deleteMutation =
-      s""" mutation {
-         |  updateUser(data:{
-         |    follower: {
-         |      delete: [{ name: "X" }]
-         |    }
-         |  },where:{
-         |    name:"Y"
-         |  }) {
-         |    name
-         |    following{
-         |      name
+         |    data: {
+         |      nameTop: "updated top",
+         |      middle: {
+         |        update: {
+         |              nameMiddle: "updated middle"
+         |              bottom: {update: {nameBottom: "updated bottom"}}
+         |      }
+         |     }
+         |   }
+         |  ) {
+         |    nameTop
+         |    middle {
+         |      nameMiddle
+         |      bottom {
+         |        nameBottom
+         |      }
          |    }
          |  }
          |}
       """
 
-    val result2 = server.query(deleteMutation, project)
-
-    result2.toString should be("""{"data":{"updateUser":{"name":"Y","following":[]}}}""")
-
-    val result3 = server.query("""query{users{name, following{name}}}""", project)
-
-    result3.toString should be("""{"data":{"users":[{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+    server.queryThatMustFail(
+      updateMutation,
+      project,
+      errorCode = 3041,
+      errorContains = """The relation BottomToMiddle has no node for the model Middle connected to a Node for the model Bottom on your mutation path."""
+    )
   }
-
 }
