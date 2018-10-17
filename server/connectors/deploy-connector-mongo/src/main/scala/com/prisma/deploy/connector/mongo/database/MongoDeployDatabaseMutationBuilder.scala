@@ -28,25 +28,30 @@ object MongoDeployDatabaseMutationBuilder {
   def truncateProjectTables(project: Project) = DeployMongoAction { database =>
     val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
 
-    for {
-      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
-      _ <- Future.sequence(nonEmbeddedModels.map { model =>
-            val fieldsWithUniqueConstraint = model.scalarNonListFields.filter(_.isUnique)
-            Future.sequence(database.createCollection(model.dbName).toFuture() +: fieldsWithUniqueConstraint.map(field =>
-              addUniqueConstraint(database, model.dbName, field.name)))
-          })
-      _ <- Future.sequence(project.relations.map { relation =>
-            if (relation.isInlineRelation) {
-              relation.modelAField.relationIsInlinedInParent match {
-                case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-                case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
-              }
-            } else {
-              Future.successful(())
-            }
-          })
-    } yield ()
+    def dropTables: Future[List[Completed]] = Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
 
+    def recreateUniques(drops: List[Completed]): Future[List[List[Any]]] =
+      Future.sequence(nonEmbeddedModels.map { model =>
+        Future.sequence(
+          database.createCollection(model.dbName).toFuture() +: model.scalarNonListFields
+            .filter(_.isUnique)
+            .map(field => addUniqueConstraint(database, model.dbName, field.name)))
+      })
+
+    def recreateRelationIndexes(uniques: List[List[Any]]) =
+      Future.sequence(project.relations.collect {
+        case relation if relation.isInlineRelation =>
+          relation.modelAField.relationIsInlinedInParent match {
+            case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+            case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+          }
+      })
+
+    for {
+      drops: List[Completed] <- dropTables
+      uniques                <- recreateUniques(drops)
+      relations              <- recreateRelationIndexes(uniques)
+    } yield ()
   }
 
   def deleteProjectDatabase = DeployMongoAction { database =>
