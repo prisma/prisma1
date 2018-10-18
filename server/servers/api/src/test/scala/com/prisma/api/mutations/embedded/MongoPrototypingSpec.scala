@@ -1102,7 +1102,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |
         |type GrandChild @embedded{
         |    name: String @unique
-        |    friend: Friend @mongoRelation(friend:"friend")
+        |    friend: Friend @mongoRelation(field:"friend")
         |}"""
     }
 
@@ -1141,6 +1141,94 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(s"""mutation {deleteFriend(where:{name: "Friend"}){name}}""", project)
 
     server.query(s"""query {parents{name, child {name}}}""", project)
+  }
+
+  "Delete of something linked to on an embedded type" should "take care of relations without foreign keys 2" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Friend {
+        |    name: String @unique
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    child: Child
+        |}
+        |
+        |type Child @embedded{
+        |    name: String @unique
+        |    child: GrandChild
+        |}
+        |
+        |type GrandChild @embedded{
+        |    name: String @unique
+        |    friend: Friend! @mongoRelation(field:"friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{
+         |   name: "Daughter"
+         |   child: {create:{
+         |      name: "GrandSon"
+         |      friend: {create:{
+         |          name: "Friend"
+         |          }}
+         |      }}
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    child{
+         |       name
+         |       friend{
+         |          name
+         |       }
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    val res2 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad2",
+         |   child: {create:{
+         |   name: "Daughter2"
+         |   child: {create:{
+         |      name: "GrandSon2"
+         |      friend: {connect:{
+         |             name: "Friend"
+         |          }}
+         |      }}
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    child{
+         |       name
+         |       friend{
+         |          name
+         |       }
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res2.toString should be(
+      """{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter2","child":{"name":"GrandSon2","friend":{"name":"Friend"}}}}}}""")
 
   }
+
 }

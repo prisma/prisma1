@@ -11,23 +11,27 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
 
   def ensureThatNodeIsNotConnected(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) = {
     relationField.relationIsInlinedInParent match {
-      case true if parent.path.segments.isEmpty =>
+      case true =>
         getNodeByWhere(parent.where).map(optionRes =>
           optionRes.foreach { res =>
             (relationField.isList, res.data.map.get(relationField.name)) match {
-              case (true, Some(ListGCValue(values))) if values.isEmpty => throw RequiredRelationWouldBeViolated(relationField.relation)
-              case (false, Some(x: IdGCValue))                         => throw RequiredRelationWouldBeViolated(relationField.relation)
-              case (_, _)                                              => Future.successful(())
+              case (true, Some(ListGCValue(values))) =>
+                val filter = ScalarFilter(relationField.relatedModel_!.idField_!, In(values))
+                getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
+                  if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
+              case (false, Some(x: IdGCValue)) =>
+                val filter = ScalarFilter(relationField.relatedModel_!.idField_!, In(Vector(x)))
+                getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
+                  if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
+              case (_, _) => Future.successful(())
             }
         })
 
-      case true => sys.error("not implemented yet")
-      case false if parent.path.segments.isEmpty =>
+      case false =>
         val filter = generateFilterForFieldAndId(relationField.relatedField, parent.where.fieldGCValue.asInstanceOf[IdGCValue])
 
         getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
           if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
-      case false => sys.error("not implemented yet")
     }
   }
 
