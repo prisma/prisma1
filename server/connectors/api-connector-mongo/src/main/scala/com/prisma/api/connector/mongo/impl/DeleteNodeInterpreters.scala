@@ -19,6 +19,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
                  for {
 //            _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
                    _ <- checkForRequiredRelationsViolations(mutationBuilder, node.id)
+                   //            _ <- Fixme deleteFromRelations since there are no foreign key constraints handling this
                    _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
                  } yield node
                case None =>
@@ -28,6 +29,12 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
   }
 
   private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, id: IdGCValue) = {
+    val fieldsWhereThisModelIsRequired = mutaction.model.schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(id, field)).toVector
+    SequenceAction(actions)
+  }
+
+  private def deleteFromRelations(mutationBuilder: MongoActionsBuilder, id: IdGCValue) = {
     val fieldsWhereThisModelIsRequired = mutaction.model.schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(id, field)).toVector
     SequenceAction(actions)
