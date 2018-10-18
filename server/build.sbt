@@ -86,7 +86,7 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(messageBus)
   .dependsOn(graphQlClient)
   .dependsOn(sangriaUtils)
-  .dependsOn(auth)
+  .dependsOn(jwtNative)
 
 lazy val api = serverProject("api")
   .dependsOn(serversShared % "compile->compile;test->test")
@@ -97,7 +97,7 @@ lazy val api = serverProject("api")
   .dependsOn(metrics)
   .dependsOn(jvmProfiler)
   .dependsOn(cache)
-  .dependsOn(auth)
+  .dependsOn(jwtNative)
   .dependsOn(sangriaUtils)
 
 lazy val subscriptions = serverProject("subscriptions")
@@ -319,8 +319,6 @@ lazy val cache = libProject("cache")
       caffeine,
       jsr305
     ))
-
-lazy val auth = libProject("auth").settings(libraryDependencies ++= Seq(jwt))
 
 lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
 

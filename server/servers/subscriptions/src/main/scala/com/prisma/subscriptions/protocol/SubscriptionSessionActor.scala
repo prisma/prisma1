@@ -3,7 +3,7 @@ package com.prisma.subscriptions.protocol
 import akka.actor.{Actor, ActorRef, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.api.ApiMetrics
-import com.prisma.auth.AuthImpl
+import com.prisma.jwt.Auth
 import com.prisma.shared.models.Project
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.helpers.ProjectHelper
@@ -78,7 +78,7 @@ case class SubscriptionSessionActor(
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
         case Some(auth) =>
-          val authResult = AuthImpl.verify(project.secrets, auth.token)
+          val authResult = dependencies.auth.verifyToken(auth.token.getOrElse(""), project.secrets)
           if (authResult.isSuccess) {
             sendToWebsocket(GqlConnectionAck)
             context.become(initFinishedReceive(auth))
@@ -141,7 +141,6 @@ case class SubscriptionSessionActor(
 
 object ParseAuthorization {
   def parseAuthorization(jsObject: JsObject): Option[Authorization] = {
-
     def parseLowerCaseAuthorization = {
       (jsObject \ "authorization").validateOpt[String] match {
         case JsSuccess(authField, _) => Some(Authorization(authField))

@@ -26,7 +26,7 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
   import JnaAuth._
 
   // expirationOffset is the offset in seconds to the current timestamp. None is no expiration at all (todo: edge case: -1).
-  def createToken(secret: String, expirationOffset: Option[Int], grant: Option[JwtGrant]): Try[String] = Try {
+  def createToken(secret: String, expirationOffset: Option[Long], grant: Option[JwtGrant]): Try[String] = Try {
     val jnaGrant = grant.map { g =>
       val jGrant = new JnaJwtGrant.ByReference()
       jGrant.setFrom(g)
@@ -38,7 +38,7 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
       secret,
       expirationOffset
         .map { e =>
-          DateTime.now(DateTimeZone.UTC).plusSeconds(e).getMillis / 1000
+          DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000
         }
         .getOrElse(NO_EXP),
       jnaGrant.orNull

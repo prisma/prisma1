@@ -7,8 +7,8 @@ import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.AuthFailure
 import com.prisma.api.schema._
-import com.prisma.auth.Auth
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
+import com.prisma.jwt.Auth
 import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryExtensions._
 import play.api.libs.json._
@@ -79,9 +79,11 @@ case class RequestHandler(
     } yield result
   }
 
-  def verifyAuth(project: Project, rawRequest: RawRequest): Future[Unit] = {
-    val authResult = auth.verify(project.secrets, rawRequest.authorizationHeader)
-    if (authResult.isSuccess) Future.unit else Future.failed(AuthFailure())
+  def verifyAuth(project: Project, rawRequest: RawRequest): Future[Unit] = Future {
+    if (project.secrets.nonEmpty) {
+      val token = auth.extractToken(rawRequest.authorizationHeader)
+      auth.verifyToken(token, project.secrets).failed.map(_ => AuthFailure()).get
+    }
   }
 
   def handleGraphQlRequest(graphQlRequest: GraphQlRequest): Future[(StatusCode, JsValue)] = {

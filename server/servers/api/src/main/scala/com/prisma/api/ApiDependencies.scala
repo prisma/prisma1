@@ -8,9 +8,9 @@ import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
-import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.config.PrismaConfig
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
+import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.messages.SchemaInvalidatedMessage
@@ -40,7 +40,7 @@ trait ApiDependencies extends AwaitUtils {
 
   implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
-  lazy val auth: Auth                                   = AuthImpl
+  lazy val auth: Auth                                   = Auth.jna(Algorithm.HS256)
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
   lazy val maxImportExportSize: Int                     = 1000000
 

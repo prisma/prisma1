@@ -8,12 +8,15 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.fields._
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.schema.types._
+import com.prisma.jwt.JwtGrant
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 case class SystemUserContext(authorizationHeader: Option[String])
 
@@ -40,6 +43,8 @@ case class SchemaBuilderImpl(
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
   val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder
+  val projectTokenExpiration                         = 1.day.toSeconds
+  val managementSecret                               = dependencies.managementSecret
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](
@@ -162,7 +167,15 @@ case class SchemaBuilderImpl(
         projectOpt <- projectPersistence.load(projectId)
         project    = projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
       } yield {
-        dependencies.apiAuth.createToken(project.secrets)
+        project.secrets.headOption match {
+          case Some(secret) =>
+            dependencies.apiAuth.createToken(secret, Some(projectTokenExpiration)) match {
+              case Success(token) => token
+              case Failure(err)   => throw AuthFailure(err.getMessage)
+            }
+
+          case None => ""
+        }
       }
     }
   )
@@ -278,6 +291,10 @@ case class SchemaBuilderImpl(
   }
 
   private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
-    dependencies.managementAuth.verify(name, stage, authHeader).get
+    val auth  = dependencies.managementAuth
+    val token = auth.extractToken(authHeader)
+    val grant = Some(JwtGrant(name, stage, "*"))
+
+    auth.verifyToken(token, Vector(managementSecret), expectedGrant = grant).get
   }
 }
