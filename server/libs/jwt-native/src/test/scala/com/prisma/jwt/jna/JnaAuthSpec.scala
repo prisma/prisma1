@@ -1,6 +1,6 @@
 package com.prisma.jwt.jna
 
-import com.prisma.jwt.{Algorithm, Auth, JwtGrant}
+import com.prisma.jwt.{Algorithm, Auth, JwtGrant, TestKey}
 import org.scalatest.{Matchers, WordSpec}
 
 class JnaAuthSpec extends WordSpec with Matchers {
@@ -18,8 +18,6 @@ class JnaAuthSpec extends WordSpec with Matchers {
     "sign and validate a simple token with utf-8" in {
       val token      = auth.createToken(secrets.last, None).get
       val validation = auth.verifyToken(token, secrets)
-
-      println(token)
 
       validation.failed.map(x => println(x.getMessage))
       validation.isSuccess should be(true)
@@ -104,6 +102,7 @@ class JnaAuthSpec extends WordSpec with Matchers {
 
     "Why would anyone sign a JWT with emojis?" in {
       val secret = Vector("\uD83D\uDE80\uD83D\uDE31\uD83E\uDD26\uD83D\uDD1C\uD83D\uDD25")
+      // Signed with an external lib to make sure the Rust impl is cross compatible.
       val token =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjamQ0cWl1emJsNXVrMDE1NG0wY3cxcWJ2IiwiaWF0IjoxNTM3MzY2NTIzLCJleHAiOjE1Mzk5NTg1MjN9.kWVlxIJwcBi3mzJNgnsT4H8dryLdEIz1jPY9HjCLtS4"
       val validation = auth.verifyToken(token, secret)
@@ -112,4 +111,19 @@ class JnaAuthSpec extends WordSpec with Matchers {
       validation.isSuccess should be(true)
     }
   }
+
+  // todo currently unsupported
+//  "RS256 JWT auth" should {
+//    val auth    = Auth.jna(algorithm = Algorithm.RS256)
+//    val sSecret = TestKey.privateKey
+//    val vSecret = Vector(TestKey.publicKey)
+//
+//    "sign and validate a simple token" in {
+//      val token = auth.createToken(sSecret, None).get
+//      println(token)
+//      val validation = auth.verifyToken(token, vSecret)
+//
+//      validation.isSuccess should be(true)
+//    }
+//  }
 }
