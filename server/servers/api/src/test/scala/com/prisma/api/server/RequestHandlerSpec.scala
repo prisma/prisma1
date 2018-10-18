@@ -5,7 +5,6 @@ import com.prisma.api.ApiSpecBase
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.APIErrors.AuthFailure
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.auth.AuthImpl
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.utils.await.AwaitUtils
@@ -41,7 +40,7 @@ class RequestHandlerSpec extends FlatSpec with Matchers with ApiSpecBase with Aw
       projectFetcher = ProjectFetcherStub(project),
       schemaBuilder = EmptySchemaBuilder,
       graphQlRequestHandler = SucceedingGraphQlRequestHandler,
-      auth = AuthImpl,
+      auth = testDependencies.auth,
       log = println
     )
   }

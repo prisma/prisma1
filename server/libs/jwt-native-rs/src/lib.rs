@@ -26,10 +26,11 @@ pub enum ProtocolError {
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
-    iat: i64, // Issued at
+    #[serde(skip_serializing_if = "Option::is_none")]
+    iat: Option<i64>, // Issued at
 
-//    #[serde(deserialize_with = "todo")]
-//    nbf: i64, // Not before
+    #[serde(skip_serializing_if = "Option::is_none")]
+    nbf: Option<i64>, // Not before
 
     #[serde(skip_serializing_if = "Option::is_none")]
     exp: Option<i64>, // Expiration
@@ -56,8 +57,8 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
     let grant_to_encode = Grant::from_ext(grant).map(|g| vec!(g));
     let now = Utc::now().timestamp();
     let claims = Claims {
-        iat: now,
-//        nbf: now,
+        iat: Some(now),
+        nbf: Some(now),
         exp: expiration,
         grants: grant_to_encode,
     };
@@ -68,7 +69,6 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
     ProtocolBuffer::from(token).into_boxed_ptr()
 }
 
-// Todo this definitely needs some refactoring love.
 #[no_mangle]
 pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num_secrets: i64, grant: *const ExtGrant) -> *mut ProtocolBuffer {
     let parsed_token = to_str(token);
@@ -79,17 +79,7 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num
         let t = decode::<Claims>(parsed_token, secret.as_ref(), &Validation { validate_exp: false, ..Validation::default()});
         match t {
             Ok(x) => {
-                if is_expired(x.claims.exp) {
-                    return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is expired"))).into_boxed_ptr();
-                }
-
-                match contains_valid_grant(Grant::from_ext(grant), x.claims.grants) {
-                    Ok(valid) if !valid =>  return ProtocolBuffer::from(ProtocolError::GenericError(String::from("Token grants do not satisfy the request."))).into_boxed_ptr(),
-                    Err(e) => return ProtocolBuffer::from(e).into_boxed_ptr(),
-                    _ => (),
-                }
-
-                return ProtocolBuffer::from(true).into_boxed_ptr()
+                return validate_claims(x.claims, Grant::from_ext(grant)).into_boxed_ptr();
             },
             Err(e) => {
                 let err = format!("{}", e);
@@ -108,9 +98,45 @@ pub extern "C" fn destroy_buffer(buffer: *mut ProtocolBuffer) {
     unsafe { Box::from_raw(buffer) };
 }
 
+fn validate_claims(claims: Claims, grant: Option<Grant>) -> ProtocolBuffer {
+    if is_expired(claims.exp) {
+        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is expired")));
+    }
+
+    if is_issued_in_future(claims.iat) {
+        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is issued in the future")));
+    }
+
+    if is_used_before_validity(claims.iat) {
+        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is not yet valid")));
+    }
+
+    match contains_valid_grant(grant, claims.grants) {
+        Ok(valid) if !valid =>  return ProtocolBuffer::from(ProtocolError::GenericError(String::from("Token grants do not satisfy the request."))),
+        Err(e) => return ProtocolBuffer::from(e),
+        _ => (),
+    }
+
+    return ProtocolBuffer::from(true)
+}
+
 fn is_expired(exp_claim: Option<i64>) -> bool {
     match exp_claim {
         Some(exp) => exp < Utc::now().timestamp(),
+        None      => false,
+    }
+}
+
+fn is_used_before_validity(nbf_claim: Option<i64>) -> bool{
+    match nbf_claim {
+        Some(iat) => iat < Utc::now().timestamp(),
+        None      => false,
+    }
+}
+
+fn is_issued_in_future(iat_claim: Option<i64>) -> bool{
+    match iat_claim {
+        Some(iat) => iat > Utc::now().timestamp(),
         None      => false,
     }
 }

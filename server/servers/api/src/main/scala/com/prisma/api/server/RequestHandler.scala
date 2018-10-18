@@ -15,7 +15,7 @@ import play.api.libs.json._
 import sangria.schema.Schema
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Failure
+import scala.util.{Failure, Success}
 
 case class RequestHandler(
     projectFetcher: ProjectFetcher,
@@ -82,7 +82,10 @@ case class RequestHandler(
   def verifyAuth(project: Project, rawRequest: RawRequest): Future[Unit] = Future {
     if (project.secrets.nonEmpty) {
       val token = auth.extractToken(rawRequest.authorizationHeader)
-      auth.verifyToken(token, project.secrets).failed.map(_ => AuthFailure()).get
+      auth.verifyToken(token, project.secrets) match {
+        case Success(_) => ()
+        case Failure(_) => throw AuthFailure()
+      }
     }
   }
 
@@ -103,5 +106,4 @@ case class RequestHandler(
       case Some(schema) => schema
     }
   }
-
 }

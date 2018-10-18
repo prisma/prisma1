@@ -6,6 +6,7 @@ use ProtocolError;
 
 #[repr(C)]
 #[no_mangle]
+/// Always instantiate boxed to avoid a copy from stack to heap: Box::new(ProtocolBuffer { ... })
 pub struct ProtocolBuffer {
     error: *mut c_char, // Always use a CString here (ffi_utils::string_to_ptr).
     data: *mut u8,      // Always use raw pointers to Box<[u8]> here
