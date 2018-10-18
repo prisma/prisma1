@@ -63,28 +63,44 @@ class JnaAuthSpec extends WordSpec with Matchers {
       validation.isSuccess should be(false)
     }
 
-    //      val tokenWithoutExp = auth.createToken(secrets.last, None).get
-    //      val expiredToken    = auth.createToken(secrets.head, Some(-5)).get
-    //
-    //      val verify1Result = auth.verifyToken(tokenWithExp, secrets)
-    //      val verify2Result = auth.verifyToken(tokenWithoutExp, secrets)
-    //      val verify3Result = auth.verifyToken("someinvalidtoken", secrets)
-    //      val verify4Result = auth.verifyToken(tokenWithExp, Vector("invalidsecret"))
-    //      val verify5Result = auth.verifyToken(expiredToken, secrets)
-    //      val verify6Result = auth.verifyToken(tokenWithExp, secrets, Some(JwtGrant("*/*", "*")))
-    //
-    //      println(verify1Result)
-    //      println(verify2Result)
-    //      println(verify3Result)
-    //      println(verify4Result)
-    //      println(verify5Result)
-    //      println(verify6Result)
-    //
-    //      verify1Result.isSuccess should be(true)
-    //      verify2Result.isSuccess should be(true)
-    //      verify3Result.isFailure should be(true)
-    //      verify4Result.isFailure should be(true)
-    //      verify5Result.isFailure should be(true)
-    //      verify6Result.isFailure should be(true)
+    "fail validation if the stages in grants don't match" in {
+      val signGrant       = Some(JwtGrant("name/stage", "*"))
+      val validationGrant = Some(JwtGrant("name/otherstage", "*"))
+      val token           = auth.createToken(secrets.head, Some(3600), signGrant).get
+      val validation      = auth.verifyToken(token, secrets, validationGrant)
+
+      validation.failed.map(x => println(x.getMessage))
+      validation.isSuccess should be(false)
+    }
+
+    "fail validation if the names in grants don't match" in {
+      val signGrant       = Some(JwtGrant("name/stage", "*"))
+      val validationGrant = Some(JwtGrant("name2/stage", "*"))
+      val token           = auth.createToken(secrets.head, Some(3600), signGrant).get
+      val validation      = auth.verifyToken(token, secrets, validationGrant)
+
+      validation.failed.map(x => println(x.getMessage))
+      validation.isSuccess should be(false)
+    }
+
+    "fail validation if the actions in grants don't match" in {
+      val signGrant       = Some(JwtGrant("name/stage", "create"))
+      val validationGrant = Some(JwtGrant("name/stage", "*"))
+      val token           = auth.createToken(secrets.head, Some(3600), signGrant).get
+      val validation      = auth.verifyToken(token, secrets, validationGrant)
+
+      validation.failed.map(x => println(x.getMessage))
+      validation.isSuccess should be(false)
+    }
+
+    "Why would anyone sign a JWT with emojis?" in {
+      val secret = Vector("\uD83D\uDE80\uD83D\uDE31\uD83E\uDD26\uD83D\uDD1C\uD83D\uDD25")
+      val token =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjamQ0cWl1emJsNXVrMDE1NG0wY3cxcWJ2IiwiaWF0IjoxNTM3MzY2NTIzLCJleHAiOjE1Mzk5NTg1MjN9.kWVlxIJwcBi3mzJNgnsT4H8dryLdEIz1jPY9HjCLtS4"
+      val validation = auth.verifyToken(token, secret)
+
+      validation.failed.map(x => println(x.getMessage))
+      validation.isSuccess should be(true)
+    }
   }
 }

@@ -27,7 +27,9 @@ pub enum ProtocolError {
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
     iat: i64, // Issued at
-    nbf: i64, // Not before
+
+//    #[serde(deserialize_with = "todo")]
+//    nbf: i64, // Not before
 
     #[serde(skip_serializing_if = "Option::is_none")]
     exp: Option<i64>, // Expiration
@@ -55,7 +57,7 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
     let now = Utc::now().timestamp();
     let claims = Claims {
         iat: now,
-        nbf: now,
+//        nbf: now,
         exp: expiration,
         grants: grant_to_encode,
     };
