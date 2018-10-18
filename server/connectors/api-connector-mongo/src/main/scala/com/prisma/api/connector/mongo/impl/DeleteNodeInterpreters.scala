@@ -33,12 +33,6 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(id, field)).toVector
     SequenceAction(actions)
   }
-
-  private def deleteFromRelations(mutationBuilder: MongoActionsBuilder, id: IdGCValue) = {
-    val fieldsWhereThisModelIsRequired = mutaction.model.schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
-    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(id, field)).toVector
-    SequenceAction(actions)
-  }
 }
 
 case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {

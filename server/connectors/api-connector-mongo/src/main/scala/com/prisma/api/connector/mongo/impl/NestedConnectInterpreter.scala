@@ -78,7 +78,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
       id <- mutationBuilder.getNodeIdByWhere(childWhere)
       _ <- id match {
             case None          => throw APIErrors.NodeNotFoundForWhereError(childWhere)
-            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(relationField.relatedField, NodeAddress.forId(childWhere.model, childId))
+            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(relationField.relatedField, NodeSelector.forId(childWhere.model, childId))
           }
     } yield ()
   }
