@@ -48,6 +48,15 @@ class JnaAuthSpec extends WordSpec with Matchers {
       validation.isSuccess should be(true)
     }
 
+    "sign and validate a token with expiration and a grant fulfilling the requested grant" in {
+      val signGrant  = Some(JwtGrant("*/*", "*"))
+      val grant      = Some(JwtGrant("project/*", "create"))
+      val token      = auth.createToken(secrets.head, Some(3600), signGrant).get
+      val validation = auth.verifyToken(token, secrets, grant)
+
+      validation.isSuccess should be(true)
+    }
+
     "fail validation if the token is invalid" in {
       val validation = auth.verifyToken("some_invalid_token\uD83D\uDE02", secrets)
 
