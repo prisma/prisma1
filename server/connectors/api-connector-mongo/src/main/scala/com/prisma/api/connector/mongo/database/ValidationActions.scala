@@ -9,32 +9,31 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries with NodeManyQueries {
 
-  def ensureThatNodeIsNotConnected(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) = {
-    relationField.relationIsInlinedInParent match {
-      case true =>
-        getNodeByWhere(parent.where).map(optionRes =>
-          optionRes.foreach { res =>
-            (relationField.isList, res.data.map.get(relationField.name)) match {
-              case (true, Some(ListGCValue(values))) =>
-                val filter = ScalarFilter(relationField.relatedModel_!.idField_!, In(values))
-                getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
-                  if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
-              case (false, Some(x: IdGCValue)) =>
-                val filter = ScalarFilter(relationField.relatedModel_!.idField_!, In(Vector(x)))
-                getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
-                  if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
-              case (_, _) => Future.successful(())
-            }
-        })
-
-      case false =>
-        val filter = generateFilterForFieldAndId(relationField.relatedField, parent.where.fieldGCValue.asInstanceOf[IdGCValue])
-
-        getNodeIdsByFilter(relationField.relatedModel_!, Some(filter)).map(list =>
-          if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation))
-    }
+  def ensureThatNodeIsNotConnected(relationField: RelationField, where: NodeSelector)(implicit ec: ExecutionContext) = {
+    for {
+      filterOption <- relationField.relationIsInlinedInParent match {
+                       case true =>
+                         for {
+                           optionRes <- getNodeByWhere(where)
+                           filterOption = optionRes.flatMap { res =>
+                             (relationField.isList, res.data.map.get(relationField.name)) match {
+                               case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
+                               case (false, Some(x: IdGCValue))       => Some(ScalarFilter(relationField.relatedModel_!.idField_!, Equals(x)))
+                               case (_, _)                            => None
+                             }
+                           }
+                         } yield filterOption
+                       case false =>
+                         MongoAction.successful(Some(generateFilterForFieldAndId(relationField.relatedField, where.fieldGCValue.asInstanceOf[IdGCValue])))
+                     }
+      list <- filterOption match {
+               case Some(f) => getNodeIdsByFilter(relationField.relatedModel_!, Some(f))
+               case None    => MongoAction.successful(List.empty)
+             }
+    } yield if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation)
   }
 
+  //here the ids do not need to be validated since we fetched them ourselves
   def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parent: NodeAddress)(implicit ec: ExecutionContext) = {
     val parentModel = relationField.model
     val childModel  = relationField.relatedModel_!
@@ -78,7 +77,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
             res.data.map.get(relationField.name) match {
               case None              => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
               case Some(NullGCValue) => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
-              case _                 => Future.successful(())
+              case _                 => Future.successful(()) //Fixme this case needs to be extended to validate that found ids really exist
             }
         })
 
@@ -97,6 +96,9 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
             ))
     }
   }
+
+  def errorIfNodeIsInRelation(nodeId: IdGCValue, otherField: RelationField)(implicit ec: ExecutionContext) =
+    errorIfNodesAreInRelation(Vector(nodeId), otherField)
 
   def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], otherField: RelationField)(implicit ec: ExecutionContext) = {
     val otherModel   = otherField.model
@@ -120,23 +122,4 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     }
   }
 
-  def errorIfNodeIsInRelation(nodeId: IdGCValue, otherField: RelationField)(implicit ec: ExecutionContext) = {
-    val otherModel   = otherField.model
-    val relatedModel = otherField.relatedModel_!
-
-    otherField.relationIsInlinedInParent match {
-      case true =>
-        val filter = generateFilterForFieldAndId(otherField, nodeId)
-
-        getNodeIdsByFilter(otherModel, Some(filter)).map(list => if (list.nonEmpty) throw RequiredRelationWouldBeViolated(otherField.relation))
-
-      case false =>
-        val filter = ScalarFilter(relatedModel.idField_!, Equals(nodeId))
-        getNodesByFilter(relatedModel, Some(filter)).map { list =>
-          list.foreach { doc =>
-            if (!otherField.relatedField.isList && doc.get(otherField.relatedField.dbName).isDefined) throw RequiredRelationWouldBeViolated(otherField.relation)
-          }
-        }
-    }
-  }
 }
