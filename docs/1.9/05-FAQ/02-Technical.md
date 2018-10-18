@@ -28,11 +28,12 @@ If you want to migrate from an existing data source, you can check out our plans
 
 If you have any preferences on which database you'd like to see implemented, you can create a new feature request or give a +1 for an existing one.
 
-### Does Prisma Cloud come with built-in Database?
+### Does Prisma Cloud come with a built-in Database?
 
 By its very nature, Prisma Cloud does **not** come with a built-in Database.
 
 We offer a **fully managed solution** where we optionally offer you a database. https://www.prisma.io/cloud/ (search for “serverless hosting”)
+
 There are **demo servers** available in Prisma Cloud where you can create demo services, which will use the DB assigned to those servers (owned by Prisma for development purposes).
 
 ### What are the benefits of GraphQL?
