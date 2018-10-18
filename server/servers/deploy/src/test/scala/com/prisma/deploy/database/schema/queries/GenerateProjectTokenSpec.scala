@@ -31,7 +31,5 @@ class GenerateProjectTokenSpec extends FlatSpec with Matchers with ActiveDeployS
 
     val token = result.pathAsString("data.generateProjectToken")
     token should equal("")
-
-    auth.verifyToken(token, project.secrets).isSuccess should be(true)
   }
 }
