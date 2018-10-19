@@ -11,29 +11,57 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
 
   "a P1! relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embeddedP1req }
+    val project = SchemaDsl.fromString() { embedddedToJoinP1Req }
 
     database.setup(project)
 
-    val res = server
+    val create = server
       .query(
         """mutation {
           |  createParent(data: {
           |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
           |  }){
           |    p
-          |    childReq{
+          |    children{
           |       c
+          |       friendReq{
+          |         f
+          |       }
+          |
           |    }
           |  }
           |}""",
         project
       )
 
-    res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
+    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
+
+    val update = server
+      .query(
+        """mutation {
+          |  updateParent(
+          |  where:{p:"p1"}
+          |  data: {
+          |    children: {create:{
+          |       c: "c1"
+          |       friendReq:{create:{f: "f1"}}
+          |    }}
+          |  }){
+          |    p
+          |    children{
+          |       c
+          |       friendReq{
+          |         f
+          |       }
+          |
+          |    }
+          |  }
+          |}""",
+        project
+      )
+
+    update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
+
   }
 
   "a P1 relation" should "work" in {
