@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.existentials
 
 trait NodeManyQueries extends FilterConditionBuilder {
+
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
@@ -31,12 +32,6 @@ trait NodeManyQueries extends FilterConditionBuilder {
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
     collection.find(bsonFilter).projection(include("_id")).collect().toFuture.map(_.map(DocumentToId.toCUIDGCValue))
-  }
-
-  def getNodesByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[Document]] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).collect().toFuture
   }
 
   def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
