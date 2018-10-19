@@ -3,13 +3,12 @@ package com.prisma.api.queries.nonEmbedded
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
-
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
-  val project = SchemaDsl.fromString() {
+class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
+  override val project = SchemaDsl.fromString() {
     """
       |type List {
       |  id: ID! @unique
@@ -24,6 +23,30 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
       |}
     """
   }
+}
+
+class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
+  override val project = SchemaDsl.fromString() {
+    """
+      |type List {
+      |  id: UUID! @unique
+      |  name: String! @unique
+      |  todos: [Todo!]!
+      |}
+      |
+      |type Todo {
+      |  id: UUID! @unique
+      |  title: String! @unique
+      |  list: List!
+      |}
+    """
+  }
+}
+
+trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
+  val project: Project
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -36,7 +59,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result1 = server.query(
       """
         |{
-        |  listsConnection(first: 3) {
+        |  listsConnection(first: 3, orderBy: createdAt_ASC) {
         |    pageInfo {
         |      hasNextPage
         |      hasPreviousPage
@@ -61,7 +84,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result2 = server.query(
       """
         |{
-        |  listsConnection(skip: 3, first: 3) {
+        |  listsConnection(skip: 3, first: 3, orderBy: createdAt_ASC) {
         |    pageInfo {
         |      hasNextPage
         |      hasPreviousPage
@@ -87,7 +110,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result1 = server.query(
       """
         |{
-        |  listsConnection(first: 3) {
+        |  listsConnection(first: 3, orderBy: createdAt_ASC) {
         |    pageInfo {
         |      hasNextPage
         |      hasPreviousPage
@@ -111,7 +134,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result2 = server.query(
       s"""
         |{
-        |  listsConnection(after: "$cursor", first: 3) {
+        |  listsConnection(after: "$cursor", first: 3, orderBy: createdAt_ASC) {
         |    pageInfo {
         |      hasNextPage
         |      hasPreviousPage
@@ -137,7 +160,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
         |{
         |  list(where: {name: "1"}) {
         |    name
-        |    todos(first: 3){
+        |    todos(first: 3, orderBy: createdAt_ASC){
         |      id
         |      title
         |    }
@@ -155,7 +178,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
         |{
         |  list(where: {name: "1"}) {
         |    name
-        |    todos(after: "$cursor", first: 3){
+        |    todos(after: "$cursor", first: 3, orderBy: createdAt_ASC){
         |      id
         |      title
         |    }
@@ -173,7 +196,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
         |{
         |  list(where: {name: "1"}) {
         |    name
-        |    todos(first: 3){
+        |    todos(first: 3, orderBy: createdAt_ASC){
         |      id
         |      title
         |    }
@@ -191,7 +214,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
          |{
          |  list(where: {name: "1"}) {
          |    name
-         |    todos(after: "$cursor"){
+         |    todos(after: "$cursor", orderBy: createdAt_ASC){
          |      id
          |      title
          |    }
@@ -209,7 +232,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
         |{
         |  lists {
         |    name
-        |    todos(first: 3){
+        |    todos(first: 3, orderBy: createdAt_ASC){
         |      title
         |    }
         |  }
@@ -249,7 +272,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result2 = server.query(
       s"""
          |{
-         |  lists(first: 2 after:"$cursor") {
+         |  lists(first: 2 after:"$cursor", orderBy: createdAt_ASC) {
          |    name
          |  }
          |}
@@ -278,7 +301,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result2 = server.query(
       s"""
          |{
-         |  lists(after:"$cursor") {
+         |  lists(after:"$cursor", orderBy: createdAt_ASC) {
          |    name
          |  }
          |}
@@ -293,7 +316,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result = server.query(
       s"""
          |{
-         |  lists(skip:1) {
+         |  lists(skip:1, orderBy: createdAt_ASC) {
          |    name
          |  }
          |}
@@ -308,7 +331,7 @@ class NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
       s"""
          |{
          |  list(where: { name: "1" }) {
-         |    todos(skip: 1) {
+         |    todos(skip: 1, orderBy: createdAt_ASC) {
          |      title
          |    }
          |  }
