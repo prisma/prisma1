@@ -55,7 +55,6 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
                case Some(f) => getNodeIdsByFilter(relationField.relatedModel_!, Some(f))
                case None    => MongoAction.successful(List.empty)
              }
-
     } yield
       if (list.isEmpty)
         throw NodesNotConnectedError(
@@ -74,23 +73,33 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     val otherModel   = otherField.model
     val relatedModel = otherField.relatedModel_!
 
-    otherField.relationIsInlinedInParent match {
-      case true =>
-        val filter = otherField.isList match {
-          case true  => ScalarListFilter(otherModel.idField_!.copy(name = otherField.dbName, isList = true), ListContainsSome(parentIds))
-          case false => ScalarFilter(otherModel.idField_!.copy(name = otherField.dbName), In(parentIds))
-        }
-        getNodeIdsByFilter(otherModel, Some(filter)).map(list => if (list.nonEmpty) throw RequiredRelationWouldBeViolated(otherField.relation))
+    for {
+      filter <- otherField.relationIsInlinedInParent match {
+                 case false =>
+                   val filter = ScalarFilter(relatedModel.idField_!, In(parentIds))
+                   for {
+                     result <- getNodes(relatedModel, QueryArguments.withFilter(filter), SelectedFields.all(relatedModel))
+                     ids = result.nodes.flatMap { node =>
+                       (otherField.relatedField.isList, node.data.map.get(otherField.relatedField.name)) match {
+                         case (true, Some(ListGCValue(values))) => values
+                         case (false, Some(x: IdGCValue))       => Vector(x)
+                         case (_, _)                            => Vector.empty
+                       }
+                     }
+                   } yield ScalarFilter(otherModel.idField_!, In(ids))
 
-      case false =>
-        val filter = ScalarFilter(relatedModel.idField_!, In(parentIds))
-        getNodesByFilter(relatedModel, Some(filter)).map { list =>
-          list.foreach { doc =>
-            if (!otherField.relatedField.isList && doc.get(otherField.relatedField.dbName).isDefined) throw RequiredRelationWouldBeViolated(otherField.relation)
-          //fixme validate this id
-          }
-        }
-    }
+                 case true =>
+                   val filter = otherField.isList match {
+                     case true  => ScalarListFilter(otherModel.idField_!.copy(name = otherField.dbName, isList = true), ListContainsSome(parentIds))
+                     case false => ScalarFilter(otherModel.idField_!.copy(name = otherField.dbName), In(parentIds))
+                   }
+                   MongoAction.successful(filter)
+               }
+      list <- getNodeIdsByFilter(otherModel, Some(filter))
+
+    } yield
+      if (list.nonEmpty)
+        throw RequiredRelationWouldBeViolated(otherField.relation)
   }
 
   //here the ids do not need to be validated since we fetched them ourselves
