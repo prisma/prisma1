@@ -144,47 +144,46 @@ trait SchemaBase {
                             c: String! @unique
                         }"""
   //EMBEDDED TO NON-EMBEDDED
-
-  val embedddedToJoinP1Opt = """type Parent{
-                               |    name: String
-                               |    children: [Child!]!
-                               |}
-                               |
-                               |type Child @embedded {
-                               |    name: String
-                               |    friends: Friend @mongoRelation(field: "friends")
-                               |}
-                               |
-                               |type Friend{
-                               |    name: String
-                               |}"""
-
   val embedddedToJoinP1Req = """type Parent{
-                            |    name: String
+                            |    p: String @unique
                             |    children: [Child!]!
                             |}
                             |
                             |type Child @embedded {
-                            |    name: String
-                            |    friends: Friend! @mongoRelation(field: "friends")
+                            |    c: String @unique
+                            |    friendReq: Friend! @mongoRelation(field: "friends")
                             |}
                             |
                             |type Friend{
-                            |    name: String
+                            |    f: String @unique
                             |}"""
 
+  val embedddedToJoinP1Opt = """type Parent{
+                               |    p: String @unique
+                               |    children: [Child!]!
+                               |}
+                               |
+                               |type Child @embedded {
+                               |    c: String @unique
+                               |    friendOpt: Friend @mongoRelation(field: "friends")
+                               |}
+                               |
+                               |type Friend{
+                               |    f: String @unique
+                               |}"""
+
   val embedddedToJoinPM = """type Parent{
-                        |    name: String
+                        |    p: String @unique
                         |    children: [Child!]!
                         |}
                         |
                         |type Child @embedded {
-                        |    name: String
-                        |    friends: [Friend!]! @mongoRelation(field: "friends")
+                        |    c: String @unique
+                        |    friendsOpt: [Friend!]! @mongoRelation(field: "friends")
                         |}
                         |
                         |type Friend{
-                        |    name: String
+                        |    f: String @unique
                         |}"""
 
 }
