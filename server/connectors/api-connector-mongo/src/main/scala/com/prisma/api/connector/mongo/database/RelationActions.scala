@@ -22,7 +22,7 @@ trait RelationActions extends FilterConditionBuilder {
 
       val parentField = parent.path.segments.isEmpty match {
         case true  => relationField.dbName
-        case false => parent.path.stringForField(relationField.name)
+        case false => parent.path.stringForField(relationField.dbName)
       }
 
       val arrayFilters = ArrayFilter.arrayFilter(parent.path)

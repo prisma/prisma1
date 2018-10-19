@@ -26,6 +26,7 @@ trait NestedRelationInterpreterBase extends NestedDatabaseMutactionInterpreter {
   }
 
   def checkForOldChild(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = {
-    mutationBuilder.ensureThatNodeIsNotConnected(relationField, parent)
+    assert(parent.path.segments.isEmpty)
+    mutationBuilder.ensureThatNodeIsNotConnected(relationField, parent.where)
   }
 }

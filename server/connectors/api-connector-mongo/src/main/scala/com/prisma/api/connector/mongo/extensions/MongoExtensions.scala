@@ -141,6 +141,9 @@ object HackforTrue {
 }
 
 object ArrayFilter {
+
+  //Fixme: we are using uniques here, but these might change during an update
+
   def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
     case None                           => Vector.empty
     case Some(ToOneSegment(_))          => Vector.empty
