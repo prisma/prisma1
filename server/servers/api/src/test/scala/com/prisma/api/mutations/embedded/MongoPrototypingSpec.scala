@@ -1228,7 +1228,57 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     res2.toString should be(
       """{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter2","child":{"name":"GrandSon2","friend":{"name":"Friend"}}}}}}""")
-
   }
 
+  "Dangling Ids" should "be ignored" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type ZChild{
+        |    name: String @unique
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    child: ZChild!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{ name: "Daughter"}}
+         |}){
+         |  name,
+         |  child{ name}
+         |}}""",
+      project
+    )
+
+    create.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter"}}}}""")
+
+    val delete = server.query(s"""mutation {deleteParent(where: { name: "Dad" }){name}}""", project)
+
+    delete.toString should be("""{"data":{"deleteParent":{"name":"Dad"}}}""")
+
+    val create2 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad2",
+         |   child: {connect:{name: "Daughter"}}
+         |}){
+         |  name,
+         |  child{ name}
+         |}}""",
+      project
+    )
+
+    create2.toString should be("""{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter"}}}}""")
+
+  }
 }

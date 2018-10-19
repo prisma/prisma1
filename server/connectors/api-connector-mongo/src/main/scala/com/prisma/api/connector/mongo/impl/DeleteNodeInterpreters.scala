@@ -19,7 +19,6 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
                  for {
 //            _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
                    _ <- checkForRequiredRelationsViolations(mutationBuilder, node.id)
-                   //            _ <- Fixme deleteFromRelations since there are no foreign key constraints handling this
                    _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
                  } yield node
                case None =>
