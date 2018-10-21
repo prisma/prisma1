@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mongo.database
 
 import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Model, Project}
 import org.mongodb.scala.model.IndexOptions
 import org.mongodb.scala.model.Sorts.ascending
 import org.mongodb.scala.{MongoNamespace, _}
@@ -73,15 +73,59 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   //Fields
-  def createField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
-    addUniqueConstraint(database, collectionName, fieldName)
+  def createField(model: Model, fieldName: String) = DeployMongoAction { database =>
+    model.isEmbedded match {
+      case false => addUniqueConstraint(database, model.dbName, fieldName)
+      case true  => Future.successful(())
+    }
   }
 
-  def deleteField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
-    removeUniqueConstraint(database, collectionName, fieldName)
+  def deleteField(model: Model, fieldName: String) = DeployMongoAction { database =>
+    model.isEmbedded match {
+      case false => removeUniqueConstraint(database, model.dbName, fieldName)
+      case true  => Future.successful(())
+    }
   }
 
   def updateField(name: String, newName: String) = NoAction.unit
+
+  //Fixme once Mongo fixes this bug we can implement nested Unique Constraints properly https://jira.mongodb.org/browse/SERVER-1068
+//  def addNestedUniqueConstraint(database: MongoDatabase, model: Model, fieldName: String) = {
+//
+//    val fieldToParent = model.relationFields.find(rf => rf.isHidden && rf.relatedField.isVisible).get
+//    val topModel      = topLevelModel(fieldToParent)
+//    val fieldNames    = (fieldName +: recurse(fieldToParent)).reverse
+//
+//    println(fieldNames)
+//    addEmbeddedUniqueConstraint(database, topModel.dbName, recurse2(fieldNames).reverse)
+//  }
+//
+//  def topLevelModel(relationField: RelationField): Model = relationField.model.isEmbedded match {
+//    case true  => topLevelModel(relationField.relatedField)
+//    case false => relationField.model
+//  }
+//
+//  def recurse2(strings: Vector[String]): Vector[String] = strings match {
+//    case one if one.length == 1  => one
+//    case many if many.length > 1 => Vector(many.mkString(".")) ++ recurse2(strings.dropRight(1))
+//  }
+//
+//  def recurse(relationField: RelationField): Vector[String] = relationField.model.isEmbedded match {
+//    case true  => relationField.relatedField.name +: recurse(relationField.relatedField)
+//    case false => Vector.empty
+//  }
+//
+//  def addEmbeddedUniqueConstraint(database: MongoDatabase, collectionName: String, fieldNames: Vector[String]) = {
+////    val shortenedName = indexNameHelper(collectionName, fieldName, true)
+//    val shortenedName = "compoundindex"
+//    val doc           = Document(fieldNames.map(x => x -> 1))
+//
+//    database
+//      .getCollection(collectionName)
+//      .createIndex(doc, IndexOptions().unique(true).sparse(true).name(shortenedName))
+//      .toFuture()
+//      .map(_ => ())
+//  }
 
   def addUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
     val shortenedName = indexNameHelper(collectionName, fieldName, true)
