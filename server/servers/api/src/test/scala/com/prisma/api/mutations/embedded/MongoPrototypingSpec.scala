@@ -1281,4 +1281,96 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     create2.toString should be("""{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter"}}}}""")
 
   }
+  //Fixme https://jira.mongodb.org/browse/SERVER-1068
+  "Unique indexes on embedded types" should "work" ignore {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    children: [Child!]!
+        |}
+        |
+        |type Child @embedded{
+        |    name: String @unique
+        |}
+        |"""
+    }
+
+    database.setup(project)
+
+    val create1 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create: [{ name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create1.toString should be("""{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"}]}}}""")
+
+    val create2 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad2",
+         |   children: {create: [{ name: "Daughter"}, { name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create2.toString should be("""{"data":{"createParent":{"name":"Dad2","children":[{"name":"Daughter"},{"name":"Daughter"}]}}}""")
+
+    val create3 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create: [{ name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create3.toString should be("""{"data":{"createParent":{"name":"Dad2","children":[{"name":"Daughter"},{"name":"Daughter"}]}}}""")
+
+    val update1 = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: {name: "Dad"}
+         |   data: {
+         |      children: {create: [{ name: "Daughter2"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    update1.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"}]}}}""")
+
+    val update2 = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: {name: "Dad"}
+         |   data: {
+         |      children: {create: [{ name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    update2.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"}]}}}""")
+
+  }
 }
