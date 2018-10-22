@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.server.ApiServer
 import com.prisma.deploy.server.ManagementServer
+import com.prisma.image.Version
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
 

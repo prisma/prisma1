@@ -5,7 +5,6 @@ import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapabilit
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
 import com.prisma.deploy.connector.postgres.impls._
-import com.prisma.metrics.PrismaCloudSecretLoader
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -58,51 +57,59 @@ case class PostgresDeployConnector(
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = managementDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
   override def cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(managementDatabase)
+//
+//  override def initialize(): Future[Unit] = {
+//    // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
+//    internalDatabaseDefs.setupDatabase
+//      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
+//      .transformWith { _ =>
+//        val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
+//        projectDatabase.run(action)
+//      }
+//      .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
+//  }
+//
+//  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(managementDatabase)
+//
+//  override def shutdown() = {
+//    for {
+//      _ <- projectDatabase.shutdown
+//      _ <- managementDatabase.shutdown
+//    } yield ()
+//  }
+//
+//  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = {
+//    if (isActive) {
+//      EmptyDatabaseIntrospectionInferrer
+//    } else {
+//      val schema = dbConfig.schema.getOrElse(projectId).toLowerCase
+//      DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
+//    }
+//  }
+//
+//  protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
+//    for {
+//      schemas <- database.run(getTables())
+//      _       <- database.run(dangerouslyTruncateTables(schemas))
+//    } yield ()
+//  }
+//
+//  private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
+//    sql"""SELECT table_name
+//          FROM information_schema.tables
+//          WHERE table_schema = '#${internalDatabaseDefs.managementSchemaName}'
+//          AND table_type = 'BASE TABLE';""".as[String]
+//  }
+//
+//  private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
+//    DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
+//  }
 
-  override def initialize(): Future[Unit] = {
-    // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
-    internalDatabaseDefs.setupDatabase
-      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
-      .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
-        projectDatabase.run(action)
-      }
-      .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
-  }
+  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = ???
 
-  override def reset(): Future[Unit] = truncateManagementTablesInDatabase(managementDatabase)
+  override def initialize(): Future[Unit] = ???
 
-  override def shutdown() = {
-    for {
-      _ <- projectDatabase.shutdown
-      _ <- managementDatabase.shutdown
-    } yield ()
-  }
+  override def reset(): Future[Unit] = ???
 
-  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = {
-    if (isActive) {
-      EmptyDatabaseIntrospectionInferrer
-    } else {
-      val schema = dbConfig.schema.getOrElse(projectId).toLowerCase
-      DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
-    }
-  }
-
-  protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
-    for {
-      schemas <- database.run(getTables())
-      _       <- database.run(dangerouslyTruncateTables(schemas))
-    } yield ()
-  }
-
-  private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
-    sql"""SELECT table_name
-          FROM information_schema.tables
-          WHERE table_schema = '#${internalDatabaseDefs.managementSchemaName}'
-          AND table_type = 'BASE TABLE';""".as[String]
-  }
-
-  private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
-  }
+  override def shutdown(): Future[Unit] = ???
 }

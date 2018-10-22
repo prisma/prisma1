@@ -5,7 +5,6 @@ import Dependencies._
 
 name := "server"
 
-
 lazy val commonSettings = Seq(
   organization := "com.prisma",
   organizationName := "graphcool",
@@ -63,6 +62,14 @@ def normalProject(name: String): Project = Project(id = name, base = file(s"./$n
 // ####################
 lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma").dependsOn(prismaImageShared)
 lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod").dependsOn(prismaImageShared)
+lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native")
+  .dependsOn(prismaImageShared).enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
+  "--enable-all-security-services",
+  "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
+  "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json",
+  //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
+  "-H:+JNI",
+  "--verbose"))
 
 lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(api)
@@ -327,6 +334,7 @@ lazy val cache = libProject("cache")
 // #######################
 
 val allDockerImageProjects = List(
+  prismaNative,
   prismaLocal,
   prismaProd
 )

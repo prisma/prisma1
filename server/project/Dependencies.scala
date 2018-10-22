@@ -81,7 +81,7 @@ object Dependencies {
   val snakeYML          = "org.yaml"                   % "snakeyaml"                      % "1.23"
   val librato           = "com.librato.metrics"        % "librato-java"                   % "2.1.0"
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"                   % "9.3.0.v20150612"
-  val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.1.1"
+  val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.3.1"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators"      % "1.0.4"
   val apacheCommons     = "commons-lang"               % "commons-lang"                   % "2.6"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
