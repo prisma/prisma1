@@ -41,6 +41,7 @@ export class Client {
   types: any
   query: any
   $subscribe: any
+  $graphql: any
   $exists: any
   debug
   mutation: any
@@ -62,6 +63,7 @@ export class Client {
 
     const token = secret ? sign({}, secret!) : undefined
 
+    this.$graphql = this.buildGraphQL()
     this.$exists = this.buildExists()
     this.token = token
     this.client = new BatchedGraphQLClient(endpoint, {
@@ -416,6 +418,12 @@ export class Client {
     }
 
     return type
+  }
+
+  private buildGraphQL() {
+    return <T = any>(query, variables): Promise<T> => {
+      return this.client.request(query, variables)
+    }
   }
 
   private buildExists(): Exists {
