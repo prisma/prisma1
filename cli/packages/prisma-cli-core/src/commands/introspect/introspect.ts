@@ -259,7 +259,9 @@ ${chalk.bold(
 
   ${chalk.cyan(fileName)}
 `)
-      if (!this.definition.definition!.datamodel) {
+
+      if (!this.definition.definition || !this.definition.definition!.datamodel) {
+        await this.definition.load(this.flags)
         this.definition.addDatamodel(fileName)
         this.out.log(
           `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
