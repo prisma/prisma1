@@ -230,7 +230,7 @@ trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     val result1 = server.query(
       """
         |{
-        |  lists {
+        |  lists(orderBy: createdAt_ASC) {
         |    name
         |    todos(first: 3, orderBy: createdAt_ASC){
         |      title
