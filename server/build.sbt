@@ -52,7 +52,7 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
 
 def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
-def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing)
+def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing).dependsOn(logging)
 def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils).dependsOn(prismaConfig).dependsOn(tracing)
 def integrationTestProject(name: String): Project =  Project(id = name, base = file(s"./integration-tests/$name")).settings(commonSettings: _*)
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
@@ -200,6 +200,13 @@ lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql
 //       LIBS
 // ####################
 
+lazy val tracing = libProject("tracing")
+lazy val logging = libProject("logging").settings(libraryDependencies ++= Seq(scalaLogging))
+lazy val scalaUtils = libProject("scala-utils")
+lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
+lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML, scalaUri))
+lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
+
 lazy val jdbcNative = libProject("jdbc-native")
   .settings(libraryDependencies ++= Seq(
     jna,
@@ -246,8 +253,6 @@ lazy val metrics = libProject("metrics")
     )
   )
 
-lazy val tracing = libProject("tracing")
-
 lazy val rabbitProcessor = libProject("rabbit-processor")
   .settings(
     libraryDependencies ++= Seq(
@@ -266,7 +271,6 @@ lazy val messageBus = libProject("message-bus")
     akkaTestKit,
     playJson
   ))
-
 
 lazy val jvmProfiler = libProject("jvm-profiler")
   .settings(commonSettings: _*)
@@ -293,9 +297,6 @@ lazy val stubServer = libProject("stub-server")
       )
     )
 
-lazy val scalaUtils = libProject("scala-utils")
-
-
 lazy val errorReporting = libProject("error-reporting")
     .settings(libraryDependencies ++= Seq(
       bugsnagClient,
@@ -320,11 +321,10 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
-lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++= slick)
 
-lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML, scalaUri))
-
-lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
+// #######################
+//       AGGREGATORS
+// #######################
 
 val allDockerImageProjects = List(
   prismaLocal,
@@ -373,7 +373,8 @@ val allLibProjects = List(
   prismaConfig,
   mongoUtils,
   jdbcNative,
-  jwtNative
+  jwtNative,
+  logging
 )
 
 val allIntegrationTestProjects = List(

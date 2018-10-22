@@ -78,9 +78,7 @@ object Dependencies {
   val jwt               = "com.pauldijou"              %% "jwt-core"                      % "0.14.1"
   val scalajHttp        = "org.scalaj"                 %% "scalaj-http"                   % "2.3.0"
   val evoInflector      = "org.atteo"                  % "evo-inflector"                  % "1.2"
-  val logBack           = "ch.qos.logback"             % "logback-classic"                % "1.1.7"
-  val snakeYML          = "org.yaml"                   % "snakeyaml"                      % "1.19"
-  val logstash          = "net.logstash.logback"       % "logstash-logback-encoder"       % "4.7"
+  val snakeYML          = "org.yaml"                   % "snakeyaml"                      % "1.23"
   val librato           = "com.librato.metrics"        % "librato-java"                   % "2.1.0"
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"                   % "9.3.0.v20150612"
   val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.1.1"
@@ -110,8 +108,6 @@ object Dependencies {
     playJson,
     scalajHttp,
     scalaLogging,
-    logBack,
-    logstash,
     evoInflector,
     cuid,
     finagle,

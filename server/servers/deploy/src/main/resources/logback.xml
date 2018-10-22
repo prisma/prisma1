@@ -5,9 +5,9 @@
     <!--<logger name="slick.jdbc.StatementInvoker.result" level="DEBUG" />-->
     <!--<logger name="slick.jdbc.JdbcBackend.benchmark" level="DEBUG" />-->
 
-    <root level="INFO">
-        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
-        </appender>
-    </root>
+    <!--<root level="INFO">-->
+        <!--<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
+            <!--<encoder class="net.logstash.logback.encoder.LogstashEncoder" />-->
+        <!--</appender>-->
+    <!--</root>-->
 </configuration>
