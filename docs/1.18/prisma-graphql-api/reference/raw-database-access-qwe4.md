@@ -1,12 +1,14 @@
----
-alias: alq1vmndfp
-description: Raw Database Access
----
+export const meta = {
+  title: "Raw Database Access",
+  position: 70,
+}
 
-# Raw Database Access
+# Overview
 You can access the native API of the underlying database and perform complex operations.
 
-As an example, consider the following datamodel:
+### Datamodel for examples on this page
+
+All example subscriptions on this page are based on a Prisma service configured with this datamodel:
 
 ```graphql
 type User {
@@ -17,6 +19,8 @@ type User {
 }
 
 ```
+
+### Docker configuration
 
 To enable raw database access, add `rawAccess` to your `docker-compose.yml` file.
 
@@ -55,7 +59,7 @@ volumes:
   postgres:
 ```
 
-## Example
+## Examples
 
 To create a new User through the native API, you can use the `executeRaw` mutation.
 
