@@ -114,14 +114,14 @@ object DeployErrors {
   def duplicateFieldName(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
-      s"The type `${fieldAndType.objectType.name}` has a duplicate fieldName."
+      s"The type `${fieldAndType.objectType.name}` has a duplicate fieldName. The detection of duplicates is performed case insensitive. "
     )
   }
 
-  def duplicateTypeName(fieldAndType: FieldAndType) = {
+  def duplicateTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
     error(
-      fieldAndType,
-      s"The name of the type `${fieldAndType.objectType.name}` occurs more than once."
+      objectTypeDefinition,
+      s"The name of the type `${objectTypeDefinition.name}` occurs more than once. The detection of duplicates is performed case insensitive."
     )
   }
 

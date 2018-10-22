@@ -12,6 +12,8 @@ $ cd ../prisma-db-introspection
 $ yarn install && yarn build
 $ cd ../prisma-cli-core
 $ yarn install && yarn build
+$ cd ../prisma-generate-schema
+$ yarn install && yarn build
 $ cd ../prisma-cli
 $ yarn install && yarn build
 $ node dist/index.js
