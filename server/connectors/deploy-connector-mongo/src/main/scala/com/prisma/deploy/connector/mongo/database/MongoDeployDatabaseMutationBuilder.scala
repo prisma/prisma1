@@ -24,17 +24,35 @@ object MongoDeployDatabaseMutationBuilder {
     database.listCollectionNames().toFuture().map(_ => ())
   }
 
+  //needs to add relation indexes as well
   def truncateProjectTables(project: Project) = DeployMongoAction { database =>
     val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
 
-    for {
-      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
-      _ <- Future.sequence(nonEmbeddedModels.map { model =>
-            val fieldsWithUniqueConstraint = model.scalarNonListFields.filter(_.isUnique)
-            Future.sequence(fieldsWithUniqueConstraint.map(field => addUniqueConstraint(database, model.dbName, field.name)))
-          })
-    } yield ()
+    def dropTables: Future[List[Completed]] = Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).drop().toFuture()))
 
+    def createTables(drops: List[Completed]): Future[List[Completed]] =
+      Future.sequence(nonEmbeddedModels.map(model => database.createCollection(model.dbName).toFuture()))
+
+    def createUniques(creates: List[Completed]): Future[List[List[Any]]] =
+      Future.sequence(nonEmbeddedModels.map { model =>
+        Future.sequence(model.scalarNonListFields.filter(_.isUnique).map(field => addUniqueConstraint(database, model.dbName, field.name)))
+      })
+
+    def createRelationIndexes(uniques: List[List[Any]]) =
+      Future.sequence(project.relations.collect {
+        case relation if relation.isInlineRelation =>
+          relation.modelAField.relationIsInlinedInParent match {
+            case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+            case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+          }
+      })
+
+    for {
+      drops: List[Completed]   <- dropTables
+      creates: List[Completed] <- createTables(drops)
+      uniques                  <- createUniques(creates)
+      relations                <- createRelationIndexes(uniques)
+    } yield ()
   }
 
   def deleteProjectDatabase = DeployMongoAction { database =>
@@ -86,7 +104,6 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   def addRelationIndex(database: MongoDatabase, collectionName: String, fieldName: String) = {
-
     val shortenedName = indexNameHelper(collectionName, fieldName, false)
 
     database
@@ -113,7 +130,6 @@ object MongoDeployDatabaseMutationBuilder {
       case false => shortenedName + "_R"
       case true  => shortenedName + "_U"
     }
-
   }
 
 }

@@ -26,12 +26,12 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
   val nonListArgs = mutaction.nonListArgs
   val listArgs    = mutaction.listArgs
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     for {
       _ <- verifyChildWhere(mutationBuilder, mutaction.where)
       childId <- mutaction.where match {
-                  case Some(where) => mutationBuilder.getNodeIdByParentIdAndWhere(mutaction.relationField, parentId, where)
-                  case None        => mutationBuilder.getNodeIdByParentId(mutaction.relationField, parentId)
+                  case Some(where) => mutationBuilder.getNodeIdByParentAndWhere(mutaction.relationField, parent, where)
+                  case None        => mutationBuilder.getNodeIdByParent(mutaction.relationField, parent)
                 }
       results <- childId match {
                   case Some(id) =>
@@ -39,7 +39,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
                   case None =>
                     throw APIErrors.NodesNotConnectedError(
                       relation = mutaction.relationField.relation,
-                      parent = parent,
+                      parent = parent.where.model,
                       parentWhere = None,
                       child = model,
                       childWhere = mutaction.where

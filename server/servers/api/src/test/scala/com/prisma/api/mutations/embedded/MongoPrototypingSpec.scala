@@ -833,4 +833,452 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = """A unique constraint would be violated on Top. Details: Field name = unique"""
     )
   }
+
+  "Relations from embedded to Non-Embedded" should "work 1" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    child: Child
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{
+         |      name: "Daughter"
+         |      friend: {create:{
+         |          name: "Buddy"
+         |      }
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter","friend":{"name":"Buddy"}}}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 2" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String @unique
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String @unique
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:{
+         |      name: "Daughter"
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    val res = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where:{name: "Dad"}
+         |   data: {
+         |   children: {update:{
+         |      where: {name: "Daughter"}
+         |      data: {
+         |          friend:{create:{name: "Buddy"}}
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 3" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friend: Friend @mongoRelation(field: "friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:{
+         |      name: "Daughter"
+         |      friend: {create:{
+         |          name: "Buddy"
+         |      }
+         |      }
+         |   }}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friend{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friend":{"name":"Buddy"}}]}}}""")
+  }
+
+  "Relations from embedded to Non-Embedded" should "work 4" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    name: String
+        |    children: [Child!]!
+        |}
+        |
+        |type Friend{
+        |    name: String
+        |}
+        |
+        |type Child @embedded {
+        |    name: String
+        |    friends: [Friend!]! @mongoRelation(field: "friends")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[
+         |   {name: "Daughter", friends: {create:[{name: "Buddy"},{name: "Buddy2"}]}},
+         |   {name: "Daughter2", friends: {create:[{name: "Buddy3"},{name: "Buddy4"}]}}
+         |   ]}
+         |}){
+         |  name,
+         |  children{
+         |    name
+         |    friends{
+         |      name
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friends":[{"name":"Buddy"},{"name":"Buddy2"}]},{"name":"Daughter2","friends":[{"name":"Buddy3"},{"name":"Buddy4"}]}]}}}""")
+  }
+
+  "Delete" should "take care of relations without foreign keys" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Child {
+        |    id: ID! @unique
+        |    name: String @unique
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    child: Child @mongoRelation(field: "children")
+        |}
+        |"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{name: "Daughter"}}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter"}}}}""")
+
+    server.query(s"""mutation {deleteChild(where:{name: "Daughter"}){name}}""", project)
+
+    server.query(s"""query {parents{name, child {name}}}""", project)
+
+  }
+
+  "Delete of something linked to on an embedded type" should "take care of relations without foreign keys " in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Friend {
+        |    name: String @unique
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    child: Child
+        |}
+        |
+        |type Child @embedded{
+        |    name: String @unique
+        |    child: GrandChild
+        |}
+        |
+        |type GrandChild @embedded{
+        |    name: String @unique
+        |    friend: Friend @mongoRelation(field:"friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{
+         |   name: "Daughter"
+         |   child: {create:{
+         |      name: "GrandSon"
+         |      friend: {create:{
+         |          name: "Friend"
+         |          }}
+         |      }}
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    child{
+         |       name
+         |       friend{
+         |          name
+         |       }
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter","child":{"name":"GrandSon","friend":{"name":"Friend"}}}}}}""")
+
+    server.query(s"""mutation {deleteFriend(where:{name: "Friend"}){name}}""", project)
+
+    server.query(s"""query {parents{name, child {name}}}""", project)
+  }
+
+  "Delete of something linked to on an embedded type" should "take care of relations without foreign keys 2" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Friend {
+        |    name: String @unique
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    child: Child
+        |}
+        |
+        |type Child @embedded{
+        |    name: String @unique
+        |    child: GrandChild
+        |}
+        |
+        |type GrandChild @embedded{
+        |    name: String @unique
+        |    friend: Friend! @mongoRelation(field:"friend")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{
+         |   name: "Daughter"
+         |   child: {create:{
+         |      name: "GrandSon"
+         |      friend: {create:{
+         |          name: "Friend"
+         |          }}
+         |      }}
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    child{
+         |       name
+         |       friend{
+         |          name
+         |       }
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    val res2 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad2",
+         |   child: {create:{
+         |   name: "Daughter2"
+         |   child: {create:{
+         |      name: "GrandSon2"
+         |      friend: {connect:{
+         |             name: "Friend"
+         |          }}
+         |      }}
+         |   }}
+         |}){
+         |  name,
+         |  child{
+         |    name
+         |    child{
+         |       name
+         |       friend{
+         |          name
+         |       }
+         |    }
+         |  }
+         |}}""",
+      project
+    )
+
+    res2.toString should be(
+      """{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter2","child":{"name":"GrandSon2","friend":{"name":"Friend"}}}}}}""")
+  }
+
+  "Dangling Ids" should "be ignored" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type ZChild{
+        |    name: String @unique
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    child: ZChild!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   child: {create:{ name: "Daughter"}}
+         |}){
+         |  name,
+         |  child{ name}
+         |}}""",
+      project
+    )
+
+    create.toString should be("""{"data":{"createParent":{"name":"Dad","child":{"name":"Daughter"}}}}""")
+
+    val delete = server.query(s"""mutation {deleteParent(where: { name: "Dad" }){name}}""", project)
+
+    delete.toString should be("""{"data":{"deleteParent":{"name":"Dad"}}}""")
+
+    val create2 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad2",
+         |   child: {connect:{name: "Daughter"}}
+         |}){
+         |  name,
+         |  child{ name}
+         |}}""",
+      project
+    )
+
+    create2.toString should be("""{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter"}}}}""")
+
+  }
 }

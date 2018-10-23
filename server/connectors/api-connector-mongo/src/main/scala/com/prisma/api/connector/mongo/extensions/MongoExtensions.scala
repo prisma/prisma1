@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mongo.extensions
 
-import com.prisma.api.connector.NodeSelector
+import com.prisma.api.connector.{NodeSelector, Path, ToManySegment, ToOneSegment}
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -136,46 +136,22 @@ object FieldCombinators {
   }
 }
 
-object Path {
-  def empty = Path(List.empty)
-}
-
-case class Path(segments: List[PathSegment]) {
-  def append(rF: RelationField, where: NodeSelector): Path = this.copy(segments = this.segments :+ ToManySegment(rF, where))
-  def append(rF: RelationField): Path                      = this.copy(segments = this.segments :+ ToOneSegment(rF))
-
-  def string: String = stringGen(segments).mkString(".")
-
-  private def stringGen(segments: List[PathSegment]): Vector[String] = segments match {
-    case Nil                          => Vector.empty
-    case ToOneSegment(rf) :: tail     => rf.name +: stringGen(tail)
-    case ToManySegment(rf, _) :: tail => rf.name +: stringGen(tail)
-  }
-
-  def stringForField(field: String): String = stringGen2(field, segments).mkString(".")
-
-  private def stringGen2(field: String, segments: List[PathSegment]): Vector[String] = segments match {
-    case Nil                              => Vector(field)
-    case ToOneSegment(rf) :: tail         => rf.name +: stringGen2(field, tail)
-    case ToManySegment(rf, where) :: tail => Vector(rf.name, "$[" + operatorName(rf, where) + "]") ++ stringGen2(field, tail)
-  }
-
-  def arrayFilter: Vector[Bson] = segments.last match {
-    case ToOneSegment(_)          => sys.error("")
-    case ToManySegment(rf, where) => Vector(Filters.equal(s"${operatorName(rf, where)}.${where.fieldName}", GCToBson(where.fieldGCValue)))
-  }
-
-  def operatorName(field: RelationField, where: NodeSelector) = s"${field.name}X${where.fieldName}X${where.hashCode().toString.replace("-", "M")}"
-
-}
-
-sealed trait PathSegment {
-  def rf: RelationField
-}
-
-case class ToOneSegment(rf: RelationField)                       extends PathSegment
-case class ToManySegment(rf: RelationField, where: NodeSelector) extends PathSegment
-
 object HackforTrue {
   val hackForTrue = notEqual("_id", -1)
+}
+
+object ArrayFilter {
+
+  //Fixme: we are using uniques here, but these might change during an update
+
+  def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
+    case None                           => Vector.empty
+    case Some(ToOneSegment(_))          => Vector.empty
+    case Some(ToManySegment(rf, where)) => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
+  }
+
+  def fieldName(where: NodeSelector): String = where.fieldName match {
+    case "id" => "_id"
+    case x    => x
+  }
 }

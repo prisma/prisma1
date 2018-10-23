@@ -30,7 +30,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRela
                case None =>
                  DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
              }
-    } yield DeleteNodeResult(node.id, node, mutaction)
+    } yield DeleteNodeResult(node, mutaction)
   }
 
   private def checkForRequiredRelationsViolations(mutationBuilder: JdbcActionsBuilder, id: IdGCValue): DBIO[_] = {
