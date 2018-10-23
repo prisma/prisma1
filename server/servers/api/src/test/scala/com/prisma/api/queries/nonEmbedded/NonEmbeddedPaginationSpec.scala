@@ -13,12 +13,14 @@ class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
     """
       |type List {
       |  id: ID! @unique
+      |  createdAt: DateTime!
       |  name: String! @unique
       |  todos: [Todo!]!
       |}
       |
       |type Todo {
       |  id: ID! @unique
+      |  createdAt: DateTime!
       |  title: String! @unique
       |  list: List!
       |}
@@ -34,12 +36,14 @@ class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
     """
       |type List {
       |  id: UUID! @unique
+      |  createdAt: DateTime!
       |  name: String! @unique
       |  todos: [Todo!]!
       |}
       |
       |type Todo {
       |  id: UUID! @unique
+      |  createdAt: DateTime!
       |  title: String! @unique
       |  list: List!
       |}
