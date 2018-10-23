@@ -502,7 +502,7 @@ export const prisma = new Prisma()`
     }
 
     return this.renderInterfaceWrapper(
-      `${type.name}${node ? 'Node' : ''}`,
+      `${type.name}${node ? '' : ''}`,
       type.description!,
       interfaces,
       fieldDefinition,
@@ -575,7 +575,7 @@ export const prisma = new Prisma()`
     const addSubscription = !partial && isSubscription && !isScalar
 
     if ((node || isList) && !isScalar && !addSubscription) {
-      typeString += `Node`
+      typeString += ``
     }
 
     if (addSubscription) {
@@ -696,8 +696,8 @@ ${fieldDefinition}
       ? [
           {
             name: subscription
-              ? `Promise<AsyncIterator<${typeName}Node>>`
-              : `Promise<${typeName}Node>`,
+              ? `Promise<AsyncIterator<${typeName}>>`
+              : `Promise<${typeName}>`,
           },
           {
             name: 'Fragmentable',
@@ -711,7 +711,7 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
+        : `export interface ${typeName}${promise && !subscription ? 'Promise' : ''}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
               ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
               : ''

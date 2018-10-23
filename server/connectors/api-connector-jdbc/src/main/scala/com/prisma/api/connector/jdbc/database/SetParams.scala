@@ -23,12 +23,12 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
 
   def setCursor(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
     queryArguments.after.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
+      pp.setGcValue(value)
+      pp.setGcValue(value)
     }
     queryArguments.before.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
+      pp.setGcValue(value)
+      pp.setGcValue(value)
     }
   }
 
