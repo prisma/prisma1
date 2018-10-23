@@ -41,7 +41,7 @@ class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
       |}
       |
       |type Todo {
-      |  id: UUID! @uniques
+      |  id: UUID! @unique
       |  createdAt: DateTime!
       |  title: String! @unique
       |  list: List!
