@@ -63,6 +63,7 @@ After running `prisma init`, the Prisma CLI prompts you to select _how_ you want
 
 - `prisma.yml`: The root configuration file for your Prisma setup.
 - `datamodel.prisma`: Specifies the datamodel for your application that will be mapped to the database (it basically defines your database schema).
+- `generated/prisma-client/`: Contains the auto-generated Prisma client library.
 
 </Collapse>
 
@@ -93,10 +94,10 @@ npm install --save prisma-client-lib graphql@0.13
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.js` and save it afterwards:
+Add the following code to `index.js` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./generated/prisma')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -121,7 +122,7 @@ node index.js
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
 
-Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+Feel free to play around with the Prisma client API and try out more operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 
