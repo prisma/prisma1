@@ -73,7 +73,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDelete
             throw NodesNotConnectedError(
               relation = parentField.relation,
               parent = parentField.model,
-              parentWhere = Some(NodeSelector.forIdGCValue(parent, parentId)),
+              parentWhere = Some(NodeSelector.forId(parent, parentId)),
               child = parentField.relatedModel_!,
               childWhere = None
             )

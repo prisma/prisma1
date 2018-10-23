@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.postgres.impls.mutactions
 
 import com.prisma.deploy.connector.postgres.database.PostgresDeployDatabaseMutationBuilder
-import com.prisma.deploy.connector.{CreateInlineRelation, CreateRelationTable, DeleteRelationTable}
+import com.prisma.deploy.connector.{CreateInlineRelationForTests, CreateRelationTable, DeleteRelationTable, RenameRelationTable}
 
 object CreateRelationInterpreter extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
@@ -32,10 +32,21 @@ object DeleteRelationInterpreter extends SqlMutactionInterpreter[DeleteRelationT
   }
 }
 
-object CreateInlineRelationInterpreter extends SqlMutactionInterpreter[CreateInlineRelation] {
-  override def execute(mutaction: CreateInlineRelation) = {
+object RenameRelationInterpreter extends SqlMutactionInterpreter[RenameRelationTable] {
+  override def execute(mutaction: RenameRelationTable) = {
+    PostgresDeployDatabaseMutationBuilder.renameTable(projectId = mutaction.projectId, name = mutaction.previousName, newName = mutaction.nextName)
+  }
+
+  override def rollback(mutaction: RenameRelationTable) = {
+    PostgresDeployDatabaseMutationBuilder.renameTable(projectId = mutaction.projectId, name = mutaction.nextName, newName = mutaction.previousName)
+
+  }
+}
+
+object CreateInlineRelationInterpreter extends SqlMutactionInterpreter[CreateInlineRelationForTests] {
+  override def execute(mutaction: CreateInlineRelationForTests) = {
     PostgresDeployDatabaseMutationBuilder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
   }
 
-  override def rollback(mutaction: CreateInlineRelation) = ???
+  override def rollback(mutaction: CreateInlineRelationForTests) = ???
 }

@@ -1,10 +1,10 @@
 package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
 import com.prisma.deploy.connector.mysql.impls._
+import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -15,7 +15,9 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def isActive         = true
+  override def isActive                                      = true
+  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
+
   lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabase
   lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
@@ -24,7 +26,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override val projectPersistence: ProjectPersistence           = MySqlProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence       = MySqlMigrationPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
-  override def capabilities                                     = Set(MigrationsCapability)
+  override def capabilities                                     = Set(MigrationsCapability, NonEmbeddedScalarListCapability)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)

@@ -2,7 +2,7 @@ package com.prisma.api.queries.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -111,7 +111,7 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
     result.toString should equal("""{"data":{"lists":[{"listInts":[7,8],"todo":{"todoInts":[9,10],"tag":{"tagInts":[11,12]}}}]}}""")
   }
 
-  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" taggedAs (IgnoreMongo) in {
+  "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
     val project = SchemaDsl.fromString() {
       s"""type List{

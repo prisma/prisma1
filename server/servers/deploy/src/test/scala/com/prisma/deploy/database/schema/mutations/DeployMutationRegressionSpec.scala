@@ -6,6 +6,8 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
+  override def doNotRunForPrototypes: Boolean = true
+
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence
 

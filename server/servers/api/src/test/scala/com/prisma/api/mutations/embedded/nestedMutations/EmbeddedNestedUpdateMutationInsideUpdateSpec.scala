@@ -1,13 +1,13 @@
 package com.prisma.api.mutations.embedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(EmbeddedTypesCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(EmbeddedTypesCapability)
 
   "Several many relations" should "be updateable by any unique argument through a nested mutation" in {
     val project = SchemaDsl.fromString() {

@@ -8,12 +8,7 @@ import org.mongodb.scala.bson.conversions
 
 object CursorConditionBuilder {
 
-  def buildCursorCondition(queryArguments: Option[QueryArguments]): conversions.Bson = queryArguments match {
-    case Some(args) => buildCursorCondition(args)
-    case None       => Filters.and(hackForTrue)
-  }
-
-  private def buildCursorCondition(queryArguments: QueryArguments): conversions.Bson = {
+  def buildCursorCondition(queryArguments: QueryArguments): conversions.Bson = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return Filters.and(hackForTrue)

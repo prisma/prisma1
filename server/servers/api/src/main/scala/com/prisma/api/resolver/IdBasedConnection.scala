@@ -9,7 +9,7 @@ import scala.annotation.implicitNotFound
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 
-case class ConnectionParentElement(nodeId: Option[IdGCValue], field: Option[models.RelationField], args: Option[QueryArguments])
+case class ConnectionParentElement(nodeId: Option[IdGCValue], field: Option[models.RelationField], args: QueryArguments)
 
 trait IdBasedConnection[T] {
   def pageInfo: PageInfo
@@ -103,7 +103,7 @@ object IdBasedConnection {
 
   val CursorPrefix = "arrayconnection:"
 
-  def empty[T] = DefaultIdBasedConnection(PageInfo.empty, Vector.empty[Edge[T]], ConnectionParentElement(None, None, None))
+  def empty[T] = DefaultIdBasedConnection(PageInfo.empty, Vector.empty[Edge[T]], ConnectionParentElement(None, None, QueryArguments.empty))
 }
 
 case class SliceInfo(sliceStart: Int, size: Int)

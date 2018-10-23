@@ -1,16 +1,18 @@
 package com.prisma.deploy.connector.mongo
 
 import com.prisma.config.DatabaseConfig
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mongo.impl._
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, JoinRelationsCapability, MigrationsCapability, MongoRelationsCapability}
+import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
+
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
@@ -20,8 +22,9 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
-//  override def capabilities: Set[DeployConnectorCapability]     = if (isActive) Set(MigrationsCapability) else Set.empty
-  override def capabilities: Set[DeployConnectorCapability] = Set.empty
+  override def capabilities: Set[ConnectorCapability] =
+    if (isActive) Set(MigrationsCapability, EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability)
+    else Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability)
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer

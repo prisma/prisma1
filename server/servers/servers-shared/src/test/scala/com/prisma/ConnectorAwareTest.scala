@@ -95,6 +95,12 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
 
   def connectorHasCapability(capability: CapabilityType): Boolean
 
+  def ifConnectorIsNotMongo[T](assertion: => T): Unit = {
+    if (connectorTag != MongoConnectorTag) {
+      assertion
+    }
+  }
+
   def ifConnectorIsActive[T](assertion: => T): Unit = {
     if (connector.active && connectorTag != MongoConnectorTag) {
       assertion
