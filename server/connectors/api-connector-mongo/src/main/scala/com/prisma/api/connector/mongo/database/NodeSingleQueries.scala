@@ -52,14 +52,9 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
     parentField.relationIsInlinedInParent match {
       case true =>
         getNodeByWhere(parent.where).map {
-          case None => None
-          case Some(n) =>
-            n.data.map(parentField.name) match {
-              case x: CuidGCValue => Some(x)
-              case _              => None
-            }
+          case None    => None
+          case Some(n) => n.getIDAtPath(parentField, parent.path)
         }
-
       case false =>
         val filter = generateFilterForFieldAndId(parentField.relatedField, parent.idValue)
 
