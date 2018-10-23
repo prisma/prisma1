@@ -43,7 +43,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
     create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
 
     val update = server
-      .query(
+      .queryThatMustFail(
         """mutation {
           |  updateParent(
           |  where:{p:"p1"}
@@ -51,7 +51,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |    children: {update:{
           |       where:{c: "c1"}
           |       data:{
-          |           friendReq:{delete:{f: "f1"}}
+          |           friendReq:{delete:true}
           |       }
           |    }}
           |  }){
@@ -65,11 +65,10 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |    }
           |  }
           |}""",
-        project
+        project,
+        0,
+        errorContains = """Reason: 'children.update[0].data.friendReq.delete' Field 'delete' is not defined in the input type 'FriendUpdateOneRequiredInput'."""
       )
-
-    update.toString should include(
-      """Reason: 'children.update[0].data.friendReq.delete' Field 'delete' is not defined in the input type 'FriendUpdateOneRequiredInput'.""")
   }
 
   "a FriendOpt relation" should "be possible" in {
@@ -131,8 +130,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
         project
       )
 
-    update.toString should include(
-      """Reason: 'children.update[0].data.friendReq.delete' Field 'delete' is not defined in the input type 'FriendUpdateOneRequiredInput'.""")
+    update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendOpt":null}]}}}""")
   }
 
   "a FriendsOpt relation" should "be possible" in {
@@ -145,7 +143,6 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
       .query(
         """mutation {
           |  createParent(
-          |  
           |  data: {
           |    p: "p1"
           |    children: {create:{
@@ -194,8 +191,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
         project
       )
 
-    update.toString should include(
-      """Reason: 'children.update[0].data.friendReq.delete' Field 'delete' is not defined in the input type 'FriendUpdateOneRequiredInput'.""")
+    update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[]}]}}}""")
   }
 
 }
