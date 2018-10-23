@@ -37,9 +37,9 @@ object ResolverResult {
 
 case class QueryArguments(
     skip: Option[Int],
-    after: Option[String],
+    after: Option[IdGCValue],
     first: Option[Int],
-    before: Option[String],
+    before: Option[IdGCValue],
     last: Option[Int],
     filter: Option[Filter],
     orderBy: Option[OrderBy]
