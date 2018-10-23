@@ -29,9 +29,9 @@ class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
 
 class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
 
-  override def runOnlyForConnectors = Set(MongoConnectorTag, PostgresConnectorTag)
+  override def runOnlyForConnectors = Set(PostgresConnectorTag)
 
-  override val project = SchemaDsl.fromString() {
+  override lazy val project = SchemaDsl.fromString() {
     """
       |type List {
       |  id: UUID! @unique
