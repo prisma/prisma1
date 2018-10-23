@@ -2,12 +2,13 @@ package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbeddedT
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
+class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
 
   "a FriendReq relation" should "be possible" in {
 
@@ -36,6 +37,20 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
 
     create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
 
+    val create2 = server
+      .query(
+        """mutation {
+          |  createFriend(data: {
+          |    f: "f1"
+          |  }){
+          |    f
+          |  }
+          |}""",
+        project
+      )
+
+    create2.toString should be("""{"data":{"createFriend":{"f":"f1"}}}""")
+
     val update = server
       .query(
         """mutation {
@@ -44,7 +59,7 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
           |  data: {
           |    children: {create:{
           |       c: "c1"
-          |       friendReq:{create:{f: "f1"}}
+          |       friendReq:{connect:{f: "f1"}}
           |    }}
           |  }){
           |    p
@@ -63,6 +78,7 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
     update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
   }
 
+  //Fixme continue here
   "a FriendOpt relation" should "be possible" in {
 
     val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
@@ -90,6 +106,18 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
 
     create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
 
+    val create2 = server
+      .query(
+        """mutation {
+          |  createFriend(data: {
+          |    f: "f1"
+          |  }){
+          |    f
+          |  }
+          |}""",
+        project
+      )
+
     val update = server
       .query(
         """mutation {
@@ -98,7 +126,7 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
           |  data: {
           |    children: {create:{
           |       c: "c1"
-          |       friendOpt:{create:{f: "f1"}}
+          |       friendOpt:{connect:{f: "f1"}}
           |    }}
           |  }){
           |    p
@@ -144,6 +172,30 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
 
     create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
 
+    val create2 = server
+      .query(
+        """mutation {
+          |  createFriend(data: {
+          |    f: "f1"
+          |  }){
+          |    f
+          |  }
+          |}""",
+        project
+      )
+
+    val create3 = server
+      .query(
+        """mutation {
+          |  createFriend(data: {
+          |    f: "f2"
+          |  }){
+          |    f
+          |  }
+          |}""",
+        project
+      )
+
     val update = server
       .query(
         """mutation {
@@ -152,7 +204,7 @@ class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec wi
           |  data: {
           |    children: {create:{
           |       c: "c1"
-          |       friendsOpt:{create:[{f: "f1"}, {f: "f2"}]}
+          |       friendsOpt:{connect:[{f: "f1"}, {f: "f2"}]}
           |    }}
           |  }){
           |    p
