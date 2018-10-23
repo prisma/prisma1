@@ -231,6 +231,11 @@ ${chalk.bold('Next steps:')}
 ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
     if (results.generator && results.generator !== 'no-generation') {
+      try {
+        process.chdir(this.config.definitionDir)
+      } catch (err) {
+        this.out.log(chalk.red(err))
+      }
       const child = spawnSync('prisma', ['generate'])
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
@@ -263,6 +268,7 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       }
     }
   }
+
   getGeneratorConfig(generator: string) {
     return `\n\ngenerate:
   - generator: ${generator}

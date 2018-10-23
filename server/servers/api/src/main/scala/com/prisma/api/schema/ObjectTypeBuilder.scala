@@ -255,12 +255,20 @@ class ObjectTypeBuilder(
   }
 
   private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): QueryArguments = {
+    def convertCursorToGcValue(s: String) = {
+      model.idField_!.typeIdentifier match {
+        case TypeIdentifier.Cuid => CuidGCValue(s)
+        case TypeIdentifier.UUID => UuidGCValue.parse_!(s)
+        case TypeIdentifier.Int  => IntGCValue(s.toInt)
+        case x                   => sys.error(s"This must not happen. $x is not a valid type identifier for an id field.")
+      }
+    }
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
     val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
     val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
-    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name)
-    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
+    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name).map(convertCursorToGcValue)
+    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name).map(convertCursorToGcValue)
     val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
     val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
 
