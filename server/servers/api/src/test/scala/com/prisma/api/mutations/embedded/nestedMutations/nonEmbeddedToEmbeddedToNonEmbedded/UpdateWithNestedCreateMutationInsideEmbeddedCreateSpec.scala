@@ -6,7 +6,7 @@ import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithEmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithNestedCreateMutationInsideEmbeddedCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a FriendReq relation" should "be possible" in {
