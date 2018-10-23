@@ -1,5 +1,7 @@
 package com.prisma.api.connector.postgres
 
+import java.sql.Driver
+
 import com.prisma.api.connector.ApiConnectorCapability._
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability}
@@ -8,8 +10,8 @@ import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val databases = PostgresDatabasesFactory.initialize(config)
+case class PostgresApiConnector(config: DatabaseConfig, driver: Driver, isActive: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
+  lazy val databases = PostgresDatabasesFactory.initialize(config, driver)
 
   override def initialize() = {
     databases

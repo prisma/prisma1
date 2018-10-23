@@ -14,12 +14,12 @@ object PrismaNativeMain {
     implicit val system       = ActorSystem("single-server")
     implicit val materializer = ActorMaterializer()
     implicit val dependencies = PrismaNativeDependencies()
-//
-//    dependencies.initialize()(system.dispatcher)
+
+    dependencies.initialize()(system.dispatcher)
 //    dependencies.migrator.initialize
 //
 //    Version.check()
-//
+
 //    ServerExecutor(
 //      port = dependencies.config.port.getOrElse(4466),
 //      ManagementServer("management"),

@@ -75,12 +75,10 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val httpClient       = SimpleHttpClient()
   override lazy val apiAuth          = Auth.jna(Algorithm.HS256)
 
-  lazy val databaseConfig           = config.databases.head
-  override lazy val deployConnector = PostgresDeployConnector(databaseConfig, isActive = databaseConfig.active)
-//  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
-  override lazy val apiConnector = PostgresApiConnector(databaseConfig, isActive = databaseConfig.active)
-
-  override def projectIdEncoder: ProjectIdEncoder = ???
+  lazy val databaseConfig                         = config.databases.head
+  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, isActive = databaseConfig.active)
+  override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
+  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, isActive = databaseConfig.active)
 
   override lazy val functionValidator           = FunctionValidatorImpl()
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()

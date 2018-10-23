@@ -60,25 +60,54 @@ def normalProject(name: String): Project = Project(id = name, base = file(s"./$n
 // ####################
 //       IMAGES
 // ####################
-lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma").dependsOn(prismaImageShared)
-lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod").dependsOn(prismaImageShared)
-lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native")
-  .dependsOn(prismaImageShared).enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
-  "--enable-all-security-services",
-  "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
-  "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json",
-  //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
-  "-H:+JNI",
-  "--verbose"))
+lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
+  .settings(
+    libraryDependencies ++= slick ++ Seq(postgresClient)
+  )
+  .dependsOn(prismaImageShared)
+  .dependsOn(graphQlClient)
+  .dependsOn(prismaConfig)
+  .dependsOn(allConnectorProjects)
 
-lazy val prismaImageShared = imageProject("prisma-image-shared")
+lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
+  .settings(
+    libraryDependencies ++= slick ++ Seq(postgresClient)
+  )
+  .dependsOn(prismaImageShared)
+  .dependsOn(graphQlClient)
+  .dependsOn(prismaConfig)
+  .dependsOn(allConnectorProjects)
+
+lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native")
+  .dependsOn(prismaImageShared)
   .dependsOn(api)
   .dependsOn(deploy)
   .dependsOn(subscriptions)
   .dependsOn(workers)
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
-  .dependsOn(allConnectorProjects)
+  .dependsOn(deployConnectorPostgres)
+  .dependsOn(apiConnectorPostgres)
+  .dependsOn(jdbcNative)
+  .enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
+  "--enable-all-security-services",
+  "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
+  "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json",
+  //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
+  "-H:+JNI",
+  "--verbose"),
+  mappings in Universal := (mappings in Universal).value.filter { case(jar, path) => {
+    val check = path.contains("mariadb") || path.contains("org.postgresql")
+    println(s"$path -> $check")
+    !check
+  }}
+)
+
+lazy val prismaImageShared = imageProject("prisma-image-shared")
+  .dependsOn(api)
+  .dependsOn(deploy)
+  .dependsOn(workers)
+  .dependsOn(subscriptions)
 
 // ####################
 //       SERVERS
@@ -140,9 +169,9 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
   )
 
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
-  .dependsOn(deployConnector, jdbcNative)
+  .dependsOn(deployConnector)
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= slick
   )
 
 lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
@@ -163,9 +192,6 @@ lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
   .dependsOn(slickUtils)
-  .settings(
-    libraryDependencies ++= slick ++ jooq ++ Seq(postgresClient)
-  )
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnectorJdbc)
@@ -174,7 +200,10 @@ lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   )
 
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
-  .dependsOn(apiConnectorJdbc, jdbcNative)
+  .dependsOn(apiConnectorJdbc)
+  .settings(
+    libraryDependencies ++= slick
+  )
 
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")

@@ -1,24 +1,23 @@
 package com.prisma.api.connector.postgres
 
+import java.sql.Driver
+
 import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
-import com.prisma.native_jdbc.CustomJdbcDriver
 import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
 
 object PostgresDatabasesFactory {
-  private lazy val dbDriver = CustomJdbcDriver.jna()
-
   // PostgreSQL db used for all Prisma schemas (must be in sync with the deploy connector)
   val defaultDatabase = "prisma"
 
   // Schema to use in the database
   val schema = "public" // default schema
 
-  def initialize(dbConfig: DatabaseConfig): Databases = {
+  def initialize(dbConfig: DatabaseConfig, driver: Driver): Databases = {
     val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
-    val masterDb                     = Database.forConfig("database", config, driver = dbDriver)
+    val masterDb                     = Database.forConfig("database", config, driver)
     val slickDatabase: SlickDatabase = SlickDatabase(PostgresProfile, masterDb)
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
