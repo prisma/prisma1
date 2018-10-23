@@ -6,7 +6,7 @@ import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithNestedDisconnectMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a FriendReq relation" should "be possible" in {
@@ -51,7 +51,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |    children: {update:{
           |       where:{c: "c1"}
           |       data:{
-          |           friendReq:{delete:true}
+          |           friendReq:{disconnect:true}
           |       }
           |    }}
           |  }){
@@ -67,7 +67,8 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |}""",
         project,
         0,
-        errorContains = """Reason: 'children.update[0].data.friendReq.delete' Field 'delete' is not defined in the input type 'FriendUpdateOneRequiredInput'."""
+        errorContains =
+          """Reason: 'children.update[0].data.friendReq.disconnect' Field 'disconnect' is not defined in the input type 'FriendUpdateOneRequiredInput'."""
       )
 
     server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[{"f":"f1"}]}}""")
@@ -115,7 +116,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |    children: {update:{
           |       where:{c: "c1"}
           |       data:{
-          |           friendOpt:{delete: true}
+          |           friendOpt:{disconnect: true}
           |       }
           |    }}
           |  }){
@@ -134,7 +135,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
 
     update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendOpt":null}]}}}""")
 
-    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[]}}""")
+    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[{"f":"f1"}]}}""")
 
   }
 
@@ -179,7 +180,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |    children: {update:{
           |       where:{c: "c1"}
           |       data:{
-          |           friendsOpt:{delete:{f: "f1"}}
+          |           friendsOpt:{disconnect:{f: "f1"}}
           |       }
           |    }}
           |  }){
@@ -198,7 +199,7 @@ class UpdateWithNestedDeleteMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
 
     update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[]}]}}}""")
 
-    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[]}}""")
+    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[{"f":"f1"}]}}""")
   }
 
 }
