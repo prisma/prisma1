@@ -33,14 +33,13 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     } yield if (list.nonEmpty) throw RequiredRelationWouldBeViolated(relationField.relation)
   }
 
-  //Fixme this needs to handle the full path
   def ensureThatParentIsConnected(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) = {
     for {
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
                          for {
                            optionRes <- getNodeByWhere(parent.where)
-                           filterOption = optionRes.flatMap { res =>
+                           filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
                                case (false, Some(x: IdGCValue))       => Some(ScalarFilter(relationField.relatedModel_!.idField_!, Equals(x)))
