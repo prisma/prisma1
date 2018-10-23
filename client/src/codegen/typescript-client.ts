@@ -502,7 +502,7 @@ export const prisma = new Prisma()`
     }
 
     return this.renderInterfaceWrapper(
-      `${type.name}${node ? 'Promise' : ''}`,
+      `${type.name}${node ? '' : ''}`,
       type.description!,
       interfaces,
       fieldDefinition,
@@ -575,7 +575,7 @@ export const prisma = new Prisma()`
     const addSubscription = !partial && isSubscription && !isScalar
 
     if ((node || isList) && !isScalar && !addSubscription) {
-      typeString += `Promise`
+      typeString += ``
     }
 
     if (addSubscription) {
