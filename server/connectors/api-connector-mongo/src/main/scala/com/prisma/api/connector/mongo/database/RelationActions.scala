@@ -61,9 +61,7 @@ trait RelationActions extends FilterConditionBuilder {
         val field         = parent.path.stringForField(relationField.dbName)
         val af            = ArrayFilter.arrayFilter(parent.path)
         val updateOptions = UpdateOptions().arrayFilters(af.toList.asJava)
-        val filter        = ScalarListFilter(parentModel.idField_!.copy(name = field, isList = true), ListContains(childId))
-        val whereFilter   = ScalarFilter(parentModel.idField_!, Equals(parent.idValue))
-        val mongoFilter   = buildConditionForFilter(Some(AndFilter(Vector(filter, whereFilter))))
+        val mongoFilter   = buildConditionForFilter(Some(ScalarFilter(parentModel.idField_!, Equals(parent.idValue))))
         val update        = if (relationField.isList) pull(field, GCToBson(childId)) else unset(field)
 
         database.getCollection(parentModel.dbName).updateMany(mongoFilter, update, updateOptions).collect().toFuture()
