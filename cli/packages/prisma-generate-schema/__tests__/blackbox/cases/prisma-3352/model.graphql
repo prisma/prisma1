@@ -1,0 +1,9 @@
+type User {
+  id: ID! @unique
+  licenses: [License!]!
+}
+
+type License {
+  id: ID! @unique
+  user: User!
+}

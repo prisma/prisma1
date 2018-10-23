@@ -1,0 +1,451 @@
+type AggregateLicense {
+  count: Int!
+}
+
+type AggregateUser {
+  count: Int!
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+type License implements Node {
+  id: ID!
+  user: User!
+}
+
+"""
+A connection to a list of items.
+"""
+type LicenseConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LicenseEdge]!
+  aggregate: AggregateLicense!
+}
+
+input LicenseCreateInput {
+  user: UserCreateOneWithoutLicensesInput!
+}
+
+input LicenseCreateManyWithoutUserInput {
+  connect: [LicenseWhereUniqueInput!]
+}
+
+"""
+An edge in a connection.
+"""
+type LicenseEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: License!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LicenseOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type LicensePreviousValues {
+  id: ID!
+}
+
+type LicenseSubscriptionPayload {
+  mutation: MutationType!
+  node: License
+  updatedFields: [String!]
+  previousValues: LicensePreviousValues
+}
+
+input LicenseSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LicenseSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LicenseSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LicenseSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LicenseWhereInput
+}
+
+input LicenseUpdateInput {
+  user: UserUpdateOneRequiredWithoutLicensesInput
+}
+
+input LicenseUpdateManyWithoutUserInput {
+  connect: [LicenseWhereUniqueInput!]
+  disconnect: [LicenseWhereUniqueInput!]
+  delete: [LicenseWhereUniqueInput!]
+}
+
+input LicenseWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LicenseWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LicenseWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LicenseWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  user: UserWhereInput
+}
+
+input LicenseWhereUniqueInput {
+  id: ID
+}
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createUser(data: UserCreateInput!): User!
+  createLicense(data: LicenseCreateInput!): License!
+  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
+  updateLicense(data: LicenseUpdateInput!, where: LicenseWhereUniqueInput!): License
+  deleteUser(where: UserWhereUniqueInput!): User
+  deleteLicense(where: LicenseWhereUniqueInput!): License
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  upsertLicense(where: LicenseWhereUniqueInput!, create: LicenseCreateInput!, update: LicenseUpdateInput!): License!
+  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
+  updateManyLicenses(data: LicenseUpdateInput!, where: LicenseWhereInput): BatchPayload!
+  deleteManyUsers(where: UserWhereInput): BatchPayload!
+  deleteManyLicenses(where: LicenseWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
+  licenses(where: LicenseWhereInput, orderBy: LicenseOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [License]!
+  user(where: UserWhereUniqueInput!): User
+  license(where: LicenseWhereUniqueInput!): License
+  usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
+  licensesConnection(where: LicenseWhereInput, orderBy: LicenseOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LicenseConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
+  license(where: LicenseSubscriptionWhereInput): LicenseSubscriptionPayload
+}
+
+type User implements Node {
+  id: ID!
+  licenses(where: LicenseWhereInput, orderBy: LicenseOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [License!]
+}
+
+"""
+A connection to a list of items.
+"""
+type UserConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [UserEdge]!
+  aggregate: AggregateUser!
+}
+
+input UserCreateInput {
+  licenses: LicenseCreateManyWithoutUserInput
+}
+
+input UserCreateOneWithoutLicensesInput {
+  connect: UserWhereUniqueInput
+}
+
+"""
+An edge in a connection.
+"""
+type UserEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: User!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum UserOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type UserPreviousValues {
+  id: ID!
+}
+
+type UserSubscriptionPayload {
+  mutation: MutationType!
+  node: User
+  updatedFields: [String!]
+  previousValues: UserPreviousValues
+}
+
+input UserSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [UserSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: UserWhereInput
+}
+
+input UserUpdateInput {
+  licenses: LicenseUpdateManyWithoutUserInput
+}
+
+input UserUpdateOneRequiredWithoutLicensesInput {
+  connect: UserWhereUniqueInput
+}
+
+input UserWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [UserWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  licenses_every: LicenseWhereInput
+  licenses_some: LicenseWhereInput
+  licenses_none: LicenseWhereInput
+}
+
+input UserWhereUniqueInput {
+  id: ID
+}
+
