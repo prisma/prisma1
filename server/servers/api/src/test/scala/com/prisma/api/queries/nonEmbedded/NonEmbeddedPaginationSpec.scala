@@ -1,5 +1,6 @@
 package com.prisma.api.queries.nonEmbedded
 
+import com.prisma.ConnectorTag.{MongoConnectorTag, PostgresConnectorTag}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.ApiConnectorCapability
 import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
@@ -26,6 +27,9 @@ class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
 }
 
 class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
+
+  override def runOnlyForConnectors = Set(MongoConnectorTag, PostgresConnectorTag)
+
   override val project = SchemaDsl.fromString() {
     """
       |type List {
