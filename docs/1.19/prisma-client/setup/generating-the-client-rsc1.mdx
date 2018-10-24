@@ -14,8 +14,8 @@ The Prisma client is auto-generated using the `prisma generate` command of the [
 The `generate` root property accepts a list of objects. Each object has two fields:
 
 - `generator`: The programming language in which the Prisma client should be generated. 
-  - Possible values: `typescript`, `javascript`, `go`.
-  - Coming soon: `reason`, `flow`.
+  - Possible values: `typescript-client`, `javascript-client`, `flow-client`, `go-client`.
+  - Coming soon: `reason`.
 - `output`: The path and name of the file in which the Prisma client should be stored.
 
 As an example, consider the following prisma.yml:
@@ -31,7 +31,7 @@ generate:
 
 Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
 
-> The `generator` also accepts `schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.`
+> The `generator` also accepts `graphql-schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.`
 
 ### More examples
 

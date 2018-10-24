@@ -1,5 +1,7 @@
 import Collapse from 'components/Markdown/Collapse'
 import Code from 'components/Markdown/Code'
+import Info from 'components/Markdown/Info'
+
 
 export const meta = {
   title: "The Datamodel",
@@ -215,6 +217,12 @@ type Query {
 ```
 
 `graphql-import` currently uses SDL comments to import types. In the future, there might be an official import syntax for SDL as has already been [discussed](https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import) in the GraphQL working group.
+
+<Info>
+
+You can generate the Prisma GraphQL schema using the [`generate`](5cy7#generate-optional) property in prisma.yml. Learn more [here](rsc1#configuring-generate-in-prisma.yml).
+
+</Info>
 
 ## Files
 
