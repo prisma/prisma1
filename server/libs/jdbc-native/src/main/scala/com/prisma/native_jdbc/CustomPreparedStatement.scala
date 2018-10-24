@@ -10,8 +10,6 @@ import java.util.{Calendar, UUID}
 import org.joda.time.DateTime
 
 import scala.annotation.tailrec
-//import org.postgresql.core.Parser
-//import org.postgresql.util.PSQLState
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
 
 import scala.collection.mutable
@@ -32,18 +30,17 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   import CustomPreparedStatement._
   import bindingAndConnection._
 
-  val standardConformingStrings  = true
-  val withParameters             = true
-  val splitStatements            = true
-  val isBatchedReWriteConfigured = false
-  val regx                       = Pattern.compile("\\?") // Extreme simplification and unlikely to work as expected forever. todo
-  val rawSqlString               = transform(query)
-//  val parsedQuery                    = Parser.parseJdbcSql(query, standardConformingStrings, withParameters, splitStatements, isBatchedReWriteConfigured).get(0)
-//  val rawSqlString                   = parsedQuery.nativeSql
+  val standardConformingStrings      = true
+  val withParameters                 = true
+  val splitStatements                = true
+  val isBatchedReWriteConfigured     = false
+  val regx                           = Pattern.compile("\\?") // Extreme simplification and unlikely to work as expected forever. todo
+  val rawSqlString                   = transform(query)
   val stmt                           = binding.prepareStatement(connection, rawSqlString)
   var currentParams                  = new Params
   val paramList                      = mutable.ArrayBuffer.empty[Params]
   var lastCallResult: RustCallResult = null
+
   val returnsRows = rawSqlString.toLowerCase().startsWith("with ") || rawSqlString.toLowerCase().startsWith("select ") || rawSqlString
     .toLowerCase()
     .contains("returning ")

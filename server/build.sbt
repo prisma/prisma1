@@ -91,13 +91,14 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
   .dependsOn(jdbcNative)
   .enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
   "--enable-all-security-services",
+  "--report-unsupported-elements-at-runtime", // todo no idea why postgres is still destroying the build
   "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
-  "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json",
+  "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
   //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
   "-H:+JNI",
   "--verbose"),
   mappings in Universal := (mappings in Universal).value.filter { case(jar, path) => {
-    val check = path.contains("mariadb")
+    val check = path.contains("mariadb") || path.contains("org.postgresql")
     println(s"$path -> $check")
     !check
   }}

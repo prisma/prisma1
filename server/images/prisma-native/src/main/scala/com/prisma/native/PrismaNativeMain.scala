@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 
 object PrismaNativeMain {
   def main(args: Array[String]): Unit = {
-    implicit val system       = ActorSystem("single-server")
+    implicit val system       = ActorSystem("single-server", StaticAkkaConfig.config)
     implicit val materializer = ActorMaterializer()
     implicit val dependencies = PrismaNativeDependencies()
 
