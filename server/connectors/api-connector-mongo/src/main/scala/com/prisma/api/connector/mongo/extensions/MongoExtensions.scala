@@ -24,7 +24,7 @@ object GCBisonTransformer {
       case FloatGCValue(v)    => BsonDouble(v)
       case JsonGCValue(v)     => BsonString(v.toString())
       case EnumGCValue(v)     => BsonString(v)
-      case CuidGCValue(v)     => BsonString(v)
+      case StringIdGCValue(v) => BsonString(v)
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
       case BooleanGCValue(v)  => BsonBoolean(v)
@@ -45,7 +45,7 @@ object NodeSelectorBsonTransformer {
 }
 
 object DocumentToId {
-  def toCUIDGCValue(document: Document): IdGCValue = CuidGCValue(document("_id").asString.getValue)
+  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asString.getValue)
 }
 
 object BisonToGC {
@@ -74,7 +74,7 @@ object BisonToGC {
     case (TypeIdentifier.Int, value: BsonInt32)         => IntGCValue(value.getValue)
     case (TypeIdentifier.Float, value: BsonDouble)      => FloatGCValue(value.getValue)
     case (TypeIdentifier.Enum, value: BsonString)       => EnumGCValue(value.getValue)
-    case (TypeIdentifier.Cuid, value: BsonString)       => CuidGCValue(value.getValue)
+    case (TypeIdentifier.Cuid, value: BsonString)       => StringIdGCValue(value.getValue)
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
@@ -97,7 +97,7 @@ object DocumentToRoot {
     val updatedAt: (String, GCValue) =
       document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
 
-    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.idField_!, v)).getOrElse("id" -> CuidGCValue.dummy)
+    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.idField_!, v)).getOrElse("id" -> StringIdGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))

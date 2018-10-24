@@ -11,25 +11,22 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
   }
 
   def getToManyChild(relationField: RelationField, where: NodeSelector): Option[PrismaNode] = data.map.get(relationField.name) match {
-    case None =>
-      None
+    case None                      => None
+    case Some(NullGCValue)         => None
+    case Some(ListGCValue(values)) => evaluateListGCValue(relationField, values, where)
+    case x                         => sys.error("Checking for toMany child in PrismaNode returned unexpected result" + x)
+  }
 
-    case Some(NullGCValue) =>
-      None
-
-    case Some(ListGCValue(values)) =>
-      values.find(value => value.asRoot.map(where.fieldName) == where.fieldGCValue) match {
-        case Some(gc) => Some(PrismaNode(gc.asRoot.idField, gc.asRoot, Some(relationField.relatedModel_!.name)))
-        case None     => None
-      }
-
-    case x =>
-      sys.error("Checking for toMany child in PrismaNode returned unexpected result" + x)
+  private def evaluateListGCValue(relationField: RelationField, values: Vector[GCValue], where: NodeSelector) = {
+    values.find(value => value.asRoot.map(where.fieldName) == where.fieldGCValue) match {
+      case Some(gc) => Some(PrismaNode(gc.asRoot.idField, gc.asRoot, Some(relationField.relatedModel_!.name)))
+      case None     => None
+    }
   }
 }
 
 object PrismaNode {
-  def dummy: PrismaNode = PrismaNode(CuidGCValue(""), RootGCValue.empty)
+  def dummy: PrismaNode = PrismaNode(StringIdGCValue.dummy, RootGCValue.empty)
 }
 
 case class PrismaNodeWithParent(parentId: IdGCValue, prismaNode: PrismaNode)
