@@ -6,7 +6,7 @@ import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithNestedDeleteMutationInsideEmbeddedUpsertSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a FriendReq relation" should "be possible" in {
@@ -18,47 +18,13 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
     val create = server
       .query(
         """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |  }){
-          |    p
-          |    children{
-          |       c
-          |       friendReq{
-          |         f
-          |       }
-          |
-          |    }
-          |  }
-          |}""",
-        project
-      )
-
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
-
-    val create2 = server
-      .query(
-        """mutation {
-          |  createFriend(data: {
-          |    f: "f1"
-          |  }){
-          |    f
-          |  }
-          |}""",
-        project
-      )
-
-    create2.toString should be("""{"data":{"createFriend":{"f":"f1"}}}""")
-
-    val update = server
-      .query(
-        """mutation {
-          |  updateParent(
-          |  where:{p:"p1"}
+          |  createParent(
+          |  
           |  data: {
+          |    p: "p1"
           |    children: {create:{
           |       c: "c1"
-          |       friendReq:{connect:{f: "f1"}}
+          |       friendReq:{create:{f: "f1"}}
           |    }}
           |  }){
           |    p
@@ -74,10 +40,39 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
         project
       )
 
-    update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
+    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
+
+    val update = server
+      .queryThatMustFail(
+        """mutation {
+          |  updateParent(
+          |  where:{p:"p1"}
+          |  data: {
+          |    children: {upsert:{
+          |       where:{c: "c1"}
+          |       create:{ c: "cNew", friendReq:{connect:{f: "SHOULD NOT MATTER"}}}
+          |       update:{ friendReq:{delete:true}}
+          |    }}
+          |  }){
+          |    p
+          |    children{
+          |       c
+          |       friendReq{
+          |         f
+          |       }
+          |
+          |    }
+          |  }
+          |}""",
+        project,
+        0,
+        errorContains =
+          """Reason: 'children.upsert[0].update.friendReq.delete' Field 'delete' is not defined in the input type 'FriendUpdateOneRequiredInput'."""
+      )
+
+    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[{"f":"f1"}]}}""")
   }
 
-  //Fixme continue here
   "a FriendOpt relation" should "be possible" in {
 
     val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
@@ -87,45 +82,13 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
     val create = server
       .query(
         """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |  }){
-          |    p
-          |    children{
-          |       c
-          |       friendOpt{
-          |         f
-          |       }
-          |
-          |    }
-          |  }
-          |}""",
-        project
-      )
-
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
-
-    val create2 = server
-      .query(
-        """mutation {
-          |  createFriend(data: {
-          |    f: "f1"
-          |  }){
-          |    f
-          |  }
-          |}""",
-        project
-      )
-
-    val update = server
-      .query(
-        """mutation {
-          |  updateParent(
-          |  where:{p:"p1"}
+          |  createParent(
+          |  
           |  data: {
+          |    p: "p1"
           |    children: {create:{
           |       c: "c1"
-          |       friendOpt:{connect:{f: "f1"}}
+          |       friendOpt:{create:{f: "f1"}}
           |    }}
           |  }){
           |    p
@@ -141,7 +104,37 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
         project
       )
 
-    update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendOpt":{"f":"f1"}}]}}}""")
+    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendOpt":{"f":"f1"}}]}}}""")
+
+    val update = server
+      .query(
+        """mutation {
+          |  updateParent(
+          |  where:{p:"p1"}
+          |  data: {
+          |    children: {upsert:{
+          |       where:{c: "c1"}
+          |       create:{ c: "cNew", friendOpt:{connect:{f: "SHOULD NOT MATTER"}}}
+          |       update:{ friendOpt:{delete:true}}
+          |    }}
+          |  }){
+          |    p
+          |    children{
+          |       c
+          |       friendOpt{
+          |         f
+          |       }
+          |
+          |    }
+          |  }
+          |}""",
+        project
+      )
+
+    update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendOpt":null}]}}}""")
+
+    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[]}}""")
+
   }
 
   "a FriendsOpt relation" should "be possible" in {
@@ -153,57 +146,12 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
     val create = server
       .query(
         """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |  }){
-          |    p
-          |    children{
-          |       c
-          |       friendsOpt{
-          |         f
-          |       }
-          |
-          |    }
-          |  }
-          |}""",
-        project
-      )
-
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[]}}}""")
-
-    val create2 = server
-      .query(
-        """mutation {
-          |  createFriend(data: {
-          |    f: "f1"
-          |  }){
-          |    f
-          |  }
-          |}""",
-        project
-      )
-
-    val create3 = server
-      .query(
-        """mutation {
-          |  createFriend(data: {
-          |    f: "f2"
-          |  }){
-          |    f
-          |  }
-          |}""",
-        project
-      )
-
-    val update = server
-      .query(
-        """mutation {
-          |  updateParent(
-          |  where:{p:"p1"}
+          |  createParent(
           |  data: {
+          |    p: "p1"
           |    children: {create:{
           |       c: "c1"
-          |       friendsOpt:{connect:[{f: "f1"}, {f: "f2"}]}
+          |       friendsOpt:{create:{f: "f1"}}
           |    }}
           |  }){
           |    p
@@ -219,7 +167,36 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
         project
       )
 
-    update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[{"f":"f1"},{"f":"f2"}]}]}}}""")
+    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[{"f":"f1"}]}]}}}""")
+
+    val update = server
+      .query(
+        """mutation {
+          |  updateParent(
+          |  where:{p:"p1"}
+          |  data: {
+          |    children: {upsert:{
+          |       where:{c: "c1"}
+          |       create:{ c: "cNew", friendsOpt:{connect:{f: "SHOULD NOT MATTER"}}}
+          |       update:{ friendsOpt:{delete:{f:"f1"}}}
+          |    }}
+          |  }){
+          |    p
+          |    children{
+          |       c
+          |       friendsOpt{
+          |         f
+          |       }
+          |
+          |    }
+          |  }
+          |}""",
+        project
+      )
+
+    update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[]}]}}}""")
+
+    server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[]}}""")
   }
 
 }
