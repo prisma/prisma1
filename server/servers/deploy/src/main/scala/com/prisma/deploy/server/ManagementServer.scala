@@ -48,8 +48,8 @@ case class ManagementServer(prefix: String = "")(
   }
 
   val innerRoutes = extractRequest { req =>
-    val requestId            = requestPrefix + ":management:" + createCuid()
-    val requestBeginningTime = System.currentTimeMillis()
+    val requestId = requestPrefix + ":management:" + createCuid()
+//    val requestBeginningTime = System.currentTimeMillis()
 
     def logRequestEnd(projectId: Option[String] = None, clientId: Option[String] = None) = {
 //      log(

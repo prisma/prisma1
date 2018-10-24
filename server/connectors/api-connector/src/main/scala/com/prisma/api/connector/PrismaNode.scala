@@ -31,14 +31,14 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
     case None => None
     case Some(n) =>
       n.data.map.get(parentField.name) match {
-        case Some(x: CuidGCValue) => Some(x)
-        case _                    => None
+        case Some(x: StringIdGCValue) => Some(x)
+        case _                        => None
       }
   }
 }
 
 object PrismaNode {
-  def dummy: PrismaNode = PrismaNode(CuidGCValue(""), RootGCValue.empty)
+  def dummy: PrismaNode = PrismaNode(StringIdGCValue(""), RootGCValue.empty)
 
   def getNodeAtPath(node: Option[PrismaNode], segments: List[PathSegment]): Option[PrismaNode] = {
     (node, segments.headOption) match {

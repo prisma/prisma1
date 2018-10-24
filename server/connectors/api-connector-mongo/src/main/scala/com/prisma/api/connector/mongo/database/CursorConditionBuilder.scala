@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.mongodb.client.model.Filters
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
-import com.prisma.gc_values.CuidGCValue
+import com.prisma.gc_values.StringIdGCValue
 import org.mongodb.scala.bson.conversions
 
 object CursorConditionBuilder {
@@ -27,8 +27,8 @@ object CursorConditionBuilder {
         case _                  => throw new IllegalArgumentException
       }
 
-    val afterCursorCondition  = after.map(_.asInstanceOf[CuidGCValue].value).map(cursorCondition(_, "after")).getOrElse(hackForTrue)
-    val beforeCursorCondition = before.map(_.asInstanceOf[CuidGCValue].value).map(cursorCondition(_, "before")).getOrElse(hackForTrue)
+    val afterCursorCondition  = after.map(_.asInstanceOf[StringIdGCValue].value).map(cursorCondition(_, "after")).getOrElse(hackForTrue)
+    val beforeCursorCondition = before.map(_.asInstanceOf[StringIdGCValue].value).map(cursorCondition(_, "before")).getOrElse(hackForTrue)
 
     Filters.and(afterCursorCondition, beforeCursorCondition)
   }

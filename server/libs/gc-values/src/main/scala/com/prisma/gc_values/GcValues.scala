@@ -73,10 +73,10 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
 
-sealed trait IdGCValue                extends LeafGCValue
-case class CuidGCValue(value: String) extends IdGCValue
-case class UuidGCValue(value: UUID)   extends IdGCValue
-case class IntGCValue(value: Int)     extends IdGCValue
+sealed trait IdGCValue                    extends LeafGCValue
+case class StringIdGCValue(value: String) extends IdGCValue
+case class UuidGCValue(value: UUID)       extends IdGCValue
+case class IntGCValue(value: Int)         extends IdGCValue
 
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
@@ -85,7 +85,7 @@ object UuidGCValue {
   def random: UuidGCValue = UuidGCValue(UUID.randomUUID())
 }
 
-object CuidGCValue {
-  def random: CuidGCValue = CuidGCValue(Cuid.createCuid())
-  def dummy: CuidGCValue  = CuidGCValue("")
+object StringIdGCValue {
+  def random: StringIdGCValue = StringIdGCValue(Cuid.createCuid())
+  def dummy: StringIdGCValue  = StringIdGCValue("")
 }

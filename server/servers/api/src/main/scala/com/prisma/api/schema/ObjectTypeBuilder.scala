@@ -257,7 +257,7 @@ class ObjectTypeBuilder(
   private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): QueryArguments = {
     def convertCursorToGcValue(s: String) = {
       model.idField_!.typeIdentifier match {
-        case TypeIdentifier.Cuid => CuidGCValue(s)
+        case TypeIdentifier.Cuid => StringIdGCValue(s)
         case TypeIdentifier.UUID => UuidGCValue.parse_!(s)
         case TypeIdentifier.Int  => IntGCValue(s.toInt)
         case x                   => sys.error(s"This must not happen. $x is not a valid type identifier for an id field.")
