@@ -97,7 +97,7 @@ object DocumentToRoot {
     val updatedAt: (String, GCValue) =
       document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
 
-    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.fields.find(_.name == "id").get, v)).getOrElse("id" -> CuidGCValue.random)
+    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.idField_!, v)).getOrElse("id" -> CuidGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
