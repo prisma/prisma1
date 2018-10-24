@@ -59,6 +59,14 @@ pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, que
 }
 
 #[no_mangle]
+pub extern "C" fn closeStatement(stmt: *mut driver::PsqlPreparedStatement) -> *const c_char  {
+    let boxedStmt = unsafe { Box::from_raw(stmt) };
+
+    return serializeCallResult(Ok(CallResult::empty()));
+}
+
+
+#[no_mangle]
 pub extern "C" fn executePreparedstatement(
     stmt: &driver::PsqlPreparedStatement,
     params: *const c_char,

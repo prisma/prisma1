@@ -20,6 +20,7 @@ trait RustBinding {
 
   def newConnection(url: String): Conn
   def prepareStatement(connection: Conn, query: String): Stmt
+  def closeStatement(stmt: Stmt): RustCallResult
   def startTransaction(connection: Conn): RustCallResult
   def commitTransaction(connection: Conn): RustCallResult
   def rollbackTransaction(connection: Conn): RustCallResult
@@ -151,5 +152,9 @@ object RustJnaImpl extends RustBinding {
     val result = library.queryPreparedstatement(stmt.stmt, params)
     println(s"[JNA] Result: $result")
     RustCallResult.fromString(result)
+  }
+
+  override def closeStatement(stmt: RustPreparedStatementJna): RustCallResult = {
+    RustCallResult.fromString(library.closeStatement(stmt.stmt))
   }
 }

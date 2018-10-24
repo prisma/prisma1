@@ -97,7 +97,7 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
   "-H:+JNI",
   "--verbose"),
   mappings in Universal := (mappings in Universal).value.filter { case(jar, path) => {
-    val check = path.contains("mariadb") || path.contains("org.postgresql")
+    val check = path.contains("mariadb")
     println(s"$path -> $check")
     !check
   }}
@@ -156,7 +156,10 @@ lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtil
 //       CONNECTORS
 // ####################
 
-lazy val connectorUtils = connectorProject("utils").dependsOn(deployConnectorProjects).dependsOn(apiConnectorProjects)
+lazy val connectorUtils = connectorProject("utils")
+  .dependsOn(deployConnectorProjects)
+  .dependsOn(apiConnectorProjects)
+  .dependsOn(jdbcNative)
 
 lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels)
@@ -189,6 +192,9 @@ lazy val apiConnector = connectorProject("api-connector")
   )
 
 lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
+  .settings(
+    libraryDependencies ++= jooq
+  )
   .dependsOn(apiConnector)
   .dependsOn(metrics)
   .dependsOn(slickUtils)
@@ -247,9 +253,8 @@ lazy val jdbcNative = libProject("jdbc-native")
   .settings(libraryDependencies ++= Seq(
     jna,
     scalaTest,
-    playJson,
-    postgresClient
-  ) ++ jooq)
+    playJson
+  ))
 
 lazy val jwtNative = libProject("jwt-native")
   .settings(libraryDependencies ++= Seq(

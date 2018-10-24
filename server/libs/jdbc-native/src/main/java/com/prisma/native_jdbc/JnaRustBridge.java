@@ -23,5 +23,7 @@ public interface JnaRustBridge extends Library {
     String executePreparedstatement(Pointer stmt, String params);
 
     String queryPreparedstatement(Pointer stmt, String params);
+
+    String closeStatement(Pointer stmt);
 }
 

@@ -75,11 +75,33 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
   override def getLong(columnIndex: Int)                = readColumnAs[Long](columnIndex)
   override def getLong(columnLabel: String)             = readColumnAs[Long](columnLabel)
 
+  override def getTimestamp(columnLabel: String, cal: Calendar) = {
+    val labelPos = rustResultSet.columns.indexWhere(c => c.name == columnLabel)
+    if (labelPos <= -1) {
+      sys.error("Column label not found")
+    }
+
+    getTimestamp(labelPos + 1, cal)
+  }
+
   override def getTimestamp(columnIndex: Int, cal: Calendar) = {
     if (cal.getTimeZone != TimeZone.getTimeZone("UTC")) {
       sys.error("Can only handle UTC.")
     }
 
+    getTimestamp(columnIndex)
+  }
+
+  override def getTimestamp(columnLabel: String) = {
+    val labelPos = rustResultSet.columns.indexWhere(c => c.name == columnLabel)
+    if (labelPos <= -1) {
+      sys.error("Column label not found")
+    }
+
+    getTimestamp(labelPos + 1)
+  }
+
+  override def getTimestamp(columnIndex: Int) = {
     val readValue = readColumnAs[MagicDateTime](columnIndex)
     if (readValue == null) {
       null
@@ -96,26 +118,13 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
 
       new Timestamp(dt.toInstant.getMillis)
     }
-  }
 
-  override def getTimestamp(columnIndex: Int) = ???
-
-  override def getTimestamp(columnLabel: String) = {
-    val readValue = readColumnAs[String](columnLabel)
-    if (readValue == null) {
-      null
-    } else {
-      Timestamp.valueOf(readValue)
-    }
-  }
-
-  override def getTimestamp(columnLabel: String, cal: Calendar) = {
-    val labelPos = rustResultSet.columns.indexWhere(c => c.name == columnLabel)
-    if (labelPos <= -1) {
-      sys.error("Column label not found")
-    }
-
-    getTimestamp(labelPos + 1, cal)
+//    val readValue = readColumnAs[String](columnIndex)
+//    if (readValue == null) {
+//      null
+//    } else {
+//      Timestamp.valueOf(readValue)
+//    }
   }
 
   override def getObject(columnIndex: Int): java.lang.Object = {

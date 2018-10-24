@@ -65,6 +65,12 @@ impl<'a> PsqlPreparedStatement<'a> {
     }
 }
 
+impl<'a> Drop for PsqlPreparedStatement<'a> {
+    fn drop(&mut self) {
+        println!("[Rust] Dropping prepared statement");
+    }
+}
+
 
 #[derive(Debug)]
 pub enum DriverError {

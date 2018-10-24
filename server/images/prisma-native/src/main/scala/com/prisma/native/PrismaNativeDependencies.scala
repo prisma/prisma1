@@ -21,6 +21,7 @@ import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.metrics.MetricsRegistry
+import com.prisma.native_jdbc.CustomJdbcDriver
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
@@ -76,9 +77,9 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val apiAuth          = Auth.jna(Algorithm.HS256)
 
   lazy val databaseConfig                         = config.databases.head
-  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, isActive = databaseConfig.active)
+  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, CustomJdbcDriver.jna(), isActive = databaseConfig.active)
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
-  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, isActive = databaseConfig.active)
+  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, CustomJdbcDriver.jna(), isActive = databaseConfig.active)
 
   override lazy val functionValidator           = FunctionValidatorImpl()
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
