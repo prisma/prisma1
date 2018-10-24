@@ -70,23 +70,28 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
         getNodeByWhere(parent.where).flatMap {
           case None =>
             noneHelper
-
           case Some(n) =>
-            (parentField.isList, n.data.map(parentField.name)) match {
-              case (false, idInParent: CuidGCValue) =>
-                getNodeByWhere(where).map {
-                  case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
-                  case _                                                     => None
-                }
-
-              case (true, ListGCValue(values)) =>
-                getNodeByWhere(where).map {
-                  case Some(childForWhere) if values.contains(childForWhere.id) => Some(childForWhere.id)
-                  case _                                                        => None
-                }
-
-              case _ =>
+            PrismaNode.getNodeAtPath(Some(n), parent.path.segments) match {
+              case None =>
                 noneHelper
+
+              case Some(node) =>
+                (parentField.isList, node.data.map(parentField.name)) match {
+                  case (false, idInParent: CuidGCValue) =>
+                    getNodeByWhere(where).map {
+                      case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
+                      case _                                                     => None
+                    }
+
+                  case (true, ListGCValue(values)) =>
+                    getNodeByWhere(where).map {
+                      case Some(childForWhere) if values.contains(childForWhere.id) => Some(childForWhere.id)
+                      case _                                                        => None
+                    }
+
+                  case _ =>
+                    noneHelper
+                }
             }
         }
       case false =>
