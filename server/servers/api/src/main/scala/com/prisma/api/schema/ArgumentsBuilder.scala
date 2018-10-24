@@ -48,7 +48,7 @@ case class ArgumentsBuilder(project: Project) {
   }
 
   def getSangriaArgumentsForUpdateMany(model: Model): Option[List[Argument[Any]]] = {
-    inputTypesBuilder.inputObjectTypeForUpdate(model).map { updateArg: InputObjectType[Any] =>
+    inputTypesBuilder.inputObjectTypeForUpdateMany(model).map { updateArg: InputObjectType[Any] =>
       List(Argument[Any]("data", updateArg), whereArgument(model, project).asInstanceOf[Argument[Any]]) //todo this is ugly
     }
   }
