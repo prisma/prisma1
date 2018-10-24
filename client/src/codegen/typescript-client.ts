@@ -711,7 +711,7 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${promise && !subscription ? 'Promise' : ''}${subscription ? 'Subscription' : ''}${
+        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${promise && !subscription ? 'Promise' : ''}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
               ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
               : ''
