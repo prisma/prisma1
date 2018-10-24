@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.gc_values.{IdGCValue, NullGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue, NullGCValue}
 import com.prisma.shared.models.{RelationField, RelationSide}
 import cool.graph.cuid.Cuid
 
@@ -62,7 +62,7 @@ trait RelationActions extends BuilderBase {
 
       insertToDBIO(query)(
         setParams = { pp =>
-          pp.setString(Cuid.createCuid())
+          pp.setGcValue(StringIdGCValue.random)
           pp.setGcValue(parentId)
           pp.setGcValue(childId)
         }

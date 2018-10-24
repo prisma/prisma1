@@ -6,7 +6,7 @@ import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.gc_values.CuidGCValue
+import com.prisma.gc_values.StringIdGCValue
 import com.prisma.shared.models.ApiConnectorCapability.NodeQueryCapability
 import com.prisma.shared.models.{ConnectorCapability, Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
@@ -305,7 +305,7 @@ case class SchemaBuilderImpl(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
       for {
         _         <- Future.unit
-        idGcValue = CuidGCValue(id)
+        idGcValue = StringIdGCValue(id)
         modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
         resultOpt <- modelOpt match {
                       case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model))

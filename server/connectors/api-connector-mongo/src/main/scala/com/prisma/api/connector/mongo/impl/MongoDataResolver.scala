@@ -15,7 +15,7 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   val database = client.getDatabase(project.id)
 
-  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
     val query = queryBuilder.getModelForGlobalId(project, globalId)
     SlickReplacement.run(database, query)
   }

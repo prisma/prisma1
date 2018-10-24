@@ -7,7 +7,7 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
   def getToOneChild(relationField: RelationField): Option[PrismaNode] = data.map.get(relationField.name) match {
     case None              => None
     case Some(NullGCValue) => None
-    case Some(value)       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot, Some(relationField.relatedModel_!.name)))
+    case Some(value)       => Some(PrismaNode(value.asRoot.idField, value.asRoot, Some(relationField.relatedModel_!.name)))
   }
 
   def getToManyChild(relationField: RelationField, where: NodeSelector): Option[PrismaNode] = data.map.get(relationField.name) match {
@@ -19,7 +19,7 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
 
     case Some(ListGCValue(values)) =>
       values.find(value => value.asRoot.map(where.fieldName) == where.fieldGCValue) match {
-        case Some(gc) => Some(PrismaNode(CuidGCValue.dummy, gc.asRoot, Some(relationField.relatedModel_!.name)))
+        case Some(gc) => Some(PrismaNode(gc.asRoot.idField, gc.asRoot, Some(relationField.relatedModel_!.name)))
         case None     => None
       }
 
@@ -31,14 +31,14 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
     case None => None
     case Some(n) =>
       n.data.map.get(parentField.name) match {
-        case Some(x: CuidGCValue) => Some(x)
-        case _                    => None
+        case Some(x: StringIdGCValue) => Some(x)
+        case _                        => None
       }
   }
 }
 
 object PrismaNode {
-  def dummy: PrismaNode = PrismaNode(CuidGCValue(""), RootGCValue.empty)
+  def dummy: PrismaNode = PrismaNode(StringIdGCValue(""), RootGCValue.empty)
 
   def getNodeAtPath(node: Option[PrismaNode], segments: List[PathSegment]): Option[PrismaNode] = {
     (node, segments.headOption) match {

@@ -3,7 +3,7 @@ package com.prisma.subscriptions.resolving
 import java.util.concurrent.TimeUnit
 
 import com.prisma.api.connector.{PrismaArgs, PrismaNode}
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models.{Model, ModelMutationType, Project}
 import com.prisma.subscriptions.metrics.SubscriptionMetrics.handleDatabaseEventTimer
