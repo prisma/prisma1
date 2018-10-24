@@ -66,17 +66,30 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   ): MongoAction[MutactionResults] = {
     mutaction match {
       case m: NestedUpsertNode =>
-        for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
-          childResult <- generateNestedMutaction(
-                          database,
-                          result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
-                          previousResults.merge(result),
-                          parent,
-                          mutationBuilder
-                        )
-        } yield previousResults.merge(result).merge(childResult)
+        if (previousResults.contains(m)) {
+          val result: DatabaseMutactionResult = previousResults.results.find(res => res.mutaction == m).get
+          for {
+            childResult <- generateNestedMutaction(
+                            database,
+                            result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
+                            previousResults,
+                            parent,
+                            mutationBuilder
+                          )
+          } yield previousResults.merge(childResult)
 
+        } else {
+          for {
+            result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
+            childResult <- generateNestedMutaction(
+                            database,
+                            result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
+                            previousResults.merge(result),
+                            parent,
+                            mutationBuilder
+                          )
+          } yield previousResults.merge(result).merge(childResult)
+        }
       case m: FurtherNestedMutaction =>
         if (previousResults.contains(m)) {
           val nestedMutactions =

@@ -78,7 +78,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
   }
 
   //Fixme continue here
-  "a FriendOpt relation" should "be possible" ignore {
+  "a FriendOpt relation" should "be possible" in {
 
     val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
 
@@ -144,7 +144,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
     update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendOpt":{"f":"f1"}}]}}}""")
   }
 
-  "a FriendsOpt relation" should "be possible" ignore {
+  "a FriendsOpt relation" should "be possible" in {
 
     val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
 

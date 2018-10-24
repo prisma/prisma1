@@ -231,22 +231,22 @@ trait NodeActions extends NodeSingleQueries {
         node.getToOneChild(rf) match {
           case None =>
             val (createDoc, createResults) = createToDoc(List.empty, create, Some(parent), Some(rf))
-            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toOneUpsert, toOneUpsert))
+            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toOneUpsert.create, toOneUpsert))
 
           case Some(_) =>
             val (updates, arrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(node, Vector(update), parent)
-            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toOneUpsert, toOneUpsert))
+            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toOneUpsert.update, toOneUpsert))
         }
 
       case toManyUpsert @ NestedUpsertNode(_, rf, Some(where), create, update) if rf.relatedModel_!.isEmbedded =>
         node.getToManyChild(rf, where) match {
           case None =>
             val (createDoc, createResults) = createToDoc(List.empty, create, Some(parent), Some(rf))
-            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toManyUpsert, toManyUpsert))
+            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toManyUpsert.create, toManyUpsert))
 
           case Some(_) =>
             val (updates, arrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(node, Vector(update), parent)
-            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toManyUpsert, toManyUpsert))
+            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toManyUpsert.update, toManyUpsert))
 
         }
 
