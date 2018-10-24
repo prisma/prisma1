@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
-import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue, ListGCValue}
 import com.prisma.shared.models.{Project, RelationField}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections._
@@ -15,7 +15,7 @@ import scala.language.existentials
 
 trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
-  def getModelForGlobalId(project: Project, globalId: CuidGCValue) = SimpleMongoAction { database =>
+  def getModelForGlobalId(project: Project, globalId: StringIdGCValue) = SimpleMongoAction { database =>
     val outer = project.models.map { model =>
       database.getCollection(model.dbName).find(Filters.eq("_id", globalId.value)).collect().toFuture.map { results: Seq[Document] =>
         if (results.nonEmpty) Vector(model) else Vector.empty
@@ -77,7 +77,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
               case Some(node) =>
                 (parentField.isList, node.data.map(parentField.name)) match {
-                  case (false, idInParent: CuidGCValue) =>
+                  case (false, idInParent: StringIdGCValue) =>
                     getNodeByWhere(where).map {
                       case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
                       case _                                                     => None
