@@ -115,11 +115,13 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
-    case m: NestedUpdateNode => NestedUpdateNodeInterpreter(m)
-    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(m)
-    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
-    case m: NestedConnect    => NestedConnectInterpreter(m)
-    case m: NestedDisconnect => NestedDisconnectInterpreter(m)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
+    case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
+    case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: NestedConnect     => NestedConnectInterpreter(m)
+    case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
+    case m: NestedUpdateNodes => ???
+    case m: NestedDeleteNodes => ???
   }
 }
