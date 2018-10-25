@@ -1,7 +1,7 @@
 package com.prisma.util.coolArgs
 
 import com.prisma.api.connector._
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.{APIErrors, FilterHelper}
 import com.prisma.gc_values.{ListGCValue, NullGCValue, RootGCValue}
 import com.prisma.shared.models._
 
@@ -67,8 +67,14 @@ case class CoolArgs(raw: Map[String, Any]) {
         deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteByWhere(args.extractNodeSelector(subModel))),
         connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectByWhere(args.extractNodeSelector(subModel))),
         disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel))),
-        updateManys = subArgsVector("updateMany").getOrElse(Vector.empty).map(args => NestedUpdateMany(None, args.subArgsOption("data").get.get)), //Fixme actually read filter
-        deleteManys = subArgsVector("deleteMany").getOrElse(Vector.empty).map(args => NestedDeleteMany(None)) //Fixme actually read filter
+        updateManys = subArgsVector("updateMany")
+          .getOrElse(Vector.empty)
+          .map(args =>
+            NestedUpdateMany(args.raw.get("where").map(x => FilterHelper.generateFilterElement(x.asInstanceOf[Map[String, Any]], subModel, false)),
+                             args.subArgsOption("data").get.get)),
+        deleteManys = subArgsVector("deleteMany")
+          .getOrElse(Vector.empty)
+          .map(args => NestedDeleteMany(args.raw.get("where").map(x => FilterHelper.generateFilterElement(x.asInstanceOf[Map[String, Any]], subModel, false))))
       )
     } else {
       NestedMutations(

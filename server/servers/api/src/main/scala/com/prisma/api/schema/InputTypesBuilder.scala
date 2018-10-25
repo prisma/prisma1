@@ -101,7 +101,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForUpdateMany(model: Model): Option[InputObjectType[Any]] = {
     val fields = computeScalarInputFieldsForUpdate(model)
-
     if (fields.nonEmpty) {
       Some(
         InputObjectType[Any](
@@ -163,6 +162,22 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       } else {
         None
       }
+    }
+  }
+
+  protected def computeInputObjectTypeForNestedDeleteMany(parentField: RelationField): Option[InputObjectType[Any]] = {
+    if (parentField.isList) {
+      val subModel = parentField.relatedModel_!
+
+      val typeName = s"${subModel.name}DeleteManyWithWhereNestedInput"
+
+      Some(
+        InputObjectType[Any](
+          name = typeName,
+          fieldsFn = () => List(InputField[Any]("where", computeInputObjectTypeForWhere(subModel)))
+        ))
+    } else {
+      None
     }
   }
 
@@ -344,6 +359,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
               nestedUpdateManyInputField(field) ++
+              nestedDeleteManyInputField(field) ++
               nestedUpsertInputField(field)
         )
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
@@ -390,7 +406,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   def nestedUpdateManyInputField(field: RelationField): Option[InputField[Any]] = {
     val inputObjectType = computeInputObjectTypeForNestedUpdateMany(field)
-    inputObjectType.map(x => OptionInputType(x)).map(x => InputField[Any]("updateMany", x))
+    inputObjectType.map(x => OptionInputType(ListInputType(x))).map(x => InputField[Any]("updateMany", x))
+  }
+
+  def nestedDeleteManyInputField(field: RelationField): Option[InputField[Any]] = {
+    val inputObjectType = computeInputObjectTypeForNestedDeleteMany(field)
+    inputObjectType.map(x => OptionInputType(ListInputType(x))).map(x => InputField[Any]("deleteMany", x))
   }
 
   def nestedCreateInputField(field: RelationField): Option[InputField[Any]] = {
