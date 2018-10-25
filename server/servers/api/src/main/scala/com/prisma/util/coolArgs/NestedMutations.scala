@@ -9,11 +9,12 @@ case class NestedMutations(
     deletes: Vector[DeleteOne],
     connects: Vector[ConnectByWhere],
     disconnects: Vector[DisconnectOne],
-    updateManys: Vector[NestedUpdateMany]
+    updateManys: Vector[NestedUpdateMany],
+    deleteManys: Vector[NestedDeleteMany]
 )
 
 object NestedMutations {
-  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
+  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
 }
 
 sealed trait NestedMutation
@@ -35,6 +36,8 @@ case class UpsertByWhere(where: NodeSelector, create: CoolArgs, update: CoolArgs
 sealed trait DeleteOne                        extends NestedMutation
 case class DeleteByRelation(boolean: Boolean) extends DeleteOne
 case class DeleteByWhere(where: NodeSelector) extends DeleteOne with NestedWhere
+
+case class NestedDeleteMany(whereFilter: Option[Filter]) extends NestedMutation
 
 sealed trait DisconnectOne                        extends NestedMutation
 case class DisconnectByRelation(boolean: Boolean) extends DisconnectOne
