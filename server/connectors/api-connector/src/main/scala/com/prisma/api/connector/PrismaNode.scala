@@ -11,24 +11,23 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
   }
 
   def getToManyChild(relationField: RelationField, where: NodeSelector): Option[PrismaNode] = data.map.get(relationField.name) match {
-    case None =>
-      None
+    case None                      => None
+    case Some(NullGCValue)         => None
+    case Some(ListGCValue(values)) => evaluateListGCValue(relationField, values, where)
+    case x                         => sys.error("Checking for toMany child in PrismaNode returned unexpected result" + x)
+  }
 
-    case Some(NullGCValue) =>
-      None
-
-    case Some(ListGCValue(values)) =>
-      values.find(value => value.asRoot.map(where.fieldName) == where.fieldGCValue) match {
-        case Some(gc) => Some(PrismaNode(gc.asRoot.idField, gc.asRoot, Some(relationField.relatedModel_!.name)))
-        case None     => None
-      }
-
-    case x =>
-      sys.error("Checking for toMany child in PrismaNode returned unexpected result" + x)
+  private def evaluateListGCValue(relationField: RelationField, values: Vector[GCValue], where: NodeSelector) = {
+    values.find(value => value.asRoot.map(where.fieldName) == where.fieldGCValue) match {
+      case Some(gc) => Some(PrismaNode(gc.asRoot.idField, gc.asRoot, Some(relationField.relatedModel_!.name)))
+      case None     => None
+    }
   }
 
   def getIDAtPath(parentField: RelationField, path: Path): Option[IdGCValue] = PrismaNode.getNodeAtPath(Some(this), path.segments) match {
-    case None => None
+    case None =>
+      None
+
     case Some(n) =>
       n.data.map.get(parentField.name) match {
         case Some(x: StringIdGCValue) => Some(x)
@@ -38,15 +37,13 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
 }
 
 object PrismaNode {
-  def dummy: PrismaNode = PrismaNode(StringIdGCValue(""), RootGCValue.empty)
+  def dummy: PrismaNode = PrismaNode(StringIdGCValue.dummy, RootGCValue.empty)
 
-  def getNodeAtPath(node: Option[PrismaNode], segments: List[PathSegment]): Option[PrismaNode] = {
-    (node, segments.headOption) match {
-      case (nodeOption, None)                           => nodeOption
-      case (None, _)                                    => None
-      case (Some(node), Some(ToOneSegment(rf)))         => getNodeAtPath(node.getToOneChild(rf), segments.drop(1))
-      case (Some(node), Some(ToManySegment(rf, where))) => getNodeAtPath(node.getToManyChild(rf, where), segments.drop(1))
-    }
+  def getNodeAtPath(node: Option[PrismaNode], segments: List[PathSegment]): Option[PrismaNode] = (node, segments.headOption) match {
+    case (nodeOption, None)                           => nodeOption
+    case (None, _)                                    => None
+    case (Some(node), Some(ToOneSegment(rf)))         => getNodeAtPath(node.getToOneChild(rf), segments.drop(1))
+    case (Some(node), Some(ToManySegment(rf, where))) => getNodeAtPath(node.getToManyChild(rf, where), segments.drop(1))
   }
 }
 
