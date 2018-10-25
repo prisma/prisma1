@@ -20,7 +20,7 @@ case class JdbcDataResolver(
     slickDatabase = slickDatabase
   )
 
-  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
     val query = queryBuilder.getModelForGlobalId(project.schema, globalId)
     performWithTiming("getModelForGlobalId", slickDatabase.database.run(query))
   }

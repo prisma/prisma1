@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
@@ -71,19 +71,19 @@ trait NodeManyQueries extends FilterConditionBuilder {
 
       val inFilter: Filter = ScalarListFilter(model.idField_!.copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
       helper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
-        val groups: Map[CuidGCValue, Seq[Document]] = fromField.relatedField.isList match {
+        val groups: Map[StringIdGCValue, Seq[Document]] = fromField.relatedField.isList match {
           case true =>
             val tuples = for {
               result <- results
-              id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => CuidGCValue(x.getValue))
+              id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => StringIdGCValue(x.getValue))
             } yield (id, result)
             tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-          case false => results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
+          case false => results.groupBy(x => StringIdGCValue(x(manifestation.referencingColumn).asString().getValue))
         }
 
         fromNodeIds.map { id =>
-          groups.get(id.asInstanceOf[CuidGCValue]) match {
+          groups.get(id.asInstanceOf[StringIdGCValue]) match {
             case Some(group) =>
               val roots                                     = group.map(DocumentToRoot(model, _))
               val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idField, r, Some(model.name)))).toVector
