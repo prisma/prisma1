@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mongo.impl
 
-import com.prisma.deploy.connector.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.shared.models.{Migration, MigrationStatus, Project}
 import com.prisma.utils.mongo.MongoExtensions
 import org.mongodb.scala.model.Filters

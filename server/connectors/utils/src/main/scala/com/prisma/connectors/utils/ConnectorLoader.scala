@@ -12,7 +12,7 @@ import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 
 import scala.concurrent.ExecutionContext
 
-object ConnectorUtils {
+object ConnectorLoader {
   def loadApiConnector(config: PrismaConfig)(implicit ec: ExecutionContext): ApiConnector = {
     val databaseConfig = config.databases.head
     (databaseConfig.connector, databaseConfig.active) match {

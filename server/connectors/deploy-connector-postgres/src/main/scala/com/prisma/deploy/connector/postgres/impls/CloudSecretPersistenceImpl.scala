@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.postgres.impls
 
-import com.prisma.deploy.connector.CloudSecretPersistence
+import com.prisma.deploy.connector.persistence.CloudSecretPersistence
 import com.prisma.deploy.connector.postgres.database.CloudSecretTable
 import slick.jdbc.PostgresProfile.backend.DatabaseDef
 

@@ -1,7 +1,8 @@
 package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
-import com.prisma.deploy.connector.{DeployMutactionExecutor, MigrationPersistence, MigrationStepMapperImpl}
+import com.prisma.deploy.connector.persistence.MigrationPersistence
+import com.prisma.deploy.connector.{DeployMutactionExecutor, MigrationStepMapperImpl}
 import com.prisma.deploy.migration.migrator.{MigrationApplierImpl, Migrator}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils

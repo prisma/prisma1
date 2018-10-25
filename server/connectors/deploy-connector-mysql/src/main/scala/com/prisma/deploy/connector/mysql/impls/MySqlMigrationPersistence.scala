@@ -1,18 +1,19 @@
 package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.deploy.connector.MigrationPersistence
 import com.prisma.deploy.connector.mysql.database.{MigrationTable, Tables}
+import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.joda.time.DateTime
 import play.api.libs.json.Json
+import slick.jdbc.JdbcProfile
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlMigrationPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends MigrationPersistence {
+case class MySqlMigrationPersistence(internalDatabase: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends MigrationPersistence {
   val table = Tables.Migrations
 
   def lock(): Future[Unit] = {

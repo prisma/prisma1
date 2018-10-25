@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.migrator
 
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
 import com.prisma.utils.exceptions.StackTraceUtils
 import org.joda.time.DateTime

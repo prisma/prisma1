@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mongo.impl
 
-import com.prisma.deploy.connector.MigrationPersistence
+import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId, MigrationStatus}
 import com.prisma.utils.mongo.MongoExtensions
@@ -13,12 +13,7 @@ import org.mongodb.scala.{MongoCollection, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MigrationPersistenceImpl(
-    internalDatabase: MongoDatabase
-)(implicit ec: ExecutionContext)
-    extends MigrationPersistence
-    with MongoExtensions {
-
+case class MigrationPersistenceImpl(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends MigrationPersistence with MongoExtensions {
   val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
 
   def lock(): Future[Unit] = Future.successful(())

@@ -121,21 +121,29 @@ lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtil
 // ####################
 
 lazy val connectorUtils = connectorProject("utils").dependsOn(deployConnectorProjects).dependsOn(apiConnectorProjects)
+lazy val connectorShared = connectorProject("shared")
+  .settings(
+    libraryDependencies ++= slick ++ jooq ++ joda
+  )
 
 lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels)
   .dependsOn(metrics)
 
-lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+lazy val deployConnectorJdbc = connectorProject("deploy-connector-jdbc")
   .dependsOn(deployConnector)
+  .dependsOn(connectorShared)
+
+lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+  .dependsOn(deployConnectorJdbc)
   .settings(
-    libraryDependencies ++= slick ++ Seq(mariaDbClient)
+    libraryDependencies ++= Seq(mariaDbClient)
   )
 
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
-  .dependsOn(deployConnector)
+  .dependsOn(deployConnectorJdbc)
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= Seq(postgresClient)
   )
 
 lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
@@ -156,8 +164,9 @@ lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
   .dependsOn(slickUtils)
+  .dependsOn(connectorShared)
   .settings(
-    libraryDependencies ++= slick ++ jooq ++ Seq(postgresClient)
+    libraryDependencies ++= Seq(postgresClient)
   )
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
@@ -329,6 +338,7 @@ val allServerProjects = List(
 
 lazy val deployConnectorProjects = List(
   deployConnector,
+  deployConnectorJdbc,
   deployConnectorMySql,
   deployConnectorPostgres,
   deployConnectorMongo
@@ -342,7 +352,7 @@ lazy val apiConnectorProjects = List(
   apiConnectorMongo
 )
 
-lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils)
+lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
 
 val allLibProjects = List(
   akkaUtils,

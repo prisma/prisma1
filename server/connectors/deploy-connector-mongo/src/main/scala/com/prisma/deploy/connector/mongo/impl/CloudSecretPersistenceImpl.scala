@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.mongo.impl
 
-import com.prisma.deploy.connector.CloudSecretPersistence
+import com.prisma.deploy.connector.persistence.CloudSecretPersistence
 import org.mongodb.scala.bson.{BsonNull, BsonString}
 import org.mongodb.scala.model.ReplaceOptions
 import org.mongodb.scala.{Document, MongoDatabase}

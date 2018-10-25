@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.postgres.impls
 
-import com.prisma.deploy.connector.ProjectPersistence
+import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.connector.postgres.database.{ProjectTable, Tables}
 import com.prisma.shared.models.Project
 import slick.jdbc.PostgresProfile.api._

@@ -7,7 +7,7 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.config.ConfigLoader
-import com.prisma.connectors.utils.ConnectorUtils
+import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
@@ -37,11 +37,11 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   }
   override val sssEventsPubSub                  = InMemoryPubSubTestKit[String]()
   override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
-  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  override lazy val apiConnector                = ConnectorLoader.loadApiConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
-  lazy val deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  lazy val deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 }

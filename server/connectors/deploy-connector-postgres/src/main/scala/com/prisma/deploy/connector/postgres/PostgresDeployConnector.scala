@@ -2,6 +2,8 @@ package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.jdbc.JdbcTelemetryPersistence
+import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
 import com.prisma.deploy.connector.postgres.impls._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
@@ -27,6 +29,9 @@ case class PostgresDeployConnector(
 
   override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(managementDatabase)
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
+  override lazy val cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(managementDatabase)
+  override lazy val telemetryPersistence: TelemetryPersistence = JdbcTelemetryPersistence()
+
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
   override def capabilities: Set[ConnectorCapability]                = if (isActive) Set(MigrationsCapability, NonEmbeddedScalarListCapability) else Set.empty
 
@@ -59,7 +64,6 @@ case class PostgresDeployConnector(
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = managementDatabase.run(TelemetryTable.getOrCreateInfo())
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = managementDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
-  override def cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(managementDatabase)
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
@@ -107,4 +111,6 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
+
+
 }

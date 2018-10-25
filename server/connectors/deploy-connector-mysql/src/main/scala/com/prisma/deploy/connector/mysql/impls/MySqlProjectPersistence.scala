@@ -1,13 +1,14 @@
 package com.prisma.deploy.connector.mysql.impls
 
-import com.prisma.deploy.connector.ProjectPersistence
 import com.prisma.deploy.connector.mysql.database.{ProjectTable, Tables}
+import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.shared.models.Project
+import slick.jdbc.JdbcProfile
 import slick.jdbc.MySQLProfile.api._
-import slick.jdbc.MySQLProfile.backend.DatabaseDef
+
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlProjectPersistence(internalDatabase: DatabaseDef)(implicit ec: ExecutionContext) extends ProjectPersistence {
+case class MySqlProjectPersistence(internalDatabase: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends ProjectPersistence {
   override def load(id: String): Future[Option[Project]] = {
     internalDatabase
       .run(ProjectTable.byIdWithMigration(id))

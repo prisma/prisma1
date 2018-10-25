@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.postgres.impls
 
-import com.prisma.deploy.connector.MigrationPersistence
+import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.deploy.connector.postgres.database.MigrationTable
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}

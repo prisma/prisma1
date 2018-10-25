@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector
+package com.prisma.deploy.connector.persistence
 
 import com.prisma.shared.models.Project
 

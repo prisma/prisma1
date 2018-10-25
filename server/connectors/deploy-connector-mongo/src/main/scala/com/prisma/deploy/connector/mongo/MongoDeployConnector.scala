@@ -3,6 +3,7 @@ package com.prisma.deploy.connector.mongo
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mongo.impl._
+import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, JoinRelationsCapability, MigrationsCapability, MongoRelationsCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -17,11 +18,13 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
 
-  override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
-  override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
+  override val migrationPersistence: MigrationPersistence     = MigrationPersistenceImpl(internalDatabase)
+  override val projectPersistence: ProjectPersistence         = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
+  override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
+  override val cloudSecretPersistence: CloudSecretPersistence = CloudSecretPersistenceImpl(internalDatabase)
+
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
-  override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
   override def capabilities: Set[ConnectorCapability] =
     if (isActive) Set(MigrationsCapability, EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability)
     else Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability)
@@ -51,7 +54,6 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = Future.successful(Vector.empty)
 
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo] = Future.successful(TelemetryInfo("not Implemented", None))
-
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = Future.unit
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
 }

@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector
+package com.prisma.deploy.connector.persistence
 
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.{Migration, MigrationId}
@@ -6,9 +6,8 @@ import org.joda.time.DateTime
 
 import scala.concurrent.Future
 
-trait TestPersistence {
-  // todo: this is temporary, as it should probably move to a general db utility or similar.
-  def lock(): Future[Int]
+trait MigrationPersistence {
+  def lock(): Future[Unit]
 
   def byId(migrationId: MigrationId): Future[Option[Migration]]
   def loadAll(projectId: String): Future[Seq[Migration]]

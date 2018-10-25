@@ -2,8 +2,10 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema, TelemetryTable}
+import com.prisma.deploy.connector.jdbc.JdbcTelemetryPersistence
+import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema}
 import com.prisma.deploy.connector.mysql.impls._
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -19,14 +21,18 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
 
   lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
-  lazy val setupDatabase        = internalDatabaseDefs.setupDatabase
-  lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
-  lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
+  lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
+  lazy val databases            = internalDatabaseDefs.managementDatabases
+  lazy val managementDatabase   = databases.primary
+  lazy val projectDatabase      = databases.primary.database
 
-  override val projectPersistence: ProjectPersistence           = MySqlProjectPersistence(managementDatabase)
-  override val migrationPersistence: MigrationPersistence       = MySqlMigrationPersistence(managementDatabase)
-  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
+  override val projectPersistence: ProjectPersistence              = MySqlProjectPersistence(managementDatabase.database)
+  override val migrationPersistence: MigrationPersistence          = MySqlMigrationPersistence(managementDatabase.database)
+  override val cloudSecretPersistence: MySqlCloudSecretPersistence = MySqlCloudSecretPersistence(managementDatabase.database)
+  override val telemetryPersistence: TelemetryPersistence          = JdbcTelemetryPersistence(managementDatabase)
+
   override def capabilities                                     = Set(MigrationsCapability, NonEmbeddedScalarListCapability)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -52,24 +58,20 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   }
 
   override def clientDBQueries(project: Project): ClientDbQueries      = MySqlClientDbQueries(project, projectDatabase)
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = managementDatabase.run(TelemetryTable.getOrCreateInfo())
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = managementDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
-  override def cloudSecretPersistence                                  = CloudSecretPersistenceImpl(managementDatabase)
 
   override def initialize(): Future[Unit] = {
-    setupDatabase
+    setupDatabase.primary.database
       .run(MySqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
-      .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
+      .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase)
+  override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
 
   override def shutdown() = {
-    for {
-      _ <- setupDatabase.shutdown
-      _ <- managementDatabase.shutdown
-    } yield ()
+    databases.shutdown
   }
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer

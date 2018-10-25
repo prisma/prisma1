@@ -4,7 +4,8 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence}
 import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
