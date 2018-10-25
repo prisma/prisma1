@@ -161,6 +161,7 @@ trait NodeActions extends NodeSingleQueries {
         node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toOneDelete.model, None)
           case Some(nestedNode) => (unset(parent.path.stringForField(rf.name)), DeleteNodeResult(nestedNode, toOneDelete))
+
         }
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) if rf.relatedModel_!.isEmbedded =>

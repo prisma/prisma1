@@ -55,6 +55,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
           case None    => None
           case Some(n) => n.getIDAtPath(parentField, parent.path)
         }
+
       case false =>
         val filter = generateFilterForFieldAndId(parentField.relatedField, parent.idValue)
 
@@ -92,6 +93,9 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
                   case _ =>
                     noneHelper
                 }
+
+              case _ =>
+                noneHelper
             }
         }
       case false =>
