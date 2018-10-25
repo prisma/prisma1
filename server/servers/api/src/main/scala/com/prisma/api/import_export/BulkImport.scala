@@ -5,7 +5,7 @@ import com.prisma.api.connector._
 import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue, UuidGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue, ListGCValue, UuidGCValue}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
@@ -79,7 +79,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   def parseIdGCValue(input: JsObject, model: Model): IdGCValue = model.idField_!.typeIdentifier match {
     case TypeIdentifier.UUID => UuidGCValue.parse_!(input.value("id").as[String])
-    case TypeIdentifier.Cuid => CuidGCValue(input.value("id").as[String])
+    case TypeIdentifier.Cuid => StringIdGCValue(input.value("id").as[String])
     case x                   => sys.error("TypeIdentifier not yet supported in Import as ID. " + x)
   }
 

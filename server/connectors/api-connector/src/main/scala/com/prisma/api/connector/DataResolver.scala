@@ -1,6 +1,6 @@
 package com.prisma.api.connector
 
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
 import com.prisma.shared.models._
 
 import scala.concurrent.Future
@@ -8,7 +8,7 @@ import scala.concurrent.Future
 trait DataResolver {
   def project: Project
 
-  def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]]
+  def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]]
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]]
 

@@ -8,6 +8,7 @@ import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, RelationField}
+import org.bson.types.ObjectId
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue}
@@ -81,7 +82,7 @@ trait NodeActions extends NodeSingleQueries {
   }
 
   def updateNodes(mutaction: UpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
-    val nodeAddress = NodeAddress.forId(mutaction.model, CuidGCValue.dummy)
+    val nodeAddress = NodeAddress.forId(mutaction.model, StringIdGCValue.dummy)
 
     val scalarUpdates   = scalarUpdateValues(mutaction, nodeAddress)
     val combinedUpdates = CustomUpdateCombiner.customCombine(scalarUpdates)
@@ -102,7 +103,7 @@ trait NodeActions extends NodeSingleQueries {
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val id = CuidGCValue.random
+    val id = StringIdGCValue(ObjectId.get().toString)
     val currentParent: NodeAddress = (parent, relationField) match {
       case (Some(p), Some(rf)) if rf.isList  => p.appendPath(rf, NodeSelector.forId(mutaction.model, id))
       case (Some(p), Some(rf)) if !rf.isList => p.appendPath(rf)
@@ -160,6 +161,7 @@ trait NodeActions extends NodeSingleQueries {
         node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toOneDelete.model, None)
           case Some(nestedNode) => (unset(parent.path.stringForField(rf.name)), DeleteNodeResult(nestedNode, toOneDelete))
+
         }
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) if rf.relatedModel_!.isEmbedded =>

@@ -41,7 +41,7 @@ object JdbcExtensionsValueClasses {
         case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
         case IntGCValue(int)           => ps.setInt(index, int)
         case FloatGCValue(float)       => ps.setDouble(index, float)
-        case CuidGCValue(id)           => ps.setString(index, id)
+        case StringIdGCValue(id)       => ps.setString(index, id)
         case UuidGCValue(uuid)         => ps.setObject(index, uuid)
         case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime))
         case EnumGCValue(enum)         => ps.setString(index, enum)
@@ -60,7 +60,7 @@ object JdbcExtensionsValueClasses {
     def getParentId(sideString: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = getIDGcValue(sideString, typeIdentifier)
 
     private def getIDGcValue(name: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = typeIdentifier match {
-      case TypeIdentifier.Cuid => CuidGCValue(resultSet.getString(name))
+      case TypeIdentifier.Cuid => StringIdGCValue(resultSet.getString(name))
       case TypeIdentifier.UUID => UuidGCValue.parse_!(resultSet.getString(name))
       case TypeIdentifier.Int  => IntGCValue(resultSet.getInt(name))
       case _                   => sys.error("Should only be called with IdGCValues")
@@ -69,7 +69,7 @@ object JdbcExtensionsValueClasses {
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val gcValue = typeIdentifier match {
         case TypeIdentifier.String   => StringGCValue(resultSet.getString(name))
-        case TypeIdentifier.Cuid     => CuidGCValue(resultSet.getString(name))
+        case TypeIdentifier.Cuid     => StringIdGCValue(resultSet.getString(name))
         case TypeIdentifier.UUID     => UuidGCValue.parse_!(resultSet.getString(name))
         case TypeIdentifier.Int      => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.DateTime => getDateTimeGCValue(name)
