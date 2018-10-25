@@ -160,6 +160,22 @@ case class UpdateNodes(
     with AllUpdateNodes
     with FinalMutaction
 
+// NESTED MANY
+case class NestedDeleteNodes(project: Project, model: Model, relationField: RelationField, whereFilter: Option[Filter])
+    extends NestedDatabaseMutaction
+    with FinalMutaction
+
+case class NestedUpdateNodes(
+    project: Project,
+    model: Model,
+    relationField: RelationField,
+    whereFilter: Option[Filter],
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)]
+) extends NestedDatabaseMutaction
+    with AllUpdateNodes
+    with FinalMutaction
+
 // NESTED
 
 case class NestedConnect(project: Project, relationField: RelationField, where: NodeSelector, topIsCreate: Boolean)

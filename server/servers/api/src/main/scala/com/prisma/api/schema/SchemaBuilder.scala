@@ -26,7 +26,7 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { project: Project =>
     SchemaBuilderImpl(
       project = project,
       capabilities = apiDependencies.capabilities,
@@ -103,7 +103,7 @@ case class SchemaBuilderImpl(
       camelCase(pluralsCache.pluralName(model)),
       fieldType = ListType(OptionType(objectTypes(model.name))),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
         DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
       }
@@ -115,7 +115,7 @@ case class SchemaBuilderImpl(
       s"${camelCase(pluralsCache.pluralName(model))}Connection",
       fieldType = connectionTypes(model.name),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
         def getSelectedFields(field: ast.Field): Vector[ast.Field] = {
           val fields = field.selections.collect {
@@ -160,7 +160,7 @@ case class SchemaBuilderImpl(
       s"create${model.name}",
       fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val mutation = Create(
           model = model,
           project = project,
@@ -180,7 +180,7 @@ case class SchemaBuilderImpl(
         s"update${model.name}",
         fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val mutation = Update(
             model = model,
             project = project,
@@ -202,7 +202,7 @@ case class SchemaBuilderImpl(
         s"updateMany${pluralsCache.pluralName(model)}",
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).filter
           val mutation  = UpdateMany(project, model, ctx.args, arguments, dataResolver = masterDataResolver)
           ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
@@ -217,7 +217,7 @@ case class SchemaBuilderImpl(
         s"upsert${model.name}",
         fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val mutation = Upsert(
             model = model,
             project = project,
@@ -238,7 +238,7 @@ case class SchemaBuilderImpl(
         s"delete${model.name}",
         fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val mutation = Delete(
             model = model,
             modelObjectTypes = objectTypeBuilder,
@@ -259,7 +259,7 @@ case class SchemaBuilderImpl(
       s"deleteMany${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).filter
         val mutation  = DeleteMany(project, model, arguments, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
@@ -279,9 +279,9 @@ case class SchemaBuilderImpl(
           Argument("database", OptionInputType(EnumType[String]("PrismaDatabase", values = enumValues))),
           Argument("query", StringType)
         ),
-        resolve = (ctx) => {
+        resolve = ctx => {
           val query    = ctx.arg[String]("query")
-          val database = ctx.argOpt[String]("database")
+          val database = ctx.argOpt[String]("database") //Fixme is this intentional?
           apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
         }
       )

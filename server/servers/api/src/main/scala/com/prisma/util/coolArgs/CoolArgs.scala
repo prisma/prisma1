@@ -66,7 +66,8 @@ case class CoolArgs(raw: Map[String, Any]) {
         },
         deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteByWhere(args.extractNodeSelector(subModel))),
         connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectByWhere(args.extractNodeSelector(subModel))),
-        disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel)))
+        disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel))),
+        updateManys = subArgsVector("updateMany").getOrElse(Vector.empty).map(args => NestedUpdateMany(args.))
       )
     } else {
       NestedMutations(

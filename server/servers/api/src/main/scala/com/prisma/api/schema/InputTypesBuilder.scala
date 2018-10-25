@@ -119,6 +119,28 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     }
   }
 
+  protected def computeInputObjectTypeForNestedUpdateMany(parentField: RelationField): Option[InputObjectType[Any]] = {
+    computeInputObjectTypeForNestedUpdateManyData(parentField).flatMap { updateManyDataInput =>
+      val subModel = parentField.relatedModel_!
+      if (parentField.isList) {
+        val typeName = s"${subModel.name}UpdateManyWithWhereNestedInput"
+
+        Some(
+          InputObjectType[Any](
+            name = typeName,
+            fieldsFn = () => {
+              List(
+                InputField[Any]("where", computeInputObjectTypeForWhere(subModel)),
+                InputField[Any]("data", updateManyDataInput)
+              )
+            }
+          ))
+      } else {
+        None
+      }
+    }
+  }
+
   protected def computeInputObjectTypeForNestedUpdateData(parentField: RelationField): Option[InputObjectType[Any]] = {
     val subModel = parentField.relatedModel_!
     val fields   = computeScalarInputFieldsForUpdate(subModel) ++ computeRelationalInputFieldsForUpdate(subModel, parentField = Some(parentField))
@@ -132,9 +154,25 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       Some(
         InputObjectType[Any](
           name = typeName,
-          fieldsFn = () => {
-            fields
-          }
+          fieldsFn = () => { fields }
+        )
+      )
+    } else {
+      None
+    }
+  }
+
+  protected def computeInputObjectTypeForNestedUpdateManyData(parentField: RelationField): Option[InputObjectType[Any]] = {
+    val subModel = parentField.relatedModel_!
+    val fields   = computeScalarInputFieldsForUpdate(subModel)
+
+    if (fields.nonEmpty) {
+      val typeName = s"${subModel.name}UpdateManyDataInput"
+
+      Some(
+        InputObjectType[Any](
+          name = typeName,
+          fieldsFn = () => { fields }
         )
       )
     } else {
@@ -280,6 +318,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
               nestedDisconnectInputField(field) ++
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
+              nestedUpdateManyInputField(field) ++
               nestedUpsertInputField(field)
         )
         Some(InputField[Any](field.name, OptionInputType(inputObjectType)))
@@ -322,6 +361,11 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   def nestedUpdateInputField(field: RelationField): Option[InputField[Any]] = {
     val inputObjectType = computeInputObjectTypeForNestedUpdate(field)
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any]("update", x))
+  }
+
+  def nestedUpdateManyInputField(field: RelationField): Option[InputField[Any]] = {
+    val inputObjectType = computeInputObjectTypeForNestedUpdateMany(field)
+    inputObjectType.map(x => OptionInputType(x)).map(x => InputField[Any]("updateMany", x))
   }
 
   def nestedCreateInputField(field: RelationField): Option[InputField[Any]] = {
