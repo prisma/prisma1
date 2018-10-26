@@ -167,15 +167,9 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForNestedDeleteMany(parentField: RelationField): Option[InputObjectType[Any]] = {
     if (parentField.isList) {
-      val subModel = parentField.relatedModel_!
-
-      val typeName = s"${subModel.name}DeleteManyWithWhereNestedInput"
-
-      Some(
-        InputObjectType[Any](
-          name = typeName,
-          fieldsFn = () => List(InputField[Any]("where", computeInputObjectTypeForWhere(subModel)))
-        ))
+      val utils                              = FilterObjectTypeBuilder(parentField.model, project)
+      val filterObject: InputObjectType[Any] = utils.filterObjectType
+      Some(filterObject)
     } else {
       None
     }

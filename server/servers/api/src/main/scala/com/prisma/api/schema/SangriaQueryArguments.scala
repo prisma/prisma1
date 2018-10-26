@@ -21,7 +21,8 @@ object SangriaQueryArguments {
   def whereArgument(model: models.Model, project: models.Project, name: String = "where"): Argument[Option[Any]] = {
     val utils                              = FilterObjectTypeBuilder(model, project)
     val filterObject: InputObjectType[Any] = utils.filterObjectType
-    Argument(name, OptionInputType(filterObject), description = "")
+    val inputType                          = OptionInputType(filterObject)
+    Argument(name, inputType, description = "")
   }
 
   def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
