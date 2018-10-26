@@ -25,6 +25,8 @@ import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
 
+import scala.concurrent.ExecutionContext
+
 case class PrismaLocalDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends DeployDependencies
     with ApiDependencies
@@ -33,7 +35,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override implicit def self = this
 
   val config: PrismaConfig = ConfigLoader.load()
-  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {
@@ -76,4 +77,9 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val mutactionVerifier             = DatabaseMutactionVerifierImpl
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
+
+  override def initialize()(implicit ec: ExecutionContext): Unit = {
+    super.initialize()(ec)
+    MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+  }
 }

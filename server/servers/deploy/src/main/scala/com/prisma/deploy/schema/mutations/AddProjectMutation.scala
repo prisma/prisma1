@@ -2,7 +2,7 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence}
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema._
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._

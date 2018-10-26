@@ -4,7 +4,7 @@ import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.JdbcTelemetryPersistence
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
-import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder, TelemetryTable}
+import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder}
 import com.prisma.deploy.connector.postgres.impls._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
@@ -23,14 +23,16 @@ case class PostgresDeployConnector(
 
   override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
 
-  lazy val internalDatabaseDefs = PostgresInternalDatabaseDefs(dbConfig)
-  lazy val projectDatabase      = internalDatabaseDefs.managementDatabase
-  lazy val managementDatabase   = internalDatabaseDefs.managementDatabase
+  lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
+  lazy val setupDatabases      = internalDatabases.setupDatabase
+  lazy val managementDatabases = internalDatabases.managementDatabase
+  lazy val managementDatabase  = managementDatabases.primary.database
+  lazy val projectDatabase     = managementDatabase
 
-  override lazy val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(managementDatabase)
-  override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
-  override lazy val cloudSecretPersistence: CloudSecretPersistence          = CloudSecretPersistenceImpl(managementDatabase)
-  override lazy val telemetryPersistence: TelemetryPersistence = JdbcTelemetryPersistence()
+  override lazy val projectPersistence: ProjectPersistence         = PostgresProjectPersistence(managementDatabase)
+  override lazy val migrationPersistence: MigrationPersistence     = PostgresMigrationPersistence(managementDatabase)
+  override lazy val cloudSecretPersistence: CloudSecretPersistence = PostgresCloudSecretPersistence(managementDatabase)
+  override lazy val telemetryPersistence: TelemetryPersistence     = JdbcTelemetryPersistence(managementDatabases.primary)
 
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
   override def capabilities: Set[ConnectorCapability]                = if (isActive) Set(MigrationsCapability, NonEmbeddedScalarListCapability) else Set.empty
@@ -61,28 +63,25 @@ case class PostgresDeployConnector(
   }
 
   override def clientDBQueries(project: Project): ClientDbQueries      = PostgresClientDbQueries(project, projectDatabase)
-  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = managementDatabase.run(TelemetryTable.getOrCreateInfo())
-  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = managementDatabase.run(TelemetryTable.updateInfo(lastPinged)).map(_ => ())
+  override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
+  override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
-    internalDatabaseDefs.setupDatabase
-      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabaseDefs.dbName))
+    setupDatabases.primary.database
+      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabases.dbName))
       .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false)
+        val action = InternalDatabaseSchema.createSchemaActions(internalDatabases.managementSchemaName, recreate = false)
         projectDatabase.run(action)
       }
-      .flatMap(_ => internalDatabaseDefs.setupDatabase.shutdown)
+      .flatMap(_ => setupDatabases.shutdown)
   }
 
   override def reset(): Future[Unit] = truncateManagementTablesInDatabase(managementDatabase)
 
   override def shutdown() = {
-    for {
-      _ <- projectDatabase.shutdown
-      _ <- managementDatabase.shutdown
-    } yield ()
+    managementDatabases.shutdown
   }
 
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = {
@@ -104,13 +103,12 @@ case class PostgresDeployConnector(
   private def getTables()(implicit ec: ExecutionContext): DBIOAction[Vector[String], NoStream, Read] = {
     sql"""SELECT table_name
           FROM information_schema.tables
-          WHERE table_schema = '#${internalDatabaseDefs.managementSchemaName}'
+          WHERE table_schema = '#${internalDatabases.managementSchemaName}'
           AND table_type = 'BASE TABLE';""".as[String]
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
-
 
 }

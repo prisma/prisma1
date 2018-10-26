@@ -21,7 +21,7 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
   implicit val system = context.system
   implicit val ec     = context.system.dispatcher
 
-  val info               = connector.getOrCreateTelemetryInfo().await
+  val info               = connector.getOrCreateTelemetryInfo().await()
   val version            = sys.env.getOrElse("CLUSTER_VERSION", "Unknown")
   val gqlClient          = GraphQlClientImpl("https://stats.prisma.io", Map.empty, Http())
   val regularInterval    = 1.hour
@@ -36,10 +36,11 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
       initialGracePeriod
   }
 
+  println(s"INITIAL: $initialDelay")
   context.system.scheduler.scheduleOnce(initialDelay, self, Report)
 
   override def receive: Receive = {
-    case Report => report
+    case Report => println("REPORTING"); report
   }
 
   private def report = {
@@ -49,6 +50,7 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
       .onComplete {
         case Success(resp) =>
           if (resp.is2xx) {
+            println("WORKS")
             connector.updateTelemetryInfo(new DateTime()).onComplete {
               case Success(_) => context.system.scheduler.scheduleOnce(regularInterval, self, Report)
               case Failure(_) => context.system.scheduler.scheduleOnce(errorInterval, self, Report)

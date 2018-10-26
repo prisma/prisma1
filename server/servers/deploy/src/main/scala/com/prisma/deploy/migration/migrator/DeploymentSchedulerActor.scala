@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence}
+import com.prisma.deploy.connector.DeployConnector
 
 import scala.collection.mutable
 import scala.concurrent.Future

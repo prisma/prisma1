@@ -7,18 +7,14 @@ import com.prisma.shared.models.{Migration, MigrationId}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.joda.time.DateTime
 import play.api.libs.json.Json
+import slick.jdbc.JdbcProfile
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.PostgresProfile.backend.DatabaseDef
 import slick.lifted.TableQuery
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MigrationPersistenceImpl(
-    internalDatabase: DatabaseDef
-)(implicit ec: ExecutionContext)
-    extends MigrationPersistence {
-
+case class PostgresMigrationPersistence(internalDatabase: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends MigrationPersistence {
   val table = TableQuery[MigrationTable]
 
   def lock(): Future[Unit] = {

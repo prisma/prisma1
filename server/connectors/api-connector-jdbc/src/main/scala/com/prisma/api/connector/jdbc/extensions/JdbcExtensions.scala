@@ -18,9 +18,7 @@ trait JdbcExtensions {
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
 }
 
-object JdbcExtensionsValueClasses {
-  import SharedJdbcExtensions._
-
+object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
   val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {

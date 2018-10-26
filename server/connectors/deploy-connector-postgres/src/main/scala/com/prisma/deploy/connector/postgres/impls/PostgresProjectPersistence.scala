@@ -3,16 +3,12 @@ package com.prisma.deploy.connector.postgres.impls
 import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.connector.postgres.database.{ProjectTable, Tables}
 import com.prisma.shared.models.Project
+import slick.jdbc.JdbcProfile
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.PostgresProfile.backend.DatabaseDef
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class ProjectPersistenceImpl(
-    internalDatabase: DatabaseDef
-)(implicit ec: ExecutionContext)
-    extends ProjectPersistence {
-
+case class PostgresProjectPersistence(internalDatabase: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends ProjectPersistence {
   override def load(id: String): Future[Option[Project]] = {
     internalDatabase
       .run(ProjectTable.byIdWithMigration(id))

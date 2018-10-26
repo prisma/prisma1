@@ -1,6 +1,5 @@
 package com.prisma.api.connector.postgres
 
-import com.prisma.api.connector.jdbc.database.SlickDatabase
 import com.prisma.config.DatabaseConfig
 import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.typesafe.config.{Config, ConfigFactory}

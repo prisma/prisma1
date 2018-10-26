@@ -3,7 +3,7 @@ package com.prisma.deploy.schema
 import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence}
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator

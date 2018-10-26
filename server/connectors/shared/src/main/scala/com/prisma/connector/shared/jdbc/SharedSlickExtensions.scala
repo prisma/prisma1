@@ -26,6 +26,15 @@ trait SharedSlickExtensions {
     )
   }
 
+  def insertIntoReturning[T](query: Insert[Record])(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+    jooqToDBIO(query, setParams)(
+      statementFn = { ps =>
+        val rs = ps.executeQuery()
+        readResult(rs)
+      }
+    )
+  }
+
   def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
   def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())
   def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.executeUpdate)

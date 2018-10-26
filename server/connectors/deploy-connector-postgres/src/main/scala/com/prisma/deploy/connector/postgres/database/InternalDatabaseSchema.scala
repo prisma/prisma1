@@ -59,7 +59,7 @@ object InternalDatabaseSchema {
     sqlu"""
       CREATE TABLE IF NOT EXISTS "TelemetryInfo" (
         "id" varchar(255)  NOT NULL,
-        "lastPinged" timestamp NOT NULL,
+        "lastPinged" timestamp,
         PRIMARY KEY ("id")
       );""",
     // CloudSecret
