@@ -4,6 +4,8 @@ import * as path from 'path'
 import chalk from 'chalk'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
+import { spawnSync } from 'npm-run'
+import * as figures from 'figures'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -160,10 +162,7 @@ datamodel: datamodel.prisma`
     fs.writeFileSync(definitionPath, newPrismaYml)
 
     const dir = this.args!.dirName
-    const dirString = dir
-      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
-      : ``
-
+    
     const isLocal = results.cluster!.local && results.writeDockerComposeYml
 
     const steps: string[] = []
@@ -231,6 +230,33 @@ ${chalk.bold('Next steps:')}
 
 ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
+    if (results.generator && results.generator !== 'no-generation') {
+      try {
+        process.chdir(this.config.definitionDir)
+      } catch (err) {
+        this.out.log(chalk.red(err))
+      }
+      const child = spawnSync('prisma', ['generate'])
+      const stderr = child.stderr && child.stderr.toString()
+      if (stderr && stderr.length > 0) {
+        this.out.log(chalk.red(stderr))
+      }
+      const stdout = child.stdout && child.stdout.toString()
+      if (stdout && stdout.length > 0) {
+        this.out.log(chalk.white(stdout))
+      }
+      const { status, error } = child
+      if (error || status !== 0) {
+        if (error) {
+          this.out.log(chalk.red(error.message))
+        }
+        this.out.action.stop(chalk.red(figures.cross))
+      } else {
+        this.out.action.stop()
+      }
+      prismaYmlString += this.getGeneratorConfig(results.generator)
+    }
+
     const dockerComposeInstalled = await isDockerComposeInstalled()
     if (!dockerComposeInstalled) {
       this.out.log(
@@ -240,13 +266,10 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       )
     }
   }
+
   getGeneratorConfig(generator: string) {
     return `\n\ngenerate:
   - generator: ${generator}
-    output: ./generated/prisma
-
-hooks:
-  post-deploy:
-    - prisma generate`
+    output: ./generated/prisma-client/`
   }
 }

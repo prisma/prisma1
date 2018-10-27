@@ -155,9 +155,18 @@ case class RelationField(
   override def defaultValue    = None
   override def schema          = model.schema
 
-  lazy val dbName = relation.manifestation match {
+  lazy val dbName: String = relation.manifestation match {
     case Some(m: InlineRelationManifestation) => m.referencingColumn
-    case _                                    => sys.error("not a valid call on relations manifested via a table")
+
+    case _ => this.name
+  }
+
+  lazy val relationIsInlinedInParent = relation.manifestation match {
+    case Some(m: InlineRelationManifestation) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
+    case Some(m: InlineRelationManifestation) if relation.isSelfRelation && relationSide == RelationSide.A                            => false
+    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name                                                     => true
+    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == relatedModel_!.name                                            => false
+    case _                                                                                                                            => false
   }
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)
@@ -193,6 +202,15 @@ case class RelationField(
   }
 
   def isRelationWithNameAndSide(relationName: String, side: RelationSide.Value): Boolean = relation.name == relationName && this.relationSide == side
+
+  def asScalarField: ScalarField = {
+    model.idField_!.copy(
+      name = this.name,
+      typeIdentifier = this.relatedModel_!.idField_!.typeIdentifier,
+      isList = this.isList,
+      manifestation = this.relation.inlineManifestation.map(x => FieldManifestation(x.referencingColumn))
+    )
+  }
 }
 
 case class ScalarField(
@@ -210,10 +228,10 @@ case class ScalarField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  override def isRelation  = false
-  override def isScalar    = true
-  override def relationOpt = None
-  override val dbName      = manifestation.map(_.dbName).getOrElse(name)
+  override def isRelation     = false
+  override def isScalar       = true
+  override def relationOpt    = None
+  override val dbName: String = manifestation.map(_.dbName).getOrElse(name)
 
   override def schema = model.schema
 }

@@ -195,10 +195,11 @@ export default class GenereateCommand extends Command {
 
     const generator = new GoGenerator({ schema })
 
-    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
-    const secret = this.definition.rawJson.secret
-      ? this.replaceEnv(this.definition.rawJson!.secret)
-      : null
+    // TODO: Hotfix to make Go endpoint work partially till this is resolved https://github.com/prisma/prisma/issues/3277
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint).replace('`', '').replace('`', '')
+    const secret = (this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret).replace('`', '').replace('`', '')
+      : null)
     const options: any = { endpoint }
     if (secret) {
       options.secret = secret
@@ -207,13 +208,9 @@ export default class GenereateCommand extends Command {
     const goCode = generator.render(options)
     fs.writeFileSync(path.join(output, 'prisma.go'), goCode)
 
-    const goLibCode = generator.renderLib(options)
-    fs.writeFileSync(path.join(output, 'lib.go'), goLibCode)
-
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
     spawnSync('go', ['fmt', path.join(output, 'prisma.go')])
-    spawnSync('go', ['fmt', path.join(output, 'lib.go')])
   }
 
   async generateFlow(output: string, schemaString: string) {

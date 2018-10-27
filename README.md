@@ -112,7 +112,7 @@ async function main() {
   // Create a new user with a new post
   const newUser = await prisma
     .createUser({
-      name: "Alice"
+      name: "Alice",
       posts: {
         create: {
           title: "The data layer for modern apps",

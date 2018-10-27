@@ -1,12 +1,15 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def doNotRun = true // we don't run this suite as it takes ages. We rather run it manually.
+
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   //Postgres has a limit of 32678 parameters to a query
@@ -236,5 +239,4 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query {cs{int}}""", project).toString should be("""{"data":{"cs":[]}}""")
     server.query("""query {ds{int}}""", project).toString should be("""{"data":{"ds":[]}}""")
   }
-
 }

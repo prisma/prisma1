@@ -12,6 +12,9 @@ object SlickReplacement {
       case SuccessAction(value) =>
         Future.successful(value)
 
+      case FailedAction(error) =>
+        Future.failed(error)
+
       case SimpleMongoAction(fn) =>
         fn(database)
 
@@ -25,6 +28,9 @@ object SlickReplacement {
         for {
           result <- run(database, source)
         } yield fn(result)
+
+      case AsTryAction(action) =>
+        run(database, action).transformWith(theTry => Future.successful(theTry))
 
       case SequenceAction(actions) =>
         sequence(database, actions)

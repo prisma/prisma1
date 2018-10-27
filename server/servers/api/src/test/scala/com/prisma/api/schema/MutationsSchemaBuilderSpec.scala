@@ -336,7 +336,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
+    schema should containMutation("updateManyTodoes(data: TodoUpdateManyInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
 
   }
