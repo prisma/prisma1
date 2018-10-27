@@ -9,8 +9,6 @@ import org.scalatest.{FlatSpec, Matchers}
 class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
-  override def doNotRunForPrototypes: Boolean = true
-
   //region  TOP LEVEL DELETE
 
   "P1!-C1! relation deleting the parent" should "work if parent is marked marked cascading" in {
@@ -557,6 +555,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
   //endregion
 
+  //Fixme
   "Self Relations" should "work" in {
     val project = SchemaDsl.fromString() { """type Folder {
                                              |  id: ID! @unique
