@@ -8,8 +8,8 @@ export const meta = {
   gettingStartedOrder: 2,
   gettingStartedTitle: 'Existing database',
   nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
-  technology: 'typescript',
-  technologyOrder: 3,
+  technology: 'flow',
+  technologyOrder: 2,
   articleGroup: 'Setting up Prisma',
 }
 
@@ -190,7 +190,7 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 
 ```yml copy
 generate:
-  - generator: typescript-client
+  - generator: flow-client
     output: ./generated/prisma-client/
 ```
 
@@ -202,34 +202,32 @@ prisma generate
 
 The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
 
-## Prepare TypeScript application
+## Prepare Flow application
 
 Run the following command to create an empty TypeScript script:
 
 ```bash copy
-touch index.ts
-```
-
-Create a `tsconfig.json` file with the following configuration:
-
-```json copy
-{
-  "compilerOptions": {
-    "lib": ["es2016", "esnext.asynciterable"]
-  }
-}
+touch index.js
 ```
 
 Next, initialize an empty NPM project in the current directory and install the required dependencies:
 
 ```bash copy
 npm init -y
-npm install --save typescript ts-node prisma-client-lib graphql@0.13
+npm install --save babel-cli babel-preset-env prisma-client-lib graphql@0.13
+```
+
+Create a `.babelrc` file with the following configuration:
+
+```json copy
+{
+  presets: ["env"]
+}
 ```
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.ts` and save it afterwards:
+Add the following code in `index.js` and save it afterwards:
 
 ```js copy
 import { prisma } from './generated/prisma'
@@ -252,7 +250,7 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-ts-node index.ts
+babel-node index.js
 ```
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
