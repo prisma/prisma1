@@ -102,7 +102,7 @@ case class NestedCreateNodeInterpreter(
     }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[_] =
     mutaction.topIsCreate match {
       case false =>
         (p.isList, c.isList) match {

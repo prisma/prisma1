@@ -37,7 +37,7 @@ trait SharedSlickExtensions {
 
   def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
   def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())
-  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.executeUpdate)
+  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Int]     = jooqToDBIO(query, setParams)(_.executeUpdate)
   def truncateToDBIO(query: Truncate[Record]): DBIO[Unit]                                                     = jooqToDBIO(query, _ => ())(_.executeUpdate())
 
   private def jooqToDBIO[T](

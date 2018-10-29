@@ -18,9 +18,8 @@ object TelemetryTable {
 }
 
 case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcPersistenceBase with TelemetryPersistence {
-  val sql                = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val telemetryTableName = "TelemetryInfo"
-  val database           = slickDatabase.database
+  val sql      = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  val database = slickDatabase.database
 
   override def getOrCreateInfo(): Future[TelemetryInfo] = {
     val query = sql
@@ -37,15 +36,14 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
     database
       .run(
         queryToDBIO(query)(
-          setParams = (_) => (),
           readResult = { rs =>
             if (rs.next()) {
-              val ts = rs.getTimestamp("lastPinged") match {
+              val ts = rs.getTimestamp(TelemetryTable.lastPinged.getName) match {
                 case null => None
                 case x    => Some(sqlTimestampToDateTime(x))
               }
 
-              Some(TelemetryInfo(rs.getString("id"), ts))
+              Some(TelemetryInfo(rs.getString(TelemetryTable.id.getName), ts))
             } else {
               None
             }
@@ -60,7 +58,7 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
             insertIntoReturning(create)(
               readResult = { rs =>
                 if (rs.next()) {
-                  TelemetryInfo(rs.getString("id"), None)
+                  TelemetryInfo(rs.getString(TelemetryTable.id.getName), None)
                 } else {
                   sys.error("[Telemetry] Did not receive result after inserting")
                 }
@@ -74,6 +72,6 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       .update(TelemetryTable.t)
       .set(TelemetryTable.lastPinged, DSL.inline(jodaDateTimeToSqlTimestampUTC(lastPinged)).asInstanceOf[Object])
 
-    database.run(updateToDBIO(update)())
+    database.run(updateToDBIO(update)()).map(_ => ())
   }
 }

@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.JdbcTelemetryPersistence
+import com.prisma.deploy.connector.jdbc.{JdbcCloudSecretPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder}
 import com.prisma.deploy.connector.postgres.impls._
@@ -31,7 +31,7 @@ case class PostgresDeployConnector(
 
   override lazy val projectPersistence: ProjectPersistence         = PostgresProjectPersistence(managementDatabase)
   override lazy val migrationPersistence: MigrationPersistence     = PostgresMigrationPersistence(managementDatabase)
-  override lazy val cloudSecretPersistence: CloudSecretPersistence = PostgresCloudSecretPersistence(managementDatabase)
+  override lazy val cloudSecretPersistence: CloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence     = JdbcTelemetryPersistence(managementDatabases.primary)
 
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
