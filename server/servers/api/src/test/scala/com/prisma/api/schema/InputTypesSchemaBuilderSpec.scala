@@ -210,7 +210,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |  b: BUpdateOneWithoutCInput
         |}
         |
-        |input CUpdateManyInput {
+        |input CUpdateManyMutationInput {
         |  name: String
         |}
         |
@@ -231,7 +231,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |  name: String
         |}
         |
-        |input UserUpdateManyInput {
+        |input UserUpdateManyMutationInput {
         |  name: String
         |}
         |
@@ -536,7 +536,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |  field: Int
                        |}
                        |
-                       |input AUpdateManyInput {
+                       |input AUpdateManyMutationInput {
                        |  field: Int
                        |}
                        |
@@ -571,7 +571,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |  a: AUpdateOneRequiredInput
                        |}
                        |
-                       |input BUpdateManyInput {
+                       |input BUpdateManyMutationInput {
                        |  field: Int
                        |}
                        |

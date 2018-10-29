@@ -105,7 +105,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     if (fields.nonEmpty) {
       Some(
         InputObjectType[Any](
-          name = s"${model.name}UpdateManyInput",
+          name = s"${model.name}UpdateManyMutationInput",
           fieldsFn = () => {
             fields
           }
