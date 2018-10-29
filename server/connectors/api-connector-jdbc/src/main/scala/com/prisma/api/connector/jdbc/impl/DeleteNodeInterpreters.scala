@@ -124,7 +124,7 @@ trait CascadingDeleteSharedStuff {
             //other parent
             val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
             val parentActions = for {
-              field           <- cascadingBackRelationFieldOfParentField
+              field           <- cascadingBackRelationFieldOfParentField.toVector
               childIdGroup    <- childIdsGrouped
               idGroupFiltered = childIdGroup.filter(x => !childIdsThatCanBeIgnored.contains(x))
             } yield {
