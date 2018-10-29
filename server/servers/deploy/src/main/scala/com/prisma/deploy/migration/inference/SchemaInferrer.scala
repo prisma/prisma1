@@ -104,7 +104,7 @@ case class SchemaInferrerImpl(
 
               case _ =>
                 val relationFieldNames = prismaType.relationalPrismaFields.filter(f => f.relationName.contains(relation.name)).map(_.name)
-                if (relationFieldNames.exists(name => name < prismaField.name)) RelationSide.B else RelationSide.A
+                if (relationFieldNames.exists(name => name < prismaField.name)) RelationSide.B else RelationSide.A //Fixme here the side is implemented for the field
             }
           } else {
             if (relation.modelAName == prismaType.name) RelationSide.A else RelationSide.B
@@ -177,8 +177,14 @@ case class SchemaInferrerImpl(
       val model1OnDelete: OnDelete.Value = relationField.cascade
       val model2OnDelete: OnDelete.Value = relatedField.map(_.cascade).getOrElse(OnDelete.SetNull)
 
-      val (modelA, modelAOnDelete, modelB, modelBOnDelete) =
-        if (model1 < model2) (model1, model1OnDelete, model2, model2OnDelete) else (model2, model2OnDelete, model1, model1OnDelete)
+      val (modelA, modelAOnDelete, modelB, modelBOnDelete) = () match {
+        case _ if model1 < model2                                                                            => (model1, model1OnDelete, model2, model2OnDelete)
+        case _ if model1 > model2                                                                            => (model2, model2OnDelete, model1, model1OnDelete)
+        case _ if (model1 == model2) && relatedField.isDefined && relationField.name < relatedField.get.name => (model1, model1OnDelete, model2, model2OnDelete)
+        case _ if (model1 == model2) && relatedField.isDefined && relationField.name > relatedField.get.name => (model2, model2OnDelete, model1, model1OnDelete)
+        case _ if model1 == model2                                                                           => (model1, model1OnDelete, model2, model2OnDelete)
+
+      }
 
       /**
         * 1: has relation directive. use that one.

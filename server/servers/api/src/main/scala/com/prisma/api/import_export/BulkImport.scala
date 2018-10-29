@@ -2,10 +2,10 @@ package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
+import com.prisma.api.import_export.GCValueJsonFormatter.{InvalidFieldValueException, UnknownFieldException}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{StringIdGCValue, IdGCValue, ListGCValue, UuidGCValue}
+import com.prisma.gc_values.{IdGCValue, ListGCValue, StringIdGCValue, UuidGCValue}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
@@ -54,14 +54,16 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val id       = parseIdGCValue(jsObject, model)
     val idStr    = id.value.toString
 
+    println(jsObject)
     val newJsObject = JsObject(jsObject.fields.filter(_._1 != "_typeName"))
 
     Try {
       GCValueJsonFormatter.readModelAwareGcValue(model)(newJsObject).get
     } match {
-      case Success(x)                        => Good(ImportNode(id, model, x))
-      case Failure(e: UnknownFieldException) => Bad(new Exception(s"The model ${model.name} with id $idStr has an unknown field '${e.field}' in field list."))
-      case Failure(e)                        => throw e
+      case Success(x)                             => Good(ImportNode(id, model, x))
+      case Failure(e: UnknownFieldException)      => Bad(new Exception(s"The model ${model.name} with id $idStr has an unknown field '${e.field}' in field list."))
+      case Failure(e: InvalidFieldValueException) => Bad(new Exception(s"The model ${model.name} with id $idStr has an invalid value for field' ${e.field}'."))
+      case Failure(e)                             => Bad(new Exception(s"The model ${model.name} with id $idStr produced an exception during import: $e."))
     }
   }
 
