@@ -84,7 +84,13 @@ Run the following command to create an empty TypeScript script:
 touch index.ts
 ```
 
-Create a `tsconfig.json` file with the following configuration:
+Run the following command to create a `tsconfig`:
+
+```bash copy
+touch tsconfig.json
+```
+
+Add the following configuration to the `tsconfig.json` file:
 
 ```json copy
 {
@@ -98,8 +104,20 @@ Next, initialize an empty NPM project in the current directory and install the r
 
 ```bash copy
 npm init -y
-npm install --save typescript ts-node prisma-client-lib graphql@0.13
+npm install --save prisma-client-lib graphql@0.13
+npm install --save-dev typescript ts-node
 ```
+
+Finally, add a script to your `package.json` to execute the script:
+
+```json copy
+{
+  "scripts": {
+    "start": "ts-node index.ts"
+  }
+}
+```
+
 
 ## Read and write data using the Prisma client
 
@@ -126,7 +144,7 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-ts-node index.ts
+npm start
 ```
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
