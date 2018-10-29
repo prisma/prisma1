@@ -173,9 +173,6 @@ case class SchemaInferrerImpl(
       val model1OnDelete: OnDelete.Value = relationField.cascade
       val model2OnDelete: OnDelete.Value = relatedField.map(_.cascade).getOrElse(OnDelete.SetNull)
 
-//      val (modelA, modelAOnDelete, modelB, modelBOnDelete) =
-//        if (model1 < model2) (model1, model1OnDelete, model2, model2OnDelete) else (model2, model2OnDelete, model1, model1OnDelete)
-
       val (modelA, modelAOnDelete, modelB, modelBOnDelete) = () match {
         case _ if model1 < model2                                                                            => (model1, model1OnDelete, model2, model2OnDelete)
         case _ if model1 > model2                                                                            => (model2, model2OnDelete, model1, model1OnDelete)

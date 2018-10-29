@@ -114,17 +114,17 @@ trait CascadingDeleteSharedStuff {
             DBIO.successful(())
           } else {
             //children
-            val cascadingChildren = model.cascadingRelationFields.filter(_ != parentField.relatedField)
+            val cascadingChildrenFields = model.cascadingRelationFields.filter(_ != parentField.relatedField)
             val childActions = for {
-              field   <- cascadingChildren
+              field   <- cascadingChildrenFields
               idGroup <- groupedIds
             } yield {
               recurse(mutationBuilder, field, idGroup)
             }
             //other parent
-            val cascadingParent = model.cascadingRelationFields.filter(_ == parentField.relatedField)
+            val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
             val parentActions = for {
-              field           <- cascadingParent
+              field           <- cascadingBackRelationFieldOfParentField
               idGroup         <- groupedIds
               idGroupFiltered = idGroup.filter(x => !seenIds.contains(x))
             } yield {
