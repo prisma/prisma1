@@ -10,14 +10,14 @@ trait SharedSlickExtensions {
 
   import slickDatabase.profile.api._
 
-  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams) { ps =>
       val rs = ps.executeQuery()
       readResult(rs)
     }
   }
 
-  def insertReturningGeneratedKeysToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+  def insertReturningGeneratedKeysToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams, returnGeneratedKeys = true)(
       statementFn = { ps =>
         ps.execute()
@@ -26,7 +26,7 @@ trait SharedSlickExtensions {
     )
   }
 
-  def insertIntoReturning[T](query: Insert[Record])(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
+  def insertIntoReturning[T](query: Insert[Record])(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams)(
       statementFn = { ps =>
         val rs = ps.executeQuery()
@@ -35,10 +35,10 @@ trait SharedSlickExtensions {
     )
   }
 
-  def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
-  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())
-  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.executeUpdate)
-  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit]                                         = jooqToDBIO(query, _ => ())(_.executeUpdate())
+  def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
+  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())
+  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.executeUpdate)
+  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit]                                                     = jooqToDBIO(query, _ => ())(_.executeUpdate())
 
   private def jooqToDBIO[T](
       query: JooqQuery,
@@ -51,6 +51,7 @@ trait SharedSlickExtensions {
       } else {
         ctx.connection.prepareStatement(query.getSQL)
       }
+
       val pp = new PositionedParameters(ps)
       setParams(pp)
       statementFn(ps)

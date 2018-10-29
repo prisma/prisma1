@@ -36,11 +36,10 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
       initialGracePeriod
   }
 
-  println(s"INITIAL: $initialDelay")
   context.system.scheduler.scheduleOnce(initialDelay, self, Report)
 
   override def receive: Receive = {
-    case Report => println("REPORTING"); report
+    case Report => report
   }
 
   private def report = {
@@ -50,7 +49,6 @@ case class TelemetryActor(connector: DeployConnector)(implicit val materializer:
       .onComplete {
         case Success(resp) =>
           if (resp.is2xx) {
-            println("WORKS")
             connector.updateTelemetryInfo(new DateTime()).onComplete {
               case Success(_) => context.system.scheduler.scheduleOnce(regularInterval, self, Report)
               case Failure(_) => context.system.scheduler.scheduleOnce(errorInterval, self, Report)

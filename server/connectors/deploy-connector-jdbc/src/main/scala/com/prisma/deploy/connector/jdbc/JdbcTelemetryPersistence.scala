@@ -10,6 +10,13 @@ import org.jooq.impl.DSL._
 
 import scala.concurrent.{ExecutionContext, Future}
 
+object TelemetryTable {
+  val telemetryTableName = "TelemetryInfo"
+  val t                  = table(name(telemetryTableName))
+  val id                 = field(name(telemetryTableName, "id"))
+  val lastPinged         = field(name(telemetryTableName, "lastPinged"))
+}
+
 case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcPersistenceBase with TelemetryPersistence {
   val sql                = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
   val telemetryTableName = "TelemetryInfo"
@@ -17,25 +24,28 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
 
   override def getOrCreateInfo(): Future[TelemetryInfo] = {
     val query = sql
-      .select(field(name(telemetryTableName, "id")), field(name(telemetryTableName, "lastPinged")))
-      .from(table(name(telemetryTableName)))
+      .select(TelemetryTable.id, TelemetryTable.lastPinged)
+      .from(TelemetryTable.t)
       .limit(DSL.inline(1))
 
     lazy val create = sql
-      .insertInto(table(name(telemetryTableName)))
-      .columns(field(name(telemetryTableName, "id")), field(name(telemetryTableName, "lastPinged")))
+      .insertInto(TelemetryTable.t)
+      .columns(TelemetryTable.id, TelemetryTable.lastPinged)
       .values(DSL.inline(java.util.UUID.randomUUID().toString), DSL.inline(null.asInstanceOf[String]))
+      .returning(TelemetryTable.id, TelemetryTable.lastPinged)
 
-    val wat = database
+    database
       .run(
         queryToDBIO(query)(
           setParams = (_) => (),
           readResult = { rs =>
             if (rs.next()) {
-              rs.getTimestamp("lastPinged") match {
+              val ts = rs.getTimestamp("lastPinged") match {
                 case null => None
-                case x    => Some(TelemetryInfo(rs.getString("id"), Some(sqlTimestampToDateTime(x))))
+                case x    => Some(sqlTimestampToDateTime(x))
               }
+
+              Some(TelemetryInfo(rs.getString("id"), ts))
             } else {
               None
             }
@@ -48,7 +58,6 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
         case None =>
           database.run(
             insertIntoReturning(create)(
-              setParams = (_) => (),
               readResult = { rs =>
                 if (rs.next()) {
                   TelemetryInfo(rs.getString("id"), None)
@@ -58,15 +67,13 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
               }
             ))
       }
-    wat.onComplete(println(_))
-    wat
   }
 
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = {
     val update = sql
-      .update(table(name(telemetryTableName)))
-      .set(field(name(telemetryTableName, "lastPinged")), jodaDateTimeToSqlTimestampUTC(lastPinged))
+      .update(TelemetryTable.t)
+      .set(TelemetryTable.lastPinged, DSL.inline(jodaDateTimeToSqlTimestampUTC(lastPinged)).asInstanceOf[Object])
 
-    database.run(updateToDBIO(update)(setParams = (_) => ()))
+    database.run(updateToDBIO(update)())
   }
 }
