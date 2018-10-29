@@ -101,19 +101,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
   protected def computeInputObjectTypeForUpdateMany(model: Model): Option[InputObjectType[Any]] = {
     val fields = computeScalarInputFieldsForUpdate(model)
-
-    if (fields.nonEmpty) {
-      Some(
-        InputObjectType[Any](
-          name = s"${model.name}UpdateManyMutationInput",
-          fieldsFn = () => {
-            fields
-          }
-        )
-      )
-    } else {
-      None
-    }
+    if (fields.nonEmpty) Some(InputObjectType[Any](name = s"${model.name}UpdateManyMutationInput", fieldsFn = () => fields)) else None
   }
 
   protected def computeInputObjectTypeForNestedUpdate(parentField: RelationField): Option[InputObjectType[Any]] = {

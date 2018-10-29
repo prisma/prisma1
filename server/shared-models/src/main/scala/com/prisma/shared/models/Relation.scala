@@ -76,12 +76,4 @@ class Relation(
       case _            => sys.error(s"The model id $modelId is not part of this relation $name")
     }
   }
-
-  def sideOfModelCascades(model: Model): Boolean = {
-    model.name match {
-      case `modelAName` => modelAOnDelete == OnDelete.Cascade
-      case `modelBName` => modelBOnDelete == OnDelete.Cascade
-      case _            => sys.error(s"The model ${model.name} is not part of the relation $name")
-    }
-  }
 }
