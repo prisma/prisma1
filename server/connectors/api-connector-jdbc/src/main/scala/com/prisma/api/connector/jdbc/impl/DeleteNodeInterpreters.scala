@@ -102,40 +102,40 @@ trait CascadingDeleteSharedStuff {
       mutationBuilder: JdbcActionsBuilder,
       parentField: RelationField,
       parentIds: Vector[IdGCValue],
-      seenIds: Vector[IdGCValue] = Vector.empty
+      childIdsThatCanBeIgnored: Vector[IdGCValue] = Vector.empty
   ): DBIO[Unit] = {
 
     for {
-      ids        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
-      groupedIds = ids.grouped(10000).toVector
-      model      = parentField.relatedModel_!
+      childIds        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
+      childIdsGrouped = childIds.grouped(10000).toVector
+      model           = parentField.relatedModel_!
       //nestedActions
-      _ <- if (ids.isEmpty) {
+      _ <- if (childIds.isEmpty) {
             DBIO.successful(())
           } else {
             //children
             val cascadingChildrenFields = model.cascadingRelationFields.filter(_ != parentField.relatedField)
             val childActions = for {
-              field   <- cascadingChildrenFields
-              idGroup <- groupedIds
+              field        <- cascadingChildrenFields
+              childIdGroup <- childIdsGrouped
             } yield {
-              recurse(mutationBuilder, field, idGroup)
+              recurse(mutationBuilder, field, childIdGroup)
             }
             //other parent
             val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
             val parentActions = for {
               field           <- cascadingBackRelationFieldOfParentField
-              idGroup         <- groupedIds
-              idGroupFiltered = idGroup.filter(x => !seenIds.contains(x))
+              childIdGroup    <- childIdsGrouped
+              idGroupFiltered = childIdGroup.filter(x => !childIdsThatCanBeIgnored.contains(x))
             } yield {
-              recurse(mutationBuilder, field, idGroupFiltered, parentIds)
+              recurse(mutationBuilder, field, idGroupFiltered, childIdsThatCanBeIgnored = parentIds)
             }
 
             DBIO.seq(childActions ++ parentActions: _*)
           }
       //actions for this level
-      _ <- DBIO.seq(groupedIds.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
-      _ <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
+      _ <- DBIO.seq(childIdsGrouped.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
+      _ <- DBIO.seq(childIdsGrouped.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
     } yield ()
   }
 
