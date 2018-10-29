@@ -7,8 +7,8 @@ export const meta = {
   gettingStartedOrder: 1,
   gettingStartedTitle: 'New database',
   nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and (re-)generate your Prisma client.',
-  technology: 'typescript',
-  technologyOrder: 3,
+  technology: 'node',
+  technologyOrder: 1,
   articleGroup: 'Setting up Prisma',
 }
 
@@ -72,7 +72,7 @@ Paste the following contents into the Docker Compose file you just created:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.17
+    image: prismagraphql/prisma:1.18
     restart: always
     ports:
     - "4466:4466"
@@ -102,7 +102,7 @@ volumes:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.17
+    image: prismagraphql/prisma:1.18
     restart: always
     ports:
     - "4466:4466"
@@ -171,8 +171,8 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 
 ```yml copy
 generate:
-  - generator: typescript-client
-    output: ./generated/prisma/
+  - generator: javascript-client
+    output: ./generated/prisma-client/
 ```
 
 Now generate the client with this command:
@@ -183,28 +183,12 @@ prisma generate
 
 The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
 
-## Prepare TypeScript application
+## Prepare Node application
 
-Run the following command to create an empty TypeScript script:
-
-```bash copy
-touch index.ts
-```
-
-Run the following command to create a `tsconfig`:
+Run the following command to create an empty Node script:
 
 ```bash copy
-touch tsconfig.json
-```
-
-Add the following configuration to the `tsconfig.json` file:
-
-```json copy
-{
-  "compilerOptions": {
-    "lib": ["es2016", "esnext.asynciterable"]
-  }
-}
+touch index.js
 ```
 
 Next, initialize an empty NPM project in the current directory and install the required dependencies:
@@ -212,25 +196,14 @@ Next, initialize an empty NPM project in the current directory and install the r
 ```bash copy
 npm init -y
 npm install --save prisma-client-lib graphql@0.13
-npm install --save-dev typescript ts-node
-```
-
-Finally, add a start script to your `package.json`:
-
-```json copy
-{
-  "scripts": {
-    "start": "ts-node index.ts"
-  }
-}
 ```
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.ts` and save it afterwards:
+Now add the following code to `index.js` and save it afterwards:
 
 ```js copy
-import { prisma } from './generated/prisma'
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -250,10 +223,10 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-npm start
+node index.js
 ```
 
-Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
+Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`).
 
 Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
