@@ -1,10 +1,10 @@
 package com.prisma.api.connector.postgres
 
-import com.prisma.api.connector.ApiConnectorCapability._
+import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
-import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability}
 import com.prisma.config.DatabaseConfig
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.ApiConnectorCapability._
+import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -27,7 +27,7 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
-  override val capabilities: Set[ApiConnectorCapability] = {
+  override val capabilities: Set[ConnectorCapability] = {
     val common = Set(TransactionalExecutionCapability, JoinRelationsCapability)
     if (isActive) {
       Set(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common

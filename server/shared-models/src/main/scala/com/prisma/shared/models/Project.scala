@@ -19,8 +19,3 @@ case class Project(
 
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 }
-
-object ProjectWithClientId {
-  def apply(project: Project): ProjectWithClientId = ProjectWithClientId(project, project.ownerId)
-}
-case class ProjectWithClientId(project: Project, clientId: Id)

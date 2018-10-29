@@ -642,23 +642,22 @@ export class EndpointDialog {
   }
 
   private async askForDemoCluster(): Promise<Cluster> {
-    const clusters = this.getCloudClusters().slice(0, 2)
-    const eu1Cluster = clusters.find(c => c.name === 'prisma-eu1')!
-    const us1Cluster = clusters.find(c => c.name === 'prisma-us1')!
     const eu1Ping = await getPing('EU_WEST_1')
     const us1Ping = await getPing('US_WEST_2')
-    const eu1Name = this.getClusterName(eu1Cluster)
-    const us1Name = this.getClusterName(us1Cluster)
-    const eu1Choice = [
-      eu1Name,
-      `Hosted on AWS in eu-west-1 using MySQL [${eu1Ping.toFixed()}ms latency]`,
-    ]
-    const us1Choice = [
-      us1Name,
-      `Hosted on AWS in us-west-2 using MySQL [${us1Ping.toFixed()}ms latency]`,
-    ]
-    const rawChoices =
-      eu1Ping < us1Ping ? [eu1Choice, us1Choice] : [us1Choice, eu1Choice]
+    const clusters = this.getCloudClusters().filter(
+      c => c.name === 'prisma-eu1' || c.name === 'prisma-us1',
+    )
+
+    const rawChoices = clusters.map(c => {
+      const clusterName = this.getClusterName(c)
+      const clusterRegion = c.name === 'prisma-eu1' ? `eu-west-1` : `us-west-2`
+      const pingTime =
+        c.name === 'prisma-eu1' ? eu1Ping.toFixed() : us1Ping.toFixed()
+      return [
+        clusterName,
+        `Hosted on AWS in ${clusterRegion} using MySQL [${pingTime}ms latency]`,
+      ]
+    })
     const choices = this.convertChoices(rawChoices)
 
     const { cluster } = await this.out.prompt({
@@ -667,8 +666,10 @@ export class EndpointDialog {
       message: `Choose the region of your demo server`,
       choices,
     })
-
-    return eu1Name === cluster ? eu1Cluster : us1Cluster
+    return clusters.find(c => {
+      const clusterName = this.getClusterName(c)
+      return clusterName === cluster
+    })!
   }
 
   private getClusterDescription(c: Cluster) {

@@ -27,7 +27,7 @@ import { getExistsTypes } from '../utils'
 
 import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment';
+import { codeComment } from '../utils/codeComment'
 
 export interface RenderOptions {
   endpoint?: string
@@ -140,6 +140,9 @@ export type ${type.name}_Output = string`
     },
 
     GraphQLEnumType: (type: GraphQLEnumType): string => {
+      if (type.name === 'PrismaDatabase') {
+        return ``
+      }
       return `${this.renderDescription(type.description!)}export type ${
         type.name
       } = ${type
@@ -172,8 +175,10 @@ export interface Exists {\n${this.renderExists()}\n}
 
 export interface Node {}
 
+export type FragmentableArray<T> = Promise<Array<T>> & Fragmentable
+
 export interface Fragmentable {
-  $fragment<T>(fragment: string | Object): T
+  $fragment<T>(fragment: string | DocumentNode): Promise<T>
 }
 
 ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
@@ -181,7 +186,6 @@ ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
   $graphql: <T ${
     this.genericsDelimiter
   } any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
-  $getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
 
   /**
    * Queries
@@ -232,7 +236,7 @@ ${this.renderExports(options)}
     return `\
 ${codeComment}
 
-import { GraphQLSchema } from 'graphql'
+import { DocumentNode, GraphQLSchema } from 'graphql'
 import { IResolvers } from 'graphql-tools/dist/Interfaces'
 import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
@@ -423,6 +427,10 @@ export const prisma = new Prisma()`
     isMutation = false,
   ): string {
     return Object.keys(fields)
+      .filter(f => {
+        const field = fields[f]
+        return !(field.name === 'executeRaw' && isMutation)
+      })
       .map(f => {
         const field = fields[f]
         return `    ${field.name}: (${this.renderArgs(
@@ -513,9 +521,13 @@ export const prisma = new Prisma()`
     return `${field.name}${isNonNullType(field.type) ? '' : '?'}`
   }
 
-  wrapType(type, subscription = false) {
+  wrapType(type, subscription = false, isArray = false) {
     if (subscription) {
       return `Promise<AsyncIterator<${type}>>`
+    }
+
+    if (isArray) {
+      return `FragmentableArray<${type}>`
     }
 
     return `Promise<${type}>`
@@ -595,15 +607,16 @@ export const prisma = new Prisma()`
       } else {
         if (renderFunction) {
           return `<T ${this.genericsDelimiter} ${this.wrapType(
-            `Array<${typeString}`,
+            `${typeString}`,
             isSubscription,
-          )}>> (${
+            true,
+          )}> (${
             field.args && field.args.length > 0
               ? this.renderArgs(field, isMutation, false)
               : ''
           }) => T`
         } else {
-          return this.wrapType(`Array<${typeString}>`, isSubscription)
+          return this.wrapType(typeString, isSubscription, true)
         }
       }
     }
@@ -696,7 +709,7 @@ ${fieldDefinition}
       // TODO: Find a better solution than the hacky replace to remove ? from inside AtLeastOne
       typeName.includes('WhereUniqueInput')
         ? `export type ${typeName} = AtLeastOne<{
-        ${fieldDefinition.replace("?:", ":")}
+        ${fieldDefinition.replace('?:', ':')}
       }>`
         : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0

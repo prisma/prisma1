@@ -29,6 +29,10 @@ if [[ -z "$CIRCLE_BRANCH" ]]; then
   fi
 fi
 
+if [[ -z "$CIRCLE_BRANCH" ]]; then
+  export CIRCLE_BRANCH=master
+fi
+
 if [ -z "$CIRCLE_TAG" ] && [ $CIRCLE_BRANCH == "master" ]; then
   echo "Builds on master are only executed when a tag is provided"
   exit 0
@@ -108,6 +112,10 @@ else
   step=1
   if [ $CIRCLE_BRANCH == "alpha" ]; then
     step=2
+  fi
+  if [[ -n "$CIRCLE_TAG" ]]; then
+    echo "Setting Step to 0"
+    step=0
   fi
   nextDockerMinor=$((nextDockerMinor + step))
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}-${CIRCLE_BRANCH}"
@@ -323,14 +331,13 @@ yarn add prisma-cli-engine@$engineVersion prisma-cli-core@$coreVersion
 yarn install
 yarn build
 
-if [ -z "$CIRCLE_TAG" ]; then
-
-  npm version $newVersion
-  npm publish --tag $CIRCLE_BRANCH
-else
+if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
   newVersion=$CIRCLE_TAG
 
   echo "new version: $newVersion"
   npm version $newVersion
   npm publish
+else
+  npm version $newVersion
+  npm publish --tag $CIRCLE_BRANCH
 fi

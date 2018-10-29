@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -9,9 +9,19 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
   override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
   "a one to many relation" should "be connectable by id within an upsert in the create case" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val customer = schema.model("Customer").field_!("name", _.String)
-      schema.model("Tenant").field_!("name", _.String).oneToManyRelation("customers", "tenant", customer)
+    val project = SchemaDsl.fromString() {
+      """type Customer {
+          | id: ID! @unique
+          | name: String!
+          | tenant: Tenant
+          |}
+          |
+          |type Tenant {
+          | id: ID! @unique
+          | name: String!
+          | customers: [Customer!]!
+          |}
+        """.stripMargin
     }
     database.setup(project)
 
@@ -19,9 +29,9 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
 
     val result = server.query(
       s"""mutation{upsertCustomer(where: {id: "DOESNOTEXIST"}, create: {name: "Paul P", tenant:{connect:{id:"$tenantId"}}}, update: {name: "Paul P"}) {
-         |    tenant{name}
-         |  }
-         |}
+           |    tenant{name}
+           |  }
+           |}
       """,
       project
     )
@@ -30,9 +40,19 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
   }
 
   "a one to many relation" should "be connectable by id within an upsert in the update case" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val customer = schema.model("Customer").field_!("name", _.String)
-      schema.model("Tenant").field_!("name", _.String).oneToManyRelation("customers", "tenant", customer)
+    val project = SchemaDsl.fromString() {
+      """type Customer {
+          | id: ID! @unique
+          | name: String!
+          | tenant: Tenant
+          |}
+          |
+          |type Tenant {
+          | id: ID! @unique
+          | name: String!
+          | customers: [Customer!]!
+          |}
+        """.stripMargin
     }
     database.setup(project)
 
@@ -41,9 +61,9 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
 
     val result = server.query(
       s"""mutation{upsertCustomer(where: {id: "$customerId"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{id:"$tenantId"}}}) {
-         |    tenant{name}
-         |  }
-         |}
+           |    tenant{name}
+           |  }
+           |}
       """,
       project
     )
@@ -52,9 +72,19 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
   }
 
   "a one to many relation" should "be connectable by unique field within an upsert in the update case" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val customer = schema.model("Customer").field_!("name", _.String, isUnique = true)
-      schema.model("Tenant").field_!("name", _.String, isUnique = true).oneToManyRelation("customers", "tenant", customer)
+    val project = SchemaDsl.fromString() {
+      """type Customer {
+          | id: ID! @unique
+          | name: String! @unique
+          | tenant: Tenant
+          |}
+          |
+          |type Tenant {
+          | id: ID! @unique
+          | name: String! @unique
+          | customers: [Customer!]!
+          |}
+        """.stripMargin
     }
     database.setup(project)
 
@@ -63,9 +93,9 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
 
     val result = server.query(
       s"""mutation{upsertCustomer(where: {name: "Paul P"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{name:"Gustav G"}}}) {
-         |    tenant{name}
-         |  }
-         |}
+           |    tenant{name}
+           |  }
+           |}
       """,
       project
     )
@@ -74,9 +104,19 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
   }
 
   "a one to many relation" should "throw the correct error for a connect by unique field within an upsert in the update case" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val customer = schema.model("Customer").field_!("name", _.String, isUnique = true)
-      schema.model("Tenant").field_!("name", _.String, isUnique = true).oneToManyRelation("customers", "tenant", customer)
+    val project = SchemaDsl.fromString() {
+      """type Customer {
+          | id: ID! @unique
+          | name: String! @unique
+          | tenant: Tenant
+          |}
+          |
+          |type Tenant {
+          | id: ID! @unique
+          | name: String! @unique
+          | customers: [Customer!]!
+          |}
+        """.stripMargin
     }
     database.setup(project)
 
@@ -85,9 +125,9 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
 
     server.queryThatMustFail(
       s"""mutation{upsertCustomer(where: {name: "Paul P"}, create: {name: "Bernd B"}, update: {name: "Bernd B",tenant:{connect:{name:"DOES NOT EXIST"}}}) {
-         |    tenant{name}
-         |  }
-         |}
+           |    tenant{name}
+           |  }
+           |}
       """,
       project,
       3039

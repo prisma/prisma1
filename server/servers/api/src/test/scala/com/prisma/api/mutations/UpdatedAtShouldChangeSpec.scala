@@ -50,7 +50,7 @@ class UpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase 
     updatedAt should not equal changedUpdatedAt
   }
 
-  "Upserting a data item" should "change it's updatedAt value" taggedAs (IgnoreMongo) in {
+  "Upserting a data item" should "change it's updatedAt value" in {
     val updatedAt = server.query("""mutation a {createTop(data: { top: "top3" }) {updatedAt}}""", project).pathAsString("data.createTop.updatedAt")
 
     val changedUpdatedAt = server

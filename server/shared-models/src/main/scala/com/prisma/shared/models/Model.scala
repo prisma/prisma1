@@ -38,7 +38,6 @@ class Model(
   lazy val relationListFields: List[RelationField]       = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[RelationField]    = relationFields.filter(!_.isList)
   lazy val visibleRelationFields: List[RelationField]    = relationFields.filter(_.isVisible)
-  lazy val cascadingRelationFields: List[RelationField]  = relationFields.filter(field => field.relation.sideOfModelCascades(this))
   lazy val nonListFields                                 = fields.filter(!_.isList)
   lazy val idField                                       = getScalarFieldByName("id")
   lazy val idField_!                                     = getScalarFieldByName_!("id")
@@ -46,6 +45,14 @@ class Model(
   lazy val hasUpdatedAtField                             = getFieldByName("updatedAt").isDefined
   lazy val hasCreatedAtField                             = getFieldByName("createdAt").isDefined
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
+  lazy val cascadingRelationFields: List[RelationField] = relationFields.collect {
+    case field if field.relationSide == RelationSide.A && field.relation.template.modelAOnDelete == OnDelete.Cascade => field
+    case field if field.relationSide == RelationSide.B && field.relation.template.modelBOnDelete == OnDelete.Cascade => field
+  }
+
+  lazy val inlineFields = relationFields.collect {
+    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelId == this.name => rf
+  }
 
   def filterScalarFields(fn: ScalarField => Boolean): Model = {
     val newFields         = this.scalarFields.filter(fn).map(_.template)

@@ -73,7 +73,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDelete
             throw NodesNotConnectedError(
               relation = parentField.relation,
               parent = parentField.model,
-              parentWhere = Some(NodeSelector.forIdGCValue(parent, parentId)),
+              parentWhere = Some(NodeSelector.forId(parent, parentId)),
               child = parentField.relatedModel_!,
               childWhere = None
             )
@@ -94,14 +94,7 @@ trait CascadingDeleteSharedStuff {
   implicit def ec: ExecutionContext
 
   def performCascadingDelete(mutationBuilder: JdbcActionsBuilder, model: Model, parentId: IdGCValue): DBIO[Unit] = {
-    val actions = model.cascadingRelationFields.map { field =>
-      recurse(
-        mutationBuilder = mutationBuilder,
-        parentField = field,
-        parentIds = Vector(parentId),
-        visitedModels = Vector(model)
-      )
-    }
+    val actions = model.cascadingRelationFields.map(field => recurse(mutationBuilder = mutationBuilder, parentField = field, parentIds = Vector(parentId)))
     DBIO.seq(actions: _*)
   }
 
@@ -109,18 +102,40 @@ trait CascadingDeleteSharedStuff {
       mutationBuilder: JdbcActionsBuilder,
       parentField: RelationField,
       parentIds: Vector[IdGCValue],
-      visitedModels: Vector[Model]
+      childIdsThatCanBeIgnored: Vector[IdGCValue] = Vector.empty
   ): DBIO[Unit] = {
+
     for {
-      ids            <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
-      model          = parentField.relatedModel_!
-      _              = if (visitedModels.contains(model)) throw APIErrors.CascadingDeletePathLoops()
-      nextCascadings = model.cascadingRelationFields.filter(_ != parentField)
-      childActions   = nextCascadings.map(field => recurse(mutationBuilder, field, ids, visitedModels :+ model))
-      _              <- DBIO.seq(childActions: _*)
-      // eigentliche Actions
-      _ <- checkTheseOnes(mutationBuilder, parentField, ids)
-      _ <- mutationBuilder.deleteNodes(model, ids, shouldDeleteRelayIds)
+      childIds        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
+      childIdsGrouped = childIds.grouped(10000).toVector
+      model           = parentField.relatedModel_!
+      //nestedActions
+      _ <- if (childIds.isEmpty) {
+            DBIO.successful(())
+          } else {
+            //children
+            val cascadingChildrenFields = model.cascadingRelationFields.filter(_ != parentField.relatedField)
+            val childActions = for {
+              field        <- cascadingChildrenFields
+              childIdGroup <- childIdsGrouped
+            } yield {
+              recurse(mutationBuilder, field, childIdGroup)
+            }
+            //other parent
+            val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
+            val parentActions = for {
+              field           <- cascadingBackRelationFieldOfParentField.toVector
+              childIdGroup    <- childIdsGrouped
+              idGroupFiltered = childIdGroup.filter(x => !childIdsThatCanBeIgnored.contains(x))
+            } yield {
+              recurse(mutationBuilder, field, idGroupFiltered, childIdsThatCanBeIgnored = parentIds)
+            }
+
+            DBIO.seq(childActions ++ parentActions: _*)
+          }
+      //actions for this level
+      _ <- DBIO.seq(childIdsGrouped.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
+      _ <- DBIO.seq(childIdsGrouped.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
     } yield ()
   }
 

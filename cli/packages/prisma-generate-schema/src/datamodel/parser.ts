@@ -128,9 +128,6 @@ export default abstract class DatamodelParser {
               break
             }
           }
-          if(fieldA.relatedField === null) {
-            throw new Error(`Opposite side of relation directive "${fieldA.relationName}" found at "${typeA.name}.${fieldA.name}" is missing on type "${fieldA.type.name}"`)
-          }
         }
       }
     }

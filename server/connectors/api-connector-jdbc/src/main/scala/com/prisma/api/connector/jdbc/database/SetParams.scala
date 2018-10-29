@@ -4,36 +4,36 @@ import java.sql.PreparedStatement
 
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
+import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
 
 object SetParams extends SlickExtensions with LimitClauseBuilder {
-  def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
+  def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: QueryArguments): Unit = {
     val pp = new PositionedParameters(preparedStatement)
     setQueryArgs(pp, queryArguments)
   }
 
-  def setQueryArgs(pp: PositionedParameters, queryArguments: Option[QueryArguments]): Unit = {
-    queryArguments.foreach { queryArgs =>
-      setFilter(pp, queryArgs.filter)
-      setCursor(pp, queryArgs)
-      setLimit(pp, queryArgs)
-    }
+  def setQueryArgs(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
+    setFilter(pp, queryArguments.filter)
+    setCursor(pp, queryArguments)
+    setLimit(pp, queryArguments)
+
   }
 
   def setCursor(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
     queryArguments.after.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
+      pp.setGcValue(value)
+      pp.setGcValue(value)
     }
     queryArguments.before.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
+      pp.setGcValue(value)
+      pp.setGcValue(value)
     }
   }
 
   def setLimit(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
-    val skipAndLimit = skipAndLimitValues(queryArguments)
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
     skipAndLimit.limit.foreach(pp.setInt)
     pp.setInt(skipAndLimit.skip)
   }

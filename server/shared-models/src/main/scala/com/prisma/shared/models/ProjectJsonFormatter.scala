@@ -96,7 +96,7 @@ object ProjectJsonFormatter {
       case (`nullType`, _)                  => JsSuccess(NullGCValue)
       case (`stringType`, JsString(str))    => JsSuccess(StringGCValue(str))
       case (`enumType`, JsString(str))      => JsSuccess(EnumGCValue(str))
-      case (`graphQlIdType`, JsString(str)) => JsSuccess(CuidGCValue(str))
+      case (`graphQlIdType`, JsString(str)) => JsSuccess(StringIdGCValue(str))
       case (`uuidType`, JsString(str))      => JsSuccess(UuidGCValue(UUID.fromString(str)))
       case (`dateTimeType`, JsString(str))  => JsSuccess(DateTimeGCValue(new DateTime(str, DateTimeZone.UTC)))
       case (`intType`, JsNumber(x))         => JsSuccess(IntGCValue(x.toInt))
@@ -119,7 +119,7 @@ object ProjectJsonFormatter {
         case NullGCValue        => json(nullType, JsNull)
         case x: StringGCValue   => json(stringType, JsString(x.value))
         case x: EnumGCValue     => json(enumType, JsString(x.value))
-        case x: CuidGCValue     => json(graphQlIdType, JsString(x.value))
+        case x: StringIdGCValue => json(graphQlIdType, JsString(x.value))
         case x: UuidGCValue     => json(uuidType, JsString(x.value.toString))
         case x: DateTimeGCValue => json(dateTimeType, JsString(formatter.print(x.value)))
         case x: IntGCValue      => json(intType, JsNumber(x.value))
@@ -293,11 +293,10 @@ object ProjectJsonFormatter {
       (JsPath \ "enums").write[List[Enum]]
   )(s => (s.modelTemplates, s.relationTemplates, s.enums))
 
-  implicit lazy val schemaFormat              = Format(schemaReads, schemaWrites)
-  implicit lazy val projectFormat             = Json.format[Project]
-  implicit lazy val projectWithClientIdFormat = Json.format[ProjectWithClientId]
-  implicit lazy val migrationStatusFormat     = JsonUtils.enumFormat(MigrationStatus)
-  implicit lazy val migrationFormat           = Json.format[Migration]
+  implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
+  implicit lazy val projectFormat         = Json.format[Project]
+  implicit lazy val migrationStatusFormat = JsonUtils.enumFormat(MigrationStatus)
+  implicit lazy val migrationFormat       = Json.format[Migration]
 
   def failingFormat[T] = new Format[T] {
 

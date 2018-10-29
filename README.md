@@ -112,7 +112,7 @@ async function main() {
   // Create a new user with a new post
   const newUser = await prisma
     .createUser({
-      name: "Alice"
+      name: "Alice",
       posts: {
         create: {
           title: "The data layer for modern apps",
@@ -196,14 +196,14 @@ Collection of Prisma example projects 💡
 | [`go-graphql`](https://github.com/prisma/prisma-examples/tree/master/go-graphql) | [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)) | Simple GraphQL server |
 | [`node-cli-app`](https://github.com/prisma/prisma-examples/tree/master/node-cli-app) | [Node.JS](https://nodejs.org/en/) | Simple CLI todo list app |
 | [`node-graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/node-graphql-auth) |  [Node.JS](https://nodejs.org/en/) | GraphQL server with email-password authentication |
-| [`node-graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/node-graphql-schema-delegation) | [Node.JS](https://nodejs.org/en/) | [Schema delegation](https://www.prisma.io/docs/prisma-client/api-reference/schema-delegation-typescript-pyl8/) with the Prisma client |
+| [`node-graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/node-graphql-schema-delegation) | [Node.JS](https://nodejs.org/en/) | [Schema delegation](https://www.prisma.io/docs/prisma-graphql-api/usage/prisma-bindings-prb1/#building-graphql-servers-with-prisma-bindings) with Prisma binding |
 | [`node-graphql`](https://github.com/prisma/prisma-examples/tree/master/node-graphql) |  [Node.JS](https://nodejs.org/en/) | Simple GraphQL server |
 | [`node-rest-express`](https://github.com/prisma/prisma-examples/tree/master/node-rest-express) | [Node.JS](https://nodejs.org/en/) | Simple REST API with Express.JS |
 | [`node-script`](https://github.com/prisma/prisma-examples/tree/master/node-script) | [Node.JS](https://nodejs.org/en/) | Simple usage of Prisma client in script |
 | [`typescript-cli-app`](https://github.com/prisma/prisma-examples/tree/master/typescript-cli-app) | [TypeScript](https://www.typescriptlang.org/) | Simple CLI todo list app |
 | [`typescript-graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/typescript-graphql-auth) | [TypeScript](https://www.typescriptlang.org/) | GraphQL server with email-password authentication |
 | [`typescript-graphql`](https://github.com/prisma/prisma-examples/tree/master/typescript-graphql) | [TypeScript](https://www.typescriptlang.org/) | Simple GraphQL server |
-| [`typescript-graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/typescript-graphql-schema-delegation) | [TypeScript](https://www.typescriptlang.org/) | [Schema delegation](https://www.prisma.io/docs/prisma-client/api-reference/schema-delegation-typescript-pyl8/) with the Prisma client |
+| [`typescript-graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/typescript-graphql-schema-delegation) | [TypeScript](https://www.typescriptlang.org/) | [Schema delegation](https://www.prisma.io/docs/prisma-graphql-api/usage/prisma-bindings-prb1/#building-graphql-servers-with-prisma-bindings) with Prisma binding |
 | [`typescript-script`](https://github.com/prisma/prisma-examples/tree/master/typescript-script) | [TypeScript](https://www.typescriptlang.org/) | Simple usage of Prisma client in script |
 
 You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
