@@ -88,7 +88,7 @@ Next, initialize an empty NPM project in the current directory and install the r
 
 ```bash copy
 npm init -y
-npm install --save babel-node babel-preset-env prisma-client-lib graphql@0.13
+npm install --save babel-cli babel-preset-env prisma-client-lib graphql@0.13
 ```
 
 Create a `.babelrc` file with the following configuration:
@@ -96,6 +96,16 @@ Create a `.babelrc` file with the following configuration:
 ```json copy
 {
   presets: ["env"]
+}
+```
+
+Finally, add a script to your `package.json` to execute the script:
+
+```json copy
+{
+  "scripts": {
+    "start": "babel-node index.js"
+  }
 }
 ```
 
@@ -124,7 +134,7 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-babel-node index.js
+npm start
 ```
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
