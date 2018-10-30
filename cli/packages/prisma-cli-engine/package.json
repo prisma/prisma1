@@ -112,7 +112,7 @@
     "opn": "^5.1.0",
     "prisma-json-schema": "0.1.2",
     "prisma-yml": "1.0.95",
-    "raven": "2.3.0",
+    "raven": "2.6.4",
     "replaceall": "^0.1.6",
     "rwlockfile": "^1.4.8",
     "scuid": "^1.0.2",
