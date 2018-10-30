@@ -8,8 +8,8 @@ export const meta = {
   gettingStartedOrder: 2,
   gettingStartedTitle: 'Existing database',
   nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
-  technology: 'node',
-  technologyOrder: 1,
+  technology: 'flow',
+  technologyOrder: 2,
   articleGroup: 'Setting up Prisma',
 }
 
@@ -63,7 +63,7 @@ npm install -g prisma
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
 
-> Don't want to use Docker? You can also get started with a [demo database](a001) for now.
+> Don't want to use Docker? You can also get started with a [demo database](j001) for now.
 
 ## Set up Prisma server
 
@@ -190,22 +190,21 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 
 ```yml copy
 generate:
-  - generator: javascript-client
+  - generator: flow-client
     output: ./generated/prisma-client/
 ```
 
-
 Now generate the client with this command:
 
-``` copy
+```bash copy
 prisma generate
 ```
 
 The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
 
-## Prepare Node application
+## Prepare Flow application
 
-Run the following command to create an empty Node script:
+Run the following command to create an empty TypeScript script:
 
 ```bash copy
 touch index.js
@@ -215,26 +214,23 @@ Next, initialize an empty NPM project in the current directory and install the r
 
 ```bash copy
 npm init -y
-npm install --save prisma-client-lib graphql@0.13
+npm install --save babel-cli babel-preset-env prisma-client-lib graphql@0.13
+```
+
+Create a `.babelrc` file with the following configuration:
+
+```json copy
+{
+  presets: ["env"]
+}
 ```
 
 ## Read and write data using the Prisma client
 
-The API operations of the Prisma client depend on the datamodel that was generated from the database introspection. The following sample queries assume there is a `User` type in the datamodel defined as follows:
-
-```graphql
-type User {
-  id: ID! @unique
-  name: String!
-}
-```
-
-If you don't have such a `User` type, you need to adjust the following code snippets with a type that matches your datamodel.
-
 Add the following code in `index.js` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./generated/prisma-client')
+import { prisma } from './generated/prisma'
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -254,10 +250,10 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-node index.js
+babel-node index.js
 ```
 
-Whenever you run this script with that command, a new user record is created in the database (because of the call to `createUser`).
+Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
 
 Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
