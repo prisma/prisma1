@@ -388,7 +388,7 @@ _Fetch links created before December 24, 2018_:
 const linksBeforeChristmas = await prisma
   .links({
     where: {
-      createdAt_lt: "2018-12-24" 
+      createdAt_lt: "2017-12-24" 
     }
   })
 ```
@@ -396,7 +396,7 @@ const linksBeforeChristmas = await prisma
 ```graphql
 query {
   links(where: {
-    createdAt_lt: "2018-12-24" 
+    createdAt_lt: "2017-12-24" 
   }) {
     id
     createdAt

@@ -8,7 +8,7 @@ export const meta = {
   gettingStartedOrder: 3,
   gettingStartedTitle: 'Demo database',
   nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and regenerate your Prisma client.',
-  technology: 'flow',
+  technology: 'node',
   technologyOrder: 2,
   articleGroup: 'Setting up Prisma',
 }
@@ -18,7 +18,7 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Setup a Prisma Demo server with a sandboxed database
+- Setup Prisma with a sandboxed demo database
 - Read and write data using the Prisma client
 
 ## Install the Prisma CLI
@@ -57,7 +57,7 @@ After running `prisma init`, the Prisma CLI prompts you to select _how_ you want
     1. The **region** where Prisma service should be hosted
     1. The **name** for Prisma service
     1. The **stage** for Prisma service
-1. Select **Prisma Flow Client** to generate Prisma client for Node.js with Flow.
+1. Select **Prisma JavaScript Client** to generate Prisma client for Node.js.
 
 <Collapse title="Learn about the generated files">
 
@@ -76,9 +76,9 @@ prisma deploy
 
 Congratulations, you have successfully deployed Prisma. You can now start using the Prisma client to talk to your database from code.
 
-## Prepare Flow application
+## Prepare Node application
 
-Run the following command to create an empty script:
+Run the following command to create an empty Node script:
 
 ```bash copy
 touch index.js
@@ -89,25 +89,6 @@ Next, initialize an empty NPM project in the current directory and install the r
 ```bash copy
 npm init -y
 npm install --save prisma-client-lib graphql@0.13
-npm install --save-dev babel-cli babel-preset-env
-```
-
-Create a `.babelrc` file with the following configuration:
-
-```json copy
-{
-  presets: ["env"]
-}
-```
-
-Finally, add a start script to your `package.json`:
-
-```json copy
-{
-  "scripts": {
-    "start": "babel-node index.js"
-  }
-}
 ```
 
 ## Read and write data using the Prisma client
@@ -115,7 +96,7 @@ Finally, add a start script to your `package.json`:
 Add the following code in `index.js` and save it afterwards:
 
 ```js copy
-import { prisma } from './generated/prisma'
+const { prisma } = require('./generated/prisma')
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -135,7 +116,7 @@ main().catch(e => console.error(e))
 Execute the script with the following command:
 
 ```bash copy
-npm start
+node index.js
 ```
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
