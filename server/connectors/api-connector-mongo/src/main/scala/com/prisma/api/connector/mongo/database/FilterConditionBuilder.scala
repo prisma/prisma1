@@ -22,6 +22,11 @@ trait FilterConditionBuilder {
     case None         => and(hackForTrue)
   }
 
+  def buildConditionForScalarFilter(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
+    case Some(filter) => buildConditionForFilter(operator, filter)
+    case None         => and(hackForTrue)
+  }
+
   private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
     filter match {
       //-------------------------------RECURSION------------------------------------
@@ -83,5 +88,4 @@ trait FilterConditionBuilder {
       case ToOneRelatedNode      => toOneNested
     }
   }
-
 }

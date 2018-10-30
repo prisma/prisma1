@@ -2,6 +2,7 @@ package com.prisma.api.connector.mongo.extensions
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
+import com.prisma.api.connector.mongo.database.FilterConditionBuilder2
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -149,16 +150,11 @@ object ArrayFilter extends FilterConditionBuilder {
     case None                                       => Vector.empty
     case Some(ToOneSegment(_))                      => Vector.empty
     case Some(ToManySegment(rf, where))             => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
-    case Some(ToManyFilterSegment(rf, whereFilter)) => convertFilter(path, rf, whereFilter)
+    case Some(ToManyFilterSegment(rf, whereFilter)) => Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter))
   }
 
   def fieldName(where: NodeSelector): String = where.fieldName match {
     case "id" => "_id"
     case x    => x
   }
-
-  def convertFilter(path: Path, rf: RelationField, whereFilter: Option[Filter]): Vector[Bson] = {
-    Vector(Filters.or(Filters.equal(s"${path.operatorName(rf, whereFilter)}.name", "Daughter")))
-  }
-
 }
