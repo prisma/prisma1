@@ -313,6 +313,12 @@ Let's investigate the deletion behaviour for the three types:
 
 You can find more detailled info about the `@relation` directive and its usage [here](knul#the-@relation-directive).
 
+<Warning>
+
+Note that no [subscription](qwe3) events are triggered for cascading deletes!
+
+</Warning>
+
 ## Authentication
 
 A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
