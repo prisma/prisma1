@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.{JdbcCloudSecretPersistence, JdbcTelemetryPersistence}
+import com.prisma.deploy.connector.jdbc.{JdbcCloudSecretPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema}
 import com.prisma.deploy.connector.mysql.impls._
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
@@ -26,7 +26,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val managementDatabase   = databases.primary
   lazy val projectDatabase      = databases.primary.database
 
-  override val projectPersistence: ProjectPersistence     = MySqlProjectPersistence(managementDatabase.database)
+  override val projectPersistence: ProjectPersistence     = JdbcProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence = MySqlMigrationPersistence(managementDatabase.database)
   override val cloudSecretPersistence                     = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence = JdbcTelemetryPersistence(managementDatabase)

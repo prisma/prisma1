@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mysql.impls
 
 import com.prisma.deploy.connector.MissingBackRelations
-import com.prisma.deploy.connector.mysql.database.{Migration, ProjectDefinition}
+import com.prisma.deploy.connector.mysql.database.Migration
 import com.prisma.shared.models
 import com.prisma.shared.models.{MigrationStep, Schema}
 import play.api.libs.json.JsValue
@@ -9,19 +9,6 @@ import play.api.libs.json.JsValue
 object DbToModelMapper {
   import com.prisma.shared.models.MigrationStepsJsonFormatter._
   import com.prisma.shared.models.ProjectJsonFormatter._
-
-  def convert(project: ProjectDefinition, migration: Migration): models.Project = {
-    models.Project(
-      id = project.id,
-      ownerId = project.ownerId.getOrElse(""),
-      revision = migration.revision,
-      schema = convertSchema(migration.schema),
-      secrets = project.secrets.as[Vector[String]],
-      allowQueries = project.allowQueries,
-      allowMutations = project.allowMutations,
-      functions = migration.functions.as[List[models.Function]]
-    )
-  }
 
   private def convertSchema(schema: JsValue): Schema = {
     val schemaWithMissingBackRelations = schema.as[Schema]

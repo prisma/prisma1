@@ -28,7 +28,6 @@ case class AddProjectMutation(
 
     val newProject = Project(
       id = projectId,
-      ownerId = args.ownerId.getOrElse(""),
       secrets = args.secrets,
       schema = Schema()
     )

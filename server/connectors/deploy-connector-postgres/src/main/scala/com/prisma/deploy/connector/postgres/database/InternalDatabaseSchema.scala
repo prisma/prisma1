@@ -22,8 +22,6 @@ object InternalDatabaseSchema {
     sqlu"""
       CREATE TABLE IF NOT EXISTS "Project" (
         "id" varchar(200) NOT NULL DEFAULT '',
-        "ownerId" varchar(25) DEFAULT NULL,
-        "webhookUrl" varchar(255)  DEFAULT NULL,
         "secrets" text DEFAULT NULL,
         "seats" text DEFAULT NULL,
         "allowQueries" boolean NOT NULL DEFAULT TRUE,

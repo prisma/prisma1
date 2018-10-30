@@ -40,8 +40,7 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
   def startedAt  = column[Option[DateTime]]("startedAt")
   def finishedAt = column[Option[DateTime]]("finishedAt")
 
-  def migration = foreignKey("migrations_projectid_foreign", projectId, Tables.Projects)(_.id)
-  def *         = (projectId, revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt) <> (Migration.tupled, Migration.unapply)
+  def * = (projectId, revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt) <> (Migration.tupled, Migration.unapply)
 }
 
 object MigrationTable {

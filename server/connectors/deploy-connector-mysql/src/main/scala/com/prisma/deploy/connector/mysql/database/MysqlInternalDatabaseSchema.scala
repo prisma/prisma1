@@ -20,8 +20,6 @@ object MySqlInternalDatabaseSchema {
     sqlu"""
       CREATE TABLE IF NOT EXISTS `Project` (
         `id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
-        `ownerId` varchar(25) COLLATE utf8_unicode_ci DEFAULT NULL,
-        `webhookUrl` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
         `secrets` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `seats` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `allowQueries` tinyint(1) NOT NULL DEFAULT '1',
