@@ -237,7 +237,6 @@ ${this.renderExports(options)}
 ${codeComment}
 
 import { DocumentNode, GraphQLSchema } from 'graphql'
-import { IResolvers } from 'graphql-tools/dist/Interfaces'
 import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
   }

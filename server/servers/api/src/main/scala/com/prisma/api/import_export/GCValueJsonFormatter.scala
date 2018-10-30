@@ -47,7 +47,8 @@ object GCValueJsonFormatter {
   /**
     * READERS
     */
-  case class UnknownFieldException(field: String, model: Model) extends Exception
+  case class UnknownFieldException(field: String, model: Model)      extends Exception
+  case class InvalidFieldValueException(field: String, model: Model) extends Exception
 
   def readModelAwareGcValue(model: Model)(json: JsValue): JsResult[RootGCValue] = {
     for {
@@ -58,7 +59,7 @@ object GCValueJsonFormatter {
           case Some(field) =>
             readLeafGCValueForField(field)(value) match {
               case JsSuccess(gcValue, _) => JsSuccess(key -> gcValue)
-              case e: JsError            => e
+              case e: JsError            => throw InvalidFieldValueException(key, model)
             }
           case None =>
             throw UnknownFieldException(key, model)
