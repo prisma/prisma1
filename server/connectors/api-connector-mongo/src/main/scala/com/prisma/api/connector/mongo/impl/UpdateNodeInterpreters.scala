@@ -21,11 +21,6 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
 }
 
 case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
-  val model       = mutaction.relationField.relatedModel_!
-  val parent      = mutaction.relationField.model
-  val nonListArgs = mutaction.nonListArgs
-  val listArgs    = mutaction.listArgs
-
   override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     for {
       _ <- verifyChildWhere(mutationBuilder, mutaction.where)
@@ -41,7 +36,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
                       relation = mutaction.relationField.relation,
                       parent = parent.where.model,
                       parentWhere = None,
-                      child = model,
+                      child = mutaction.relationField.relatedModel_!,
                       childWhere = mutaction.where
                     )
                 }
@@ -65,5 +60,18 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
     case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
   }
+}
 
+case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
+    for {
+      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.relationField.relatedModel_!, mutaction.whereFilter)
+      _   <- mutationBuilder.updateNodes(mutaction, ids)
+    } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.length)))
+  }
+
+  override val errorMapper = {
+    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
+  }
 }

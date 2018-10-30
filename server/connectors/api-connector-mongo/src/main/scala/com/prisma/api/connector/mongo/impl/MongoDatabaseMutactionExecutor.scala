@@ -145,7 +145,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(mutaction = m)
     case m: NestedConnect     => NestedConnectInterpreter(mutaction = m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(mutaction = m)
-    case m: NestedUpdateNodes => ???
+    case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(mutaction = m)
     case m: NestedDeleteNodes => ???
   }
 

@@ -1409,7 +1409,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     create.toString should be(
       """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"},{"name":"Son"},{"name":"Son2"}]}}}""")
 
-    server.query(
+    val nestedUpdateMany = server.query(
       s"""mutation {
          |   updateParent(
          |   where: { name: "Dad" }
@@ -1426,10 +1426,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
          |  }}
          |){
          |  name,
-         |  children{ name}
+         |  children{ name, test}
          |}}""",
       project
     )
+
+    nestedUpdateMany.toString should be(
+      """{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter","test":"UpdateManyDaughters"},{"name":"Daughter2","test":"UpdateManyDaughters"},{"name":"Son","test":"UpdateManySons"},{"name":"Son2","test":"UpdateManySons"}]}}}""")
   }
 
   "DeleteMany" should "work" in {

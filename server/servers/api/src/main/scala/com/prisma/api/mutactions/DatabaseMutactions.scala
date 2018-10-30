@@ -62,7 +62,9 @@ case class DatabaseMutactions(project: Project) {
       nestedUpserts = nested.nestedUpserts,
       nestedDeletes = nested.nestedDeletes,
       nestedConnects = nested.nestedConnects,
-      nestedDisconnects = nested.nestedDisconnects
+      nestedDisconnects = nested.nestedDisconnects,
+      nestedUpdateManys = nested.nestedUpdateManys,
+      nestedDeleteManys = nested.nestedDeleteManys
     )
   }
 
@@ -194,7 +196,9 @@ case class DatabaseMutactions(project: Project) {
       nestedUpdates = nestedMutactions.nestedUpdates,
       nestedUpserts = nestedMutactions.nestedUpserts,
       nestedDeletes = nestedMutactions.nestedDeletes,
-      nestedDisconnects = nestedMutactions.nestedDisconnects
+      nestedDisconnects = nestedMutactions.nestedDisconnects,
+      nestedUpdateManys = nestedMutactions.nestedUpdateManys,
+      nestedDeleteManys = nestedMutactions.nestedDeleteManys
     )
   }
 
@@ -241,7 +245,9 @@ case class DatabaseMutactions(project: Project) {
         nestedUpserts = nested.nestedUpserts,
         nestedDeletes = nested.nestedDeletes,
         nestedConnects = nested.nestedConnects,
-        nestedDisconnects = nested.nestedDisconnects
+        nestedDisconnects = nested.nestedDisconnects,
+        nestedUpdateManys = nested.nestedUpdateManys,
+        nestedDeleteManys = nested.nestedDeleteManys
       )
     }
   }
