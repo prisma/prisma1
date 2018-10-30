@@ -229,24 +229,14 @@ trait NodeActions extends NodeSingleQueries {
   private def embeddedNestedUpdateManyDocsAndResults(node: PrismaNode,
                                                      mutactions: Vector[NestedUpdateNodes],
                                                      parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
-
-    //find the number
-    //do the update
-    //return ManyMutactionResult
-
     val actionsArrayFiltersAndResults = mutactions.collect {
-      case updateNodes @ NestedUpdateNodes(_, model, rf, whereFilter, nonListArgs, listArgs) if rf.relatedModel_!.isEmbedded =>
-        val updatedParent = parent.appendPath(rf)
-        val subNode = node.getToOneChild(rf) match {
-          case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
-          case Some(prismaNode) => prismaNode
-        }
-
-        val scalars = scalarUpdateValues(updateNodes, updatedParent)
+      case updateNodes @ NestedUpdateNodes(_, _, rf, whereFilter, _, _) if rf.relatedModel_!.isEmbedded =>
+        val updatedParent = parent.appendPath(rf, whereFilter)
+        val scalars       = scalarUpdateValues(updateNodes, updatedParent)
 
         val thisResult = ManyNodesResult(updateNodes, 0)
 
-        (scalars, Vector.empty, Vector(thisResult))
+        (scalars, ArrayFilter.arrayFilter(updatedParent.path), Vector(thisResult))
     }
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }

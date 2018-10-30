@@ -1,6 +1,7 @@
 package com.prisma.api.connector.mongo.extensions
 
-import com.prisma.api.connector.{NodeSelector, Path, ToManySegment, ToOneSegment}
+import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -140,18 +141,24 @@ object HackforTrue {
   val hackForTrue = notEqual("_id", -1)
 }
 
-object ArrayFilter {
+object ArrayFilter extends FilterConditionBuilder {
 
   //Fixme: we are using uniques here, but these might change during an update
 
   def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
-    case None                           => Vector.empty
-    case Some(ToOneSegment(_))          => Vector.empty
-    case Some(ToManySegment(rf, where)) => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
+    case None                                       => Vector.empty
+    case Some(ToOneSegment(_))                      => Vector.empty
+    case Some(ToManySegment(rf, where))             => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
+    case Some(ToManyFilterSegment(rf, whereFilter)) => convertFilter(path, rf, whereFilter)
   }
 
   def fieldName(where: NodeSelector): String = where.fieldName match {
     case "id" => "_id"
     case x    => x
   }
+
+  def convertFilter(path: Path, rf: RelationField, whereFilter: Option[Filter]): Vector[Bson] = {
+    Vector(Filters.or(Filters.equal(s"${path.operatorName(rf, whereFilter)}.name", "Daughter")))
+  }
+
 }

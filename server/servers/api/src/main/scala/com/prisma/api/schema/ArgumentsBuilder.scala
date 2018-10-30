@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.api.schema.SangriaQueryArguments.whereArgument
+import com.prisma.api.schema.SangriaQueryArguments._
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolSangria.FromInputImplicit
 import sangria.schema._
@@ -49,12 +49,12 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdateMany(model: Model): Option[List[Argument[Any]]] = {
     inputTypesBuilder.inputObjectTypeForUpdateMany(model).map { updateArg: InputObjectType[Any] =>
-      List(Argument[Any]("data", updateArg), whereArgument(model, project).asInstanceOf[Argument[Any]]) //todo this is ugly
+      List(Argument[Any]("data", updateArg), scalarWhereArgument(model, project).asInstanceOf[Argument[Any]]) //todo this is ugly
     }
   }
 
   def getSangriaArgumentsForDeleteMany(model: Model): List[Argument[Option[Any]]] = {
-    List(whereArgument(model, project))
+    List(scalarWhereArgument(model, project))
   }
 
   def whereUniqueArgument(model: Model): Option[Argument[Any]] = {
