@@ -57,7 +57,7 @@ After running `prisma init`, the Prisma CLI prompts you to select _how_ you want
     1. The **region** where Prisma service should be hosted
     1. The **name** for Prisma service
     1. The **stage** for Prisma service
-1. Select **Prisma JavaScript Client** to generate Prisma client for Node.js.    
+1. Select **Prisma JavaScript Client** to generate Prisma client for Node.js.
 
 <Collapse title="Learn about the generated files">
 
@@ -96,7 +96,7 @@ npm install --save prisma-client-lib graphql@0.13
 Add the following code in `index.js` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./generated/prisma')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
