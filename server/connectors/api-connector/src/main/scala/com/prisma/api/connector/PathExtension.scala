@@ -24,5 +24,6 @@ sealed trait PathSegment {
   def rf: RelationField
 }
 
-case class ToOneSegment(rf: RelationField)                       extends PathSegment
-case class ToManySegment(rf: RelationField, where: NodeSelector) extends PathSegment
+case class ToOneSegment(rf: RelationField)                             extends PathSegment
+case class ToManySegment(rf: RelationField, where: NodeSelector)       extends PathSegment
+case class ToManyFilterSegment(rf: RelationField, whereFilter: Filter) extends PathSegment

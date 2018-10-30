@@ -55,22 +55,23 @@ trait NodeActions extends NodeSingleQueries {
           throw APIErrors.NodeNotFoundForWhereError(where)
 
         case Some(node) =>
-          val parent                                  = NodeAddress.forId(mutaction.model, node.id)
-          val scalarUpdates                           = scalarUpdateValues(mutaction, parent)
-          val (creates, createResults)                = embeddedNestedCreateActionsAndResults(mutaction, parent)
-          val (deletes, deleteResults)                = embeddedNestedDeleteActionsAndResults(node, mutaction, parent)
-          val (updates, arrayFilters, updateResults)  = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates, parent)
-          val (upserts, arrayFilters2, upsertResults) = embeddedNestedUpsertDocsAndResults(node, mutaction, parent)
+          val parent                                          = NodeAddress.forId(mutaction.model, node.id)
+          val scalarUpdates                                   = scalarUpdateValues(mutaction, parent)
+          val (creates, createResults)                        = embeddedNestedCreateActionsAndResults(mutaction, parent)
+          val (deletes, deleteResults)                        = embeddedNestedDeleteActionsAndResults(node, mutaction, parent)
+          val (updates, arrayFilters, updateResults)          = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates, parent)
+          val (updateManys, arrayFilters2, updateManyResults) = embeddedNestedUpdateManyDocsAndResults(node, mutaction.nestedUpdateManys, parent)
+          val (upserts, arrayFilters3, upsertResults)         = embeddedNestedUpsertDocsAndResults(node, mutaction, parent)
 
-          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts
+          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts ++ updateManys
 
-          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults :+ UpdateNodeResult(node.id, node, mutaction)
+          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults ++ updateManyResults :+ UpdateNodeResult(node.id, node, mutaction)
           if (allUpdates.isEmpty) {
             Future.successful(MutactionResults(results))
           } else {
             val combinedUpdates = CustomUpdateCombiner.customCombine(allUpdates)
 
-            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
+            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2 ++ arrayFilters3).toList.asJava)
 
             database
               .getCollection(mutaction.model.dbName)
@@ -221,6 +222,31 @@ trait NodeActions extends NodeSingleQueries {
         (scalars ++ creates ++ deletes ++ updates,
          ArrayFilter.arrayFilter(updatedParent.path) ++ nestedArrayFilters,
          createResults ++ deleteResults ++ updateResults :+ thisResult)
+    }
+    (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
+  }
+
+  private def embeddedNestedUpdateManyDocsAndResults(node: PrismaNode,
+                                                     mutactions: Vector[NestedUpdateNodes],
+                                                     parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
+
+    //find the number
+    //do the update
+    //return ManyMutactionResult
+
+    val actionsArrayFiltersAndResults = mutactions.collect {
+      case updateNodes @ NestedUpdateNodes(_, model, rf, whereFilter, nonListArgs, listArgs) if rf.relatedModel_!.isEmbedded =>
+        val updatedParent = parent.appendPath(rf)
+        val subNode = node.getToOneChild(rf) match {
+          case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
+          case Some(prismaNode) => prismaNode
+        }
+
+        val scalars = scalarUpdateValues(updateNodes, updatedParent)
+
+        val thisResult = ManyNodesResult(updateNodes, 0)
+
+        (scalars, Vector.empty, Vector(thisResult))
     }
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }
