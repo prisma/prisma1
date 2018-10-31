@@ -5,7 +5,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.Model
 import org.postgresql.util.PSQLException
@@ -30,25 +30,7 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
     } yield UpdateNodeResult(node.id, node, mutaction)
   }
 
-  override val errorMapper = {
-    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
-
-    case e: PSQLException if e.getSQLState == "23503" =>
-      APIErrors.NodeNotFoundForWhereError(mutaction.where)
-
-    case e: PSQLException if e.getSQLState == "23502" =>
-      APIErrors.FieldCannotBeNull()
-
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 &&
-          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
-
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-      APIErrors.FieldCannotBeNull()
-  }
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
 case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
@@ -91,22 +73,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
     } yield UpdateNodeResult(id, PrismaNode(id, RootGCValue.empty), mutaction)
   }
 
-  override val errorMapper = {
-    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
-
-    case e: PSQLException if e.getSQLState == "23502" =>
-      APIErrors.FieldCannotBeNull()
-
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 &&
-          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
-
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-      APIErrors.FieldCannotBeNull()
-  }
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
 trait SharedUpdateLogic {
@@ -132,5 +99,22 @@ trait SharedUpdateLogic {
       _ <- mutationBuilder.updateNodeById(model, id, nonListArgs)
       _ <- mutationBuilder.updateScalarListValuesForNodeId(model, id, listArgs)
     } yield id
+  }
+
+  def errorHandler(args: PrismaArgs): PartialFunction[Throwable, UserFacingError] = {
+    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+
+    case e: PSQLException if e.getSQLState == "23502" =>
+      APIErrors.FieldCannotBeNull()
+
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 &&
+          GetFieldFromSQLUniqueException.getFieldOptionMySql(args.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(args.keys, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
+      APIErrors.FieldCannotBeNull()
   }
 }
