@@ -52,6 +52,7 @@ trait RelationActions extends FilterConditionBuilder {
     }
   }
 
+  //Fixme: This is used in delete, but when deleting, only in one case do we need to update, in the other case the deleted Node had the id
   def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parent: NodeAddress) = SimpleMongoAction { database =>
     val parentModel = parent.where.model
     val childModel  = relationField.relatedModel_!
