@@ -74,7 +74,7 @@ case class CoolArgs(raw: Map[String, Any]) {
                              args.subArgsOption("data").get.get)),
         deleteManys = subArgsVector("deleteMany")
           .getOrElse(Vector.empty)
-          .map(args => NestedDeleteMany(args.raw.get("where").map(x => FilterHelper.generateFilterElement(x.asInstanceOf[Map[String, Any]], subModel, false))))
+          .map(args => NestedDeleteMany(Some(FilterHelper.generateFilterElement(args.raw, subModel, false))))
       )
     } else {
       NestedMutations(

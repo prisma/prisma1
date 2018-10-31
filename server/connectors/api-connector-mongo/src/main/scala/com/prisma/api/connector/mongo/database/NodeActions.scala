@@ -61,17 +61,20 @@ trait NodeActions extends NodeSingleQueries {
           val (deletes, deleteResults)                        = embeddedNestedDeleteActionsAndResults(node, mutaction, parent)
           val (updates, arrayFilters, updateResults)          = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates, parent)
           val (updateManys, arrayFilters2, updateManyResults) = embeddedNestedUpdateManyDocsAndResults(node, mutaction.nestedUpdateManys, parent)
-          val (upserts, arrayFilters3, upsertResults)         = embeddedNestedUpsertDocsAndResults(node, mutaction, parent)
+          val (deleteManys, arrayFilters3, deleteManyResults) = embeddedNestedDeleteManyDocsAndResults(node, mutaction.nestedDeleteManys, parent)
+          val (upserts, arrayFilters4, upsertResults)         = embeddedNestedUpsertDocsAndResults(node, mutaction, parent)
 
-          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts ++ updateManys
+          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts ++ updateManys ++ deleteManys
 
-          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults ++ updateManyResults :+ UpdateNodeResult(node.id, node, mutaction)
+          val thisResult = UpdateNodeResult(node.id, node, mutaction)
+
+          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults ++ updateManyResults ++ deleteManyResults :+ thisResult
           if (allUpdates.isEmpty) {
             Future.successful(MutactionResults(results))
           } else {
             val combinedUpdates = CustomUpdateCombiner.customCombine(allUpdates)
 
-            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2 ++ arrayFilters3).toList.asJava)
+            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2 ++ arrayFilters3 ++ arrayFilters4).toList.asJava)
 
             database
               .getCollection(mutaction.model.dbName)
@@ -237,6 +240,19 @@ trait NodeActions extends NodeSingleQueries {
         val thisResult = ManyNodesResult(updateNodes, 0)
 
         (scalars, ArrayFilter.arrayFilter(updatedParent.path), Vector(thisResult))
+    }
+    (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
+  }
+
+  private def embeddedNestedDeleteManyDocsAndResults(node: PrismaNode,
+                                                     mutactions: Vector[NestedDeleteNodes],
+                                                     parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
+    val actionsArrayFiltersAndResults = mutactions.collect {
+      case deleteNodes @ NestedDeleteNodes(_, _, rf, whereFilter) if rf.relatedModel_!.isEmbedded =>
+        val deletes    = pull(parent.path.stringForField(rf.name), buildConditionForScalarFilter("", whereFilter))
+        val thisResult = ManyNodesResult(deleteNodes, 0)
+
+        (Vector(deletes), Vector.empty, Vector(thisResult))
     }
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }

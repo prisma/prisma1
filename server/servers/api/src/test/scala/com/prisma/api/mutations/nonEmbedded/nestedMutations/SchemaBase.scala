@@ -177,7 +177,9 @@ trait SchemaBase {
                                |    f: String @unique
                                |}"""
 
-  val embedddedToJoinFriendsOpt = """type Parent{
+  val embedddedToJoinFriendsOpt = """
+                        |type Parent{
+                        |    id: ID! @unique
                         |    p: String @unique
                         |    children: [Child!]!
                         |}
