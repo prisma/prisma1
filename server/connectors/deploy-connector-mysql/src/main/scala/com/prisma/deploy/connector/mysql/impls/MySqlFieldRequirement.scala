@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql.impls
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.shared.models.FieldTemplate
 
-case class FieldRequirementImpl(
+case class MySqlFieldRequirement(
     isActive: Boolean
 ) extends FieldRequirementsInterface {
   val idFieldRequirementForPassiveConnectors = Vector(FieldRequirement("id", Vector("ID", "UUID"), required = true, unique = true, list = false))

@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
-  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
+  override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
 
   lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
