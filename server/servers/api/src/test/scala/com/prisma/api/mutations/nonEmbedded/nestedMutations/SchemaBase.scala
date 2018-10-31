@@ -145,7 +145,9 @@ trait SchemaBase {
                         
                         type Child @embedded{
                             c: String! @unique
+                            test: String
                         }"""
+
   //EMBEDDED TO NON-EMBEDDED
   val embedddedToJoinFriendReq = """type Parent{
                             |    p: String @unique
@@ -187,6 +189,7 @@ trait SchemaBase {
                         |
                         |type Friend{
                         |    f: String @unique
+                        |    test: String
                         |}"""
 
 }
