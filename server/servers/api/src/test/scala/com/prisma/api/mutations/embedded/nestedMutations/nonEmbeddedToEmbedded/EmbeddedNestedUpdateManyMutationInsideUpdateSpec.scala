@@ -84,40 +84,6 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated"},{"c":"c2","test":"updated"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
-  private def setupData(project: Project) = {
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-  }
-
   "a PM to CM  relation " should "work with several updateManys" in {
     val project = SchemaDsl.fromString() { embeddedPM }
     database.setup(project)
@@ -270,6 +236,40 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated2"},{"c":"c2","test":"updated1"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
+  }
+
+  private def setupData(project: Project) = {
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p1"
+        |    childrenOpt: {
+        |      create: [{c: "c1"},{c: "c2"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+
+    server.query(
+      """mutation {
+        |  createParent(data: {
+        |    p: "p2"
+        |    childrenOpt: {
+        |      create: [{c: "c3"},{c: "c4"}]
+        |    }
+        |  }){
+        |    childrenOpt{
+        |       c
+        |    }
+        |  }
+        |}""".stripMargin,
+      project
+    )
   }
 
 }

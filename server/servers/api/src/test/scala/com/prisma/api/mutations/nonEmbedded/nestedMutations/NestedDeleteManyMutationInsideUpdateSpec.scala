@@ -267,10 +267,10 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
-      """{"data":{"parents":[{"p":"p1","childrenOpt":[]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
+      """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":null},{"c":"c2","test":null}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
   private def setupData(project: Project) = {
