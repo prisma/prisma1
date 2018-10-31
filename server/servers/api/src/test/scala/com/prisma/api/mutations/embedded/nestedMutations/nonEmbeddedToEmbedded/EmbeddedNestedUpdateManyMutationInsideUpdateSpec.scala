@@ -2,12 +2,12 @@ package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "A 1-n relation" should "error if trying to use nestedUpdateMany" in {
     val project = SchemaDsl.fromString() { embeddedP1opt }

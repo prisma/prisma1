@@ -4,9 +4,9 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
-import com.prisma.gc_values.{DateTimeGCValue, GCValue, NullGCValue}
+import com.prisma.gc_values.{GCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField
-import org.mongodb.scala.bson.{BsonDateTime, conversions}
+import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
 //relationfilters depend on relationtype
@@ -19,18 +19,18 @@ import org.mongodb.scala.model.Filters._
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter("", filter)
-    case None         => and(hackForTrue)
+    case None         => hackForTrue
   }
 
   def buildConditionForScalarFilter(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter(operator, filter)
-    case None         => and(hackForTrue)
+    case None         => hackForTrue
   }
 
   private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter => and(hackForTrue)
+      case NodeSubscriptionFilter => hackForTrue
       case AndFilter(filters)     => and(nonEmptyConditions(path, filters): _*)
       case OrFilter(filters)      => or(nonEmptyConditions(path, filters): _*)
       case NotFilter(filters)     => nor(filters.map(f => buildConditionForFilter(path, f)): _*) //not can only negate equality comparisons not filters
@@ -38,8 +38,8 @@ trait FilterConditionBuilder {
       case x: RelationFilter      => relationFilterStatement(path, x)
 
       //--------------------------------ANCHORS------------------------------------
-      case TrueFilter                                            => and(hackForTrue)
-      case FalseFilter                                           => not(and(hackForTrue))
+      case TrueFilter                                            => hackForTrue
+      case FalseFilter                                           => not(hackForTrue)
       case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, renameId(scalarField)), value.value.toString)
       case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, renameId(scalarField)), value.value.toString))
       case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, renameId(scalarField)), "^" + value.value)
@@ -71,8 +71,9 @@ trait FilterConditionBuilder {
   def renameId(field: ScalarField): String = if (field.name == "id") "_id" else field.name
 
   def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
-    case x if x.isEmpty => Vector(and(hackForTrue))
-    case x              => x
+    case x if x.isEmpty && path == "" => Vector(hackForTrue)
+    case x if x.isEmpty               => Vector(notEqual(s"$path._id", -1))
+    case x                            => x
   }
 
   def fromGCValue(value: GCValue): Any = GCToBson.apply(value)
