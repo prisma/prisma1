@@ -51,6 +51,17 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
   }
 }
 
+case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+
+  def dbioAction(mutationBuilder: JdbcActionsBuilder) =
+    for {
+      ids        <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
+      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
+    } yield ManyNodesResult(mutaction, ids.size)
+}
+
 case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with SharedUpdateLogic {
