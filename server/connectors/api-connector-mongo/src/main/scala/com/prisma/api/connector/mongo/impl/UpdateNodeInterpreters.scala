@@ -1,10 +1,11 @@
 package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder}
+import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, NodeSingleQueries}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.IdGCValue
+import com.prisma.api.schema.APIErrors.NodesNotConnectedError
+import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import org.mongodb.scala.MongoWriteException
 
 import scala.concurrent.ExecutionContext
@@ -62,12 +63,35 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
   }
 }
 
-case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
+case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter
+    with NodeSingleQueries {
   override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
+
+    val relationField = mutaction.relationField
     for {
-      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.relationField.relatedModel_!, mutaction.whereFilter)
-      _   <- mutationBuilder.updateNodes(mutaction, ids)
-    } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.length)))
+      filterOption <- relationField.relationIsInlinedInParent match {
+                       case true =>
+                         for {
+                           optionRes <- getNodeByWhere(parent.where)
+                           filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
+                             (relationField.isList, res.data.map.get(relationField.name)) match {
+                               case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
+                               case (false, Some(x: IdGCValue))       => Some(ScalarFilter(relationField.relatedModel_!.idField_!, Equals(x)))
+                               case (_, _)                            => None
+                             }
+                           }
+                         } yield filterOption
+                       case false =>
+                         MongoAction.successful(Some(generateFilterForFieldAndId(relationField.relatedField, parent.idValue)))
+                     }
+      idList <- filterOption match {
+                 case Some(f) => getNodeIdsByFilter(relationField.relatedModel_!, Some(AndFilter(Vector(f) ++ mutaction.whereFilter)))
+                 case None    => MongoAction.successful(List.empty)
+               }
+      _ <- mutationBuilder.updateNodes(mutaction, idList)
+
+    } yield MutactionResults(Vector(ManyNodesResult(mutaction, idList.length)))
   }
 
   override val errorMapper = {

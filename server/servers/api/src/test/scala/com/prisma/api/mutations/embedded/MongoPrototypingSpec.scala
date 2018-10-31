@@ -1533,7 +1533,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       s"""mutation {
          |   updateParent(
          |   where: { name: "Dad" }
-         |   data: {  children: {updateMany:[
+         |   data: {  children: {deleteMany:[
          |      {
          |          name_contains:"Daughter"
          |      },

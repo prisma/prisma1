@@ -62,6 +62,7 @@ trait SchemaBase {
                             id: ID! @unique
                             c: String! @unique
                             parentReq: Parent!
+                            test: String
                         }"""
 
   val schemaPMToC1opt = """type Parent{
@@ -74,6 +75,7 @@ trait SchemaBase {
                             id: ID! @unique
                             c: String! @unique
                             parentOpt: Parent
+                            test: String
                         }"""
 
   val schemaP1reqToCM = """type Parent{
@@ -110,6 +112,7 @@ trait SchemaBase {
                             id: ID! @unique
                             c: String! @unique
                             parentsOpt: [Parent!]!
+                            test: String
                         }"""
 
   //EMBEDDED

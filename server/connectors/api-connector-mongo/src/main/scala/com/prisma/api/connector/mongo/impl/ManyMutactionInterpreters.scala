@@ -27,7 +27,6 @@ case class DeleteNodesInterpreter(mutaction: DeleteNodes)(implicit ec: Execution
 }
 
 case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
-
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {
       ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)

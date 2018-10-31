@@ -146,7 +146,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
     case m: NestedConnect     => NestedConnectInterpreter(mutaction = m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(mutaction = m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(mutaction = m)
-    case m: NestedDeleteNodes => ???
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(mutaction = m)
   }
 
   override def executeRaw(query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))

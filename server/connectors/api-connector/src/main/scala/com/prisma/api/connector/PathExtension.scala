@@ -20,7 +20,6 @@ case class Path(segments: List[PathSegment]) {
     case ToManySegment(rf, where) :: tail             => Vector(rf.name, "$[" + operatorName(rf, where) + "]") ++ stringGen(field, tail)
     case ToManyFilterSegment(rf, whereFilter) :: tail => Vector(rf.name, "$[" + operatorName(rf, whereFilter) + "]") ++ stringGen(field, tail)
   }
-
 }
 
 sealed trait PathSegment {

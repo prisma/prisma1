@@ -2,7 +2,6 @@ package com.prisma.api.connector.mongo.extensions
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
-import com.prisma.api.connector.mongo.database.FilterConditionBuilder2
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
