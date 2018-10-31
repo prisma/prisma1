@@ -122,14 +122,7 @@
     "@types/node" "*"
     "@types/pg-types" "*"
 
-"@types/pump@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@types/pump/-/pump-1.0.1.tgz#ae8157cefef04d1a4d24c1cc91d403c2f5da5cd0"
-  integrity sha1-roFXzv7wTRpNJMHMkdQDwvXaXNA=
-  dependencies:
-    "@types/node" "*"
-
-"@types/tough-cookie@^2.3.0", "@types/tough-cookie@^2.3.2":
+"@types/tough-cookie@^2.3.0":
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-2.3.3.tgz#7f226d67d654ec9070e755f46daebf014628e9d9"
   integrity sha512-MDQLxNFRLasqS4UlkWMSACMKeSm1x4Q3TxzUC7KQUsh6RK1ZrQ0VEyE3yzXcBu+K8ejVj4wuX32eUG02yNp+YQ==
@@ -957,11 +950,6 @@ byline@5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/byline/-/byline-5.0.0.tgz#741c5216468eadc457b03410118ad77de8c1ddb1"
   integrity sha1-dBxSFkaOrcRXsDQQEYrXfejB3bE=
-
-byte-length@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/byte-length/-/byte-length-1.0.2.tgz#ba5a5909240b0121c079b7f7b15248d6f08223cc"
-  integrity sha512-ovBpjmsgd/teRmgcPh23d4gJvxDoXtAzEL9xTfMU8Yc2kqCDb7L9jAG0XHl1nzuGl+h3ebCIF1i62UFyA9V/2Q==
 
 bytes@3.0.0:
   version "3.0.0"
@@ -1917,7 +1905,7 @@ encoding@^0.1.11:
   dependencies:
     iconv-lite "~0.4.13"
 
-end-of-stream@^1.0.0, end-of-stream@^1.1.0:
+end-of-stream@^1.0.0:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.4.1.tgz#ed29634d19baba463b6ce6b80a37213eab71ec43"
   integrity sha512-1MkrZNvWTKCaigbn+W15elq2BB/L22nqrSY5DKlo3X6+vclJm8Bb5djXJBmEX6fS3+zCh/F4VBK5Z2KxJt4s2Q==
@@ -5185,14 +5173,7 @@ make-error-cause@^1.2.1:
   dependencies:
     make-error "^1.2.0"
 
-make-error-cause@^2.1.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/make-error-cause/-/make-error-cause-2.2.0.tgz#d69d3bf3adfd5df56c247f5f790eb433baaefccb"
-  integrity sha512-qPkj0ajfb7j8dSevKEmVE+Pc5x7OlFy9aQN6ryYNSCn+6METm45Pz5TfuB6uiYyYTyI1UYmnsfMjytQwb6Q5zw==
-  dependencies:
-    make-error "^1.3.4"
-
-make-error@1.x, make-error@^1.1.1, make-error@^1.2.0, make-error@^1.3.4:
+make-error@1.x, make-error@^1.1.1, make-error@^1.2.0:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.5.tgz#efe4e81f6db28cadd605c70f29c831b58ef776c8"
   integrity sha512-c3sIjNUow0+8swNwVpqoH4YCShKNFkMaw6oH1mNS2haDZQqkeZFlHS3dhoeEbKKmJB4vXpJucU6oH75aDYeE9g==
@@ -5799,7 +5780,7 @@ on-finished@~2.3.0:
   dependencies:
     ee-first "1.1.1"
 
-once@^1.3.0, once@^1.3.1, once@^1.4.0:
+once@^1.3.0, once@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/once/-/once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1"
   integrity sha1-WDsap3WWHUsROsF9nFC6753Xa9E=
@@ -6251,7 +6232,7 @@ pn@^1.1.0:
   resolved "https://registry.yarnpkg.com/pn/-/pn-1.1.0.tgz#e2f4cef0e219f463c179ab37463e4e1ecdccbafb"
   integrity sha512-2qHaIQr2VLRFoxe2nASzsV6ef4yOOH+Fi9FBOVH6cqeSgUnoyySPZkxzLuzd+RYOQTRpROA0ztTMqxROKSb/nA==
 
-popsicle@^10.0.1:
+popsicle@10, popsicle@^10.0.1:
   version "10.0.1"
   resolved "https://registry.yarnpkg.com/popsicle/-/popsicle-10.0.1.tgz#2abd36130560647c74eaf08400d473ae25c4486f"
   integrity sha512-IFVBRz+hc05+MiVDH+KH9QoeE6gjFOiIZNxKePIwz+JbH/yP9rLreUT9+GocxRweYBiRh7O9+MfI5X1zKfSH6Q==
@@ -6263,19 +6244,6 @@ popsicle@^10.0.1:
     concat-stream "^1.4.7"
     form-data "^2.0.0"
     make-error-cause "^1.2.1"
-    tough-cookie "^2.0.0"
-
-popsicle@^11.0.0:
-  version "11.0.0"
-  resolved "https://registry.yarnpkg.com/popsicle/-/popsicle-11.0.0.tgz#d0c8f2ea24dee517117aa85ffc6026c69731f1d5"
-  integrity sha512-wHap4qBTgLNjZ1MYqQAHylJrwA7JF64BYZXBjh3DvJO7IWAfOpBvePxHq37/HvSU81eLbH27vF9P09JH99bM6Q==
-  dependencies:
-    "@types/pump" "^1.0.1"
-    "@types/tough-cookie" "^2.3.2"
-    make-error-cause "^2.1.0"
-    pump "^3.0.0"
-    servie "^3.2.3"
-    throwback "^4.0.0"
     tough-cookie "^2.0.0"
 
 portfinder@^1.0.13:
@@ -6667,14 +6635,6 @@ psl@^1.1.24:
     readable-stream "~1.0.31"
     setimmediate ">= 1.0.2 < 2"
     slice-stream ">= 1.0.0 < 2"
-
-pump@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/pump/-/pump-3.0.0.tgz#b4a2116815bde2f4e1ea602354e8c75565107a64"
-  integrity sha512-LwZy+p3SFs1Pytd/jYct4wpv49HiYCqd9Rlc5ZVdk0V+8Yzv6jR5Blk3TRmPL1ft69TxP0IMZGJ+WPFU2BFhww==
-  dependencies:
-    end-of-stream "^1.1.0"
-    once "^1.3.1"
 
 punycode@^1.4.1:
   version "1.4.1"
@@ -7237,13 +7197,6 @@ serve-static@1.13.2:
     escape-html "~1.0.3"
     parseurl "~1.3.2"
     send "0.16.2"
-
-servie@^3.2.3:
-  version "3.2.4"
-  resolved "https://registry.yarnpkg.com/servie/-/servie-3.2.4.tgz#de4ed46a52e52858c74974331828cc84ffbc9467"
-  integrity sha512-IE9TxM+CXq0NB9v+ryxG1m/v/omvvFFikY4hy6SPZ+6WpdDtdHb0DXPmVSny+XbqOVJVO5cainENzAUz49t9kQ==
-  dependencies:
-    byte-length "^1.0.2"
 
 set-blocking@^2.0.0, set-blocking@~2.0.0:
   version "2.0.0"
@@ -7834,11 +7787,6 @@ through@2, through@^2.3.6:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
   integrity sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=
-
-throwback@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/throwback/-/throwback-4.0.0.tgz#128f96dcea5308df01fe7c99d50e33f77a7a2230"
-  integrity sha512-4XQH6+K3XmJSQ805KyoE2OwLEWsIHMAa0ysLDoOqRvSguGlHoM6wDuUi/qvwogj5eGtZfrqGwNJNCXZV9esqkQ==
 
 timed-out@4.0.1, timed-out@^4.0.0:
   version "4.0.1"
