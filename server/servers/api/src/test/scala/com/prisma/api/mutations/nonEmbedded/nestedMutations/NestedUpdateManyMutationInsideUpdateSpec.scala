@@ -2,6 +2,7 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -53,37 +54,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
@@ -116,10 +87,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated"},{"c":"c2","test":"updated"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
-  "a PM to C1  relation " should "work" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1opt }
-    database.setup(project)
-
+  private def setupData(project: Project) = {
     server.query(
       """mutation {
         |  createParent(data: {
@@ -151,6 +119,13 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
         |}""".stripMargin,
       project
     )
+  }
+
+  "a PM to C1  relation " should "work" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1opt }
+    database.setup(project)
+
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
@@ -187,37 +162,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
@@ -254,37 +199,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
@@ -327,37 +242,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
@@ -396,37 +281,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
@@ -471,37 +326,7 @@ class NestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p1"
-        |    childrenOpt: {
-        |      create: [{c: "c1"},{c: "c2"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
-
-    server.query(
-      """mutation {
-        |  createParent(data: {
-        |    p: "p2"
-        |    childrenOpt: {
-        |      create: [{c: "c3"},{c: "c4"}]
-        |    }
-        |  }){
-        |    childrenOpt{
-        |       c
-        |    }
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    setupData(project)
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 

@@ -1,17 +1,16 @@
-package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
+package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
+class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
-  "A 1-n relation" should "error if trying to use nestedUpdateMany" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+  "A 1-n relation" should "error if trying to use nestedDeleteMany" in {
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val parent1Id = server
@@ -33,10 +32,8 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  where:{id: "$parent1Id"}
          |  data:{
          |    p: "p2"
-         |    childOpt: {updateMany: {
+         |    childOpt: {deleteMany: {
          |        where:{c: "c"}
-         |        data: {c: "newC"}
-         |    
          |    }}
          |  }){
          |    childOpt {
@@ -47,15 +44,17 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       """.stripMargin,
       project,
       errorCode = 0,
-      errorContains = """Reason: 'childOpt.updateMany' Field 'updateMany' is not defined in the input type 'ChildUpdateOneInput'."""
+      errorContains = """ Reason: 'childOpt.deleteMany' Field 'deleteMany' is not defined in the input type 'ChildUpdateOneWithoutParentOptInput'."""
     )
   }
 
-  "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+  "a PM to C1!  relation " should "work" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     server.query(
       s"""
@@ -63,10 +62,8 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {updateMany: {
-         |        where: {c_contains:"c"}
-         |        data: {test: "updated"}
-         |    }}
+         |    childrenOpt: {deleteMany: {c_contains:"c"}
+         |    }
          |  }){
          |    childrenOpt {
          |      c
@@ -78,10 +75,12 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
-      """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated"},{"c":"c2","test":"updated"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
+      """{"data":{"parents":[{"p":"p1","childrenOpt":[]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
   private def setupData(project: Project) = {
@@ -118,11 +117,13 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
     )
   }
 
-  "a PM to CM  relation " should "work with several updateManys" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+  "a PM to C1  relation " should "work" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1opt }
     database.setup(project)
 
     setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     server.query(
       s"""
@@ -130,7 +131,81 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {updateMany: [
+         |    childrenOpt: {deleteMany: {
+         |        where: {c_contains:"c"}
+         |        data: {test: "updated"}
+         |    }}
+         |  }){
+         |    childrenOpt {
+         |      c
+         |      test
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
+
+    server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
+      """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated"},{"c":"c2","test":"updated"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
+  }
+
+  "a PM to CM  relation " should "work" in {
+    val project = SchemaDsl.fromString() { schemaPMToCM }
+    database.setup(project)
+
+    setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+
+    server.query(
+      s"""
+         |mutation {
+         |  updateParent(
+         |    where: {p: "p1"}
+         |    data:{
+         |    childrenOpt: {deleteMany: {
+         |        where: {c_contains:"c"}
+         |        data: {test: "updated"}
+         |    }}
+         |  }){
+         |    childrenOpt {
+         |      c
+         |      test
+         |    }
+         |  }
+         |}
+      """.stripMargin,
+      project
+    )
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
+
+    server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
+      """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated"},{"c":"c2","test":"updated"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
+  }
+
+  "a PM to C1!  relation " should "work with several deleteManys" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
+    database.setup(project)
+
+    setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+
+    server.query(
+      s"""
+         |mutation {
+         |  updateParent(
+         |    where: {p: "p1"}
+         |    data:{
+         |    childrenOpt: {deleteMany: [
          |    {
          |        where: {c_contains:"1"}
          |        data: {test: "updated1"}
@@ -151,17 +226,21 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated1"},{"c":"c2","test":"updated2"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
-  "a PM to CM relation " should "work with empty Filter" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+  "a PM to C1!  relation " should "work with empty Filter" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     server.query(
       s"""
@@ -169,7 +248,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {updateMany: [
+         |    childrenOpt: {deleteMany: [
          |    {
          |        where: {}
          |        data: {test: "updated1"}
@@ -186,17 +265,21 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated1"},{"c":"c2","test":"updated1"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
-  "a PM to CM  relation " should "not change anything when there is no hit" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+  "a PM to C1!  relation " should "not change anything when there is no hit" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     server.query(
       s"""
@@ -204,7 +287,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {updateMany: [
+         |    childrenOpt: {deleteMany: [
          |    {
          |        where: {c_contains:"3"}
          |        data: {test: "updated3"}
@@ -225,7 +308,9 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":null},{"c":"c2","test":null}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
@@ -233,11 +318,13 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
 
   //optional ordering
 
-  "a PM to CM  relation " should "work when multiple filters hit" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+  "a PM to C1!  relation " should "work when multiple filters hit" in {
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     setupData(project)
+
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
 
     server.query(
       s"""
@@ -245,7 +332,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {updateMany: [
+         |    childrenOpt: {deleteMany: [
          |    {
          |        where: {c_contains:"c"}
          |        data: {test: "updated1"}
@@ -266,7 +353,9 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project
     )
 
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(4)
 
     server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
       """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated2"},{"c":"c2","test":"updated1"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")

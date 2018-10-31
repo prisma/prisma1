@@ -3,9 +3,9 @@ package com.prisma.api.connector.mongo.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, NodeSingleQueries}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.api.schema.APIErrors
-import com.prisma.api.schema.APIErrors.NodesNotConnectedError
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
+import com.prisma.shared.models.Model
 import org.mongodb.scala.MongoWriteException
 
 import scala.concurrent.ExecutionContext
@@ -15,10 +15,17 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
     mutationBuilder.updateNode(mutaction)
   }
 
-  override val errorMapper = {
-    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
-  }
+  override val errorMapper = UpdateShared.errorHandler(mutaction.model)
+}
+
+case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+  def mongoAction(mutationBuilder: MongoActionsBuilder) =
+    for {
+      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
+      _   <- mutationBuilder.updateNodes(mutaction, ids)
+    } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.size)))
+
+  override val errorMapper = UpdateShared.errorHandler(mutaction.model)
 }
 
 case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext) extends NestedDatabaseMutactionInterpreter {
@@ -57,10 +64,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
     }
   }
 
-  override val errorMapper = {
-    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
-  }
+  override val errorMapper = UpdateShared.errorHandler(mutaction.model)
 }
 
 case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
@@ -94,8 +98,12 @@ case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit e
     } yield MutactionResults(Vector(ManyNodesResult(mutaction, idList.length)))
   }
 
-  override val errorMapper = {
-    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
+  override val errorMapper = UpdateShared.errorHandler(mutaction.model)
+}
+
+object UpdateShared {
+  def errorHandler(model: Model): PartialFunction[Throwable, UserFacingError] = {
+    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, MongoErrorMessageHelper.getFieldOption(model, e).get)
   }
 }

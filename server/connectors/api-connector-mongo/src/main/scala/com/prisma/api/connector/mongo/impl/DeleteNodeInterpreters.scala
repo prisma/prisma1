@@ -6,6 +6,7 @@ import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLe
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.NodesNotConnectedError
 import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
+import com.prisma.shared.models.{Model, Project}
 
 import scala.concurrent.ExecutionContext
 
@@ -18,7 +19,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
                case Some(node) =>
                  for {
 //            _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
-                   _ <- checkForRequiredRelationsViolations(mutationBuilder, node.id)
+                   _ <- DeleteShared.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, node.id)
                    _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
                  } yield node
                case None =>
@@ -26,11 +27,22 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
              }
     } yield MutactionResults(Vector(DeleteNodeResult(node, mutaction)))
   }
+}
 
-  private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, id: IdGCValue) = {
-    val fieldsWhereThisModelIsRequired = mutaction.model.schema.fieldsWhereThisModelIsRequired(mutaction.where.model)
-    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(id, field)).toVector
-    SequenceAction(actions)
+case class DeleteNodesInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+
+  def mongoAction(mutationBuilder: MongoActionsBuilder) =
+    for {
+      ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
+      _   <- checkForRequiredRelationsViolations(mutationBuilder, ids)
+      _   <- mutationBuilder.deleteNodes(mutaction.model, ids)
+    } yield MutactionResults(Vector(ManyNodesResult(mutaction, ids.size)))
+
+  private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, nodeIds: Seq[IdGCValue]) = {
+    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.model)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelation(nodeIds.toVector, field))
+
+    SequenceAction(actions.toVector)
   }
 }
 
@@ -43,7 +55,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
       childId <- getChildId(mutationBuilder, parent)
       _       <- mutationBuilder.ensureThatNodesAreConnected(parentField, childId, parent)
 //      _       <- performCascadingDelete(mutationBuilder, child, childId)
-      _ <- checkForRequiredRelationsViolations(mutationBuilder, childId)
+      _ <- DeleteShared.checkForRequiredRelationsViolations(mutaction.project, mutaction.relationField.relatedModel_!, mutationBuilder, childId)
       _ <- mutationBuilder.deleteNodeById(child, childId)
       _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, childId, parent)
     } yield MutactionResults(Vector.empty)
@@ -69,12 +81,6 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
             )
         }
     }
-  }
-
-  private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
-    val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.relationField.relatedModel_!)
-    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(parentId, field)).toVector
-    SequenceAction(actions)
   }
 }
 
@@ -121,6 +127,16 @@ case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes)(implicit v
 
   private def checkForRequiredRelationsViolations(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
     val fieldsWhereThisModelIsRequired = mutaction.project.schema.fieldsWhereThisModelIsRequired(mutaction.relationField.relatedModel_!)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(parentId, field)).toVector
+    SequenceAction(actions)
+  }
+}
+
+object DeleteShared {
+
+  def checkForRequiredRelationsViolations(project: Project, model: Model, mutationBuilder: MongoActionsBuilder, parentId: IdGCValue)(
+      implicit ec: ExecutionContext) = {
+    val fieldsWhereThisModelIsRequired = project.schema.fieldsWhereThisModelIsRequired(model)
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodeIsInRelation(parentId, field)).toVector
     SequenceAction(actions)
   }
