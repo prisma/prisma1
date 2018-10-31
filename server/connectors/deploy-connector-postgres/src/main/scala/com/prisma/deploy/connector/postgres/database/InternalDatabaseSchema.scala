@@ -23,7 +23,6 @@ object InternalDatabaseSchema {
       CREATE TABLE IF NOT EXISTS "Project" (
         "id" varchar(200) NOT NULL DEFAULT '',
         "secrets" text DEFAULT NULL,
-        "seats" text DEFAULT NULL,
         "allowQueries" boolean NOT NULL DEFAULT TRUE,
         "allowMutations" boolean NOT NULL DEFAULT TRUE,
         "functions" text DEFAULT NULL,

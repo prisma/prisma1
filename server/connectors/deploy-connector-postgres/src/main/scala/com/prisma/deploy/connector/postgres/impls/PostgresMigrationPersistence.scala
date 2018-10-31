@@ -17,13 +17,6 @@ import scala.util.{Failure, Success}
 case class PostgresMigrationPersistence(internalDatabase: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends MigrationPersistence {
   val table = TableQuery[MigrationTable]
 
-  def lock(): Future[Unit] = {
-    internalDatabase.run(sql"SELECT pg_advisory_lock(1000);".as[String].head.withPinnedSession).transformWith {
-      case Success(_)   => Future.successful(())
-      case Failure(err) => Future.failed(err)
-    }
-  }
-
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     val baseQuery = for {
       migration <- table

@@ -44,12 +44,9 @@ class MigrationTable(tag: Tag) extends Table[Migration](tag, "Migration") {
 }
 
 object MigrationTable {
-  implicit val jsonMapper = MappedColumns.jsonMapper
-  implicit val jodaMapper = MySQLJodaSupport.datetimeTypeMapper
-  implicit val statusMapper = MappedColumnType.base[MigrationStatus, String](
-    _.toString,
-    MigrationStatus.withName
-  )
+  implicit val jsonMapper   = MappedColumns.jsonMapper
+  implicit val jodaMapper   = MySQLJodaSupport.datetimeTypeMapper
+  implicit val statusMapper = MappedColumnType.base[MigrationStatus, String](_.toString, MigrationStatus.withName)
 
   // todo: Take a hard look at the code and determine if this is necessary
   // Retrieves the last migration for the project, regardless of its status

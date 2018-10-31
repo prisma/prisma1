@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mongo.impl
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.shared.models.FieldTemplate
 
-case class FieldRequirementImpl(
+case class MongoFieldRequirement(
     isActive: Boolean
 ) extends FieldRequirementsInterface {
   val idFieldRequirement = Vector(FieldRequirement("id", Vector("ID"), required = true, unique = true, list = false))

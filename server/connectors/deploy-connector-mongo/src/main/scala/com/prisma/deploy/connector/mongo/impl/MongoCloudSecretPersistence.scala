@@ -7,7 +7,7 @@ import org.mongodb.scala.{Document, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CloudSecretPersistenceImpl(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends CloudSecretPersistence {
+case class MongoCloudSecretPersistence(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends CloudSecretPersistence {
   val secrets = internalDatabase.getCollection("Secret")
 
   override def load(): Future[Option[String]] = {

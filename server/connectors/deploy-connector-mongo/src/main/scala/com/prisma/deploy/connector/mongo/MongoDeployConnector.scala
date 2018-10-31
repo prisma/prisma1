@@ -12,16 +12,16 @@ import org.mongodb.scala.MongoClient
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
+  override def fieldRequirements: FieldRequirementsInterface = MongoFieldRequirement(isActive)
 
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
 
-  override val migrationPersistence: MigrationPersistence     = MigrationPersistenceImpl(internalDatabase)
-  override val projectPersistence: ProjectPersistence         = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
+  override val migrationPersistence: MigrationPersistence     = MongoMigrationPersistence(internalDatabase)
+  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence)
   override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
-  override val cloudSecretPersistence: CloudSecretPersistence = CloudSecretPersistenceImpl(internalDatabase)
+  override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
 
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
@@ -56,4 +56,6 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
 
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
+
+  override def managementLock(): Future[Unit] = Future.successful(())
 }

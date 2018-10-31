@@ -50,7 +50,7 @@ case class DeploymentSchedulerActor(
   def initialize(): Future[Unit] = {
     // Ensure that we're the only deploy agent running on the db, then resume init.
     println("Obtaining exclusive agent lock...")
-    migrationPersistence.lock().flatMap { _ =>
+    deployConnector.managementLock().flatMap { _ =>
       println("Obtaining exclusive agent lock... Successful.")
       migrationPersistence.loadDistinctUnmigratedProjectIds().transformWith {
         case Success(projectIds) => Future { projectIds.foreach(workerForProject) }

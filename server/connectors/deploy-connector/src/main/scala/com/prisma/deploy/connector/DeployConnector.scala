@@ -35,6 +35,9 @@ trait DeployConnector {
 
   def getOrCreateTelemetryInfo(): Future[TelemetryInfo]
   def updateTelemetryInfo(lastPinged: DateTime): Future[Unit]
+
+  // Database level lock granting exclusive deploy privileges to this instance.
+  def managementLock(): Future[Unit]
 }
 
 case class DatabaseSize(name: String, total: Double)

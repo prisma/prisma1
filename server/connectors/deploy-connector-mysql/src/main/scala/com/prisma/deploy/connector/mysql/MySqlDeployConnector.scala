@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.{JdbcCloudSecretPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
+import com.prisma.deploy.connector.jdbc.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema}
 import com.prisma.deploy.connector.mysql.impls._
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
@@ -15,6 +15,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
@@ -26,10 +27,10 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val managementDatabase   = databases.primary
   lazy val projectDatabase      = databases.primary.database
 
-  override val projectPersistence: ProjectPersistence     = JdbcProjectPersistence(managementDatabase)
-  override val migrationPersistence: MigrationPersistence = MySqlMigrationPersistence(managementDatabase.database)
-  override val cloudSecretPersistence                     = JdbcCloudSecretPersistence(managementDatabase)
-  override val telemetryPersistence: TelemetryPersistence = JdbcTelemetryPersistence(managementDatabase)
+  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
+  override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
+  override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
+  override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
 
   override def capabilities                                     = Set(MigrationsCapability, NonEmbeddedScalarListCapability)
   override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
@@ -75,6 +76,13 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   }
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
+
+  override def managementLock(): Future[Unit] = {
+    managementDatabase.database.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
+      case Success(result) => if (result == 1) Future.successful(()) else managementLock()
+      case Failure(err)    => Future.failed(err)
+    }
+  }
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {

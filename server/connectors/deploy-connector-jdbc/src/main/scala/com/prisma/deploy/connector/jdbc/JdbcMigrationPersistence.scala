@@ -26,8 +26,6 @@ object MigrationTable {
 }
 
 case class JdbcMigrationPersistence(slickDatabase: SlickDatabase) extends JdbcPersistenceBase with MigrationPersistence {
-  override def lock(): Future[Unit] = ???
-
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = ???
 
   override def loadAll(projectId: String): Future[Seq[Migration]] = ???

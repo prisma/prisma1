@@ -14,6 +14,7 @@ import slick.dbio.{DBIOAction, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
@@ -29,9 +30,8 @@ case class PostgresDeployConnector(
   lazy val managementDatabase  = managementDatabases.primary.database
   lazy val projectDatabase     = managementDatabase
 
-  override lazy val projectPersistence: ProjectPersistence = JdbcProjectPersistence(managementDatabases.primary)
-  override lazy val migrationPersistence
-    : MigrationPersistence                                         = PostgresMigrationPersistence(managementDatabase) //JdbcMigrationPersistence(managementDatabases.primary)
+  override lazy val projectPersistence: ProjectPersistence         = JdbcProjectPersistence(managementDatabases.primary)
+  override lazy val migrationPersistence: MigrationPersistence     = JdbcMigrationPersistence(managementDatabases.primary)
   override lazy val cloudSecretPersistence: CloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence     = JdbcTelemetryPersistence(managementDatabases.primary)
 
@@ -94,6 +94,13 @@ case class PostgresDeployConnector(
     }
   }
 
+  override def managementLock(): Future[Unit] = {
+    managementDatabase.run(sql"SELECT pg_advisory_lock(1000);".as[String].head.withPinnedSession).transformWith {
+      case Success(_)   => Future.successful(())
+      case Failure(err) => Future.failed(err)
+    }
+  }
+
   protected def truncateManagementTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       schemas <- database.run(getTables())
@@ -111,5 +118,4 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
-
 }

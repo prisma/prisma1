@@ -21,7 +21,6 @@ object MySqlInternalDatabaseSchema {
       CREATE TABLE IF NOT EXISTS `Project` (
         `id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `secrets` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
-        `seats` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,
         `allowQueries` tinyint(1) NOT NULL DEFAULT '1',
         `allowMutations` tinyint(1) NOT NULL DEFAULT '1',
         `functions` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL,

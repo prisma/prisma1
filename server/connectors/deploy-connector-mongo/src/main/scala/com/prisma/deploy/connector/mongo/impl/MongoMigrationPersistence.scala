@@ -13,10 +13,8 @@ import org.mongodb.scala.{MongoCollection, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MigrationPersistenceImpl(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends MigrationPersistence with MongoExtensions {
+case class MongoMigrationPersistence(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends MigrationPersistence with MongoExtensions {
   val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
-
-  def lock(): Future[Unit] = Future.successful(())
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     migrations

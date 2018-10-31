@@ -8,7 +8,7 @@ import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class ProjectPersistenceImpl(
+case class MongoProjectPersistence(
     internalDatabase: MongoDatabase,
     migrationPersistence: MigrationPersistence
 )(implicit ec: ExecutionContext)
