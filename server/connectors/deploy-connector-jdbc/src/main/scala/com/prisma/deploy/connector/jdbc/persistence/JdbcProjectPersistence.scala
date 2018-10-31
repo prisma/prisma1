@@ -1,20 +1,19 @@
-package com.prisma.deploy.connector.jdbc
+package com.prisma.deploy.connector.jdbc.persistence
 
 import java.sql.ResultSet
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.MissingBackRelations
+import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.deploy.connector.persistence.ProjectPersistence
-import com.prisma.shared.models.{MigrationStatus, Project, Schema}
-import org.jooq.conf.Settings
-import org.jooq.impl.DSL
 import com.prisma.shared.models
-
-import scala.concurrent.Future
+import com.prisma.shared.models.{MigrationStatus, Project, Schema}
+import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 import play.api.libs.json.{JsValue, Json}
 
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Future
 
 object ProjectTable {
   val projectTableName = "Project"
@@ -26,13 +25,11 @@ object ProjectTable {
   val functions        = field(name(projectTableName, "functions"))
 }
 
-case class JdbcProjectPersistence(slickDatabase: SlickDatabase) extends JdbcPersistenceBase with ProjectPersistence {
+case class JdbcProjectPersistence(slickDatabase: SlickDatabase) extends JdbcBase with ProjectPersistence {
   import com.prisma.shared.models.ProjectJsonFormatter._
 
-  val sql      = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val database = slickDatabase.database
-  val pt       = ProjectTable
-  val mt       = MigrationTable
+  val pt = ProjectTable
+  val mt = MigrationTable
 
   override def load(id: String): Future[Option[Project]] = {
     val query = sql

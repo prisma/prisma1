@@ -7,13 +7,18 @@ import slick.jdbc.PositionedParameters
 
 trait SharedSlickExtensions {
   val slickDatabase: SlickDatabase
-
   import slickDatabase.profile.api._
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams) { ps =>
       val rs = ps.executeQuery()
       readResult(rs)
+    }
+  }
+
+  def changeDatabaseQueryToDBIO(query: JooqQuery)(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit] = {
+    jooqToDBIO(query, setParams) { ps =>
+      ps.execute()
     }
   }
 

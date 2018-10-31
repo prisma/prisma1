@@ -6,10 +6,7 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresDeployMutactionExecutor(
-    database: Database
-)(implicit ec: ExecutionContext)
-    extends DeployMutactionExecutor {
+case class PostgresDeployMutactionExecutor(database: Database)(implicit ec: ExecutionContext) extends DeployMutactionExecutor {
 
   override def execute(mutaction: DeployMutaction): Future[Unit] = {
     val action = AnyMutactionInterpreterImpl.execute(mutaction)
@@ -20,5 +17,4 @@ case class PostgresDeployMutactionExecutor(
     val action = AnyMutactionInterpreterImpl.rollback(mutaction)
     database.run(action).map(_ => ())
   }
-
 }

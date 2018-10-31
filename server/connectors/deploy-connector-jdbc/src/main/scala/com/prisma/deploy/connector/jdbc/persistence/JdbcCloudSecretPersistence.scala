@@ -1,8 +1,8 @@
-package com.prisma.deploy.connector.jdbc
+package com.prisma.deploy.connector.jdbc.persistence
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.deploy.connector.persistence.CloudSecretPersistence
-import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 
@@ -14,10 +14,7 @@ object CloudSecretTable {
   val secret               = field(name(cloudSecretTableName, "secret"))
 }
 
-case class JdbcCloudSecretPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcPersistenceBase with CloudSecretPersistence {
-  val sql      = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val database = slickDatabase.database
-
+case class JdbcCloudSecretPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcBase with CloudSecretPersistence {
   override def load(): Future[Option[String]] = {
     val query = sql
       .select(CloudSecretTable.secret)

@@ -1,10 +1,10 @@
-package com.prisma.deploy.connector.jdbc
+package com.prisma.deploy.connector.jdbc.persistence
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.TelemetryInfo
+import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.deploy.connector.persistence.TelemetryPersistence
 import org.joda.time.DateTime
-import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 
@@ -17,10 +17,7 @@ object TelemetryTable {
   val lastPinged         = field(name(telemetryTableName, "lastPinged"))
 }
 
-case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcPersistenceBase with TelemetryPersistence {
-  val sql      = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val database = slickDatabase.database
-
+case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcBase with TelemetryPersistence {
   override def getOrCreateInfo(): Future[TelemetryInfo] = {
     val query = sql
       .select(TelemetryTable.id, TelemetryTable.lastPinged)

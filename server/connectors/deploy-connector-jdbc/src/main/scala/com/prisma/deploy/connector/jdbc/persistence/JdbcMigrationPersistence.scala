@@ -1,21 +1,20 @@
-package com.prisma.deploy.connector.jdbc
+package com.prisma.deploy.connector.jdbc.persistence
 
 import java.sql.ResultSet
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.deploy.connector.persistence.MigrationPersistence
-import com.prisma.shared.models._
+import com.prisma.shared.models
 import com.prisma.shared.models.MigrationStatus.MigrationStatus
+import com.prisma.shared.models._
 import org.joda.time.DateTime
-import org.jooq.conf.Settings
 import org.jooq.impl.DSL
-
-import scala.concurrent.{ExecutionContext, Future}
 import org.jooq.impl.DSL._
 import play.api.libs.json.Json
-import com.prisma.shared.models
 
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.{ExecutionContext, Future}
 
 object MigrationTable {
   val migrationTableName = "Migration"
@@ -36,14 +35,13 @@ object MigrationTable {
   val insertColumns = Seq(revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt)
 }
 
-case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcPersistenceBase with MigrationPersistence {
-  import com.prisma.shared.models.ProjectJsonFormatter._
+case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcBase with MigrationPersistence {
   import com.prisma.shared.models.MigrationStepsJsonFormatter._
+  import com.prisma.shared.models.ProjectJsonFormatter._
+
   import collection.JavaConverters._
 
-  val sql      = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val database = slickDatabase.database
-  val mt       = MigrationTable
+  val mt = MigrationTable
 
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
     val query = sql

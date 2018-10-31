@@ -31,6 +31,7 @@ case class TestMigrator(
                       savedMigration.copy(status = MigrationStatus.Success)
                     }
                   } else {
+
                     Future.failed(new Exception("Fatal: apply resulted in an error"))
                   }
                 }

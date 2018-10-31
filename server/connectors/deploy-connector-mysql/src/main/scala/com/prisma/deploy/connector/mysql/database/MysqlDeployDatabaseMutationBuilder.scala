@@ -175,6 +175,7 @@ object MySqlDeployDatabaseMutationBuilder {
       case TypeIdentifier.DateTime => "datetime(3)"
     }
   }
+
   def charsetTypeForScalarTypeIdentifier(isList: Boolean, typeIdentifier: ScalarTypeIdentifier): String = {
     if (isList) {
       return "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
