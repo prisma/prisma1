@@ -367,8 +367,8 @@ All a resolver needs to do is invoke the correct binding function and pass on th
 #### 2.3. Configure and start the GraphQL server
 
 ```js
-const GraphQLSever = require('graphql-yoga')
-const Prisma = require('prisma-binding')
+const { GraphQLSever } = require('graphql-yoga')
+const { Prisma } = require('prisma-binding')
 const resolvers = require('./resolvers')
 
 const server = new GraphQLServer({
