@@ -7,8 +7,6 @@ case class SkipAndLimit(skip: Int, limit: Option[Int])
 
 object LimitClauseHelper {
 
-  def skipAndLimitValues(args: Option[QueryArguments]): SkipAndLimit = skipAndLimitValues(args.getOrElse(QueryArguments.empty))
-
   def skipAndLimitValues(args: QueryArguments): SkipAndLimit = {
     val (firstOpt, lastOpt, skipOpt) = (args.first, args.last, args.skip)
     validate(args)
@@ -18,9 +16,7 @@ object LimitClauseHelper {
     }
   }
 
-  def validate(args: Option[QueryArguments]): Unit = args.foreach(validate)
-
-  private def validate(args: QueryArguments): Unit = {
+  def validate(args: QueryArguments): Unit = {
     throwIfBelowZero(args.first, InvalidFirstArgument())
     throwIfBelowZero(args.last, InvalidLastArgument())
     throwIfBelowZero(args.skip, InvalidSkipArgument())

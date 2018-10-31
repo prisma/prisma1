@@ -1,14 +1,14 @@
 package com.prisma.api.schema
 
 import akka.actor.ActorSystem
-import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
 import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.gc_values.StringIdGCValue
+import com.prisma.shared.models.ApiConnectorCapability.NodeQueryCapability
+import com.prisma.shared.models.{ConnectorCapability, Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
@@ -37,7 +37,7 @@ object SchemaBuilder {
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Set[ApiConnectorCapability] = Set.empty,
+    capabilities: Set[ConnectorCapability] = Set.empty,
     enableRawAccess: Boolean = false
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
@@ -203,7 +203,7 @@ case class SchemaBuilderImpl(
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
         resolve = (ctx) => {
-          val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+          val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).filter
           val mutation  = UpdateMany(project, model, ctx.args, arguments, dataResolver = masterDataResolver)
           ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         }
@@ -260,7 +260,7 @@ case class SchemaBuilderImpl(
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
       resolve = (ctx) => {
-        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).filter
         val mutation  = DeleteMany(project, model, arguments, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
@@ -305,10 +305,10 @@ case class SchemaBuilderImpl(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
       for {
         _         <- Future.unit
-        idGcValue = CuidGCValue(id)
+        idGcValue = StringIdGCValue(id)
         modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
         resultOpt <- modelOpt match {
-                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forIdGCValue(model, idGcValue), ctx.getSelectedFields(model))
+                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model))
                       case None        => Future.successful(None)
                     }
       } yield resultOpt

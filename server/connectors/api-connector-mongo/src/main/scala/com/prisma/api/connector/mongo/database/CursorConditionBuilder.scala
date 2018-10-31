@@ -3,16 +3,12 @@ package com.prisma.api.connector.mongo.database
 import com.mongodb.client.model.Filters
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
+import com.prisma.gc_values.StringIdGCValue
 import org.mongodb.scala.bson.conversions
 
 object CursorConditionBuilder {
 
-  def buildCursorCondition(queryArguments: Option[QueryArguments]): conversions.Bson = queryArguments match {
-    case Some(args) => buildCursorCondition(args)
-    case None       => Filters.and(hackForTrue)
-  }
-
-  private def buildCursorCondition(queryArguments: QueryArguments): conversions.Bson = {
+  def buildCursorCondition(queryArguments: QueryArguments): conversions.Bson = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return Filters.and(hackForTrue)
@@ -31,8 +27,8 @@ object CursorConditionBuilder {
         case _                  => throw new IllegalArgumentException
       }
 
-    val afterCursorCondition  = after.map(cursorCondition(_, "after")).getOrElse(hackForTrue)
-    val beforeCursorCondition = before.map(cursorCondition(_, "before")).getOrElse(hackForTrue)
+    val afterCursorCondition  = after.map(_.asInstanceOf[StringIdGCValue].value).map(cursorCondition(_, "after")).getOrElse(hackForTrue)
+    val beforeCursorCondition = before.map(_.asInstanceOf[StringIdGCValue].value).map(cursorCondition(_, "before")).getOrElse(hackForTrue)
 
     Filters.and(afterCursorCondition, beforeCursorCondition)
   }

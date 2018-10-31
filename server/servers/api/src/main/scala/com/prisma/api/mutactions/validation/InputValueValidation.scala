@@ -30,7 +30,7 @@ object InputValueValidation {
     case x: BooleanGCValue  => true
     case x: DateTimeGCValue => true
     case x: EnumGCValue     => x.value.length <= 191
-    case x: CuidGCValue     => x.value.length <= 25
+    case x: StringIdGCValue => x.value.length <= 25
     case x: UuidGCValue     => true
     case x: FloatGCValue    => BigDecimal(x.value).underlying().toPlainString.length <= 35
     case x: ListGCValue     => sys.error("handle this case")

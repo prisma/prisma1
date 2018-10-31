@@ -2,8 +2,8 @@ package com.prisma.api.mutations
 
 import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
+import com.prisma.shared.models.ApiConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -30,7 +30,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |CREATE SCHEMA $schema;
                                 |CREATE TABLE $schema.list (
                                 |  id      varchar PRIMARY KEY  -- implicit primary key constraint
-                                |, name    text NOT NULL
+                                |, name    text NOT NULL UNIQUE
                                 |);
                                 |
                                 |CREATE TABLE $schema.user (
@@ -40,7 +40,7 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |
                                 |CREATE TABLE $schema.todo (
                                 |  id       varchar PRIMARY KEY
-                                |, title     text NOT NULL
+                                |, title     text NOT NULL UNIQUE
                                 |, list_id varchar REFERENCES $schema.list (id) ON UPDATE CASCADE
                                 |, user_id varchar REFERENCES $schema.user (id) ON UPDATE CASCADE
                                 |);
@@ -50,13 +50,13 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     """
       | type List @pgTable(name: "list"){
       |   id: ID! @unique
-      |   name: String!
+      |   name: String! @unique
       |   todos: [Todo!]!
       | }
       |
       | type Todo @pgTable(name: "todo"){
       |   id: ID! @unique
-      |   title: String!
+      |   title: String! @unique
       |   list: List @pgRelation(column: "list_id")
       |   user: MyUser @pgRelation(column: "user_id")
       | }
@@ -81,9 +81,8 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" ignore {
+  "A Create Mutation" should "created nested items" in {
     executeOnInternalDatabase(inlineRelationSchema)
-    // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
       s"""mutation {
          |  createTodo(data: {
@@ -91,14 +90,18 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |    list: {
          |      create: { name: "the list" }
          |    }
-         |  }){ title }
+         |  }){ title
+         |      list{
+         |          name
+         |      }
+         |  }
          |}""".stripMargin,
       project = inlineRelationProject
     )
-    res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
+    res.toString should be(s"""{"data":{"createTodo":{"title":"the todo","list":{"name":"the list"}}}}""")
   }
 
-  "A Create Mutation" should "created nested items 2" in {
+  "A Create Mutation" should "create nested items 2" in {
     executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
@@ -112,6 +115,37 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
       project = inlineRelationProject
     )
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+  }
+
+  "A Create Mutation" should "create nested items 3" in {
+    executeOnInternalDatabase(inlineRelationSchema)
+    val res = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{ title: "the todo" }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+    res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |  updateList(
+         |  where: {name:"the list"}
+         |  data: {
+         |    todos: {
+         |      create: [{ title: "the todo 2" }]
+         |    }
+         |  }){ name todos{title} }
+         |}""",
+      project = inlineRelationProject
+    )
+    res2.toString should be(s"""{"data":{"updateList":{"name":"the list","todos":[{"title":"the todo"},{"title":"the todo 2"}]}}}""")
+
   }
 
   "Expanding 2 inline relations on a type" should "work" in {

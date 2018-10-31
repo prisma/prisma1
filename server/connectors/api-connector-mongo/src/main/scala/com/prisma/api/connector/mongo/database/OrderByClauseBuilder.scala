@@ -7,9 +7,9 @@ import org.mongodb.scala.{Document, FindObservable}
 
 object OrderByClauseBuilder {
 
-  def queryWithOrder(query: FindObservable[Document], args: Option[QueryArguments]): FindObservable[Document] = {
+  def queryWithOrder(query: FindObservable[Document], args: QueryArguments): FindObservable[Document] = {
     val idField                   = "_id"
-    val (first, last, orderByArg) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
+    val (first, last, orderByArg) = (args.first, args.last, args.orderBy)
     val isReverseOrder            = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.

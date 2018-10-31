@@ -21,7 +21,7 @@ case class RelationTemplate(
   def connectsTheModels(model1: String, model2: String): Boolean =
     (modelAName == model1 && modelBName == model2) || (modelAName == model2 && modelBName == model1)
 
-  def isSameModelRelation: Boolean = modelAName == modelBName
+  def isSelfRelation: Boolean = modelAName == modelBName
 }
 
 object Relation {
@@ -42,7 +42,6 @@ class Relation(
   lazy val hasManifestation: Boolean                                = manifestation.isDefined
   lazy val isInlineRelation: Boolean                                = manifestation.exists(_.isInstanceOf[InlineRelationManifestation])
   lazy val inlineManifestation: Option[InlineRelationManifestation] = manifestation.collect { case x: InlineRelationManifestation => x }
-  lazy val isSelfRelation                                           = modelA == modelB
 
   lazy val relationTableName = manifestation match {
     case Some(m: RelationTableManifestation)  => m.table
@@ -52,7 +51,7 @@ class Relation(
 
   lazy val modelAColumn: String = manifestation match {
     case Some(m: RelationTableManifestation)  => m.modelAColumn
-    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAName && !isSameModelRelation) modelA.idField_!.dbName else m.referencingColumn
+    case Some(m: InlineRelationManifestation) => if (m.inTableOfModelId == modelAName && !isSelfRelation) modelA.idField_!.dbName else m.referencingColumn
     case None                                 => "A"
   }
 
@@ -75,14 +74,6 @@ class Relation(
       case `modelAName` => modelAField
       case `modelBName` => modelBField
       case _            => sys.error(s"The model id $modelId is not part of this relation $name")
-    }
-  }
-
-  def sideOfModelCascades(model: Model): Boolean = {
-    model.name match {
-      case `modelAName` => modelAOnDelete == OnDelete.Cascade
-      case `modelBName` => modelBOnDelete == OnDelete.Cascade
-      case _            => sys.error(s"The model ${model.name} is not part of the relation $name")
     }
   }
 }

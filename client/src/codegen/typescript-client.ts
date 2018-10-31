@@ -186,7 +186,6 @@ ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
   $graphql: <T ${
     this.genericsDelimiter
   } any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
-  $getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
 
   /**
    * Queries
