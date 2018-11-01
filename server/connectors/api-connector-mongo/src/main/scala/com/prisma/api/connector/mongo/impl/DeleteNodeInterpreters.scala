@@ -50,7 +50,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val
 //      _       <- performCascadingDelete(mutationBuilder, child, childId)
       _ <- DeleteShared.checkForRequiredRelationsViolations(mutaction.project, mutaction.relationField.relatedModel_!, mutationBuilder, Vector(childId))
       _ <- mutationBuilder.deleteNodeById(child, childId)
-      _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, childId, parent)
+      _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, childId, parent, fromDelete = true)
     } yield MutactionResults(Vector.empty)
   }
 
@@ -110,7 +110,7 @@ case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes)(implicit v
 //            _       <- performCascadingDelete(mutationBuilder, child, childId)
       _ <- DeleteShared.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, idList)
       _ <- mutationBuilder.deleteNodes(child, idList)
-      _ <- SequenceAction(idList.map(id => mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, id, parent)).toVector)
+      _ <- SequenceAction(idList.map(id => mutationBuilder.deleteRelationRowByChildIdAndParentId(parentField, id, parent, fromDelete = true)).toVector)
 
     } yield MutactionResults(Vector(ManyNodesResult(mutaction, idList.length)))
   }

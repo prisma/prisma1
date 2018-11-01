@@ -52,31 +52,34 @@ trait RelationActions extends FilterConditionBuilder {
     }
   }
 
-  //Fixme: This is used in delete, but when deleting, only in one case do we need to update, in the other case the deleted Node had the id
-  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parent: NodeAddress) = SimpleMongoAction { database =>
-    val parentModel = parent.where.model
-    val childModel  = relationField.relatedModel_!
+  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parent: NodeAddress, fromDelete: Boolean = false) =
+    SimpleMongoAction { database =>
+      val parentModel = parent.where.model
+      val childModel  = relationField.relatedModel_!
 
-    relationField.relationIsInlinedInParent match {
-      case true =>
-        val field         = parent.path.stringForField(relationField.dbName)
-        val af            = ArrayFilter.arrayFilter(parent.path)
-        val updateOptions = UpdateOptions().arrayFilters(af.toList.asJava)
-        val mongoFilter   = buildConditionForFilter(Some(ScalarFilter(parentModel.idField_!, Equals(parent.idValue))))
-        val update        = if (relationField.isList) pull(field, GCToBson(childId)) else unset(field)
+      relationField.relationIsInlinedInParent match {
+        case true =>
+          val field         = parent.path.stringForField(relationField.dbName)
+          val af            = ArrayFilter.arrayFilter(parent.path)
+          val updateOptions = UpdateOptions().arrayFilters(af.toList.asJava)
+          val mongoFilter   = buildConditionForFilter(Some(ScalarFilter(parentModel.idField_!, Equals(parent.idValue))))
+          val update        = if (relationField.isList) pull(field, GCToBson(childId)) else unset(field)
 
-        database.getCollection(parentModel.dbName).updateMany(mongoFilter, update, updateOptions).collect().toFuture()
+          database.getCollection(parentModel.dbName).updateMany(mongoFilter, update, updateOptions).collect().toFuture()
 
-      case false =>
-        val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!, Equals(childId))))
-        val update = relationField.relatedField.isList match {
-          case false => unset(relationField.relatedField.dbName)
-          case true  => pull(relationField.relatedField.dbName, GCToBson(parent.idValue))
-        }
+        case false if !fromDelete =>
+          val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!, Equals(childId))))
+          val update = relationField.relatedField.isList match {
+            case false => unset(relationField.relatedField.dbName)
+            case true  => pull(relationField.relatedField.dbName, GCToBson(parent.idValue))
+          }
 
-        database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture()
+          database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture()
+
+        case false if fromDelete =>
+          Future.successful(())
+      }
     }
-  }
 
   def deleteRelationRowByParent(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) =
     SimpleMongoAction { database =>
