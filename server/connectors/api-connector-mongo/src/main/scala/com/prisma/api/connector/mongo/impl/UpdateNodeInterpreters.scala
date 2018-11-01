@@ -105,5 +105,8 @@ object UpdateShared {
   def errorHandler(model: Model): PartialFunction[Throwable, UserFacingError] = {
     case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, MongoErrorMessageHelper.getFieldOption(model, e).get)
+    case e: MongoWriteException if e.getError.getCode == 40 =>
+      APIErrors.MongoConflictingUpdates(model.name, e.getError.getMessage)
+
   }
 }

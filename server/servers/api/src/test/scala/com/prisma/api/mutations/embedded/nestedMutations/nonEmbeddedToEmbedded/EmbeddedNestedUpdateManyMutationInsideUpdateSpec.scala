@@ -205,7 +205,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
 
     setupData(project)
 
-    server.query(
+    server.queryThatMustFail(
       s"""
          |mutation {
          |  updateParent(
@@ -229,13 +229,11 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |  }
          |}
       """.stripMargin,
-      project
+      project,
+      errorCode = 3043,
+      errorContains =
+        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.updatedAt'"""
     )
-
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
-
-    server.query("query{parents{p,childrenOpt{c, test}}}", project).toString() should be(
-      """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1","test":"updated2"},{"c":"c2","test":"updated1"}]},{"p":"p2","childrenOpt":[{"c":"c3","test":null},{"c":"c4","test":null}]}]}}""")
   }
 
   private def setupData(project: Project) = {
