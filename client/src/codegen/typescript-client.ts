@@ -417,6 +417,7 @@ export const prisma = new Prisma()`
       partial: false,
       renderFunction: false,
       isMutation,
+      operation: false,
     })
   }
 
@@ -444,6 +445,7 @@ export const prisma = new Prisma()`
           renderFunction: false,
           isMutation,
           isSubscription: operation === 'subscription',
+          operation: true,
         })}`
       })
       .join(';\n')
@@ -491,6 +493,7 @@ export const prisma = new Prisma()`
           renderFunction: true,
           isMutation: false,
           isSubscription: subscription,
+          operation: false,
         })}`
       })
       .join(`${this.lineBreakDelimiter}\n`)
@@ -540,6 +543,7 @@ export const prisma = new Prisma()`
     renderFunction,
     isMutation = false,
     isSubscription = false,
+    operation = false
   }: {
     field
     node: boolean
@@ -548,6 +552,7 @@ export const prisma = new Prisma()`
     renderFunction: boolean
     isMutation: boolean
     isSubscription?: boolean
+    operation: boolean
     // node: boolean = true,
     // input: boolean = false,
     // partial: boolean = false,
@@ -572,6 +577,10 @@ export const prisma = new Prisma()`
     }
 
     const addSubscription = !partial && isSubscription && !isScalar
+
+    if (operation && !node && !isInput && !isList && !isScalar && !addSubscription && !partial && !isOptional) {
+      return `${typeString}Promise`
+    }
 
     if ((node || isList) && !isScalar && !addSubscription) {
       typeString += ``
@@ -631,14 +640,6 @@ export const prisma = new Prisma()`
     if (isInput || !renderFunction) {
       return typeString
     }
-
-    // if (node && !typeString.endsWith('Node')) {
-    //   typeString = `${typeString}Node`
-    // }
-
-    // if (isSubscription && !typeString.endsWith('Subscription')) {
-    //   typeString = `${typeStringSubscription}`
-    // }
 
     return `<T ${this.genericsDelimiter} ${typeString}>(${
       field.args && field.args.length > 0
