@@ -102,15 +102,16 @@ trait CascadingDeleteSharedStuff {
       mutationBuilder: JdbcActionsBuilder,
       parentField: RelationField,
       parentIds: Vector[IdGCValue],
-      childIdsThatCanBeIgnored: Vector[IdGCValue] = Vector.empty
+      idsThatCanBeIgnored: Vector[IdGCValue] = Vector.empty
   ): DBIO[Unit] = {
 
     for {
       childIds        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
-      childIdsGrouped = childIds.grouped(10000).toVector
+      filteredIds     = childIds.filter(x => !idsThatCanBeIgnored.contains(x))
+      childIdsGrouped = filteredIds.grouped(10000).toVector
       model           = parentField.relatedModel_!
       //nestedActions
-      _ <- if (childIds.isEmpty) {
+      _ <- if (filteredIds.isEmpty) {
             DBIO.successful(())
           } else {
             //children
@@ -124,11 +125,10 @@ trait CascadingDeleteSharedStuff {
             //other parent
             val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
             val parentActions = for {
-              field           <- cascadingBackRelationFieldOfParentField.toVector
-              childIdGroup    <- childIdsGrouped
-              idGroupFiltered = childIdGroup.filter(x => !childIdsThatCanBeIgnored.contains(x))
+              field        <- cascadingBackRelationFieldOfParentField.toVector
+              childIdGroup <- childIdsGrouped
             } yield {
-              recurse(mutationBuilder, field, idGroupFiltered, childIdsThatCanBeIgnored = parentIds)
+              recurse(mutationBuilder, field, childIdGroup, idsThatCanBeIgnored = parentIds)
             }
 
             DBIO.seq(childActions ++ parentActions: _*)
