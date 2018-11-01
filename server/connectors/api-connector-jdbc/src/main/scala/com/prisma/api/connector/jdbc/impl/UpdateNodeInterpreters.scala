@@ -4,7 +4,7 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
+import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, NodeSingleQueries}
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.Model
@@ -76,6 +76,26 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
   override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
+case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter
+    with SharedUpdateLogic {
+  val model       = mutaction.relationField.relatedModel_!
+  val parent      = mutaction.relationField.model
+  val nonListArgs = mutaction.nonListArgs
+  val listArgs    = mutaction.listArgs
+
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+    for {
+      ids        <- mutationBuilder.getNodesIdsByParentIdAndWhereFilter(mutaction.relationField, parentId, mutaction.whereFilter)
+      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
+    } yield ManyNodesResult(mutaction, ids.size)
+  }
+
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
+}
+
 trait SharedUpdateLogic {
   def model: Model
   def nonListArgs: PrismaArgs
@@ -102,7 +122,6 @@ trait SharedUpdateLogic {
   }
 
   def errorHandler(args: PrismaArgs): PartialFunction[Throwable, UserFacingError] = {
-    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
 
