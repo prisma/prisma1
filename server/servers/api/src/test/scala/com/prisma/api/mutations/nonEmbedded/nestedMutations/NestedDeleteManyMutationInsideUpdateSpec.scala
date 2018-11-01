@@ -75,7 +75,7 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
 
@@ -110,7 +110,7 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
 
@@ -147,7 +147,7 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
 
@@ -188,7 +188,7 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
 
@@ -224,7 +224,7 @@ class NestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(4) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(2)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
 

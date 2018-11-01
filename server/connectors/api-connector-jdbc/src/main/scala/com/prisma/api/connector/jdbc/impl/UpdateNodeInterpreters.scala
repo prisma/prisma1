@@ -33,7 +33,10 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
   override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
-case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter with SharedUpdateLogic {
+  val model       = mutaction.model
+  val nonListArgs = mutaction.nonListArgs
+  val listArgs    = mutaction.listArgs
 
   def dbioAction(mutationBuilder: JdbcActionsBuilder) =
     for {
@@ -42,6 +45,27 @@ case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: Execution
       _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
       _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
     } yield ManyNodesResult(mutaction, ids.size)
+
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
+}
+
+case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter
+    with SharedUpdateLogic {
+  val model       = mutaction.relationField.relatedModel_!
+  val nonListArgs = mutaction.nonListArgs
+  val listArgs    = mutaction.listArgs
+
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+    for {
+      ids        <- mutationBuilder.getNodesIdsByParentIdAndWhereFilter(mutaction.relationField, parentId, mutaction.whereFilter)
+      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
+    } yield ManyNodesResult(mutaction, ids.size)
+  }
+
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
 case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext)
@@ -71,26 +95,6 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
                )
            }
     } yield UpdateNodeResult(id, PrismaNode(id, RootGCValue.empty), mutaction)
-  }
-
-  override val errorMapper = errorHandler(mutaction.nonListArgs)
-}
-
-case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
-    extends NestedDatabaseMutactionInterpreter
-    with SharedUpdateLogic {
-  val model       = mutaction.relationField.relatedModel_!
-  val parent      = mutaction.relationField.model
-  val nonListArgs = mutaction.nonListArgs
-  val listArgs    = mutaction.listArgs
-
-  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
-    for {
-      ids        <- mutationBuilder.getNodesIdsByParentIdAndWhereFilter(mutaction.relationField, parentId, mutaction.whereFilter)
-      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
-      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
-      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
-    } yield ManyNodesResult(mutaction, ids.size)
   }
 
   override val errorMapper = errorHandler(mutaction.nonListArgs)

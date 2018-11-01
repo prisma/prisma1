@@ -46,6 +46,17 @@ case class DeleteNodesInterpreter(mutaction: DeleteNodes, shouldDeleteRelayIds: 
     } yield ManyNodesResult(mutaction, ids.size)
 }
 
+case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter {
+  def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) =
+    for {
+      ids        <- mutationBuilder.getNodesIdsByParentIdAndWhereFilter(mutaction.relationField, parentId, mutaction.whereFilter)
+      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
+      _          <- DBIO.seq(groupedIds.map(SharedDelete.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(mutaction.model, _, shouldDeleteRelayIds)): _*)
+    } yield ManyNodesResult(mutaction, ids.size)
+}
+
 case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
