@@ -343,8 +343,18 @@ object SangriaEvidences {
 class PluralsCache {
   private val cache = mutable.Map.empty[Model, String]
 
-  def pluralName(model: Model): String = cache.getOrElseUpdate(
-    key = model,
-    op = English.plural(model.name).capitalize
-  )
+  def pluralName(model: Model): String = {
+    val pluralCandidate = English.plural(model.name)
+    val plural = if (pluralCandidate != model.name) {
+      pluralCandidate
+    } else if (model.name.endsWith("s")) {
+      model.name + "es"
+    } else {
+      model.name + "s"
+    }
+    cache.getOrElseUpdate(
+      key = model,
+      op = plural.capitalize
+    )
+  }
 }

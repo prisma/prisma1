@@ -654,4 +654,38 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{folders{name}}""", project).toString should be("""{"data":{"folders":[]}}""")
   }
 
+  "Cascade on both sides" should "halt" in {
+    val project = SchemaDsl.fromString() { """type User {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  a: [A!]! @relation(name: "A", onDelete: CASCADE)
+                                             |  b: [B!]! @relation(name: "B", onDelete: CASCADE)
+                                             |}
+                                             |
+                                             |type A{
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  user: User! @relation(name: "A", onDelete: CASCADE)
+                                             |}
+                                             |
+                                             |type B{
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  user: User! @relation(name: "B", onDelete: CASCADE)
+                                             |}""" }
+    database.setup(project)
+
+    server.query("""mutation createUser{createUser(data:{name: "Paul"}){id}}""", project)
+
+    server.query("""mutation createA{createA(data:{name:"A" user: {connect:{name: "Paul"}}}){id}}""", project)
+
+    server.query("""mutation createB{createB(data:{name:"B" user: {connect:{name: "Paul"}}}){id}}""", project)
+
+    server.query("""mutation deleteUser{deleteUser(where: {name: "Paul"}){id}}""", project)
+
+    server.query("""query{users{name}}""", project).toString should be("""{"data":{"users":[]}}""")
+    server.query("""query{as{name}}""", project).toString should be("""{"data":{"as":[]}}""")
+    server.query("""query{bs{name}}""", project).toString should be("""{"data":{"bs":[]}}""")
+
+  }
 }

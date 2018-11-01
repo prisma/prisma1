@@ -13,6 +13,8 @@ import chalk from 'chalk'
 const ajv = new Ajv()
 
 const validate = ajv.compile(schema)
+// this is used by the playground, which accepts additional properties
+const validateGraceful = ajv.compile({ ...schema, additionalProperties: true })
 
 const cache = {}
 
@@ -21,6 +23,7 @@ export async function readDefinition(
   args: Args,
   out: IOutput = new Output(),
   envVars?: any,
+  graceful?: boolean,
 ): Promise<{ definition: PrismaDefinition; rawJson: any }> {
   if (!fs.pathExistsSync(filePath)) {
     throw new Error(`${filePath} could not be found.`)
@@ -35,12 +38,16 @@ export async function readDefinition(
   if (populatedJson.custom) {
     delete populatedJson.custom
   }
-  const valid = validate(populatedJson)
+  const valid = graceful
+    ? validateGraceful(populatedJson)
+    : validate(populatedJson)
   // TODO activate as soon as the backend sends valid yaml
   if (!valid) {
     debugger
     let errorMessage =
-      `Invalid prisma.yml file` + '\n' + printErrors(validate.errors!)
+      `Invalid prisma.yml file` +
+      '\n' +
+      printErrors(graceful ? validateGraceful.errors! : validate.errors!)
     throw new Error(errorMessage)
   }
 
