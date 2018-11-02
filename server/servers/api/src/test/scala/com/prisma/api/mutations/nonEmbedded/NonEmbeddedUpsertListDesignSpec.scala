@@ -7,7 +7,7 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability, NonEmbeddedScalarListCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
   //region top level upserts
 
   "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {
