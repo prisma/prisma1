@@ -209,11 +209,11 @@ trait NodeActions extends NodeSingleQueries {
         (scalars ++ creates ++ deletes ++ updates, arrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
 
       case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
-        val updatedParent = parent.appendPath(rf, where)
         val subNode = node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
           case Some(prismaNode) => prismaNode
         }
+        val updatedParent = parent.appendPath(rf, where, subNode)
 
         val scalars                                      = scalarUpdateValues(toManyUpdate, updatedParent)
         val (creates, createResults)                     = embeddedNestedCreateActionsAndResults(toManyUpdate, updatedParent)

@@ -246,7 +246,7 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
     Future.traverse(0 to 50)(i => exec(i)).await(seconds = 30)
   }
 
-  "deleting many items" should "not cause deadlocks" taggedAs (IgnoreMongo) in {
+  "deleting many items" should "not cause deadlocks" in {
     val project = SchemaDsl.fromString() {
       """
         |type Todo {

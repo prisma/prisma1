@@ -922,7 +922,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
   //Fixme Think about Self Relations and embedded types
   // would need to be nested within a normal type
-  "Nested delete on self relations" should "only delete the specified nodes" taggedAs (IgnoreMongo) in {
+  "Nested delete on self relations" should "only delete the specified nodes" in {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique

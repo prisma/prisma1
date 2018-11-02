@@ -70,7 +70,7 @@ class UpdateWithNestedCreateMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
     update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f2"}}]}}}""")
   }
 
-  "a FriendReq relation" should "be possible if updating a unique along the path" taggedAs (IgnoreMongo) in {
+  "a FriendReq relation" should "be possible if updating a unique along the path" in {
     val project = SchemaDsl.fromString() { embedddedToJoinFriendReq }
 
     database.setup(project)

@@ -58,7 +58,7 @@ object ListGCValue {
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def isEmpty: Boolean   = values.isEmpty
   def size: Int          = values.size
-  def value: Vector[Any] = values.map(_.value)
+  def value: Vector[Any] = values.collect { case x if !x.isInstanceOf[RootGCValue] => x.value }
 
   def ++(other: ListGCValue) = ListGCValue(this.values ++ other.values)
 }
