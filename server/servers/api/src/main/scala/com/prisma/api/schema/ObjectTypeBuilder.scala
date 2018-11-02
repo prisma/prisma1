@@ -12,6 +12,7 @@ import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapabi
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
+import sangria.ast.{Directive => AstDirective}
 
 import scala.concurrent.ExecutionContext
 
@@ -90,11 +91,7 @@ class ObjectTypeBuilder(
       },
       interfaces = {
         val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid)
-        if (model.hasVisibleIdField && idFieldHasRightType) {
-          nodeInterface.toList
-        } else {
-          List.empty
-        }
+        if (model.hasVisibleIdField && idFieldHasRightType) nodeInterface.toList else List.empty
       },
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
         value match {
@@ -102,7 +99,7 @@ class ObjectTypeBuilder(
           case PrismaNode(_, _, Some(_))        => false
           case _                                => valClass.isAssignableFrom(value.getClass)
       },
-      astDirectives = Vector.empty
+      astDirectives = if (model.isEmbedded) Vector(AstDirective("embedded", Vector.empty, Vector.empty, None)) else Vector.empty
     )
   }
 
