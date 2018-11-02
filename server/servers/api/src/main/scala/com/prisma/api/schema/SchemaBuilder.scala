@@ -16,7 +16,7 @@ import sangria.ast
 import sangria.relay._
 import sangria.schema._
 
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
 import scala.concurrent.Future
 
 case class ApiUserContext(clientId: String)

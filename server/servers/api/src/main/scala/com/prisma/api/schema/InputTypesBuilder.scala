@@ -411,12 +411,16 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any]("upsert", x))
   }
 
-  def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = whereInputField(field, name = "connect")
+  def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = field.relatedModel_!.isEmbedded match {
+    case true  => None
+    case false => whereInputField(field, name = "connect")
+  }
 
-  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.isList, field.isRequired) match {
-    case (true, _)      => whereInputField(field, name = "disconnect")
-    case (false, false) => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
-    case (false, true)  => None
+  def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.relatedModel_!.isEmbedded, field.isList, field.isRequired) match {
+    case (true, _, _)          => None
+    case (false, true, _)      => whereInputField(field, name = "disconnect")
+    case (false, false, false) => Some(InputField[Any]("disconnect", OptionInputType(BooleanType)))
+    case (false, false, true)  => None
   }
 
   def nestedDeleteInputField(field: RelationField): Option[InputField[Any]] = (field.isList, field.isRequired) match {
