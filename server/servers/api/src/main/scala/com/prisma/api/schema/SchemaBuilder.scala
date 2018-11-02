@@ -158,7 +158,7 @@ case class SchemaBuilderImpl(
   def createItemField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"create${model.name}",
-      fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
+      fieldType = objectTypes(model.name),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
       resolve = ctx => {
         val mutation = Create(
@@ -178,7 +178,7 @@ case class SchemaBuilderImpl(
     argumentsBuilder.getSangriaArgumentsForUpdate(model).map { args =>
       Field(
         s"update${model.name}",
-        fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
+        fieldType = OptionType(objectTypes(model.name)),
         arguments = args,
         resolve = ctx => {
           val mutation = Update(
@@ -215,7 +215,7 @@ case class SchemaBuilderImpl(
     argumentsBuilder.getSangriaArgumentsForUpsert(model).map { args =>
       Field(
         s"upsert${model.name}",
-        fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
+        fieldType = objectTypes(model.name),
         arguments = args,
         resolve = ctx => {
           val mutation = Upsert(
@@ -236,7 +236,7 @@ case class SchemaBuilderImpl(
     argumentsBuilder.getSangriaArgumentsForDelete(model).map { args =>
       Field(
         s"delete${model.name}",
-        fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
+        fieldType = OptionType(objectTypes(model.name)),
         arguments = args,
         resolve = ctx => {
           val mutation = Delete(
@@ -326,9 +326,9 @@ case class SchemaBuilderImpl(
 
   def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
 
-  private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
+  private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[PrismaNode] = {
     result.map {
-      case ReturnValue(prismaNode) => outputTypesBuilder.mapResolve(prismaNode, args)
+      case ReturnValue(prismaNode) => prismaNode
       case NoReturnValue(where)    => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
