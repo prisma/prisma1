@@ -9,7 +9,7 @@ import scala.util.Try
   * Parses SDL schema files.
   * Accepts empty schemas
   */
-object SdlSchemaParser {
+object GraphQlSdlParser {
   def parse(schema: String): Try[Document] = {
     QueryParser.parse(schema) recover {
       case e: SyntaxError if e.getMessage().contains("Unexpected end of input") => Document(Vector.empty)

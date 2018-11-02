@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
@@ -451,9 +451,9 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {
 
-    val validator = SchemaSyntaxValidator(
+    val validator = LegacyDataModelValidator(
       types,
-      SchemaSyntaxValidator.directiveRequirements,
+      LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
       capabilities
     )

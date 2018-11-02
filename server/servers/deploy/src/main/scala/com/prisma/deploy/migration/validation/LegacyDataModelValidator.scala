@@ -32,7 +32,7 @@ object FieldRequirementHelper {
   }
 }
 
-object SchemaSyntaxValidator {
+object LegacyDataModelValidator extends DataModelValidator {
 
   def validOnDeleteEnum(x: sangria.ast.Value): Boolean = {
     val enum = x.isInstanceOf[EnumValue]
@@ -59,17 +59,21 @@ object SchemaSyntaxValidator {
     DirectiveRequirement("embedded", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  def apply(schema: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[ConnectorCapability]): SchemaSyntaxValidator = {
-    SchemaSyntaxValidator(
+  def apply(schema: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[ConnectorCapability]): LegacyDataModelValidator = {
+    LegacyDataModelValidator(
       schema = schema,
       directiveRequirements = directiveRequirements,
       fieldRequirements = fieldRequirements,
       capabilities = capabilities
     )
   }
+
+  override def validate(dataModel: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[ConnectorCapability]) = {
+    apply(dataModel, fieldRequirements, capabilities).validateSyntax
+  }
 }
 
-case class SchemaSyntaxValidator(
+case class LegacyDataModelValidator(
     schema: String,
     directiveRequirements: Seq[DirectiveRequirement],
     fieldRequirements: FieldRequirementsInterface,
@@ -77,7 +81,7 @@ case class SchemaSyntaxValidator(
 ) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
-  val result   = SdlSchemaParser.parse(schema)
+  val result   = GraphQlSdlParser.parse(schema)
   lazy val doc = result.get
 
   def validateSyntax: PrismaSdl Or Vector[DeployError] = {
