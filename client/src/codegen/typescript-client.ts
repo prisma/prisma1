@@ -578,7 +578,7 @@ export const prisma = new Prisma()`
 
     const addSubscription = !partial && isSubscription && !isScalar
 
-    if (operation && !node && !isInput && !isList && !isScalar && !addSubscription && !partial && !isOptional) {
+    if (operation && !node && !isInput && !isList && !isScalar && !addSubscription) {
       return `${typeString}Promise`
     }
 
