@@ -94,14 +94,7 @@ trait CascadingDeleteSharedStuff {
   implicit def ec: ExecutionContext
 
   def performCascadingDelete(mutationBuilder: JdbcActionsBuilder, model: Model, parentId: IdGCValue): DBIO[Unit] = {
-    val actions = model.cascadingRelationFields.map { field =>
-      recurse(
-        mutationBuilder = mutationBuilder,
-        parentField = field,
-        parentIds = Vector(parentId),
-        visitedModels = Vector(model)
-      )
-    }
+    val actions = model.cascadingRelationFields.map(field => recurse(mutationBuilder = mutationBuilder, parentField = field, parentIds = Vector(parentId)))
     DBIO.seq(actions: _*)
   }
 
@@ -109,26 +102,40 @@ trait CascadingDeleteSharedStuff {
       mutationBuilder: JdbcActionsBuilder,
       parentField: RelationField,
       parentIds: Vector[IdGCValue],
-      visitedModels: Vector[Model]
+      idsThatCanBeIgnored: Vector[IdGCValue] = Vector.empty
   ): DBIO[Unit] = {
 
     for {
-      ids        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
-      groupedIds = ids.grouped(10000).toVector
-      model      = parentField.relatedModel_!
-      _          = if (visitedModels.contains(model)) throw APIErrors.CascadingDeletePathLoops()
+      childIds        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
+      filteredIds     = childIds.filter(x => !idsThatCanBeIgnored.contains(x))
+      childIdsGrouped = filteredIds.grouped(10000).toVector
+      model           = parentField.relatedModel_!
       //nestedActions
-      nextCascadings = model.cascadingRelationFields.filter(_ != parentField)
-      childActions = for {
-        field   <- nextCascadings
-        idGroup <- groupedIds
-      } yield {
-        recurse(mutationBuilder, field, idGroup, visitedModels :+ model)
-      }
-      _ <- DBIO.seq(childActions: _*)
+      _ <- if (filteredIds.isEmpty) {
+            DBIO.successful(())
+          } else {
+            //children
+            val cascadingChildrenFields = model.cascadingRelationFields.filter(_ != parentField.relatedField)
+            val childActions = for {
+              field        <- cascadingChildrenFields
+              childIdGroup <- childIdsGrouped
+            } yield {
+              recurse(mutationBuilder, field, childIdGroup)
+            }
+            //other parent
+            val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
+            val parentActions = for {
+              field        <- cascadingBackRelationFieldOfParentField.toVector
+              childIdGroup <- childIdsGrouped
+            } yield {
+              recurse(mutationBuilder, field, childIdGroup, idsThatCanBeIgnored = parentIds)
+            }
+
+            DBIO.seq(childActions ++ parentActions: _*)
+          }
       //actions for this level
-      _ <- DBIO.seq(groupedIds.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
-      _ <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
+      _ <- DBIO.seq(childIdsGrouped.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
+      _ <- DBIO.seq(childIdsGrouped.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
     } yield ()
   }
 
