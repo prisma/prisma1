@@ -247,12 +247,12 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
   }
 
   "Updating Relations" should "create UpdateRelation steps (even when there are lots of renames)" in {
-    val previousProject = SchemaDsl.fromBuilder { schema =>
+    val previousProject = SchemaBuilder() { schema =>
       val comment = schema.model("Comment")
       schema.model("Todo").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentToTodo"))
     }
 
-    val nextProject = SchemaDsl.fromBuilder { schema =>
+    val nextProject = SchemaBuilder() { schema =>
       val comment = schema.model("CommentNew")
       schema.model("TodoNew").oneToManyRelation("commentsNew", "todoNew", comment, relationName = Some("CommentNewToTodoNew"))
     }
