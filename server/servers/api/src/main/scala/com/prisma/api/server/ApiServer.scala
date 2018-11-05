@@ -15,6 +15,7 @@ import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
+import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.ProjectId
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging
@@ -148,17 +149,26 @@ case class ApiServer(
                 complete(result)
 
               case Some("import") =>
-                withRequestTimeout(5.minutes) {
-                  val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(projectIdAsString))
-                  complete(result)
+                if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
+                  withRequestTimeout(5.minutes) {
+                    val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest)
+                    result.onComplete(_ => logRequestEnd(projectIdAsString))
+                    complete(result)
+                  }
+                } else {
+                  complete(StatusCodes.BadRequest, s"The connector is missing the import / export capability.")
                 }
 
               case Some("export") =>
-                withRequestTimeout(5.minutes) {
-                  val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
-                  result.onComplete(_ => logRequestEnd(projectIdAsString))
-                  complete(result)
+                if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
+
+                  withRequestTimeout(5.minutes) {
+                    val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest)
+                    result.onComplete(_ => logRequestEnd(projectIdAsString))
+                    complete(result)
+                  }
+                } else {
+                  complete(StatusCodes.BadRequest, s"The connector is missing the import / export capability.")
                 }
 
               case Some(x) =>
