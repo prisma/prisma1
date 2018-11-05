@@ -272,7 +272,7 @@ import { typeDefs } from './prisma-schema'`
       }
     }
 
-    return `{typeDefs${endpointString}${secretString}}`
+    return `{typeDefs, models, ${endpointString}${secretString}}`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)

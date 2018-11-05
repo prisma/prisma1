@@ -1,4 +1,4 @@
-import { ClientOptions, Exists } from './types'
+import { ClientOptions, Exists, Model } from './types'
 import {
   GraphQLObjectType,
   GraphQLScalarType,
@@ -52,12 +52,14 @@ export class Client {
   schema: GraphQLSchema
   token: string
   currentInstructions: InstructionsMap = {}
+  models: Model[]
 
-  constructor({ typeDefs, endpoint, secret, debug }: ClientOptions) {
+  constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
     this.debug = debug
     this.schema = buildSchema(typeDefs)
     this.endpoint = endpoint
     this.secret = secret
+    this.models = models || []
 
     this.buildMethods()
 
@@ -283,20 +285,37 @@ export class Client {
           node.selectionSet.selections = Object.entries(type.getFields())
             .filter(([_, field]: any) => {
               const fieldType = this.getDeepType(field.type)
+              const model = this.models.find(m => m.name === field.type.name)
+              const embedded = model && model.embedded
+
               return (
                 fieldType instanceof GraphQLScalarType ||
-                fieldType instanceof GraphQLEnumType
+                fieldType instanceof GraphQLEnumType ||
+                embedded
               )
             })
-            .map(([fieldName]) => ({
-              kind: Kind.FIELD,
-              name: {
-                kind: Kind.NAME,
-                value: fieldName,
-              },
-              arguments: [],
-              directives: [],
-            }))
+            .map(([fieldName, field]: [any, any]) => {
+              const subNode: any = {
+                kind: Kind.FIELD,
+                name: {
+                  kind: Kind.NAME,
+                  value: fieldName,
+                },
+                arguments: [],
+                directives: [],
+              }
+
+              const model = this.models.find(m => m.name === field.type.name)
+              const embedded = model && model.embedded
+
+              if (embedded) {
+                subNode.selectionSet = {
+                  // CONTINUE HERE
+                }
+              }
+
+              return subNode
+            })
         }
       }
 
@@ -366,7 +385,10 @@ export class Client {
                           if (fieldName.startsWith('delete')) {
                             realArgs = { where: realArgs }
                           }
-                        } else if (name === 'Query' || name === 'Subscription') {
+                        } else if (
+                          name === 'Query' ||
+                          name === 'Subscription'
+                        ) {
                           if (field.args.length === 1) {
                             realArgs = { where: realArgs }
                           }
