@@ -602,9 +602,7 @@ export const prisma = new Prisma()`
       !isInput &&
       !isList &&
       !isScalar &&
-      !addSubscription &&
-      !partial &&
-      !isOptional
+      !addSubscription
     ) {
       return `${typeString}Promise`
     }
