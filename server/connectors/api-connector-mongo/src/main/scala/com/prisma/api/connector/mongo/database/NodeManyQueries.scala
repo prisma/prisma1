@@ -118,7 +118,6 @@ trait NodeManyQueries extends FilterConditionBuilder {
 //    queryWithLimit.collect().toFuture
 
     collection.countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
-
   }
 
   def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { database =>

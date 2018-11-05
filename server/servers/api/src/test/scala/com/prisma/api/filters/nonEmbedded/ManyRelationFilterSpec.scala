@@ -5,7 +5,7 @@ import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 
-class RelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
+class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def doNotRunForPrototypes: Boolean = true
   override def runOnlyForCapabilities         = Set(JoinRelationsCapability)
