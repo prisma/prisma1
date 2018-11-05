@@ -147,7 +147,9 @@ object DataSchemaAstExtensions {
     def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
       fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
 
-    def createdAtBehaviour: Option[FieldBehaviour.CreatedAtBehaviour.type] = {
+    def behaviour: Option[FieldBehaviour] = idBehaviour.orElse(createdAtBehaviour).orElse(updatedAtBehaviour)
+
+    private def createdAtBehaviour: Option[FieldBehaviour.CreatedAtBehaviour.type] = {
       if (fieldDefinition.hasDirective("createdAt")) {
         Some(CreatedAtBehaviour)
       } else {
@@ -155,15 +157,15 @@ object DataSchemaAstExtensions {
       }
     }
 
-    def updatedAtBehaviour: Option[FieldBehaviour.UpdatedAtBehaviour.type] = {
-      if (fieldDefinition.hasDirective("createdAt")) {
+    private def updatedAtBehaviour: Option[FieldBehaviour.UpdatedAtBehaviour.type] = {
+      if (fieldDefinition.hasDirective("updatedAt")) {
         Some(UpdatedAtBehaviour)
       } else {
         None
       }
     }
 
-    def idBehaviour: Option[FieldBehaviour.IdBehaviour] = {
+    private def idBehaviour: Option[FieldBehaviour.IdBehaviour] = {
       fieldDefinition.directive("id").map { directive =>
         directive.argumentValueAsString("strategy").getOrElse("AUTO") match {
           case "AUTO" => IdBehaviour(FieldBehaviour.IdStrategy.Auto)

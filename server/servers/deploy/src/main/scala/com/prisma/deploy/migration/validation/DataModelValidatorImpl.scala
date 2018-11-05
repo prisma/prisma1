@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast.{EnumTypeDefinition, FieldDefinition, Type}
+import sangria.ast.{EnumTypeDefinition, FieldDefinition, SchemaAstNode, Type}
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success, Try}
@@ -70,7 +70,6 @@ case class DataModelValidatorImpl(
           )(_)
 
         case x if isScalarField(x) =>
-          val behaviour = x.idBehaviour
           ScalarPrismaField(
             name = x.name,
             columnName = x.dbName,
@@ -79,7 +78,7 @@ case class DataModelValidatorImpl(
             isUnique = x.isUnique,
             typeIdentifier = typeIdentifierForTypename(x.fieldType),
             defaultValue = None,
-            behaviour = behaviour
+            behaviour = x.behaviour
           )(_)
       }
 
@@ -101,7 +100,11 @@ case class DataModelValidatorImpl(
 
   def validateInternal: Seq[DeployError] = {
     val reservedFieldsValidations = tryValidation(validateTypes())
-    val allValidations            = Vector(reservedFieldsValidations)
+    val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
+    val allValidations = Vector(
+      reservedFieldsValidations,
+      fieldDirectiveValidations
+    )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
     val validationFailures: Vector[Throwable] = allValidations.collect { case Bad(e) => e }
@@ -132,6 +135,17 @@ case class DataModelValidatorImpl(
     }
   }
 
+  def validateFieldDirectives(): Seq[DeployError] = {
+    for {
+      fieldAndType <- allFieldAndTypes
+      directive    <- fieldAndType.fieldDef.directives
+      requirement  <- FieldDirectiveRequirements.all.filter(_.name == directive.name)
+      if !requirement.isValid(fieldAndType.fieldDef)
+    } yield {
+      DeployError(fieldAndType, requirement.errorMessage(fieldAndType.fieldDef))
+    }
+  }
+
   private def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
   private def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
   private def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
@@ -152,4 +166,23 @@ case class DataModelValidatorImpl(
       TypeIdentifier.withName(typeName)
     }
   }
+}
+
+case class FieldDirectiveRequirement(name: String, isValid: FieldDefinition => Boolean, errorMessage: FieldDefinition => String)
+
+object FieldDirectiveRequirements {
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
+  val createdAt = FieldDirectiveRequirement(
+    name = "createdAt",
+    isValid = field => field.typeName == "DateTime" && field.isRequired,
+    errorMessage = field => s"Fields that are marked as @createdAt must be of type `DateTime!`."
+  )
+
+  val updatedAt = FieldDirectiveRequirement(
+    name = "updatedAt",
+    isValid = field => field.typeName == "DateTime" && field.isRequired,
+    errorMessage = field => s"Fields that are marked as @updatedAt must be of type `DateTime!`."
+  )
+
+  val all = Vector(createdAt, updatedAt)
 }
