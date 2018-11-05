@@ -8,7 +8,7 @@ import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.collection.immutable.Seq
 
-class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySpecBase {
+class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
   case class FieldRequirementImpl(
       isActive: Boolean
@@ -37,7 +37,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  title: String
         |}
       """.stripMargin
-    SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate should be(empty)
+    LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate should be(empty)
   }
 
   "fail if the schema is syntactically incorrect" in {
@@ -48,7 +48,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  isDone
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.`type` should equal("Global")
   }
@@ -62,7 +62,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  owner: User @relation(name: "Test", onDelete: CASCADE)
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("owner"))
@@ -81,7 +81,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -98,7 +98,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(2))
 
     result.head.`type` should equal("Todo")
@@ -125,7 +125,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(4))
     result.forall(_.description.contains("A relation directive cannot appear more than twice.")) should be(true)
   }
@@ -146,7 +146,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  text: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -161,7 +161,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  bla: String
         |}
         """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("title"))
@@ -180,7 +180,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  bla: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -204,7 +204,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  bla: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -220,7 +220,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  bla: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     result.head.description should include("not a valid value for onDelete")
   }
@@ -240,7 +240,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -255,7 +255,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -276,7 +276,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  todo: Todo @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val first = result.head
     first.`type` should equal("Todo")
@@ -301,7 +301,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  whatever: Comment @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(2))
     val first = result.head
     first.`type` should equal("Todo")
@@ -327,7 +327,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  todo: Todo @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
   }
 
@@ -344,7 +344,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  todo: Todo! @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -357,7 +357,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error = result.head
     error.`type` should equal("Todo")
@@ -378,7 +378,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(
+    val result = LegacyDataModelValidator(
       schema,
       directiveRequirements,
       FieldRequirementImpl(true),
@@ -399,7 +399,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(
+    val result = LegacyDataModelValidator(
       schema,
       directiveRequirements,
       FieldRequirementImpl(true),
@@ -430,7 +430,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("TodoStatus")
@@ -451,7 +451,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
          |}
       """.stripMargin
 
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("TodoStatus")
@@ -466,7 +466,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  title: String @default(value: "foo") @default(value: "bar")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -481,7 +481,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  title: String @defaultValue(value: "foo")
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -497,7 +497,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  id: ID!
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -514,7 +514,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  id: Float
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(false), capabilities = Set.empty).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(false), capabilities = Set.empty).validate
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
@@ -528,7 +528,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  id: Int! @unique
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(false), capabilities = Set.empty).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(false), capabilities = Set.empty).validate
     result should have(size(0))
   }
 
@@ -539,7 +539,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  title: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(0))
   }
 
@@ -550,7 +550,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  title: String
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(false), capabilities = Set.empty).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(false), capabilities = Set.empty).validate
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
@@ -574,7 +574,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  C
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Privacy")
@@ -591,7 +591,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  TITLE: String!
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -610,7 +610,7 @@ class SchemaSyntaxValidatorSpec extends WordSpecLike with Matchers with DeploySp
         |  id: ID! @unique
         |}
       """.stripMargin
-    val result = SchemaSyntaxValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = LegacyDataModelValidator(schema, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
     println(result)
     val error1 = result.head
     error1.`type` should equal("Todo")

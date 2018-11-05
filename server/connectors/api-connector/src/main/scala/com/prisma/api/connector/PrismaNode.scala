@@ -40,10 +40,11 @@ object PrismaNode {
   def dummy: PrismaNode = PrismaNode(StringIdGCValue.dummy, RootGCValue.empty)
 
   def getNodeAtPath(node: Option[PrismaNode], segments: List[PathSegment]): Option[PrismaNode] = (node, segments.headOption) match {
-    case (nodeOption, None)                           => nodeOption
-    case (None, _)                                    => None
-    case (Some(node), Some(ToOneSegment(rf)))         => getNodeAtPath(node.getToOneChild(rf), segments.drop(1))
-    case (Some(node), Some(ToManySegment(rf, where))) => getNodeAtPath(node.getToManyChild(rf, where), segments.drop(1))
+    case (nodeOption, None)                                       => nodeOption
+    case (None, _)                                                => None
+    case (Some(node), Some(ToOneSegment(rf)))                     => getNodeAtPath(node.getToOneChild(rf), segments.drop(1))
+    case (Some(node), Some(ToManySegment(rf, where)))             => getNodeAtPath(node.getToManyChild(rf, where), segments.drop(1))
+    case (Some(node), Some(ToManyFilterSegment(rf, whereFilter))) => ???
   }
 }
 

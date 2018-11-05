@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.{OnDelete, Schema}
@@ -169,9 +169,9 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBa
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Schema = {
-    val validator = SchemaSyntaxValidator(
+    val validator = LegacyDataModelValidator(
       types,
-      SchemaSyntaxValidator.directiveRequirements,
+      LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
       Set.empty
     )

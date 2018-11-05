@@ -139,12 +139,14 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
   //for embedded types none of these should actually fire since they should be embedded in their toplevel actions
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m)
-    case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
-    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(mutaction = m)
-    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m)
-    case m: NestedConnect    => NestedConnectInterpreter(mutaction = m)
-    case m: NestedDisconnect => NestedDisconnectInterpreter(mutaction = m)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(mutaction = m)
+    case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(mutaction = m)
+    case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(mutaction = m)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(mutaction = m)
+    case m: NestedConnect     => NestedConnectInterpreter(mutaction = m)
+    case m: NestedDisconnect  => NestedDisconnectInterpreter(mutaction = m)
+    case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(mutaction = m)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(mutaction = m)
   }
 
   override def executeRaw(query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))
