@@ -17,8 +17,6 @@ object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
-  def apply() = SchemaBuilder()
-
   def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)

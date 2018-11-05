@@ -101,7 +101,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   "if a given relation does already exist, the inferer" should {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment")
       schema.model("Todo").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentToTodo"))
     }
@@ -183,7 +183,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
 
   "if a model already exists and it gets renamed, the inferrer" should {
     "infer the next model with the stable identifier of the existing model" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo").field("title", _.String)
       }
       val types =
