@@ -78,7 +78,7 @@ case class DataModelValidatorImpl(
             isUnique = x.isUnique,
             typeIdentifier = typeIdentifierForTypename(x.fieldType),
             defaultValue = None,
-            behaviour = x.behaviour
+            behaviour = x.behaviour(capabilities)
           )(_)
       }
 
@@ -137,12 +137,19 @@ case class DataModelValidatorImpl(
 
   def validateFieldDirectives(): Seq[DeployError] = {
     for {
-      fieldAndType <- allFieldAndTypes
-      directive    <- fieldAndType.fieldDef.directives
-      requirement  <- FieldDirectiveRequirements.all.filter(_.name == directive.name)
-      if !requirement.isValid(fieldAndType.fieldDef)
+      fieldAndType        <- allFieldAndTypes
+      directive           <- fieldAndType.fieldDef.directives
+      requirement         <- FieldDirectiveRequirements.all.filter(_.name == directive.name)
+      isValidOnField      = !requirement.isValidOnField(fieldAndType.fieldDef)
+      hasInvalidArguments = !requirement.areArgumentsValid(directive)
+      if isValidOnField || hasInvalidArguments
     } yield {
-      DeployError(fieldAndType, requirement.errorMessage(fieldAndType.fieldDef))
+      val errorMessage = if (isValidOnField) {
+        requirement.fieldInvalidErrorMessage(fieldAndType.fieldDef)
+      } else {
+        requirement.argumentInvalidErrorMessage(directive)
+      }
+      DeployError(fieldAndType, errorMessage)
     }
   }
 
@@ -168,21 +175,44 @@ case class DataModelValidatorImpl(
   }
 }
 
-case class FieldDirectiveRequirement(name: String, isValid: FieldDefinition => Boolean, errorMessage: FieldDefinition => String)
+case class FieldDirectiveRequirement(
+    name: String,
+    isValidOnField: FieldDefinition => Boolean,
+    fieldInvalidErrorMessage: FieldDefinition => String,
+    areArgumentsValid: sangria.ast.Directive => Boolean = _ => true,
+    argumentInvalidErrorMessage: sangria.ast.Directive => String = _ => ""
+)
 
 object FieldDirectiveRequirements {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
   val createdAt = FieldDirectiveRequirement(
     name = "createdAt",
-    isValid = field => field.typeName == "DateTime" && field.isRequired,
-    errorMessage = field => s"Fields that are marked as @createdAt must be of type `DateTime!`."
+    isValidOnField = field => field.typeName == "DateTime" && field.isRequired,
+    fieldInvalidErrorMessage = field => s"Fields that are marked as @createdAt must be of type `DateTime!`."
   )
 
   val updatedAt = FieldDirectiveRequirement(
     name = "updatedAt",
-    isValid = field => field.typeName == "DateTime" && field.isRequired,
-    errorMessage = field => s"Fields that are marked as @updatedAt must be of type `DateTime!`."
+    isValidOnField = field => field.typeName == "DateTime" && field.isRequired,
+    fieldInvalidErrorMessage = field => s"Fields that are marked as @updatedAt must be of type `DateTime!`."
   )
 
-  val all = Vector(createdAt, updatedAt)
+  val scalarList = {
+    val validValues = Set("EMBEDDED", "RELATION")
+    FieldDirectiveRequirement(
+      name = "scalarList",
+      isValidOnField = field => field.isValidScalarListType,
+      fieldInvalidErrorMessage = field => s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`.",
+      areArgumentsValid = { directive =>
+        val value = directive.argument("strategy").map(_.valueAsString)
+        value match {
+          case None    => true
+          case Some(v) => validValues.contains(v)
+        }
+      },
+      argumentInvalidErrorMessage = directive => s"Valid values for the strategy argument of `@scalarList` are: ${validValues.mkString(", ")}."
+    )
+  }
+
+  val all = Vector(createdAt, updatedAt, scalarList)
 }

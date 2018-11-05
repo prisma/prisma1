@@ -1,9 +1,10 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
-import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, IdBehaviour, UpdatedAtBehaviour}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{FieldBehaviour, OnDelete, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, OnDelete, TypeIdentifier}
 import sangria.ast._
 
 import scala.collection.Seq
@@ -147,7 +148,9 @@ object DataSchemaAstExtensions {
     def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
       fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
 
-    def behaviour: Option[FieldBehaviour] = idBehaviour.orElse(createdAtBehaviour).orElse(updatedAtBehaviour)
+    def behaviour(capabilities: Set[ConnectorCapability]): Option[FieldBehaviour] = {
+      idBehaviour.orElse(createdAtBehaviour).orElse(updatedAtBehaviour).orElse(scalarListBehaviour(capabilities))
+    }
 
     private def createdAtBehaviour: Option[FieldBehaviour.CreatedAtBehaviour.type] = {
       if (fieldDefinition.hasDirective("createdAt")) {
@@ -173,6 +176,26 @@ object DataSchemaAstExtensions {
           case x      => sys.error(s"Encountered unknown strategy $x")
         }
       }
+    }
+
+    private def scalarListBehaviour(capabilities: Set[ConnectorCapability]): Option[FieldBehaviour.ScalarListBehaviour] = {
+      val defaultBehaviour = if (capabilities.contains(EmbeddedScalarListsCapability)) {
+        Some(ScalarListBehaviour(ScalarListStrategy.Embedded))
+      } else if (capabilities.contains(NonEmbeddedScalarListCapability)) {
+        Some(ScalarListBehaviour(ScalarListStrategy.Relation))
+      } else {
+        None
+      }
+
+      val configuredBehaviour = fieldDefinition.directive("scalarList").flatMap { directive =>
+        directive.argumentValueAsString("strategy").map {
+          case "RELATION" => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Relation)
+          case "EMBEDDED" => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Embedded)
+          case x          => sys.error(s"Unknown strategy $x")
+        }
+      }
+
+      configuredBehaviour.orElse(defaultBehaviour)
     }
   }
 
@@ -225,21 +248,25 @@ object DataSchemaAstExtensions {
                      val isScalarOrEnum = x.value.isInstanceOf[ScalarValue] || x.value.isInstanceOf[EnumValue]
                      x.name == name && isScalarOrEnum
                    }
-      } yield {
-        argument.value match {
-          case value: EnumValue       => value.value
-          case value: StringValue     => value.value
-          case value: BigIntValue     => value.value.toString
-          case value: BigDecimalValue => value.value.toString
-          case value: IntValue        => value.value.toString
-          case value: FloatValue      => value.value.toString
-          case value: BooleanValue    => value.value.toString
-          case _                      => sys.error("This clause is unreachable because of the instance checks above, but i did not know how to prove it to the compiler.")
-        }
-      }
+      } yield argument.valueAsString
     }
     def argument(name: String): Option[Argument] = directive.arguments.find(_.name == name)
     def argument_!(name: String): Argument       = argument(name).getOrElse(sys.error(s"Could not find the argument with name: $name!"))
+  }
+
+  implicit class CoolArgument(val argument: Argument) extends AnyVal {
+    def valueAsString = {
+      argument.value match {
+        case value: EnumValue       => value.value
+        case value: StringValue     => value.value
+        case value: BigIntValue     => value.value.toString
+        case value: BigDecimalValue => value.value.toString
+        case value: IntValue        => value.value.toString
+        case value: FloatValue      => value.value.toString
+        case value: BooleanValue    => value.value.toString
+        case _                      => sys.error("This clause is unreachable because of the instance checks above, but i did not know how to prove it to the compiler.")
+      }
+    }
   }
 
   implicit class CoolType(val `type`: Type) extends AnyVal {
