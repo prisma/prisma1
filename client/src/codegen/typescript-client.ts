@@ -161,6 +161,19 @@ export type ${type.name}_Output = string`
     return `type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
   }
 
+  renderModels() {
+    const models = this.internalTypes
+      .map(
+        i => `{
+    name: '${i.name}',
+    embedded: ${i.embedded}
+  }`,
+      )
+      .join(',\n')
+
+    return `export const models = [${models}]`
+  }
+
   render(options?: RenderOptions) {
     const queries = this.renderQueries()
     const mutations = this.renderMutations()
@@ -223,6 +236,13 @@ ${this.renderTypes()}
 */
 
 ${this.renderExports(options)}
+
+
+/**
+ * Model Metadata
+*/
+
+${this.renderModels()}
 `)
   }
   renderClientConstructor() {
