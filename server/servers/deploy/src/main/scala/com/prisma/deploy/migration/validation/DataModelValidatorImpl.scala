@@ -1,8 +1,11 @@
 package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.FieldRequirementsInterface
-import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
+import com.prisma.shared.models.FieldBehaviour._
+import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast.{EnumTypeDefinition, FieldDefinition, SchemaAstNode, Type}
+import sangria.ast._
+import com.prisma.deploy.migration.DataSchemaAstExtensions._
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success, Try}
@@ -78,7 +81,7 @@ case class DataModelValidatorImpl(
             isUnique = x.isUnique,
             typeIdentifier = typeIdentifierForTypename(x.fieldType),
             defaultValue = None,
-            behaviour = x.behaviour(capabilities)
+            behaviour = FieldDirectiveThingy.all.flatMap(_.getValue(x, capabilities)).headOption
           )(_)
       }
 
@@ -137,19 +140,13 @@ case class DataModelValidatorImpl(
 
   def validateFieldDirectives(): Seq[DeployError] = {
     for {
-      fieldAndType        <- allFieldAndTypes
-      directive           <- fieldAndType.fieldDef.directives
-      requirement         <- FieldDirectiveRequirements.all.filter(_.name == directive.name)
-      isValidOnField      = !requirement.isValidOnField(fieldAndType.fieldDef)
-      hasInvalidArguments = !requirement.areArgumentsValid(directive)
-      if isValidOnField || hasInvalidArguments
+      fieldAndType <- allFieldAndTypes
+      directive    <- fieldAndType.fieldDef.directives
+      validator    <- FieldDirectiveThingy.all
+      error        = validator.isValid(fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
+      if error.isDefined
     } yield {
-      val errorMessage = if (isValidOnField) {
-        requirement.fieldInvalidErrorMessage(fieldAndType.fieldDef)
-      } else {
-        requirement.argumentInvalidErrorMessage(directive)
-      }
-      DeployError(fieldAndType, errorMessage)
+      DeployError(fieldAndType, error.get)
     }
   }
 
@@ -175,44 +172,162 @@ case class DataModelValidatorImpl(
   }
 }
 
-case class FieldDirectiveRequirement(
-    name: String,
-    isValidOnField: FieldDefinition => Boolean,
-    fieldInvalidErrorMessage: FieldDefinition => String,
-    areArgumentsValid: sangria.ast.Directive => Boolean = _ => true,
-    argumentInvalidErrorMessage: sangria.ast.Directive => String = _ => ""
-)
+trait FieldDirectiveThingy[T] {
+  def name: String
 
-object FieldDirectiveRequirements {
-  import com.prisma.deploy.migration.DataSchemaAstExtensions._
-  val createdAt = FieldDirectiveRequirement(
-    name = "createdAt",
-    isValidOnField = field => field.typeName == "DateTime" && field.isRequired,
-    fieldInvalidErrorMessage = field => s"Fields that are marked as @createdAt must be of type `DateTime!`."
-  )
-
-  val updatedAt = FieldDirectiveRequirement(
-    name = "updatedAt",
-    isValidOnField = field => field.typeName == "DateTime" && field.isRequired,
-    fieldInvalidErrorMessage = field => s"Fields that are marked as @updatedAt must be of type `DateTime!`."
-  )
-
-  val scalarList = {
-    val validValues = Set("EMBEDDED", "RELATION")
-    FieldDirectiveRequirement(
-      name = "scalarList",
-      isValidOnField = field => field.isValidScalarListType,
-      fieldInvalidErrorMessage = field => s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`.",
-      areArgumentsValid = { directive =>
-        val value = directive.argument("strategy").map(_.valueAsString)
-        value match {
-          case None    => true
-          case Some(v) => validValues.contains(v)
-        }
-      },
-      argumentInvalidErrorMessage = directive => s"Valid values for the strategy argument of `@scalarList` are: ${validValues.mkString(", ")}."
-    )
+  def isValid(
+      typeDef: ObjectTypeDefinition,
+      fieldDef: FieldDefinition,
+      directive: sangria.ast.Directive,
+      capabilities: Set[ConnectorCapability]
+  ): Option[String] = {
+    if (directive.name == name) {
+      isValidOnType(typeDef, capabilities)
+        .orElse(isValidOnField(fieldDef, capabilities))
+        .orElse(hasValidArguments(directive, capabilities))
+    } else {
+      None
+    }
   }
 
-  val all = Vector(createdAt, updatedAt, scalarList)
+  def isValidOnType(typeDef: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]): Option[String]
+
+  def isValidOnField(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]): Option[String]
+
+  def hasValidArguments(directive: sangria.ast.Directive, capabilities: Set[ConnectorCapability]): Option[String]
+
+  def getValue(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]): Option[T] = {
+    fieldDef.directive(name).map { directive =>
+      getValue(directive, capabilities)
+    }
+  }
+
+  protected def getValue(directive: sangria.ast.Directive, capabilities: Set[ConnectorCapability]): T
+}
+
+object FieldDirectiveThingy {
+  val all = Vector(IdDirective, CreatedAtDirective, UpdatedAtDirective, ScalarListDirective)
+}
+
+object IdDirective extends FieldDirectiveThingy[IdBehaviour] {
+  val autoValue           = "AUTO"
+  val noneValue           = "NONE"
+  val validStrategyValues = Set(autoValue, noneValue)
+
+  override def name = "id"
+
+  override def isValidOnType(typeDef: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]) = {
+    if (typeDef.isEmbedded) {
+      Some(s"The `@$name` directive is not allowed on embedded types.")
+    } else {
+      None
+    }
+  }
+
+  override def isValidOnField(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+    // FIXME: introduce capabilities for database sequences. Int is only valid for connectors that support sequences.
+    None
+  }
+
+  override def hasValidArguments(directive: Directive, capabilities: Set[ConnectorCapability]) = {
+    directive.argumentValueAsString("strategy") match {
+      case Some(strat) =>
+        if (validStrategyValues.contains(strat)) {
+          None
+        } else {
+          Some(s"Valid values for the strategy argument of `@$name` are: ${validStrategyValues.mkString(", ")}.")
+        }
+      case None => None
+    }
+  }
+
+  override def getValue(directive: Directive, capabilities: Set[ConnectorCapability]) = {
+    directive.argumentValueAsString("strategy").getOrElse(autoValue) match {
+      case `autoValue` => IdBehaviour(FieldBehaviour.IdStrategy.Auto)
+      case `noneValue` => IdBehaviour(FieldBehaviour.IdStrategy.None)
+      case x           => sys.error(s"Encountered unknown strategy $x")
+    }
+  }
+}
+
+object CreatedAtDirective extends FieldDirectiveThingy[CreatedAtBehaviour.type] {
+  override def name = "createdAt"
+
+  override def isValidOnType(typeDef: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]) = None
+
+  override def isValidOnField(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+    if (fieldDef.typeName == "DateTime" && fieldDef.isRequired) {
+      None
+    } else {
+      Some(s"Fields that are marked as @createdAt must be of type `DateTime!`.")
+    }
+  }
+
+  override def hasValidArguments(directive: Directive, capabilities: Set[ConnectorCapability]) = None
+
+  override protected def getValue(directive: Directive, capabilities: Set[ConnectorCapability]) = CreatedAtBehaviour
+}
+
+object UpdatedAtDirective extends FieldDirectiveThingy[UpdatedAtBehaviour.type] {
+  override def name = "updatedAt"
+
+  override def isValidOnType(typeDef: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]) = None
+
+  override def isValidOnField(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+    if (fieldDef.typeName == "DateTime" && fieldDef.isRequired) {
+      None
+    } else {
+      Some(s"Fields that are marked as @updatedAt must be of type `DateTime!`.")
+    }
+  }
+
+  override def hasValidArguments(directive: Directive, capabilities: Set[ConnectorCapability]) = None
+
+  override protected def getValue(directive: Directive, capabilities: Set[ConnectorCapability]) = UpdatedAtBehaviour
+}
+
+object ScalarListDirective extends FieldDirectiveThingy[ScalarListBehaviour] {
+  val embeddedValue       = "EMBEDDED"
+  val relationValue       = "RELATION"
+  val validStrategyValues = Set(embeddedValue, relationValue)
+
+  override def name = "scalarList"
+
+  override def isValidOnType(typeDef: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]) = None
+
+  override def isValidOnField(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+    if (!fieldDef.isValidScalarListType) Some(s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`.")
+    else None
+  }
+
+  override def hasValidArguments(directive: Directive, capabilities: Set[ConnectorCapability]) = {
+    val value = directive.argument("strategy").map(_.valueAsString)
+    value match {
+      case None => None
+      case Some(v) =>
+        if (validStrategyValues.contains(v)) {
+          None
+        } else {
+          Some(s"Valid values for the strategy argument of `@scalarList` are: ${validStrategyValues.mkString(", ")}.")
+        }
+    }
+  }
+
+  override protected def getValue(directive: Directive, capabilities: Set[ConnectorCapability]): ScalarListBehaviour = {
+    val defaultBehaviour = if (capabilities.contains(EmbeddedScalarListsCapability)) {
+      ScalarListBehaviour(ScalarListStrategy.Embedded)
+    } else if (capabilities.contains(NonEmbeddedScalarListCapability)) {
+      ScalarListBehaviour(ScalarListStrategy.Relation)
+    } else {
+      sys.error("should not happen")
+    }
+
+    val configuredBehaviour = directive.argumentValueAsString("strategy").map {
+      case `relationValue` => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Relation)
+      case `embeddedValue` => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Embedded)
+      case x               => sys.error(s"Unknown strategy $x")
+    }
+
+    configuredBehaviour.getOrElse(defaultBehaviour)
+  }
 }

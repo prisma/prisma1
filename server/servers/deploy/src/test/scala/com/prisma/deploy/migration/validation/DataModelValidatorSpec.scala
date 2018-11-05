@@ -43,6 +43,19 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     dataModel.type_!("Model").scalarField_!("id").behaviour should be(Some(IdBehaviour(IdStrategy.None)))
   }
 
+  "@id should error on embedded types" in {
+    val dataModelString =
+      """
+        |type Model @embedded {
+        |  id: ID! @id(strategy: NONE)
+        |}
+      """.stripMargin
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("id"))
+    error.description should equal("The `@id` directive is not allowed on embedded types.")
+  }
+
   "a type without @id should error" in {
     val dataModelString =
       """

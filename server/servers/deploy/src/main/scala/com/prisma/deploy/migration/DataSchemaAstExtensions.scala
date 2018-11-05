@@ -147,56 +147,6 @@ object DataSchemaAstExtensions {
 
     def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
       fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
-
-    def behaviour(capabilities: Set[ConnectorCapability]): Option[FieldBehaviour] = {
-      idBehaviour.orElse(createdAtBehaviour).orElse(updatedAtBehaviour).orElse(scalarListBehaviour(capabilities))
-    }
-
-    private def createdAtBehaviour: Option[FieldBehaviour.CreatedAtBehaviour.type] = {
-      if (fieldDefinition.hasDirective("createdAt")) {
-        Some(CreatedAtBehaviour)
-      } else {
-        None
-      }
-    }
-
-    private def updatedAtBehaviour: Option[FieldBehaviour.UpdatedAtBehaviour.type] = {
-      if (fieldDefinition.hasDirective("updatedAt")) {
-        Some(UpdatedAtBehaviour)
-      } else {
-        None
-      }
-    }
-
-    private def idBehaviour: Option[FieldBehaviour.IdBehaviour] = {
-      fieldDefinition.directive("id").map { directive =>
-        directive.argumentValueAsString("strategy").getOrElse("AUTO") match {
-          case "AUTO" => IdBehaviour(FieldBehaviour.IdStrategy.Auto)
-          case "NONE" => IdBehaviour(FieldBehaviour.IdStrategy.None)
-          case x      => sys.error(s"Encountered unknown strategy $x")
-        }
-      }
-    }
-
-    private def scalarListBehaviour(capabilities: Set[ConnectorCapability]): Option[FieldBehaviour.ScalarListBehaviour] = {
-      val defaultBehaviour = if (capabilities.contains(EmbeddedScalarListsCapability)) {
-        Some(ScalarListBehaviour(ScalarListStrategy.Embedded))
-      } else if (capabilities.contains(NonEmbeddedScalarListCapability)) {
-        Some(ScalarListBehaviour(ScalarListStrategy.Relation))
-      } else {
-        None
-      }
-
-      val configuredBehaviour = fieldDefinition.directive("scalarList").flatMap { directive =>
-        directive.argumentValueAsString("strategy").map {
-          case "RELATION" => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Relation)
-          case "EMBEDDED" => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Embedded)
-          case x          => sys.error(s"Unknown strategy $x")
-        }
-      }
-
-      configuredBehaviour.orElse(defaultBehaviour)
-    }
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
