@@ -115,7 +115,16 @@ case class LegacyDataModelValidator(
           EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
 
         case x if isScalarField(x) =>
-          ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
+          ScalarPrismaField(
+            name = x.name,
+            columnName = x.columnName,
+            isList = x.isList,
+            isRequired = x.isRequired,
+            isUnique = x.isUnique,
+            typeIdentifier = typeIdentifierForTypename(x.fieldType),
+            defaultValue = getDefaultValueFromField_!(x),
+            behaviour = None
+          )(_)
       }
 
       PrismaType(definition.name, definition.tableNameDirective, definition.isEmbedded, prismaFields)(_)

@@ -1,8 +1,9 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
+import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, IdBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{OnDelete, TypeIdentifier}
+import com.prisma.shared.models.{FieldBehaviour, OnDelete, TypeIdentifier}
 import sangria.ast._
 
 import scala.collection.Seq
@@ -87,6 +88,8 @@ object DataSchemaAstExtensions {
 
     def columnName: Option[String] = fieldDefinition.directiveArgumentAsString("pgColumn", "name")
 
+    def dbName: Option[String] = fieldDefinition.directiveArgumentAsString("db", "name")
+
     def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
 
     def isRequired: Boolean = fieldDefinition.fieldType.isRequired
@@ -143,6 +146,32 @@ object DataSchemaAstExtensions {
 
     def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
       fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
+
+    def createdAtBehaviour: Option[FieldBehaviour.CreatedAtBehaviour.type] = {
+      if (fieldDefinition.hasDirective("createdAt")) {
+        Some(CreatedAtBehaviour)
+      } else {
+        None
+      }
+    }
+
+    def updatedAtBehaviour: Option[FieldBehaviour.UpdatedAtBehaviour.type] = {
+      if (fieldDefinition.hasDirective("createdAt")) {
+        Some(UpdatedAtBehaviour)
+      } else {
+        None
+      }
+    }
+
+    def idBehaviour: Option[FieldBehaviour.IdBehaviour] = {
+      fieldDefinition.directive("id").map { directive =>
+        directive.argumentValueAsString("strategy").getOrElse("AUTO") match {
+          case "AUTO" => IdBehaviour(FieldBehaviour.IdStrategy.Auto)
+          case "NONE" => IdBehaviour(FieldBehaviour.IdStrategy.None)
+          case x      => sys.error(s"Encountered unknown strategy $x")
+        }
+      }
+    }
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -165,25 +194,12 @@ object DataSchemaAstExtensions {
 
     def directiveArgumentAsString(directiveName: String, argumentName: String): Option[String] = {
       for {
-        directive <- directive(directiveName)
-        argument <- directive.arguments.find { x =>
-                     val isScalarOrEnum = x.value.isInstanceOf[ScalarValue] || x.value.isInstanceOf[EnumValue]
-                     x.name == argumentName && isScalarOrEnum
-                   }
-      } yield {
-        argument.value match {
-          case value: EnumValue       => value.value
-          case value: StringValue     => value.value
-          case value: BigIntValue     => value.value.toString
-          case value: BigDecimalValue => value.value.toString
-          case value: IntValue        => value.value.toString
-          case value: FloatValue      => value.value.toString
-          case value: BooleanValue    => value.value.toString
-          case _                      => sys.error("This clause is unreachable because of the instance checks above, but i did not know how to prove it to the compiler.")
-        }
-      }
+        directive     <- directive(directiveName)
+        argumentValue <- directive.argumentValueAsString(argumentName)
+      } yield argumentValue
     }
 
+    def hasDirective(name: String)                 = directive(name).isDefined
     def directive(name: String): Option[Directive] = withDirectives.directives.find(_.name == name)
     def directive_!(name: String): Directive       = directive(name).getOrElse(sys.error(s"Could not find the directive with name: $name!"))
 
@@ -201,6 +217,25 @@ object DataSchemaAstExtensions {
       }
     }
 
+    def argumentValueAsString(name: String): Option[String] = {
+      for {
+        argument <- directive.arguments.find { x =>
+                     val isScalarOrEnum = x.value.isInstanceOf[ScalarValue] || x.value.isInstanceOf[EnumValue]
+                     x.name == name && isScalarOrEnum
+                   }
+      } yield {
+        argument.value match {
+          case value: EnumValue       => value.value
+          case value: StringValue     => value.value
+          case value: BigIntValue     => value.value.toString
+          case value: BigDecimalValue => value.value.toString
+          case value: IntValue        => value.value.toString
+          case value: FloatValue      => value.value.toString
+          case value: BooleanValue    => value.value.toString
+          case _                      => sys.error("This clause is unreachable because of the instance checks above, but i did not know how to prove it to the compiler.")
+        }
+      }
+    }
     def argument(name: String): Option[Argument] = directive.arguments.find(_.name == name)
     def argument_!(name: String): Argument       = argument(name).getOrElse(sys.error(s"Could not find the argument with name: $name!"))
   }

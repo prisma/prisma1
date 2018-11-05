@@ -3,12 +3,14 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.migration.DirectiveTypes.RelationDBDirective
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.OnDelete.OnDelete
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{FieldBehaviour, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 
 case class PrismaSdl(typesFn: Vector[PrismaSdl => PrismaType], enumsFn: Vector[PrismaSdl => PrismaEnum]) {
   val types: Vector[PrismaType] = typesFn.map(_.apply(this))
   val enums: Vector[PrismaEnum] = enumsFn.map(_.apply(this))
+
+  def type_!(name: String) = types.find(_.name == name).get
 }
 
 case class PrismaType(name: String, tableName: Option[String], isEmbedded: Boolean, fieldFn: Vector[PrismaType => PrismaField])(val sdl: PrismaSdl) {
@@ -21,6 +23,9 @@ case class PrismaType(name: String, tableName: Option[String], isEmbedded: Boole
   }
 
   def finalTableName = tableName.getOrElse(name)
+
+  def scalarField_!(name: String) = field_!(name).asInstanceOf[ScalarPrismaField]
+  def field_!(name: String)       = fields.find(_.name == name).get
 }
 
 sealed trait PrismaField {
@@ -38,7 +43,8 @@ case class ScalarPrismaField(
     isRequired: Boolean,
     isUnique: Boolean,
     typeIdentifier: TypeIdentifier,
-    defaultValue: Option[GCValue]
+    defaultValue: Option[GCValue],
+    behaviour: Option[FieldBehaviour]
 )(val tpe: PrismaType)
     extends PrismaField
 
