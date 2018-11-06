@@ -9,6 +9,8 @@ trait InputTypesBuilder {
 
   def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]]
 
+  def inputObjectTypeForUpdateMany(model: Model): Option[InputObjectType[Any]]
+
   def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]]
 }
 
@@ -26,6 +28,12 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
   override def inputObjectTypeForUpdate(model: Model): Option[InputObjectType[Any]] = {
     cache.getOrUpdate(cacheKey("cachedInputObjectTypeForUpdate", model), { () =>
       computeInputObjectTypeForUpdate(model)
+    })
+  }
+
+  override def inputObjectTypeForUpdateMany(model: Model): Option[InputObjectType[Any]] = {
+    cache.getOrUpdate(cacheKey("cachedInputObjectTypeForUpdateMany", model), { () =>
+      computeInputObjectTypeForUpdateMany(model)
     })
   }
 
@@ -89,6 +97,11 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     } else {
       None
     }
+  }
+
+  protected def computeInputObjectTypeForUpdateMany(model: Model): Option[InputObjectType[Any]] = {
+    val fields = computeScalarInputFieldsForUpdate(model)
+    if (fields.nonEmpty) Some(InputObjectType[Any](name = s"${model.name}UpdateManyMutationInput", fieldsFn = () => fields)) else None
   }
 
   protected def computeInputObjectTypeForNestedUpdate(parentField: RelationField): Option[InputObjectType[Any]] = {

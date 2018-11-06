@@ -8,6 +8,7 @@ import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodesNotConnectedError}
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, RelationField}
+import org.bson.types.ObjectId
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue}
@@ -96,7 +97,7 @@ trait NodeActions extends NodeSingleQueries {
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
         .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
 
-    val id                                 = CuidGCValue.random
+    val id                                 = StringIdGCValue(ObjectId.get().toString)
     val nonListArgsWithId                  = nonListValues :+ ("_id", id)
     val (nestedCreateFields, childResults) = embeddedNestedCreateDocsAndResults(mutaction)
     val thisResult                         = CreateNodeResult(id, mutaction)
@@ -144,13 +145,13 @@ trait NodeActions extends NodeSingleQueries {
       case toOneDelete @ NestedDeleteNode(_, rf, None) if rf.relatedModel_!.isEmbedded =>
         node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toOneDelete.model, None)
-          case Some(nestedNode) => (unset(path.stringForField(rf.name)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toOneDelete))
+          case Some(nestedNode) => (unset(path.stringForField(rf.name)), DeleteNodeResult(StringIdGCValue.dummy, nestedNode, toOneDelete))
         }
 
       case toManyDelete @ NestedDeleteNode(_, rf, Some(where)) if rf.relatedModel_!.isEmbedded =>
         node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, parentWhere, toManyDelete.model, Some(where))
-          case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(CuidGCValue.dummy, nestedNode, toManyDelete))
+          case Some(nestedNode) => (pull(path.stringForField(rf.name), whereToBson(where)), DeleteNodeResult(StringIdGCValue.dummy, nestedNode, toManyDelete))
         }
     }
 
