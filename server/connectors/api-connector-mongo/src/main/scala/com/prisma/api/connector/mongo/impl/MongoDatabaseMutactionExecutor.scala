@@ -76,7 +76,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
                             parent,
                             mutationBuilder
                           )
-          } yield previousResults.merge(childResult)
+          } yield MutactionResults(Vector(result)).merge(childResult)
 
         } else {
           for {
@@ -88,16 +88,18 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
                             parent,
                             mutationBuilder
                           )
-          } yield previousResults.merge(result).merge(childResult)
+          } yield result.merge(childResult)
         }
       case m: FurtherNestedMutaction =>
         if (previousResults.contains(m)) {
+          val result: DatabaseMutactionResult = previousResults.results.find(res => res.mutaction == m).get
+
           val nestedMutactions =
             m.allNestedMutactions.map(x => generateNestedMutaction(database, x, previousResults, previousResults.nodeAddress(m), mutationBuilder))
 
           for {
             childResults <- MongoAction.seq(nestedMutactions)
-          } yield previousResults.merge(childResults)
+          } yield MutactionResults(Vector(result)).merge(childResults)
 
         } else {
           for {
@@ -110,11 +112,13 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
                                MongoAction.seq(nestedMutactions)
                              case _ => MongoAction.successful(Vector.empty)
                            }
-          } yield previousResults.merge(result).merge(childResults)
+          } yield result.merge(childResults)
         }
       case m: FinalMutaction =>
         if (previousResults.contains(m)) {
-          MongoAction.successful(previousResults)
+          val result: DatabaseMutactionResult = previousResults.results.find(res => res.mutaction == m).get
+
+          MongoAction.successful(MutactionResults(Vector(result)))
         } else {
           for {
             result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
