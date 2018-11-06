@@ -91,10 +91,14 @@ object DataSchemaAstExtensions {
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
 
+    def isRelationField(doc: Document): Boolean = !hasScalarType && !isEnumField(doc)
+
     def hasScalarType: Boolean = TypeIdentifier.withNameOpt(typeName) match {
       case Some(_: ScalarTypeIdentifier) => true
       case _                             => false
     }
+
+    def isEnumField(doc: Document): Boolean = doc.isEnumType(fieldDefinition.typeName)
 
     def previousName: String = {
       val nameBeforeRename = fieldDefinition.directiveArgumentAsString("rename", "oldName")

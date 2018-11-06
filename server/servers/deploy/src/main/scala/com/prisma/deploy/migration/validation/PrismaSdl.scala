@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.migration.DirectiveTypes.RelationDBDirective
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.OnDelete.OnDelete
-import com.prisma.shared.models.{FieldBehaviour, TypeIdentifier}
+import com.prisma.shared.models.{FieldBehaviour, RelationStrategy, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 
 case class PrismaSdl(
@@ -33,9 +33,10 @@ case class PrismaType(
 
   def finalTableName = tableName.getOrElse(name)
 
-  def scalarField_!(name: String) = field_!(name).asInstanceOf[ScalarPrismaField]
-  def enumField_!(name: String)   = field_!(name).asInstanceOf[EnumPrismaField]
-  def field_!(name: String)       = fields.find(_.name == name).get
+  def scalarField_!(name: String)   = field_!(name).asInstanceOf[ScalarPrismaField]
+  def enumField_!(name: String)     = field_!(name).asInstanceOf[EnumPrismaField]
+  def relationField_!(name: String) = field_!(name).asInstanceOf[RelationalPrismaField]
+  def field_!(name: String)         = fields.find(_.name == name).get
 }
 
 sealed trait PrismaField {
@@ -74,6 +75,7 @@ case class EnumPrismaField(
 case class RelationalPrismaField(
     name: String,
     relationDbDirective: Option[RelationDBDirective],
+    strategy: RelationStrategy,
     isList: Boolean,
     isRequired: Boolean,
     referencesType: String,

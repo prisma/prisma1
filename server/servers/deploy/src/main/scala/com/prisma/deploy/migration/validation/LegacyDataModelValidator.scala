@@ -109,7 +109,16 @@ case class LegacyDataModelValidator(
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
       val prismaFields = definition.fields.map {
         case x if isRelationField(x) =>
-          RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
+          RelationalPrismaField(
+            name = x.name,
+            relationDbDirective = x.relationDBDirective,
+            strategy = null,
+            isList = x.isList,
+            isRequired = x.isRequired,
+            referencesType = x.typeName,
+            relationName = x.relationName,
+            cascade = x.onDelete
+          )(_)
 
         case x if isEnumField(x) =>
           EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)

@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.gc_values.{EnumGCValue, StringGCValue}
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
-import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.{ConnectorCapability, OnDelete, RelationStrategy}
 import com.prisma.shared.models.FieldBehaviour._
 import org.scalactic.{Bad, Good, Or}
 import org.scalatest.{Matchers, WordSpecLike}
@@ -305,6 +305,38 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     val dataModel         = validate(dataModelString)
     val relationTableType = dataModel.type_!("ModelToModelRelation")
     relationTableType.isRelationTable should be(true)
+  }
+
+  "@relation settings must be detected" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "MyRelation", strategy: EMBED, onDelete: CASCADE)
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").relationField_!("model")
+    field.relationName should equal(Some("MyRelation"))
+    field.cascade should equal(OnDelete.Cascade)
+    field.strategy should equal(RelationStrategy.Embed)
+  }
+
+  "@relation must be optional" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").relationField_!("model")
+    field.relationName should equal(None)
+    field.cascade should equal(OnDelete.SetNull)
+    field.strategy should equal(RelationStrategy.Auto)
   }
 
   def validateThatMustError(dataModel: String, capabilities: Set[ConnectorCapability] = Set.empty): Vector[DeployError] = {

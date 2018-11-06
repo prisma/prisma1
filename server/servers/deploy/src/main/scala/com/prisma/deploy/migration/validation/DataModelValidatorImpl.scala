@@ -3,11 +3,12 @@ import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.shared.models.FieldBehaviour._
-import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, RelationStrategy, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.utils.boolean.BooleanUtils
 
@@ -55,14 +56,16 @@ case class DataModelValidatorImpl(
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { typeDef =>
       val prismaFields = typeDef.fields.map {
         case x if isRelationField(x) =>
+          val relationDirective = RelationDirective.value(doc, typeDef, x, capabilities).get
           RelationalPrismaField(
             name = x.name,
             relationDbDirective = x.relationDBDirective,
+            strategy = relationDirective.strategy,
             isList = x.isList,
             isRequired = x.isRequired,
             referencesType = x.typeName,
-            relationName = x.relationName,
-            cascade = x.onDelete
+            relationName = relationDirective.name,
+            cascade = relationDirective.onDelete
           )(_)
 
         case x if isEnumField(x) =>
@@ -194,9 +197,24 @@ case class DataModelValidatorImpl(
   private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.isEnumType(fieldDef.typeName)
 }
 
-trait ValidatorShared {}
+trait ValidatorShared {
+  def validateString(value: sangria.ast.Value): Option[String] = {
+    value match {
+      case v: sangria.ast.StringValue => None
+      case _                          => Some("This argument must be a String.")
+    }
+  }
 
-trait FieldDirective[T] extends BooleanUtils { // could introduce a new interface for type level directives
+  def validateEnum(validValues: Vector[String])(value: sangria.ast.Value): Option[String] = {
+    if (validValues.contains(value.asString)) {
+      None
+    } else {
+      Some(s"Valid values are: ${validValues.mkString(",")}.")
+    }
+  }
+}
+
+trait FieldDirective[T] extends BooleanUtils with ValidatorShared { // could introduce a new interface for type level directives
   def name: String
   def requiredArgs: Vector[ArgumentRequirement]
   def optionalArgs: Vector[ArgumentRequirement]
@@ -423,6 +441,43 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
     }
     fieldDef.isValidScalarListType.toOption {
       behaviour
+    }
+  }
+}
+
+case class RelationDirectiveHolder(name: Option[String], onDelete: OnDelete, strategy: RelationStrategy)
+object RelationDirective extends FieldDirective[RelationDirectiveHolder] {
+  override def name = "relation"
+
+  override def requiredArgs = Vector.empty
+
+  override def optionalArgs = Vector(
+    ArgumentRequirement("name", validateString),
+    ArgumentRequirement("onDelete", validateEnum(Vector("ON_DELETE", "SET_NULL"))),
+    ArgumentRequirement("strategy", validateEnum(Vector("AUTO", "EMBED", "RELATION_TABLE")))
+  )
+
+  override def validate(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      fieldDef: FieldDefinition,
+      directive: Directive,
+      capabilities: Set[ConnectorCapability]
+  ) = {
+    None
+  }
+
+  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+    if (fieldDef.isRelationField(document)) {
+      val strategy = fieldDef.directiveArgumentAsString(name, "strategy") match {
+        case Some("AUTO")           => RelationStrategy.Auto
+        case Some("EMBED")          => RelationStrategy.Embed
+        case Some("RELATION_TABLE") => RelationStrategy.RelationTable
+        case _                      => RelationStrategy.Auto
+      }
+      Some(RelationDirectiveHolder(fieldDef.relationName, fieldDef.onDelete, strategy))
+    } else {
+      None
     }
   }
 }
