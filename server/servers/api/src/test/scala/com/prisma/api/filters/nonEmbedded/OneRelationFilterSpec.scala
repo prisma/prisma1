@@ -48,108 +48,51 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       """mutation {createBlog(
         |     data: {
         |       name: "blog 1",
-        |       post:{create: {title: "post 1", popularity: 10, comment:{ create: {text:"comment 1", likes: 0 }}}}
+        |       post:{create: {title: "post 1", popularity: 10, comment:{ create: {text:"comment 1", likes: 10 }}}}
         | }
-        |){name}}""".stripMargin,
+        |){name}}""",
       project = project
     )
+
     server.query(
       """mutation {createBlog(data:{
         |                         name: "blog 2",
-        |                         post: {create:{title: "post 3",popularity: 1000,comment:{create:{text:"comment 5", likes: 1000}}}}
-        |}){name}}""".stripMargin,
+        |                         post: {create:{title: "post 2",popularity: 100,comment:{create:{text:"comment 2", likes: 100}}}}
+        |}){name}}""",
       project = project
     )
+
+    server.query(
+      """mutation {createBlog(data:{
+        |                         name: "blog 3",
+        |                         post: {create:{title: "post 3",popularity: 1000,comment:{create:{text:"comment 3", likes: 1000}}}}
+        |}){name}}""",
+      project = project
+    )
+
   }
 
   "1 level 1-relation filter" should "work" in {
+
     server.query(query = """{posts(where:{blog:{name: "blog 1"}}){title}}""", project = project).toString should be(
-      """{"data":{"posts":[{"title":"post 1"},{"title":"post 2"}]}}""")
+      """{"data":{"posts":[{"title":"post 1"}]}}""")
+
+    server.query(query = """{blogs(where:{post:{popularity_gte: 100}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 2"},{"name":"blog 3"}]}}""")
+
+    server.query(query = """{blogs(where:{post:{popularity_gte: 500}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 3"}]}}""")
   }
 
-  "1 level m-relation filter" should "work for _every, _some and _none" in {
-
-    server.query(query = """{blogs(where:{posts_some:{popularity_gte: 5}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_some:{popularity_gte: 50}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_every:{popularity_gte: 2}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_every:{popularity_gte: 3}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_none:{popularity_gte: 50}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_none:{popularity_gte: 5}}){name}}""", project = project).toString should be("""{"data":{"blogs":[]}}""")
-  }
-
-  "2 level m-relation filter" should "work for _every, _some and _none" in {
+  "2 level 1-relation filter" should "work" in {
 
     // some|some
-    server.query(query = """{blogs(where:{posts_some:{comments_some: {likes: 0}}}){name}}""", project = project).toString should be(
+    server.query(query = """{blogs(where:{post:{comment: {likes: 10}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
 
-    server.query(query = """{blogs(where:{posts_some:{comments_some: {likes: 1}}}){name}}""", project = project).toString should be("""{"data":{"blogs":[]}}""")
+    server.query(query = """{blogs(where:{post:{comment: {likes: 1000}}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 3"}]}}""")
 
-    // some|every
-    server.query(query = """{blogs(where:{posts_some:{comments_every: {likes_gte: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_some:{comments_every: {likes: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[]}}""")
-
-    // some|none
-    server.query(query = """{blogs(where:{posts_some:{comments_none: {likes: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_some:{comments_none: {likes_gte: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[]}}""")
-
-    // every|some
-    server.query(query = """{blogs(where:{posts_every:{comments_some: {likes: 10}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_every:{comments_some: {likes: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[]}}""")
-
-    // every|every
-    server.query(query = """{blogs(where:{posts_every:{comments_every: {likes_gte: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_every:{comments_every: {likes: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[]}}""")
-
-    // every|none
-    server.query(query = """{blogs(where:{posts_every:{comments_none: {likes_gte: 100}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_every:{comments_none: {likes: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
-
-    // none|some
-    server.query(query = """{blogs(where:{posts_none:{comments_some: {likes_gte: 100}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_none:{comments_some: {likes: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
-
-    // none|every
-    server.query(query = """{blogs(where:{posts_none:{comments_every: {likes_gte: 11}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_none:{comments_every: {likes_gte: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[]}}""")
-
-    // none|none
-    server.query(query = """{blogs(where:{posts_none:{comments_none: {likes_gte: 0}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
-
-    server.query(query = """{blogs(where:{posts_none:{comments_none: {likes_gte: 11}}}){name}}""", project = project).toString should be(
-      """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
   "crazy filters" should "work" in {
@@ -158,23 +101,20 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       .query(
         query = """{posts(where: {
                 |  blog: {
-                |    posts_some: {
-                |      popularity_gte: 5
+                |    post: {
+                |      popularity_gte: 10
                 |    }
-                |    name_contains: "Blog 1"
+                |    name_contains: "blog 1"
                 |  }
-                |  comments_none: {
+                |  comment: {
                 |    likes_gte: 5
-                |  }
-                |  comments_some: {
-                |    likes_lte: 2
+                |    likes_lte: 200
                 |  }
                 |}) {
                 |  title
                 |}}""".stripMargin,
         project = project
       )
-      .toString should be("""{"data":{"posts":[]}}""")
-
+      .toString should be("""{"data":{"posts":[{"title":"post 1"}]}}""")
   }
 }
