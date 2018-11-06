@@ -88,6 +88,20 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
       }
     )
 
+  lazy val filterObjectTypeWithOutJoinRelationFilters: InputObjectType[Any] =
+    InputObjectType[Any](
+      s"${model.name}WhereInput",
+      fieldsFn = () => {
+        List(
+          InputField("AND", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.ANDFilter.description),
+          InputField("OR", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.ORFilter.description),
+          InputField("NOT", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.NOTFilter.description)
+        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
+          .filter(_.relatedModel_!.isEmbedded)
+          .flatMap(mapToRelationFilterInputField)
+      }
+    )
+
   lazy val scalarFilterObjectType: InputObjectType[Any] =
     InputObjectType[Any](
       s"${model.name}ScalarWhereInput",
