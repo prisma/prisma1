@@ -8,7 +8,7 @@ import com.prisma.shared.models.{OnDelete, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
+class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
 
   val inferer      = SchemaInferrer(Set(MigrationsCapability))
   val emptyProject = TestProject.empty

@@ -7,7 +7,7 @@ import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
-class InfererIntegrationSpec extends FlatSpec with Matchers with DeploySpecBase {
+class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpecBase {
 
   "they" should "should propose no UpdateRelation when ambiguous relations are involved" in {
     val schema =

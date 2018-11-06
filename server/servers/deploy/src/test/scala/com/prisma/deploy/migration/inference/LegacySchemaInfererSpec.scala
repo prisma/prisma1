@@ -9,7 +9,7 @@ import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
+class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   val emptyProject = TestProject.empty
 
   "if a given relation does not exist yet, the inferer" should {
