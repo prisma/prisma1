@@ -260,7 +260,7 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     error.description should include("The default value is invalid for this enum. Valid values are: A, B.")
   }
 
-  "@db should work" in {
+  "@db should work on fields" in {
     val dataModelString =
       """
         |type Model {
@@ -272,6 +272,20 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     val dataModel = validate(dataModelString)
     val field     = dataModel.type_!("Model").scalarField_!("field")
     field.columnName should be(Some("some_columns"))
+  }
+
+  "@db should work on types" in {
+    val dataModelString =
+      """
+        |type Model @db(name:"some_table") {
+        |  id: ID! @id
+        |  field: String
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val model     = dataModel.type_!("Model")
+    model.tableName should equal(Some("some_table"))
   }
 
   def validateThatMustError(dataModel: String, capabilities: Set[ConnectorCapability] = Set.empty): Vector[DeployError] = {

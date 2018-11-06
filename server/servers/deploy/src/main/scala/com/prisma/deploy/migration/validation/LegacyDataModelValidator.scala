@@ -127,7 +127,13 @@ case class LegacyDataModelValidator(
           )(_)
       }
 
-      PrismaType(definition.name, definition.tableNameDirective, definition.isEmbedded, prismaFields)(_)
+      PrismaType(
+        name = definition.name,
+        tableName = definition.tableNameDirective,
+        isEmbedded = definition.isEmbedded,
+        isRelationTable = false,
+        fieldFn = prismaFields
+      )(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)

@@ -89,7 +89,13 @@ case class DataModelValidatorImpl(
           )(_)
       }
 
-      PrismaType(definition.name, definition.tableNameDirective, definition.isEmbedded, prismaFields)(_)
+      PrismaType(
+        name = definition.name,
+        tableName = definition.dbName,
+        isEmbedded = definition.isEmbedded,
+        isRelationTable = false,
+        fieldFn = prismaFields
+      )(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)

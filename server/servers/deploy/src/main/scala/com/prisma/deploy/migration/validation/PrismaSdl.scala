@@ -6,14 +6,23 @@ import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.{FieldBehaviour, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 
-case class PrismaSdl(typesFn: Vector[PrismaSdl => PrismaType], enumsFn: Vector[PrismaSdl => PrismaEnum]) {
+case class PrismaSdl(
+    typesFn: Vector[PrismaSdl => PrismaType],
+    enumsFn: Vector[PrismaSdl => PrismaEnum]
+) {
   val types: Vector[PrismaType] = typesFn.map(_.apply(this))
   val enums: Vector[PrismaEnum] = enumsFn.map(_.apply(this))
 
   def type_!(name: String) = types.find(_.name == name).get
 }
 
-case class PrismaType(name: String, tableName: Option[String], isEmbedded: Boolean, fieldFn: Vector[PrismaType => PrismaField])(val sdl: PrismaSdl) {
+case class PrismaType(
+    name: String,
+    tableName: Option[String],
+    isEmbedded: Boolean,
+    isRelationTable: Boolean,
+    fieldFn: Vector[PrismaType => PrismaField]
+)(val sdl: PrismaSdl) {
   val fields: Vector[PrismaField] = fieldFn.map(_.apply(this))
 
   val relationalPrismaFields = fields.collect { case x: RelationalPrismaField => x }

@@ -29,3 +29,10 @@ object FieldBehaviour {
     object Relation extends ScalarListStrategy
   }
 }
+
+sealed trait RelationStrategy
+object RelationStrategy {
+  object Auto          extends RelationStrategy
+  object Embed         extends RelationStrategy
+  object RelationTable extends RelationStrategy
+}
