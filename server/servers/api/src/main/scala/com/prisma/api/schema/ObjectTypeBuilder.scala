@@ -99,7 +99,7 @@ class ObjectTypeBuilder(
           case PrismaNode(_, _, Some(_))        => false
           case _                                => valClass.isAssignableFrom(value.getClass)
       },
-      astDirectives = if (model.isEmbedded) Vector(AstDirective("embedded", Vector.empty, Vector.empty, None)) else Vector.empty
+      astDirectives = Vector.empty
     )
   }
 
