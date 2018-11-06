@@ -422,7 +422,7 @@ export class Client {
 
   private buildGraphQL() {
     return <T = any>(query, variables): Promise<T> => {
-      return this.client.request(query, variables)
+      return this._client.request(query, variables)
     }
   }
 
