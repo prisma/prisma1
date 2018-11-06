@@ -12,22 +12,6 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
   val schemaBuilder                   = testDependencies.apiSchemaBuilder
 
-  "An embedded type" should "should have the @embedded in the schema" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Embedded @embedded {
-        |   name: String
-        |}
-      """
-    }
-
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
-    val build         = schemaBuilder.build()
-    val schema        = SchemaRenderer.renderSchema(build)
-
-    schema should include("type Embedded @embedded {\n  name: String\n}")
-  }
-
   "An embedded relation" should "have relational filters, a join relation should not" in {
     val project = SchemaDsl.fromString() {
 
