@@ -73,7 +73,7 @@ case class DataModelValidatorImpl(
             isRequired = x.isRequired,
             isUnique = x.isUnique,
             enumName = x.typeName,
-            defaultValue = None
+            defaultValue = DefaultDirective.value(doc, definition, x, capabilities)
           )(_)
 
         case x if isScalarField(x) =>
@@ -185,7 +185,7 @@ case class DataModelValidatorImpl(
   private def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
   private def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
 
-  private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.enumType(fieldDef.typeName).isDefined
+  private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.isEnumType(fieldDef.typeName)
 }
 
 trait ValidatorShared {}
@@ -242,13 +242,20 @@ object DefaultDirective extends FieldDirective[GCValue] {
     val value          = directive.argument_!(valueArg).value
     val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType).asInstanceOf[ScalarTypeIdentifier]
     (typeIdentifier, value) match {
-      case (TypeIdentifier.Enum, _)                  => None
       case (TypeIdentifier.String, _: StringValue)   => None
       case (TypeIdentifier.Float, _: FloatValue)     => None
       case (TypeIdentifier.Boolean, _: BooleanValue) => None
       case (TypeIdentifier.Json, _: StringValue)     => None
       case (TypeIdentifier.DateTime, _: StringValue) => None
-      case (ti, v)                                   => Some(DeployError(typeDef, fieldDef, s"The value ${v.renderPretty} is not a valid default for fields of type ${ti.code}."))
+      case (TypeIdentifier.Enum, v: EnumValue) => {
+        val enumValues = document.enumType(fieldDef.typeName).get.values.map(_.name)
+        if (enumValues.contains(v.asString)) {
+          None
+        } else {
+          Some(DeployError(typeDef, fieldDef, s"The default value is invalid for this enum. Valid values are: ${enumValues.mkString(", ")}."))
+        }
+      }
+      case (ti, v) => Some(DeployError(typeDef, fieldDef, s"The value ${v.renderPretty} is not a valid default for fields of type ${ti.code}."))
     }
   }
 

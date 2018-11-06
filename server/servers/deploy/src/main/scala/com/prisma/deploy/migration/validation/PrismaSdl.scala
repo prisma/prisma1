@@ -25,6 +25,7 @@ case class PrismaType(name: String, tableName: Option[String], isEmbedded: Boole
   def finalTableName = tableName.getOrElse(name)
 
   def scalarField_!(name: String) = field_!(name).asInstanceOf[ScalarPrismaField]
+  def enumField_!(name: String)   = field_!(name).asInstanceOf[EnumPrismaField]
   def field_!(name: String)       = fields.find(_.name == name).get
 }
 

@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.gc_values.StringGCValue
+import com.prisma.gc_values.{EnumGCValue, StringGCValue}
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.FieldBehaviour._
@@ -206,6 +206,25 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     field.defaultValue should be(Some(StringGCValue("my_value")))
   }
 
+  "@default should work for enum fields" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: Status! @default(value: B)
+        |}
+        |
+        |enum Status {
+        |  A,
+        |  B
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").enumField_!("field")
+    field.defaultValue should be(Some(EnumGCValue("B")))
+  }
+
   "@default should error if the provided value does not match the field type" in {
     val dataModelString =
       """
@@ -219,6 +238,26 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     error.`type` should equal("Model")
     error.field should equal(Some("field"))
     error.description should include("The value true is not a valid default for fields of type String.")
+  }
+
+  "@default should error if the provided value does not match the field type in the case of enums" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: Status! @default(value: X)
+        |}
+        |
+        |enum Status {
+        |  A,
+        |  B
+        |}
+      """.stripMargin
+
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("field"))
+    error.description should include("The default value is invalid for this enum. Valid values are: A, B.")
   }
 
   "@db should work" in {
