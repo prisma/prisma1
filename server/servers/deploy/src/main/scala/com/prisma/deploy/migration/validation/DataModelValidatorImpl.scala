@@ -1,11 +1,15 @@
 package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.FieldRequirementsInterface
+import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
-import sangria.ast._
+import sangria.ast.{Argument => _, _}
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.utils.boolean.BooleanUtils
 
 import scala.collection.immutable.Seq
 import scala.util.{Failure, Success, Try}
@@ -79,8 +83,8 @@ case class DataModelValidatorImpl(
             isList = x.isList,
             isRequired = x.isRequired,
             isUnique = x.isUnique,
-            typeIdentifier = typeIdentifierForTypename(x.fieldType),
-            defaultValue = None,
+            typeIdentifier = doc.typeIdentifierForTypename(x.fieldType),
+            defaultValue = DefaultDirective.value(doc, definition, x, capabilities),
             behaviour = FieldDirectiveThingy.all.flatMap(_.getValue(x, capabilities)).headOption
           )(_)
       }
@@ -102,11 +106,13 @@ case class DataModelValidatorImpl(
   } yield FieldAndType(objectType, field)
 
   def validateInternal: Seq[DeployError] = {
-    val reservedFieldsValidations = tryValidation(validateTypes())
-    val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
+    val reservedFieldsValidations    = tryValidation(validateTypes())
+    val fieldDirectiveValidations    = tryValidation(validateFieldDirectives())
+    val fieldDirectiveValidationsNew = tryValidation(validateFieldDirectivesNew())
     val allValidations = Vector(
       reservedFieldsValidations,
-      fieldDirectiveValidations
+      fieldDirectiveValidations,
+      fieldDirectiveValidationsNew
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -150,6 +156,19 @@ case class DataModelValidatorImpl(
     }
   }
 
+  def validateFieldDirectivesNew(): Seq[DeployError] = {
+    for {
+      fieldAndType <- allFieldAndTypes
+      directive    <- fieldAndType.fieldDef.directives
+      validator    <- FieldDirectiveNew.all
+      if directive.name == validator.name
+      error = validator.validate(doc, fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
+      if error.isDefined
+    } yield {
+      error.get
+    }
+  }
+
   private def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
   private def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
   private def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
@@ -158,16 +177,78 @@ case class DataModelValidatorImpl(
   private def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
 
   private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.enumType(fieldDef.typeName).isDefined
+}
 
-  private def typeIdentifierForTypename(fieldType: Type): TypeIdentifier.Value = {
-    val typeName = fieldType.namedType.name
+trait ValidatorShared {}
 
-    if (doc.objectType(typeName).isDefined) {
-      TypeIdentifier.Relation
-    } else if (doc.enumType(typeName).isDefined) {
-      TypeIdentifier.Enum
-    } else {
-      TypeIdentifier.withName(typeName)
+trait FieldDirectiveNew[T] { // could introduce a new interface for type level directives
+  def name: String
+  def requiredArgs: Vector[Argument]
+  def optionalArgs: Vector[Argument]
+
+  // gets called if the directive was found. Can return an error message
+  def validate(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      fieldDef: FieldDefinition,
+      directive: sangria.ast.Directive,
+      capabilities: Set[ConnectorCapability]
+  ): Option[DeployError]
+
+  def value(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      fieldDef: FieldDefinition,
+      capabilities: Set[ConnectorCapability]
+  ): Option[T]
+}
+
+object FieldDirectiveNew {
+  val all = Vector(DefaultDirective)
+}
+
+object DefaultDirective extends FieldDirectiveNew[GCValue] {
+  val valueArg = "value"
+
+  override def name         = "default"
+  override def requiredArgs = Vector(Argument("value", _ => true))
+  override def optionalArgs = Vector.empty
+
+  override def validate(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      fieldDef: FieldDefinition,
+      directive: Directive,
+      capabilities: Set[ConnectorCapability]
+  ): Option[DeployError] = {
+    val placementIsInvalid = !document.isEnumType(fieldDef.typeName) && !fieldDef.isValidScalarNonListType
+    if (placementIsInvalid) {
+      return Some(DeployError(typeDef, fieldDef, "The `@default` directive must only be placed on scalar fields that are not lists."))
+    }
+
+    val value          = directive.argument_!(valueArg).value
+    val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType).asInstanceOf[ScalarTypeIdentifier]
+    (typeIdentifier, value) match {
+      case (TypeIdentifier.Enum, _)                  => None
+      case (TypeIdentifier.String, _: StringValue)   => None
+      case (TypeIdentifier.Float, _: FloatValue)     => None
+      case (TypeIdentifier.Boolean, _: BooleanValue) => None
+      case (TypeIdentifier.Json, _: StringValue)     => None
+      case (TypeIdentifier.DateTime, _: StringValue) => None
+      case (ti, v)                                   => Some(DeployError(typeDef, fieldDef, s"The value ${v.renderPretty} is not a valid default for fields of type ${ti.code}."))
+    }
+  }
+
+  override def value(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      fieldDef: FieldDefinition,
+      capabilities: Set[ConnectorCapability]
+  ): Option[GCValue] = {
+    fieldDef.directive(name).map { directive =>
+      val value          = directive.argument_!(valueArg).valueAsString
+      val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType)
+      GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(value).get
     }
   }
 }

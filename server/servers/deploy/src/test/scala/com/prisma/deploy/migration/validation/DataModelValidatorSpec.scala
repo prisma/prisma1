@@ -190,7 +190,7 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
 
     val dataModel = validate(dataModelString)
     val field     = dataModel.type_!("Model").scalarField_!("field")
-    field.defaultValue should be(Some(StringGCValue("some_columns")))
+    field.defaultValue should be(Some(StringGCValue("my_value")))
   }
 
   "@default should error if the provided value does not match the field type" in {
@@ -205,7 +205,7 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     val error = validateThatMustError(dataModelString).head
     error.`type` should equal("Model")
     error.field should equal(Some("field"))
-    error.description should include("asjdfk")
+    error.description should include("The value true is not a valid default for fields of type String.")
   }
 
   "@db should work" in {

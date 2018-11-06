@@ -17,7 +17,9 @@ object DataSchemaAstExtensions {
     def enumNames: Vector[String]         = enumTypes.map(_.name)
     def previousEnumNames: Vector[String] = enumTypes.map(_.previousName)
 
-    def isObjectOrEnumType(name: String): Boolean = objectType(name).isDefined || enumType(name).isDefined
+    def isObjectOrEnumType(name: String): Boolean = isObjecType(name) || isEnumType(name)
+    def isObjecType(name: String): Boolean        = objectType(name).isDefined
+    def isEnumType(name: String): Boolean         = enumType(name).isDefined
 
     def objectType_!(name: String): ObjectTypeDefinition       = objectType(name).getOrElse(sys.error(s"Could not find the object type $name!"))
     def objectType(name: String): Option[ObjectTypeDefinition] = objectTypes.find(_.name == name)
@@ -45,6 +47,18 @@ object DataSchemaAstExtensions {
 
         case None =>
           otherFieldsOnModelBRelatedToModelA.headOption
+      }
+    }
+
+    def typeIdentifierForTypename(fieldType: Type): TypeIdentifier.Value = {
+      val typeName = fieldType.namedType.name
+
+      if (doc.objectType(typeName).isDefined) {
+        TypeIdentifier.Relation
+      } else if (doc.enumType(typeName).isDefined) {
+        TypeIdentifier.Enum
+      } else {
+        TypeIdentifier.withName(typeName)
       }
     }
   }
