@@ -197,12 +197,16 @@ trait FieldDirectiveThingy[T] {
   def hasValidArguments(directive: sangria.ast.Directive, capabilities: Set[ConnectorCapability]): Option[String]
 
   def getValue(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]): Option[T] = {
-    fieldDef.directive(name).map { directive =>
-      getValue(directive, capabilities)
+    fieldDef.directive(name) match {
+      case Some(directive)                                        => Some(getValue(directive, capabilities))
+      case None if isValidOnField(fieldDef, capabilities).isEmpty => getDefaultForMissingDirective(fieldDef, capabilities)
+      case None                                                   => None
     }
   }
 
   protected def getValue(directive: sangria.ast.Directive, capabilities: Set[ConnectorCapability]): T
+
+  protected def getDefaultForMissingDirective(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]): Option[T] = None
 }
 
 object FieldDirectiveThingy {
@@ -314,6 +318,14 @@ object ScalarListDirective extends FieldDirectiveThingy[ScalarListBehaviour] {
   }
 
   override protected def getValue(directive: Directive, capabilities: Set[ConnectorCapability]): ScalarListBehaviour = {
+    directive.argument_!("strategy").valueAsString match {
+      case `relationValue` => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Relation)
+      case `embeddedValue` => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Embedded)
+      case x               => sys.error(s"Unknown strategy $x")
+    }
+  }
+
+  override protected def getDefaultForMissingDirective(fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]): Option[ScalarListBehaviour] = {
     val defaultBehaviour = if (capabilities.contains(EmbeddedScalarListsCapability)) {
       ScalarListBehaviour(ScalarListStrategy.Embedded)
     } else if (capabilities.contains(NonEmbeddedScalarListCapability)) {
@@ -321,13 +333,6 @@ object ScalarListDirective extends FieldDirectiveThingy[ScalarListBehaviour] {
     } else {
       sys.error("should not happen")
     }
-
-    val configuredBehaviour = directive.argumentValueAsString("strategy").map {
-      case `relationValue` => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Relation)
-      case `embeddedValue` => ScalarListBehaviour(FieldBehaviour.ScalarListStrategy.Embedded)
-      case x               => sys.error(s"Unknown strategy $x")
-    }
-
-    configuredBehaviour.getOrElse(defaultBehaviour)
+    Some(defaultBehaviour)
   }
 }
