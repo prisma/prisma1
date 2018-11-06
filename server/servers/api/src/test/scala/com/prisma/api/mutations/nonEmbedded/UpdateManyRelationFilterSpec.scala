@@ -29,7 +29,7 @@ class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
       |   bottom: Bottom
       |}""".stripMargin
 
-  val project: Project = SchemaDsl.fromString() { schema }
+  lazy val project: Project = SchemaDsl.fromString() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
