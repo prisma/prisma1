@@ -14,6 +14,7 @@ case class PrismaSdl(
   val enums: Vector[PrismaEnum] = enumsFn.map(_.apply(this))
 
   def type_!(name: String) = types.find(_.name == name).get
+  def enum_!(name: String) = enums.find(_.name == name).get
 }
 
 case class PrismaType(

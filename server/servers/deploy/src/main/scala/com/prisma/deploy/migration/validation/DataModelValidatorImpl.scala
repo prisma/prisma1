@@ -45,13 +45,10 @@ case class DataModelValidatorImpl(
   }
 
   def generateSDL: PrismaSdl = {
-
-//    val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumNames.map { name =>
-//      val definition: EnumTypeDefinition = doc.enumType(name).get
-//      val enumValues                     = definition.values.map(_.name)
-//      PrismaEnum(name, values = enumValues)(_)
-//    }
-    val enumTypes = Vector.empty
+    val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumTypes.map { definition =>
+      val enumValues = definition.values.map(_.name)
+      PrismaEnum(definition.name, values = enumValues)(_)
+    }
 
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { typeDef =>
       val prismaFields = typeDef.fields.map {

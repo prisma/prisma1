@@ -339,6 +339,20 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     field.strategy should equal(RelationStrategy.Auto)
   }
 
+  "enum types must be detected" in {
+    val dataModelString =
+      """
+        |enum Status {
+        |  A,
+        |  B
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val enum      = dataModel.enum_!("Status")
+    enum.values should equal(Vector("A", "B"))
+  }
+
   def validateThatMustError(dataModel: String, capabilities: Set[ConnectorCapability] = Set.empty): Vector[DeployError] = {
     val result = validateInternal(dataModel, capabilities)
     result match {
