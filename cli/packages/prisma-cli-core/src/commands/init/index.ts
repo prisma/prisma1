@@ -43,7 +43,6 @@ export default class Init extends Command {
   async runInit({ endpoint }) {
     const files = fs.readdirSync(this.config.definitionDir)
     // the .prismarc must be allowed for the docker version to be functioning
-    // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
       (files.includes('prisma.yml') || files.includes('datamodel.prisma'))
@@ -62,12 +61,14 @@ Either try using a new directory name, or remove the files listed above.
 
     if (endpoint) {
       fs.writeFileSync(
-        path.join(this.config.definitionDir, 'datamodel.prisma'), 
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'datamodel.prisma'))
+        path.join(this.config.definitionDir, 'datamodel.prisma'),
+        fs.readFileSync(
+          path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
+        ),
       )
       fs.writeFileSync(
-        path.join(this.config.definitionDir, 'prisma.yml'), 
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml'))
+        path.join(this.config.definitionDir, 'prisma.yml'),
+        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml')),
       )
 
       const endpointDefinitionPath = path.join(
@@ -162,7 +163,7 @@ datamodel: datamodel.prisma`
     fs.writeFileSync(definitionPath, newPrismaYml)
 
     const dir = this.args!.dirName
-    
+
     const isLocal = results.cluster!.local && results.writeDockerComposeYml
 
     const steps: string[] = []
