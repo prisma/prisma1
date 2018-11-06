@@ -5,6 +5,8 @@ import com.prisma.gc_values.IdGCValue
 sealed trait ApiMutactionResult
 sealed trait DatabaseMutactionResult {
   def mutaction: DatabaseMutaction
+  def merge(otherResults: MutactionResults): MutactionResults         = MutactionResults(Vector(this)).merge(otherResults)
+  def merge(otherResults: Vector[MutactionResults]): MutactionResults = MutactionResults(Vector(this)).merge(otherResults)
 }
 
 sealed trait FurtherNestedMutactionResult extends DatabaseMutactionResult {
