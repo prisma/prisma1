@@ -1,13 +1,13 @@
-package com.prisma.api.mutations
+package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, JoinRelationsFilterCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, JoinRelationsCapability, JoinRelationsFilterCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability, JoinRelationsFilterCapability)
+class UpdateManyEmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   val schema =
     """type Top{
@@ -16,17 +16,13 @@ class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
       |   bottom: Bottom
       |}
       |
-      |type Bottom{
-      |   id: ID! @unique
+      |type Bottom @embedded{
       |   bottom: String!
-      |   top: Top
       |   veryBottom: VeryBottom
       |}
       |
-      |type VeryBottom{
-      |   id: ID! @unique
+      |type VeryBottom @embedded{
       |   veryBottom: String!
-      |   bottom: Bottom
       |}""".stripMargin
 
   val project: Project = SchemaDsl.fromString() { schema }
