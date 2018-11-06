@@ -2,6 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.FieldBehaviour._
@@ -176,6 +177,35 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     error.`type` should equal("Model")
     error.field should equal(Some("tags"))
     error.description should include("Valid values for the strategy argument of `@scalarList` are:")
+  }
+
+  "@default should work" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: String! @default(value: "my_value")
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").scalarField_!("field")
+    field.defaultValue should be(Some(StringGCValue("some_columns")))
+  }
+
+  "@default should error if the provided value does not match the field type" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: String! @default(value: true)
+        |}
+      """.stripMargin
+
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("field"))
+    error.description should include("asjdfk")
   }
 
   "@db should work" in {
