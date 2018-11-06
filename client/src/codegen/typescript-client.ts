@@ -53,12 +53,12 @@ export class TypescriptGenerator extends Generator {
 
   graphqlRenderers = {
     GraphQLUnionType: (type: GraphQLUnionType): string => {
-      return `${this.renderDescription(type.description!)}export type ${
+      return `${this.renderDescription(type.description!)}export enum ${
         type.name
-      } = ${type
-        .getTypes()
-        .map(t => t.name)
-        .join(' | ')}`
+        } { ${type
+          .getTypes()
+          .map(t => `${t.name.replace("", '')} = ${t.name}`)
+          .join(', ')} }`
     },
 
     GraphQLObjectType: (
@@ -95,7 +95,7 @@ export class TypescriptGenerator extends Generator {
           const isOptional = !isNonNullType(field.type)
           return `  ${this.renderFieldName(field, false)}${
             isOptional ? '?' : ''
-          }: ${this.renderInputFieldType(field.type)}`
+            }: ${this.renderInputFieldType(field.type)}`
         })
         .join(`${this.lineBreakDelimiter}\n`)
 
@@ -123,7 +123,7 @@ ${type.description}
 */
 `
           : ''
-      }export type ${type.name} = ${this.scalarMapping[type.name] || 'string'}`
+        }export type ${type.name} = ${this.scalarMapping[type.name] || 'string'}`
     },
 
     GraphQLIDType: (type: GraphQLScalarType): string => {
@@ -134,7 +134,7 @@ ${type.description}
 */
 `
           : ''
-      }export type ${type.name}_Input = ${this.scalarMapping[type.name] ||
+        }export type ${type.name}_Input = ${this.scalarMapping[type.name] ||
         'string'}
 export type ${type.name}_Output = string`
     },
@@ -145,10 +145,10 @@ export type ${type.name}_Output = string`
       }
       return `${this.renderDescription(type.description!)}export type ${
         type.name
-      } = ${type
-        .getValues()
-        .map(e => `  '${e.name}'`)
-        .join(' |\n')}`
+        } = ${type
+          .getValues()
+          .map(e => `  '${e.name}'`)
+          .join(' |\n')}`
     },
   }
 
@@ -184,8 +184,8 @@ export interface Fragmentable {
 ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
   $exists: Exists;
   $graphql: <T ${
-    this.genericsDelimiter
-  } any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
+      this.genericsDelimiter
+      } any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
 
   /**
    * Queries
@@ -261,7 +261,7 @@ import { typeDefs } from './prisma-schema'`
     const args = this.renderPrismaClassArgs(options)
     return `export const Prisma = makePrismaClientClass<ClientConstructor<${
       this.prismaInterface
-    }>>(${args})
+      }>>(${args})
 export const prisma = new Prisma()`
   }
   renderTypedefs() {
@@ -328,7 +328,7 @@ export const prisma = new Prisma()`
       .sort(
         (a, b) =>
           (ast.getType(a) as any).constructor.name <
-          (ast.getType(b) as any).constructor.name
+            (ast.getType(b) as any).constructor.name
             ? -1
             : 1,
       )
@@ -404,7 +404,7 @@ export const prisma = new Prisma()`
       .map(
         a =>
           `${this.renderFieldName(a, false)}${
-            isNonNullType(a.type) ? '' : '?'
+          isNonNullType(a.type) ? '' : '?'
           }: ${this.renderInputFieldTypeHelper(a, isMutation)}`,
       )
       .join(', ')}${args.length > 0 ? ' ' : ''}}`
@@ -542,18 +542,18 @@ export const prisma = new Prisma()`
     isMutation = false,
     isSubscription = false,
   }: {
-    field
-    node: boolean
-    input: boolean
-    partial: boolean
-    renderFunction: boolean
-    isMutation: boolean
-    isSubscription?: boolean
-    // node: boolean = true,
-    // input: boolean = false,
-    // partial: boolean = false,
-    // renderFunction: boolean = true,
-  }) {
+      field
+      node: boolean
+      input: boolean
+      partial: boolean
+      renderFunction: boolean
+      isMutation: boolean
+      isSubscription?: boolean
+      // node: boolean = true,
+      // input: boolean = false,
+      // partial: boolean = false,
+      // renderFunction: boolean = true,
+    }) {
     const { type } = field
     const deepType = this.getDeepType(type)
     const isList = isListType(type) || isListType(type.ofType)
@@ -593,7 +593,7 @@ export const prisma = new Prisma()`
           field.args && field.args.length > 0
             ? this.renderArgs(field, isMutation)
             : ''
-        }) => ${this.wrapType(typeString, isSubscription)}`
+          }) => ${this.wrapType(typeString, isSubscription)}`
       }
     }
 
@@ -614,7 +614,7 @@ export const prisma = new Prisma()`
             field.args && field.args.length > 0
               ? this.renderArgs(field, isMutation, false)
               : ''
-          }) => T`
+            }) => T`
         } else {
           return this.wrapType(typeString, isSubscription, true)
         }
@@ -645,7 +645,7 @@ export const prisma = new Prisma()`
       field.args && field.args.length > 0
         ? this.renderArgs(field, isMutation, false)
         : ''
-    }) => T`
+      }) => T`
   }
 
   renderInputFieldType(type: GraphQLInputType | GraphQLOutputType) {
@@ -694,15 +694,15 @@ ${fieldDefinition}
   ): string {
     const actualInterfaces = promise
       ? [
-          {
-            name: subscription
-              ? `Promise<AsyncIterator<${typeName}Node>>`
-              : `Promise<${typeName}Node>`,
-          },
-          {
-            name: 'Fragmentable',
-          },
-        ].concat(interfaces)
+        {
+          name: subscription
+            ? `Promise<AsyncIterator<${typeName}Node>>`
+            : `Promise<${typeName}Node>`,
+        },
+        {
+          name: 'Fragmentable',
+        },
+      ].concat(interfaces)
       : interfaces
 
     return `${this.renderDescription(typeDescription)}${
@@ -712,13 +712,13 @@ ${fieldDefinition}
         ${fieldDefinition.replace('?:', ':')}
       }>`
         : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
-            actualInterfaces.length > 0
-              ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
-              : ''
-          } {
+        actualInterfaces.length > 0
+          ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
+          : ''
+        } {
       ${fieldDefinition}
       }`
-    }`
+      }`
   }
 
   renderDescription(description?: string | void) {
@@ -729,6 +729,6 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
  */
 `
         : ''
-    }`
+      }`
   }
 }
