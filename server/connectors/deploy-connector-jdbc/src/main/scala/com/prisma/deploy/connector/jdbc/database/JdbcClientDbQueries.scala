@@ -15,19 +15,25 @@ case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(i
     val model = project.schema.getModelByName_!(modelName)
     val query = queryBuilder.existsByModel(project.id, model)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    val result = database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    result.onComplete(x => println(s"ClientDbQueries: $result"))
+    result
   }
 
   def existsDuplicateByRelationAndSide(relationId: String, relationSide: RelationSide): Future[Boolean] = {
     val query = queryBuilder.existsDuplicateByRelationAndSide(project.id, relationId, relationSide)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    val result = database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    result.onComplete(x => println(s"ClientDbQueries: $result"))
+    result
   }
 
   def existsByRelation(relationId: String): Future[Boolean] = {
     val query = queryBuilder.existsByRelation(project.id, relationId)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    val result = database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    result.onComplete(x => println(s"ClientDbQueries: $result"))
+    result
   }
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
@@ -36,18 +42,24 @@ case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(i
       case f: RelationField => queryBuilder.existsNullByModelAndRelationField(project.id, model, f)
     }
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    val result = database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    result.onComplete(x => println(s"ClientDbQueries: $result"))
+    result
   }
 
   def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean] = {
     val query = queryBuilder.existsDuplicateValueByModelAndField(project.id, model, field.dbName)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    val result = database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    result.onComplete(x => println(s"ClientDbQueries: $result"))
+    result
   }
 
   override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
     val query = queryBuilder.enumValueIsInUse(project.id, models, enumName, value)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    val result = database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    result.onComplete(x => println(s"ClientDbQueries: $result"))
+    result
   }
 }

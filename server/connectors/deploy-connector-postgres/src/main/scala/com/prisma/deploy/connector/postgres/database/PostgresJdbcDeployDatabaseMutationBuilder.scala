@@ -81,7 +81,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All] = {
     val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, isList, typeIdentifier)
     val uniqueAction = isUnique match {
-      case true  => addUniqueConstraint(projectId, tableName, columnName, isList)
+      case true  => addUniqueConstraint(projectId, tableName, columnName)
       case false => DatabaseAction.successful(())
     }
 

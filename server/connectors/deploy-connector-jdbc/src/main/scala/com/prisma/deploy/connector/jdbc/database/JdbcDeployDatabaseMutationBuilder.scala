@@ -102,13 +102,16 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     changeDatabaseQueryToDBIO(query)()
   }
 
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, isList: Boolean) = {
+  // Important: This is only using the _UNIQUE suffix for legacy and cross-compatibility reasons, however, postgres for example
+  // truncates the index name, causing the index name to be "<...>._" rather than "<...>._UNIQUE"
+  // TODO bug or feature?
+  def addUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
     val query = sql.createUniqueIndex(name(s"$projectId.$tableName.$columnName._UNIQUE")).on(name(projectId, tableName), name(columnName))
     changeDatabaseQueryToDBIO(query)()
   }
 
   def removeUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
-    val query = sql.dropIndex(name(projectId, tableName, columnName, "_UNIQUE")).on(name(projectId, tableName)) // todo originally had double projectId prefix - still needed?
+    val query = sql.dropIndex(name(projectId, s"$projectId.$tableName.$columnName._UNIQUE")).on(table(name(projectId, tableName)))
     changeDatabaseQueryToDBIO(query)()
   }
 }
