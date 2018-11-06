@@ -198,7 +198,7 @@ object DataSchemaAstExtensions {
     import shapeless._
     import syntax.typeable._
 
-    def containsArgument(name: String, mustBeAString: Boolean): Boolean = {
+    def containsArgument(name: String, mustBeAString: Boolean = false): Boolean = {
       if (mustBeAString) {
         directive.arguments.find(_.name == name).flatMap(_.value.cast[StringValue]).isDefined
       } else {
@@ -219,8 +219,12 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolArgument(val argument: Argument) extends AnyVal {
-    def valueAsString = {
-      argument.value match {
+    def valueAsString = argument.value.asString
+  }
+
+  implicit class CoolValue(val value: Value) extends AnyVal {
+    def asString = {
+      value match {
         case value: EnumValue       => value.value
         case value: StringValue     => value.value
         case value: BigIntValue     => value.value.toString
