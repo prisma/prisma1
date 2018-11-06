@@ -16,5 +16,4 @@ case class MySqlDeployMutactionExecutor(database: Database)(implicit ec: Executi
     val action = MySqlAnyMutactionInterpreter.rollback(mutaction)
     database.run(action).map(_ => ())
   }
-
 }

@@ -5,7 +5,7 @@ import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 
 trait JdbcBase extends SharedSlickExtensions with SharedJdbcExtensions {
-  val placeHolder = "?"
-  val sql         = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  val database    = slickDatabase.database
+  lazy val placeHolder = "?"
+  lazy val sql         = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  lazy val database    = slickDatabase.database
 }

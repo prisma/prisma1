@@ -3,9 +3,7 @@ package com.prisma.deploy.connector.postgres.impls
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.shared.models.FieldTemplate
 
-case class PostgresFieldRequirement(
-    isActive: Boolean
-) extends FieldRequirementsInterface {
+case class PostgresFieldRequirement(isActive: Boolean) extends FieldRequirementsInterface {
   val idFieldRequirementForPassive = Vector(FieldRequirement("id", Vector("ID", "UUID", "Int"), required = true, unique = true, list = false))
   val idFieldRequirementForActive  = Vector(FieldRequirement("id", Vector("ID", "UUID"), required = true, unique = true, list = false))
 

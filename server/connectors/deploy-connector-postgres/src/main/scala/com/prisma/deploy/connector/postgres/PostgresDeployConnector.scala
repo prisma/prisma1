@@ -2,10 +2,15 @@ package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
+import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
-import com.prisma.deploy.connector.postgres.database.{InternalDatabaseSchema, PostgresDeployDatabaseMutationBuilder}
+import com.prisma.deploy.connector.postgres.database.{
+  InternalDatabaseSchema,
+  PostgresDeployDatabaseMutationBuilder,
+  PostgresJdbcDeployDatabaseMutationBuilder,
+  PostgresTypeMapper
+}
 import com.prisma.deploy.connector.postgres.impls._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
@@ -34,11 +39,14 @@ case class PostgresDeployConnector(
   lazy val managementDatabase = managementDatabases.primary.database
   lazy val projectDatabase    = projectDatabases.primary.database
 
+  lazy val postgresTypeMapper = PostgresTypeMapper()
+  lazy val mutationBuilder    = PostgresJdbcDeployDatabaseMutationBuilder(managementDatabases.primary, postgresTypeMapper)
+
   override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary)
   override lazy val migrationPersistence: MigrationPersistence       = JdbcMigrationPersistence(managementDatabases.primary)
   override lazy val cloudSecretPersistence: CloudSecretPersistence   = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence       = JdbcTelemetryPersistence(managementDatabases.primary)
-  override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(projectDatabases.primary)
+  override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -65,7 +73,7 @@ case class PostgresDeployConnector(
     projectDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = PostgresClientDbQueries(project, projectDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, projectDatabases.primary)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')

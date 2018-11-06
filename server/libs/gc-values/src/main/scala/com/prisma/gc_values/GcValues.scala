@@ -25,6 +25,7 @@ object RootGCValue {
     RootGCValue(empty)
   }
 }
+
 case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
     case Some(id) => id.asInstanceOf[IdGCValue]
