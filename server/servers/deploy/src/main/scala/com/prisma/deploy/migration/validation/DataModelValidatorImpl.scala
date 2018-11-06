@@ -85,7 +85,7 @@ case class DataModelValidatorImpl(
             isUnique = x.isUnique,
             typeIdentifier = doc.typeIdentifierForTypename(x.fieldType),
             defaultValue = DefaultDirective.value(doc, definition, x, capabilities),
-            behaviour = FieldDirectiveNew.behaviour.flatMap(_.value(doc, definition, x, capabilities)).headOption
+            behaviour = FieldDirective.behaviour.flatMap(_.value(doc, definition, x, capabilities)).headOption
           )(_)
       }
 
@@ -146,7 +146,7 @@ case class DataModelValidatorImpl(
     for {
       fieldAndType <- allFieldAndTypes
       directive    <- fieldAndType.fieldDef.directives
-      validator    <- FieldDirectiveNew.all
+      validator    <- FieldDirective.all
       if directive.name == validator.name
       argumentErrors  = validateArguments(directive, validator, fieldAndType)
       validationError = validator.validate(doc, fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
@@ -156,7 +156,7 @@ case class DataModelValidatorImpl(
     }
   }
 
-  def validateArguments(directive: Directive, validator: FieldDirectiveNew[_], fieldAndType: FieldAndType): Vector[DeployError] = {
+  def validateArguments(directive: Directive, validator: FieldDirective[_], fieldAndType: FieldAndType): Vector[DeployError] = {
     val requiredArgErrors = for {
       argumentRequirement <- validator.optionalArgs
       schemaError <- if (!directive.containsArgument(argumentRequirement.name)) {
@@ -169,7 +169,7 @@ case class DataModelValidatorImpl(
     val optionalArgErrors = for {
       argumentRequirement <- validator.optionalArgs
       argument            <- directive.argument(argumentRequirement.name)
-      schemaError <- argumentRequirement.isValid(argument.value).map { errorMsg =>
+      schemaError <- argumentRequirement.validate(argument.value).map { errorMsg =>
                       DeployError(fieldAndType, errorMsg)
                     }
     } yield schemaError
@@ -189,10 +189,10 @@ case class DataModelValidatorImpl(
 
 trait ValidatorShared {}
 
-trait FieldDirectiveNew[T] extends BooleanUtils { // could introduce a new interface for type level directives
+trait FieldDirective[T] extends BooleanUtils { // could introduce a new interface for type level directives
   def name: String
-  def requiredArgs: Vector[ArgumentNew]
-  def optionalArgs: Vector[ArgumentNew]
+  def requiredArgs: Vector[ArgumentRequirement]
+  def optionalArgs: Vector[ArgumentRequirement]
 
   // gets called if the directive was found. Can return an error message
   def validate(
@@ -211,19 +211,19 @@ trait FieldDirectiveNew[T] extends BooleanUtils { // could introduce a new inter
   ): Option[T]
 }
 
-object FieldDirectiveNew {
-  val behaviour = Vector(IdDirectiveNew, CreatedAtDirectiveNew, UpdatedAtDirectiveNew, ScalarListDirectiveNew)
+object FieldDirective {
+  val behaviour = Vector(IdDirective$, CreatedAtDirective$, UpdatedAtDirective$, ScalarListDirective$)
   val all       = Vector(DefaultDirective) ++ behaviour
 
 }
 
-case class ArgumentNew(name: String, isValid: sangria.ast.Value => Option[String])
+case class ArgumentRequirement(name: String, validate: sangria.ast.Value => Option[String])
 
-object DefaultDirective extends FieldDirectiveNew[GCValue] {
+object DefaultDirective extends FieldDirective[GCValue] {
   val valueArg = "value"
 
   override def name         = "default"
-  override def requiredArgs = Vector(ArgumentNew("value", _ => None))
+  override def requiredArgs = Vector(ArgumentRequirement("value", _ => None))
   override def optionalArgs = Vector.empty
 
   override def validate(
@@ -265,13 +265,13 @@ object DefaultDirective extends FieldDirectiveNew[GCValue] {
   }
 }
 
-object IdDirectiveNew extends FieldDirectiveNew[IdBehaviour] {
+object IdDirective$ extends FieldDirective[IdBehaviour] {
   val autoValue           = "AUTO"
   val noneValue           = "NONE"
   val validStrategyValues = Set(autoValue, noneValue)
 
   override def name         = "id"
-  override def requiredArgs = Vector(ArgumentNew("strategy", isStrategyValueValid))
+  override def requiredArgs = Vector(ArgumentRequirement("strategy", isStrategyValueValid))
   override def optionalArgs = Vector.empty
 
   private def isStrategyValueValid(value: sangria.ast.Value): Option[String] = {
@@ -307,7 +307,7 @@ object IdDirectiveNew extends FieldDirectiveNew[IdBehaviour] {
   }
 }
 
-object CreatedAtDirectiveNew extends FieldDirectiveNew[CreatedAtBehaviour.type] {
+object CreatedAtDirective$ extends FieldDirective[CreatedAtBehaviour.type] {
   override def name         = "createdAt"
   override def requiredArgs = Vector.empty
   override def optionalArgs = Vector.empty
@@ -333,7 +333,7 @@ object CreatedAtDirectiveNew extends FieldDirectiveNew[CreatedAtBehaviour.type] 
   }
 }
 
-object UpdatedAtDirectiveNew extends FieldDirectiveNew[UpdatedAtBehaviour.type] {
+object UpdatedAtDirective$ extends FieldDirective[UpdatedAtBehaviour.type] {
   override def name         = "updatedAt"
   override def requiredArgs = Vector.empty
   override def optionalArgs = Vector.empty
@@ -359,10 +359,10 @@ object UpdatedAtDirectiveNew extends FieldDirectiveNew[UpdatedAtBehaviour.type] 
   }
 }
 
-object ScalarListDirectiveNew extends FieldDirectiveNew[ScalarListBehaviour] {
+object ScalarListDirective$ extends FieldDirective[ScalarListBehaviour] {
   override def name         = "scalarList"
   override def requiredArgs = Vector.empty
-  override def optionalArgs = Vector(ArgumentNew("strategy", isValidStrategyArgument))
+  override def optionalArgs = Vector(ArgumentRequirement("strategy", isValidStrategyArgument))
 
   val embeddedValue       = "EMBEDDED"
   val relationValue       = "RELATION"
