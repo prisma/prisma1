@@ -154,7 +154,7 @@ class ObjectTypeBuilder(
     val skipArgument = Argument("skip", OptionInputType(IntType))
 
     List(
-      whereArgument(model, project),
+      whereArgument(model, project, capabilities = capabilities),
       orderByArgument(model).asInstanceOf[Argument[Option[Any]]],
       skipArgument.asInstanceOf[Argument[Option[Any]]],
       IdBasedConnection.Args.After.asInstanceOf[Argument[Option[Any]]],

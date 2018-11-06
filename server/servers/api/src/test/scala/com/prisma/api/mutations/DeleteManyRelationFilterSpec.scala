@@ -1,13 +1,13 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, JoinRelationsFilterCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability, JoinRelationsFilterCapability)
 
   val schema =
     """type Top{
@@ -67,6 +67,7 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
     val lastCount         = topCount
 
     firstCount should be(3)
+    filterQueryCount should be(2)
     firstCount - filterQueryCount should be(lastCount)
     firstCount - filterDeleteCount should be(lastCount)
   }
@@ -98,6 +99,7 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
     val lastCount         = topCount
 
     firstCount should be(3)
+    filterQueryCount should be(3)
     firstCount - filterQueryCount should be(lastCount)
     firstCount - filterDeleteCount should be(lastCount)
   }
@@ -133,6 +135,7 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
     val lastCount         = topCount
 
     firstCount should be(3)
+    filterQueryCount should be(1)
     firstCount - filterQueryCount should be(lastCount)
     firstCount - filterDeleteCount should be(lastCount)
   }
@@ -168,6 +171,7 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
     val lastCount         = topCount
 
     firstCount should be(3)
+    filterQueryCount should be(1)
     firstCount - filterQueryCount should be(lastCount)
     firstCount - filterDeleteCount should be(lastCount)
   }

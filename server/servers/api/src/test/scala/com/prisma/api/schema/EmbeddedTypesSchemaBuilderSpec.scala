@@ -27,4 +27,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
 
     schema should include("type Embedded @embedded {\n  name: String\n}")
   }
+
+//relational filters only on embedded types
+
 }
