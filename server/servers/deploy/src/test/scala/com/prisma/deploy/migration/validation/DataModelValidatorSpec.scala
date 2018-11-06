@@ -44,6 +44,19 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     dataModel.type_!("Model").scalarField_!("id").behaviour should be(Some(IdBehaviour(IdStrategy.None)))
   }
 
+  "@id should error when an unknown strategy is used" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id(strategy: FOO)
+        |}
+      """.stripMargin
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("id"))
+    error.description should equal("Valid values for the strategy argument of `@id` are: AUTO, NONE.")
+  }
+
   "@id should error on embedded types" in {
     val dataModelString =
       """

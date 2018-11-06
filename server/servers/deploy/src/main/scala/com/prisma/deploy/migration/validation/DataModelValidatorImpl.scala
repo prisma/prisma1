@@ -107,7 +107,7 @@ case class DataModelValidatorImpl(
 
   def validateInternal: Seq[DeployError] = {
     val reservedFieldsValidations    = tryValidation(validateTypes())
-    val fieldDirectiveValidationsNew = tryValidation(validateFieldDirectivesNew())
+    val fieldDirectiveValidationsNew = tryValidation(validateFieldDirectives())
     val allValidations = Vector(
       reservedFieldsValidations,
       fieldDirectiveValidationsNew
@@ -142,13 +142,13 @@ case class DataModelValidatorImpl(
     }
   }
 
-  def validateFieldDirectivesNew(): Seq[DeployError] = {
+  def validateFieldDirectives(): Seq[DeployError] = {
     for {
       fieldAndType <- allFieldAndTypes
       directive    <- fieldAndType.fieldDef.directives
       validator    <- FieldDirective.all
       if directive.name == validator.name
-      argumentErrors  = validateArguments(directive, validator, fieldAndType)
+      argumentErrors  = validateDirectiveArguments(directive, validator, fieldAndType)
       validationError = validator.validate(doc, fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
       error           <- argumentErrors ++ validationError
     } yield {
@@ -156,13 +156,14 @@ case class DataModelValidatorImpl(
     }
   }
 
-  def validateArguments(directive: Directive, validator: FieldDirective[_], fieldAndType: FieldAndType): Vector[DeployError] = {
+  def validateDirectiveArguments(directive: Directive, validator: FieldDirective[_], fieldAndType: FieldAndType): Vector[DeployError] = {
     val requiredArgErrors = for {
-      argumentRequirement <- validator.optionalArgs
-      schemaError <- if (!directive.containsArgument(argumentRequirement.name)) {
-                      Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
-                    } else {
-                      None
+      argumentRequirement <- validator.requiredArgs
+      schemaError <- directive.argument(argumentRequirement.name) match {
+                      case None =>
+                        Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
+                      case Some(arg) =>
+                        argumentRequirement.validate(arg.value).map(error => DeployError(fieldAndType, error))
                     }
     } yield schemaError
 
@@ -212,7 +213,7 @@ trait FieldDirective[T] extends BooleanUtils { // could introduce a new interfac
 }
 
 object FieldDirective {
-  val behaviour = Vector(IdDirective$, CreatedAtDirective$, UpdatedAtDirective$, ScalarListDirective$)
+  val behaviour = Vector(IdDirective, CreatedAtDirective, UpdatedAtDirective, ScalarListDirective)
   val all       = Vector(DefaultDirective) ++ behaviour
 
 }
@@ -265,14 +266,14 @@ object DefaultDirective extends FieldDirective[GCValue] {
   }
 }
 
-object IdDirective$ extends FieldDirective[IdBehaviour] {
+object IdDirective extends FieldDirective[IdBehaviour] {
   val autoValue           = "AUTO"
   val noneValue           = "NONE"
   val validStrategyValues = Set(autoValue, noneValue)
 
   override def name         = "id"
-  override def requiredArgs = Vector(ArgumentRequirement("strategy", isStrategyValueValid))
-  override def optionalArgs = Vector.empty
+  override def requiredArgs = Vector.empty
+  override def optionalArgs = Vector(ArgumentRequirement("strategy", isStrategyValueValid))
 
   private def isStrategyValueValid(value: sangria.ast.Value): Option[String] = {
     if (validStrategyValues.contains(value.asString)) {
@@ -307,7 +308,7 @@ object IdDirective$ extends FieldDirective[IdBehaviour] {
   }
 }
 
-object CreatedAtDirective$ extends FieldDirective[CreatedAtBehaviour.type] {
+object CreatedAtDirective extends FieldDirective[CreatedAtBehaviour.type] {
   override def name         = "createdAt"
   override def requiredArgs = Vector.empty
   override def optionalArgs = Vector.empty
@@ -333,7 +334,7 @@ object CreatedAtDirective$ extends FieldDirective[CreatedAtBehaviour.type] {
   }
 }
 
-object UpdatedAtDirective$ extends FieldDirective[UpdatedAtBehaviour.type] {
+object UpdatedAtDirective extends FieldDirective[UpdatedAtBehaviour.type] {
   override def name         = "updatedAt"
   override def requiredArgs = Vector.empty
   override def optionalArgs = Vector.empty
@@ -359,7 +360,7 @@ object UpdatedAtDirective$ extends FieldDirective[UpdatedAtBehaviour.type] {
   }
 }
 
-object ScalarListDirective$ extends FieldDirective[ScalarListBehaviour] {
+object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
   override def name         = "scalarList"
   override def requiredArgs = Vector.empty
   override def optionalArgs = Vector(ArgumentRequirement("strategy", isValidStrategyArgument))
