@@ -288,6 +288,25 @@ class DataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecB
     model.tableName should equal(Some("some_table"))
   }
 
+  "@relationTable must be detected" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @relationTable {
+        |  A: Model!
+        |  B: Model!
+        |}
+      """.stripMargin
+
+    val dataModel         = validate(dataModelString)
+    val relationTableType = dataModel.type_!("ModelToModelRelation")
+    relationTableType.isRelationTable should be(true)
+  }
+
   def validateThatMustError(dataModel: String, capabilities: Set[ConnectorCapability] = Set.empty): Vector[DeployError] = {
     val result = validateInternal(dataModel, capabilities)
     result match {

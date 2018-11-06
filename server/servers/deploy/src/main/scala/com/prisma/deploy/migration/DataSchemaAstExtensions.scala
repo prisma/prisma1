@@ -85,6 +85,8 @@ object DataSchemaAstExtensions {
     def tableNameDirective: Option[String] = objectType.directiveArgumentAsString("pgTable", "name")
 
     def dbName: Option[String] = objectType.directiveArgumentAsString("db", "name")
+
+    def isRelationTable: Boolean = objectType.hasDirective("relationTable")
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {

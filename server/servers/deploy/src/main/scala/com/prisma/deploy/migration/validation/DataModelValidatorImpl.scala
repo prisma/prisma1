@@ -52,8 +52,8 @@ case class DataModelValidatorImpl(
 //    }
     val enumTypes = Vector.empty
 
-    val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
-      val prismaFields = definition.fields.map {
+    val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { typeDef =>
+      val prismaFields = typeDef.fields.map {
         case x if isRelationField(x) =>
           RelationalPrismaField(
             name = x.name,
@@ -73,7 +73,7 @@ case class DataModelValidatorImpl(
             isRequired = x.isRequired,
             isUnique = x.isUnique,
             enumName = x.typeName,
-            defaultValue = DefaultDirective.value(doc, definition, x, capabilities)
+            defaultValue = DefaultDirective.value(doc, typeDef, x, capabilities)
           )(_)
 
         case x if isScalarField(x) =>
@@ -84,16 +84,16 @@ case class DataModelValidatorImpl(
             isRequired = x.isRequired,
             isUnique = x.isUnique,
             typeIdentifier = doc.typeIdentifierForTypename(x.fieldType),
-            defaultValue = DefaultDirective.value(doc, definition, x, capabilities),
-            behaviour = FieldDirective.behaviour.flatMap(_.value(doc, definition, x, capabilities)).headOption
+            defaultValue = DefaultDirective.value(doc, typeDef, x, capabilities),
+            behaviour = FieldDirective.behaviour.flatMap(_.value(doc, typeDef, x, capabilities)).headOption
           )(_)
       }
 
       PrismaType(
-        name = definition.name,
-        tableName = definition.dbName,
-        isEmbedded = definition.isEmbedded,
-        isRelationTable = false,
+        name = typeDef.name,
+        tableName = typeDef.dbName,
+        isEmbedded = typeDef.isEmbedded,
+        isRelationTable = typeDef.isRelationTable,
         fieldFn = prismaFields
       )(_)
     }
@@ -140,10 +140,10 @@ case class DataModelValidatorImpl(
   def validateTypes(): Seq[DeployError] = {
     doc.objectTypes.flatMap { objectType =>
       val hasIdDirective = objectType.fields.exists(_.hasDirective("id"))
-      if (hasIdDirective) {
-        None
-      } else {
+      if (!hasIdDirective && !objectType.isRelationTable) {
         Some(DeployError.apply(objectType.name, s"One field of the type `${objectType.name}` must be marked as the id field with the `@id` directive."))
+      } else {
+        None
       }
     }
   }
