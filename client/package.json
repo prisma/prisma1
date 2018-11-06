@@ -17,7 +17,7 @@
     "test-ts-definitions-generator-only": "npm run build && ava dist/codegen/typescript-definitions.test.js",
     "test-go-generator-only": "npm run build && ava dist/codegen/go-client.test.js",
     "test-flow-generator-only": "npm run build && ava dist/codegen/flow-client.test.js",
-    "test": "tslint src/**/*.ts && npm run test-generator-only"
+    "test": "tslint src/**/*.ts && npm run test-only"
   },
   "dependencies": {
     "@types/node": "^10.12.0",

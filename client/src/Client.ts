@@ -92,16 +92,16 @@ export class Client {
     return instructions[0].typeName.toLowerCase()
   }
 
-  processInstructions = async (id: number): Promise<any> => {
+  getDocumentForInstructions(id: number) {
     log('process instructions')
     const instructions = this.currentInstructions[id]
 
-    const { ast, variables } = this.generateSelections(instructions)
+    const { ast } = this.generateSelections(instructions)
     log('generated selections')
     const { variableDefinitions, ...restAst } = ast
     const operation = this.getOperation(instructions) as OperationTypeNode
 
-    const document = {
+    return {
       kind: Kind.DOCUMENT,
       definitions: [
         {
@@ -116,6 +116,17 @@ export class Client {
         },
       ],
     }
+  }
+
+  processInstructions = async (id: number): Promise<any> => {
+    log('process instructions')
+    const instructions = this.currentInstructions[id]
+
+    const { variables } = this.generateSelections(instructions)
+
+    const document = this.getDocumentForInstructions(id)
+    const operation = this.getOperation(instructions) as OperationTypeNode
+
     if (this.debug) {
       console.log(`\nQuery:`)
       const query = print(document)
@@ -255,19 +266,7 @@ export class Client {
         })
       }
 
-      const node = {
-        kind: Kind.FIELD,
-        name: {
-          kind: Kind.NAME,
-          value: instruction.fieldName,
-        },
-        arguments: args,
-        directives: [],
-        selectionSet: {
-          kind: Kind.SELECTION_SET,
-          selections: [] as any[],
-        },
-      }
+      let node
 
       const type = this.getDeepType(instruction.field.type)
       if (
@@ -280,42 +279,22 @@ export class Client {
               ${instruction.fragment}
             `
           }
-          node.selectionSet = instruction.fragment.definitions[0].selectionSet
+          node.selectionSet = node = {
+            kind: Kind.FIELD,
+            name: {
+              kind: Kind.NAME,
+              value: instruction.fieldName,
+            },
+            arguments: args,
+            directives: [],
+            selectionSet: instruction.fragment.definitions[0].selectionSet,
+          }
         } else {
-          node.selectionSet.selections = Object.entries(type.getFields())
-            .filter(([_, field]: any) => {
-              const fieldType = this.getDeepType(field.type)
-              const model = this.models.find(m => m.name === field.type.name)
-              const embedded = model && model.embedded
-
-              return (
-                fieldType instanceof GraphQLScalarType ||
-                fieldType instanceof GraphQLEnumType ||
-                embedded
-              )
-            })
-            .map(([fieldName, field]: [any, any]) => {
-              const subNode: any = {
-                kind: Kind.FIELD,
-                name: {
-                  kind: Kind.NAME,
-                  value: fieldName,
-                },
-                arguments: [],
-                directives: [],
-              }
-
-              const model = this.models.find(m => m.name === field.type.name)
-              const embedded = model && model.embedded
-
-              if (embedded) {
-                subNode.selectionSet = {
-                  // CONTINUE HERE
-                }
-              }
-
-              return subNode
-            })
+          node = this.getFieldAst({
+            field: instruction.field,
+            fieldName: instruction.fieldName,
+            args,
+          })
         }
       }
 
@@ -330,6 +309,61 @@ export class Client {
       ast: { ...ast, variableDefinitions },
       variables,
     }
+  }
+
+  isScalar(field) {
+    const fieldType = this.getDeepType(field.type)
+
+    return (
+      fieldType instanceof GraphQLScalarType ||
+      fieldType instanceof GraphQLEnumType
+    )
+  }
+
+  isEmbedded(field) {
+    const model = this.models.find(m => m.name === field.type.name)
+    return model && model.embedded
+  }
+
+  getFieldAst({ field, fieldName, args }) {
+    const node: any = {
+      kind: Kind.FIELD,
+      name: {
+        kind: Kind.NAME,
+        value: fieldName,
+      },
+      arguments: args,
+      directives: [],
+    }
+
+    if (this.isScalar(field)) {
+      return node
+    }
+
+    node.selectionSet = {
+      kind: Kind.SELECTION_SET,
+      selections: [] as any[],
+    }
+
+    const type = this.getDeepType(field.type)
+
+    node.selectionSet.selections = Object.entries(type.getFields())
+      .filter(([_, subField]: any) => {
+        const isScalar = this.isScalar(subField)
+        if (isScalar) {
+          return true
+        }
+        const fieldType = this.getDeepType(subField.type)
+        const model = this.models.find(m => m.name === fieldType.name)
+        const embedded = model && model.embedded
+
+        return embedded
+      })
+      .map(([fieldName, field]: [any, any]) => {
+        return this.getFieldAst({ field, fieldName, args: [] })
+      })
+
+    return node
   }
 
   buildMethods() {
