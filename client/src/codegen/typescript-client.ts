@@ -232,17 +232,16 @@ ${this.renderClientConstructor}
 ${this.renderTypes()}
 
 /**
- * Type Defs
-*/
-
-${this.renderExports(options)}
-
-
-/**
  * Model Metadata
 */
 
 ${this.renderModels()}
+
+/**
+ * Type Defs
+*/
+
+${this.renderExports(options)}
 `)
   }
   renderClientConstructor() {
@@ -272,7 +271,7 @@ import { typeDefs } from './prisma-schema'`
       }
     }
 
-    return `{typeDefs, models, ${endpointString}${secretString}}`
+    return `{typeDefs, models${endpointString}${secretString}}`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
