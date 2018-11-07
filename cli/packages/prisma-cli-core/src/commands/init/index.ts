@@ -257,13 +257,15 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       prismaYmlString += this.getGeneratorConfig(results.generator)
     }
 
-    const dockerComposeInstalled = await isDockerComposeInstalled()
-    if (!dockerComposeInstalled) {
-      this.out.log(
-        `\nTo install docker-compose, please follow this link: ${chalk.cyan(
-          'https://docs.docker.com/compose/install/',
-        )}`,
-      )
+    if (isLocal) {
+      const dockerComposeInstalled = await isDockerComposeInstalled()
+      if (!dockerComposeInstalled) {
+        this.out.log(
+          `\nTo install docker-compose, please follow this link: ${chalk.cyan(
+            'https://docs.docker.com/compose/install/',
+          )}`,
+        )
+      }
     }
   }
 

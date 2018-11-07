@@ -16,7 +16,8 @@ case class Schema(
   val allFields: Seq[Field]                 = models.flatMap(_.fields)
   val allRelationFields: Seq[RelationField] = models.flatMap(_.relationFields)
 
-  def fieldsWhereThisModelIsRequired(model: Model) = allRelationFields.filter(f => f.isRequired && !f.isList && f.relatedModel_! == model)
+  def fieldsThatLinkToThisModel(model: Model)      = allRelationFields.filter(_.relatedModel_! == model)
+  def fieldsWhereThisModelIsRequired(model: Model) = fieldsThatLinkToThisModel(model).filter(f => f.isRequired && !f.isList)
 
   def getModelByStableIdentifier_!(stableId: String): Model = {
     models.find(_.stableIdentifier == stableId).getOrElse(throw SharedErrors.InvalidModel(s"Could not find a model for the stable identifier: $stableId"))

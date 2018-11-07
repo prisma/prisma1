@@ -237,7 +237,6 @@ ${this.renderExports(options)}
 ${codeComment}
 
 import { DocumentNode, GraphQLSchema } from 'graphql'
-import { IResolvers } from 'graphql-tools/dist/Interfaces'
 import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
   }
@@ -418,6 +417,7 @@ export const prisma = new Prisma()`
       partial: false,
       renderFunction: false,
       isMutation,
+      operation: false,
     })
   }
 
@@ -445,6 +445,7 @@ export const prisma = new Prisma()`
           renderFunction: false,
           isMutation,
           isSubscription: operation === 'subscription',
+          operation: true,
         })}`
       })
       .join(';\n')
@@ -492,6 +493,7 @@ export const prisma = new Prisma()`
           renderFunction: true,
           isMutation: false,
           isSubscription: subscription,
+          operation: false,
         })}`
       })
       .join(`${this.lineBreakDelimiter}\n`)
@@ -502,7 +504,7 @@ export const prisma = new Prisma()`
     }
 
     return this.renderInterfaceWrapper(
-      `${type.name}${node ? 'Node' : ''}`,
+      `${type.name}${node ? '' : ''}`,
       type.description!,
       interfaces,
       fieldDefinition,
@@ -541,6 +543,7 @@ export const prisma = new Prisma()`
     renderFunction,
     isMutation = false,
     isSubscription = false,
+    operation = false
   }: {
     field
     node: boolean
@@ -549,6 +552,7 @@ export const prisma = new Prisma()`
     renderFunction: boolean
     isMutation: boolean
     isSubscription?: boolean
+    operation: boolean
     // node: boolean = true,
     // input: boolean = false,
     // partial: boolean = false,
@@ -574,8 +578,12 @@ export const prisma = new Prisma()`
 
     const addSubscription = !partial && isSubscription && !isScalar
 
+    if (operation && !node && !isInput && !isList && !isScalar && !addSubscription) {
+      return `${typeString}Promise`
+    }
+
     if ((node || isList) && !isScalar && !addSubscription) {
-      typeString += `Node`
+      typeString += ``
     }
 
     if (addSubscription) {
@@ -633,14 +641,6 @@ export const prisma = new Prisma()`
       return typeString
     }
 
-    // if (node && !typeString.endsWith('Node')) {
-    //   typeString = `${typeString}Node`
-    // }
-
-    // if (isSubscription && !typeString.endsWith('Subscription')) {
-    //   typeString = `${typeStringSubscription}`
-    // }
-
     return `<T ${this.genericsDelimiter} ${typeString}>(${
       field.args && field.args.length > 0
         ? this.renderArgs(field, isMutation, false)
@@ -696,8 +696,8 @@ ${fieldDefinition}
       ? [
           {
             name: subscription
-              ? `Promise<AsyncIterator<${typeName}Node>>`
-              : `Promise<${typeName}Node>`,
+              ? `Promise<AsyncIterator<${typeName}>>`
+              : `Promise<${typeName}>`,
           },
           {
             name: 'Fragmentable',
@@ -711,7 +711,7 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
+        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${promise && !subscription ? 'Promise' : ''}${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
               ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
               : ''

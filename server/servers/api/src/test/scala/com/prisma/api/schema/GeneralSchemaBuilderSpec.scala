@@ -22,7 +22,6 @@ class GeneralSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     "be generated without a Node interface if there is no visible ID field" in {
       val project = projectWithHiddenID
       val schema  = SchemaRenderer.renderSchema(schemaBuilder(project))
-      println(schema)
       schema should containType("Todo")
       schema shouldNot containType("Todo", "Node")
     }

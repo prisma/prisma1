@@ -143,4 +143,47 @@ trait SchemaBase {
                         type Child @embedded{
                             c: String! @unique
                         }"""
+  //EMBEDDED TO NON-EMBEDDED
+  val embedddedToJoinFriendReq = """type Parent{
+                            |    p: String @unique
+                            |    children: [Child!]!
+                            |}
+                            |
+                            |type Child @embedded {
+                            |    c: String @unique
+                            |    friendReq: Friend! @mongoRelation(field: "friends")
+                            |}
+                            |
+                            |type Friend{
+                            |    f: String @unique
+                            |}"""
+
+  val embedddedToJoinFriendOpt = """type Parent{
+                               |    p: String @unique
+                               |    children: [Child!]!
+                               |}
+                               |
+                               |type Child @embedded {
+                               |    c: String @unique
+                               |    friendOpt: Friend @mongoRelation(field: "friends")
+                               |}
+                               |
+                               |type Friend{
+                               |    f: String @unique
+                               |}"""
+
+  val embedddedToJoinFriendsOpt = """type Parent{
+                        |    p: String @unique
+                        |    children: [Child!]!
+                        |}
+                        |
+                        |type Child @embedded {
+                        |    c: String @unique
+                        |    friendsOpt: [Friend!]! @mongoRelation(field: "friends")
+                        |}
+                        |
+                        |type Friend{
+                        |    f: String @unique
+                        |}"""
+
 }

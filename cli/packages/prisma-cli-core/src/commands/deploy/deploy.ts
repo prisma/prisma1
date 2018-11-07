@@ -1,13 +1,11 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
 import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
-import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
-import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName, defaultDockerCompose } from '../../util'
 import * as sillyname from 'sillyname'
@@ -41,10 +39,6 @@ ${chalk.gray(
       char: 'f',
       description: 'Accept data loss caused by schema changes',
     }),
-    watch: flags.boolean({
-      char: 'w',
-      description: 'Watch for changes',
-    }),
     new: flags.boolean({
       char: 'n',
       description: 'Force interactive mode to select the cluster',
@@ -72,7 +66,7 @@ ${chalk.gray(
     /**
      * Get Args
      */
-    const { force, watch } = this.flags
+    const { force } = this.flags
     const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
@@ -182,30 +176,6 @@ ${chalk.gray(
       projectNew,
       workspace!,
     )
-
-    if (watch) {
-      this.out.log('Watching for change...')
-      chokidar
-        .watch(this.config.definitionDir, { ignoreInitial: true })
-        .on('all', () => {
-          setImmediate(async () => {
-            if (!this.deploying) {
-              await this.definition.load(this.flags)
-              await this.deploy(
-                stage,
-                serviceName,
-                cluster,
-                cluster.name,
-                force,
-                dryRun,
-                false,
-                workspace!,
-              )
-              this.out.log('Watching for change...')
-            }
-          })
-        })
-    }
   }
 
   private getSillyName() {

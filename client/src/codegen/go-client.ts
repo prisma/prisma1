@@ -689,7 +689,6 @@ package prisma
 import (
 	"context"
   "errors"
-  "os"
 
 	"github.com/prisma/prisma-client-lib-go"
 
