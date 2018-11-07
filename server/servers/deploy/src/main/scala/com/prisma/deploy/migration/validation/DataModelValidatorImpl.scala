@@ -2,6 +2,7 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
+import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
@@ -99,7 +100,7 @@ case class DataModelValidatorImpl(
 
   def validateSyntax: Seq[DeployError] = result match {
     case Success(_) => validateInternal
-    case Failure(e) => List(DeployError.global(s"There's a syntax error in the Schema Definition. ${e.getMessage}"))
+    case Failure(e) => List(DeployError.global(s"There's a syntax error in the data model. ${e.getMessage}"))
   }
 
   lazy val allFieldAndTypes: Seq[FieldAndType] = for {
@@ -108,11 +109,15 @@ case class DataModelValidatorImpl(
   } yield FieldAndType(objectType, field)
 
   def validateInternal: Seq[DeployError] = {
+    val globalValidations            = tryValidation(GlobalValidations(doc).validate())
     val reservedFieldsValidations    = tryValidation(validateTypes())
     val fieldDirectiveValidationsNew = tryValidation(validateFieldDirectives())
+    val enumValidations              = tryValidation(EnumValidator(doc).validate())
     val allValidations = Vector(
+      globalValidations,
       reservedFieldsValidations,
-      fieldDirectiveValidationsNew
+      fieldDirectiveValidationsNew,
+      enumValidations
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -134,25 +139,21 @@ case class DataModelValidatorImpl(
   def tryValidation(block: => Seq[DeployError]): Or[Seq[DeployError], Throwable] = Or.from(Try(block))
 
   def validateTypes(): Seq[DeployError] = {
-    doc.objectTypes.flatMap { objectType =>
-      val hasIdDirective = objectType.fields.exists(_.hasDirective("id"))
-      if (!hasIdDirective && !objectType.isRelationTable) {
-        Some(DeployError.apply(objectType.name, s"One field of the type `${objectType.name}` must be marked as the id field with the `@id` directive."))
-      } else {
-        None
-      }
+    doc.objectTypes.filter(!_.isRelationTable).flatMap { objectType =>
+      ModelValidator(doc, objectType).validate()
     }
   }
 
   def validateFieldDirectives(): Seq[DeployError] = {
     for {
-      fieldAndType <- allFieldAndTypes
-      directive    <- fieldAndType.fieldDef.directives
-      validator    <- FieldDirective.all
+      fieldAndType    <- allFieldAndTypes
+      duplicateErrors = validateDirectiveUniqueness(fieldAndType)
+      directive       <- fieldAndType.fieldDef.directives
+      validator       <- FieldDirective.all
       if directive.name == validator.name
       argumentErrors  = validateDirectiveArguments(directive, validator, fieldAndType)
       validationError = validator.validate(doc, fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
-      error           <- argumentErrors ++ validationError
+      error           <- duplicateErrors ++ argumentErrors ++ validationError
     } yield {
       error
     }
@@ -180,6 +181,16 @@ case class DataModelValidatorImpl(
     requiredArgErrors ++ optionalArgErrors
   }
 
+  def validateDirectiveUniqueness(fieldAndType: FieldAndType): Option[DeployError] = {
+    val directives       = fieldAndType.fieldDef.directives
+    val uniqueDirectives = directives.map(_.name).toSet
+    if (uniqueDirectives.size != directives.size) {
+      Some(DeployErrors.directivesMustAppearExactlyOnce(fieldAndType))
+    } else {
+      None
+    }
+  }
+
   private def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
   private def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
   private def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
@@ -188,4 +199,179 @@ case class DataModelValidatorImpl(
   private def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
 
   private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.isEnumType(fieldDef.typeName)
+}
+
+case class GlobalValidations(doc: Document) {
+  def validate(): Vector[DeployError] = {
+    validateDuplicateTypes()
+  }
+
+  def validateDuplicateTypes(): Vector[DeployError] = {
+    val typeNames          = doc.objectTypes.map(_.name.toLowerCase)
+    val duplicateTypeNames = typeNames.filter(name => typeNames.count(_ == name) > 1)
+
+    for {
+      duplicateTypeName <- duplicateTypeNames
+      objectType        <- doc.objectTypes.find(_.name.equalsIgnoreCase(duplicateTypeName))
+    } yield {
+      DeployErrors.duplicateTypeName(objectType)
+    }
+  }
+}
+
+case class EnumValidator(doc: Document) {
+  def validate(): Vector[DeployError] = {
+    val duplicateNames = doc.enumNames.diff(doc.enumNames.distinct).distinct.flatMap(dupe => Some(DeployErrors.enumNamesMustBeUnique(doc.enumType(dupe).get)))
+
+    val otherErrors = doc.enumTypes.flatMap { enumType =>
+      val invalidEnumValues = enumType.valuesAsStrings.filter(!NameConstraints.isValidEnumValueName(_))
+
+      if (enumType.values.exists(value => value.name.head.isLower)) {
+        Some(DeployErrors.enumValuesMustBeginUppercase(enumType))
+      } else if (invalidEnumValues.nonEmpty) {
+        Some(DeployErrors.enumValuesMustBeValid(enumType, invalidEnumValues))
+      } else {
+        None
+      }
+    }
+
+    duplicateNames ++ otherErrors
+  }
+}
+
+case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
+  def validate(): Vector[DeployError] = {
+    val allValidations = Vector(
+      tryValidation(validateMissingTypes),
+      tryValidation(requiredIdDirectiveValidation.toVector),
+      tryValidation(validateRelationFields),
+      tryValidation(validateDuplicateFields)
+    )
+
+    val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
+    val validationFailures: Vector[Throwable] = allValidations.collect { case Bad(e) => e }
+
+    val errors = if (validationErrors.nonEmpty) {
+      validationErrors
+    } else {
+      validationFailures.map { throwable =>
+        throwable.printStackTrace()
+        DeployError.global(s"An unknown error happened: $throwable")
+      }
+    }
+
+    errors.distinct
+  }
+
+  def tryValidation(block: => Seq[DeployError]): Or[Seq[DeployError], Throwable] = Or.from(Try(block))
+
+  val requiredIdDirectiveValidation = {
+    val hasIdDirective = objectType.fields.exists(_.hasDirective("id"))
+    if (!hasIdDirective && !objectType.isRelationTable) {
+      Some(DeployError.apply(objectType.name, s"One field of the type `${objectType.name}` must be marked as the id field with the `@id` directive."))
+    } else {
+      None
+    }
+  }
+
+  val validateMissingTypes: Vector[DeployError] = {
+    objectType.fields
+      .filter(!_.hasScalarType)
+      .collect { case fieldDef if !doc.isObjectOrEnumType(fieldDef.typeName) => DeployErrors.missingType(objectType, fieldDef) }
+  }
+
+  def validateDuplicateFields: Seq[DeployError] = {
+    val fieldNames = objectType.fields.map(_.name.toLowerCase)
+    for {
+      field <- objectType.fields
+      if fieldNames.count(_.equals(field.name.toLowerCase)) > 1
+    } yield {
+      DeployErrors.duplicateFieldName(FieldAndType(objectType, field))
+    }
+  }
+
+  def validateRelationFields: Seq[DeployError] = {
+    val relationFields = objectType.relationFields(doc)
+    val wrongTypeDefinitions = relationFields.collect {
+      case fieldDef if !fieldDef.isValidRelationType => DeployErrors.relationFieldTypeWrong(FieldAndType(objectType, fieldDef))
+    }
+
+    val ambiguousRelationFields: Vector[FieldAndType] = {
+      val relationFields                                = objectType.relationFields(doc)
+      val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
+      val ambiguousFields                               = grouped.values.filter(_.size > 1).flatten.toVector
+      ambiguousFields.map(field => FieldAndType(objectType, field))
+    }
+
+    val (schemaErrors, _) = partition(ambiguousRelationFields) {
+      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
+        Left(DeployErrors.missingRelationDirective(fieldAndType))
+
+      case fieldAndType if !fieldAndType.isSelfRelation && fieldAndType.relationCount(doc) > 2 =>
+        Left(DeployErrors.relationDirectiveCannotAppearMoreThanTwice(fieldAndType))
+
+      case fieldAndType if fieldAndType.isSelfRelation && fieldAndType.relationCount(doc) != 1 && fieldAndType.relationCount(doc) != 2 =>
+        Left(DeployErrors.selfRelationMustAppearOneOrTwoTimes(fieldAndType))
+
+      case fieldAndType =>
+        Right(fieldAndType)
+    }
+
+    val relationFieldsWithRelationDirective = for {
+      objectType <- doc.objectTypes
+      field      <- objectType.fields
+      if field.hasRelationDirective
+      if field.isRelationField(doc)
+    } yield FieldAndType(objectType, field)
+
+    /**
+      * Check that if a relation is not a self-relation and a relation-directive occurs only once that there is no
+      * opposing field without a relationdirective on the other side.
+      */
+    val allowOnlyOneDirectiveOnlyWhenUnambigous = relationFieldsWithRelationDirective.flatMap {
+      case thisType if !thisType.isSelfRelation && thisType.relationCount(doc) == 1 =>
+        val oppositeObjectType               = doc.objectType_!(thisType.fieldDef.typeName)
+        val fieldsOnOppositeObjectType       = oppositeObjectType.fields.filter(_.typeName == thisType.objectType.name)
+        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirective && f.isRelationField(doc))
+        val relationFieldsPointingToThisType = relationFieldsWithoutDirective.filter(f => f.typeName == thisType.objectType.name)
+        if (relationFieldsPointingToThisType.nonEmpty) Some(DeployErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
+
+      case _ =>
+        None
+    }
+
+    /**
+      * The validation below must be only applied to fields that specify the relation directive.
+      * And it can only occur for relation that specify both sides of a relation.
+      */
+    val relationFieldsWithNonMatchingTypes = relationFieldsWithRelationDirective
+      .groupBy(_.fieldDef.previousRelationName.get)
+      .flatMap {
+        case (_, fieldAndTypes) if fieldAndTypes.size > 1 =>
+          val first  = fieldAndTypes.head
+          val second = fieldAndTypes.last
+          val firstError = if (first.fieldDef.typeName != second.objectType.name) {
+            Option(DeployErrors.typesForOppositeRelationFieldsDoNotMatch(first, second))
+          } else {
+            None
+          }
+          val secondError = if (second.fieldDef.typeName != first.objectType.name) {
+            Option(DeployErrors.typesForOppositeRelationFieldsDoNotMatch(second, first))
+          } else {
+            None
+          }
+          firstError ++ secondError
+        case _ =>
+          Iterable.empty
+      }
+
+    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambigous
+  }
+
+  def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {
+    val mapped = seq.map(partitionFn)
+    val lefts  = mapped.collect { case Left(x) => x }
+    val rights = mapped.collect { case Right(x) => x }
+    (lefts, rights)
+  }
 }

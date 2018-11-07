@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.FieldRequirement
-import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
+import sangria.ast.{EnumTypeDefinition, FieldDefinition, ObjectTypeDefinition, TypeDefinition}
 
 object DeployWarnings {
   def dataLossModel(`type`: String): DeployWarning = {
@@ -66,10 +66,12 @@ object DeployErrors {
     )
   }
 
-  def missingType(fieldAndType: FieldAndType) = {
+  def missingType(fieldAndType: FieldAndType): DeployError = missingType(fieldAndType.objectType, fieldAndType.fieldDef)
+  def missingType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(
-      fieldAndType,
-      s"The field `${fieldAndType.fieldDef.name}` has the type `${fieldAndType.fieldDef.typeString}` but there's no type or enum declaration with that name."
+      objectType,
+      fieldDef,
+      s"The field `${fieldDef.name}` has the type `${fieldDef.typeString}` but there's no type or enum declaration with that name."
     )
   }
 
@@ -212,11 +214,15 @@ object DeployErrors {
     DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
   }
 
-  def error(fieldAndType: FieldAndType, description: String) = {
-    DeployError(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
+  def error(fieldAndType: FieldAndType, description: String): DeployError = {
+    error(fieldAndType.objectType, fieldAndType.fieldDef, description)
   }
 
-  def error(typeDef: TypeDefinition, description: String) = {
+  def error(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition, description: String): DeployError = {
+    DeployError(objectType.name, fieldDef.name, description)
+  }
+
+  def error(typeDef: TypeDefinition, description: String): DeployError = {
     DeployError(typeDef.name, description)
   }
 

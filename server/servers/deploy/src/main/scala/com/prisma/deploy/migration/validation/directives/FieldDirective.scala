@@ -29,7 +29,7 @@ trait FieldDirective[T] extends BooleanUtils with SharedDirectiveValidation { //
 
 object FieldDirective {
   val behaviour = Vector(IdDirective, CreatedAtDirective, UpdatedAtDirective, ScalarListDirective)
-  val all       = Vector(DefaultDirective) ++ behaviour
+  val all       = Vector(DefaultDirective, RelationDirective) ++ behaviour
 }
 
 case class ArgumentRequirement(name: String, validate: sangria.ast.Value => Option[String])
