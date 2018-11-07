@@ -130,8 +130,8 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
           }
         ))
       .flatMap { revision =>
-        database.run(
-          insertIntoReturning(insertQuery)(
+        database
+          .run(insertToDBIO(insertQuery)(
             setParams = { pp =>
               val schema    = Json.toJson(migration.schema).toString()
               val functions = Json.toJson(migration.functions).toString()
@@ -158,11 +158,9 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
               pp.setString(errors)
               pp.setTimestamp(startedAt)
               pp.setTimestamp(finishedAt)
-            },
-            readResult = { rs =>
-              migration.copy(revision = revision)
             }
           ))
+          .map(_ => migration.copy(revision = revision))
       }
   }
 

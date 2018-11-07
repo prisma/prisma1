@@ -24,11 +24,11 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       .from(TelemetryTable.t)
       .limit(DSL.inline(1))
 
+    lazy val uuid = java.util.UUID.randomUUID().toString
     lazy val create = sql
       .insertInto(TelemetryTable.t)
       .columns(TelemetryTable.id, TelemetryTable.lastPinged)
-      .values(DSL.inline(java.util.UUID.randomUUID().toString), DSL.inline(null.asInstanceOf[String]))
-      .returning(TelemetryTable.id, TelemetryTable.lastPinged)
+      .values(placeHolder, DSL.inline(null.asInstanceOf[String]))
 
     database
       .run(
@@ -51,16 +51,16 @@ case class JdbcTelemetryPersistence(slickDatabase: SlickDatabase)(implicit ec: E
           Future.successful(t)
 
         case None =>
-          database.run(
-            insertIntoReturning(create)(
-              readResult = { rs =>
-                if (rs.next()) {
-                  TelemetryInfo(rs.getString(TelemetryTable.id.getName), None)
-                } else {
-                  sys.error("[Telemetry] Did not receive result after inserting")
-                }
+          database
+            .run(insertToDBIO(create)(
+              setParams = { pp =>
+                pp.setString(uuid)
               }
             ))
+            .map { _ =>
+              TelemetryInfo(uuid, None)
+            }
+
       }
   }
 
