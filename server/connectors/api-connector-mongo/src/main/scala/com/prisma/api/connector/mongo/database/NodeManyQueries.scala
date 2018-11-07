@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.existentials
 
 trait NodeManyQueries extends FilterConditionBuilder {
+
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
@@ -30,13 +31,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
     val collection: MongoCollection[Document] = database.getCollection(model.dbName)
     val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
-  }
-
-  def getNodesByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[Document]] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).collect().toFuture
+    collection.find(bsonFilter).projection(include("_id")).collect().toFuture.map(_.map(DocumentToId.toCUIDGCValue))
   }
 
   def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
@@ -71,19 +66,19 @@ trait NodeManyQueries extends FilterConditionBuilder {
 
       val inFilter: Filter = ScalarListFilter(model.idField_!.copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
       helper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
-        val groups: Map[CuidGCValue, Seq[Document]] = fromField.relatedField.isList match {
+        val groups: Map[StringIdGCValue, Seq[Document]] = fromField.relatedField.isList match {
           case true =>
             val tuples = for {
               result <- results
-              id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => CuidGCValue(x.getValue))
+              id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => StringIdGCValue(x.getValue))
             } yield (id, result)
             tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-          case false => results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
+          case false => results.groupBy(x => StringIdGCValue(x(manifestation.referencingColumn).asString().getValue))
         }
 
         fromNodeIds.map { id =>
-          groups.get(id.asInstanceOf[CuidGCValue]) match {
+          groups.get(id.asInstanceOf[StringIdGCValue]) match {
             case Some(group) =>
               val roots                                     = group.map(DocumentToRoot(model, _))
               val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idField, r, Some(model.name)))).toVector

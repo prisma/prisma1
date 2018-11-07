@@ -4,7 +4,6 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.extensions.SlickReplacement._
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.gc_values.IdGCValue
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import play.api.libs.json.{JsValue, Json}
 
@@ -35,21 +34,19 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
           childResult <- generateTopLevelMutaction(database,
                                                    result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction],
                                                    mutationBuilder)
-        } yield MutactionResults(result.results ++ childResult.results)
+        } yield result.merge(childResult)
 
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
                            case results: MutactionResults =>
-                             val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
-                             val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
-
-                             val nestedMutactionsStillToRun = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
-                             MongoAction.seq(nestedMutactionsStillToRun)
+                             val nestedMutactions =
+                               m.allNestedMutactions.map(x => generateNestedMutaction(database, x, results, results.nodeAddress(m), mutationBuilder))
+                             MongoAction.seq(nestedMutactions)
                            case _ => MongoAction.successful(Vector.empty)
                          }
-        } yield MutactionResults(result.results ++ childResults.flatMap(_.results))
+        } yield result.merge(childResults)
 
       case m: FinalMutaction =>
         for {
@@ -63,38 +60,53 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   def generateNestedMutaction(
       database: MongoDatabase,
       mutaction: NestedDatabaseMutaction,
-      parentId: IdGCValue,
+      previousResults: MutactionResults,
+      parent: NodeAddress,
       mutationBuilder: MongoActionsBuilder
   ): MongoAction[MutactionResults] = {
     mutaction match {
       case m: NestedUpsertNode =>
         for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
-          childResult <- generateNestedMutaction(database,
-                                                 result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
-                                                 parentId,
-                                                 mutationBuilder)
-        } yield MutactionResults(result.results ++ childResult.results)
+          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
+          childResult <- generateNestedMutaction(
+                          database,
+                          result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
+                          previousResults.merge(result),
+                          parent,
+                          mutationBuilder
+                        )
+        } yield previousResults.merge(result).merge(childResult)
 
       case m: FurtherNestedMutaction =>
-        for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
-          childResults <- result match {
-                           case results: MutactionResults =>
-                             val stillToExecute = m.allNestedMutactions diff results.results.map(_.mutaction)
-                             val resultOfM      = results.results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult]
+        if (previousResults.contains(m)) {
+          val nestedMutactions =
+            m.allNestedMutactions.map(x => generateNestedMutaction(database, x, previousResults, previousResults.nodeAddress(m), mutationBuilder))
 
-                             val nestedMutactionsStillToRun = stillToExecute.map(x => generateNestedMutaction(database, x, resultOfM.id, mutationBuilder))
-                             MongoAction.seq(nestedMutactionsStillToRun)
-                           case _ => MongoAction.successful(Vector.empty)
-                         }
-        } yield MutactionResults(result.results ++ childResults.flatMap(_.results))
+          for {
+            childResults <- MongoAction.seq(nestedMutactions)
+          } yield previousResults.merge(childResults)
 
+        } else {
+          for {
+            result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
+            childResults <- result match {
+                             case results: MutactionResults =>
+                               val nestedMutactions =
+                                 m.allNestedMutactions.map(x =>
+                                   generateNestedMutaction(database, x, previousResults.merge(result), results.nodeAddress(m), mutationBuilder))
+                               MongoAction.seq(nestedMutactions)
+                             case _ => MongoAction.successful(Vector.empty)
+                           }
+          } yield previousResults.merge(result).merge(childResults)
+        }
       case m: FinalMutaction =>
-        for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parentId)
-        } yield result
-
+        if (previousResults.contains(m)) {
+          MongoAction.successful(previousResults)
+        } else {
+          for {
+            result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
+          } yield result
+        }
       case _ => sys.error("not implemented yet")
     }
   }
