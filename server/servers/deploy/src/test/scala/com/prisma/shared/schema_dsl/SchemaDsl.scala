@@ -2,9 +2,9 @@ package com.prisma.shared.schema_dsl
 
 import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
-import com.prisma.deploy.migration.validation.LegacyDataModelValidator
+import com.prisma.deploy.migration.validation.{DataModelValidatorImpl, LegacyDataModelValidator}
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MongoRelationsCapability}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation}
 import com.prisma.shared.models._
@@ -61,9 +61,13 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator          = LegacyDataModelValidator(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities)
+    val validator = if (deployConnector.capabilities.contains(LegacyDataModelCapability)) {
+      LegacyDataModelValidator
+    } else {
+      DataModelValidatorImpl
+    }
 
-    val prismaSdl = validator.validateSyntax match {
+    val prismaSdl = validator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {
       case Good(prismaSdl) =>
         prismaSdl
       case Bad(errors) =>
