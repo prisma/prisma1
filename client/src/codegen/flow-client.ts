@@ -47,7 +47,7 @@ import { typeDefs } from './prisma-schema'`
     return `type AtLeastOne<T> = $Shape<T>`
   }
   renderGraphQL() {
-    return `$graphql: <T: any>(query: string, variables?: {[key: string]: any}) => Promise<T>;`
+    return `$graphql: <T: mixed>(query: string, variables?: {[key: string]: mixed}) => Promise<T>;`
   }
   renderInputListType(type) {
     return `${type}[]`
