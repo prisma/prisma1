@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
+import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType}
 import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.{ConnectorCapability, RelationStrategy}
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
@@ -14,7 +15,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
 
   override def optionalArgs = Vector(
     ArgumentRequirement("name", validateStringValue),
-    ArgumentRequirement("onDelete", validateEnumValue(Vector("ON_DELETE", "SET_NULL"))),
+    ArgumentRequirement("onDelete", validateEnumValue(Vector("CASCADE", "SET_NULL"))),
     ArgumentRequirement("strategy", validateEnumValue(Vector("AUTO", "EMBED", "RELATION_TABLE")))
   )
 
@@ -25,7 +26,9 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    None
+    fieldDef.hasScalarType.toOption {
+      DeployErrors.relationDirectiveNotAllowedOnScalarFields(FieldAndType(typeDef, fieldDef))
+    }
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {

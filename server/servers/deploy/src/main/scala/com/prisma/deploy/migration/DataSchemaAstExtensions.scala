@@ -87,6 +87,8 @@ object DataSchemaAstExtensions {
     def dbName: Option[String] = objectType.directiveArgumentAsString("db", "name")
 
     def isRelationTable: Boolean = objectType.hasDirective("relationTable")
+
+    def relationFields(doc: Document): Vector[FieldDefinition] = objectType.fields.filter(_.isRelationField(doc))
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -169,6 +171,8 @@ object DataSchemaAstExtensions {
 
     def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
       fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
+
+    def typeIdentifier(doc: Document) = doc.typeIdentifierForTypename(fieldDefinition.fieldType)
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -185,7 +189,7 @@ object DataSchemaAstExtensions {
     def onDelete = directiveArgumentAsString("relation", "onDelete") match {
       case Some("SET_NULL") => OnDelete.SetNull
       case Some("CASCADE")  => OnDelete.Cascade
-      case Some(_)          => sys.error("The SchemaSyntaxvalidator should catch this")
+      case Some(x)          => sys.error(s"The SchemaSyntaxvalidator should catch this already: $x")
       case None             => OnDelete.SetNull
     }
 
