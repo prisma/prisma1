@@ -55,22 +55,26 @@ trait NodeActions extends NodeSingleQueries {
           throw APIErrors.NodeNotFoundForWhereError(where)
 
         case Some(node) =>
-          val parent                                  = NodeAddress.forId(mutaction.model, node.id)
-          val scalarUpdates                           = scalarUpdateValues(mutaction, parent)
-          val (creates, createResults)                = embeddedNestedCreateActionsAndResults(mutaction, parent)
-          val (deletes, deleteResults)                = embeddedNestedDeleteActionsAndResults(node, mutaction, parent)
-          val (updates, arrayFilters, updateResults)  = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates, parent)
-          val (upserts, arrayFilters2, upsertResults) = embeddedNestedUpsertDocsAndResults(node, mutaction, parent)
+          val parent                                          = NodeAddress.forId(mutaction.model, node.id)
+          val scalarUpdates                                   = scalarUpdateValues(mutaction, parent)
+          val (creates, createResults)                        = embeddedNestedCreateActionsAndResults(mutaction, parent)
+          val (deletes, deleteResults)                        = embeddedNestedDeleteActionsAndResults(node, mutaction, parent)
+          val (updates, arrayFilters, updateResults)          = embeddedNestedUpdateDocsAndResults(node, mutaction.nestedUpdates, parent)
+          val (updateManys, arrayFilters2, updateManyResults) = embeddedNestedUpdateManyDocsAndResults(node, mutaction.nestedUpdateManys, parent)
+          val (deleteManys, arrayFilters3, deleteManyResults) = embeddedNestedDeleteManyDocsAndResults(node, mutaction.nestedDeleteManys, parent)
+          val (upserts, arrayFilters4, upsertResults)         = embeddedNestedUpsertDocsAndResults(node, mutaction, parent)
 
-          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts
+          val allUpdates = scalarUpdates ++ creates ++ deletes ++ updates ++ upserts ++ updateManys ++ deleteManys
 
-          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults :+ UpdateNodeResult(node.id, node, mutaction)
+          val thisResult = UpdateNodeResult(node.id, node, mutaction)
+
+          val results = createResults ++ deleteResults ++ updateResults ++ upsertResults ++ updateManyResults ++ deleteManyResults :+ thisResult
           if (allUpdates.isEmpty) {
             Future.successful(MutactionResults(results))
           } else {
             val combinedUpdates = CustomUpdateCombiner.customCombine(allUpdates)
 
-            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2).toList.asJava)
+            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2 ++ arrayFilters3 ++ arrayFilters4).toList.asJava)
 
             database
               .getCollection(mutaction.model.dbName)
@@ -81,7 +85,7 @@ trait NodeActions extends NodeSingleQueries {
       }
   }
 
-  def updateNodes(mutaction: UpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
+  def updateNodes(mutaction: AllUpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
     val nodeAddress = NodeAddress.forId(mutaction.model, StringIdGCValue.dummy)
 
     val scalarUpdates   = scalarUpdateValues(mutaction, nodeAddress)
@@ -189,7 +193,7 @@ trait NodeActions extends NodeSingleQueries {
                                                  parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
 
     val actionsArrayFiltersAndResults = mutactions.collect {
-      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
+      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
         val updatedParent = parent.appendPath(rf)
         val subNode = node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
@@ -204,12 +208,12 @@ trait NodeActions extends NodeSingleQueries {
 
         (scalars ++ creates ++ deletes ++ updates, arrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
 
-      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
-        val updatedParent = parent.appendPath(rf, where)
+      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
         val subNode = node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
           case Some(prismaNode) => prismaNode
         }
+        val updatedParent = parent.appendPath(rf, where, subNode)
 
         val scalars                                      = scalarUpdateValues(toManyUpdate, updatedParent)
         val (creates, createResults)                     = embeddedNestedCreateActionsAndResults(toManyUpdate, updatedParent)
@@ -225,6 +229,34 @@ trait NodeActions extends NodeSingleQueries {
     (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
   }
 
+  private def embeddedNestedUpdateManyDocsAndResults(node: PrismaNode,
+                                                     mutactions: Vector[NestedUpdateNodes],
+                                                     parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
+    val actionsArrayFiltersAndResults = mutactions.collect {
+      case updateNodes @ NestedUpdateNodes(_, _, rf, whereFilter, _, _) if rf.relatedModel_!.isEmbedded =>
+        val updatedParent = parent.appendPath(rf, whereFilter)
+        val scalars       = scalarUpdateValues(updateNodes, updatedParent)
+
+        val thisResult = ManyNodesResult(updateNodes, 0)
+
+        (scalars, ArrayFilter.arrayFilter(updatedParent.path), Vector(thisResult))
+    }
+    (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
+  }
+
+  private def embeddedNestedDeleteManyDocsAndResults(node: PrismaNode,
+                                                     mutactions: Vector[NestedDeleteNodes],
+                                                     parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
+    val actionsArrayFiltersAndResults = mutactions.collect {
+      case deleteNodes @ NestedDeleteNodes(_, _, rf, whereFilter) if rf.relatedModel_!.isEmbedded =>
+        val deletes    = pull(parent.path.stringForField(rf.name), buildConditionForScalarFilter("", whereFilter))
+        val thisResult = ManyNodesResult(deleteNodes, 0)
+
+        (Vector(deletes), Vector.empty, Vector(thisResult))
+    }
+    (actionsArrayFiltersAndResults.flatMap(_._1), actionsArrayFiltersAndResults.flatMap(_._2), actionsArrayFiltersAndResults.flatMap(_._3))
+  }
+
   private def embeddedNestedUpsertDocsAndResults(node: PrismaNode,
                                                  mutaction: UpdateNode,
                                                  parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
@@ -233,22 +265,22 @@ trait NodeActions extends NodeSingleQueries {
         node.getToOneChild(rf) match {
           case None =>
             val (createDoc, createResults) = createToDoc(List.empty, create, Some(parent), Some(rf))
-            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toOneUpsert, toOneUpsert))
+            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toOneUpsert.create, toOneUpsert))
 
           case Some(_) =>
             val (updates, arrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(node, Vector(update), parent)
-            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toOneUpsert, toOneUpsert))
+            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toOneUpsert.update, toOneUpsert))
         }
 
       case toManyUpsert @ NestedUpsertNode(_, rf, Some(where), create, update) if rf.relatedModel_!.isEmbedded =>
         node.getToManyChild(rf, where) match {
           case None =>
             val (createDoc, createResults) = createToDoc(List.empty, create, Some(parent), Some(rf))
-            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toManyUpsert, toManyUpsert))
+            (Vector(push(rf.name, createDoc)), Vector.empty, createResults :+ UpsertNodeResult(toManyUpsert.create, toManyUpsert))
 
           case Some(_) =>
             val (updates, arrayFilters, updateResults) = embeddedNestedUpdateDocsAndResults(node, Vector(update), parent)
-            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toManyUpsert, toManyUpsert))
+            (updates, arrayFilters, updateResults :+ UpsertNodeResult(toManyUpsert.update, toManyUpsert))
 
         }
 

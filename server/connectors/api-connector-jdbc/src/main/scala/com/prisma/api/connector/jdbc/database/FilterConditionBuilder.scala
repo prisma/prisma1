@@ -126,10 +126,17 @@ trait FilterConditionBuilder extends BuilderBase {
 
   private def oneRelationIsNullFilter(relationField: RelationField, alias: String): Condition = {
     val relation = relationField.relation
-    val select = sql
-      .select(relationColumn(relation, relationField.relationSide))
-      .from(relationTable(relation))
 
-    modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
+    relationField.relationIsInlinedInParent match {
+      case true =>
+        field(name(alias, relationField.dbName)).isNull
+
+      case false =>
+        val select = sql
+          .select(relationColumn(relation, relationField.relationSide))
+          .from(relationTable(relation))
+
+        modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
+    }
   }
 }

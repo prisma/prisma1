@@ -52,12 +52,8 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
     parentField.relationIsInlinedInParent match {
       case true =>
         getNodeByWhere(parent.where).map {
-          case None => None
-          case Some(n) =>
-            n.data.map(parentField.name) match {
-              case x: StringIdGCValue => Some(x)
-              case _                  => None
-            }
+          case None    => None
+          case Some(n) => n.getIDAtPath(parentField, parent.path)
         }
 
       case false =>
@@ -75,21 +71,29 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
         getNodeByWhere(parent.where).flatMap {
           case None =>
             noneHelper
-
           case Some(n) =>
-            (parentField.isList, n.data.map(parentField.name)) match {
+            PrismaNode.getNodeAtPath(Some(n), parent.path.segments) match {
+              case None =>
+                noneHelper
 
-              case (false, idInParent: StringIdGCValue) =>
-                getNodeByWhere(where).map {
-                  case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
-                  case _                                                     => None
+              case Some(node) =>
+                (parentField.isList, node.data.map(parentField.name)) match {
+                  case (false, idInParent: StringIdGCValue) =>
+                    getNodeByWhere(where).map {
+                      case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
+                      case _                                                     => None
+                    }
+
+                  case (true, ListGCValue(values)) =>
+                    getNodeByWhere(where).map {
+                      case Some(childForWhere) if values.contains(childForWhere.id) => Some(childForWhere.id)
+                      case _                                                        => None
+                    }
+
+                  case _ =>
+                    noneHelper
                 }
 
-              case (true, ListGCValue(values)) =>
-                getNodeByWhere(where).map {
-                  case Some(childForWhere) if values.contains(childForWhere.id) => Some(childForWhere.id)
-                  case _                                                        => None
-                }
               case _ =>
                 noneHelper
             }

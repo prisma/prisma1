@@ -1281,4 +1281,273 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     create2.toString should be("""{"data":{"createParent":{"name":"Dad2","child":{"name":"Daughter"}}}}""")
 
   }
+
+  //Fixme https://jira.mongodb.org/browse/SERVER-1068
+  "Unique indexes on embedded types" should "work" ignore {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    children: [Child!]!
+        |}
+        |
+        |type Child @embedded{
+        |    name: String @unique
+        |}
+        |"""
+    }
+
+    database.setup(project)
+
+    val create1 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create: [{ name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create1.toString should be("""{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"}]}}}""")
+
+    val create2 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad2",
+         |   children: {create: [{ name: "Daughter"}, { name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create2.toString should be("""{"data":{"createParent":{"name":"Dad2","children":[{"name":"Daughter"},{"name":"Daughter"}]}}}""")
+
+    val create3 = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create: [{ name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create3.toString should be("""{"data":{"createParent":{"name":"Dad2","children":[{"name":"Daughter"},{"name":"Daughter"}]}}}""")
+
+    val update1 = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: {name: "Dad"}
+         |   data: {
+         |      children: {create: [{ name: "Daughter2"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    update1.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"}]}}}""")
+
+    val update2 = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: {name: "Dad"}
+         |   data: {
+         |      children: {create: [{ name: "Daughter"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    update2.toString should be("""{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"}]}}}""")
+
+  }
+
+  "UpdateMany" should "work between top level types" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type ZChild{
+        |    name: String @unique
+        |    test: String
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    children: [ZChild!]!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[{ name: "Daughter"},{ name: "Daughter2"}, { name: "Son"},{ name: "Son2"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"},{"name":"Son"},{"name":"Son2"}]}}}""")
+
+    val nestedUpdateMany = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: { name: "Dad" }
+         |   data: {  children: {updateMany:[
+         |      {
+         |          where:{name_contains:"Daughter"}
+         |          data:{test: "UpdateManyDaughters"}
+         |      },
+         |      {
+         |          where:{name_contains:"Son"}
+         |          data:{test: "UpdateManySons"}
+         |      }
+         |   ]
+         |  }}
+         |){
+         |  name,
+         |  children{ name, test}
+         |}}""",
+      project
+    )
+
+    nestedUpdateMany.toString should be(
+      """{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter","test":"UpdateManyDaughters"},{"name":"Daughter2","test":"UpdateManyDaughters"},{"name":"Son","test":"UpdateManySons"},{"name":"Son2","test":"UpdateManySons"}]}}}""")
+  }
+
+  "UpdateMany" should "work with embedded types" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type ZChild @embedded{
+        |    name: String @unique
+        |    test: String
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    children: [ZChild!]!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[{ name: "Daughter"},{ name: "Daughter2"}, { name: "Son"},{ name: "Son2"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"},{"name":"Son"},{"name":"Son2"}]}}}""")
+
+    val nestedUpdateMany = server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: { name: "Dad" }
+         |   data: {  children: {updateMany:[
+         |      {
+         |          where:{name_contains:"Daughter"}
+         |          data:{test: "UpdateManyDaughters"}
+         |      },
+         |      {
+         |          where:{name_contains:"Son"}
+         |          data:{test: "UpdateManySons"}
+         |      }
+         |   ]
+         |  }}
+         |){
+         |  name,
+         |  children{ name, test}
+         |}}""",
+      project
+    )
+
+    nestedUpdateMany.toString should be(
+      """{"data":{"updateParent":{"name":"Dad","children":[{"name":"Daughter","test":"UpdateManyDaughters"},{"name":"Daughter2","test":"UpdateManyDaughters"},{"name":"Son","test":"UpdateManySons"},{"name":"Son2","test":"UpdateManySons"}]}}}""")
+  }
+
+  "DeleteMany" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type ZChild{
+        |    name: String @unique
+        |    test: String
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    children: [ZChild!]!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[{ name: "Daughter"},{ name: "Daughter2"}, { name: "Son"},{ name: "Son2"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"},{"name":"Son"},{"name":"Son2"}]}}}""")
+
+    server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: { name: "Dad" }
+         |   data: {  children: {deleteMany:[
+         |      {
+         |          name_contains:"Daughter"
+         |      },
+         |      {
+         |          name_contains:"Son"
+         |      }
+         |   ]
+         |  }}
+         |){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+  }
+
 }

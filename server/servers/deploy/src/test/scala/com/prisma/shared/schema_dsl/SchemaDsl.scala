@@ -2,7 +2,7 @@ package com.prisma.shared.schema_dsl
 
 import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
 import com.prisma.shared.models.IdType.Id
@@ -16,8 +16,6 @@ import org.scalatest.Suite
 object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
-
-  def apply() = SchemaBuilder()
 
   def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
     val schemaBuilder = SchemaBuilder()
@@ -63,7 +61,7 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator          = SchemaSyntaxValidator(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities)
+    val validator          = LegacyDataModelValidator(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities)
 
     val prismaSdl = validator.validateSyntax match {
       case Good(prismaSdl) =>

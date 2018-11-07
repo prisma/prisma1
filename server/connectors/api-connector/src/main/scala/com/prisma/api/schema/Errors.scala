@@ -112,6 +112,12 @@ object APIErrors {
         3042
       )
 
+  case class MongoConflictingUpdates(model: String, override val message: String)
+      extends ClientApiError(
+        s"You have several updates affecting the same area of the document underlying $model. MongoMessage: $message",
+        3043
+      )
+
   case class ExecuteRawError(e: SQLException) extends ClientApiError(e.getMessage, e.getErrorCode)
 
   def pathErrorMessage(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector]) = {
