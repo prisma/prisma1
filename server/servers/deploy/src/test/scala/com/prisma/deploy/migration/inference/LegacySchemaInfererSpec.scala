@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
 import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
@@ -450,17 +450,17 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {
-
+    val actualCapabilities = capabilities ++ Set(LegacyDataModelCapability)
     val validator = LegacyDataModelValidator(
       types,
       LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
-      capabilities
+      actualCapabilities
     )
 
     val prismaSdl = validator.generateSDL
 
-    SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
+    SchemaInferrer(actualCapabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
 
   }
 }

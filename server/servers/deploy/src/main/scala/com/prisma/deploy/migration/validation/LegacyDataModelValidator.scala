@@ -4,8 +4,7 @@ import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, ScalarListsCapability}
-import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{ConnectorCapability, RelationStrategy, TypeIdentifier}
 import com.prisma.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -112,7 +111,7 @@ case class LegacyDataModelValidator(
           RelationalPrismaField(
             name = x.name,
             relationDbDirective = x.relationDBDirective,
-            strategy = null,
+            strategy = RelationStrategy.Auto,
             isList = x.isList,
             isRequired = x.isRequired,
             referencesType = x.typeName,

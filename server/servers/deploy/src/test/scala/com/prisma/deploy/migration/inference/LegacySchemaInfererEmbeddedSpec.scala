@@ -3,13 +3,12 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.{OnDelete, Schema}
+import com.prisma.shared.models.ApiConnectorCapability.LegacyDataModelCapability
+import com.prisma.shared.models.{ConnectorCapability, OnDelete, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
 class LegacySchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBase {
-
-  val inferer      = SchemaInferrer(Set.empty)
   val emptyProject = TestProject.empty
 
   "Inferring embedded typeDirectives" should {
@@ -46,15 +45,16 @@ class LegacySchemaInfererEmbeddedSpec extends WordSpec with Matchers with Deploy
 //  embedded types on connector without embedded types capability
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Schema = {
+    val actualCapabilities = Set[ConnectorCapability](LegacyDataModelCapability)
     val validator = LegacyDataModelValidator(
       types,
       LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
-      Set.empty
+      actualCapabilities
     )
 
     val prismaSdl = validator.generateSDL
 
-    inferer.infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    SchemaInferrer(actualCapabilities).infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
   }
 }
