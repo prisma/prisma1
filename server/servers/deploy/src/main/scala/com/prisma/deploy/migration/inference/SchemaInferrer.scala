@@ -271,6 +271,7 @@ case class SchemaInferrerImpl(
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
         relationManifestationOnField(relatedType, relatedField, relationName)
       }
+
       manifestationOnThisField.orElse(manifestationOnRelatedField)
     } else {
       None
@@ -288,7 +289,7 @@ case class SchemaInferrerImpl(
         } else if (relationField.isManyToMany) {
           RelationStrategy.RelationTable
         } else if (relationField.isOneToMany) {
-          RelationStrategy.Embed
+          RelationStrategy.Embed //Fixme: Only one side
         } else {
           sys.error("One to one relations must not have the AUTO strategy")
         }
