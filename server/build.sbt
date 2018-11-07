@@ -50,6 +50,8 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   }
 )
 
+javaOptions in Universal ++= Seq("-Dorg.jooq.no-logo=true")
+
 def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing)

@@ -90,22 +90,20 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
   }
 
   override def create(migration: Migration): Future[Migration] = {
+    // Has to be 2 separate queries, not all dbs are able to support INSERT...RETURNING for example
     val revisionQuery = sql.select(
-      DSL.coalesce(
-        sql
-          .select(DSL.max(mt.revision).add(DSL.inline(1)))
-          .from(mt.t)
-          .where(mt.projectId.equal(placeHolder)),
-        DSL.inline(1)
-      )
-    )
+      DSL.coalesce(sql
+                     .select(max(mt.revision))
+                     .from(mt.t)
+                     .where(mt.projectId.equal(placeHolder)),
+                   inline(0)))
 
-    val query = sql
+    val insertQuery = sql
       .insertInto(mt.t)
       .columns(mt.* : _*)
       .values(
         placeHolder,
-        revisionQuery,
+        placeHolder,
         placeHolder,
         placeHolder,
         placeHolder,
@@ -116,45 +114,56 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
         placeHolder,
         placeHolder
       )
-      .returning(mt.revision)
 
-    database.run(
-      insertIntoReturning(query)(
-        setParams = { pp =>
-          val schema    = Json.toJson(migration.schema).toString()
-          val functions = Json.toJson(migration.functions).toString()
-          val errors    = Json.toJson(migration.errors).toString()
-          val steps     = Json.toJson(migration.steps).toString()
-          val startedAt = migration.startedAt match {
-            case Some(ts) => jodaDateTimeToSqlTimestampUTC(ts)
-            case None     => null
+    database
+      .run(
+        queryToDBIO(revisionQuery)(
+          setParams = { pp =>
+            pp.setString(migration.projectId)
+          },
+          readResult = { rs =>
+            if (rs.next()) {
+              rs.getInt(1) + 1
+            } else {
+              1
+            }
           }
+        ))
+      .flatMap { revision =>
+        database.run(
+          insertIntoReturning(insertQuery)(
+            setParams = { pp =>
+              val schema    = Json.toJson(migration.schema).toString()
+              val functions = Json.toJson(migration.functions).toString()
+              val errors    = Json.toJson(migration.errors).toString()
+              val steps     = Json.toJson(migration.steps).toString()
+              val startedAt = migration.startedAt match {
+                case Some(ts) => jodaDateTimeToSqlTimestampUTC(ts)
+                case None     => null
+              }
 
-          val finishedAt = migration.finishedAt match {
-            case Some(ts) => jodaDateTimeToSqlTimestampUTC(ts)
-            case None     => null
-          }
+              val finishedAt = migration.finishedAt match {
+                case Some(ts) => jodaDateTimeToSqlTimestampUTC(ts)
+                case None     => null
+              }
 
-          pp.setString(migration.projectId)
-          pp.setString(migration.projectId) // revision query
-          pp.setString(schema)
-          pp.setString(functions)
-          pp.setString(migration.status.toString)
-          pp.setInt(migration.applied)
-          pp.setInt(migration.rolledBack)
-          pp.setString(steps)
-          pp.setString(errors)
-          pp.setTimestamp(startedAt)
-          pp.setTimestamp(finishedAt)
-        },
-        readResult = { rs =>
-          if (rs.next()) {
-            migration.copy(revision = rs.getInt(mt.revision.getName))
-          } else {
-            sys.error("Migration create with RETURNING did not return any rows")
-          }
-        }
-      ))
+              pp.setString(migration.projectId)
+              pp.setInt(revision)
+              pp.setString(schema)
+              pp.setString(functions)
+              pp.setString(migration.status.toString)
+              pp.setInt(migration.applied)
+              pp.setInt(migration.rolledBack)
+              pp.setString(steps)
+              pp.setString(errors)
+              pp.setTimestamp(startedAt)
+              pp.setTimestamp(finishedAt)
+            },
+            readResult = { rs =>
+              migration.copy(revision = revision)
+            }
+          ))
+      }
   }
 
   override def getNextMigration(projectId: String): Future[Option[Migration]] = {
