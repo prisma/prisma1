@@ -139,4 +139,28 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
                             |  id_not_ends_with: ID
                             |}""".stripMargin)
   }
+
+  "An embedded relation" should "have relational filters, a join relation should not 2 " in {
+    val project = SchemaDsl.fromString() {
+
+      """type Top{
+        |   id: ID! @unique
+        |   em: [Embedded!]!
+        |}
+        |
+        |type Embedded @embedded {
+        |   name: String
+        |}
+      """
+    }
+
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
+    val build         = schemaBuilder.build()
+    val schema        = SchemaRenderer.renderSchema(build)
+
+    schema should include("""type Top implements Node {
+                            |  id: ID!
+                            |  em: [Embedded!]
+                            |}""".stripMargin)
+  }
 }
