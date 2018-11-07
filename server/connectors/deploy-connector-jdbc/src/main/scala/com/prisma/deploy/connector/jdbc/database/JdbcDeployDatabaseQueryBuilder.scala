@@ -109,15 +109,10 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
     val checks = nameTuples
       .map { t =>
         sql
-          .select(
-            field(
-              exists(
-                sql
-                  .select(inline(0).as("check"))
-                  .from(table(name(projectId, t._2)))
-                  .where(field(name(t._3)).equal(inline(t._4)))
-              )))
-          .orderBy(field(""))
+          .select(inline(0).as("check"))
+          .from(table(name(projectId, t._2)))
+          .where(field(name(t._3)).equal(inline(t._4)))
+          .limit(inline(1))
       }
 
     // JOOQ switches types in between .union calls, preventing a more elegant solution (e.g. just a .reduce over the col)
@@ -136,7 +131,7 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
         }
 
       case _ =>
-        sql.select(inline(false).as("check"))
+        return queryToDBIO(sql.select(inline(false)))(readResult = readExists)
     }
 
     val outerQuery = sql.select(
@@ -144,10 +139,8 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
         exists(
           sql
             .selectZero()
-            .from(inner.asTable("inner"))
-            .where(field(name("inner", "check")).isTrue)
-        ))
-    )
+            .from(inner)
+        )))
 
     queryToDBIO(outerQuery)(readResult = readExists)
   }

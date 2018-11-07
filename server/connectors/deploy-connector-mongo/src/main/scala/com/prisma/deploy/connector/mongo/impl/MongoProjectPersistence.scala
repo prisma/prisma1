@@ -24,8 +24,10 @@ case class MongoProjectPersistence(
       theProjects <- projects.find(projectIdFilter(id)).collect.toFuture()
       migration   <- lastSuccessfulMigrationForProjectId(id)
     } yield {
-      migration.map { migration =>
-        DbMapper.convertToProjectModel(theProjects.head, migration)
+      theProjects.headOption.flatMap { project =>
+        migration.map { migration =>
+          DbMapper.convertToProjectModel(project, migration)
+        }
       }
     }
   }
