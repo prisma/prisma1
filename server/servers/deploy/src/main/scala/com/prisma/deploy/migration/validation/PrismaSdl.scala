@@ -10,8 +10,9 @@ case class PrismaSdl(
     typesFn: Vector[PrismaSdl => PrismaType],
     enumsFn: Vector[PrismaSdl => PrismaEnum]
 ) {
-  val types: Vector[PrismaType] = typesFn.map(_.apply(this))
-  val enums: Vector[PrismaEnum] = enumsFn.map(_.apply(this))
+  val types: Vector[PrismaType]          = typesFn.map(_.apply(this))
+  val enums: Vector[PrismaEnum]          = enumsFn.map(_.apply(this))
+  val relationTables: Vector[PrismaType] = types.filter(_.isRelationTable)
 
   def type_!(name: String) = types.find(_.name == name).get
   def enum_!(name: String) = enums.find(_.name == name).get
@@ -99,6 +100,11 @@ case class RelationalPrismaField(
   }
 
   def relatedType: PrismaType = tpe.sdl.types.find(_.name == referencesType).get
+
+  def isManyToMany: Boolean = isList && relatedField.forall(_.isList)
+  def isOneToMany: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))
+  def isOne: Boolean        = !isList
+  def oneRelationField      = if (isOne) Some(this) else relatedField
 }
 
 case class PrismaEnum(name: String, values: Vector[String])(sdl: PrismaSdl)

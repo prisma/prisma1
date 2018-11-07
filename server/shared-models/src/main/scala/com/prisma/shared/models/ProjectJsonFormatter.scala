@@ -284,14 +284,16 @@ object ProjectJsonFormatter {
   val schemaReads: Reads[Schema] = (
     (JsPath \ "models").read[List[ModelTemplate]] and
       (JsPath \ "relations").read[List[RelationTemplate]] and
-      (JsPath \ "enums").read[List[Enum]]
+      (JsPath \ "enums").read[List[Enum]] and
+      (JsPath \ "version").readNullable[String]
   )(Schema.apply _)
 
   val schemaWrites: Writes[Schema] = (
     (JsPath \ "models").write[List[ModelTemplate]] and
       (JsPath \ "relations").write[List[RelationTemplate]] and
-      (JsPath \ "enums").write[List[Enum]]
-  )(s => (s.modelTemplates, s.relationTemplates, s.enums))
+      (JsPath \ "enums").write[List[Enum]] and
+      (JsPath \ "version").writeNullable[String]
+  )(s => (s.modelTemplates, s.relationTemplates, s.enums, s.version))
 
   implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat         = Json.format[Project]

@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective,
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, MongoRelationsCapability}
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
 import com.prisma.utils.await.AwaitUtils
@@ -36,6 +36,8 @@ case class SchemaInferrerImpl(
     capabilities: Set[ConnectorCapability],
     inferredTables: InferredTables
 ) extends AwaitUtils {
+
+  val isLegacy = capabilities.contains(LegacyDataModelCapability)
 
   def infer(): Schema = {
     val schemaWithOutOptionalBackrelations = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
@@ -221,7 +223,7 @@ case class SchemaInferrerImpl(
       val oldEquivalentRelation = oldEquivalentRelationByName.orElse {
         UnambiguousRelation.unambiguousRelationThatConnectsModels(baseSchema, previousModelAName, previousModelBName)
       }
-      val relationManifestation = relationManifestationOnFieldOrRelatedField(prismaType, relationField)
+      val relationManifestation = relationManifestationOnFieldOrRelatedField(prismaType, relationField, relationName)
 
       val nextRelation = RelationTemplate(
         name = relationName,
@@ -244,12 +246,16 @@ case class SchemaInferrerImpl(
     tmp.groupBy(_.name).values.flatMap(_.headOption).toSet
   }
 
-  def relationManifestationOnFieldOrRelatedField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
+  def relationManifestationOnFieldOrRelatedField(
+      prismaType: PrismaType,
+      relationField: RelationalPrismaField,
+      relationName: String
+  ): Option[RelationManifestation] = {
     if (!capabilities.contains(MigrationsCapability) || capabilities.contains(MongoRelationsCapability)) {
-      val manifestationOnThisField = relationManifestationOnField(prismaType, relationField)
+      val manifestationOnThisField = relationManifestationOnField(prismaType, relationField, relationName)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
-        relationManifestationOnField(relatedType, relatedField)
+        relationManifestationOnField(relatedType, relatedField, relationName)
       }
       manifestationOnThisField.orElse(manifestationOnRelatedField)
     } else {
@@ -257,12 +263,55 @@ case class SchemaInferrerImpl(
     }
   }
 
-  def relationManifestationOnField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
+  def relationManifestationOnField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationManifestation] = {
+    if (isLegacy) {
+      legacyRelationManifestation(prismaType, relationField)
+    } else {
+      // TODO: This must be tested with the SQL connectors. So far only tested with Mongo.
+      val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
+        if (capabilities.contains(MongoRelationsCapability)) {
+          RelationStrategy.Embed
+        } else if (relationField.isManyToMany) {
+          RelationStrategy.RelationTable
+        } else if (relationField.isOneToMany) {
+          RelationStrategy.Embed
+        } else {
+          sys.error("One to one relations must not have the AUTO strategy")
+        }
+      } else {
+        relationField.strategy
+      }
+
+      activeStrategy match {
+        case RelationStrategy.Embed =>
+          if (capabilities.contains(MongoRelationsCapability)) {
+            Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = relationField.name))
+          } else {
+            val oneRelationField = relationField.oneRelationField.get
+            Some(InlineRelationManifestation(inTableOfModelId = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
+          }
+
+        case RelationStrategy.RelationTable =>
+          // TODO: This must be tested with the SQL connectors that actually support this strategy
+          prismaSdl.relationTables.find(_.name == relationName) match {
+            case Some(relationTable) =>
+              Some(RelationTableManifestation(table = relationTable.finalTableName, modelAColumn = ???, modelBColumn = ???))
+            case None =>
+              Some(RelationTableManifestation(table = relationName, modelAColumn = "A", modelBColumn = "B"))
+          }
+
+        case RelationStrategy.Auto =>
+          sys.error("this case must not happen")
+      }
+    }
+
+  }
+
+  def legacyRelationManifestation(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
     val relatedType         = relationField.relatedType
     val tableForThisType    = prismaType.finalTableName
     val tableForRelatedType = relatedType.finalTableName
     val isThisModelA        = isModelA(prismaType.name, relationField.referencesType)
-
     relationField.relationDbDirective match {
       case Some(inlineDirective: MongoInlineRelationDirective) =>
         Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.field))
