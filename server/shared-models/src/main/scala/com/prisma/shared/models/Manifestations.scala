@@ -1,5 +1,8 @@
 package com.prisma.shared.models
 
+import enumeratum.EnumEntry.{Camelcase, LowerCamelcase}
+import enumeratum.{EnumEntry, Enum => Enumeratum}
+
 object Manifestations {
   case class ModelManifestation(dbName: String)
   case class FieldManifestation(dbName: String)
@@ -17,22 +20,28 @@ object FieldBehaviour {
   object UpdatedAtBehaviour                                    extends FieldBehaviour
   case class ScalarListBehaviour(strategy: ScalarListStrategy) extends FieldBehaviour
 
-  sealed trait IdStrategy
-  object IdStrategy {
-    object Auto extends IdStrategy
-    object None extends IdStrategy
+  sealed abstract class IdStrategy(override val entryName: String) extends EnumEntry
+  object IdStrategy extends Enumeratum[IdStrategy] {
+    override def values = findValues
+
+    object Auto extends IdStrategy("Auto")
+    object None extends IdStrategy("None")
   }
 
-  sealed trait ScalarListStrategy
-  object ScalarListStrategy {
-    object Embedded extends ScalarListStrategy
-    object Relation extends ScalarListStrategy
+  sealed abstract class ScalarListStrategy(override val entryName: String) extends EnumEntry
+  object ScalarListStrategy extends Enumeratum[ScalarListStrategy] {
+    override def values = findValues
+
+    object Embedded extends ScalarListStrategy("Embedded")
+    object Relation extends ScalarListStrategy("Relation")
   }
 }
 
-sealed trait RelationStrategy
-object RelationStrategy {
-  object Auto          extends RelationStrategy
-  object Embed         extends RelationStrategy
-  object RelationTable extends RelationStrategy
+sealed abstract class RelationStrategy(override val entryName: String) extends EnumEntry
+object RelationStrategy extends Enumeratum[RelationStrategy] {
+  override def values = findValues
+
+  object Auto          extends RelationStrategy("Auto")
+  object Embed         extends RelationStrategy("Embed")
+  object RelationTable extends RelationStrategy("RelationTable")
 }

@@ -28,7 +28,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -45,7 +46,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -62,7 +64,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 }

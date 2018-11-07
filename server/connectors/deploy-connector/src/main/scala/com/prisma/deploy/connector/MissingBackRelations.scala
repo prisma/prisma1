@@ -43,7 +43,8 @@ object MissingBackRelations {
       defaultValue = None,
       relationName = Some(relation.name),
       relationSide = Some(relationSide),
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 }
