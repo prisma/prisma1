@@ -68,7 +68,8 @@ case class EnumPrismaField(
     isRequired: Boolean,
     isUnique: Boolean,
     enumName: String,
-    defaultValue: Option[GCValue]
+    defaultValue: Option[GCValue],
+    behaviour: Option[FieldBehaviour]
 )(val tpe: PrismaType)
     extends PrismaField {
   override def typeIdentifier: TypeIdentifier = TypeIdentifier.Enum

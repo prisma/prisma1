@@ -1,5 +1,6 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.ModelManifestation
 
 import scala.language.implicitConversions
@@ -27,6 +28,7 @@ class Model(
     val schema: Schema
 ) {
   import template._
+  val isLegacy = schema.isLegacy
 
   val dbName: String                                     = manifestation.map(_.dbName).getOrElse(name)
   lazy val fields: List[Field]                           = fieldTemplates.map(_.build(this))
@@ -39,12 +41,13 @@ class Model(
   lazy val relationNonListFields: List[RelationField]    = relationFields.filter(!_.isList)
   lazy val visibleRelationFields: List[RelationField]    = relationFields.filter(_.isVisible)
   lazy val nonListFields                                 = fields.filter(!_.isList)
-  lazy val idField                                       = getScalarFieldByName("id")
-  lazy val idField_!                                     = getScalarFieldByName_!("id")
+  lazy val idField                                       = if (isLegacy) getScalarFieldByName("id") else scalarFields.find(_.isId)
+  lazy val idField_!                                     = if (isLegacy) getScalarFieldByName_!("id") else idField.get
   lazy val dbNameOfIdField_!                             = idField_!.dbName
-  lazy val hasUpdatedAtField                             = getFieldByName("updatedAt").isDefined
-  lazy val hasCreatedAtField                             = getFieldByName("createdAt").isDefined
+  lazy val hasUpdatedAtField                             = if (isLegacy) getFieldByName("updatedAt").isDefined else scalarFields.exists(_.isUpdatedAt)
+  lazy val hasCreatedAtField                             = if (isLegacy) getFieldByName("createdAt").isDefined else scalarFields.exists(_.isCreatedAt)
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
+
   lazy val cascadingRelationFields: List[RelationField] = relationFields.collect {
     case field if field.relationSide == RelationSide.A && field.relation.template.modelAOnDelete == OnDelete.Cascade => field
     case field if field.relationSide == RelationSide.B && field.relation.template.modelBOnDelete == OnDelete.Cascade => field

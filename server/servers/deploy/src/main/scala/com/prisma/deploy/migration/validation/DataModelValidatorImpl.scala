@@ -68,7 +68,8 @@ case class DataModelValidatorImpl(
             isRequired = x.isRequired,
             isUnique = x.isUnique,
             enumName = x.typeName,
-            defaultValue = DefaultDirective.value(doc, typeDef, x, capabilities)
+            defaultValue = DefaultDirective.value(doc, typeDef, x, capabilities),
+            behaviour = FieldDirective.behaviour.flatMap(_.value(doc, typeDef, x, capabilities)).headOption
           )(_)
 
         case x if isScalarField(x) =>
