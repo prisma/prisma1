@@ -143,12 +143,12 @@ export type ${type.name}_Output = string`
       if (type.name === 'PrismaDatabase') {
         return ``
       }
-      return `${this.renderDescription(type.description!)}export type ${
+      return `${this.renderDescription(type.description!)}export enum ${
         type.name
-      } = ${type
+      } {\n ${type
         .getValues()
-        .map(e => `  '${e.name}'`)
-        .join(' |\n')}`
+        .map(e => `${e.name} = '${e.value}'`)
+        .join(',\n')}\n}`
     },
   }
 
