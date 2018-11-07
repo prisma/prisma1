@@ -12,7 +12,6 @@ import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapabi
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
-import sangria.ast.{Directive => AstDirective}
 
 import scala.concurrent.ExecutionContext
 
@@ -143,10 +142,11 @@ class ObjectTypeBuilder(
   }
 
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = field match {
-    case f if f.isHidden               => List.empty
-    case _: ScalarField                => List.empty
-    case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
-    case f: RelationField if !f.isList => List.empty
+    case f if f.isHidden                                              => List.empty
+    case _: ScalarField                                               => List.empty
+    case f: RelationField if f.isList && !f.relatedModel_!.isEmbedded => mapToListConnectionArguments(f.relatedModel_!)
+    case f: RelationField if f.isList && f.relatedModel_!.isEmbedded  => List.empty
+    case f: RelationField if !f.isList                                => List.empty
   }
 
   def mapToListConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
