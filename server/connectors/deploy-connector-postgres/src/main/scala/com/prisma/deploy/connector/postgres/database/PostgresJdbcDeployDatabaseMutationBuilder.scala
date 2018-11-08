@@ -99,7 +99,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All] = {
     val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, isList, typeIdentifier)
     val uniqueAction = isUnique match {
-      case true  => addUniqueConstraint(projectId, tableName, columnName)
+      case true  => addUniqueConstraint(projectId, tableName, columnName, typeIdentifier)
       case false => DatabaseAction.successful(())
     }
 
@@ -136,5 +136,16 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def renameTable(projectId: String, currentName: String, newName: String): DatabaseAction[Any, NoStream, Effect.All] = {
     sqlu"""ALTER TABLE #${qualify(projectId, currentName)} RENAME TO #${qualify(newName)}"""
+  }
+
+  override def addUniqueConstraint(projectId: String,
+                                   tableName: String,
+                                   columnName: String,
+                                   typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+    sqlu"""CREATE UNIQUE INDEX #${qualify(s"$projectId.$tableName.$columnName._UNIQUE")} ON #${qualify(projectId, tableName)}(#${qualify(columnName)} ASC);"""
+  }
+
+  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DatabaseAction[Any, NoStream, Effect.All] = {
+    sqlu"""DROP INDEX #${qualify(projectId, s"$projectId.$tableName.$columnName._UNIQUE")}"""
   }
 }

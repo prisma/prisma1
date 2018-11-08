@@ -22,6 +22,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def truncateProjectTables(project: Project): DBIOAction[Any, NoStream, Effect.All]
   def deleteProjectDatabase(projectId: String): DBIOAction[Any, NoStream, Effect.All]
   def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All]
+  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
+  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIOAction[Any, NoStream, Effect.All]
 
   def createModelTable(projectId: String, model: Model): DBIOAction[Any, NoStream, Effect.All]
   def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
@@ -85,19 +87,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
 
   def deleteColumn(projectId: String, tableName: String, columnName: String) = {
     val query = sql.alterTable(name(projectId, tableName)).dropColumn(name(columnName))
-    changeDatabaseQueryToDBIO(query)()
-  }
-
-  // Important: This is only using the _UNIQUE suffix for legacy and cross-compatibility reasons, however, postgres for example
-  // truncates the index name, causing the index name to be "<...>._" rather than "<...>._UNIQUE"
-  // TODO bug or feature?
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
-    val query = sql.createUniqueIndex(name(s"$projectId.$tableName.$columnName._UNIQUE")).on(name(projectId, tableName), name(columnName))
-    changeDatabaseQueryToDBIO(query)()
-  }
-
-  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String) = {
-    val query = sql.dropIndex(name(projectId, s"$projectId.$tableName.$columnName._UNIQUE")).on(table(name(projectId, tableName)))
     changeDatabaseQueryToDBIO(query)()
   }
 }

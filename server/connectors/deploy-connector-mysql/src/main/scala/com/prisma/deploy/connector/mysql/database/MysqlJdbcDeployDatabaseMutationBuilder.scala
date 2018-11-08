@@ -134,4 +134,18 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
     case x if x.startsWith("text") | x.startsWith("mediumtext") => "(191)"
     case _                                                      => ""
   }
+
+  override def addUniqueConstraint(projectId: String,
+                                   tableName: String,
+                                   columnName: String,
+                                   typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
+    val indexSize = indexSizeForSQLType(sqlType)
+
+    sqlu"ALTER TABLE #${qualify(projectId, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
+  }
+
+  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DatabaseAction[Any, NoStream, Effect.All] = {
+    sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(s"${columnName}_UNIQUE")}"
+  }
 }

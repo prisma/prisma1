@@ -103,7 +103,8 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     val addUniqueConstraint = builder.addUniqueConstraint(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
-      columnName = after.dbName
+      columnName = after.dbName,
+      typeIdentifier = after.typeIdentifier
     )
 
     val updateColumnActions = (hasIndex, indexIsDirty, after.isUnique) match {
