@@ -1,6 +1,15 @@
-import { RootGenerator, FieldConfigUtils } from "../generator"
-import { IGQLType } from "../../datamodel/model"
-import { GraphQLObjectType, GraphQLID, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
+import { RootGenerator, FieldConfigUtils } from '../generator'
+import { IGQLType } from '../../datamodel/model'
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLFieldConfigMap,
+  GraphQLFieldConfig,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLInputObjectType,
+  GraphQLString,
+} from 'graphql/type'
 import { plural, camelCase } from '../../util/util'
 
 export default class MutationGenerator extends RootGenerator {
@@ -8,21 +17,22 @@ export default class MutationGenerator extends RootGenerator {
     return 'Mutation'
   }
   protected generateInternal(input: IGQLType[], args: {}) {
-
-    const fieldMaps = input.filter(type => !type.isEnum).map(type =>
-      FieldConfigUtils.merge(
-        this.generateCreateField(type),
-        this.generateUpdateField(type),
-        this.generateUpdateManyField(type),
-        this.generateUpsertField(type),
-        this.generateDeleteField(type),
-        this.generateDeleteManyField(type),
+    const fieldMaps = input
+      .filter(type => !type.isEnum)
+      .map(type =>
+        FieldConfigUtils.merge(
+          this.generateCreateField(type),
+          this.generateUpdateField(type),
+          this.generateUpdateManyField(type),
+          this.generateUpsertField(type),
+          this.generateDeleteField(type),
+          this.generateDeleteManyField(type),
+        ),
       )
-    )
 
     return new GraphQLObjectType({
       name: this.getTypeName(input, args),
-      fields: FieldConfigUtils.merge(...fieldMaps)
+      fields: FieldConfigUtils.merge(...fieldMaps),
     })
   }
 
@@ -30,7 +40,9 @@ export default class MutationGenerator extends RootGenerator {
     const fields = {} as GraphQLFieldConfigMap<null, null>
 
     // TODO: model.fields.length === 0 should be encapuslated in the respective "wouldBeEmpty" or another helper function
-    const wouldBeEmpty = model.fields.length === 0 && this.generators.modelCreateInput.wouldBeEmpty(model, {});
+    const wouldBeEmpty =
+      model.fields.length === 0 &&
+      this.generators.modelCreateInput.wouldBeEmpty(model, {})
     const nonIdFields = model.fields.filter(field => field.name !== 'id')
 
     if (wouldBeEmpty) {
@@ -39,9 +51,16 @@ export default class MutationGenerator extends RootGenerator {
 
     fields[`create${model.name}`] = {
       type: new GraphQLNonNull(this.generators.model.generate(model, {})),
-      args: nonIdFields.length === 0 ? {} : {
-        data: { type: new GraphQLNonNull(this.generators.modelCreateInput.generate(model, {})) }
-      }
+      args:
+        nonIdFields.length === 0
+          ? {}
+          : {
+              data: {
+                type: new GraphQLNonNull(
+                  this.generators.modelCreateInput.generate(model, {}),
+                ),
+              },
+            },
     }
 
     return fields
@@ -61,9 +80,17 @@ export default class MutationGenerator extends RootGenerator {
     fields[`update${model.name}`] = {
       type: this.generators.model.generate(model, {}),
       args: {
-        data: { type: new GraphQLNonNull(this.generators.modelUpdateInput.generate(model, {})) },
-        where: { type: new GraphQLNonNull(this.generators.modelWhereUniqueInput.generate(model, {})) }
-      }
+        data: {
+          type: new GraphQLNonNull(
+            this.generators.modelUpdateInput.generate(model, {}),
+          ),
+        },
+        where: {
+          type: new GraphQLNonNull(
+            this.generators.modelWhereUniqueInput.generate(model, {}),
+          ),
+        },
+      },
     }
 
     return fields
@@ -82,9 +109,13 @@ export default class MutationGenerator extends RootGenerator {
     fields[`updateMany${plural(model.name)}`] = {
       type: new GraphQLNonNull(this.generators.batchPayload.generate(null, {})),
       args: {
-        data: { type: new GraphQLNonNull(this.generators.modelUpdateInput.generate(model, {})) },
-        where: { type: this.generators.modelWhereInput.generate(model, {}) }
-      }
+        data: {
+          type: new GraphQLNonNull(
+            this.generators.modelUpdateManyMutationInput.generate(model, {}),
+          ),
+        },
+        where: { type: this.generators.modelWhereInput.generate(model, {}) },
+      },
     }
 
     return fields
@@ -106,12 +137,23 @@ export default class MutationGenerator extends RootGenerator {
     fields[`upsert${model.name}`] = {
       type: new GraphQLNonNull(this.generators.model.generate(model, {})),
       args: {
-        where: { type: new GraphQLNonNull(this.generators.modelWhereUniqueInput.generate(model, {})) },
-        create: { type: new GraphQLNonNull(this.generators.modelCreateInput.generate(model, {})) },
-        update: { type: new GraphQLNonNull(this.generators.modelUpdateInput.generate(model, {})) },
-      }
+        where: {
+          type: new GraphQLNonNull(
+            this.generators.modelWhereUniqueInput.generate(model, {}),
+          ),
+        },
+        create: {
+          type: new GraphQLNonNull(
+            this.generators.modelCreateInput.generate(model, {}),
+          ),
+        },
+        update: {
+          type: new GraphQLNonNull(
+            this.generators.modelUpdateInput.generate(model, {}),
+          ),
+        },
+      },
     }
-
 
     return fields
   }
@@ -126,10 +168,13 @@ export default class MutationGenerator extends RootGenerator {
     fields[`delete${model.name}`] = {
       type: this.generators.model.generate(model, {}),
       args: {
-        where: { type: new GraphQLNonNull(this.generators.modelWhereUniqueInput.generate(model, {})) }
-      }
+        where: {
+          type: new GraphQLNonNull(
+            this.generators.modelWhereUniqueInput.generate(model, {}),
+          ),
+        },
+      },
     }
-
 
     return fields
   }
@@ -144,8 +189,8 @@ export default class MutationGenerator extends RootGenerator {
     fields[`deleteMany${plural(model.name)}`] = {
       type: new GraphQLNonNull(this.generators.batchPayload.generate(null, {})),
       args: {
-        where: { type: this.generators.modelWhereInput.generate(model, {}) }
-      }
+        where: { type: this.generators.modelWhereInput.generate(model, {}) },
+      },
     }
 
     return fields
