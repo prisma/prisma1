@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MongoRelationsCapability}
 import com.prisma.shared.models.{OnDelete, RelationStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -22,32 +22,54 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     validate(dataModelString)
   }
 
-  "fail if a back relation field is missing for Mongo" in {
+  // TODO: it seems that this is not a requirement anymore
+//  "fail if a back relation field is missing for Mongo" in {
+//    val dataModelString =
+//      """
+//        |type Model {
+//        |  id: ID! @id
+//        |  others: [Other!]!
+//        |  others2: [Other2!]!
+//        |}
+//        |type Other {
+//        |  id: ID! @id
+//        |}
+//        |type Other2 {
+//        |  id: ID! @id
+//        |}
+//      """.stripMargin
+//
+//    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+//    println(errors)
+//    errors should have(size(2))
+//    val (error1, error2) = (errors.head, errors(1))
+//    error1.`type` should equal("Other")
+//    error1.field should be(None)
+//    error1.description should equal("The type `Other` does not specify a back relation field. It is referenced from the type `Model` in the field `others`.")
+//    error2.`type` should equal("Other2")
+//    error2.field should be(None)
+//    error2.description should equal("The type `Other2` does not specify a back relation field. It is referenced from the type `Model` in the field `others2`.")
+//  }
+
+  "fail if a back relation field is specified for an embedded type" in {
     val dataModelString =
       """
-        |type Model {
-        |  id: ID! @id
-        |  others: [Other!]!
-        |  others2: [Other2!]!
-        |}
-        |type Other {
-        |  id: ID! @id
-        |}
-        |type Other2 {
-        |  id: ID! @id
-        |}
-      """.stripMargin
+            |type Model {
+            |  id: ID! @id
+            |  other: Other
+            |}
+            |type Other @embedded {
+            |  text: String
+            |  model: Model
+            |}
+          """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
-    println(errors)
-    errors should have(size(2))
-    val (error1, error2) = (errors.head, errors(1))
-    error1.`type` should equal("Other")
-    error1.field should be(None)
-    error1.description should equal("The type `Other` does not specify a back relation field. It is referenced from the type `Model` in the field `others`.")
-    error2.`type` should equal("Other2")
-    error2.field should be(None)
-    error2.description should equal("The type `Other2` does not specify a back relation field. It is referenced from the type `Model` in the field `others2`.")
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should equal("Other")
+    error.field should be(Some("model"))
+    error.description should be("The type `Other` specifies the back relation field `model`, which is disallowed for embedded types.")
   }
 
   "@relation settings must be detected" in {
@@ -108,6 +130,28 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     error2.description should equal("The field `model` must provide a relation strategy.")
   }
 
+  "@relation strategy must be required for relations to non-embedded types in Mongo" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  other: Other
+        |}
+        |
+        |type Other {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+    errors should have(size(1))
+    val error = errors.head
+    println(error)
+    error.`type` should be("Model")
+    error.field should be(Some("other"))
+    error.description should be("The field `other` must provide a relation strategy.")
+  }
+
   "@relation strategy must be optional if an embedded type is involved in Mongo" in {
     val dataModelString =
       """
@@ -121,7 +165,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val dataModel = validate(dataModelString)
+    val dataModel = validate(dataModelString, Set(EmbeddedTypesCapability))
 
   }
 

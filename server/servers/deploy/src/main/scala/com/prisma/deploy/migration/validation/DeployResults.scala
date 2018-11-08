@@ -43,6 +43,14 @@ object DeployErrors {
     )
   }
 
+  def disallowedBackRelationFieldOnEmbeddedType(relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The type `${relationField.tpe.name}` specifies the back relation field `${relationField.name}`, which is disallowed for embedded types."
+    )
+  }
+
   def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }

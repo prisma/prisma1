@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -58,7 +59,7 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
         |  id: ID! @id(strategy: NONE)
         |}
       """.stripMargin
-    val error = validateThatMustError(dataModelString).head
+    val error = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability)).head
     error.`type` should equal("Model")
     error.field should equal(Some("id"))
     error.description should equal("The `@id` directive is not allowed on embedded types.")

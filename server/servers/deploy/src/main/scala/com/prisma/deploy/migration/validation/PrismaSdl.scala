@@ -40,6 +40,7 @@ case class PrismaType(
   def enumField_!(name: String)     = field_!(name).asInstanceOf[EnumPrismaField]
   def relationField_!(name: String) = field_!(name).asInstanceOf[RelationalPrismaField]
   def field_!(name: String)         = fields.find(_.name == name).get
+  def isNotEmbedded                 = !isEmbedded
 }
 
 sealed trait PrismaField {
