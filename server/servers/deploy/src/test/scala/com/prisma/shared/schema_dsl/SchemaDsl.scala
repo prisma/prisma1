@@ -61,11 +61,7 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator = if (deployConnector.capabilities.contains(LegacyDataModelCapability)) {
-      LegacyDataModelValidator
-    } else {
-      DataModelValidatorImpl
-    }
+    val validator          = LegacyDataModelValidator
 
     val prismaSdl = validator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {
       case Good(prismaSdl) =>

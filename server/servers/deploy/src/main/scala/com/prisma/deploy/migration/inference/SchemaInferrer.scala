@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective,
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, LegacyDataModelCapability, MigrationsCapability, MongoRelationsCapability}
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
@@ -57,6 +57,8 @@ case class SchemaInferrerImpl(
       val hiddenReservedFields = if (capabilities.contains(MigrationsCapability) && isLegacy) {
         val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
         missingReservedFields.map(ReservedFields.reservedFieldFor)
+      } else if (capabilities.contains(EmbeddedTypesCapability)) {
+        Vector(ReservedFields.reservedFieldFor(ReservedFields.idFieldName))
       } else {
         Vector.empty
       }

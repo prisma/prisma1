@@ -36,6 +36,110 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       val comment = schema.getModelByName_!("Comment")
       comment.isEmbedded should be(true)
     }
+
+    "work if one with a relation from embedded to non-parent non embedded type" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment!]! @relation(name: "MyRelationName", strategy: EMBED)
+          |}
+          |
+          |type Comment @embedded {
+          |  test: String
+          |  other: Other @relation(name: "MyOtherRelationName", strategy: EMBED)
+          |}
+          |
+          |type Other {
+          |  id: ID! @id
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+
+      schema.relations should have(size(2))
+      val relation = schema.getRelationByName_!("MyRelationName")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
+      val relation2 = schema.getRelationByName_!("MyOtherRelationName")
+      relation2.modelAName should equal("Comment")
+      relation2.modelBName should equal("Other")
+      schema.models should have(size(3))
+      val todo = schema.getModelByName_!("Todo")
+      todo.isEmbedded should be(false)
+      val comment = schema.getModelByName_!("Comment")
+      comment.isEmbedded should be(true)
+      val other = schema.getModelByName_!("Other")
+      other.isEmbedded should be(false)
+    }
+
+    "work if one with a relation from embedded to embedded type" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment!]! @relation(name: "MyRelationName", strategy: EMBED)
+          |}
+          |
+          |type Comment @embedded {
+          |  test: String
+          |  other: Other @relation(name: "MyOtherRelationName", strategy: EMBED)
+          |}
+          |
+          |type Other @embedded{
+          |  test: String
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+
+      schema.relations should have(size(2))
+      val relation = schema.getRelationByName_!("MyRelationName")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
+      val relation2 = schema.getRelationByName_!("MyOtherRelationName")
+      relation2.modelAName should equal("Comment")
+      relation2.modelBName should equal("Other")
+      schema.models should have(size(3))
+      val todo = schema.getModelByName_!("Todo")
+      todo.isEmbedded should be(false)
+      val comment = schema.getModelByName_!("Comment")
+      comment.isEmbedded should be(true)
+      val other = schema.getModelByName_!("Other")
+      other.isEmbedded should be(true)
+    }
+
+    "work with a relation from embedded to embedded type even when the relations are not named" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment!]! @relation(strategy: EMBED)
+          |}
+          |
+          |type Comment @embedded {
+          |  test: String
+          |  other: Other @relation(strategy: EMBED)
+          |}
+          |
+          |type Other @embedded{
+          |  test: String
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+
+      schema.relations should have(size(2))
+      val relation = schema.relations.head
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Other")
+      val relation2 = schema.relations.reverse.head
+      relation2.modelAName should equal("Comment")
+      relation2.modelBName should equal("Todo")
+      schema.models should have(size(3))
+      val todo = schema.getModelByName_!("Todo")
+      todo.isEmbedded should be(false)
+      val comment = schema.getModelByName_!("Comment")
+      comment.isEmbedded should be(true)
+      val other = schema.getModelByName_!("Other")
+      other.isEmbedded should be(true)
+
+    }
+
   }
 
   //Fixme more ideas for test cases / spec work
