@@ -549,6 +549,17 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     relationField.relation.manifestation should be(Some(expectedManifestation))
   }
 
+  "should make a field tagged with @id unique" in {
+    val types =
+      """|type Todo {
+         |  id: ID! @id
+         |}""".stripMargin
+
+    val schema  = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val idField = schema.getModelByName_!("Todo").getFieldByName_!("id")
+    idField.isUnique should be(true)
+  }
+
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {
     val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get
     SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
