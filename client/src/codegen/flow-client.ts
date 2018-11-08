@@ -59,9 +59,11 @@ import { typeDefs } from './prisma-schema'`
     }
     return ''
   }
-  // renderExports(options?: RenderOptions) {
-  //   const args = this.renderPrismaClassArgs(options)
+  renderExports(options?: RenderOptions) {
+    const args = this.renderPrismaClassArgs(options)
+    
+    return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
 
-  //   return `export const prisma: Prisma = makePrismaClientClass(${args})`
-  // }
+export const prisma: ${this.prismaInterface} = new Prisma()`
+  }
 }
