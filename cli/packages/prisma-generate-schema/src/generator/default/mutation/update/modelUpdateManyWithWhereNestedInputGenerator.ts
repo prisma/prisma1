@@ -8,6 +8,12 @@ export default class ModelUpdateManyWithWhereNestedInputGenerator extends Relate
     return `${input.name}UpdateManyWithWhereNestedInput`
   }
 
+  
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
+    return this.generators.modelUpdateManyDataInput.wouldBeEmpty(model, args)
+  }
+
+
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 

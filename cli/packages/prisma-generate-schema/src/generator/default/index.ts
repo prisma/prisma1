@@ -54,7 +54,7 @@ import ScalarTypeGenerator from './scalar/scalarTypeGenerator'
  * This class represents a collection of all existing generators. The generators used
  * here depend on each other.
  */
-export default class Default implements IGenerators {
+export default class DefaultGenerator implements IGenerators {
   typeRegistry = new TypeRegistry()
   modelCreateInput = new ModelCreateInputGenerator(this.typeRegistry, this)
   modelCreateOneInput = new ModelCreateOneInputGenerator(

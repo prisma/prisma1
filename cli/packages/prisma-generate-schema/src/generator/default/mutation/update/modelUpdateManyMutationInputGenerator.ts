@@ -9,7 +9,7 @@ import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 export default class ModelUpdateManyMutationInputGenerator extends ModelInputObjectTypeGenerator {
   public wouldBeEmpty(model: IGQLType, args: {}) {
     return !TypeFromModelGenerator.hasFieldsExcept(
-      model.fields,
+      model.fields.filter(field => this.generators.scalarTypeGenerator.isScalarField(field)),
       ...TypeFromModelGenerator.reservedFields,
     )
   }

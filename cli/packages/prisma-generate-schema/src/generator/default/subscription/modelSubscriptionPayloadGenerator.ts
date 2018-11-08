@@ -20,14 +20,10 @@ export default class ModelSubscriptionPayloadGenerator extends ModelObjectTypeGe
       },
     } as GraphQLFieldConfigMap<any, any>
 
-    if (this.hasScalarField(input.fields)) {
+    if (this.hasScalarFields(input.fields)) {
       payload.previousValues = { type: this.generators.modelPreviousValues.generate(input, {}) }
     }
 
     return payload
-  }
-
-  private hasScalarField(fields: IGQLField[]) {
-    return fields.filter(field => this.generators.scalarTypeGenerator.isScalarField(field)).length > 0
   }
 }

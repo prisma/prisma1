@@ -99,7 +99,7 @@ export default class MutationGenerator extends RootGenerator {
   private generateUpdateManyField(model: IGQLType) {
     const fields = {} as GraphQLFieldConfigMap<null, null>
 
-    if (this.generators.modelUpdateInput.wouldBeEmpty(model, {})) {
+    if (this.generators.modelUpdateManyMutationInput.wouldBeEmpty(model, {})) {
       return fields
     }
     if (this.generators.modelWhereInput.wouldBeEmpty(model, {})) {

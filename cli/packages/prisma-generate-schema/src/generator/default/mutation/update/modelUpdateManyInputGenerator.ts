@@ -36,6 +36,8 @@ export default class ModelUpdateManyInputTypeGenerator extends ModelInputObjectT
     }
     if (!this.generators.modelScalarWhereInput.wouldBeEmpty(model, args)) {
       fields.deleteMany = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelScalarWhereInput.generate(model, args)) }
+    }
+    if (!this.generators.modelUpdateManyWithWhereNestedInput.wouldBeEmpty(model, args)) {
       fields.updateMany = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelUpdateManyWithWhereNestedInput.generate(model, args)) }
     }
 
