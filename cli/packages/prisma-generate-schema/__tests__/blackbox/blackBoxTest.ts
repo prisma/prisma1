@@ -40,7 +40,7 @@ export default function blackBoxTest(name: string) {
 }
 
 // const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
-const testNames = ['airbnb']
+const testNames = ['embedded']
 
 for (const testName of testNames) {
   test(`Generates input type for ${testName} correctly`, () => {
