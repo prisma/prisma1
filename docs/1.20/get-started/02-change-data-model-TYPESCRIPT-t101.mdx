@@ -3,7 +3,6 @@ import Warning from 'components/Markdown/Warning'
 export const meta = {
   title: 'Change Datamodel',
   position: 2,
-  step: 2,
   nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma client.',
   technology: 'typescript',
   technologyOrder: 2,
@@ -52,7 +51,7 @@ Here's what changed:
 - You added a new `Post` type to the datamodel.
 - You added a _relation_ between `User` and `Post` (via the `posts` and `author` fields).
 
-## Redeploy your Prisma service
+## Redeploy your Prisma API
 
 To apply the changes you just made to your datamodel, you need to redeploy the Prisma API:
 

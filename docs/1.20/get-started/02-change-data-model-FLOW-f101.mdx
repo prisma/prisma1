@@ -3,7 +3,6 @@ import Warning from 'components/Markdown/Warning'
 export const meta = {
   title: 'Change Datamodel',
   position: 2,
-  step: 2,
   nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma client.',
   technology: 'flow',
   technologyOrder: 3,
@@ -22,7 +21,7 @@ On this page, you will learn how to:
 
 <Warning>
 
-This page is only relevant if you started with a [new database](f002) or a [demo server](f001). If you configured Prisma with an [existing database](f003), you need to run migrations directly against your database.
+This page is only relevant if you started with a [new database](j002) or a [demo server](j001). If you configured Prisma with an [existing database](j003), you need to run migrations directly against your database.
 
 </Warning>
 
@@ -52,7 +51,7 @@ Here's what changed:
 - You added a new `Post` type to the datamodel.
 - You added a _relation_ between `User` and `Post` (via the `posts` and `author` fields).
 
-## Redeploy your Prisma service
+## Redeploy your Prisma API
 
 To apply the changes you just made to your datamodel, you need to redeploy the Prisma API:
 
@@ -77,7 +76,7 @@ The Prisma client API allows to write nested objects in a single transaction wit
 Update your `index.js` to look as follows:
 
 ```js copy
-import { prisma } from './generated/prisma-client'
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -109,15 +108,15 @@ main().catch(e => console.error(e))
 Run the script with the following command:
 
 ```bash copy
-babel-node index.js
+node index.js
 ```
 
 ## Query relational data
 
-With the Prisma client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
+With the Prisma client API, you can navigate relations in your data graph using chained method calls (also called _fluent API_). Here is how you can query the `posts` written by a certain `User`:
 
 ```js copy
-import { prisma } from './generated/prisma-client'
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
