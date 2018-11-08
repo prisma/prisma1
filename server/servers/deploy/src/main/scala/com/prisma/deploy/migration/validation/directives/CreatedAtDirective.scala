@@ -18,10 +18,10 @@ object CreatedAtDirective extends FieldDirective[CreatedAtBehaviour.type] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    if (fieldDef.typeName == "DateTime" && fieldDef.isRequired) {
+    if (fieldDef.typeName == "DateTime") {
       None
     } else {
-      Some(DeployError(typeDef, fieldDef, s"Fields that are marked as @createdAt must be of type `DateTime!`."))
+      Some(DeployError(typeDef, fieldDef, s"Fields that are marked as @createdAt must be of type `DateTime!` or `DateTime`."))
     }
   }
 
