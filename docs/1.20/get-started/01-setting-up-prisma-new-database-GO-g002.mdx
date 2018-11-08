@@ -7,8 +7,8 @@ export const meta = {
   gettingStartedOrder: 1,
   gettingStartedTitle: 'New database',
   nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and (re-)generate your Prisma client.',
-  technology: 'typescript',
-  technologyOrder: 2,
+  technology: 'go',
+  technologyOrder: 4,
   articleGroup: 'Set up Prisma',
 }
 
@@ -43,7 +43,7 @@ npm install -g prisma
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
 
-> Don't want to use Docker? You can also get started with a [demo database](t001) for now.
+> Don't want to use Docker? You can also get started with a [demo database](g001) for now.
 
 ## Set up and connect Prisma with a database
 
@@ -171,7 +171,7 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 
 ```yml copy
 generate:
-  - generator: typescript-client
+  - generator: go-client
     output: ./generated/prisma-client/
 ```
 
@@ -183,96 +183,65 @@ prisma generate
 
 The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.
 
-## Prepare TypeScript application
-
-Create your [`tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) with the following command:
+## Prepare Go application
 
 ```bash copy
-touch tsconfig.json
+touch index.go
 ```
 
-Add the following configuration to the `tsconfig.json` file:
-
-```json copy
-{
-  "compilerOptions": {
-    "lib": ["es2016", "esnext.asynciterable"]
-  }
-}
-```
-
-Next, initialize an empty NPM project in the current directory and install the required dependencies:
+You'll be using [dep](https://golang.github.io/dep/) for dependency management in this tutorial. Run the following command to create the required setup:
 
 ```bash copy
-npm init -y
-npm install --save prisma-client-lib graphql
-npm install --save-dev typescript ts-node
-```
-
-Almost done! Run the following command to create an empty TypeScript script:
-
-```bash copy
-touch index.ts
+dep init
 ```
 
 Great, you're now ready to write some code and talk to your database programmatically!
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.ts` :
+Add the following code in `index.go`:
 
-```js copy
-import { prisma } from './generated/prisma-client'
+```go copy
+package main
 
-// A `main` function so that we can use async/await
-async function main() {
+import (
+	"context"
+	"fmt"
+	prisma "hello-prisma/generated/prisma-client"
+)
 
-  // Create a new user called `Alice`
-  const newUser = await prisma.createUser({ name: 'Alice' })
-  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+func main() {
+	client := prisma.New(nil)
+	ctx := context.TODO()
 
-  // Read all users from the database and print them to the console
-  const allUsers = await prisma.users()
-  console.log(allUsers)
-}
+	// Create a new user
+	name := "Alice"
+	newUser, err := client.CreateUser(prisma.UserCreateInput{
+		Name: name,
+	}).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Created new user: %+v\\n", newUser)
 
-main().catch(e => console.error(e))
-```
-
-Before executing the code, go ahead and add a `start` script to `package.json` so you can comfortably run the code:
-
-<Code lines="8">
-
-```json copy
-{
-  "name": "hello-world",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node index.ts"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "graphql": "^14.0.2",
-    "prisma-client-lib": "^1.20.0"
-  },
-  "devDependencies": {
-    "ts-node": "^7.0.1",
-    "typescript": "^3.1.6"
-  }
+	users, err := client.Users(nil).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\\n", users)
 }
 ```
 
-</Code>
+Before executing the script, you need to _ensure_ all dependencies are available. Run the following command:
+
+```bash copy
+dep ensure
+```
 
 Now execute the script with the following command:
 
 ```bash copy
-npm run start
+go run index.go
 ```
 
 Whenever you run the script with that command, a new user record is created in the database (because of the call to `createUser`).
@@ -281,33 +250,43 @@ Feel free to play around with the Prisma client API and try out some of the foll
 
 <QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
 
-```js lineNumbers,copy
-const user = await prisma
-  .user({ id: '__USER_ID__' })
+```go lineNumbers,copy
+id := "__USER_ID__"
+userById, err := client.User(prisma.UserWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
 ```
 
-```js lineNumbers,copy
-const usersCalledAlice = await prisma
-  .users({
-    where: {
-      name: 'Alice'
-    }
-  })
+```go lineNumbers,copy
+filter := "Alice"
+posts, err := client.Users(&prisma.UsersParams{
+  Where: &prisma.UserWhereInput{
+    Name: &filter,
+  },
+}).Exec(ctx)
 ```
 
-```js lineNumbers,copy
- const updatedUser = await prisma
-  .updateUser({
-    where: { id: '__USER_ID__' },
-    data: { name: 'Bob' }
-  })
+```go lineNumbers,copy
+id := "__USER_ID__"
+newName := "Bob"
+updatedUser, err := client.UpdateUser(prisma.UserUpdateParams{
+  Where: prisma.UserWhereUniqueInput{
+    ID: &id,
+  },
+  Data: prisma.UserUpdateInput{
+    Name: &newName,
+  },
+}).Exec(ctx)
 ```
 
-```js lineNumbers,copy
- const deletedUser = await prisma
-  .deleteUser({ id: '__USER_ID__' })
+```go lineNumbers,copy
+id := "__USER_ID__"
+deletedUser, err := client.DeleteUser(prisma.UserWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
 ```
 
 </QueryChooser>
+
 
 > In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.
