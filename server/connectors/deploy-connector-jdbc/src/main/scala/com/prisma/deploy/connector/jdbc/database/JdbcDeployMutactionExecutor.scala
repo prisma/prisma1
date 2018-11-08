@@ -31,9 +31,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: CreateInlineRelationForTests => CreateInlineRelationInterpreter(builder).execute(x)
     }
 
-    val result = database.run(action).map(_ => ())
-    result.onComplete(println(_))
-    result
+    database.run(action).map(_ => ())
   }
 
   override def rollback(mutaction: DeployMutaction): Future[Unit] = {
@@ -56,8 +54,6 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: CreateInlineRelationForTests => CreateInlineRelationInterpreter(builder).rollback(x)
     }
 
-    val result = database.run(action).map(_ => ())
-    result.onComplete(println(_))
-    result
+    database.run(action).map(_ => ())
   }
 }

@@ -10,7 +10,7 @@ case class CreateModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) ex
     model = mutaction.model
   )
 
-  override def rollback(mutaction: CreateModelTable) = ??? //dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
+  override def rollback(mutaction: CreateModelTable) = builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
 }
 
 case class DeleteModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteModelTable] {

@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.postgres.impls
+package com.prisma.deploy.connector.postgres.database
 
 import com.prisma.deploy.connector._
 import com.prisma.utils.boolean.BooleanUtils._

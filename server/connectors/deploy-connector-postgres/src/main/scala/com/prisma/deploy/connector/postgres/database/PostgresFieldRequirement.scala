@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.postgres.impls
+package com.prisma.deploy.connector.postgres.database
 
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.shared.models.FieldTemplate

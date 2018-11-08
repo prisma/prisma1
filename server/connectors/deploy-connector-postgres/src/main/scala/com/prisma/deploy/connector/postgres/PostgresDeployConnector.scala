@@ -5,13 +5,7 @@ import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
-import com.prisma.deploy.connector.postgres.database.{
-  InternalDatabaseSchema,
-  PostgresDeployDatabaseMutationBuilder,
-  PostgresJdbcDeployDatabaseMutationBuilder,
-  PostgresTypeMapper
-}
-import com.prisma.deploy.connector.postgres.impls._
+import com.prisma.deploy.connector.postgres.database._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -49,12 +43,12 @@ case class PostgresDeployConnector(
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = PostgresDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
     projectDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    val action = PostgresDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+    val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
     projectDatabase.run(action)
   }
 
