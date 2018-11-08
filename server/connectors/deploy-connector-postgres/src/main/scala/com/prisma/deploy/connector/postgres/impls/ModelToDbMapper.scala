@@ -15,7 +15,7 @@ object ModelToDbMapper {
     ProjectDefinition(
       id = project.id,
       ownerId = Some(project.ownerId),
-      project.webhookUrl,
+      None,
       secretsJson,
       project.allowQueries,
       project.allowMutations,

@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnoreMySql
+import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -57,7 +57,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     todoAndRelayCountShouldBe(project, 3)
   }
 
-  "the delete mutation" should "work when node ids are UUIDs" taggedAs (IgnoreMySql) in {
+  "the delete mutation" should "work when node ids are UUIDs" taggedAs (IgnoreMySql, IgnoreMongo) in {
     val project = SchemaDsl.fromString()(s"""
          |type Todo {
          |  id: UUID! @unique

@@ -21,7 +21,7 @@ sealed trait GCValue {
 object RootGCValue {
   def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(Map(elements: _*))
   def empty: RootGCValue = {
-    val empty: SortedMap[String, GCValue] = SortedMap.empty
+    val empty: Map[String, GCValue] = Map.empty
     RootGCValue(empty)
   }
 }
@@ -32,6 +32,7 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   }
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
+  def filterKeys(p: String => Boolean)    = copy(map = map.filter(t => p(t._1)))
 
   def toMapStringAny: Map[String, Any] = map.collect {
     case (key, value) =>
@@ -48,6 +49,10 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def add(field: String, value: GCValue) = copy(map = map.updated(field, value))
 
   def value = sys.error("RootGCValues not implemented yet in GCValueExtractor")
+}
+
+object ListGCValue {
+  def empty: ListGCValue = ListGCValue(Vector.empty)
 }
 
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
@@ -68,18 +73,19 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
 
-sealed trait IdGCValue                extends LeafGCValue
-case class CuidGCValue(value: String) extends IdGCValue
-case class UuidGCValue(value: UUID)   extends IdGCValue
-case class IntGCValue(value: Int)     extends IdGCValue
+sealed trait IdGCValue                    extends LeafGCValue
+case class StringIdGCValue(value: String) extends IdGCValue
+case class UuidGCValue(value: UUID)       extends IdGCValue
+case class IntGCValue(value: Int)         extends IdGCValue
 
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
   def parse(s: String): Try[UuidGCValue] = Try { UuidGCValue(UUID.fromString(s)) }
 
-  def random(): UuidGCValue = UuidGCValue(UUID.randomUUID())
+  def random: UuidGCValue = UuidGCValue(UUID.randomUUID())
 }
 
-object CuidGCValue {
-  def random(): CuidGCValue = CuidGCValue(Cuid.createCuid())
+object StringIdGCValue {
+  def random: StringIdGCValue = StringIdGCValue(Cuid.createCuid())
+  def dummy: StringIdGCValue  = StringIdGCValue("")
 }

@@ -7,6 +7,7 @@ import sangria.schema
 import sangria.schema._
 
 case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectType[ApiUserContext, PrismaNode]], masterDataResolver: DataResolver) {
+  import com.prisma.utils.boolean.BooleanUtils._
 
   def mapOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode], onlyId: Boolean): ObjectType[C, SimpleResolveOutput] = {
     ObjectType[C, SimpleResolveOutput](
@@ -27,7 +28,7 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
     )
   }
 
-  def mapPreviousValuesOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode]): ObjectType[C, PrismaNode] = {
+  def previousValuesObjectType[C](model: Model, objectType: ObjectType[C, PrismaNode]): Option[ObjectType[C, PrismaNode]] = {
     def isIncluded(outputType: OutputType[_]): Boolean = {
       outputType match {
         case _: ScalarType[_] | _: EnumType[_] => true
@@ -40,10 +41,12 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
       case field if isIncluded(field.fieldType) => field.copy(resolve = (outerCtx: Context[C, PrismaNode]) => field.resolve(outerCtx))
     }
 
-    ObjectType[C, PrismaNode](
-      name = s"${objectType.name}PreviousValues",
-      fieldsFn = () => fields
-    )
+    fields.nonEmpty.toOption {
+      ObjectType[C, PrismaNode](
+        name = s"${objectType.name}PreviousValues",
+        fieldsFn = () => fields
+      )
+    }
   }
 
   def mapCreateOutputType[C](model: Model, objectType: ObjectType[C, PrismaNode]): ObjectType[C, SimpleResolveOutput] = {
@@ -94,15 +97,17 @@ case class OutputTypesBuilder(project: Project, objectTypes: Map[String, ObjectT
             description = None,
             arguments = List(),
             resolve = (outerCtx: Context[C, SimpleResolveOutput]) => updatedFields
-          ),
-          schema.Field(
-            name = "previousValues",
-            fieldType = OptionType(mapPreviousValuesOutputType(model, objectType)),
-            description = None,
-            arguments = List(),
-            resolve = (outerCtx: Context[C, SimpleResolveOutput]) => previousValues
           )
-      )
+        ) ++
+          previousValuesObjectType(model, objectType).map { objectType =>
+            schema.Field(
+              name = "previousValues",
+              fieldType = OptionType(objectType),
+              description = None,
+              arguments = List(),
+              resolve = (outerCtx: Context[C, SimpleResolveOutput]) => previousValues
+            )
+        }
     )
   }
 

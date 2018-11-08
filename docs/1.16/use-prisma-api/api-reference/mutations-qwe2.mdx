@@ -1,0 +1,611 @@
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Mutations",
+  position: 50,
+}
+
+## Overview
+
+### How are mutations in the Prisma API generated?
+
+The GraphQL API of a Prisma service is specified in the Prisma GraphQL schema. The Prisma GraphQL schema is auto-generated based on the service's data model:
+
+![](https://i.imgur.com/jHkNjKU.png)
+
+The `Mutation` type of the Prisma GraphQL schema defines all the mutations the Prisma API accepts.
+
+As an example, consider the following data model:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+This is the `Mutation` type Prisma will generate:
+
+```graphql
+type Mutation {
+  createUser(data: UserCreateInput!): User!
+  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
+  deleteUser(where: UserWhereUniqueInput!): User
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput!): BatchPayload!
+  deleteManyUsers(where: UserWhereInput!): BatchPayload!
+}
+```
+
+For every type in your data model, six mutation are generated. Taking above the above `User` type as an example, these mutations are:
+
+- `createUser`: Create a new `User` node
+- `updateUser`: Update an existing `User` node
+- `deleteUser`: Delete an existing `User` node
+- `upsertUser`: Update an existing `User` node; if it does not exist create a new `User` node
+- `updateManyUsers`: Update many `User` nodes at once
+- `deleteManyUsers`: Delete many `User` nodes at once
+
+To inspect all the available operations of your Prisma API in detail, you can read the Prisma GraphQL schema of your Prisma service. It can be downloaded with the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli):
+
+```bash
+graphql get-schema --endpoint __YOUR_PRISMA_ENDPOINT__ --output prisma.graphql --no-all
+```
+
+Another way to learn about the concrete capabilities of your Prisma API is by exploring the auto-generated API documentation inside a GraphQL Playground. You can do so by clicking the green **SCHEMA**-button at the right edge of the Playground:
+
+![](https://i.imgur.com/ArteAJQ.png)
+
+
+### Data model for examples on this page
+
+All example mutations on this page are based on a Prisma service configured with this data model:
+
+```graphql
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
+}
+
+type User {
+  id: ID! @unique
+  age: Int
+  email: String! @unique
+  name: String!
+  posts: [Post!]!
+}
+```
+
+
+## Mutation concepts
+
+The Prisma API offers three kinds of mutations:
+
+- **Object mutations**: Create, update, upsert or delete a single node of a certain [object type](knul#object-types).
+- **Nested mutations**: Create, update, upsert, delete, connect, disconnect multiple nodes of two or more related types.
+- **Batch mutations**: Update and delete many nodes of a certain [object type](knul#object-types).
+
+When working with the Prisma API, the following concepts are also useful to keep in mind:
+
+- **Relation mutations**: Connect and disconnect two nodes in a relation (this is done via nested mutations).
+- **Input types**: The Prisma API follows best practices of GraphQL mutation design and accepts mutation arguments as a single input object called `data`.
+
+## Object mutations
+
+You can use **object mutations** to modify single nodes of a certain model.
+
+### Creating nodes
+
+You can create new nodes using `create` mutations. These mutations take one input object called `data` wrapping all _required_ fields of the respective type.
+
+**Create a new `User` node:**
+
+```graphql
+mutation {
+  createUser(
+    data: {
+      age: 42
+      email: "alice@prisma.io"
+      name: "Alice"
+    }
+  ) {
+    id
+    name
+  }
+}
+```
+
+### Updating nodes
+
+You can change the values of one or more fields of a node using an `update` mutation. The node to be updated is [selected](vw4d#node-selection) using the `where` argument and the new values are provided via the `data` argument. Nodes can be selected by any field that's annotated with the `@unique` directive.
+
+**Change the `name` of a `User` node identified by its `id`:**
+
+```graphql
+mutation {
+  updateUser(
+    data: {
+      name: "Alice"
+    }
+    where: {
+      id: "cjcdi63j80adw0146z7r59bn5"
+    }
+  ) {
+    id
+    name
+  }
+}
+```
+
+**Change the `name` of a `User` node identified by its `email`:**
+
+```graphql
+mutation {
+  updateUser(
+    data: {
+      name: "Alice"
+    }
+    where: {
+      email: "alice@prisma.io"
+    }
+  ) {
+    id
+    name
+  }
+}
+```
+
+### Upserting nodes
+
+When you want to either update an existing node, _or_ create a new one in a single mutation, you can use _upsert_ mutations.
+
+**Update the `User` with a certain `email`, or create a new `User` if a `User` with that `email` doesn't exist yet**:
+
+```graphql
+mutation {
+  upsertUser(
+    where: {
+      email: "alice@prisma.io"
+    }
+    create: {
+      email: "alice@prisma.io"
+      age: 42
+      name: "Alice"
+    }
+    update: {
+      age: 42
+    }
+  ) {
+    name
+  }
+}
+```
+
+### Deleting nodes
+
+To delete nodes, you need to [select the node](vw4d#node-selection) to be deleted via the `where` argument in a `delete` mutation.
+
+**Delete a `User` node by its `id`:**
+
+```graphql
+mutation {
+  deleteUser(where: {
+    id: "cjcdi63l20adx0146vg20j1ck"
+  }) {
+    id
+    name
+    email
+  }
+}
+```
+
+**Delete a `User` node by its `email`:**
+
+```graphql
+mutation {
+  deleteUser(where: {
+    email: "cjcdi63l20adx0146vg20j1ck"
+  }) {
+    id
+    name
+    email
+  }
+}
+```
+
+## Nested mutations
+
+You can use `create` and `update` mutations to modify nodes across relations at the same time. This is referred to as **nested mutations** and is executed [transactionally](vw4d#transactions--nested-mutations).
+
+Several nested mutation arguments exist:
+
+- `create`
+- `update`
+- `upsert`
+- `delete`
+- `connect`
+- `disconnect`
+
+Rather than mapping out all possible scenarios at this point, we provide a list of examples.
+
+It's recommended to explore the behaviour of different nested mutations by using the [GraphQL Playground](https://github.com/prismagraphql/graphql-playground).
+
+### Creating and connecting related nodes
+
+You can use the `connect` mutation within a nested input object field to connect to one or more related nodes.
+
+**Create a new `Post` node and connect it to an existing `User` node via the unique `email` field:**
+
+```graphql
+mutation {
+  createPost(data: {
+    title: "This is a draft"
+    author: {
+      connect: {
+        email: "alice@prisma.io"
+      }
+    }
+  }) {
+    id
+    author {
+      name
+    }
+  }
+}
+```
+
+If you provide a `create` argument instead of `connect` within `author`, you would _create_ a new `User` node and at the same time connect the new `Post` node to it:
+
+```graphql
+mutation {
+  createPost(data: {
+    title: "This is a draft"
+    author: {
+      create: {
+        name: "Bob"
+        email: "bob@prisma.io"
+        age: 42
+      }
+    }
+  }) {
+    id
+    author {
+      name
+    }
+  }
+}
+```
+
+When using the `createUser` instead of a `createPost` mutation, you can actually create and connect to multiple `Post` nodes at the same time, because `User` has a _to-many_ relation `Post`.
+
+**Create a new `User` node and directly connect it to several newly created `Post` nodes:**
+
+```graphql
+mutation {
+  createUser(
+    data: {
+      name: "Bob"
+      email: "bob@prisma.io"
+      age: 42
+      posts: {
+        create: [
+          {
+            published: true
+            title: "Hello World"
+          },
+          {
+            title: "GraphQL is great"
+          }
+        ]
+      }
+    }
+  ) {
+    id
+    posts {
+      id
+    }
+  }
+}
+```
+
+**Create a new `User` node and directly connect it to several newly created _and_ existing `Post` nodes:**
+
+```graphql
+mutation {
+  createUser(
+    data: {
+      name: "Bob"
+      email: "bob@prisma.io"
+      age: 42
+      posts: {
+        create: [
+          {
+            published: true
+            title: "Hello World"
+          },
+          {
+            title: "GraphQL is great"
+          }
+        ]
+        connect: [
+          {
+            id: "cjcdi63j80adw0146z7r59bn5"
+          }, {
+            id: "cjcdi63l80ady014658ud1u02"
+          }
+        ]
+      }
+    }
+  ) {
+    id
+    posts {
+      id
+    }
+  }
+}
+```
+
+### Updating and upserting related nodes
+
+When updating nodes, you can update one or more related nodes at the same time.
+
+**Update the `title` of a `Post` node that belongs to a certain `User` node:**
+
+```graphql
+mutation {
+  updateUser(
+    data: {
+      posts: {
+        update: [
+          {
+            where: {
+              id: "cjcf1cj0r017z014605713ym0"
+            }
+            data: {
+              title: "Hello World"
+            }
+          }
+        ]
+      }
+    }
+    where: {
+      id: "cjcf1cj0c017y01461c6enbfe"
+    }
+  ) {
+    id
+    posts {
+      id
+    }
+  }
+}
+```
+
+`update` accepts a list of objects with `where` and `data` fields suitable for the `updatePost` mutation.
+
+**Update the `name` of an existing `User` node _or_ create a new `User` node that belongs to a certain `Post` node:**
+
+Nested upserting works similarly:
+
+```graphql
+mutation {
+  updatePost(
+    where: {
+      id: "cjcf1cj0r017z014605713ym0"
+    }
+    data: {
+      author: {
+        upsert: {
+          where: {
+            id: "cjcf1cj0c017y01461c6enbfe"
+          }
+          update: {
+            id: "cjcdi63l80ady014658ud1u02"
+            name: "Alice"
+          }
+          create: {
+            email: "alice@prisma.io"
+            name: "Alice"
+            age: 42
+          }
+        }
+      }
+    }
+  ) {
+    id
+    author {
+      id
+    }
+  }
+}
+```
+
+**Disconnecting a `Post` node from a `User` node**:
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: "cjcf1cj0c017y01461c6enbfe"
+    }
+    data: {
+      posts: {
+        disconnect: [
+          { id: "cjcdi63l80ady014658ud1u02" }
+        ]
+      }
+    }
+  ) {
+    id
+    posts {
+      id
+    }
+  }
+}
+```
+
+### Deleting related nodes
+
+When updating nodes, you can delete one or more related nodes at the same time.
+
+**Delete `Post` nodes belonging to a certain `User` node:**
+
+```graphql
+mutation {
+  updateUser(
+    data: {
+      posts: {
+        delete: [
+          {
+            id: "cjcf1cj0u01800146jii8h8ch"
+          },
+          {
+            id: "cjcf1cj0u01810146m84cnt34"
+          }
+        ]
+      }
+    }
+    where: {
+      id: "cjcf1cj0c017y01461c6enbfe"
+    }
+  ) {
+    id
+  }
+}
+```
+
+
+## Scalar list mutations
+
+When an [object type](knul#object-types) has a field that is has a _scalar list_ as its type, there are a number of special mutations available.
+
+In the following data model, the `User` type has three such fields:
+
+```graphql
+type User {
+  id: ID! @unique
+  scores: [Int!]!         # scalar list for integers
+  friends: [String!]!     # scalar list for strings
+  coinFlips: [Boolean!]!  # scalar list for booleans
+}
+```
+
+### Creating nodes
+
+When creating a new node of type `User`, a list of values can be provided for each scalar list field using `set`.
+
+**Create a new `User` and set the values for `scores`, `friends` and `coinFlips`:**
+
+```grahpql
+mutation {
+  createUser(data: {
+    scores: { set: [1, 2, 3] }
+    friends: { set: ["Sarah", "Jane"] }
+    throws: { set: [false, false] }
+  }) {
+    id
+  }
+}
+```
+
+### Updating nodes
+
+When updating an existing node of type `User`, a number of additional operations can be performed on the scalar list fields (such as `scores: [Int!]!`):
+
+- `set`: Override the existing list with an entirely new list.
+- `push` (coming soon): Add one or more elements anywhere in the list.
+- `pop` (coming soon): Remove one or more elements from the beginning or the end of the list.
+- `remove` (coming soon): Remove all elements from the list that match a given filter.
+
+> `push`, `pop` and `remove` are not yet implemented. If you're curios what these are going to look like, you can get a preview in the respective [specification](https://github.com/prisma/prisma/issues/1275).
+
+Each scalar list field takes an object with a `set` field in an `update` mutation. The value of that field is a single value _or_ a list of the corresponding scalar type.
+
+**Set the `scores` of an existing `User` node to `[1]`:**
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: "cjd4lfdyww0h00144zst9alur"
+    }
+    data: {
+      scores: {
+        set: 1
+      }
+    }
+  ) {
+    id
+  }
+}
+```
+
+**Set the `scores` of an existing `User` node to `[10,20,30]`:**
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: "cjd4lfdyww0h00144zst9alur"
+    }
+    data: {
+      scores: {
+        set: [10,20,30]
+      }
+    }
+  ) {
+    id
+  }
+}
+```
+
+
+## Batch Mutations
+
+Batch mutations are useful to update or delete many nodes at once. The returned data only contains the `count` of affected nodes.
+
+<Warning>
+
+Batch mutations are **not** triggering [subscription](qwe3) events!
+
+</Warning>
+
+For updating many nodes, you can [select the affected nodes](vw4d#node-selection) using the `where` argument, while you specify the new values with `data`. All nodes will be updated to the same value.
+
+
+**Set the `published` fields of all unpublished `Post` nodes that were created in 2017 to `true`:**
+
+```graphql
+mutation {
+  updateManyPosts(
+    where: {
+      createdAt_gte: "2017"
+      createdAt_lt: "2018"
+      published: false
+    }
+    data: {
+      published: true
+    }
+  ) {
+    count
+  }
+}
+```
+
+**Delete all unpublished `Post` nodes where the `name` of the `author` is `Alice`:**
+
+```graphql
+mutation {
+  deleteManyPosts(
+    where: {
+      published: false
+      author: {
+        name: "Alice"
+      }
+    }
+  ) {
+    count
+  }
+}
+```

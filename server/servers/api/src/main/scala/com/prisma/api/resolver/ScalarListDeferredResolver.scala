@@ -6,11 +6,10 @@ import com.prisma.api.resolver.DeferredTypes._
 import scala.concurrent.{ExecutionContext, Future}
 
 class ScalarListDeferredResolver(dataResolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[ScalarListDeferred]],
-              executionContext: ExecutionContext): Vector[OrderedDeferredFutureResult[ScalarListDeferredResultType]] = {
-    implicit val ec: ExecutionContext = executionContext
-    val deferreds                     = orderedDeferreds.map(_.deferred)
-
+  def resolve(
+      orderedDeferreds: Vector[OrderedDeferred[ScalarListDeferred]]
+  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[ScalarListDeferredResultType]] = {
+    val deferreds    = orderedDeferreds.map(_.deferred)
     val headDeferred = deferreds.head
     val deferredIds  = deferreds.map(deferred => deferred.nodeId)
 

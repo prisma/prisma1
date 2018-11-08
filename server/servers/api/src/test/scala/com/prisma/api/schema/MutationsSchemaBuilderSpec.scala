@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.schema_dsl.SchemaDsl
+import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
 import sangria.renderer.SchemaRenderer
@@ -336,7 +336,24 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
+    schema should containMutation("updateManyTodoes(data: TodoUpdateManyMutationInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
+
+  }
+
+  "the executeRaw mutation" should "be there if raw access is enabled" in {
+    val project       = TestProject()
+    val schemaBuilder = SchemaBuilderImpl(project, enableRawAccess = true)
+    val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
+
+    schema should containMutation("executeRaw(database: PrismaDatabase, query: String!): Json")
+  }
+
+  "the executeRaw mutation" should "not be there if raw access is disabled" in {
+    val project       = TestProject()
+    val schemaBuilder = SchemaBuilderImpl(project, enableRawAccess = false)
+    val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
+
+    schema should not(containMutation("executeRaw(database: PrismaDatabase, query: String!): Json"))
   }
 }

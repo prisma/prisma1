@@ -4,7 +4,8 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
-import com.prisma.shared.models.{Migration, Project, ProjectId}
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.{ConnectorCapability, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -12,19 +13,21 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions {
+  self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
   implicit lazy val deployConnector                          = testDependencies.deployConnector
+  override def prismaConfig                                  = testDependencies.config
+  val server                                                 = DeployTestServer()
+  val internalDB                                             = testDependencies.deployConnector
+  val projectsToCleanUp                                      = new ArrayBuffer[String]
+  def capabilities                                           = deployConnector.capabilities
 
-  override def prismaConfig = testDependencies.config
-
-  val server            = DeployTestServer()
-  val internalDB        = testDependencies.deployConnector
-  val projectsToCleanUp = new ArrayBuffer[String]
+  def connectorHasCapability(capability: ConnectorCapability) = deployConnector.hasCapability(capability)
 
   val basicTypesGql =
     """
@@ -40,14 +43,11 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
     deployConnector.shutdown().await()
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-//    projectsToCleanUp.foreach(internalDB.deleteProjectDatabase)
-//    projectsToCleanUp.clear()
     deployConnector.reset().await
   }
 
@@ -68,19 +68,17 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 }
 
 trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
-
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(MigrationsCapability)
 }
 
 trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
-  override def runSuiteOnlyForPassiveConnectors = true
 
-  val projectName  = this.getClass.getSimpleName
-  val projectStage = "default"
-  val projectId    = s"$projectName$$$projectStage"
+  val projectName                      = this.getClass.getSimpleName
+  val projectStage                     = "default"
+  val projectId                        = s"$projectName$$$projectStage"
+  override def doNotRunForCapabilities = Set(MigrationsCapability)
 
   def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
-//    setupProjectDatabaseForProject("passive_test", projectName, projectStage, sql)
     setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
   }
 

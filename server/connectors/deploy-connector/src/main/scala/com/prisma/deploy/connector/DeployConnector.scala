@@ -8,7 +8,7 @@ import scala.concurrent.Future
 
 trait DeployConnector {
   def isActive: Boolean
-  def isPassive: Boolean = !isActive
+  def fieldRequirements: FieldRequirementsInterface
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def deployMutactionExecutor: DeployMutactionExecutor
@@ -16,6 +16,8 @@ trait DeployConnector {
   def projectIdEncoder: ProjectIdEncoder
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
   def cloudSecretPersistence: CloudSecretPersistence
+  def capabilities: Set[ConnectorCapability]
+  def hasCapability(capability: ConnectorCapability): Boolean = capabilities.contains(capability)
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]
@@ -40,4 +42,15 @@ trait ClientDbQueries {
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean]
   def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean]
   def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean]
+}
+
+object EmptyClientDbQueries extends ClientDbQueries {
+  private val falseFuture = Future.successful(false)
+
+  override def existsByModel(modelName: String)                                         = falseFuture
+  override def existsByRelation(relationId: String)                                     = falseFuture
+  override def existsDuplicateByRelationAndSide(relationId: String, side: RelationSide) = falseFuture
+  override def existsNullByModelAndField(model: Model, field: Field)                    = falseFuture
+  override def existsDuplicateValueByModelAndField(model: Model, field: ScalarField)    = falseFuture
+  override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String) = falseFuture
 }

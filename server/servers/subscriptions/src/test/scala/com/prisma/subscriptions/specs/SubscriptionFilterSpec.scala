@@ -10,6 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.{JsString, Json}
 
 class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpecBase with AwaitUtils {
+
   val project = SchemaDsl.fromBuilder { schema =>
     val statusEnum: Enum                = schema.enum("Status", Vector("Active", "Done"))
     val comment: SchemaDsl.ModelBuilder = schema.model("Comment").field("text", _.String)
@@ -31,7 +32,7 @@ class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpe
     testNodeId = TestData.createTodo("some todo", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase).value.toString
     importantTestNodeId = TestData.createTodo("important!", JsString("[1,2,{\"a\":\"b\"}]"), None, project, model, testDatabase).value.toString
 
-    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", CuidGCValue("comment-id")))
+    val raw: List[(String, GCValue)] = List(("text", StringGCValue("some comment")), ("id", StringIdGCValue("comment-id")))
     val args                         = PrismaArgs(RootGCValue(raw: _*))
 
     testDatabase.runDatabaseMutactionOnClientDb(

@@ -1,8 +1,8 @@
 package com.prisma.config
 
 import java.io.File
-import java.net.URI
-import io.lemonlabs.uri.{Uri, Url}
+
+import io.lemonlabs.uri.Url
 import io.lemonlabs.uri.config.UriConfig
 import io.lemonlabs.uri.decoding.NoopDecoder
 import org.yaml.snakeyaml.Yaml
@@ -61,7 +61,6 @@ object ConfigLoader {
       val port           = sys.env.getOrElse("PORT", "4466").toInt
       val secret         = sys.env.getOrElse("PRISMA_MANAGEMENT_API_JWT_SECRET", "")
       val legacySecret   = sys.env.getOrElse("CLUSTER_PUBLIC_KEY", "")
-      val s2sSecret      = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", "")
       val clusterAddress = sys.env.getOrElse("CLUSTER_ADDRESS", "")
       val rabbitUri      = sys.env.getOrElse("RABBITMQ_URI", "")
       val dbHost         = sys.env.getOrElse("SQL_CLIENT_HOST", sys.error("Env var SQL_CLIENT_HOST required but not found"))
@@ -79,7 +78,6 @@ object ConfigLoader {
         |port: $port
         |managementApiSecret: $secret
         |legacySecret: $legacySecret
-        |server2serverSecret: $s2sSecret
         |clusterAddress: $clusterAddress
         |rabbitUri: $rabbitUri
         |enableManagementApi: $mgmtApiEnabled
@@ -100,7 +98,6 @@ object ConfigLoader {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
     val legacySecret   = extractStringOpt("legacySecret", map)
-    val s2sSecret      = extractStringOpt("server2serverSecret", map)
     val clusterAddress = extractStringOpt("clusterAddress", map)
     val rabbitUri      = extractStringOpt("rabbitUri", map)
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
@@ -118,7 +115,6 @@ object ConfigLoader {
       port = port,
       managementApiSecret = secret,
       legacySecret = legacySecret,
-      server2serverSecret = s2sSecret,
       clusterAddress = clusterAddress,
       rabbitUri = rabbitUri,
       managmentApiEnabled = mgmtApiEnabled,
@@ -142,6 +138,7 @@ object ConfigLoader {
     val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
     val database    = uri.path.toAbsolute.parts.headOption
     val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
+    val rawAccess   = extractBooleanOpt("rawAccess", db)
 
     databaseConfig(
       name = dbName,
@@ -156,7 +153,8 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = mgmtSchema,
-      ssl = ssl
+      ssl = ssl,
+      rawAccess = rawAccess
     )
   }
 
@@ -174,6 +172,7 @@ object ConfigLoader {
     val database    = extractStringOpt("database", db)
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
+    val rawAccess   = extractBooleanOpt("rawAccess", db)
 
     databaseConfig(
       name = dbName,
@@ -188,7 +187,8 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = mgmtSchema,
-      ssl = ssl
+      ssl = ssl,
+      rawAccess = rawAccess
     )
   }
 
@@ -205,7 +205,8 @@ object ConfigLoader {
       database: Option[String],
       schema: Option[String],
       managementSchema: Option[String],
-      ssl: Option[Boolean]
+      ssl: Option[Boolean],
+      rawAccess: Option[Boolean]
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -220,7 +221,8 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = managementSchema,
-      ssl = ssl.getOrElse(false)
+      ssl = ssl.getOrElse(false),
+      rawAccess = rawAccess.getOrElse(false)
     )
     validateDatabaseConfig(config)
   }
@@ -291,7 +293,6 @@ case class PrismaConfig(
     port: Option[Int],
     managementApiSecret: Option[String],
     legacySecret: Option[String],
-    server2serverSecret: Option[String],
     clusterAddress: Option[String],
     rabbitUri: Option[String],
     managmentApiEnabled: Option[Boolean],
@@ -311,7 +312,8 @@ case class DatabaseConfig(
     pooled: Boolean,
     database: Option[String],
     schema: Option[String],
-    ssl: Boolean
+    ssl: Boolean,
+    rawAccess: Boolean
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)

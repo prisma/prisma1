@@ -9,7 +9,7 @@ import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema._
 import com.prisma.auth.Auth
 import com.prisma.errors.{ErrorReporter, ProjectMetadata}
-import com.prisma.shared.models.{Project, ProjectWithClientId}
+import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryExtensions._
 import play.api.libs.json._
 import sangria.schema.Schema
@@ -73,9 +73,9 @@ case class RequestHandler(
       fn: Project => Future[(StatusCode, T)]
   ): Future[(StatusCode, T)] = {
     for {
-      projectWithClientId <- fetchProject(projectId)
-      _                   <- verifyAuth(projectWithClientId.project, rawRequest)
-      result              <- fn(projectWithClientId.project)
+      project <- fetchProject(projectId)
+      _       <- verifyAuth(project, rawRequest)
+      result  <- fn(project)
     } yield result
   }
 
@@ -88,7 +88,7 @@ case class RequestHandler(
     graphQlRequestHandler.handle(graphQlRequest)
   }
 
-  def fetchProject(projectId: String): Future[ProjectWithClientId] = {
+  def fetchProject(projectId: String): Future[Project] = {
     val result = projectFetcher.fetch(projectIdOrAlias = projectId)
 
     result.onComplete {

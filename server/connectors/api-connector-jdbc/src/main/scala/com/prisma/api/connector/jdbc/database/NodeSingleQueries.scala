@@ -1,10 +1,10 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode}
+import com.prisma.api.connector.{Filter, NodeSelector, PrismaNode, SelectedFields}
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Model, RelationField, Schema}
+import com.prisma.shared.models.{Model, RelationField, ScalarField, Schema}
+import org.jooq.impl.DSL.{field, name}
 import org.jooq.{Condition, Record1, SelectConditionStep}
-import org.jooq.impl.DSL.{asterisk, field, name}
 
 import scala.concurrent.ExecutionContext
 import scala.language.existentials
@@ -12,44 +12,38 @@ import scala.language.existentials
 trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  //This could save a roundtrip if we would deploy a stored procedure that would contain a mapping from stablemodelidentifier to modeltable
-  def getNodeByGlobalId(schema: Schema, idGCValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
-
-    val modelNameForId: DBIO[Option[String]] = {
-      val query = sql
-        .select(relayStableIdentifierColumn)
-        .from(relayTable)
-        .where(relayIdColumn.equal(placeHolder))
-
-      queryToDBIO(query)(
-        setParams = pp => pp.setGcValue(idGCValue),
-        readResult = _.readWith(readStableModelIdentifier).headOption
-      )
-    }
-
-    for {
-      stableModelIdentifier <- modelNameForId
-      result <- stableModelIdentifier match {
-                 case Some(stableModelIdentifier) => getNodeById(schema.getModelByStableIdentifier_!(stableModelIdentifier.trim), idGCValue)
-                 case None                        => DBIO.successful(None)
-               }
-    } yield result
-  }
-
-  def getNodeById(model: Model, idGcValue: IdGCValue)(implicit ec: ExecutionContext): DBIO[Option[PrismaNode]] = {
-    getNodesByValuesForField(model, model.idField_!, Vector(idGcValue)).map(_.headOption)
-  }
-
-  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = {
-    val model = where.model
+  def getModelForGlobalId(schema: Schema, idGCValue: IdGCValue): DBIO[Option[Model]] = {
     val query = sql
-      .select(asterisk())
+      .select(relayStableIdentifierColumn)
+      .from(relayTable)
+      .where(relayIdColumn.equal(placeHolder))
+
+    queryToDBIO(query)(
+      setParams = pp => pp.setGcValue(idGCValue),
+      readResult = { rs =>
+        rs.readWith(readStableModelIdentifier).headOption.map { stableModelIdentifier =>
+          schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
+        }
+      }
+    )
+  }
+
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
+
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = {
+    val model      = where.model
+    val fieldsInDB = selectedFields.scalarDbFields
+    val jooqFields = fieldsInDB.map(modelColumn)
+    val query = sql
+      .select(jooqFields.toVector: _*)
       .from(modelTable(model))
-      .where(modelColumn(model, where.field).equal(placeHolder))
+      .where(modelColumn(where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = pp => pp.setGcValue(where.fieldGCValue),
-      readResult = rs => rs.readWith(readsPrismaNode(model)).headOption
+      readResult = rs => {
+        rs.readWith(readsPrismaNode(model, fieldsInDB)).headOption
+      }
     )
   }
 
@@ -58,7 +52,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     val query = sql
       .select(idField(model))
       .from(modelTable(model))
-      .where(modelColumn(model, where.field).equal(placeHolder))
+      .where(modelColumn(where.field).equal(placeHolder))
 
     queryToDBIO(query)(
       setParams = _.setGcValue(where.fieldGCValue),
@@ -96,7 +90,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
 
   def getNodeIdByParentIdAndWhere(parentField: RelationField, parentId: IdGCValue, where: NodeSelector): DBIO[Option[IdGCValue]] = {
     val model                 = parentField.relatedModel_!
-    val nodeSelectorCondition = modelColumn(model, where.field).equal(placeHolder)
+    val nodeSelectorCondition = modelColumn(where.field).equal(placeHolder)
     val q: SelectConditionStep[Record1[AnyRef]] = sql
       .select(idField(model))
       .from(modelTable(model))

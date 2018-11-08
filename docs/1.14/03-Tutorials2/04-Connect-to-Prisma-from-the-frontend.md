@@ -15,11 +15,11 @@ Prisma turns your database into a GraphQL API, exposing powerful CRUD operations
 
 There are several reasons why this is not a suitable setup for production use cases:
 
-* Your clients should be able to consume a domain-specific API rather than working with generic CRUD operations
-* You want to provide authentication functionality for your users so that they can register with a password or some 3rd-party authentication provider
-* You want your API to integrate with microservices or other legacy systems
-* You want to include 3-rd party services (such as Stripe, GitHub, Yelp, ...) or other public APIs into your server
-* You don't want to expose your entire database schema the everyone (which would be the case due to GrapHQL's introspection feature)
+- Your clients should be able to consume a domain-specific API rather than working with generic CRUD operations
+- You want to provide authentication functionality for your users so that they can register with a password or some 3rd-party authentication provider
+- You want your API to integrate with microservices or other legacy systems
+- You want to include 3-rd party services (such as Stripe, GitHub, Yelp, ...) or other public APIs into your server
+- You don't want to expose your entire database schema the everyone (which would be the case due to GrapHQL's introspection feature)
 
 </InfoBox>
 
@@ -111,10 +111,10 @@ mv datamodel.graphql prisma.yml prisma
 
 Here is a rundown of the commands you just ran.
 
-* `yarn init -y` creates a file called `package.json` with default values
-* `mkdir public src prisma` creates three folders called `public`, `src`, and `prisma`
-* `touch public/index.html src/index.js` creates two files called `public/index.html` and `src/index.js`
-* `mv datamodel.graphql prisma.yml prisma` moves your Prisma configuration file to the `prisma` folder
+- `yarn init -y` creates a file called `package.json` with default values
+- `mkdir public src prisma` creates three folders called `public`, `src`, and `prisma`
+- `touch public/index.html src/index.js` creates two files called `public/index.html` and `src/index.js`
+- `mv datamodel.graphql prisma.yml prisma` moves your Prisma configuration file to the `prisma` folder
 
 </Instruction>
 
@@ -172,20 +172,20 @@ After creating a new post, the visitor will see the post list in `/posts`. The o
 Fill `src/index.js` with the contents of the following snippet.
 
 ```js
-import React from "react";
-import ReactDOM from "react-dom";
-import { Container, CreateUser, Posts, NewPost } from "blog-components";
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Container, CreateUser, Posts, NewPost } from 'blog-components'
 
 class App extends React.Component {
-  state = { user: null, posts: [] };
+  state = { user: null, posts: [] }
   createUser = name => {
-    this.setState({ user: { name } });
-  };
+    this.setState({ user: { name } })
+  }
   createPost = ({ title, content }) => {
     this.setState({
-      posts: [...this.state.posts, { title, content, author: this.state.user }]
-    });
-  };
+      posts: [...this.state.posts, { title, content, author: this.state.user }],
+    })
+  }
   render() {
     return (
       <Container user={this.state.user}>
@@ -193,11 +193,11 @@ class App extends React.Component {
         <NewPost user={this.state.user} createPost={this.createPost} />
         <Posts posts={this.state.posts} />
       </Container>
-    );
+    )
   }
 }
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById('root'))
 ```
 
 </Instruction>
@@ -239,26 +239,26 @@ Please note that you need to replace the `__YOUR_PRISMA_ENDPOINT__` placeholder 
 Modify `src/index.js` to look like the following:
 
 ```js
-import React from "react";
-import ReactDOM from "react-dom";
-import { Container, CreateUser, Posts, NewPost } from "blog-components";
-import { ApolloProvider } from "react-apollo";
-import ApolloClient from "apollo-boost";
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Container, CreateUser, Posts, NewPost } from 'blog-components'
+import { ApolloProvider } from 'react-apollo'
+import ApolloClient from 'apollo-boost'
 
 const client = new ApolloClient({
-  uri: "__YOUR_PRISMA_ENDPOINT__"
-});
+  uri: '__YOUR_PRISMA_ENDPOINT__',
+})
 
 class App extends React.Component {
-  state = { user: null, posts: [] };
+  state = { user: null, posts: [] }
   createUser = name => {
-    this.setState({ user: { name } });
-  };
+    this.setState({ user: { name } })
+  }
   createPost = ({ title, content }) => {
     this.setState({
-      posts: [...this.state.posts, { title, content, author: this.state.user }]
-    });
-  };
+      posts: [...this.state.posts, { title, content, author: this.state.user }],
+    })
+  }
   render() {
     return (
       <ApolloProvider client={client}>
@@ -268,11 +268,11 @@ class App extends React.Component {
           <Posts posts={this.state.posts} />
         </Container>
       </ApolloProvider>
-    );
+    )
   }
 }
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById('root'))
 ```
 
 </Instruction>
@@ -288,16 +288,16 @@ Both `Mutation` and `Query` receive a GraphQL mutation parsed with `graphql-tag`
 Wrap `CreateUser`, `Posts` and `NewPost` with their respective `Query` or `Mutation` components.
 
 ```js
-import React from "react";
-import ReactDOM from "react-dom";
-import { Container, CreateUser, Posts, NewPost } from "blog-components";
-import { ApolloProvider, Query, Mutation } from "react-apollo";
-import ApolloClient from "apollo-boost";
-import gql from "graphql-tag";
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Container, CreateUser, Posts, NewPost } from 'blog-components'
+import { ApolloProvider, Query, Mutation } from 'react-apollo'
+import ApolloClient from 'apollo-boost'
+import gql from 'graphql-tag'
 
 const client = new ApolloClient({
-  uri: "__YOUR_PRISMA_ENDPOINT__"
-});
+  uri: '__YOUR_PRISMA_ENDPOINT__',
+})
 
 const POSTS = gql`
   {
@@ -309,7 +309,7 @@ const POSTS = gql`
       }
     }
   }
-`;
+`
 
 const CREATE_USER = gql`
   mutation CreateUser($name: String!) {
@@ -318,7 +318,7 @@ const CREATE_USER = gql`
       name
     }
   }
-`;
+`
 
 const CREATE_POST = gql`
   mutation CreatePost($post: PostCreateInput!) {
@@ -328,10 +328,10 @@ const CREATE_POST = gql`
       content
     }
   }
-`;
+`
 
 class App extends React.Component {
-  state = { user: null };
+  state = { user: null }
   render() {
     return (
       <ApolloProvider client={client}>
@@ -339,7 +339,7 @@ class App extends React.Component {
           <Mutation
             mutation={CREATE_USER}
             update={(cache, { data }) => {
-              this.setState({ user: data.createUser });
+              this.setState({ user: data.createUser })
             }}
           >
             {createUser => (
@@ -358,10 +358,10 @@ class App extends React.Component {
                       post: {
                         title,
                         content,
-                        author: { connect: { id: this.state.user.id } }
-                      }
+                        author: { connect: { id: this.state.user.id } },
+                      },
                     },
-                    refetchQueries: [{ query: POSTS }]
+                    refetchQueries: [{ query: POSTS }],
                   })
                 }
               />
@@ -370,21 +370,21 @@ class App extends React.Component {
           <Query query={POSTS}>
             {({ loading, error, data }) => {
               if (error) {
-                return <div>Error :(</div>;
+                return <div>Error :(</div>
               }
               if (loading) {
-                return <div>Loading...</div>;
+                return <div>Loading...</div>
               }
-              return <Posts posts={data.posts} />;
+              return <Posts posts={data.posts} />
             }}
           </Query>
         </Container>
       </ApolloProvider>
-    );
+    )
   }
 }
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById('root'))
 ```
 
 </Instruction>

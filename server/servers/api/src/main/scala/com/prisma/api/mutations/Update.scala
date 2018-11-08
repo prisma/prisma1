@@ -4,19 +4,18 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import sangria.schema
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class Update(
     model: Model,
     project: Project,
     args: schema.Args,
+    selectedFields: SelectedFields,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends SingleItemClientMutation {
@@ -27,20 +26,15 @@ case class Update(
   val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
   val where    = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
-  lazy val prismaNodes: Future[Option[PrismaNode]] = dataResolver.getNodeByWhere(where)
+  lazy val prismaNode: Future[Option[PrismaNode]] = dataResolver.getNodeByWhere(where, selectedFields)
 
-  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
-    prismaNodes map {
-      case Some(prismaNode) => DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs, prismaNode)
-      case None             => throw APIErrors.NodeNotFoundForWhereError(where)
-    }
-  }
+  lazy val updateMutaction = DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs)
+
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful { updateMutaction }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    prismaNodes flatMap {
-      case Some(prismaNode) => returnValueByUnique(NodeSelector.forIdGCValue(model, prismaNode.id))
-      case None             => Future.successful(NoReturnValue(where))
-    }
+    val updateResult = results.results.collectFirst { case r: UpdateNodeResult if r.mutaction == updateMutaction => r }.head
+    returnValueByUnique(NodeSelector.forId(model, updateResult.id), selectedFields)
   }
 
 }

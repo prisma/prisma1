@@ -1,5 +1,6 @@
 package com.prisma.deploy.database.schema.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
@@ -172,9 +173,9 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val (project, _)  = setupProject(schema)
     val loadedProject = projectPersistence.load(project.id).await.get
 
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
+    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("id").isHidden shouldEqual true
+    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("createdAt").isHidden shouldEqual true
+    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("updatedAt").isHidden shouldEqual true
   }
 
   "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
@@ -710,7 +711,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations2.head.revision shouldEqual 4 // order is DESC
   }
 
-  "DeployMutation" should "succeed with id fields of type UUID" in {
+  "DeployMutation" should "succeed with id fields of type UUID" taggedAs (IgnoreMongo) in {
     val (project, _) = setupProject(basicTypesGql)
     val schema =
       """

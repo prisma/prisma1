@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.migration.DirectiveTypes.{InlineRelationDirective, RelationTableDirective}
+import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{OnDelete, TypeIdentifier}
 import sangria.ast._
@@ -59,6 +59,7 @@ object DataSchemaAstExtensions {
       nameBeforeRename.getOrElse(objectType.name)
     }
 
+    def isEmbedded: Boolean                          = objectType.directives.exists(_.name == "embedded")
     def field_!(name: String): FieldDefinition       = field(name).getOrElse(sys.error(s"Could not find the field $name on the type ${objectType.name}"))
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
 
@@ -127,7 +128,7 @@ object DataSchemaAstExtensions {
     def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
     def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
 
-    def relationDBDirective = relationTableDirective.orElse(inlineRelationDirective)
+    def relationDBDirective = relationTableDirective.orElse(pgInlineRelationDirective).orElse(mongoInlineRelationDirective)
 
     def relationTableDirective: Option[RelationTableDirective] = {
       for {
@@ -137,8 +138,11 @@ object DataSchemaAstExtensions {
       } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
     }
 
-    def inlineRelationDirective: Option[InlineRelationDirective] =
-      fieldDefinition.directiveArgumentAsString("pgRelation", "column").map(value => InlineRelationDirective(value))
+    def pgInlineRelationDirective: Option[PGInlineRelationDirective] =
+      fieldDefinition.directiveArgumentAsString("pgRelation", "column").map(value => PGInlineRelationDirective(value))
+
+    def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
+      fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
   }
 
   implicit class CoolEnumType(val enumType: EnumTypeDefinition) extends AnyVal {
@@ -221,5 +225,6 @@ object DirectiveTypes {
 
   sealed trait RelationDBDirective
   case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
-  case class InlineRelationDirective(column: String)                                                        extends RelationDBDirective
+  case class PGInlineRelationDirective(column: String)                                                      extends RelationDBDirective
+  case class MongoInlineRelationDirective(field: String)                                                    extends RelationDBDirective
 }

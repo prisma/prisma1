@@ -36,7 +36,7 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
         case (x: Boolean, TypeIdentifier.Boolean)                                     => BooleanGCValue(x)
         case (x: String, TypeIdentifier.DateTime)                                     => DateTimeGCValue(new DateTime(x))
         case (x: DateTime, TypeIdentifier.DateTime)                                   => DateTimeGCValue(x)
-        case (x: String, TypeIdentifier.Cuid)                                         => CuidGCValue(x)
+        case (x: String, TypeIdentifier.Cuid)                                         => StringIdGCValue(x)
         case (x: UUID, TypeIdentifier.UUID)                                           => UuidGCValue(x)
         case (x: String, TypeIdentifier.Enum)                                         => EnumGCValue(x)
         case (x: JsObject, TypeIdentifier.Json)                                       => JsonGCValue(x)
@@ -54,11 +54,11 @@ case class GCAnyConverter(typeIdentifier: TypeIdentifier, isList: Boolean) exten
 }
 
 /**
-  *  CoolArgs <-> ReallyCoolArgs - This is used to transform from Coolargs for create on a model to typed ReallyCoolArgs
+  *  CoolArgs <-> PrismaArgs - This is used to transform from Coolargs for create on a model to typed PrismaArgs
   */
-case class GCCreateReallyCoolArgsConverter(model: Model) {
+case class GCCreatePrismaArgsConverter(model: Model) {
 
-  def toReallyCoolArgs(raw: Map[String, Any]): PrismaArgs = {
+  def toPrismaArgs(raw: Map[String, Any]): PrismaArgs = {
 
     val res = model.scalarNonListFields
       .filter { field =>
@@ -79,7 +79,7 @@ case class GCCreateReallyCoolArgsConverter(model: Model) {
     PrismaArgs(RootGCValue(res: _*))
   }
 
-  def toReallyCoolArgsFromJson(json: JsValue): PrismaArgs = {
+  def toPrismaArgsFromJson(json: JsValue): PrismaArgs = {
 
     def fromSingleJsValue(jsValue: JsValue, field: ScalarField): GCValue = jsValue match {
       case JsString(x)                                                    => StringGCValue(x)

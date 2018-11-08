@@ -2,8 +2,10 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.{DatabaseMutaction, TopLevelDatabaseMutaction}
+import com.prisma.api.connector.TopLevelDatabaseMutaction
 import com.prisma.deploy.connector._
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
 import com.prisma.shared.models.Manifestations.InlineRelationManifestation
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -14,6 +16,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
 
   def setup(project: Project): Unit = {
     deleteProjectDatabase(project)
+    dependencies.invalidationTestKit.publish(Only(project.id), project.id)
     createProjectDatabase(project)
 
     // The order here is very important or foreign key constraints will fail
@@ -25,19 +28,16 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
+  //Fixme how does this work with self relations?
   private def createRelationTable(project: Project, relation: Relation) = {
     val mutaction = relation.manifestation match {
-      case Some(m: InlineRelationManifestation) =>
-        val modelA = relation.modelA
-        val modelB = relation.modelB
+      case Some(m: InlineRelationManifestation) if !dependencies.deployConnector.hasCapability(MongoRelationsCapability) =>
+        val modelA              = relation.modelA
+        val modelB              = relation.modelB
+        val (model, references) = if (m.inTableOfModelId == modelA.name) (modelA, modelB) else (modelB, modelA)
+        val field               = relation.getFieldOnModel(m.inTableOfModelId)
 
-        val (model, references) = if (m.inTableOfModelId == modelA.name) {
-          (modelA, modelB)
-        } else {
-          (modelB, modelA)
-        }
-        val field = relation.getFieldOnModel(m.inTableOfModelId)
-        CreateInlineRelation(project.id, model, field, references, m.referencingColumn)
+        CreateInlineRelationForTests(project.id, model, field, references, m.referencingColumn)
       case _ =>
         CreateRelationTable(project.id, project.schema, relation = relation)
     }

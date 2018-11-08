@@ -2,10 +2,13 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
+import com.prisma.shared.models.ApiConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
+
+  override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
   val project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum(

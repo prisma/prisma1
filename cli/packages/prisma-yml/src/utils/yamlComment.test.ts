@@ -4,7 +4,7 @@ describe('replaceYamlValue', () => {
   test('when document is clean', () => {
     const input = `\
 endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
-datamodel: datamodel.graphql`
+datamodel: datamodel.prisma`
 
     const output = replaceYamlValue(input, 'endpoint', 'http://localhost:4466')
 
@@ -17,7 +17,7 @@ datamodel: datamodel.graphql`
 endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 
 #endpoint: asdasd
-datamodel: datamodel.graphql`
+datamodel: datamodel.prisma`
 
     const output = replaceYamlValue(input, 'endpoint', 'http://localhost:4466')
 
@@ -26,7 +26,7 @@ datamodel: datamodel.graphql`
 
   test('when key does not yet exist', () => {
     const input = `\
-datamodel: datamodel.graphql`
+datamodel: datamodel.prisma`
 
     const output = replaceYamlValue(input, 'endpoint', 'http://localhost:4466')
 
@@ -38,7 +38,7 @@ describe('migrateToEndpoint', () => {
   test('ignore when endpoint present', () => {
     const input = `\
 endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
-datamodel: datamodel.graphql`
+datamodel: datamodel.prisma`
 
     const output = migrateToEndpoint(input, '')
 
@@ -50,7 +50,7 @@ datamodel: datamodel.graphql`
 service: my-service
 stage: dev
 cluster: public-asdf/prisma-eu1
-datamodel: datamodel.graphql`
+datamodel: datamodel.prisma`
 
     const output = migrateToEndpoint(
       input,
@@ -70,7 +70,7 @@ service: my-service
 
 
 
-datamodel: datamodel.graphql`
+datamodel: datamodel.prisma`
 
     const output = migrateToEndpoint(
       input,

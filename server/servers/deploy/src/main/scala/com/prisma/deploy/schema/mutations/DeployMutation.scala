@@ -9,14 +9,14 @@ import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, ServerSideSubscriptionFunction, UpdateSecrets, WebhookDelivery}
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, UpdateSecrets}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.future.FutureUtils.FutureOr
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
 import sangria.parser.QueryParser
 
-import scala.collection.{Seq, immutable}
+import scala.collection.Seq
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -55,7 +55,7 @@ case class DeployMutation(
       inferredTables     <- FutureOr(inferTables)
       inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
       _                  <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-      functions          <- FutureOr(getFunctionModels(args.functions))
+      functions          <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps              <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
 
@@ -70,7 +70,7 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
-    SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive).validateSyntax
+    SchemaSyntaxValidator(args.types, deployConnector.fieldRequirements, deployConnector.capabilities).validateSyntax
   }
 
   private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
@@ -78,7 +78,7 @@ case class DeployMutation(
   }
 
   private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (deployConnector.isPassive) {
+    if (!deployConnector.isActive) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
         Future.successful(Good(()))
@@ -103,8 +103,8 @@ case class DeployMutation(
     DestructiveChanges(deployConnector, project, nextSchema, steps).check
   }
 
-  private def getFunctionModels(fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {
-    dependencies.functionValidator.validateFunctionInputs(project, fns)
+  private def getFunctionModels(nextSchema: Schema, fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {
+    dependencies.functionValidator.validateFunctionInputs(nextSchema, fns)
   }
 
   private def performDeployment(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Good[DeployMutationPayload]] = {

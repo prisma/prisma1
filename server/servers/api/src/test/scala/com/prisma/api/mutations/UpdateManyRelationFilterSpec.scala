@@ -1,20 +1,35 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val top        = schema.model("Top").field_!("top", _.String)
-    val bottom     = schema.model("Bottom").field_!("bottom", _.String)
-    val veryBottom = schema.model("VeryBottom").field_!("veryBottom", _.String)
-    top.oneToOneRelation("bottom", "top", bottom)
-    bottom.oneToOneRelation("veryBottom", "bottom", veryBottom)
+  val schema =
+    """type Top{
+      |   id: ID! @unique
+      |   top: String!
+      |   bottom: Bottom
+      |}
+      |
+      |type Bottom{
+      |   id: ID! @unique
+      |   bottom: String!
+      |   top: Top
+      |   veryBottom: VeryBottom
+      |}
+      |
+      |type VeryBottom{
+      |   id: ID! @unique
+      |   veryBottom: String!
+      |   bottom: Bottom
+      |}""".stripMargin
 
-  }
+  val project: Project = SchemaDsl.fromString() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

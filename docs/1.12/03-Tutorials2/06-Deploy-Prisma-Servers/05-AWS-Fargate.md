@@ -134,7 +134,7 @@ Save the **DatabasePort** and **DatabaseEndpoint** as you’ll need them in the 
 
 The Prisma server is deployed via a CloudFormation template as well. So, just like before you first need to get access to that template.
 
-You can find it in the [prisma-templates](https://github.com/prismagraphql/prisma-templates) GitHub repository. 
+You can find it in the [prisma-templates](https://github.com/prisma/prisma-templates) GitHub repository.
 
 <Instruction>
 
@@ -256,7 +256,7 @@ Similar to what you did with the database stack before, first select the `my-pri
 
 ## 3. Deploy a Prisma service to the new server
 
-It’s time to put your new server in use and deploy a service to it. 
+It’s time to put your new server in use and deploy a service to it.
 
 <Instruction>
 
@@ -292,14 +292,14 @@ For the following prompts, you can simply hit **Enter** to choose the suggested 
 
 After those selections, the CLI creates a new directory called `my-prisma-service` with your project files.
 
-Before deploying your service with `prisma deploy`, you need to ensure the Prisma CLI is authorized to access your Prisma server. To do so, you need to set the `MANAGEMENT_API_SECRET` environment variable in your shell. The CLI will read this environment variable and generate a JWT based on it which it uses to authenticate against the server.
+Before deploying your service with `prisma deploy`, you need to ensure the Prisma CLI is authorized to access your Prisma server. To do so, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable in your shell. The CLI will read this environment variable and generate a JWT based on it which it uses to authenticate against the server.
 
 <Instruction>
 
-Set the `MANAGEMENT_API_SECRET` environment variable in your terminal:
+Set the `PRISMA_MANAGEMENT_API_SECRET` environment variable in your terminal:
 
 ```bash
-export MANAGEMENT_API_SECRET="protecting-my-prisma-server"
+export PRISMA_MANAGEMENT_API_SECRET="protecting-my-prisma-server"
 ```
 
 </Instruction>

@@ -4,13 +4,14 @@ import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBack
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
 import com.prisma.gc_values.GCValue
+import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
+import org.scalactic.{Bad, Good}
 import org.scalatest.Suite
-import sangria.parser.QueryParser
 
 object SchemaDsl extends AwaitUtils {
 
@@ -22,22 +23,19 @@ object SchemaDsl extends AwaitUtils {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)
     val project = schemaBuilder.build(id = projectId(suite))
-    if (deployConnector.isPassive) {
-      addIdFields(addManifestations(project), cuidField)
+
+    if (!deployConnector.isActive) {
+      addIdFields(addManifestations(project, deployConnector), cuidField)
     } else {
       addIdFields(project, cuidField)
     }
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(
-      id = projectId(suite),
-      InferredTables.empty,
-      isActive = deployConnector.isActive,
-      shouldCheckAgainstInferredTables = false
-    )(sdlString.stripMargin)
-    if (deployConnector.isPassive) {
-      addManifestations(project)
+    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
+
+    if (!deployConnector.isActive || deployConnector.hasCapability(MongoRelationsCapability)) {
+      addManifestations(project, deployConnector)
     } else {
       project
     }
@@ -55,36 +53,38 @@ object SchemaDsl extends AwaitUtils {
       id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, isActive = false, shouldCheckAgainstInferredTables = true)(sdlString)
+    fromString(id, inferredTables, deployConnector)(sdlString)
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      isActive: Boolean,
-      shouldCheckAgainstInferredTables: Boolean
+      deployConnector: DeployConnector
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator = SchemaSyntaxValidator(
-      sdlString,
-      SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
-      allowScalarLists = true
-    )
+    val validator          = SchemaSyntaxValidator(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities)
 
-    val prismaSdl = validator.generateSDL
+    val prismaSdl = validator.validateSyntax match {
+      case Good(prismaSdl) =>
+        prismaSdl
+      case Bad(errors) =>
+        sys.error(
+          s"""Encountered the following errors during schema validation. Please fix:
+           |${errors.mkString("\n")}
+         """.stripMargin
+        )
+    }
 
-    val schema                 = SchemaInferrer(isActive, shouldCheckAgainstInferredTables).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
+    val schema                 = SchemaInferrer(deployConnector.capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
     TestProject().copy(id = id, schema = withBackRelationsAdded)
   }
 
-  private def addManifestations(project: Project): Project = {
+  private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if (relation.isManyToMany) {
+      if ((relation.isManyToMany && !deployConnector.hasCapability(MongoRelationsCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)
@@ -103,9 +103,7 @@ object SchemaDsl extends AwaitUtils {
     }
     val newModels = project.models.map { model =>
       val newFields = model.fields.map { field =>
-        val newRelation = field.relationOpt.flatMap { relation =>
-          newRelations.find(_.name == relation.name)
-        }
+        val newRelation = field.relationOpt.flatMap(relation => newRelations.find(_.name == relation.name))
         field.template.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
       }
 
@@ -171,7 +169,8 @@ object SchemaDsl extends AwaitUtils {
       name: String,
       fields: Buffer[FieldTemplate] = Buffer.empty,
       var withPermissions: Boolean = true,
-      relations: Buffer[RelationTemplate] = Buffer.empty
+      relations: Buffer[RelationTemplate] = Buffer.empty,
+      isEmbedded: Boolean = false
   ) {
     val id = name
 
@@ -399,6 +398,7 @@ object SchemaDsl extends AwaitUtils {
       ModelTemplate(
         name = name,
         stableIdentifier = Cuid.createCuid(),
+        isEmbedded = isEmbedded,
         fieldTemplates = fields.toList,
         manifestation = None
       )

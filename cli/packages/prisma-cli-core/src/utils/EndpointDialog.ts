@@ -1,7 +1,7 @@
 import { Output, Client, Config, getPing } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
-import { Cluster, Environment } from 'prisma-yml'
+import { Cluster, Environment, PrismaDefinitionClass } from 'prisma-yml'
 import {
   concatName,
   defaultDataModel,
@@ -13,6 +13,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector, PostgresConnector } from 'prisma-db-introspection'
 import * as yaml from 'js-yaml'
+import { Client as PGClient } from 'pg'
 
 export interface GetEndpointParams {
   folderName: string
@@ -45,6 +46,7 @@ export interface GetEndpointResult {
   newDatabase: boolean
   managementSecret?: string
   writeDockerComposeYml: boolean
+  generator?: string
 }
 
 export interface HandleChoiceInput {
@@ -96,16 +98,36 @@ volumes:
 `,
 }
 
+export interface ConstructorArgs {
+  out: Output
+  client: Client
+  env: Environment
+  config: Config
+  definition: PrismaDefinitionClass
+  shouldAskForGenerator: boolean
+}
+
 export class EndpointDialog {
   out: Output
   client: Client
   env: Environment
   config: Config
-  constructor(out: Output, client: Client, env: Environment, config: Config) {
+  definition: PrismaDefinitionClass
+  shouldAskForGenerator: boolean
+  constructor({
+    out,
+    client,
+    env,
+    config,
+    definition,
+    shouldAskForGenerator,
+  }: ConstructorArgs) {
     this.out = out
     this.client = client
     this.env = env
     this.config = config
+    this.definition = definition
+    this.shouldAskForGenerator = shouldAskForGenerator
   }
 
   async getEndpoint(): Promise<GetEndpointResult> {
@@ -165,6 +187,7 @@ export class EndpointDialog {
         user: credentials.user,
         password: credentials.password,
         migrations: !credentials.alreadyData,
+        rawAccess: true,
       }),
     )
     return yaml
@@ -218,13 +241,13 @@ export class EndpointDialog {
         service = await this.ask({
           message: 'Choose a name for your service',
           key: 'serviceName',
-          defaultValue: 'default'
+          defaultValue: folderName,
         })
 
         stage = await this.ask({
           message: 'Choose a name for your stage',
           key: 'stageName',
-          defaultValue: 'default'
+          defaultValue: 'dev',
         })
 
         writeDockerComposeYml = false
@@ -260,10 +283,9 @@ export class EndpointDialog {
             ? `Introspecting database`
             : `Connecting to database`,
         )
-        const connector = new PostgresConnector(this.replaceLocalDockerHost(credentials))
-        const introspector = new Introspector(
-          connector,
-        )
+        const client = new PGClient(this.replaceLocalDockerHost(credentials))
+        const connector = new PostgresConnector(client)
+        const introspector = new Introspector(connector)
         let schemas
         try {
           schemas = await introspector.listSchemas()
@@ -277,7 +299,10 @@ export class EndpointDialog {
           schemas &&
           schemas.length > 0
         ) {
-          const { numTables, sdl } = await introspector.introspect(credentials.schema || schemas[0])
+          const schema = credentials.schema || schemas[0]
+
+          const { numTables, sdl } = await introspector.introspect(schema)
+          await client.end()
           if (numTables === 0) {
             this.out.log(
               chalk.red(
@@ -301,6 +326,8 @@ export class EndpointDialog {
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       case 'Demo server':
+        writeDockerComposeYml = false
+
         const demoCluster = await this.getDemoCluster()
         if (!demoCluster) {
           return this.getEndpoint()
@@ -345,6 +372,10 @@ export class EndpointDialog {
       stage = await this.askForStage('dev')
     }
 
+    const generator = this.shouldAskForGenerator
+      ? await this.askForGenerator()
+      : undefined
+
     workspace = workspace || cluster.workspaceSlug
 
     return {
@@ -359,6 +390,7 @@ export class EndpointDialog {
       datamodel,
       newDatabase,
       managementSecret,
+      generator,
       writeDockerComposeYml,
     }
   }
@@ -379,7 +411,7 @@ export class EndpointDialog {
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
     const alreadyData = introspection || (await this.askForExistingData())
-    const askForSchema = introspection ? true : alreadyData ? true : false 
+    const askForSchema = introspection ? true : alreadyData ? true : false
     if (type === 'mysql' && alreadyData) {
       throw new Error(
         `Existing MySQL databases with data are not yet supported.`,
@@ -420,10 +452,12 @@ export class EndpointDialog {
             key: 'ssl',
           })
         : undefined
-    const schema = askForSchema ? await this.ask({
-      message: `Enter name of existing schema`,
-      key: 'schema',
-    }) : undefined
+    const schema = askForSchema
+      ? await this.ask({
+          message: `Enter name of existing schema`,
+          key: 'schema',
+        })
+      : undefined
 
     return {
       type,
@@ -436,6 +470,23 @@ export class EndpointDialog {
       schema,
       ssl,
     }
+  }
+
+  public async selectSchema(schemas: string[]): Promise<string> {
+    const choices = schemas.map(s => ({
+      value: s,
+      name: s,
+    }))
+
+    const { choice } = await this.out.prompt({
+      message: 'Please select the Postgres schema you want to introspect',
+      name: 'choice',
+      type: 'list',
+      choices,
+      pageSize: Math.min(choices.length, 20),
+    })
+
+    return choice
   }
 
   private getClusterAndWorkspaceFromChoice(
@@ -593,23 +644,22 @@ export class EndpointDialog {
   }
 
   private async askForDemoCluster(): Promise<Cluster> {
-    const clusters = this.getCloudClusters().slice(0, 2)
-    const eu1Cluster = clusters.find(c => c.name === 'prisma-eu1')!
-    const us1Cluster = clusters.find(c => c.name === 'prisma-us1')!
     const eu1Ping = await getPing('EU_WEST_1')
     const us1Ping = await getPing('US_WEST_2')
-    const eu1Name = this.getClusterName(eu1Cluster)
-    const us1Name = this.getClusterName(us1Cluster)
-    const eu1Choice = [
-      eu1Name,
-      `Hosted on AWS in eu-west-1 using MySQL [${eu1Ping.toFixed()}ms latency]`,
-    ]
-    const us1Choice = [
-      us1Name,
-      `Hosted on AWS in us-west-2 using MySQL [${us1Ping.toFixed()}ms latency]`,
-    ]
-    const rawChoices =
-      eu1Ping < us1Ping ? [eu1Choice, us1Choice] : [us1Choice, eu1Choice]
+    const clusters = this.getCloudClusters().filter(
+      c => c.name === 'prisma-eu1' || c.name === 'prisma-us1',
+    )
+
+    const rawChoices = clusters.map(c => {
+      const clusterName = this.getClusterName(c)
+      const clusterRegion = c.name === 'prisma-eu1' ? `eu-west-1` : `us-west-2`
+      const pingTime =
+        c.name === 'prisma-eu1' ? eu1Ping.toFixed() : us1Ping.toFixed()
+      return [
+        clusterName,
+        `Hosted on AWS in ${clusterRegion} using MySQL [${pingTime}ms latency]`,
+      ]
+    })
     const choices = this.convertChoices(rawChoices)
 
     const { cluster } = await this.out.prompt({
@@ -618,8 +668,10 @@ export class EndpointDialog {
       message: `Choose the region of your demo server`,
       choices,
     })
-
-    return eu1Name === cluster ? eu1Cluster : us1Cluster
+    return clusters.find(c => {
+      const clusterName = this.getClusterName(c)
+      return clusterName === cluster
+    })!
   }
 
   private getClusterDescription(c: Cluster) {
@@ -685,6 +737,42 @@ export class EndpointDialog {
     return stage
   }
 
+  private async askForGenerator(): Promise<string> {
+    const choices = [
+      {
+        name: 'Prisma TypeScript Client',
+        value: 'typescript-client',
+      },
+      {
+        name: 'Prisma Flow Client',
+        value: 'flow-client',
+      },
+      {
+        name: 'Prisma JavaScript Client',
+        value: 'javascript-client',
+      },
+      {
+        name: 'Prisma Go Client',
+        value: 'go-client',
+      },
+      {
+        name: `Don't generate`,
+        value: 'no-generation',
+      },
+    ]
+
+    const { generator } = await this.out.prompt({
+      name: 'generator',
+      type: 'list',
+      message:
+        'Select the programming language for the generated Prisma client',
+      pageSize: choices.length,
+      choices,
+    })
+
+    return generator
+  }
+
   private async askForService(defaultName: string): Promise<string> {
     const question = {
       name: 'service',
@@ -727,7 +815,7 @@ export class EndpointDialog {
         },
         new inquirer.Separator(
           `\n\n${chalk.yellow(
-            'Warning: Introspecting databases with existing data is currently an experimental feature. If you find any issues, please report them here: https://github.com/graphcool/prisma/issues\n',
+            'Warning: Introspecting databases with existing data is currently an experimental feature. If you find any issues, please report them here: https://github.com/prisma/prisma/issues\n',
           )}`,
         ),
       ],

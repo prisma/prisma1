@@ -24,7 +24,7 @@ If you want to migrate from an existing data source, you can check out our plans
 
 ### What databases does Prisma support?
 
-**MySQL** is the very first database supported by Prisma. You can find more information about which databases will be supported [here](https://github.com/graphcool/prisma/tree/master/cli/#supported-databases).
+**MySQL** is the very first database supported by Prisma. You can find more information about which databases will be supported [here](https://github.com/prisma/prisma#database-connectors).
 
 If you have any preferences on which database you'd like to see implemented, you can create a new feature request or give a +1 for an existing one.
 

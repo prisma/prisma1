@@ -4,9 +4,8 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.mutactions.{DatabaseMutactions, ServerSideSubscriptions, SubscriptionEvents}
+import com.prisma.api.mutactions.DatabaseMutactions
 import com.prisma.api.schema.{APIErrors, ObjectTypeBuilder}
-import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import sangria.schema
@@ -20,6 +19,7 @@ case class Delete(
     modelObjectTypes: ObjectTypeBuilder,
     project: Project,
     args: schema.Args,
+    selectedFields: SelectedFields,
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends SingleItemClientMutation {
@@ -28,22 +28,18 @@ case class Delete(
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
   var deletedItemOpt: Option[PrismaNode] = None
-  val requestId: Id                      = "" // dataResolver.requestContext.map(_.requestId).getOrElse("")
-
-  val coolArgs            = CoolArgs(args.raw)
-  val where: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
+  val coolArgs                           = CoolArgs(args.raw)
+  val where: NodeSelector                = coolArgs.extractNodeSelectorFromWhereField(model)
 
   override def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
     dataResolver
-      .getNodeByWhere(where)
+      .getNodeByWhere(where, selectedFields)
       .andThen {
-        case Success(x) => deletedItemOpt = x.map(dataItem => dataItem)
+        case Success(x) => deletedItemOpt = x
       }
       .map { _ =>
         val itemToDelete = deletedItemOpt.getOrElse(throw APIErrors.NodeNotFoundForWhereError(where))
         val mutaction    = DatabaseMutactions(project).getMutactionsForDelete(where, itemToDelete)
-//        val subscriptionMutactions = SubscriptionEvents.extractFromSqlMutactions(project, mutationId, mutaction)
-//        val sssActions             = ServerSideSubscriptions.extractFromMutactions(project, mutaction, requestId)
 
         mutaction
       }

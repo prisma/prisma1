@@ -1,0 +1,134 @@
+export const meta = {
+  title: 'Forwarding to Prisma',
+  position: 40,
+}
+
+## Overview
+
+Prisma bindings are commonly used for implementing the application layer in GraphQL servers. Next to providing business logic and other functionality such as authentication and authorization, the responsibility of the application layer is to _transform Prisma's generic CRUD API into a domain-specific API_ that fits the needs of your client applications.
+
+Sometimes it might be the case that you don't actually _need_ to transform an operation from your Prisma API but instead simply want to _proxy_ the exact same operation from Prisma in your application layer.
+
+In these cases, you can use `forwardTo` from the `prisma-binding` library. It has the following interface:
+
+```ts
+forwardTo(bindingName: string)
+```
+
+`forwardTo` depends on the resolver aruments `context` and `info`. Therefore, it can only be used inside a resolver function, not in Node scripts or other applications where Prisma bindings are used outside the context of a resolver function.
+
+The `bindingName` argument refers to the key which holds the `Prisma` binding object on `context`. For example, assume you instantiate your `GraphQLServer` as follows:
+
+```js
+const server = new GraphQLServer({
+  typeDefs: "src/schema/schema.graphql",
+  resolvers,
+  context: {
+    db: new Prisma({
+      typeDefs: "src/generated/prisma.graphql",
+      endpoint: "http://localhost:4466"
+    }),
+  }
+})
+```
+
+Then `db` is the `bindingName`:
+
+```js
+const resolvers = {
+  Mutation: {
+    createPost: forwardTo('db')
+  }
+}
+```
+
+In the future, it is planned to implement the `forwardTo` directive to reduce even more boilerplate and save the resolver implementation for an operation altogether. Join the discussion on [GitHub](https://github.com/graphql-binding/graphql-binding/issues/83) to learn more.
+
+## Example
+
+Assume your Prisma API is based on the following data model:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+Your Prisma API will expose the following `users` query:
+
+```graphql
+type Query {
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
+}
+```
+
+If you now want to expose the exact same query on the application layer, you can use `forwardTo`.
+
+### Without `forwardTo`
+
+Before demonstrating how `forwardTo` can be used for that use case, let's quickly run through what it would look like if you were to implement this functionality without `forwardTo`.
+
+**Application schema** (commonly called `schema.graphql`):
+
+```graphql
+# import Post, PostWhereInput, PostOrderByInput from "prisma.graphql"
+
+type Query {
+  posts(
+    where: PostWhereInput
+    orderBy: PostOrderByInput
+    skip: Int
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): [Post!]!
+}
+```
+
+**Resolver implementation** (e.g. `index.js`):
+
+```js
+const resolvers = {
+  Query: {
+    posts: (root, args, context, info) => {
+      return context.prisma.query.posts(args, info)
+    }
+  }
+}
+```
+
+### With `forwardTo`
+
+To reduce the boilerplate of the approach above, you can use `forwardTo`. The application schema is defined in the same way as before:
+
+**Application schema** (commonly called `schema.graphql`):
+
+```graphql
+# import Post, PostWhereInput, PostOrderByInput from "prisma.graphql"
+
+type Query {
+  posts(
+    where: PostWhereInput
+    orderBy: PostOrderByInput
+    skip: Int
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): [Post!]!
+}
+```
+
+Inside the `posts` resolver you're now using `forwardTo` instead of explicitly invoking the `posts` binding function.
+
+**Resolver implementation** (e.g. `index.js`):
+
+```js
+const resolvers = {
+  Query: {
+    posts: forwardTo('prisma')
+  }
+}
+```
