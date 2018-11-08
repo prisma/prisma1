@@ -18,7 +18,7 @@ object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
   object TransactionalExecutionCapability    extends ConnectorCapability
   object SupportsExistingDatabasesCapability extends ConnectorCapability
   object MigrationsCapability                extends ConnectorCapability
-  object MongoRelationsCapability            extends ConnectorCapability
+  object MongoRelationsCapability            extends ConnectorCapability // this expresses that mongo can have arrays of ids within a model
   object LegacyDataModelCapability           extends ConnectorCapability
   // IntrospectionCapability
   // RawAccessCapability

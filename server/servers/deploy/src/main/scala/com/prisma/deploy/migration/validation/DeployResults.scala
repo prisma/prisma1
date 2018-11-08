@@ -32,6 +32,10 @@ object DeployErrors {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }
 
+  def missingRelationStrategy(relationField: RelationalPrismaField): DeployError = {
+    DeployError(relationField.tpe.name, relationField.name, s"The field `${relationField.name}` must provide a relation strategy.")
+  }
+
   def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }

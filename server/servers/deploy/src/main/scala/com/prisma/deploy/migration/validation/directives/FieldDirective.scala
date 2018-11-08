@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation.directives
 
-import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.utils.boolean.BooleanUtils
 import sangria.ast.{Document, FieldDefinition, ObjectTypeDefinition}
@@ -25,6 +25,8 @@ trait FieldDirective[T] extends BooleanUtils with SharedDirectiveValidation { //
       fieldDef: FieldDefinition,
       capabilities: Set[ConnectorCapability]
   ): Option[T]
+
+  def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = Vector.empty
 }
 
 object FieldDirective {
