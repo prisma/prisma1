@@ -28,6 +28,10 @@ object DeployErrors {
     error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
   }
 
+  def uniqueDisallowedOnEmbeddedTyps(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
+    error(objectType, fieldDef, s"The field `${fieldDef.name}` is marked as unique but its type `${objectType.name}` is embedded. This is disallowed.")
+  }
+
   def missingRelationDirective(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }
