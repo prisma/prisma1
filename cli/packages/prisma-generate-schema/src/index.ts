@@ -1,4 +1,4 @@
-import Generators from './generator/defaultGenerators'
+import Generators from './generator/default/'
 import DatamodelParser from './datamodel/parser'
 import { printSchema } from 'graphql/utilities'
 import { GraphQLSchema } from 'graphql/type'
