@@ -23,7 +23,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
   override def capabilities: Set[ConnectorCapability] = {
-    val common = Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability, LegacyDataModelCapability)
+    val common = Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability, EmbeddedTypesCapability)
     if (isActive) common ++ Set(MigrationsCapability) else common
   }
 
