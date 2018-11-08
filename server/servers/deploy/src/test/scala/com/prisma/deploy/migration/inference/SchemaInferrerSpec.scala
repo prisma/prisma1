@@ -9,12 +9,12 @@ import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
+class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(MongoRelationsCapability)
 
   val emptyProject = TestProject.empty
 
-  "if a given relation does not exist yet, the inferer" should {
+  "if a given relation does not exist yet, the inferrer" should {
     "infer relations with the given name if a relation directive is provided on both sides" in {
       val types =
         """
@@ -57,27 +57,6 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
       val relation2 = schema.getRelationByName_!("CallMembers")
       relation2.modelAName should equal("Call")
       relation2.modelBName should equal("User")
-    }
-
-    "infer relations with provided name if only one relation directive is given" in {
-      val types =
-        """
-          |type Todo {
-          |  id: ID! @id
-          |  comments: [Comment!]! @relation(name:"MyRelationName")
-          |}
-          |
-          |type Comment {
-          |  id: ID! @id
-          |  todo: Todo!
-          |}
-        """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
-
-      schema.relations should have(size(1))
-      val relation = schema.getRelationByName_!("MyRelationName")
-      relation.modelAName should equal("Comment")
-      relation.modelBName should equal("Todo")
     }
 
     "infer relations with an auto generated name if no relation directive is given" in {
@@ -185,10 +164,12 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
       val types =
         """
           |type TodoNew {
-          |  comments: [CommentNew!]
+          |  id: ID! @id
+          |  comments: [CommentNew!]!
           |}
           |
           |type CommentNew {
+          |  id: ID! @id
           |  todo: TodoNew!
           |}
         """.stripMargin
@@ -220,10 +201,12 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
       val types =
         """
           |type TodoNew {
-          |  commentsNew: [CommentNew!]
+          |  id: ID! @id
+          |  commentsNew: [CommentNew!]!
           |}
           |
           |type CommentNew {
+          |  id: ID! @id
           |  todoNew: TodoNew!
           |}
         """.stripMargin
@@ -264,6 +247,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
       val types =
         """
           |type TodoNew {
+          |  id: ID! @id
           |  title: String
           |}
         """.stripMargin
@@ -287,6 +271,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
     "assign fieldA to the field with the lower lexicographic order" in {
       val types =
         """|type Technology {
+           |  id: ID! @id
            |  name: String! @unique
            |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
@@ -305,6 +290,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
     "keep assignments after renames" in {
       val types =
         """|type Technology {
+           |  id: ID! @id
            |  name: String! @unique
            |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
@@ -320,6 +306,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
 
       val newTypes =
         """|type NewTechnology {
+           |  id: ID! @id
            |  name: String! @unique
            |  xTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
            |  parentTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
@@ -351,6 +338,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   "repair invalid assignments" in {
     val types =
       """|type Technology {
+         |  id: ID! @id
          |  name: String! @unique
          |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
          |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
@@ -391,6 +379,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   "handle optional backrelations" in {
     val types =
       """|type Technology {
+         |  id: ID! @id
          |  name: String! @unique
          |  childTechnologies: [Technology!]!
          |}""".stripMargin.trim()
@@ -405,7 +394,8 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
 
   "handle database manifestations for models" in {
     val types =
-      """|type Todo @pgTable(name:"todo_table"){
+      """|type Todo @db(name:"todo_table"){
+         |  id: ID! @id
          |  name: String!
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
@@ -417,7 +407,8 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   "handle pg database manifestations for fields" in {
     val types =
       """|type Todo {
-         |  name: String! @pgColumn(name: "my_name_column")
+         |  id: ID! @id
+         |  name: String! @db(name: "my_name_column")
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -425,14 +416,21 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
-  "handle pg relation table manifestations" ignore {
+  "handle relation table manifestations" in {
     val types =
       """|type Todo {
+         |  id: ID! @id
          |  name: String!
          |}
          |
          |type List {
-         |  todos: [Todo] @relationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
+         |  id: ID! @id
+         |  todos: [Todo!]! @relation(strategy: RELATION_TABLE)
+         |}
+         |
+         |type TodoToList @relationTable {
+         |   name: String!
+         |   todos: [Todo!]!
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -441,87 +439,114 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
     relation.modelAName should equal("List")
     relation.modelBName should equal("Todo")
 
-    val expectedManifestation = RelationTableManifestation(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
+    val expectedManifestation = RelationTableManifestation(table = "ListToTodo", modelAColumn = "A", modelBColumn = "B")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
-  "handle pg inline relation manifestations" ignore {
+  "handle inline relation manifestations on Mongo" in {
     val types =
       """
          |type List {
-         |  todos: [Todo]
+         |  id: ID! @id
+         |  todos: [Todo!]!
          |}
          |
          |type Todo {
+         |  id: ID! @id
          |  name: String!
-         |  list: List @pgRelation(column: "list_id")
+         |  list: List @relation(strategy: EMBED)
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = Set(MongoRelationsCapability))
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
-    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
+    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
-  "handle mongo inline relation manifestations" ignore {
+  "handle inline relation manifestations on the SQL" in {
     val types =
       """
         |type List {
-        |  todos: [Todo]
+        |  id: ID! @id
+        |  todos: [Todo!]!
         |}
         |
         |type Todo {
+        |  id: ID! @id
         |  name: String!
-        |  list: List @mongoRelation(field: "list_id")
+        |  list: List @relation(strategy: EMBED)
         |}
         |""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
-    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
+    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
-  "add hidden reserved fields if isActive is true" in {
+  "Do not add hidden fields if isActive is true" in {
     val types =
       """|type Todo {
+         |  id: ID! @id
          |  name: String!
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set(MigrationsCapability))
 
     val model = schema.getModelByName_!("Todo")
-    model.fields should have(size(4))
-    model.fields.map(_.name) should equal(List("name", "id", "updatedAt", "createdAt"))
+    model.fields should have(size(2))
+    model.fields.map(_.name) should equal(List("id", "name"))
   }
 
   "do not add hidden reserved fields if isActive is false" in {
     val types =
       """|type Todo {
+         |  id: ID! @id
          |  name: String!
          |}""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
     val model = schema.getModelByName_!("Todo")
-    model.fields should have(size(1))
-    model.fields.map(_.name) should equal(List("name"))
+    model.fields should have(size(2))
+    model.fields.map(_.name) should equal(List("id", "name"))
   }
 
-  "should not blow up when no @pgRelation is used and inferred tables is empty" in {
+  "should not blow up when no @relation is used on SQL" in {
     val types =
       """|type Todo {
+         |  id: ID! @id
          |  name: String!
          |  comments: [Comment!]!
          |}
          |type Comment {
+         |  id: ID! @id
          |  text: String
          |}
          |""".stripMargin
-    val schema        = infer(emptyProject.schema, types, capabilities = Set.empty)
-    val relationField = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
-    relationField.relation.manifestation should be(None)
+    val schema                = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
+    val expectedManifestation = RelationTableManifestation(table = "CommentToTodo", modelAColumn = "A", modelBColumn = "B")
+    relationField.relation.manifestation should be(Some(expectedManifestation))
+  }
+
+  "should not blow up when no @relation is used on Mongo" in {
+    val types =
+      """|type Todo {
+         |  id: ID! @id
+         |  name: String!
+         |  comments: [Comment!]!
+         |}
+         |type Comment {
+         |  id: ID! @id
+         |  text: String
+         |}
+         |""".stripMargin
+    val schema                = infer(emptyProject.schema, types, capabilities = Set(MongoRelationsCapability))
+    val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
+    val expectedManifestation = InlineRelationManifestation("Todo", "comments")
+    relationField.relation.manifestation should be(Some(expectedManifestation))
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {

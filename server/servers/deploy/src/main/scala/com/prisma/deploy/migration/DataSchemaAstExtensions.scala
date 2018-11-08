@@ -146,10 +146,10 @@ object DataSchemaAstExtensions {
       case _                               => false
     }
 
-    def hasRelationDirective: Boolean        = relationName.isDefined
-    def hasDefaultValueDirective: Boolean    = defaultValue.isDefined
-    def hasOldDefaultValueDirective: Boolean = oldDefaultValue.isDefined
-    def description: Option[String]          = fieldDefinition.directiveArgumentAsString("description", "text")
+    def hasRelationDirectiveWithNameArg: Boolean = relationName.isDefined
+    def hasDefaultValueDirective: Boolean        = defaultValue.isDefined
+    def hasOldDefaultValueDirective: Boolean     = oldDefaultValue.isDefined
+    def description: Option[String]              = fieldDefinition.directiveArgumentAsString("description", "text")
     def defaultValue: Option[String] =
       fieldDefinition.directiveArgumentAsString("default", "value").orElse(fieldDefinition.directiveArgumentAsString("pgDefault", "value"))
     def oldDefaultValue: Option[String]      = fieldDefinition.directiveArgumentAsString("defaultValue", "value")

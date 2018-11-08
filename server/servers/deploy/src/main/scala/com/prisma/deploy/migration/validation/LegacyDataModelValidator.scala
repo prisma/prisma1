@@ -282,7 +282,7 @@ case class LegacyDataModelValidator(
     val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
 
     val (schemaErrors, _) = partition(ambiguousRelationFields) {
-      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
+      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirectiveWithNameArg =>
         Left(DeployErrors.missingRelationDirective(fieldAndType))
 
       case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) > 2 =>
@@ -298,7 +298,7 @@ case class LegacyDataModelValidator(
     val relationFieldsWithRelationDirective = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
-      if field.hasRelationDirective
+      if field.hasRelationDirectiveWithNameArg
       if isRelationField(field)
     } yield FieldAndType(objectType, field)
 
@@ -310,7 +310,7 @@ case class LegacyDataModelValidator(
       case thisType if !isSelfRelation(thisType) && relationCount(thisType) == 1 =>
         val oppositeObjectType               = doc.objectType_!(thisType.fieldDef.typeName)
         val fieldsOnOppositeObjectType       = oppositeObjectType.fields.filter(_.typeName == thisType.objectType.name)
-        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirective && isRelationField(f))
+        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirectiveWithNameArg && isRelationField(f))
         val relationFieldsPointingToThisType = relationFieldsWithoutDirective.filter(f => f.typeName == thisType.objectType.name)
         if (relationFieldsPointingToThisType.nonEmpty) Some(DeployErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
 
@@ -396,7 +396,7 @@ case class LegacyDataModelValidator(
     }
 
     def ensureRelationDirectivesArePlacedCorrectly(fieldAndType: FieldAndType): Option[DeployError] = {
-      if (!isRelationField(fieldAndType.fieldDef) && fieldAndType.fieldDef.hasRelationDirective) {
+      if (!isRelationField(fieldAndType.fieldDef) && fieldAndType.fieldDef.hasRelationDirectiveWithNameArg) {
         Some(DeployErrors.relationDirectiveNotAllowedOnScalarFields(fieldAndType))
       } else {
         None

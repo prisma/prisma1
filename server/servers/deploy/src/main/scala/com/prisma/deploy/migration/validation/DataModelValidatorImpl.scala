@@ -310,7 +310,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
     }
 
     val (schemaErrors, _) = partition(ambiguousRelationFields) {
-      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
+      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirectiveWithNameArg =>
         Left(DeployErrors.missingRelationDirective(fieldAndType))
 
       case fieldAndType if !fieldAndType.isSelfRelation && fieldAndType.relationCount(doc) > 2 =>
@@ -326,7 +326,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
     val relationFieldsWithRelationDirective = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
-      if field.hasRelationDirective
+      if field.hasRelationDirectiveWithNameArg
       if field.isRelationField(doc)
     } yield FieldAndType(objectType, field)
 
@@ -334,13 +334,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
       * Check that if a relation is not a self-relation and a relation-directive occurs only once that there is no
       * opposing field without a relationdirective on the other side.
       */
-    val allowOnlyOneDirectiveOnlyWhenUnambigous = relationFieldsWithRelationDirective.flatMap {
+    val allowOnlyOneDirectiveOnlyWhenUnambiguous = relationFieldsWithRelationDirective.flatMap {
       case thisType if !thisType.isSelfRelation && thisType.relationCount(doc) == 1 =>
         val oppositeObjectType               = doc.objectType_!(thisType.fieldDef.typeName)
         val fieldsOnOppositeObjectType       = oppositeObjectType.fields.filter(_.typeName == thisType.objectType.name)
-        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirective && f.isRelationField(doc))
+        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirectiveWithNameArg && f.isRelationField(doc))
         val relationFieldsPointingToThisType = relationFieldsWithoutDirective.filter(f => f.typeName == thisType.objectType.name)
-        if (relationFieldsPointingToThisType.nonEmpty) Some(DeployErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
+        if (relationFieldsPointingToThisType.nonEmpty) Some(DeployErrors.relationDirectiveWithNameArgumentMustAppearTwice(thisType)) else None
 
       case _ =>
         None
@@ -371,7 +371,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
           Iterable.empty
       }
 
-    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambigous
+    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
   }
 
   def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {

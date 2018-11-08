@@ -53,6 +53,17 @@ object DeployErrors {
     )
   }
 
+  def relationDirectiveWithNameArgumentMustAppearTwice(fieldAndType: FieldAndType): DeployError = {
+    val relationName = fieldAndType.fieldDef.previousRelationName.get
+    val nameA        = fieldAndType.objectType.name
+    val nameB        = fieldAndType.fieldDef.fieldType.namedType.name
+    error(
+      fieldAndType,
+      s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive with a name on `$nameA`. " +
+        s"Please also provide the same named relation directive on the relation field on `$nameB` pointing towards `$nameA`. "
+    )
+  }
+
   def relationDirectiveCannotAppearMoreThanTwice(fieldAndType: FieldAndType): DeployError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
     error(fieldAndType, s"A relation directive cannot appear more than twice. Relation name: '$relationName'")
