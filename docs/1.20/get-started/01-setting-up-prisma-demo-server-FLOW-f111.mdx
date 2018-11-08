@@ -3,14 +3,14 @@ import Collapse from 'components/Markdown/Collapse'
 import Code from 'components/Markdown/Code'
 
 export const meta = {
-  title: 'Setting up Prisma',
+  title: 'Set up Prisma',
   position: 1,
   gettingStartedOrder: 3,
   gettingStartedTitle: 'Demo database',
   nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and regenerate your Prisma client.',
   technology: 'flow',
   technologyOrder: 2,
-  articleGroup: 'Setting up Prisma',
+  articleGroup: 'Set up Prisma',
 }
 
 ## Goals
@@ -18,7 +18,7 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Setup a Prisma Demo server with a sandboxed database
+- Set up a Prisma Demo server with a sandboxed database
 - Read and write data using the Prisma client
 
 ## Install the Prisma CLI
@@ -38,9 +38,9 @@ npm install -g prisma
 
 </Code>
 
-## Setup Prisma
+## Set up Prisma
 
-To bootstrap the configuration files for your Prisma setup, create a new directory and initalize it using the `prisma init` command:
+To bootstrap the configuration files for your Prisma set up, create a new directory and initalize it using the `prisma init` command:
 
 ```bash copy
 mkdir hello-world
@@ -112,7 +112,7 @@ Finally, add a start script to your `package.json`:
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.js` and save it afterwards:
+Add the following code in `index.js`:
 
 ```js copy
 import { prisma } from './generated/prisma-client'
