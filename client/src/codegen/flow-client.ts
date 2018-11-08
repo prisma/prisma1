@@ -62,7 +62,10 @@ import { typeDefs } from './prisma-schema'`
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
     
-    return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
+    return `if (!process.env['PRISMA_API_SECRET'])
+throw new Error('Please provide a PRISMA_API_SECRET env variable.');
+
+export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
 
 export const prisma: ${this.prismaInterface} = new Prisma()`
   }
