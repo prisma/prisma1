@@ -294,7 +294,7 @@ case class SchemaInferrerImpl(
     }
   }
 
-  private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String) = {
+  private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationManifestation] = {
     val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
       if (capabilities.contains(MongoRelationsCapability)) {
         RelationStrategy.Embed
@@ -311,7 +311,9 @@ case class SchemaInferrerImpl(
 
     activeStrategy match {
       case RelationStrategy.Embed =>
-        if (capabilities.contains(MongoRelationsCapability)) {
+        if (prismaType.isEmbedded || relationField.relatedType.isEmbedded) {
+          None
+        } else if (capabilities.contains(MongoRelationsCapability)) {
           Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = relationField.name))
         } else {
           // this can be only one to many in SQL
