@@ -17,7 +17,7 @@ trait FieldDirective[T] extends BooleanUtils with SharedDirectiveValidation { //
       fieldDef: FieldDefinition,
       directive: sangria.ast.Directive,
       capabilities: Set[ConnectorCapability]
-  ): Option[DeployError]
+  ): Vector[DeployError]
 
   def value(
       document: Document,

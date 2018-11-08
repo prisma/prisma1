@@ -17,9 +17,10 @@ object UniqueDirective extends FieldDirective[Boolean] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    typeDef.isEmbedded.toOption {
+    val error = typeDef.isEmbedded.toOption {
       DeployErrors.uniqueDisallowedOnEmbeddedTyps(typeDef, fieldDef)
     }
+    error.toVector
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {

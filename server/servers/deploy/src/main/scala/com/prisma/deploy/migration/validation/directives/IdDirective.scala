@@ -31,9 +31,8 @@ object IdDirective extends FieldDirective[IdBehaviour] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    validatePlacement(typeDef, fieldDef).orElse(
-      validateFieldType(doc, typeDef, fieldDef)
-    )
+    val errors = validatePlacement(typeDef, fieldDef) ++ validateFieldType(doc, typeDef, fieldDef)
+    errors.toVector
   }
 
   def validatePlacement(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {

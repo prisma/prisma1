@@ -18,11 +18,10 @@ object UpdatedAtDirective extends FieldDirective[UpdatedAtBehaviour.type] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    if (fieldDef.typeName == "DateTime" && fieldDef.isRequired) {
-      None
-    } else {
-      Some(DeployError(typeDef, fieldDef, s"Fields that are marked as @updatedAt must be of type `DateTime!`."))
+    val typeError = (fieldDef.typeName != "DateTime").toOption {
+      DeployError(typeDef, fieldDef, s"Fields that are marked as @updatedAt must be of type `DateTime!` or `DateTime`.")
     }
+    typeError.toVector
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {

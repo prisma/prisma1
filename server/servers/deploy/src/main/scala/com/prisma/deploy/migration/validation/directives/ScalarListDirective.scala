@@ -31,11 +31,10 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    if (!fieldDef.isValidScalarListType) {
-      Some(DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`."))
-    } else {
-      None
+    val invalidTypeError = (!fieldDef.isValidScalarListType).toOption {
+      DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`.")
     }
+    invalidTypeError.toVector
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {

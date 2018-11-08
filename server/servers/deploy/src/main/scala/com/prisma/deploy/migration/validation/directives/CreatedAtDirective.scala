@@ -18,11 +18,13 @@ object CreatedAtDirective extends FieldDirective[CreatedAtBehaviour.type] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    if (fieldDef.typeName == "DateTime" && fieldDef.isRequired) {
-      None
-    } else {
-      Some(DeployError(typeDef, fieldDef, s"Fields that are marked as @createdAt must be of type `DateTime!`."))
+    val typeError = (fieldDef.typeName != "DateTime").toOption {
+      DeployError(typeDef, fieldDef, s"Fields that are marked as `@$name` must be of type `DateTime!` or `DateTime`.")
     }
+    val simultaneousCreatedAndUpdatedAt = fieldDef.directive(UpdatedAtDirective.name).isDefined.toOption {
+      DeployError(typeDef, fieldDef, s"Fields cannot be marked simultaneously with `@$name` and `@${UpdatedAtDirective.name}`.")
+    }
+    (typeError ++ simultaneousCreatedAndUpdatedAt).toVector
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
