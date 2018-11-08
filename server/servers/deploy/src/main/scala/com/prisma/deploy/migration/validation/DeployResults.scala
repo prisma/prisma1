@@ -36,6 +36,13 @@ object DeployErrors {
     DeployError(relationField.tpe.name, relationField.name, s"The field `${relationField.name}` must provide a relation strategy.")
   }
 
+  def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      tpe.name,
+      s"The type `${tpe.name}` does not specify a back relation field. It is referenced from the type `${relationField.tpe.name}` in the field `${relationField.name}`."
+    )
+  }
+
   def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }

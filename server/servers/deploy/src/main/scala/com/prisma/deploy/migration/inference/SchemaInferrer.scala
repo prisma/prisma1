@@ -111,7 +111,7 @@ case class SchemaInferrerImpl(
                 field.relationSide
 
               case _ =>
-                val relationFieldNames = prismaType.relationalPrismaFields.filter(f => f.relationName.contains(relation.name)).map(_.name)
+                val relationFieldNames = prismaType.relationFields.filter(f => f.relationName.contains(relation.name)).map(_.name)
                 if (relationFieldNames.exists(name => name < prismaField.name)) RelationSide.B else RelationSide.A //Fixme here the side is implemented for the field
             }
           } else {
@@ -184,7 +184,7 @@ case class SchemaInferrerImpl(
   lazy val nextRelations: Set[RelationTemplate] = {
     val tmp = for {
       prismaType    <- prismaSdl.types
-      relationField <- prismaType.relationalPrismaFields
+      relationField <- prismaType.relationFields
     } yield {
       val model1       = prismaType.name
       val model2       = relationField.referencesType

@@ -28,8 +28,8 @@ case class PrismaType(
 )(val sdl: PrismaSdl) {
   val fields: Vector[PrismaField] = fieldFn.map(_.apply(this))
 
-  val relationalPrismaFields = fields.collect { case x: RelationalPrismaField => x }
-  val nonRelationalPrismaFields = fields.collect {
+  val relationFields = fields.collect { case x: RelationalPrismaField => x }
+  val nonRelationFields = fields.collect {
     case x: EnumPrismaField   => x
     case y: ScalarPrismaField => y
   }
@@ -91,8 +91,8 @@ case class RelationalPrismaField(
 
   def relatedField: Option[RelationalPrismaField] = {
     val otherFieldsOnOppositeModel = tpe.sdl.types.find(_.name == referencesType).get match {
-      case sameModel if sameModel.name == tpe.name => sameModel.relationalPrismaFields.filter(_.referencesType == tpe.name).filter(_.name != name)
-      case otherModel                              => otherModel.relationalPrismaFields.filter(_.referencesType == tpe.name)
+      case sameModel if sameModel.name == tpe.name => sameModel.relationFields.filter(_.referencesType == tpe.name).filter(_.name != name)
+      case otherModel                              => otherModel.relationFields.filter(_.referencesType == tpe.name)
     }
 
     relationName match {

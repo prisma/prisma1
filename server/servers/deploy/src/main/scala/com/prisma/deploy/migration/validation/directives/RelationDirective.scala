@@ -33,14 +33,26 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   }
 
   override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
-    validateIfRequiredStrategyIsProvided(dataModel, capabilities)
+    validateIfRequiredStrategyIsProvided(dataModel, capabilities) ++ validateBackRelationFields(dataModel, capabilities)
+  }
+
+  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+    for {
+      modelType     <- dataModel.modelTypes
+      relationField <- modelType.relationFields
+      relatedType   = relationField.relatedType
+      if capabilities.contains(MongoRelationsCapability)
+      if relationField.relatedField.isEmpty && !relatedType.isEmbedded
+    } yield {
+      DeployErrors.missingBackRelationField(relatedType, relationField)
+    }
   }
 
   private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
     val isMongo = capabilities.contains(MongoRelationsCapability)
     for {
       modelType     <- dataModel.modelTypes
-      relationField <- modelType.relationalPrismaFields
+      relationField <- modelType.relationFields
       relatedField  <- relationField.relatedField
       relatedType   = relatedField.tpe
       if isMongo || relationField.isOneToOne
