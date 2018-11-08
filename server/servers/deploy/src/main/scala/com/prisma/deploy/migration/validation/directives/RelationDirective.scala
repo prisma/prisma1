@@ -58,7 +58,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       strategies               = Set(relationField.strategy) ++ relatedField.map(_.strategy)
       containsOnlyAutoStrategy = strategies == Set(RelationStrategy.Auto)
       if containsOnlyAutoStrategy
-      if isMongo || relationField.isOneToOne
+      if isMongo || relationField.hasOneToOneRelation
       if modelType.isNotEmbedded || relatedType.isNotEmbedded
     } yield {
       DeployErrors.missingRelationStrategy(relationField)
