@@ -265,64 +265,75 @@ case class SchemaInferrerImpl(
       relationField: RelationalPrismaField,
       relationName: String
   ): Option[RelationManifestation] = {
-    if (!capabilities.contains(MigrationsCapability) || capabilities.contains(MongoRelationsCapability)) {
-      val manifestationOnThisField = relationManifestationOnField(prismaType, relationField, relationName)
+    if (!isLegacy) { //new
+      import RelationStrategy._
+
+      relationField.relatedField match {
+        case Some(relatedField) =>
+          (relationField.strategy, relatedField.strategy) match {
+            case (Auto, Auto) if relationField.isOne  => manifestationForField(prismaType, relationField, relationName)
+            case (Auto, Auto) if relationField.isList => manifestationForField(relatedField.tpe, relatedField, relationName)
+            case (_, Auto)                            => manifestationForField(prismaType, relationField, relationName)
+            case (Auto, _)                            => manifestationForField(relatedField.tpe, relatedField, relationName)
+            case (_, _)                               => sys.error("must not happen")
+          }
+
+        case None =>
+          manifestationForField(prismaType, relationField, relationName)
+      }
+    } else if (!capabilities.contains(MigrationsCapability)) { //passive
+      val manifestationOnThisField = legacyRelationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
-        relationManifestationOnField(relatedType, relatedField, relationName)
+        legacyRelationManifestationOnField(relatedType, relatedField)
       }
 
       manifestationOnThisField.orElse(manifestationOnRelatedField)
-    } else {
+    } else { // active
       None
     }
   }
 
-  def relationManifestationOnField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationManifestation] = {
-    if (isLegacy) {
-      legacyRelationManifestation(prismaType, relationField)
-    } else {
-      // TODO: This must be tested with the SQL connectors. So far only tested with Mongo.
-      val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
-        if (capabilities.contains(MongoRelationsCapability)) {
-          RelationStrategy.Embed
-        } else if (relationField.isManyToMany) {
-          RelationStrategy.RelationTable
-        } else if (relationField.isOneToMany) {
-          RelationStrategy.Embed //Fixme: Only one side
-        } else {
-          sys.error("One to one relations must not have the AUTO strategy")
-        }
+  private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String) = {
+    val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
+      if (capabilities.contains(MongoRelationsCapability)) {
+        RelationStrategy.Embed
+      } else if (relationField.hasManyToManyRelation) {
+        RelationStrategy.RelationTable
+      } else if (relationField.hasOneToManyRelation && relationField.isOne) {
+        RelationStrategy.Embed
       } else {
-        relationField.strategy
+        sys.error("One to one relations must not have the AUTO strategy")
       }
-
-      activeStrategy match {
-        case RelationStrategy.Embed =>
-          if (capabilities.contains(MongoRelationsCapability)) {
-            Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = relationField.name))
-          } else {
-            val oneRelationField = relationField.oneRelationField.get
-            Some(InlineRelationManifestation(inTableOfModelId = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
-          }
-
-        case RelationStrategy.RelationTable =>
-          // TODO: This must be tested with the SQL connectors that actually support this strategy
-          prismaSdl.relationTables.find(_.name == relationName) match {
-            case Some(relationTable) =>
-              Some(RelationTableManifestation(table = relationTable.finalTableName, modelAColumn = ???, modelBColumn = ???))
-            case None =>
-              Some(RelationTableManifestation(table = relationName, modelAColumn = "A", modelBColumn = "B"))
-          }
-
-        case RelationStrategy.Auto =>
-          sys.error("this case must not happen")
-      }
+    } else {
+      relationField.strategy
     }
 
+    activeStrategy match {
+      case RelationStrategy.Embed =>
+        if (capabilities.contains(MongoRelationsCapability)) {
+          Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = relationField.name))
+        } else {
+          // this can be only one to many in SQL
+          val oneRelationField = relationField.oneRelationField.get
+          Some(InlineRelationManifestation(inTableOfModelId = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
+        }
+
+      case RelationStrategy.RelationTable =>
+        // TODO: This must be tested with the SQL connectors that actually support this strategy
+        prismaSdl.relationTables.find(_.name == relationName) match {
+          case Some(relationTable) =>
+            Some(RelationTableManifestation(table = relationTable.finalTableName, modelAColumn = ???, modelBColumn = ???))
+          case None =>
+            Some(RelationTableManifestation(table = relationName, modelAColumn = "A", modelBColumn = "B"))
+        }
+
+      case RelationStrategy.Auto =>
+        sys.error("this case must not happen")
+    }
   }
 
-  def legacyRelationManifestation(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
+  def legacyRelationManifestationOnField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
     val relatedType         = relationField.relatedType
     val tableForThisType    = prismaType.finalTableName
     val tableForRelatedType = relatedType.finalTableName

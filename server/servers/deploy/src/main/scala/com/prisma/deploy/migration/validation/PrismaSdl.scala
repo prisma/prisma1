@@ -102,10 +102,10 @@ case class RelationalPrismaField(
 
   def relatedType: PrismaType = tpe.sdl.types.find(_.name == referencesType).get
 
-  def isManyToMany: Boolean = isList && relatedField.forall(_.isList)
-  def isOneToMany: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))
-  def isOne: Boolean        = !isList
-  def oneRelationField      = if (isOne) Some(this) else relatedField
+  def hasManyToManyRelation: Boolean = isList && relatedField.forall(_.isList)
+  def hasOneToManyRelation: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))
+  def isOne: Boolean                 = !isList
+  def oneRelationField               = if (isOne) Some(this) else relatedField
 }
 
 case class PrismaEnum(name: String, values: Vector[String])(sdl: PrismaSdl)

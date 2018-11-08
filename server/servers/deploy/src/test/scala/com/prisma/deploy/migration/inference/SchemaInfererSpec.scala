@@ -20,7 +20,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!] @relation(name:"MyNameForTodoToComments")
+          |  comments: [Comment!]! @relation(name:"MyNameForTodoToComments")
           |}
           |
           |type Comment {
@@ -64,7 +64,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!] @relation(name:"MyRelationName")
+          |  comments: [Comment!]! @relation(name:"MyRelationName")
           |}
           |
           |type Comment {
@@ -85,7 +85,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]
+          |  comments: [Comment!]!
           |}
           |
           |type Comment {
@@ -109,12 +109,12 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
       field2.relation should be(relation)
     }
 
-    "infer mongo relation " in {
+    "For mongoRelations the correct side should have the id inlined 1" in {
       val types =
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!] @relation(strategy: EMBED)
+          |  comments: [Comment!]! @relation(strategy: EMBED)
           |}
           |
           |type Comment {
@@ -123,7 +123,39 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
           |}
         """.stripMargin.trim()
 
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      schema.relations.foreach(println(_))
+
+      val relation = schema.getRelationByName_!("CommentToTodo")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
+
+      val field1 = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
+      field1.isList should be(true)
+      field1.relation should be(relation)
+
+      val field2 = schema.getModelByName_!("Comment").getRelationFieldByName_!("todo")
+      field2.isList should be(false)
+      field2.relation should be(relation)
+
+      field1.relationIsInlinedInParent should be(true)
+    }
+
+    "For mongoRelations the correct side should have the id inlined 2" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment!]!
+          |}
+          |
+          |type Comment {
+          |  id: ID! @id
+          |  todo: Todo! @relation(strategy: EMBED)
+          |}
+        """.stripMargin.trim()
+
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
