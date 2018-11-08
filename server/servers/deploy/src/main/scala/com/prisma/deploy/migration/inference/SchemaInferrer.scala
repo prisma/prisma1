@@ -313,7 +313,7 @@ case class SchemaInferrerImpl(
 
     activeStrategy match {
       case RelationStrategy.Embed =>
-        if (prismaType.isEmbedded || relationField.relatedType.isEmbedded) {
+        if (relationField.relatedType.isEmbedded) {
           None
         } else if (capabilities.contains(MongoRelationsCapability)) {
           Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = relationField.name))
