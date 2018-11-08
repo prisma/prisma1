@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
@@ -101,7 +101,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   "if a given relation does already exist, the inferer" should {
-    val project = SchemaDsl() { schema =>
+    val project = SchemaDsl.fromBuilder { schema =>
       val comment = schema.model("Comment")
       schema.model("Todo").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentToTodo"))
     }
@@ -183,7 +183,7 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
 
   "if a model already exists and it gets renamed, the inferrer" should {
     "infer the next model with the stable identifier of the existing model" in {
-      val project = SchemaDsl() { schema =>
+      val project = SchemaDsl.fromBuilder { schema =>
         schema.model("Todo").field("title", _.String)
       }
       val types =
@@ -451,9 +451,9 @@ class SchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase {
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {
 
-    val validator = SchemaSyntaxValidator(
+    val validator = LegacyDataModelValidator(
       types,
-      SchemaSyntaxValidator.directiveRequirements,
+      LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
       capabilities
     )

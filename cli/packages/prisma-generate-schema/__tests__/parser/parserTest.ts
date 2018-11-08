@@ -1,11 +1,17 @@
-
 import DatamodelParser from '../../src/datamodel/parser'
 import { IGQLType } from '../../src/datamodel/model'
 
 /**
  * Assertion helper for fields.
  */
-function expectField(candidate: IGQLType, name: string, required: boolean, list: boolean, type: string | IGQLType, defaultValue: any = null) {
+function expectField(
+  candidate: IGQLType,
+  name: string,
+  required: boolean,
+  list: boolean,
+  type: string | IGQLType,
+  defaultValue: any = null,
+) {
   const [fieldObj] = candidate.fields.filter(f => f.name === name)
 
   expect(fieldObj).toBeDefined()
@@ -30,7 +36,7 @@ function expectType(types: IGQLType[], name: string, isEnum: boolean = false) {
   return type
 }
 
-test("Parse a type with scalars correctly.", () => {
+test('Parse a type with scalars correctly.', () => {
   const model = `
     type User {
       requiredInt: Int!
@@ -50,7 +56,28 @@ test("Parse a type with scalars correctly.", () => {
   expectField(userType, 'anotherInt', true, false, 'Int', '10')
 })
 
-test("Parse a type with an enum correctly.", () => {
+test('Parse a type with @embedded directive correctly.', () => {
+  const model = `
+    type User @embedded {
+      requiredInt: Int!
+      stringList: [String!]!
+      optionalDateTime: DateTime
+      anotherInt: Int! @default(value: 10)
+    }
+  `
+
+  const types = DatamodelParser.parseFromSchemaString(model)
+
+  const userType = expectType(types, 'User')
+
+  expectField(userType, 'requiredInt', true, false, 'Int')
+  expectField(userType, 'stringList', false, true, 'String')
+  expectField(userType, 'optionalDateTime', false, false, 'DateTime')
+  expectField(userType, 'anotherInt', true, false, 'Int', '10')
+  expect(userType.embedded).toBe(true)
+})
+
+test('Parse a type with an enum correctly.', () => {
   const model = `
     type User {
       enumField: UserRole!
@@ -75,8 +102,7 @@ test("Parse a type with an enum correctly.", () => {
   expectField(userRoleEnum, 'mod', false, false, 'String')
 })
 
-
-test("Connect relations correctly.", () => {
+test('Connect relations correctly.', () => {
   const model = `
     type A {
       b: B

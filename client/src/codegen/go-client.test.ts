@@ -12,9 +12,10 @@ test('go generator', t => {
   const schema = buildSchema(typeDefs)
   const generator = new GoGenerator({
     schema,
+    internalTypes: [],
   })
   const result = generator.render({
-    endpoint: "http://localhost:4466/test/test"
+    endpoint: 'http://localhost:4466/test/test',
   })
   t.snapshot(result)
 })

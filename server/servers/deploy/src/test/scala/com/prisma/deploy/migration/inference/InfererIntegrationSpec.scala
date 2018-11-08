@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models._
@@ -356,9 +356,9 @@ class InfererIntegrationSpec extends FlatSpec with Matchers with DeploySpecBase 
   }
 
   def inferSchema(previous: Schema, schema: String): Schema = {
-    val validator = SchemaSyntaxValidator(
+    val validator = LegacyDataModelValidator(
       schema,
-      SchemaSyntaxValidator.directiveRequirements,
+      LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
       capabilities = Set(MigrationsCapability)
     )

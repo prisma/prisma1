@@ -10,6 +10,7 @@ import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.ApiConnectorCapability.LegacyDataModelCapability
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, UpdateSecrets}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.future.FutureUtils.FutureOr
@@ -71,7 +72,12 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
-    SchemaSyntaxValidator(args.types, deployConnector.fieldRequirements, deployConnector.capabilities).validateSyntax
+    val validator = if (deployConnector.capabilities.contains(LegacyDataModelCapability)) {
+      LegacyDataModelValidator
+    } else {
+      LegacyDataModelValidator
+    }
+    validator.validate(args.types, deployConnector.fieldRequirements, deployConnector.capabilities)
   }
 
   private def inferTables: Future[InferredTables Or Vector[DeployError]] = {

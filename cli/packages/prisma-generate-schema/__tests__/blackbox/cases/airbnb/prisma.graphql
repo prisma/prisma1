@@ -472,6 +472,49 @@ input AmenitiesUpdateInput {
   place: PlaceUpdateOneRequiredWithoutAmenitiesInput
 }
 
+input AmenitiesUpdateManyMutationInput {
+  elevator: Boolean
+  petsAllowed: Boolean
+  internet: Boolean
+  kitchen: Boolean
+  wirelessInternet: Boolean
+  familyKidFriendly: Boolean
+  freeParkingOnPremises: Boolean
+  hotTub: Boolean
+  pool: Boolean
+  smokingAllowed: Boolean
+  wheelchairAccessible: Boolean
+  breakfast: Boolean
+  cableTv: Boolean
+  suitableForEvents: Boolean
+  dryer: Boolean
+  washer: Boolean
+  indoorFireplace: Boolean
+  tv: Boolean
+  heating: Boolean
+  hangers: Boolean
+  iron: Boolean
+  hairDryer: Boolean
+  doorman: Boolean
+  paidParkingOffPremises: Boolean
+  freeParkingOnStreet: Boolean
+  gym: Boolean
+  airConditioning: Boolean
+  shampoo: Boolean
+  essentials: Boolean
+  laptopFriendlyWorkspace: Boolean
+  privateEntrance: Boolean
+  buzzerWirelessIntercom: Boolean
+  babyBath: Boolean
+  babyMonitor: Boolean
+  babysitterRecommendations: Boolean
+  bathtub: Boolean
+  changingTable: Boolean
+  childrensBooksAndToys: Boolean
+  childrensDinnerware: Boolean
+  crib: Boolean
+}
+
 input AmenitiesUpdateOneRequiredWithoutPlaceInput {
   create: AmenitiesCreateWithoutPlaceInput
   connect: AmenitiesWhereUniqueInput
@@ -957,6 +1000,11 @@ input BookingUpdateInput {
   payment: PaymentUpdateOneRequiredWithoutBookingInput
 }
 
+input BookingUpdateManyMutationInput {
+  startDate: DateTime
+  endDate: DateTime
+}
+
 input BookingUpdateManyWithoutBookeeInput {
   create: [BookingCreateWithoutBookeeInput!]
   connect: [BookingWhereUniqueInput!]
@@ -1301,6 +1349,10 @@ input CityUpdateInput {
   neighbourhoods: NeighbourhoodUpdateManyWithoutCityInput
 }
 
+input CityUpdateManyMutationInput {
+  name: String
+}
+
 input CityUpdateOneRequiredWithoutNeighbourhoodsInput {
   create: CityCreateWithoutNeighbourhoodsInput
   connect: CityWhereUniqueInput
@@ -1603,6 +1655,17 @@ input CreditCardInformationUpdateInput {
   postalCode: String
   country: String
   paymentAccount: PaymentAccountUpdateOneWithoutCreditcardInput
+}
+
+input CreditCardInformationUpdateManyMutationInput {
+  cardNumber: String
+  expiresOnMonth: Int
+  expiresOnYear: Int
+  securityCode: String
+  firstName: String
+  lastName: String
+  postalCode: String
+  country: String
 }
 
 input CreditCardInformationUpdateOneWithoutPaymentAccountInput {
@@ -2247,6 +2310,11 @@ input ExperienceCategoryUpdateInput {
   experience: ExperienceUpdateOneWithoutCategoryInput
 }
 
+input ExperienceCategoryUpdateManyMutationInput {
+  mainColor: String
+  name: String
+}
+
 input ExperienceCategoryUpdateOneWithoutExperienceInput {
   create: ExperienceCategoryCreateWithoutExperienceInput
   connect: ExperienceCategoryWhereUniqueInput
@@ -2615,6 +2683,12 @@ input ExperienceUpdateInput {
   location: LocationUpdateOneRequiredWithoutExperienceInput
   reviews: ReviewUpdateManyWithoutExperienceInput
   preview: PictureUpdateOneRequiredInput
+}
+
+input ExperienceUpdateManyMutationInput {
+  title: String
+  pricePerPerson: Int
+  popularity: Int
 }
 
 input ExperienceUpdateManyWithoutHostInput {
@@ -3032,6 +3106,12 @@ input GuestRequirementsUpdateInput {
   place: PlaceUpdateOneRequiredWithoutGuestRequirementsInput
 }
 
+input GuestRequirementsUpdateManyMutationInput {
+  govIssuedId: Boolean
+  recommendationsFromOtherHosts: Boolean
+  guestTripInformation: Boolean
+}
+
 input GuestRequirementsUpdateOneWithoutPlaceInput {
   create: GuestRequirementsCreateWithoutPlaceInput
   connect: GuestRequirementsWhereUniqueInput
@@ -3277,6 +3357,15 @@ input HouseRulesUpdateDataInput {
 }
 
 input HouseRulesUpdateInput {
+  suitableForChildren: Boolean
+  suitableForInfants: Boolean
+  petsAllowed: Boolean
+  smokingAllowed: Boolean
+  partiesAndEventsAllowed: Boolean
+  additionalRules: String
+}
+
+input HouseRulesUpdateManyMutationInput {
   suitableForChildren: Boolean
   suitableForInfants: Boolean
   petsAllowed: Boolean
@@ -3720,6 +3809,13 @@ input LocationUpdateInput {
   place: PlaceUpdateOneWithoutLocationInput
   experience: ExperienceUpdateOneWithoutLocationInput
   restaurant: RestaurantUpdateOneWithoutLocationInput
+}
+
+input LocationUpdateManyMutationInput {
+  lat: Float
+  lng: Float
+  address: String
+  directions: String
 }
 
 input LocationUpdateManyWithoutNeighbourHoodInput {
@@ -4227,6 +4323,11 @@ input MessageUpdateInput {
   to: UserUpdateOneRequiredWithoutReceivedMessagesInput
 }
 
+input MessageUpdateManyMutationInput {
+  deliveredAt: DateTime
+  readAt: DateTime
+}
+
 input MessageUpdateManyWithoutFromInput {
   create: [MessageCreateWithoutFromInput!]
   connect: [MessageWhereUniqueInput!]
@@ -4530,29 +4631,29 @@ type Mutation {
   upsertNotification(where: NotificationWhereUniqueInput!, create: NotificationCreateInput!, update: NotificationUpdateInput!): Notification!
   upsertRestaurant(where: RestaurantWhereUniqueInput!, create: RestaurantCreateInput!, update: RestaurantUpdateInput!): Restaurant!
   upsertHouseRules(where: HouseRulesWhereUniqueInput!, create: HouseRulesCreateInput!, update: HouseRulesUpdateInput!): HouseRules!
-  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
-  updateManyPlaces(data: PlaceUpdateInput!, where: PlaceWhereInput): BatchPayload!
-  updateManyPricings(data: PricingUpdateInput!, where: PricingWhereInput): BatchPayload!
-  updateManyGuestRequirementses(data: GuestRequirementsUpdateInput!, where: GuestRequirementsWhereInput): BatchPayload!
-  updateManyPolicieses(data: PoliciesUpdateInput!, where: PoliciesWhereInput): BatchPayload!
-  updateManyViewses(data: ViewsUpdateInput!, where: ViewsWhereInput): BatchPayload!
-  updateManyLocations(data: LocationUpdateInput!, where: LocationWhereInput): BatchPayload!
-  updateManyNeighbourhoods(data: NeighbourhoodUpdateInput!, where: NeighbourhoodWhereInput): BatchPayload!
-  updateManyCities(data: CityUpdateInput!, where: CityWhereInput): BatchPayload!
-  updateManyExperiences(data: ExperienceUpdateInput!, where: ExperienceWhereInput): BatchPayload!
-  updateManyExperienceCategories(data: ExperienceCategoryUpdateInput!, where: ExperienceCategoryWhereInput): BatchPayload!
-  updateManyAmenitieses(data: AmenitiesUpdateInput!, where: AmenitiesWhereInput): BatchPayload!
-  updateManyReviews(data: ReviewUpdateInput!, where: ReviewWhereInput): BatchPayload!
-  updateManyBookings(data: BookingUpdateInput!, where: BookingWhereInput): BatchPayload!
-  updateManyPayments(data: PaymentUpdateInput!, where: PaymentWhereInput): BatchPayload!
-  updateManyPaymentAccounts(data: PaymentAccountUpdateInput!, where: PaymentAccountWhereInput): BatchPayload!
-  updateManyPaypalInformations(data: PaypalInformationUpdateInput!, where: PaypalInformationWhereInput): BatchPayload!
-  updateManyCreditCardInformations(data: CreditCardInformationUpdateInput!, where: CreditCardInformationWhereInput): BatchPayload!
-  updateManyMessages(data: MessageUpdateInput!, where: MessageWhereInput): BatchPayload!
-  updateManyNotifications(data: NotificationUpdateInput!, where: NotificationWhereInput): BatchPayload!
-  updateManyRestaurants(data: RestaurantUpdateInput!, where: RestaurantWhereInput): BatchPayload!
-  updateManyPictures(data: PictureUpdateInput!, where: PictureWhereInput): BatchPayload!
-  updateManyHouseRuleses(data: HouseRulesUpdateInput!, where: HouseRulesWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
+  updateManyPlaces(data: PlaceUpdateManyMutationInput!, where: PlaceWhereInput): BatchPayload!
+  updateManyPricings(data: PricingUpdateManyMutationInput!, where: PricingWhereInput): BatchPayload!
+  updateManyGuestRequirementses(data: GuestRequirementsUpdateManyMutationInput!, where: GuestRequirementsWhereInput): BatchPayload!
+  updateManyPolicieses(data: PoliciesUpdateManyMutationInput!, where: PoliciesWhereInput): BatchPayload!
+  updateManyViewses(data: ViewsUpdateManyMutationInput!, where: ViewsWhereInput): BatchPayload!
+  updateManyLocations(data: LocationUpdateManyMutationInput!, where: LocationWhereInput): BatchPayload!
+  updateManyNeighbourhoods(data: NeighbourhoodUpdateManyMutationInput!, where: NeighbourhoodWhereInput): BatchPayload!
+  updateManyCities(data: CityUpdateManyMutationInput!, where: CityWhereInput): BatchPayload!
+  updateManyExperiences(data: ExperienceUpdateManyMutationInput!, where: ExperienceWhereInput): BatchPayload!
+  updateManyExperienceCategories(data: ExperienceCategoryUpdateManyMutationInput!, where: ExperienceCategoryWhereInput): BatchPayload!
+  updateManyAmenitieses(data: AmenitiesUpdateManyMutationInput!, where: AmenitiesWhereInput): BatchPayload!
+  updateManyReviews(data: ReviewUpdateManyMutationInput!, where: ReviewWhereInput): BatchPayload!
+  updateManyBookings(data: BookingUpdateManyMutationInput!, where: BookingWhereInput): BatchPayload!
+  updateManyPayments(data: PaymentUpdateManyMutationInput!, where: PaymentWhereInput): BatchPayload!
+  updateManyPaymentAccounts(data: PaymentAccountUpdateManyMutationInput!, where: PaymentAccountWhereInput): BatchPayload!
+  updateManyPaypalInformations(data: PaypalInformationUpdateManyMutationInput!, where: PaypalInformationWhereInput): BatchPayload!
+  updateManyCreditCardInformations(data: CreditCardInformationUpdateManyMutationInput!, where: CreditCardInformationWhereInput): BatchPayload!
+  updateManyMessages(data: MessageUpdateManyMutationInput!, where: MessageWhereInput): BatchPayload!
+  updateManyNotifications(data: NotificationUpdateManyMutationInput!, where: NotificationWhereInput): BatchPayload!
+  updateManyRestaurants(data: RestaurantUpdateManyMutationInput!, where: RestaurantWhereInput): BatchPayload!
+  updateManyPictures(data: PictureUpdateManyMutationInput!, where: PictureWhereInput): BatchPayload!
+  updateManyHouseRuleses(data: HouseRulesUpdateManyMutationInput!, where: HouseRulesWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyPlaces(where: PlaceWhereInput): BatchPayload!
   deleteManyPricings(where: PricingWhereInput): BatchPayload!
@@ -4734,6 +4835,13 @@ input NeighbourhoodUpdateInput {
   locations: LocationUpdateManyWithoutNeighbourHoodInput
   homePreview: PictureUpdateOneInput
   city: CityUpdateOneRequiredWithoutNeighbourhoodsInput
+}
+
+input NeighbourhoodUpdateManyMutationInput {
+  name: String
+  slug: String
+  featured: Boolean
+  popularity: Int
 }
 
 input NeighbourhoodUpdateManyWithoutCityInput {
@@ -5146,6 +5254,12 @@ input NotificationUpdateInput {
   link: String
   readDate: DateTime
   user: UserUpdateOneRequiredWithoutNotificationsInput
+}
+
+input NotificationUpdateManyMutationInput {
+  type: NOTIFICATION_TYPE
+  link: String
+  readDate: DateTime
 }
 
 input NotificationUpdateManyWithoutUserInput {
@@ -5567,6 +5681,10 @@ input PaymentAccountUpdateInput {
   creditcard: CreditCardInformationUpdateOneWithoutPaymentAccountInput
 }
 
+input PaymentAccountUpdateManyMutationInput {
+  type: PAYMENT_PROVIDER
+}
+
 input PaymentAccountUpdateManyWithoutUserInput {
   create: [PaymentAccountCreateWithoutUserInput!]
   connect: [PaymentAccountWhereUniqueInput!]
@@ -5902,6 +6020,12 @@ input PaymentUpdateInput {
   totalPrice: Float
   booking: BookingUpdateOneRequiredWithoutPaymentInput
   paymentMethod: PaymentAccountUpdateOneRequiredWithoutPaymentsInput
+}
+
+input PaymentUpdateManyMutationInput {
+  serviceFee: Float
+  placePrice: Float
+  totalPrice: Float
 }
 
 input PaymentUpdateManyWithoutPaymentMethodInput {
@@ -6251,6 +6375,10 @@ input PaypalInformationUpdateInput {
   paymentAccount: PaymentAccountUpdateOneRequiredWithoutPaypalInput
 }
 
+input PaypalInformationUpdateManyMutationInput {
+  email: String
+}
+
 input PaypalInformationUpdateOneWithoutPaymentAccountInput {
   create: PaypalInformationCreateWithoutPaymentAccountInput
   connect: PaypalInformationWhereUniqueInput
@@ -6527,12 +6655,12 @@ input PictureUpdateDataInput {
   url: String
 }
 
-input PictureUpdateInput {
-  url: String
-}
-
 input PictureUpdateManyInput {
   create: [PictureCreateInput!]
+}
+
+input PictureUpdateManyMutationInput {
+  url: String
 }
 
 input PictureUpdateOneInput {
@@ -7067,6 +7195,19 @@ input PlaceUpdateInput {
   houseRules: HouseRulesUpdateOneInput
   bookings: BookingUpdateManyWithoutPlaceInput
   pictures: PictureUpdateManyInput
+}
+
+input PlaceUpdateManyMutationInput {
+  name: String
+  size: PLACE_SIZES
+  shortDescription: String
+  description: String
+  slug: String
+  maxGuests: Int
+  numBedrooms: Int
+  numBeds: Int
+  numBaths: Int
+  popularity: Int
 }
 
 input PlaceUpdateManyWithoutHostInput {
@@ -7980,6 +8121,12 @@ input PoliciesUpdateInput {
   place: PlaceUpdateOneRequiredWithoutPoliciesInput
 }
 
+input PoliciesUpdateManyMutationInput {
+  checkInStartTime: Float
+  checkInEndTime: Float
+  checkoutTime: Float
+}
+
 input PoliciesUpdateOneWithoutPlaceInput {
   create: PoliciesCreateWithoutPlaceInput
   connect: PoliciesWhereUniqueInput
@@ -8402,6 +8549,21 @@ input PricingUpdateInput {
   weekendPricing: Int
   currency: CURRENCY
   place: PlaceUpdateOneRequiredWithoutPricingInput
+}
+
+input PricingUpdateManyMutationInput {
+  monthlyDiscount: Int
+  weeklyDiscount: Int
+  perNight: Int
+  smartPricing: Boolean
+  basePrice: Int
+  averageWeekly: Int
+  averageMonthly: Int
+  cleaningFee: Int
+  securityDeposit: Int
+  extraGuests: Int
+  weekendPricing: Int
+  currency: CURRENCY
 }
 
 input PricingUpdateOneRequiredWithoutPlaceInput {
@@ -9035,6 +9197,14 @@ input RestaurantUpdateInput {
   location: LocationUpdateOneRequiredWithoutRestaurantInput
 }
 
+input RestaurantUpdateManyMutationInput {
+  title: String
+  avgPricePerPerson: Int
+  isCurated: Boolean
+  slug: String
+  popularity: Int
+}
+
 input RestaurantUpdateOneWithoutLocationInput {
   create: RestaurantCreateWithoutLocationInput
   connect: RestaurantWhereUniqueInput
@@ -9511,6 +9681,17 @@ input ReviewUpdateInput {
   communication: Int
   place: PlaceUpdateOneRequiredWithoutReviewsInput
   experience: ExperienceUpdateOneWithoutReviewsInput
+}
+
+input ReviewUpdateManyMutationInput {
+  text: String
+  stars: Int
+  accuracy: Int
+  location: Int
+  checkIn: Int
+  value: Int
+  cleanliness: Int
+  communication: Int
 }
 
 input ReviewUpdateManyWithoutExperienceInput {
@@ -10322,6 +10503,17 @@ input UserUpdateInput {
   notifications: NotificationUpdateManyWithoutUserInput
   profilePicture: PictureUpdateOneInput
   hostingExperiences: ExperienceUpdateManyWithoutHostInput
+}
+
+input UserUpdateManyMutationInput {
+  firstName: String
+  lastName: String
+  email: String
+  password: String
+  phone: String
+  responseRate: Float
+  responseTime: Int
+  isSuperHost: Boolean
 }
 
 input UserUpdateOneRequiredWithoutBookingsInput {
@@ -11163,6 +11355,10 @@ input ViewsSubscriptionWhereInput {
 input ViewsUpdateInput {
   lastWeek: Int
   place: PlaceUpdateOneRequiredWithoutViewsInput
+}
+
+input ViewsUpdateManyMutationInput {
+  lastWeek: Int
 }
 
 input ViewsUpdateOneRequiredWithoutPlaceInput {

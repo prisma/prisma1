@@ -27,9 +27,11 @@ sealed trait FurtherNestedMutaction extends DatabaseMutaction {
   def nestedDeletes: Vector[NestedDeleteNode]
   def nestedConnects: Vector[NestedConnect]
   def nestedDisconnects: Vector[NestedDisconnect]
+  def nestedUpdateManys: Vector[NestedUpdateNodes]
+  def nestedDeleteManys: Vector[NestedDeleteNodes]
 
   override def allNestedMutactions: Vector[NestedDatabaseMutaction] = {
-    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects
+    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects ++ nestedUpdateManys ++ nestedDeleteManys
   }
 }
 
@@ -45,6 +47,8 @@ sealed trait CreateNode extends FurtherNestedMutaction {
   override def nestedUpserts     = Vector.empty
   override def nestedDeletes     = Vector.empty
   override def nestedDisconnects = Vector.empty
+  override def nestedUpdateManys = Vector.empty
+  override def nestedDeleteManys = Vector.empty
 }
 case class TopLevelCreateNode(
     project: Project,
@@ -93,7 +97,9 @@ case class TopLevelUpdateNode(
     nestedUpserts: Vector[NestedUpsertNode],
     nestedDeletes: Vector[NestedDeleteNode],
     nestedConnects: Vector[NestedConnect],
-    nestedDisconnects: Vector[NestedDisconnect]
+    nestedDisconnects: Vector[NestedDisconnect],
+    nestedUpdateManys: Vector[NestedUpdateNodes],
+    nestedDeleteManys: Vector[NestedDeleteNodes]
 ) extends UpdateNode
     with TopLevelDatabaseMutaction {
   override def model = where.model
@@ -110,7 +116,9 @@ case class NestedUpdateNode(
     nestedUpserts: Vector[NestedUpsertNode],
     nestedDeletes: Vector[NestedDeleteNode],
     nestedConnects: Vector[NestedConnect],
-    nestedDisconnects: Vector[NestedDisconnect]
+    nestedDisconnects: Vector[NestedDisconnect],
+    nestedUpdateManys: Vector[NestedUpdateNodes],
+    nestedDeleteManys: Vector[NestedDeleteNodes]
 ) extends UpdateNode
     with NestedDatabaseMutaction {
   override def model = relationField.relatedModel_!
@@ -157,6 +165,22 @@ case class UpdateNodes(
     nonListArgs: PrismaArgs,
     listArgs: Vector[(String, ListGCValue)]
 ) extends TopLevelDatabaseMutaction
+    with AllUpdateNodes
+    with FinalMutaction
+
+// NESTED MANY
+case class NestedDeleteNodes(project: Project, model: Model, relationField: RelationField, whereFilter: Option[Filter])
+    extends NestedDatabaseMutaction
+    with FinalMutaction
+
+case class NestedUpdateNodes(
+    project: Project,
+    model: Model,
+    relationField: RelationField,
+    whereFilter: Option[Filter],
+    nonListArgs: PrismaArgs,
+    listArgs: Vector[(String, ListGCValue)]
+) extends NestedDatabaseMutaction
     with AllUpdateNodes
     with FinalMutaction
 

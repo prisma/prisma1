@@ -12,8 +12,11 @@ import {
   FlowGenerator,
 } from 'prisma-client-lib'
 import { spawnSync } from 'npm-run'
-import generateCRUDSchemaString from 'prisma-generate-schema'
+import generateCRUDSchemaString, {
+  parseInternalTypes,
+} from 'prisma-generate-schema'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
+import { IGQLType } from 'prisma-generate-schema/dist/src/datamodel/model'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -24,8 +27,9 @@ export default class GenereateCommand extends Command {
       char: 'e',
     }),
     ['endpoint']: flags.boolean({
-      description: 'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
-      required: false
+      description:
+        'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
+      required: false,
     }),
   }
   async run() {
@@ -40,7 +44,7 @@ export default class GenereateCommand extends Command {
     ) {
       const before = Date.now()
 
-      let schemaString;
+      let schemaString
       if (this.flags.endpoint) {
         this.out.action.start(`Downloading schema`)
         const serviceName = this.definition.service!
@@ -49,7 +53,7 @@ export default class GenereateCommand extends Command {
         const cluster = this.definition.getCluster()
         const workspace = this.definition.getWorkspace()
         this.env.setActiveCluster(cluster!)
-         await this.client.initClusterClient(
+        await this.client.initClusterClient(
           cluster!,
           serviceName,
           stageName,
@@ -71,9 +75,7 @@ export default class GenereateCommand extends Command {
             )} is missing in your prisma.yml`,
           )
         }
-        schemaString = generateCRUDSchemaString(
-          this.definition.typesString!,
-        )
+        schemaString = generateCRUDSchemaString(this.definition.typesString!)
       }
 
       if (!schemaString) {
@@ -96,20 +98,30 @@ export default class GenereateCommand extends Command {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
+        const internalTypes = parseInternalTypes(this.definition.typesString!)
+
         if (generator === 'typescript-client') {
-          await this.generateTypescript(resolvedOutput, schemaString)
+          await this.generateTypescript(
+            resolvedOutput,
+            schemaString,
+            internalTypes,
+          )
         }
 
         if (generator === 'javascript-client') {
-          await this.generateJavascript(resolvedOutput, schemaString)
+          await this.generateJavascript(
+            resolvedOutput,
+            schemaString,
+            internalTypes,
+          )
         }
 
         if (generator === 'go-client') {
-          await this.generateGo(resolvedOutput, schemaString)
+          await this.generateGo(resolvedOutput, schemaString, internalTypes)
         }
 
         if (generator === 'flow-client') {
-          await this.generateFlow(resolvedOutput, schemaString)
+          await this.generateFlow(resolvedOutput, schemaString, internalTypes)
         }
 
         const generators = [
@@ -134,7 +146,11 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'prisma.graphql'), schemaString)
   }
 
-  async generateTypescript(output: string, schemaString: string) {
+  async generateTypescript(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new TypescriptGenerator({ schema })
@@ -156,7 +172,11 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
 
-  async generateJavascript(output: string, schemaString: string) {
+  async generateJavascript(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new JavascriptGenerator({ schema })
@@ -190,16 +210,24 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
 
-  async generateGo(output: string, schemaString: string) {
+  async generateGo(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new GoGenerator({ schema })
 
     // TODO: Hotfix to make Go endpoint work partially till this is resolved https://github.com/prisma/prisma/issues/3277
-    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint).replace('`', '').replace('`', '')
-    const secret = (this.definition.rawJson.secret
-      ? this.replaceEnv(this.definition.rawJson!.secret).replace('`', '').replace('`', '')
-      : null)
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+      .replace('`', '')
+      .replace('`', '')
+    const secret = this.definition.rawJson.secret
+      ? this.replaceEnv(this.definition.rawJson!.secret)
+          .replace('`', '')
+          .replace('`', '')
+      : null
     const options: any = { endpoint }
     if (secret) {
       options.secret = secret
@@ -213,7 +241,11 @@ export default class GenereateCommand extends Command {
     spawnSync('go', ['fmt', path.join(output, 'prisma.go')])
   }
 
-  async generateFlow(output: string, schemaString: string) {
+  async generateFlow(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new FlowGenerator({ schema })
@@ -237,17 +269,17 @@ export default class GenereateCommand extends Command {
   }
 
   replaceEnv(str) {
-    const regex = /\${env:(.*?)}/;
-    const match = regex.exec(str);
+    const regex = /\${env:(.*?)}/
+    const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
       return this.replaceEnv(
         `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
-          match[0].length + match.index
-        )}`
-      );
+          match[0].length + match.index,
+        )}`,
+      )
     } else {
-      return `\`${str}\``;
+      return `\`${str}\``
     }
   }
 }
