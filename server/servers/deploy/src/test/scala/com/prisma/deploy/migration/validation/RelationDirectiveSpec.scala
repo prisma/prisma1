@@ -51,6 +51,27 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
 //    error2.description should equal("The type `Other2` does not specify a back relation field. It is referenced from the type `Model` in the field `others2`.")
 //  }
 
+  "fail if a back relation field is specified for an embedded type" in {
+    val dataModelString =
+      """
+            |type Model {
+            |  id: ID! @id
+            |  other: Other
+            |}
+            |type Other @embedded {
+            |  text: String
+            |  model: Model
+            |}
+          """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should equal("Other")
+    error.field should be(Some("model"))
+    error.description should be("The type `Other` specifies the back relation field `model`, which is disallowed for embedded types.")
+  }
+
   "@relation settings must be detected" in {
     val dataModelString =
       """

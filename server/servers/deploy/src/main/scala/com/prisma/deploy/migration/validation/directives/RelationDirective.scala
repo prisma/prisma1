@@ -33,7 +33,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   }
 
   override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
-    validateIfRequiredStrategyIsProvided(dataModel, capabilities)
+    validateIfRequiredStrategyIsProvided(dataModel, capabilities) ++ validateBackRelationFields(dataModel, capabilities)
   }
 
 //  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
@@ -48,6 +48,17 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
 //    }
 //  }
 
+  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+    for {
+      modelType     <- dataModel.modelTypes
+      relationField <- modelType.relationFields
+      relatedField  <- relationField.relatedField
+      if relationField.relatedType.isEmbedded
+    } yield {
+      DeployErrors.disallowedBackRelationFieldOnEmbeddedType(relatedField)
+    }
+  }
+
   private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
     val isMongo = capabilities.contains(MongoRelationsCapability)
     for {
@@ -59,7 +70,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       containsOnlyAutoStrategy = strategies == Set(RelationStrategy.Auto)
       if containsOnlyAutoStrategy
       if isMongo || relationField.hasOneToOneRelation
-      if modelType.isNotEmbedded || relatedType.isNotEmbedded
+      if modelType.isNotEmbedded && relatedType.isNotEmbedded
     } yield {
       DeployErrors.missingRelationStrategy(relationField)
     }
