@@ -89,6 +89,8 @@ You'll be using [dep](https://golang.github.io/dep/) for dependency management i
 dep init
 ```
 
+Great, you're now ready to write some code and talk to your database programmatically!
+
 ## Read and write data using the Prisma client
 
 Add the following code in `index.go`:
@@ -171,7 +173,7 @@ updatedUser, err := client.UpdateUser(prisma.UserUpdateParams{
 }).Exec(ctx)
 ```
 
-```js lineNumbers,copy
+```go lineNumbers,copy
 id := "__USER_ID__"
 deletedUser, err := client.DeleteUser(prisma.UserWhereUniqueInput{
   ID: &id,

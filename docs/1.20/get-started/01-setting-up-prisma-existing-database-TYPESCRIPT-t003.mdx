@@ -90,7 +90,7 @@ Paste the following contents into the Docker Compose file you just created:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.19
+    image: prismagraphql/prisma:1.20
     restart: always
     ports:
     - "4466:4466"
@@ -303,7 +303,7 @@ Now execute the script with the following command:
 npm run start
 ```
 
-Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
+Whenever you run the script with that command, a new user record is created in the database (because of the call to `createUser`).
 
 Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
 
