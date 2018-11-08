@@ -39,7 +39,7 @@ case class SubscriptionSchema(
           previousValues,
           isDelete match {
             case false => None
-            case true  => Some(SimpleResolveOutput(PrismaNode.dummy, Args.empty))
+            case true  => Some(PrismaNode.dummy)
           }
         )),
     arguments = List(
@@ -50,7 +50,7 @@ case class SubscriptionSchema(
     ),
     resolve = (ctx) =>
       isDelete match { // in the delete case there MUST be the previousValues
-        case true  => Future.successful(Some(SimpleResolveOutput(previousValues.get, Args.empty)))
+        case true  => Future.successful(previousValues)
         case false => SubscriptionDataResolver.resolve(dependencies.dataResolver(project), schemaBuilder.objectTypeBuilder, model, ctx)
     }
   )

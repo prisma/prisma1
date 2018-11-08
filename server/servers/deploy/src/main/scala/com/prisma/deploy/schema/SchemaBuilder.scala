@@ -1,7 +1,8 @@
 package com.prisma.deploy.schema
 
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator
@@ -39,7 +40,7 @@ case class SchemaBuilderImpl(
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
   val deployConnector: DeployConnector               = dependencies.deployConnector
   val migrator: Migrator                             = dependencies.migrator
-  val schemaInferrer: SchemaInferrer                 = SchemaInferrer(isActive = deployConnector.isActive)
+  val schemaInferrer: SchemaInferrer                 = SchemaInferrer(deployConnector.capabilities)
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
   val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder

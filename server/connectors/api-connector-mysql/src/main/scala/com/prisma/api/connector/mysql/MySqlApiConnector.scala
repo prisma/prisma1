@@ -1,10 +1,10 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.ApiConnectorCapability._
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
-import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability, DatabaseMutactionExecutor}
+import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.ApiConnectorCapability._
+import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -29,9 +29,9 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 
-  override val capabilities: Set[ApiConnectorCapability] = {
+  override val capabilities: Set[ConnectorCapability] = {
     val isActive = true
-    val common   = Set(TransactionalExecutionCapability, JoinRelationsCapability)
+    val common   = Set(TransactionalExecutionCapability, JoinRelationsCapability, JoinRelationsFilterCapability)
     if (isActive) {
       Set(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {

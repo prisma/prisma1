@@ -2,7 +2,7 @@ import { TypescriptGenerator } from './typescript-client'
 import { getExistsFlowTypes } from '../utils'
 
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment';
+import { codeComment } from '../utils/codeComment'
 
 export interface RenderOptions {
   endpoint?: string
@@ -24,8 +24,7 @@ export class FlowGenerator extends TypescriptGenerator {
 
 ${codeComment}
 
-import type { GraphQLSchema } from 'graphql'
-import type { IResolvers } from 'graphql-tools/dist/Interfaces'
+import type { GraphQLSchema, DocumentNode } from 'graphql'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
 import { makePrismaClientClass } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`

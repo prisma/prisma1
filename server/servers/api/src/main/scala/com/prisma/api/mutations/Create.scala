@@ -24,6 +24,6 @@ case class Create(
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val createdItem = results.results.collectFirst { case r: CreateNodeResult if r.mutaction == createMutaction => r }.get
-    returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.id), selectedFields)
+    returnValueByUnique(NodeSelector.forId(model, createdItem.id), selectedFields)
   }
 }

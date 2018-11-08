@@ -1,14 +1,16 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.LegacyDataModelValidator
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.{OnDelete, Schema}
-import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
+import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
+class SchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
 
-  val inferer      = SchemaInferrer()
+  val inferer      = SchemaInferrer(Set(MigrationsCapability))
   val emptyProject = TestProject.empty
 
   "Inferring onDelete relationDirectives" should {
@@ -167,16 +169,15 @@ class SchemaInfererOnDeleteSpec extends WordSpec with Matchers {
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Schema = {
-    val validator = SchemaSyntaxValidator(
+    val validator = LegacyDataModelValidator(
       types,
-      SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
-      true
+      LegacyDataModelValidator.directiveRequirements,
+      deployConnector.fieldRequirements,
+      Set.empty
     )
 
     val prismaSdl = validator.generateSDL
 
-    SchemaInferrer().infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    inferer.infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
   }
 }

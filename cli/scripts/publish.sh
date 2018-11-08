@@ -29,6 +29,10 @@ if [[ -z "$CIRCLE_BRANCH" ]]; then
   fi
 fi
 
+if [[ -z "$CIRCLE_BRANCH" ]]; then
+  export CIRCLE_BRANCH=master
+fi
+
 if [ -z "$CIRCLE_TAG" ] && [ $CIRCLE_BRANCH == "master" ]; then
   echo "Builds on master are only executed when a tag is provided"
   exit 0
@@ -109,6 +113,10 @@ else
   if [ $CIRCLE_BRANCH == "alpha" ]; then
     step=2
   fi
+  if [[ -n "$CIRCLE_TAG" ]]; then
+    echo "Setting Step to 0"
+    step=0
+  fi
   nextDockerMinor=$((nextDockerMinor + step))
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}-${CIRCLE_BRANCH}"
 fi
@@ -156,17 +164,46 @@ else
 fi
 
 
+
+
+######################
+# Build cli/packages #
+######################
+
+cd cli/packages/
+
+#
+# Build prisma-generate-schema
+#
+
+if [ $generateSchemaChanged ]; then
+  cd prisma-generate-schema
+  sleep 3.0
+  ../../scripts/doubleInstall.sh
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
+export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
+
 #
 # Build prisma-client-lib
 #
 
-cd client
+cd ../../client
 export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
   yarn install
   yarn build
   npm version $newVersion
+  yarn add prisma-generate-schema@$generateSchemaVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
@@ -177,14 +214,13 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn install
 fi
 export clientVersion=$(cat package.json | jq -r '.version')
-cd ..
+cd ../cli/packages
 
 
-######################
-# Build cli/packages #
-######################
 
-cd cli/packages/
+########################
+# Back to cli/packages #
+########################
 
 #
 # Build prisma-yml
@@ -257,27 +293,6 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 
 
 #
-# Build prisma-generate-schema
-#
-
-if [ $generateSchemaChanged ]; then
-  cd prisma-generate-schema
-  sleep 3.0
-  ../../scripts/doubleInstall.sh
-  yarn build
-  npm version $newVersion
-
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
-  else
-    npm publish --tag $CIRCLE_BRANCH
-  fi
-  cd ..
-fi
-export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
-
-
-#
 # Build prisma-cli-core
 #
 
@@ -323,14 +338,13 @@ yarn add prisma-cli-engine@$engineVersion prisma-cli-core@$coreVersion
 yarn install
 yarn build
 
-if [ -z "$CIRCLE_TAG" ]; then
-
-  npm version $newVersion
-  npm publish --tag $CIRCLE_BRANCH
-else
+if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
   newVersion=$CIRCLE_TAG
 
   echo "new version: $newVersion"
   npm version $newVersion
   npm publish
+else
+  npm version $newVersion
+  npm publish --tag $CIRCLE_BRANCH
 fi

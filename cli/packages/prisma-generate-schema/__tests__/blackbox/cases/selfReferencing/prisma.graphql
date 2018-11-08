@@ -39,9 +39,16 @@ type AggregateSelfReferencingCWithId {
 }
 
 type BatchPayload {
-  """The number of nodes that have been affected by the Batch operation."""
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
   count: Long!
 }
+
+"""
+Raw JSON value
+"""
+scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -54,12 +61,17 @@ type MultiSelfReferencingB {
   b: MultiSelfReferencingB
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type MultiSelfReferencingBConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [MultiSelfReferencingBEdge]!
   aggregate: AggregateMultiSelfReferencingB!
 }
@@ -85,12 +97,17 @@ input MultiSelfReferencingBCreateWithoutBInput {
   a: MultiSelfReferencingBCreateOneWithoutBInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type MultiSelfReferencingBEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: MultiSelfReferencingB!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -110,30 +127,30 @@ type MultiSelfReferencingBSubscriptionPayload {
 }
 
 input MultiSelfReferencingBSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingBSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingBSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingBSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -181,13 +198,17 @@ input MultiSelfReferencingBUpsertWithoutBInput {
 }
 
 input MultiSelfReferencingBWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingBWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingBWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingBWhereInput!]
   a: MultiSelfReferencingBWhereInput
   b: MultiSelfReferencingBWhereInput
@@ -199,12 +220,17 @@ type MultiSelfReferencingBWithId implements Node {
   b: MultiSelfReferencingBWithId
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type MultiSelfReferencingBWithIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [MultiSelfReferencingBWithIdEdge]!
   aggregate: AggregateMultiSelfReferencingBWithId!
 }
@@ -232,12 +258,17 @@ input MultiSelfReferencingBWithIdCreateWithoutBInput {
   a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type MultiSelfReferencingBWithIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: MultiSelfReferencingBWithId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -262,30 +293,30 @@ type MultiSelfReferencingBWithIdSubscriptionPayload {
 }
 
 input MultiSelfReferencingBWithIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -335,53 +366,70 @@ input MultiSelfReferencingBWithIdUpsertWithoutBInput {
 }
 
 input MultiSelfReferencingBWithIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingBWithIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingBWithIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingBWithIdWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   a: MultiSelfReferencingBWithIdWhereInput
   b: MultiSelfReferencingBWithIdWhereInput
@@ -396,12 +444,17 @@ type MultiSelfReferencingC {
   b(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC!]
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type MultiSelfReferencingCConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [MultiSelfReferencingCEdge]!
   aggregate: AggregateMultiSelfReferencingC!
 }
@@ -427,12 +480,17 @@ input MultiSelfReferencingCCreateWithoutBInput {
   a: MultiSelfReferencingCCreateManyWithoutBInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type MultiSelfReferencingCEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: MultiSelfReferencingC!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -452,30 +510,30 @@ type MultiSelfReferencingCSubscriptionPayload {
 }
 
 input MultiSelfReferencingCSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingCSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingCSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingCSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -497,13 +555,17 @@ input MultiSelfReferencingCUpdateManyWithoutBInput {
 }
 
 input MultiSelfReferencingCWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingCWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingCWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingCWhereInput!]
   a_every: MultiSelfReferencingCWhereInput
   a_some: MultiSelfReferencingCWhereInput
@@ -519,12 +581,17 @@ type MultiSelfReferencingCWithId implements Node {
   b(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId!]
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type MultiSelfReferencingCWithIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [MultiSelfReferencingCWithIdEdge]!
   aggregate: AggregateMultiSelfReferencingCWithId!
 }
@@ -552,12 +619,17 @@ input MultiSelfReferencingCWithIdCreateWithoutBInput {
   a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type MultiSelfReferencingCWithIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: MultiSelfReferencingCWithId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -582,30 +654,30 @@ type MultiSelfReferencingCWithIdSubscriptionPayload {
 }
 
 input MultiSelfReferencingCWithIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -667,53 +739,70 @@ input MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutBInput {
 }
 
 input MultiSelfReferencingCWithIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [MultiSelfReferencingCWithIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [MultiSelfReferencingCWithIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [MultiSelfReferencingCWithIdWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   a_every: MultiSelfReferencingCWithIdWhereInput
   a_some: MultiSelfReferencingCWithIdWhereInput
@@ -790,24 +879,35 @@ enum MutationType {
   DELETED
 }
 
-"""An object with an ID"""
+"""
+An object with an ID
+"""
 interface Node {
-  """The id of the object."""
+  """
+  The id of the object.
+  """
   id: ID!
 }
 
-"""Information about pagination in a connection."""
+"""
+Information about pagination in a connection.
+"""
 type PageInfo {
-  """When paginating forwards, are there more items?"""
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
-
-  """When paginating backwards, are there more items?"""
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
-
-  """When paginating backwards, the cursor to continue."""
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
-
-  """When paginating forwards, the cursor to continue."""
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
 }
 
@@ -840,10 +940,13 @@ type Query {
   selfReferencingBWithIdsConnection(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBWithIdConnection!
   selfReferencingAWithIdsConnection(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAWithIdConnection!
   selfReferencingCsConnection(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCConnection!
-
-  """Fetches an object given its ID"""
+  """
+  Fetches an object given its ID
+  """
   node(
-    """The ID of an object"""
+    """
+    The ID of an object
+    """
     id: ID!
   ): Node
 }
@@ -854,12 +957,17 @@ type SelfReferencingA implements Node {
   field: Int!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type SelfReferencingAConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [SelfReferencingAEdge]!
   aggregate: AggregateSelfReferencingA!
 }
@@ -869,12 +977,17 @@ input SelfReferencingACreateInput {
   a: SelfReferencingAWithIdCreateOneInput!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type SelfReferencingAEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: SelfReferencingA!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -902,30 +1015,30 @@ type SelfReferencingASubscriptionPayload {
 }
 
 input SelfReferencingASubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingASubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingASubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingASubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -935,79 +1048,103 @@ input SelfReferencingASubscriptionWhereInput {
 
 input SelfReferencingAUpdateInput {
   field: Int
-  a: SelfReferencingAWithIdUpdateOneInput
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
 }
 
 input SelfReferencingAWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingAWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingAWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingAWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a: SelfReferencingAWithIdWhereInput
 }
@@ -1022,12 +1159,17 @@ type SelfReferencingAWithId implements Node {
   field: Int!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type SelfReferencingAWithIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [SelfReferencingAWithIdEdge]!
   aggregate: AggregateSelfReferencingAWithId!
 }
@@ -1042,12 +1184,17 @@ input SelfReferencingAWithIdCreateOneInput {
   connect: SelfReferencingAWithIdWhereUniqueInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type SelfReferencingAWithIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: SelfReferencingAWithId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1075,30 +1222,30 @@ type SelfReferencingAWithIdSubscriptionPayload {
 }
 
 input SelfReferencingAWithIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingAWithIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingAWithIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingAWithIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1108,18 +1255,17 @@ input SelfReferencingAWithIdSubscriptionWhereInput {
 
 input SelfReferencingAWithIdUpdateDataInput {
   field: Int
-  a: SelfReferencingAWithIdUpdateOneInput
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
 }
 
 input SelfReferencingAWithIdUpdateInput {
   field: Int
-  a: SelfReferencingAWithIdUpdateOneInput
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
 }
 
-input SelfReferencingAWithIdUpdateOneInput {
+input SelfReferencingAWithIdUpdateOneRequiredInput {
   create: SelfReferencingAWithIdCreateInput
   connect: SelfReferencingAWithIdWhereUniqueInput
-  delete: Boolean
   update: SelfReferencingAWithIdUpdateDataInput
   upsert: SelfReferencingAWithIdUpsertNestedInput
 }
@@ -1130,75 +1276,99 @@ input SelfReferencingAWithIdUpsertNestedInput {
 }
 
 input SelfReferencingAWithIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingAWithIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingAWithIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingAWithIdWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a: SelfReferencingAWithIdWhereInput
 }
@@ -1213,12 +1383,17 @@ type SelfReferencingB implements Node {
   field: Int!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type SelfReferencingBConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [SelfReferencingBEdge]!
   aggregate: AggregateSelfReferencingB!
 }
@@ -1233,12 +1408,17 @@ input SelfReferencingBCreateOneInput {
   connect: SelfReferencingBWhereUniqueInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type SelfReferencingBEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: SelfReferencingB!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1266,30 +1446,30 @@ type SelfReferencingBSubscriptionPayload {
 }
 
 input SelfReferencingBSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingBSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingBSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingBSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1322,75 +1502,99 @@ input SelfReferencingBUpsertNestedInput {
 }
 
 input SelfReferencingBWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingBWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingBWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingBWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a: SelfReferencingBWhereInput
 }
@@ -1405,12 +1609,17 @@ type SelfReferencingBWithId implements Node {
   field: Int!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type SelfReferencingBWithIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [SelfReferencingBWithIdEdge]!
   aggregate: AggregateSelfReferencingBWithId!
 }
@@ -1430,12 +1639,17 @@ input SelfReferencingBWithIdCreateOneInput {
   connect: SelfReferencingBWithIdWhereUniqueInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type SelfReferencingBWithIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: SelfReferencingBWithId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1463,30 +1677,30 @@ type SelfReferencingBWithIdSubscriptionPayload {
 }
 
 input SelfReferencingBWithIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingBWithIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingBWithIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingBWithIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1539,75 +1753,99 @@ input SelfReferencingBWithIdUpsertWithWhereUniqueNestedInput {
 }
 
 input SelfReferencingBWithIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingBWithIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingBWithIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingBWithIdWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a: SelfReferencingBWithIdWhereInput
 }
@@ -1622,12 +1860,17 @@ type SelfReferencingC implements Node {
   field: Int!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type SelfReferencingCConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [SelfReferencingCEdge]!
   aggregate: AggregateSelfReferencingC!
 }
@@ -1642,12 +1885,17 @@ input SelfReferencingCCreateManyInput {
   connect: [SelfReferencingCWhereUniqueInput!]
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type SelfReferencingCEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: SelfReferencingC!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1675,30 +1923,30 @@ type SelfReferencingCSubscriptionPayload {
 }
 
 input SelfReferencingCSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingCSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingCSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingCSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1737,75 +1985,99 @@ input SelfReferencingCUpsertWithWhereUniqueNestedInput {
 }
 
 input SelfReferencingCWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingCWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingCWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingCWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a_every: SelfReferencingCWhereInput
   a_some: SelfReferencingCWhereInput
@@ -1822,12 +2094,17 @@ type SelfReferencingCWithId implements Node {
   field: Int!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type SelfReferencingCWithIdConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [SelfReferencingCWithIdEdge]!
   aggregate: AggregateSelfReferencingCWithId!
 }
@@ -1837,12 +2114,17 @@ input SelfReferencingCWithIdCreateInput {
   a: SelfReferencingBWithIdCreateManyInput
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type SelfReferencingCWithIdEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: SelfReferencingCWithId!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1870,30 +2152,30 @@ type SelfReferencingCWithIdSubscriptionPayload {
 }
 
 input SelfReferencingCWithIdSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingCWithIdSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingCWithIdSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingCWithIdSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1907,75 +2189,99 @@ input SelfReferencingCWithIdUpdateInput {
 }
 
 input SelfReferencingCWithIdWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [SelfReferencingCWithIdWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [SelfReferencingCWithIdWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [SelfReferencingCWithIdWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   field: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   field_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   field_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   field_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   field_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   field_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   field_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   field_gte: Int
   a_every: SelfReferencingBWithIdWhereInput
   a_some: SelfReferencingBWithIdWhereInput

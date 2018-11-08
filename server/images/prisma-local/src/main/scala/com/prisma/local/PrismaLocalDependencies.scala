@@ -8,7 +8,7 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutac
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
-import com.prisma.connectors.utils.ConnectorUtils
+import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
@@ -71,13 +71,18 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhooksConsumer  = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient        = SimpleHttpClient()
   override lazy val apiAuth           = Auth.jna(Algorithm.HS256)
-  override lazy val deployConnector   = ConnectorUtils.loadDeployConnector(config)
+  override lazy val deployConnector   = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator = FunctionValidatorImpl()
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
-  override lazy val apiConnector                  = ConnectorUtils.loadApiConnector(config)
+  override lazy val apiConnector                  = ConnectorLoader.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor   = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier             = DatabaseMutactionVerifierImpl
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
+
+  override def initialize()(implicit ec: ExecutionContext): Unit = {
+    super.initialize()(ec)
+    MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+  }
 }

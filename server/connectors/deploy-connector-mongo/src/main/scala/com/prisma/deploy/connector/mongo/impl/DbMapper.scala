@@ -51,8 +51,7 @@ object DbMapper extends JsonBsonConversion with MongoExtensions {
       allowMutations = projectDocument.allowMutations,
       revision = migration.revision,
       schema = schemaWithAddedBackRelations,
-      functions = migration.functions.toList,
-      ownerId = ""
+      functions = migration.functions.toList
     )
   }
 

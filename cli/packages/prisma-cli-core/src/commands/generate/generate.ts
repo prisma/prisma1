@@ -12,7 +12,11 @@ import {
   FlowGenerator,
 } from 'prisma-client-lib'
 import { spawnSync } from 'npm-run'
-import generateCRUDSchemaString from 'prisma-generate-schema'
+import generateCRUDSchemaString, {
+  parseInternalTypes,
+} from 'prisma-generate-schema'
+import { fetchAndPrintSchema } from '../deploy/printSchema'
+import { IGQLType } from 'prisma-generate-schema/dist/src/datamodel/model'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -21,6 +25,11 @@ export default class GenereateCommand extends Command {
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
+    }),
+    ['endpoint']: flags.boolean({
+      description:
+        'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
+      required: false,
     }),
   }
   async run() {
@@ -34,19 +43,46 @@ export default class GenereateCommand extends Command {
       this.definition.definition!.generate!.length > 0
     ) {
       const before = Date.now()
-      this.out.action.start(`Generating schema`)
 
-      if (!this.definition.definition!.datamodel) {
-        await this.out.error(
-          `The property ${chalk.bold(
-            'datamodel',
-          )} is missing in your prisma.yml`,
+      let schemaString
+      if (this.flags.endpoint) {
+        this.out.action.start(`Downloading schema`)
+        const serviceName = this.definition.service!
+        const stageName = this.definition.stage!
+        const token = this.definition.getToken(serviceName, stageName)
+        const cluster = this.definition.getCluster()
+        const workspace = this.definition.getWorkspace()
+        this.env.setActiveCluster(cluster!)
+        await this.client.initClusterClient(
+          cluster!,
+          serviceName,
+          stageName,
+          workspace,
         )
+        schemaString = await fetchAndPrintSchema(
+          this.client,
+          serviceName,
+          stageName!,
+          token,
+          workspace!,
+        )
+      } else {
+        this.out.action.start(`Generating schema`)
+        if (!this.definition.definition!.datamodel) {
+          await this.out.error(
+            `The property ${chalk.bold(
+              'datamodel',
+            )} is missing in your prisma.yml`,
+          )
+        }
+        schemaString = generateCRUDSchemaString(this.definition.typesString!)
       }
 
-      const schemaString = generateCRUDSchemaString(
-        this.definition.typesString!,
-      )
+      if (!schemaString) {
+        await this.out.error(
+          chalk.red(`Failed to download/generate the schema`),
+        )
+      }
 
       this.out.action.stop(prettyTime(Date.now() - before))
 
@@ -62,20 +98,30 @@ export default class GenereateCommand extends Command {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
+        const internalTypes = parseInternalTypes(this.definition.typesString!)
+
         if (generator === 'typescript-client') {
-          await this.generateTypescript(resolvedOutput, schemaString)
+          await this.generateTypescript(
+            resolvedOutput,
+            schemaString,
+            internalTypes,
+          )
         }
 
         if (generator === 'javascript-client') {
-          await this.generateJavascript(resolvedOutput, schemaString)
+          await this.generateJavascript(
+            resolvedOutput,
+            schemaString,
+            internalTypes,
+          )
         }
 
         if (generator === 'go-client') {
-          await this.generateGo(resolvedOutput, schemaString)
+          await this.generateGo(resolvedOutput, schemaString, internalTypes)
         }
 
         if (generator === 'flow-client') {
-          await this.generateFlow(resolvedOutput, schemaString)
+          await this.generateFlow(resolvedOutput, schemaString, internalTypes)
         }
 
         const generators = [
@@ -100,7 +146,11 @@ export default class GenereateCommand extends Command {
     fs.writeFileSync(path.join(output, 'prisma.graphql'), schemaString)
   }
 
-  async generateTypescript(output: string, schemaString: string) {
+  async generateTypescript(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new TypescriptGenerator({ schema })
@@ -122,7 +172,11 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (TypeScript) at ${output}`)
   }
 
-  async generateJavascript(output: string, schemaString: string) {
+  async generateJavascript(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new JavascriptGenerator({ schema })
@@ -156,14 +210,23 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (JavaScript) at ${output}`)
   }
 
-  async generateGo(output: string, schemaString: string) {
+  async generateGo(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new GoGenerator({ schema })
 
+    // TODO: Hotfix to make Go endpoint work partially till this is resolved https://github.com/prisma/prisma/issues/3277
     const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+      .replace('`', '')
+      .replace('`', '')
     const secret = this.definition.rawJson.secret
       ? this.replaceEnv(this.definition.rawJson!.secret)
+          .replace('`', '')
+          .replace('`', '')
       : null
     const options: any = { endpoint }
     if (secret) {
@@ -173,16 +236,16 @@ export default class GenereateCommand extends Command {
     const goCode = generator.render(options)
     fs.writeFileSync(path.join(output, 'prisma.go'), goCode)
 
-    const goLibCode = generator.renderLib(options)
-    fs.writeFileSync(path.join(output, 'lib.go'), goLibCode)
-
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
     spawnSync('go', ['fmt', path.join(output, 'prisma.go')])
-    spawnSync('go', ['fmt', path.join(output, 'lib.go')])
   }
 
-  async generateFlow(output: string, schemaString: string) {
+  async generateFlow(
+    output: string,
+    schemaString: string,
+    internalTypes: IGQLType[],
+  ) {
     const schema = buildSchema(schemaString)
 
     const generator = new FlowGenerator({ schema })
@@ -210,11 +273,13 @@ export default class GenereateCommand extends Command {
     const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
-      return `\`${str.slice(0, match.index)}$\{process.env['${
-        match[1]
-      }']}${str.slice(match[0].length + match.index)}\``
+      return this.replaceEnv(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
+          match[0].length + match.index,
+        )}`,
+      )
     } else {
-      return `'${str}'`
+      return `\`${str}\``
     }
   }
 }

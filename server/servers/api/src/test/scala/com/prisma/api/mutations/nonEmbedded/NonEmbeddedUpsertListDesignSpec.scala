@@ -1,14 +1,13 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, NonEmbeddedScalarListCapability}
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
+import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability, NonEmbeddedScalarListCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability, ScalarListsCapability)
   //region top level upserts
 
   "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {

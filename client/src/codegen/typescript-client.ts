@@ -5,7 +5,6 @@ import {
   isObjectType,
   isEnumType,
   GraphQLObjectType,
-  GraphQLSchema,
   GraphQLUnionType,
   GraphQLInterfaceType,
   GraphQLInputObjectType,
@@ -27,7 +26,7 @@ import { getExistsTypes } from '../utils'
 
 import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment';
+import { codeComment } from '../utils/codeComment'
 
 export interface RenderOptions {
   endpoint?: string
@@ -140,6 +139,9 @@ export type ${type.name}_Output = string`
     },
 
     GraphQLEnumType: (type: GraphQLEnumType): string => {
+      if (type.name === 'PrismaDatabase') {
+        return ``
+      }
       return `${this.renderDescription(type.description!)}export type ${
         type.name
       } = ${type
@@ -149,9 +151,6 @@ export type ${type.name}_Output = string`
     },
   }
 
-  constructor({ schema }: { schema: GraphQLSchema }) {
-    super({ schema })
-  }
   format(code: string, options: prettier.Options = {}) {
     return prettier.format(code, {
       ...options,
@@ -162,7 +161,22 @@ export type ${type.name}_Output = string`
     return `type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
   }
 
+  renderModels() {
+    const models = this.internalTypes
+      .map(
+        i => `{
+    name: '${i.name}',
+    embedded: ${i.embedded}
+  }`,
+      )
+      .join(',\n')
+
+    return `export const models = [${models}]`
+  }
+
   render(options?: RenderOptions) {
+    const queries = this.renderQueries()
+    const mutations = this.renderMutations()
     return this.format(this.compile`\
 ${this.renderImports()}
 
@@ -172,8 +186,10 @@ export interface Exists {\n${this.renderExists()}\n}
 
 export interface Node {}
 
+export type FragmentableArray<T> = Promise<Array<T>> & Fragmentable
+
 export interface Fragmentable {
-  $fragment<T>(fragment: string | Object): T
+  $fragment<T>(fragment: string | DocumentNode): Promise<T>
 }
 
 ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
@@ -181,31 +197,30 @@ ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
   $graphql: <T ${
     this.genericsDelimiter
   } any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
-  $getAbstractResolvers(filterSchema?: GraphQLSchema | string): IResolvers;
 
   /**
    * Queries
   */
 
-${this.renderQueries()};
+${queries}${queries.length > 0 ? ';' : ''}
 
   /**
    * Mutations
   */
 
-${this.renderMutations()};
+${mutations}${mutations.length > 0 ? ';' : ''}
 
 
   /**
    * Subscriptions
   */
 
-  $subscribe: Subscription
+  $subscribe: Subscription;
 
 }
 
 export interface Subscription {
-${this.renderSubscriptions()};
+${this.renderSubscriptions()}
 }
 
 ${this.renderClientConstructor}
@@ -221,6 +236,13 @@ ${this.renderTypes()}
 */
 
 ${this.renderExports(options)}
+
+
+/**
+ * Model Metadata
+*/
+
+${this.renderModels()}
 `)
   }
   renderClientConstructor() {
@@ -232,8 +254,7 @@ ${this.renderExports(options)}
     return `\
 ${codeComment}
 
-import { GraphQLSchema } from 'graphql'
-import { IResolvers } from 'graphql-tools/dist/Interfaces'
+import { DocumentNode, GraphQLSchema } from 'graphql'
 import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
   }
@@ -251,7 +272,7 @@ import { typeDefs } from './prisma-schema'`
       }
     }
 
-    return `{typeDefs${endpointString}${secretString}}`
+    return `{typeDefs, models, ${endpointString}${secretString}}`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
@@ -284,7 +305,7 @@ export const prisma = new Prisma()`
   renderMutations() {
     const mutationType = this.schema.getMutationType()
     if (!mutationType) {
-      return '{}'
+      return ''
     }
     return this.renderMainMethodFields(
       'mutation',
@@ -414,6 +435,8 @@ export const prisma = new Prisma()`
       partial: false,
       renderFunction: false,
       isMutation,
+      operation: false,
+      embedded: false,
     })
   }
 
@@ -423,6 +446,10 @@ export const prisma = new Prisma()`
     isMutation = false,
   ): string {
     return Object.keys(fields)
+      .filter(f => {
+        const field = fields[f]
+        return !(field.name === 'executeRaw' && isMutation)
+      })
       .map(f => {
         const field = fields[f]
         return `    ${field.name}: (${this.renderArgs(
@@ -437,6 +464,8 @@ export const prisma = new Prisma()`
           renderFunction: false,
           isMutation,
           isSubscription: operation === 'subscription',
+          operation: true,
+          embedded: false,
         })}`
       })
       .join(';\n')
@@ -463,6 +492,17 @@ export const prisma = new Prisma()`
     return `Promise<T>`
   }
 
+  isEmbeddedType(
+    type: GraphQLScalarType | GraphQLObjectType | GraphQLEnumType,
+  ) {
+    const internalType = this.internalTypes.find(i => i.name === type.name)
+    if (internalType && internalType.embedded) {
+      return true
+    }
+
+    return false
+  }
+
   renderInterfaceOrObject(
     type: GraphQLObjectTypeRef | GraphQLInputObjectType | GraphQLInterfaceType,
     node = true,
@@ -472,10 +512,14 @@ export const prisma = new Prisma()`
     const fieldDefinition = Object.keys(fields)
       .filter(f => {
         const deepType = this.getDeepType(fields[f].type)
-        return node ? !isObjectType(deepType) : true
+        return node
+          ? !isObjectType(deepType) || this.isEmbeddedType(deepType)
+          : true
       })
       .map(f => {
         const field = fields[f]
+        const deepType = this.getDeepType(fields[f].type)
+        const embedded = this.isEmbeddedType(deepType)
         return `  ${this.renderFieldName(field, node)}: ${this.renderFieldType({
           field,
           node,
@@ -484,6 +528,8 @@ export const prisma = new Prisma()`
           renderFunction: true,
           isMutation: false,
           isSubscription: subscription,
+          operation: false,
+          embedded,
         })}`
       })
       .join(`${this.lineBreakDelimiter}\n`)
@@ -494,7 +540,7 @@ export const prisma = new Prisma()`
     }
 
     return this.renderInterfaceWrapper(
-      `${type.name}${node ? 'Node' : ''}`,
+      `${type.name}${node ? '' : ''}`,
       type.description!,
       interfaces,
       fieldDefinition,
@@ -513,9 +559,13 @@ export const prisma = new Prisma()`
     return `${field.name}${isNonNullType(field.type) ? '' : '?'}`
   }
 
-  wrapType(type, subscription = false) {
+  wrapType(type, subscription = false, isArray = false) {
     if (subscription) {
       return `Promise<AsyncIterator<${type}>>`
+    }
+
+    if (isArray) {
+      return `FragmentableArray<${type}>`
     }
 
     return `Promise<${type}>`
@@ -529,6 +579,8 @@ export const prisma = new Prisma()`
     renderFunction,
     isMutation = false,
     isSubscription = false,
+    operation = false,
+    embedded = false,
   }: {
     field
     node: boolean
@@ -537,6 +589,8 @@ export const prisma = new Prisma()`
     renderFunction: boolean
     isMutation: boolean
     isSubscription?: boolean
+    operation: boolean
+    embedded: boolean
     // node: boolean = true,
     // input: boolean = false,
     // partial: boolean = false,
@@ -562,8 +616,19 @@ export const prisma = new Prisma()`
 
     const addSubscription = !partial && isSubscription && !isScalar
 
+    if (
+      operation &&
+      !node &&
+      !isInput &&
+      !isList &&
+      !isScalar &&
+      !addSubscription
+    ) {
+      return typeString === 'Node' ? `Node` : `${typeString}Promise`
+    }
+
     if ((node || isList) && !isScalar && !addSubscription) {
-      typeString += `Node`
+      typeString += ``
     }
 
     if (addSubscription) {
@@ -595,21 +660,26 @@ export const prisma = new Prisma()`
       } else {
         if (renderFunction) {
           return `<T ${this.genericsDelimiter} ${this.wrapType(
-            `Array<${typeString}`,
+            `${typeString}`,
             isSubscription,
-          )}>> (${
+            true,
+          )}> (${
             field.args && field.args.length > 0
               ? this.renderArgs(field, isMutation, false)
               : ''
           }) => T`
         } else {
-          return this.wrapType(`Array<${typeString}>`, isSubscription)
+          return this.wrapType(typeString, isSubscription, true)
         }
       }
     }
 
     if (partial) {
       typeString = `${this.partialType}<${typeString}>`
+    }
+
+    if (embedded && node) {
+      return typeString
     }
 
     if (node && (!isInput || isScalar)) {
@@ -619,14 +689,6 @@ export const prisma = new Prisma()`
     if (isInput || !renderFunction) {
       return typeString
     }
-
-    // if (node && !typeString.endsWith('Node')) {
-    //   typeString = `${typeString}Node`
-    // }
-
-    // if (isSubscription && !typeString.endsWith('Subscription')) {
-    //   typeString = `${typeStringSubscription}`
-    // }
 
     return `<T ${this.genericsDelimiter} ${typeString}>(${
       field.args && field.args.length > 0
@@ -683,8 +745,8 @@ ${fieldDefinition}
       ? [
           {
             name: subscription
-              ? `Promise<AsyncIterator<${typeName}Node>>`
-              : `Promise<${typeName}Node>`,
+              ? `Promise<AsyncIterator<${typeName}>>`
+              : `Promise<${typeName}>`,
           },
           {
             name: 'Fragmentable',
@@ -696,9 +758,11 @@ ${fieldDefinition}
       // TODO: Find a better solution than the hacky replace to remove ? from inside AtLeastOne
       typeName.includes('WhereUniqueInput')
         ? `export type ${typeName} = AtLeastOne<{
-        ${fieldDefinition.replace("?:", ":")}
+        ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${subscription ? 'Subscription' : ''}${
+        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${
+            promise && !subscription ? 'Promise' : ''
+          }${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
               ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
               : ''

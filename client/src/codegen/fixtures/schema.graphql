@@ -12,7 +12,7 @@ type Post implements Node {
   isPublished: Boolean!
   title: String!
   text: String!
-  author(where: UserWhereInput): User!
+  author: User!
 }
 
 type User implements Node {

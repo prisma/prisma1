@@ -49,6 +49,8 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   }
 )
 
+javaOptions in Universal ++= Seq("-Dorg.jooq.no-logo=true")
+
 def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing).dependsOn(logging)
@@ -91,7 +93,7 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
   .dependsOn(jdbcNative)
   .enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
   "--enable-all-security-services",
-  "--report-unsupported-elements-at-runtime", // todo no idea why postgres is still destroying the build
+//  "--report-unsupported-elements-at-runtime", // todo no idea why postgres is still destroying the build
   "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
   "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
   //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
@@ -162,21 +164,24 @@ lazy val connectorUtils = connectorProject("utils")
   .dependsOn(apiConnectorProjects)
   .dependsOn(jdbcNative)
 
+lazy val connectorShared = connectorProject("shared")
+  .settings(
+    libraryDependencies ++= slick ++ jooq ++ joda
+  )
+
 lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels)
   .dependsOn(metrics)
 
-lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+lazy val deployConnectorJdbc = connectorProject("deploy-connector-jdbc")
   .dependsOn(deployConnector)
-  .settings(
-    libraryDependencies ++= slick ++ Seq(mariaDbClient)
-  )
+  .dependsOn(connectorShared)
+
+lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+  .dependsOn(deployConnectorJdbc)
 
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
-  .dependsOn(deployConnector)
-  .settings(
-    libraryDependencies ++= slick
-  )
+  .dependsOn(deployConnectorJdbc)
 
 lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
@@ -193,25 +198,16 @@ lazy val apiConnector = connectorProject("api-connector")
   )
 
 lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
-  .settings(
-    libraryDependencies ++= jooq
-  )
   .dependsOn(apiConnector)
   .dependsOn(metrics)
   .dependsOn(slickUtils)
+  .dependsOn(connectorShared)
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnectorJdbc)
-  .settings(
-    libraryDependencies ++= Seq(mariaDbClient)
-  )
 
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
   .dependsOn(apiConnectorJdbc)
-  .settings(
-    libraryDependencies ++= slick
-  )
-
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .dependsOn(apiConnector)
@@ -385,6 +381,7 @@ val allServerProjects = List(
 
 lazy val deployConnectorProjects = List(
   deployConnector,
+  deployConnectorJdbc,
   deployConnectorMySql,
   deployConnectorPostgres,
   deployConnectorMongo
@@ -398,7 +395,7 @@ lazy val apiConnectorProjects = List(
   apiConnectorMongo
 )
 
-lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils)
+lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
 
 val allLibProjects = List(
   akkaUtils,

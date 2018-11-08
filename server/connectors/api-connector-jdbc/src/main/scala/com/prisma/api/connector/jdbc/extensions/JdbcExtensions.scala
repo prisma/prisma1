@@ -1,9 +1,9 @@
 package com.prisma.api.connector.jdbc.extensions
 
-import java.sql.{PreparedStatement, ResultSet, Timestamp}
-import java.time.ZoneOffset
+import java.sql.{PreparedStatement, ResultSet}
 import java.util.{Calendar, TimeZone}
 
+import com.prisma.connector.shared.jdbc.SharedJdbcExtensions
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
@@ -12,24 +12,16 @@ import play.api.libs.json.Json
 trait JdbcExtensions {
   import JdbcExtensionsValueClasses._
 
-  def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(DateTime.now(DateTimeZone.UTC))
-  def currentDateTimeGCValue            = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
+  def currentDateTimeGCValue = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
 
   implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
-
 }
 
-object JdbcExtensionsValueClasses {
+object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
   val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
-  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
-    val milis = dateTime.getMillis
-    new Timestamp(milis)
-  }
-
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
-
     def setGcValue(index: Int, value: GCValue): Unit = {
       value match {
         case v: LeafGCValue => setLeafValue(index, v)
@@ -43,7 +35,7 @@ object JdbcExtensionsValueClasses {
         case BooleanGCValue(boolean)   => ps.setBoolean(index, boolean)
         case IntGCValue(int)           => ps.setInt(index, int)
         case FloatGCValue(float)       => ps.setDouble(index, float)
-        case CuidGCValue(id)           => ps.setString(index, id)
+        case StringIdGCValue(id)       => ps.setString(index, id)
         case UuidGCValue(uuid)         => ps.setObject(index, uuid)
         case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime), calendar)
         case EnumGCValue(enum)         => ps.setString(index, enum)
@@ -62,7 +54,7 @@ object JdbcExtensionsValueClasses {
     def getParentId(sideString: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = getIDGcValue(sideString, typeIdentifier)
 
     private def getIDGcValue(name: String, typeIdentifier: TypeIdentifier.Value): IdGCValue = typeIdentifier match {
-      case TypeIdentifier.Cuid => CuidGCValue(resultSet.getString(name))
+      case TypeIdentifier.Cuid => StringIdGCValue(resultSet.getString(name))
       case TypeIdentifier.UUID => UuidGCValue.parse_!(resultSet.getString(name))
       case TypeIdentifier.Int  => IntGCValue(resultSet.getInt(name))
       case _                   => sys.error("Should only be called with IdGCValues")
@@ -71,7 +63,7 @@ object JdbcExtensionsValueClasses {
     def getGcValue(name: String, typeIdentifier: TypeIdentifier.Value): GCValue = {
       val gcValue = typeIdentifier match {
         case TypeIdentifier.String   => StringGCValue(resultSet.getString(name))
-        case TypeIdentifier.Cuid     => CuidGCValue(resultSet.getString(name))
+        case TypeIdentifier.Cuid     => StringIdGCValue(resultSet.getString(name))
         case TypeIdentifier.UUID     => UuidGCValue.parse_!(resultSet.getString(name))
         case TypeIdentifier.Int      => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.DateTime => getDateTimeGCValue(name)

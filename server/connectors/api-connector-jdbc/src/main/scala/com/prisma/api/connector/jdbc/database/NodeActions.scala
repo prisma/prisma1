@@ -41,7 +41,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
   private def generateId(model: Model) = {
     model.idField_!.typeIdentifier.asInstanceOf[IdTypeIdentifier] match {
       case TypeIdentifier.UUID => UuidGCValue.random
-      case TypeIdentifier.Cuid => CuidGCValue.random
+      case TypeIdentifier.Cuid => StringIdGCValue.random
       case TypeIdentifier.Int  => sys.error("can't generate int ids")
     }
   }
@@ -61,8 +61,6 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
         .update(aliasedTable)
         .setColumnsWithPlaceHolders(columns)
         .where(aliasColumn(model.dbNameOfIdField_!).in(placeHolders(ids)))
-
-      println(query)
 
       updateToDBIO(query)(
         setParams = pp => {

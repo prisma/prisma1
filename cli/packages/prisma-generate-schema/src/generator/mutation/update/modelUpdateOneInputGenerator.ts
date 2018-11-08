@@ -19,13 +19,8 @@ export default class ModelUpdateOneInputTypeGenerator extends ModelUpdateInputGe
     }
 
     fields.delete = { type: this.generators.scalarTypeGenerator.generate('Boolean', {}) }
-
-    // TODO: The disconnect field behavior of the scala implementation is very hard to replicate,
-    // as it is not clear which order the types are traversed in. 
-    // https://github.com/prisma/prisma/issues/3051
-    if (!args.relatedField.isRequired || args.relatedField.isList) {
-      fields.disconnect = { type: this.generators.scalarTypeGenerator.generate('Boolean', {}) }
-    }
+    
+    fields.disconnect = { type: this.generators.scalarTypeGenerator.generate('Boolean', {}) }
 
     if (!this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)) {
       fields.connect = { type: this.generators.modelWhereUniqueInput.generate(model, {}) }

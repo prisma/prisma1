@@ -1,31 +1,38 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, SupportsExistingDatabasesCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, SupportsExistingDatabasesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
-  override def runOnlyForCapabilities  = Set(JoinRelationsCapability)
+  override def doNotRunForPrototypes: Boolean = true
+  override def doNotRunForCapabilities        = Set(SupportsExistingDatabasesCapability)
+  override def runOnlyForCapabilities         = Set(JoinRelationsCapability)
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val human: SchemaDsl.ModelBuilder = schema
-      .model("Human")
-      .field("name", _.String)
-
-    human
-      .oneToOneRelation("wife", "husband", human, Some("Marriage"))
-      .oneToManyRelation("daughters", "father", human, Some("Offspring"))
-      .oneToManyRelation("stepdaughters", "mother", human, Some("Cuckoo"))
-      .manyToManyRelation("fans", "rockstars", human, Some("Admirers"))
-      .manyToOneRelation("singer", "bandmembers", human, Some("Team"))
-
-    val song = schema
-      .model("Song")
-      .field("title", _.String)
-      .oneToOneRelation("creator", "title", human)
+  val project = SchemaDsl.fromString() {
+    """type Human{
+    |   id: ID! @unique
+    |   name: String
+    |   wife: Human @relation(name: "Marriage")
+    |   husband: Human @relation(name: "Marriage")
+    |   daughters: [Human!]! @relation(name:"Offspring")
+    |   father: Human @relation(name:"Offspring")
+    |   stepdaughters: [Human!]! @relation(name:"Cuckoo")
+    |   mother: Human @relation(name:"Cuckoo")
+    |   fans: [Human!]! @relation(name:"Admirers")
+    |   rockstars: [Human!]! @relation(name:"Admirers")
+    |   singer: Human @relation(name:"Team")
+    |   bandmembers: [Human!]! @relation(name:"Team")
+    |   title: Song
+    |}
+    |type Song{
+    |   id: ID! @unique
+    |   title: String
+    |   creator: Human 
+    |}""".stripMargin
   }
+
   //All Queries run against the same data that is only set up once before all testcases
 
   override protected def beforeAll(): Unit = {

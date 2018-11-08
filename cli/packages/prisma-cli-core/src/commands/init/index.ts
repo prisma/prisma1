@@ -4,6 +4,8 @@ import * as path from 'path'
 import chalk from 'chalk'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
+import { spawnSync } from 'npm-run'
+import * as figures from 'figures'
 
 export default class Init extends Command {
   static topic = 'init'
@@ -41,7 +43,6 @@ export default class Init extends Command {
   async runInit({ endpoint }) {
     const files = fs.readdirSync(this.config.definitionDir)
     // the .prismarc must be allowed for the docker version to be functioning
-    // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
       (files.includes('prisma.yml') || files.includes('datamodel.prisma'))
@@ -60,12 +61,14 @@ Either try using a new directory name, or remove the files listed above.
 
     if (endpoint) {
       fs.writeFileSync(
-        path.join(this.config.definitionDir, 'datamodel.prisma'), 
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'datamodel.prisma'))
+        path.join(this.config.definitionDir, 'datamodel.prisma'),
+        fs.readFileSync(
+          path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
+        ),
       )
       fs.writeFileSync(
-        path.join(this.config.definitionDir, 'prisma.yml'), 
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml'))
+        path.join(this.config.definitionDir, 'prisma.yml'),
+        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml')),
       )
 
       const endpointDefinitionPath = path.join(
@@ -160,9 +163,6 @@ datamodel: datamodel.prisma`
     fs.writeFileSync(definitionPath, newPrismaYml)
 
     const dir = this.args!.dirName
-    const dirString = dir
-      ? `Open the new folder via ${chalk.cyan(`$ cd ${dir}`)}.\n`
-      : ``
 
     const isLocal = results.cluster!.local && results.writeDockerComposeYml
 
@@ -231,22 +231,48 @@ ${chalk.bold('Next steps:')}
 
 ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
-    const dockerComposeInstalled = await isDockerComposeInstalled()
-    if (!dockerComposeInstalled) {
-      this.out.log(
-        `\nTo install docker-compose, please follow this link: ${chalk.cyan(
-          'https://docs.docker.com/compose/install/',
-        )}`,
-      )
+    if (results.generator && results.generator !== 'no-generation') {
+      try {
+        process.chdir(this.config.definitionDir)
+      } catch (err) {
+        this.out.log(chalk.red(err))
+      }
+      const child = spawnSync('prisma', ['generate'])
+      const stderr = child.stderr && child.stderr.toString()
+      if (stderr && stderr.length > 0) {
+        this.out.log(chalk.red(stderr))
+      }
+      const stdout = child.stdout && child.stdout.toString()
+      if (stdout && stdout.length > 0) {
+        this.out.log(chalk.white(stdout))
+      }
+      const { status, error } = child
+      if (error || status !== 0) {
+        if (error) {
+          this.out.log(chalk.red(error.message))
+        }
+        this.out.action.stop(chalk.red(figures.cross))
+      } else {
+        this.out.action.stop()
+      }
+      prismaYmlString += this.getGeneratorConfig(results.generator)
+    }
+
+    if (isLocal) {
+      const dockerComposeInstalled = await isDockerComposeInstalled()
+      if (!dockerComposeInstalled) {
+        this.out.log(
+          `\nTo install docker-compose, please follow this link: ${chalk.cyan(
+            'https://docs.docker.com/compose/install/',
+          )}`,
+        )
+      }
     }
   }
+
   getGeneratorConfig(generator: string) {
     return `\n\ngenerate:
   - generator: ${generator}
-    output: ./generated/prisma
-
-hooks:
-  post-deploy:
-    - prisma generate`
+    output: ./generated/prisma-client/`
   }
 }

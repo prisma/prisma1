@@ -4,7 +4,6 @@ import com.prisma.shared.models.IdType.Id
 
 case class Project(
     id: Id,
-    ownerId: Id,
     revision: Int = 1,
     schema: Schema,
     secrets: Vector[String] = Vector.empty,

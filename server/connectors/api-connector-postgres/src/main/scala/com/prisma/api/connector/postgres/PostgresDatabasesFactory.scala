@@ -2,8 +2,8 @@ package com.prisma.api.connector.postgres
 
 import java.sql.Driver
 
-import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
+import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
@@ -19,6 +19,7 @@ object PostgresDatabasesFactory {
     val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
     val masterDb                     = Database.forConfig("database", config, driver)
     val slickDatabase: SlickDatabase = SlickDatabase(PostgresProfile, masterDb)
+
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 

@@ -23,13 +23,17 @@ type AggregateLotsOfScalarsWithID {
 }
 
 type BatchPayload {
-  """The number of nodes that have been affected by the Batch operation."""
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
   count: Long!
 }
 
 scalar DateTime
 
-"""Raw JSON value"""
+"""
+Raw JSON value
+"""
 scalar Json
 
 """
@@ -47,12 +51,17 @@ type LotsOfRequiredScalars {
   boolean: Boolean!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type LotsOfRequiredScalarsConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [LotsOfRequiredScalarsEdge]!
   aggregate: AggregateLotsOfRequiredScalars!
 }
@@ -66,12 +75,17 @@ input LotsOfRequiredScalarsCreateInput {
   boolean: Boolean!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type LotsOfRequiredScalarsEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: LotsOfRequiredScalars!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -113,30 +127,30 @@ type LotsOfRequiredScalarsSubscriptionPayload {
 }
 
 input LotsOfRequiredScalarsSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfRequiredScalarsSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfRequiredScalarsSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfRequiredScalarsSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -154,123 +168,162 @@ input LotsOfRequiredScalarsUpdateInput {
 }
 
 input LotsOfRequiredScalarsWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfRequiredScalarsWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfRequiredScalarsWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfRequiredScalarsWhereInput!]
   int: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   int_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   int_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   int_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   int_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   int_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   int_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   int_gte: Int
   string: String
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   string_not: String
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   string_in: [String!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   string_not_in: [String!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   string_lt: String
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   string_lte: String
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   string_gt: String
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   string_gte: String
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   string_contains: String
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   string_not_contains: String
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   string_starts_with: String
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   string_not_starts_with: String
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   string_ends_with: String
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   string_not_ends_with: String
   float: Float
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   float_not: Float
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   float_in: [Float!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   float_not_in: [Float!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   float_lt: Float
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   float_lte: Float
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   float_gt: Float
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   float_gte: Float
   dateTime: DateTime
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   dateTime_not: DateTime
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   dateTime_in: [DateTime!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   dateTime_not_in: [DateTime!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   dateTime_lt: DateTime
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   dateTime_lte: DateTime
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   dateTime_gt: DateTime
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   dateTime_gte: DateTime
   boolean: Boolean
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   boolean_not: Boolean
 }
 
@@ -284,12 +337,17 @@ type LotsOfRequiredScalarsWithID implements Node {
   boolean: Boolean!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type LotsOfRequiredScalarsWithIDConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [LotsOfRequiredScalarsWithIDEdge]!
   aggregate: AggregateLotsOfRequiredScalarsWithID!
 }
@@ -303,12 +361,17 @@ input LotsOfRequiredScalarsWithIDCreateInput {
   boolean: Boolean!
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type LotsOfRequiredScalarsWithIDEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: LotsOfRequiredScalarsWithID!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -351,30 +414,30 @@ type LotsOfRequiredScalarsWithIDSubscriptionPayload {
 }
 
 input LotsOfRequiredScalarsWithIDSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -392,163 +455,215 @@ input LotsOfRequiredScalarsWithIDUpdateInput {
 }
 
 input LotsOfRequiredScalarsWithIDWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfRequiredScalarsWithIDWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfRequiredScalarsWithIDWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfRequiredScalarsWithIDWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   int: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   int_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   int_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   int_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   int_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   int_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   int_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   int_gte: Int
   string: String
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   string_not: String
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   string_in: [String!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   string_not_in: [String!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   string_lt: String
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   string_lte: String
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   string_gt: String
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   string_gte: String
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   string_contains: String
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   string_not_contains: String
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   string_starts_with: String
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   string_not_starts_with: String
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   string_ends_with: String
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   string_not_ends_with: String
   float: Float
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   float_not: Float
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   float_in: [Float!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   float_not_in: [Float!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   float_lt: Float
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   float_lte: Float
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   float_gt: Float
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   float_gte: Float
   dateTime: DateTime
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   dateTime_not: DateTime
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   dateTime_in: [DateTime!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   dateTime_not_in: [DateTime!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   dateTime_lt: DateTime
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   dateTime_lte: DateTime
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   dateTime_gt: DateTime
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   dateTime_gte: DateTime
   boolean: Boolean
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   boolean_not: Boolean
 }
 
@@ -565,12 +680,17 @@ type LotsOfScalarLists {
   boolean: [Boolean!]!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type LotsOfScalarListsConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [LotsOfScalarListsEdge]!
   aggregate: AggregateLotsOfScalarLists!
 }
@@ -608,12 +728,17 @@ input LotsOfScalarListsCreatestringInput {
   set: [String!]
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type LotsOfScalarListsEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: LotsOfScalarLists!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -643,30 +768,30 @@ type LotsOfScalarListsSubscriptionPayload {
 }
 
 input LotsOfScalarListsSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarListsSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarListsSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarListsSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -708,13 +833,17 @@ input LotsOfScalarListsUpdatestringInput {
 }
 
 input LotsOfScalarListsWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarListsWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarListsWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarListsWhereInput!]
 }
 
@@ -728,12 +857,17 @@ type LotsOfScalarListsWithID implements Node {
   boolean: [Boolean!]!
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type LotsOfScalarListsWithIDConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [LotsOfScalarListsWithIDEdge]!
   aggregate: AggregateLotsOfScalarListsWithID!
 }
@@ -771,12 +905,17 @@ input LotsOfScalarListsWithIDCreatestringInput {
   set: [String!]
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type LotsOfScalarListsWithIDEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: LotsOfScalarListsWithID!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -807,30 +946,30 @@ type LotsOfScalarListsWithIDSubscriptionPayload {
 }
 
 input LotsOfScalarListsWithIDSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -872,53 +1011,70 @@ input LotsOfScalarListsWithIDUpdatestringInput {
 }
 
 input LotsOfScalarListsWithIDWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarListsWithIDWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarListsWithIDWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarListsWithIDWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
 }
 
@@ -935,12 +1091,17 @@ type LotsOfScalars {
   boolean: Boolean
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type LotsOfScalarsConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [LotsOfScalarsEdge]!
   aggregate: AggregateLotsOfScalars!
 }
@@ -954,12 +1115,17 @@ input LotsOfScalarsCreateInput {
   boolean: Boolean
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type LotsOfScalarsEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: LotsOfScalars!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1001,30 +1167,30 @@ type LotsOfScalarsSubscriptionPayload {
 }
 
 input LotsOfScalarsSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarsSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarsSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarsSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1042,123 +1208,162 @@ input LotsOfScalarsUpdateInput {
 }
 
 input LotsOfScalarsWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarsWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarsWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarsWhereInput!]
   int: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   int_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   int_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   int_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   int_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   int_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   int_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   int_gte: Int
   string: String
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   string_not: String
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   string_in: [String!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   string_not_in: [String!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   string_lt: String
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   string_lte: String
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   string_gt: String
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   string_gte: String
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   string_contains: String
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   string_not_contains: String
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   string_starts_with: String
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   string_not_starts_with: String
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   string_ends_with: String
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   string_not_ends_with: String
   float: Float
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   float_not: Float
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   float_in: [Float!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   float_not_in: [Float!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   float_lt: Float
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   float_lte: Float
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   float_gt: Float
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   float_gte: Float
   dateTime: DateTime
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   dateTime_not: DateTime
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   dateTime_in: [DateTime!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   dateTime_not_in: [DateTime!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   dateTime_lt: DateTime
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   dateTime_lte: DateTime
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   dateTime_gt: DateTime
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   dateTime_gte: DateTime
   boolean: Boolean
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   boolean_not: Boolean
 }
 
@@ -1172,12 +1377,17 @@ type LotsOfScalarsWithID implements Node {
   boolean: Boolean
 }
 
-"""A connection to a list of items."""
+"""
+A connection to a list of items.
+"""
 type LotsOfScalarsWithIDConnection {
-  """Information to aid in pagination."""
+  """
+  Information to aid in pagination.
+  """
   pageInfo: PageInfo!
-
-  """A list of edges."""
+  """
+  A list of edges.
+  """
   edges: [LotsOfScalarsWithIDEdge]!
   aggregate: AggregateLotsOfScalarsWithID!
 }
@@ -1191,12 +1401,17 @@ input LotsOfScalarsWithIDCreateInput {
   boolean: Boolean
 }
 
-"""An edge in a connection."""
+"""
+An edge in a connection.
+"""
 type LotsOfScalarsWithIDEdge {
-  """The item at the end of the edge."""
+  """
+  The item at the end of the edge.
+  """
   node: LotsOfScalarsWithID!
-
-  """A cursor for use in pagination."""
+  """
+  A cursor for use in pagination.
+  """
   cursor: String!
 }
 
@@ -1239,30 +1454,30 @@ type LotsOfScalarsWithIDSubscriptionPayload {
 }
 
 input LotsOfScalarsWithIDSubscriptionWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarsWithIDSubscriptionWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarsWithIDSubscriptionWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarsWithIDSubscriptionWhereInput!]
-
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
-
   """
   The subscription event gets only dispatched when one of the updated fields names is included in this list
   """
   updatedFields_contains: String
-
   """
   The subscription event gets only dispatched when all of the field names included in this list have been updated
   """
   updatedFields_contains_every: [String!]
-
   """
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
@@ -1280,163 +1495,215 @@ input LotsOfScalarsWithIDUpdateInput {
 }
 
 input LotsOfScalarsWithIDWhereInput {
-  """Logical AND on all given filters."""
+  """
+  Logical AND on all given filters.
+  """
   AND: [LotsOfScalarsWithIDWhereInput!]
-
-  """Logical OR on all given filters."""
+  """
+  Logical OR on all given filters.
+  """
   OR: [LotsOfScalarsWithIDWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
+  """
+  Logical NOT on all given filters combined by AND.
+  """
   NOT: [LotsOfScalarsWithIDWhereInput!]
   id: ID
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   id_not: ID
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   id_in: [ID!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   id_not_in: [ID!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   id_lt: ID
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   id_lte: ID
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   id_gt: ID
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   id_gte: ID
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   id_contains: ID
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   id_not_contains: ID
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   id_starts_with: ID
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   id_not_starts_with: ID
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   id_ends_with: ID
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   id_not_ends_with: ID
   int: Int
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   int_not: Int
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   int_in: [Int!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   int_not_in: [Int!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   int_lt: Int
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   int_lte: Int
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   int_gt: Int
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   int_gte: Int
   string: String
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   string_not: String
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   string_in: [String!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   string_not_in: [String!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   string_lt: String
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   string_lte: String
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   string_gt: String
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   string_gte: String
-
-  """All values containing the given string."""
+  """
+  All values containing the given string.
+  """
   string_contains: String
-
-  """All values not containing the given string."""
+  """
+  All values not containing the given string.
+  """
   string_not_contains: String
-
-  """All values starting with the given string."""
+  """
+  All values starting with the given string.
+  """
   string_starts_with: String
-
-  """All values not starting with the given string."""
+  """
+  All values not starting with the given string.
+  """
   string_not_starts_with: String
-
-  """All values ending with the given string."""
+  """
+  All values ending with the given string.
+  """
   string_ends_with: String
-
-  """All values not ending with the given string."""
+  """
+  All values not ending with the given string.
+  """
   string_not_ends_with: String
   float: Float
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   float_not: Float
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   float_in: [Float!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   float_not_in: [Float!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   float_lt: Float
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   float_lte: Float
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   float_gt: Float
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   float_gte: Float
   dateTime: DateTime
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   dateTime_not: DateTime
-
-  """All values that are contained in given list."""
+  """
+  All values that are contained in given list.
+  """
   dateTime_in: [DateTime!]
-
-  """All values that are not contained in given list."""
+  """
+  All values that are not contained in given list.
+  """
   dateTime_not_in: [DateTime!]
-
-  """All values less than the given value."""
+  """
+  All values less than the given value.
+  """
   dateTime_lt: DateTime
-
-  """All values less than or equal the given value."""
+  """
+  All values less than or equal the given value.
+  """
   dateTime_lte: DateTime
-
-  """All values greater than the given value."""
+  """
+  All values greater than the given value.
+  """
   dateTime_gt: DateTime
-
-  """All values greater than or equal the given value."""
+  """
+  All values greater than or equal the given value.
+  """
   dateTime_gte: DateTime
   boolean: Boolean
-
-  """All values that are not equal to given value."""
+  """
+  All values that are not equal to given value.
+  """
   boolean_not: Boolean
 }
 
@@ -1480,24 +1747,35 @@ enum MutationType {
   DELETED
 }
 
-"""An object with an ID"""
+"""
+An object with an ID
+"""
 interface Node {
-  """The id of the object."""
+  """
+  The id of the object.
+  """
   id: ID!
 }
 
-"""Information about pagination in a connection."""
+"""
+Information about pagination in a connection.
+"""
 type PageInfo {
-  """When paginating forwards, are there more items?"""
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
-
-  """When paginating backwards, are there more items?"""
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
-
-  """When paginating backwards, the cursor to continue."""
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
-
-  """When paginating forwards, the cursor to continue."""
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
 }
 
@@ -1517,10 +1795,13 @@ type Query {
   lotsOfScalarsWithIDsConnection(where: LotsOfScalarsWithIDWhereInput, orderBy: LotsOfScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfScalarsWithIDConnection!
   lotsOfRequiredScalarsWithIDsConnection(where: LotsOfRequiredScalarsWithIDWhereInput, orderBy: LotsOfRequiredScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfRequiredScalarsWithIDConnection!
   lotsOfScalarListsWithIDsConnection(where: LotsOfScalarListsWithIDWhereInput, orderBy: LotsOfScalarListsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfScalarListsWithIDConnection!
-
-  """Fetches an object given its ID"""
+  """
+  Fetches an object given its ID
+  """
   node(
-    """The ID of an object"""
+    """
+    The ID of an object
+    """
     id: ID!
   ): Node
 }

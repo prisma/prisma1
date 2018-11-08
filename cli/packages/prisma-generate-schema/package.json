@@ -1,6 +1,6 @@
 {
   "name": "prisma-generate-schema",
-  "version": "0.0.5",
+  "version": "1.21.0-alpha.52.1",
   "description": "Transform prisma datamodel SDL into graphql-js SDL",
   "main": "dist/src/index.js",
   "scripts": {
@@ -14,16 +14,15 @@
   "author": "Emanuel Jöbstl",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/jest": "^23.3.1",
     "jest": "^23.5.0",
     "ts-jest": "^23.1.4",
     "typescript": "^3.0.1"
   },
   "dependencies": {
-    "@types/jest": "^23.3.1",
     "graphql": "^14.0.2",
     "pluralize": "^7.0.0",
-    "popsicle": "^10.0.1",
-    "prisma-cli": "^1.0.7",
+    "popsicle": "10",
     "tslint-config-prettier": "^1.15.0",
     "tslint-eslint-rules": "^5.4.0"
   },

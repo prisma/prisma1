@@ -8,78 +8,72 @@ import sangria.visitor.VisitorCommand
 
 object QueryTransformer {
 
-  def replaceExternalFieldsWithBooleanFieldsForInternalSchema(query: Document, mutation: ModelMutationType, updatedFields: Option[List[String]]) = {
-    val replaceMutationIn = replaceMutationInFilter(query, mutation).asInstanceOf[Document]
-
-    mutation == ModelMutationType.Updated match {
-      case true  => replaceUpdatedFieldsInFilter(replaceMutationIn, updatedFields.get.toSet).asInstanceOf[Document]
-      case false => replaceMutationIn
-    }
+  def evaluateInMemoryFilters(query: Document, mutationType: ModelMutationType, updatedFields: Set[String]): (Boolean, Document) = {
+    val (mutationInMatches, query1)     = evaluateMutationInFilter(query, mutationType)
+    val (updatedFieldsContains, query2) = evaluateUpdatedFieldsInFilter(query1, updatedFields)
+    (mutationInMatches && updatedFieldsContains, query2)
   }
 
-  def replaceMutationInFilter(query: Document, mutation: ModelMutationType): AstNode = {
-    val mutationName = mutation.toString
-    MyAstVisitor.visitAst(
+  private def evaluateMutationInFilter(query: Document, mutationType: ModelMutationType): (Boolean, Document) = {
+    val mutationName = mutationType.toString
+    var accumulator  = true
+    val newQuery = AstVisitor.visit(
       query,
-      onEnter = {
+      AstVisitor {
         case ObjectField("mutation_in", EnumValue(value, _, _), _, _) =>
-          val exists = mutationName == value
-          Some(ObjectField("boolean", BooleanValue(exists)))
+          val matches = mutationName == value
+          accumulator = accumulator && matches
+          VisitorCommand.Delete
 
         case ObjectField("mutation_in", ListValue(values, _, _), _, _) =>
-          values.isEmpty match {
-            case true  => None
-            case false => Some(ObjectField("boolean", BooleanValue(values.asInstanceOf[Vector[EnumValue]].exists(_.value == mutationName))))
-          }
-
-        case _ =>
-          None
-      },
-      onLeave = (node) => {
-        None
+          val matches = values.asInstanceOf[Vector[EnumValue]].exists(_.value == mutationName)
+          accumulator = accumulator && matches
+          VisitorCommand.Delete
       }
     )
+    (accumulator, newQuery)
   }
 
-  def replaceUpdatedFieldsInFilter(query: Document, updatedFields: Set[String]) = {
-    MyAstVisitor.visitAst(
+  private def evaluateUpdatedFieldsInFilter(query: Document, updatedFields: Set[String]): (Boolean, Document) = {
+    var accumulator = true
+    val visitor: AstVisitor = AstVisitor {
+      case ObjectField(fieldName @ ("updatedFields_contains_every" | "updatedFields_contains_some"), ListValue(values, _, _), _, _) =>
+        values match {
+          case (x: StringValue) +: _ =>
+            val list      = values.asInstanceOf[Vector[StringValue]]
+            val valuesSet = list.map(_.value).toSet
+
+            fieldName match {
+              case "updatedFields_contains_every" =>
+                val containsEvery = valuesSet.subsetOf(updatedFields)
+                accumulator = accumulator && containsEvery
+                VisitorCommand.Delete
+
+              case "updatedFields_contains_some" =>
+                // is one of the fields in the list included in the updated fields?
+                val containsSome = valuesSet.exists(updatedFields.contains)
+                accumulator = accumulator && containsSome
+                VisitorCommand.Delete
+
+              case _ =>
+                VisitorCommand.Continue
+            }
+
+          case _ =>
+            VisitorCommand.Continue
+        }
+
+      case ObjectField("updatedFields_contains", StringValue(value, _, _, _, _), _, _) =>
+        val contains = updatedFields.contains(value)
+        accumulator = accumulator && contains
+        VisitorCommand.Delete
+    }
+    val newQuery = AstVisitor.visit(
       query,
-      onEnter = {
-        case ObjectField(fieldName @ ("updatedFields_contains_every" | "updatedFields_contains_some"), ListValue(values, _, _), _, _) =>
-          values match {
-            case (x: StringValue) +: _ =>
-              val list      = values.asInstanceOf[Vector[StringValue]]
-              val valuesSet = list.map(_.value).toSet
-
-              fieldName match {
-                case "updatedFields_contains_every" =>
-                  val containsEvery = valuesSet.subsetOf(updatedFields)
-                  Some(ObjectField("boolean", BooleanValue(containsEvery)))
-
-                case "updatedFields_contains_some" =>
-                  // is one of the fields in the list included in the updated fields?
-                  val containsSome = valuesSet.exists(updatedFields.contains)
-                  Some(ObjectField("boolean", BooleanValue(containsSome)))
-
-                case _ =>
-                  None
-              }
-
-            case _ =>
-              None
-          }
-
-        case ObjectField("updatedFields_contains", StringValue(value, _, _, _, _), _, _) =>
-          val contains = updatedFields.contains(value)
-          Some(ObjectField("boolean", BooleanValue(contains)))
-
-        case _ =>
-          None
-      },
-      onLeave = (node) => {
-        None
-      }
+      visitor
     )
+
+    (accumulator, newQuery)
   }
 
   def getModelNameFromSubscription(query: Document): Option[String] = {

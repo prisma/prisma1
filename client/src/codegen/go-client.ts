@@ -16,7 +16,6 @@ import {
 import * as upperCamelCase from 'uppercamelcase'
 
 import { getTypeNames } from '../utils/getTypeNames'
-import { codeComment } from '../utils/codeComment';
 
 const goCase = (s: string) => {
   const cased = upperCamelCase(s)
@@ -42,7 +41,13 @@ export interface RenderOptions {
   secret?: string
 }
 
+const whereArgs = 7
+
 export class GoGenerator extends Generator {
+  // Tracks which types we've already printed.
+  // At the moment, it only tracks FooParamsExec types.
+  printedTypes: { [key: string]: boolean } = {}
+
   scalarMapping = {
     Int: 'int32',
     String: 'string',
@@ -52,6 +57,35 @@ export class GoGenerator extends Generator {
     DateTime: 'string',
     Json: 'map[string]interface{}',
     Long: 'int64',
+  }
+
+  goTypeName(fieldType: FieldLikeType): string {
+    let typ: string
+    if(fieldType.isEnum) {
+      typ = goCase(fieldType.typeName)
+    } else {
+      typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
+    }
+
+    if(fieldType.isList) {
+      typ = "[]" + typ
+    } else if(!fieldType.isNonNull) {
+      typ = "*" + typ
+    }
+    return typ
+  }
+
+  shouldOmitEmpty(fieldType: FieldLikeType): boolean {
+    return !fieldType.isNonNull
+  }
+
+  goStructTag(field: GraphQLField<any, any>): string {
+    let s = "`json:\"" + field.name
+    if(this.shouldOmitEmpty(this.extractFieldLikeType(field))) {
+      s += ",omitempty"
+    }
+    s += "\"`"
+    return s
   }
 
   extractFieldLikeType(field: GraphQLField<any, any>): FieldLikeType {
@@ -106,232 +140,147 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
+      if(type.name === "BatchPayload") {
+        return ""
+      }
+
+      if(type.name.startsWith("Aggregate")) {
+        // We're merging all Aggregate types into a single type
+        return ``
+      }
+
       return `
-      // ${type.name}Exec docs
-      type ${type.name}Exec struct {
-        client    Client
-        stack []Instruction
-      }
-
-      ${Object.keys(fieldMap)
-        .filter(key => {
-          const field = fieldMap[key]
-          const { isScalar, isEnum } = this.extractFieldLikeType(
-            field as GraphQLField<any, any>,
-          )
-          return !isScalar && !isEnum
-        })
-        .map(key => {
-          const field = fieldMap[key] as GraphQLField<any, any>
-          const args = field.args
-          const { typeFields, typeName, isList } = this.extractFieldLikeType(
-            field as GraphQLField<any, any>,
-          )
-          return `
-          ${args.length > 0 ? `
-          type ${goCase(field.name)}ParamsExec struct {
-            ${args
-              .map(arg => `${goCase(arg.name)} *${this.scalarMapping[arg.type.toString()] || arg.type }`).join('\n')
-          }
+        type ${type.name}Exec struct {
+          exec *prisma.Exec
         }
-          ` : ``}
-          
-          // ${goCase(field.name)} docs - executable for types
-        func (instance *${type.name}Exec) ${goCase(field.name)}(${args.length > 0 ? `params *${goCase(field.name)}ParamsExec` : ``}) *${goCase(typeName.toString())}Exec${isList ? `Array` : ``} {
-              var args []GraphQLArg
-              
-              ${args.length > 0 ? `
-              if params != nil {
-                ${args.map(arg => `
-                if params.${goCase(arg.name)} != nil {
-                  args = append(args, GraphQLArg{
-                    Name: "${arg.name}",
-                    Key: "${arg.name}",
-                    TypeName: "${this.scalarMapping[arg.type.toString()] || arg.type }",
-                    Value: params.${goCase(arg.name)},
-                  })
-                }
-                `).join('\n')}
-              }
-              ` : ``}
 
-              instance.stack = append(instance.stack, Instruction{
-                Name: "${field.name}",
-                Field: GraphQLField{
-                  Name: "${field.name}",
-                  TypeName: "${typeName}",
-                  TypeFields: ${`[]string{${typeFields
-                    .map(f => f)
-                    .join(',')}}`},
-                },
-                Operation: "",
-                Args: args,
-              })
-            return &${goCase(typeName.toString())}Exec${isList ? `Array` : ``}{
-              client: instance.client,
-              stack: instance.stack,
-            }
-          }`
-        })
-        .join('\n')}
+        ${Object.keys(fieldMap)
+          .filter(key => {
+            const field = fieldMap[key]
+            const { isScalar, isEnum } = this.extractFieldLikeType(
+              field as GraphQLField<any, any>,
+            )
+            return !isScalar && !isEnum
+          })
+          .map(key => {
+            // XXX this code is responsible for things like
+            // previousValues, pageInfo, aggregate, edges, and relations.
+            // It should probably be specialised like the rest of our code generation.
 
-      // Exec docs
-      func (instance ${type.name}Exec) Exec() (${type.name}, error) {
-        var allArgs []GraphQLArg
-        variables := make(map[string]interface{})
-        for instructionKey := range instance.stack {
-          instruction := &instance.stack[instructionKey]
-          if instance.client.Debug {
-            fmt.Println("Instruction Exec: ", instruction)
-          }
-          for argKey := range instruction.Args {
-            arg := &instruction.Args[argKey]
-            if instance.client.Debug {
-              fmt.Println("Instruction Arg Exec: ", instruction)
-            }
-            isUnique := false
-            for isUnique == false {
-              isUnique = true
-              for key, existingArg := range allArgs {
-                if existingArg.Name == arg.Name {
-                  isUnique = false
-                  arg.Name = arg.Name + "_" + strconv.Itoa(key)
-                  if instance.client.Debug {
-                    fmt.Println("Resolving Collision Arg Name: ", arg.Name)
+            const field = fieldMap[key] as GraphQLField<any, any>
+            const args = field.args
+            const { typeFields, typeName, isList } = this.extractFieldLikeType(
+              field as GraphQLField<any, any>,
+            )
+
+            let sTyp = ""
+            const meth = goCase(field.name) + "ParamsExec"
+
+            // TODO(dh): This type (FooParamsExec) is redundant.
+            // If we have a relation article.authors -> [User],
+            // then we can reuse UsersParams.
+            // The only reason we can't do it right now
+            // is because we don't have the base type's plural name available
+            // (and appending a single s doesn't work for names like Mouse)
+            if(!this.printedTypes[meth] && field.args.length > 0) {
+              this.printedTypes[meth] = true
+              sTyp = `
+                type ${meth} struct {
+                  ${args
+                    .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
                   }
-                  break
-                }
+                }`
+            }
+
+            if(field.args.length !== 0 && field.args.length !== whereArgs) {
+              throw new Error(`unexpected argument count ${field.args.length}`)
+            }
+            if(field.args.length === whereArgs && !isList) {
+              throw new Error("looks like a getMany query but doesn't return an array")
+            }
+
+            if (field.args.length > 0) {
+              return sTyp + `
+                func (instance *${type.name}Exec) ${goCase(field.name)}(params *${goCase(field.name)}ParamsExec) *${goCase(typeName)}ExecArray {
+                  var wparams *prisma.WhereParams
+                  if params != nil {
+                    wparams = &prisma.WhereParams{
+                      Where: params.Where,
+                      OrderBy: (*string)(params.OrderBy),
+                      Skip: params.Skip,
+                      After: params.After,
+                      Before: params.Before,
+                      First: params.First,
+                      Last: params.Last,
+                    }
+                  }
+
+                  ret := instance.exec.Client.GetMany(
+                    instance.exec,
+                    wparams,
+                    [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                    "${field.name}",
+                    []string{${typeFields.join(',')}})
+
+                  return &${goCase(typeName)}ExecArray{ret}
+                }`
+            } else {
+              if(type.name.endsWith("Connection") && field.name === "aggregate") {
+                return sTyp + `
+                  func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context) (Aggregate, error) {
+                    ret := instance.exec.Client.GetOne(
+                      instance.exec,
+                      nil,
+                      [2]string{"", "${typeName}"},
+                      "${field.name}",
+                      []string{${typeFields.join(',')}})
+
+                    var v Aggregate
+                    _, err := ret.Exec(ctx, &v)
+                    return v, err
+                  }`
               }
+              return sTyp + `
+                func (instance *${type.name}Exec) ${goCase(field.name)}() *${goCase(typeName)}Exec {
+                  ret := instance.exec.Client.GetOne(
+                    instance.exec,
+                    nil,
+                    [2]string{"", "${typeName}"},
+                    "${field.name}",
+                    []string{${typeFields.join(',')}})
+
+                  return &${goCase(typeName)}Exec{ret}
+                }`
             }
-            if instance.client.Debug {
-              fmt.Println("Arg Name: ", arg.Name)
+          }).join('\n')}
+
+          func (instance ${type.name}Exec) Exec(ctx context.Context) (*${type.name}, error) {
+            var v ${type.name}
+            ok, err := instance.exec.Exec(ctx, &v)
+            if err != nil {
+              return nil, err
             }
-            allArgs = append(allArgs, *arg)
-            variables[arg.Name] = arg.Value
+            if !ok {
+              return nil, ErrNoResult
+            }
+            return &v, nil
           }
-        }
-        query := instance.client.ProcessInstructions(instance.stack)
-        if instance.client.Debug {
-          fmt.Println("Query Exec:", query)
-          fmt.Println("Variables Exec:", variables)
-        }
-        data, err := instance.client.GraphQL(query, variables)
-        if instance.client.Debug {
-          fmt.Println("Data Exec:", data)
-          fmt.Println("Error Exec:", err)
-        }
 
-        var genericData interface{} // This can handle both map[string]interface{} and []interface[]
-
-        // Is unpacking needed
-        dataType := reflect.TypeOf(data)
-        if !isArray(dataType) {
-          unpackedData := data
-          for _, instruction := range instance.stack {
-            if instance.client.Debug {
-              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
-            }
-            if isArray(unpackedData[instruction.Name]) {
-              genericData = (unpackedData[instruction.Name]).([]interface{})
-              break
-            } else {
-              unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            }
-            if instance.client.Debug {
-              fmt.Println("Partially Unpacked Data Step Exec:", unpackedData)
-            }
-            if instance.client.Debug {
-              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
-              fmt.Println("Unpacked Data Step Exec:", unpackedData)
-              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
-            }
-            genericData = unpackedData
+          func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
+            return instance.exec.Exists(ctx)
           }
-        }
-        if instance.client.Debug {
-          fmt.Println("Data Unpacked Exec:", genericData)
-        }
 
-        var decodedData ${type.name}
-        mapstructure.Decode(genericData, &decodedData)
-        if instance.client.Debug {
-          fmt.Println("Data Exec Decoded:", decodedData)
-        }
-        return decodedData, err
-      }
-      
-      // ${type.name}ExecArray docs
-      type ${type.name}ExecArray struct {
-        client    Client
-        stack []Instruction
-      }
-
-      // Exec docs
-      func (instance ${type.name}ExecArray) Exec() ([]${type.name}, error) {
-        query := instance.client.ProcessInstructions(instance.stack)
-        variables := make(map[string]interface{})
-        for _, instruction := range instance.stack {
-          if instance.client.Debug {
-            fmt.Println("Instruction Exec: ", instruction)
+          type ${type.name}ExecArray struct {
+            exec *prisma.Exec
           }
-          for _, arg := range instruction.Args {
-            if instance.client.Debug {
-              fmt.Println("Instruction Arg Exec: ", instruction)
-            }
-            variables[arg.Name] = arg.Value
+
+          func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
+            var v []${type.name}
+            err := instance.exec.ExecArray(ctx, &v)
+            return v, err
           }
-        }
-        if instance.client.Debug {
-          fmt.Println("Query Exec:", query)
-          fmt.Println("Variables Exec:", variables)
-        }
-        data, err := instance.client.GraphQL(query, variables)
-        if instance.client.Debug {
-          fmt.Println("Data Exec:", data)
-          fmt.Println("Error Exec:", err)
-        }
 
-        var genericData interface{} // This can handle both map[string]interface{} and []interface[]
-
-        // Is unpacking needed
-        dataType := reflect.TypeOf(data)
-        if !isArray(dataType) {
-          unpackedData := data
-          for _, instruction := range instance.stack {
-            if instance.client.Debug {
-              fmt.Println("Original Unpacked Data Step Exec:", unpackedData)
-            }
-            if isArray(unpackedData[instruction.Name]) {
-              genericData = (unpackedData[instruction.Name]).([]interface{})
-              break
-            } else {
-              unpackedData = (unpackedData[instruction.Name]).(map[string]interface{})
-            }
-            if instance.client.Debug {
-              fmt.Println("Partially Unpacked Data Step Exec:", unpackedData)
-            }
-            if instance.client.Debug {
-              fmt.Println("Unpacked Data Step Instruction Exec:", instruction.Name)
-              fmt.Println("Unpacked Data Step Exec:", unpackedData)
-              fmt.Println("Unpacked Data Step Type Exec:", reflect.TypeOf(unpackedData))
-            }
-            genericData = unpackedData
-          }
-        }
-        if instance.client.Debug {
-          fmt.Println("Data Unpacked Exec:", genericData)
-        }
-
-        var decodedData []${type.name}
-        mapstructure.Decode(genericData, &decodedData)
-        if instance.client.Debug {
-          fmt.Println("Data Exec Decoded:", decodedData)
-        }
-        return decodedData, err
-      }
-
-      // ${type.name} docs - generated with types
-      type ${type.name} struct {
+        type ${type.name} struct {
           ${Object.keys(fieldMap)
             .filter(key => {
               const field = fieldMap[key]
@@ -342,19 +291,12 @@ export class GoGenerator extends Generator {
             })
             .map(key => {
               const field = fieldMap[key]
-              const {
-                typeName,
-                isNonNull,
-                isScalar,
-              } = this.extractFieldLikeType(field as GraphQLField<any, any>)
-              return `${goCase(field.name)} ${isScalar ? `` : `*`}${this
-                .scalarMapping[typeName] || typeName} \`json:"${field.name}${
-                isNonNull ? `` : `,omitempty`
-              }"\``
+              const fieldType = this.extractFieldLikeType(field as GraphQLField<any, any>)
+
+              return `${goCase(field.name)} ${this.goTypeName(fieldType)} ${this.goStructTag(field as GraphQLField<any, any>)}`
             })
             .join('\n')}
-            }
-        `
+        }`
     },
 
     GraphQLInterfaceType: (
@@ -363,15 +305,16 @@ export class GoGenerator extends Generator {
         | GraphQLInputObjectType
         | GraphQLInterfaceType,
     ): string => {
+      if(type.name === "Node") {
+        // Don't emit code relating to generic node fetching
+        return ""
+      }
       const fieldMap = type.getFields()
       return `
-      // ${goCase(type.name)}Exec docs
       type ${goCase(type.name)}Exec struct {
-        client    Client
-        stack []Instruction
+        exec *prisma.Exec
       }
 
-      // ${goCase(type.name)} docs - generated with types in GraphQLInterfaceType
       type ${goCase(type.name)} interface {
         ${Object.keys(fieldMap).map(key => {
           const field = fieldMap[key]
@@ -392,21 +335,19 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
-      return `// ${type.name} input struct docs
+      return `
       type ${type.name} struct {
-          ${Object.keys(fieldMap)
-            .map(key => {
-              const field = fieldMap[key]
-              const { typeName } = this.extractFieldLikeType(
-                field as GraphQLField<any, any>,
-              )
+        ${Object.keys(fieldMap)
+          .map(key => {
+            const field = fieldMap[key]
+            const fieldType = this.extractFieldLikeType(
+              field as GraphQLField<any, any>,
+            )
 
-              return `${goCase(field.name)} *${this.scalarMapping[typeName] ||
-                typeName} \`json:"${field.name},omitempty"\``
-            })
-            .join('\n')}
-            }
-        `
+            const typ = this.goTypeName(fieldType)
+            return `${goCase(field.name)} ${typ} ${this.goStructTag(field as GraphQLField<any, any>)}`
+          }).join('\n')}
+          }`
     },
 
     GraphQLScalarType: (type: GraphQLScalarType): string => ``,
@@ -415,20 +356,16 @@ export class GoGenerator extends Generator {
 
     GraphQLEnumType: (type: GraphQLEnumType): string => {
       const enumValues = type.getValues()
+      const typ = goCase(type.name)
       return `
-            // ${type.name} docs
-            type ${type.name} string
-            const (
-                ${enumValues
-                  .map(
-                    v =>
-                      `
-                      // ${goCase(v.name)}${type.name} docs
-                      ${goCase(v.name)}${type.name} ${type.name} = "${v.name}"`,
-                  )
-                  .join('\n')}
+        type ${typ} string
+        const (
+          ${enumValues
+            .map(
+              v => `${typ}${goCase(v.name)} ${typ} = "${v.name}"`,
             )
-        `
+            .join('\n')}
+          )`
     },
   }
 
@@ -473,117 +410,228 @@ export class GoGenerator extends Generator {
     },
   }
 
+  opUpdateMany(field) {
+    const param = this.paramsType(field, "updateMany")
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params ${param.type}) *BatchPayloadExec {
+        exec := client.Client.UpdateMany(
+          prisma.UpdateParams{
+            Data: params.Data,
+            Where: params.Where,
+          },
+          [2]string{"${field.args[0].type}", "${field.args[1].type}"},
+          "${field.name}")
+        return &BatchPayloadExec{exec}
+      }`
+  }
+
+  opUpdate(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    const param = this.paramsType(field, "update")
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params ${param.type}) *${goCase(typeName)}Exec {
+        ret := client.Client.Update(
+                 prisma.UpdateParams{
+                   Data: params.Data,
+                   Where: params.Where,
+                 },
+                 [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                 "${field.name}",
+                 []string{${typeFields.join(',')}})
+
+        return &${goCase(typeName)}Exec{ret}
+      }`
+  }
+
+  opDeleteMany(field) {
+    return `
+      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *BatchPayloadExec {
+        exec := client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
+        return &BatchPayloadExec{exec}
+      }`
+  }
+
+  opDelete(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+        ret := client.Client.Delete(
+          params,
+          [2]string{"${field.args[0].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.join(',')}})
+
+        return &${goCase(typeName)}Exec{ret}
+      }`
+  }
+
+  opGetOne(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+        ret := client.Client.GetOne(
+          nil,
+          params,
+          [2]string{"${field.args[0].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.join(',')}})
+
+        return &${goCase(typeName)}Exec{ret}
+      }`
+  }
+
+  opGetMany(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    const param = this.paramsType(field)
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}ExecArray {
+        var wparams *prisma.WhereParams
+        if params != nil {
+          wparams = &prisma.WhereParams{
+            Where: params.Where,
+            OrderBy: (*string)(params.OrderBy),
+            Skip: params.Skip,
+            After: params.After,
+            Before: params.Before,
+            First: params.First,
+            Last: params.Last,
+          }
+        }
+
+        ret := client.Client.GetMany(
+          nil,
+          wparams,
+          [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.join(',')}})
+
+        return &${goCase(typeName)}ExecArray{ret}
+      }`
+  }
+
+  opGetConnection(field) {
+    // TODO(dh): Connections are not yet implemented
+    const { typeName } = this.extractFieldLikeType(field)
+    const param = this.paramsType(field)
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params *${param.type}) (${goCase(typeName)}Exec) {
+        panic("not implemented")
+      }`
+  }
+
+  opCreate(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    return `
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+        ret := client.Client.Create(
+          params,
+          [2]string{"${field.args[0].type}", "${typeName}"},
+          "${field.name}",
+          []string{${typeFields.join(',')}})
+
+        return &${goCase(typeName)}Exec{ret}
+      }`
+  }
+
+  opUpsert(field) {
+    const { typeFields, typeName } = this.extractFieldLikeType(field)
+    const param = this.paramsType(field, "upsert")
+    return param.code + `
+      func (client *Client) ${goCase(field.name)} (params ${param.type}) *${goCase(typeName)}Exec {
+        uparams := &prisma.UpsertParams{
+          Where:  params.Where,
+          Create: params.Create,
+          Update: params.Update,
+        }
+        ret := client.Client.Upsert(
+          uparams,
+          [4]string{"${field.args[0].type}", "${field.args[1].type}", "${field.args[2].type}","${typeName}"},
+          "${field.name}",
+          []string{${typeFields.join(',')}})
+
+        return &${goCase(typeName)}Exec{ret}
+      }`
+  }
+
+  paramsType(field, verb?: string) {
+    let type = goCase(field.name) + "Params"
+    if(verb) {
+      // Mangle the name from <verb><noun>Params to <noun><verb>Params.
+      // When the noun is in its plural form, turn it into its singular form.
+
+      let arg = field.args.find(arg => { return arg.name === "where" })
+      if(!arg) {
+        throw new Error("couldn't find expected 'where' argument")
+      }
+      let match = arg.type.toString().match("^(.+)Where(?:Unique)?Input!?$")
+      if(match === null) {
+        throw new Error("couldn't determine type name")
+      }
+      type = match[1] + goCase(verb) + "Params"
+    }
+    let code = `
+      type ${type} struct {
+        ${field.args
+          .map(arg => {
+            const fieldType = this.extractFieldLikeType(arg)
+            const typ = this.goTypeName(fieldType)
+            return `${goCase(arg.name)} ${typ} ${this.goStructTag(arg)}`
+          })
+          .join('\n')}
+      }`
+    return { code: code, type: type }
+  }
+
   printOperation(fields, operation: string, options: RenderOptions) {
     return Object.keys(fields)
       .map(key => {
         const field = fields[key]
-        const args = field.args
-        const { typeFields, typeName, isList } = this.extractFieldLikeType(
-          field,
-        )
 
-        const whereArgs = args.filter(arg => arg.name === 'where')
-        let whereArg = null
-        if (whereArgs.length > 0) {
-          whereArg = whereArgs[0]
+        const { isList } = this.extractFieldLikeType(field)
+
+        // FIXME(dh): This is brittle. A model may conceivably be named "Many",
+        // in which case updateMany would be updating a single instance of Many.
+        // The same issue applies to many other prefixes.
+        if(operation === "mutation") {
+          if(field.name.startsWith("updateMany")) {
+            return this.opUpdateMany(field)
+          }
+          if(field.name.startsWith("update")) {
+            return this.opUpdate(field)
+          }
+          if(field.name.startsWith("deleteMany")) {
+            return this.opDeleteMany(field)
+          }
+          if(field.name.startsWith("delete")) {
+            return this.opDelete(field)
+          }
+          if(field.name.startsWith("create")) {
+            return this.opCreate(field)
+          }
+          if(field.name.startsWith("upsert")) {
+            return this.opUpsert(field)
+          }
+          throw new Error("unsupported mutation operation on field " + field.name)
         }
 
-        return `
-
-          ${
-            operation === 'query' && !isList && whereArg
-              ? `
-              // Exists
-
-              // ${goCase(field.name)} exists docs
-              func (exists *Exists) ${goCase(field.name)}(params *${goCase(
-                  this.getDeepType((whereArg! as any).type).toString(),
-                )}) bool {
-                client := Client{
-                  Endpoint: (map[bool]string{true: exists.Endpoint, false: ${this.printEndpoint(
-                    options,
-                  )}})[exists.Endpoint != ""],
-                  Debug: exists.Debug,
-                }
-                data, err := client.${goCase(field.name)}(
-                  ${
-                    args.length === 1
-                      ? `params,`
-                      : `&${goCase(field.name)}Params{
-                    Where: params,
-                  },`
-                  }
-                ).Exec()
-                if err != nil {
-                  if client.Debug {
-                    fmt.Println("Error Exists", err)
-                  }
-                  return false
-                }
-                if isZeroOfUnderlyingType(data) {
-                  return false
-                }
-                return true
-              }
-          `
-              : ``
-          } 
-
-          // ${goCase(field.name)}Params docs
-          type ${goCase(field.name)}Params struct {
-            ${args
-              .map(arg => {
-                const { typeName, isNonNull } = this.extractFieldLikeType(arg)
-                return `${goCase(arg.name)} *${this.scalarMapping[typeName] ||
-                  typeName} \`json:"${arg.name}${
-                  isNonNull ? `` : `,omitempty`
-                }"\``
-              })
-              .join('\n')}
+        if(operation === "query") {
+          if(!isList && field.args.length === 1 && field.name !== "node") {
+            return this.opGetOne(field)
           }
-          
-          // ${goCase(field.name)} docs - generated while printing operation - ${operation}
-          func (client Client) ${goCase(field.name)} (${
-          args.length === 1
-            ? `params *${this.getDeepType(args[0].type)}`
-            : `params *${goCase(field.name)}Params`
-        }) *${goCase(typeName)}Exec${isList ? `Array` : ``} {
-
-          stack := make([]Instruction, 0)
-          var args []GraphQLArg
-          ${args
-            .map(arg => {
-              return `if params != nil ${
-                args.length === 1 ? `` : `&& params.${goCase(arg.name)} != nil`
-              } {
-                args = append(args, GraphQLArg{
-                  Name: "${arg.name}",
-                  Key: "${arg.name}",
-                  TypeName: "${arg.type}",
-                  Value: *params${
-                    args.length === 1 ? `` : `.${goCase(arg.name)}`
-                  },
-                })
-              }`
-            })
-            .join('\n')}
-          
-          stack = append(stack, Instruction{
-            Name: "${field.name}",
-            Field: GraphQLField{
-              Name: "${field.name}",
-              TypeName: "${typeName}",
-              TypeFields: ${`[]string{${typeFields.map(f => f).join(',')}}`},
-            },
-            Operation: "${operation}",
-            Args: args,
-          })
-
-          return &${goCase(typeName)}Exec${isList ? `Array` : ``}{
-            client: client,
-            stack: stack,
+          if(isList && field.args.length === whereArgs) {
+            return this.opGetMany(field)
           }
-        }`
+          if(!isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
+            return this.opGetConnection(field)
+          }
+          if(field.name === "node") {
+            // Don't emit generic Node fetching
+            return ``
+          }
+          throw new Error("unsupported query operation on field " + field.name)
+        }
+
+        throw new Error("unsupported operation " + operation)
       })
       .join('\n')
   }
@@ -602,250 +650,24 @@ export class GoGenerator extends Generator {
     }
   }
 
-  renderLib(options: RenderOptions) {
-    return `
-${codeComment}
-package prisma
-
-import (
-	"bytes"
-	"fmt"
-	"html/template"
-	"reflect"
-)
-
-// GraphQLField docs
-type GraphQLField struct {
-  Name string
-  TypeName string
-  TypeFields []string
-}
-
-// GraphQLArg docs
-type GraphQLArg struct {
-  Name string
-  Key string
-  TypeName string
-  Value interface{}
-}
-
-// Instruction docs
-type Instruction struct {
-  Name string
-  Field GraphQLField
-  Operation string
-	Args []GraphQLArg
-}
-
-func isZeroOfUnderlyingType(x interface{}) bool {
-	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
-}
-
-func isArray(i interface{}) bool {
-  v := reflect.ValueOf(i)
-  switch v.Kind() {
-  case reflect.Array:
-    return true
-  case reflect.Slice:
-    return true
-  default:
-    return false
-  }
-}
-
-type PrismaOptions struct {
-	Endpoint string
-	Debug    bool
-}
-
-func New(options *PrismaOptions) Client {
-  if options == nil {
-    return Client{}
-  }
-	return Client{
-		Endpoint: options.Endpoint,
-		Debug:    options.Debug,
-		Exists: Exists{
-			Endpoint: options.Endpoint,
-			Debug:    options.Debug,
-		},
-	}
-}
-
-type Client struct {
-  Endpoint string
-  Debug bool
-  Exists Exists
-}
-
-// Exists docs
-type Exists struct {
-	Endpoint string
-	Debug    bool
-}
-
-// ProcessInstructions docs
-func (client *Client) ProcessInstructions(stack []Instruction) string {
-	query := make(map[string]interface{})
-	argsByInstruction := make(map[string][]GraphQLArg)
-	var allArgs []GraphQLArg
-	firstInstruction := stack[0]
-	for i := len(stack) - 1; i >= 0; i-- {
-		instruction := stack[i]
-		if client.Debug {
-			fmt.Println("Instruction: ", instruction)
-		}
-		if len(query) == 0 {
-			query[instruction.Name] = instruction.Field.TypeFields
-      argsByInstruction[instruction.Name] = instruction.Args
-      for _, arg := range instruction.Args {
-				allArgs = append(allArgs, arg)
-			}
-		} else {
-			previousInstruction := stack[i+1]
-			query[instruction.Name] = map[string]interface{}{
-				previousInstruction.Name: query[previousInstruction.Name],
-			}
-      argsByInstruction[instruction.Name] = instruction.Args
-      for _, arg := range instruction.Args {
-				allArgs = append(allArgs, arg)
-			}
-			delete(query, previousInstruction.Name)
-		}
-	}
-
-	if client.Debug {
-		fmt.Println("Final Query:", query)
-		fmt.Println("Final Args By Instruction:", argsByInstruction)
-		fmt.Println("Final All Args:", allArgs)
-	}
-
-	// TODO: Make this recursive - current depth = 3
-	queryTemplateString := \`
-  {{ $.operation }} {{ $.operationName }} 
-  	{{- if eq (len $.allArgs) 0 }} {{ else }} ( {{ end }}
-    	{{- range $_, $arg := $.allArgs }}
-			\${{ $arg.Name }}: {{ $arg.TypeName }}, 
-		{{- end }}
-	{{- if eq (len $.allArgs) 0 }} {{ else }} ) {{ end }}
-    {
-    {{- range $k, $v := $.query }}
-    {{- if isArray $v }}
-	  {{- $k }}
-	  {{- range $argKey, $argValue := $.argsByInstruction }}
-	  {{- if eq $argKey $k }}
-	  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-				{{- range $k, $arg := $argValue}}
-					{{ $arg.Key }}: \${{ $arg.Name }},
-				{{- end }}
-		{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-			{{- end }}
-		{{- end }}
-	  {
-        {{- range $k1, $v1 := $v }}
-          {{ $v1 }}
-        {{end}}
+  printSecret(options: RenderOptions): string | null {
+    if (!options.secret) {
+      return `""`
+    } else {
+      if (options.secret!.startsWith('${process.env')) {
+        // Find a better way to generate Go env construct
+        const envVariable = `${options.secret!
+          .replace('${process.env[', '')
+          .replace(']}', '')}`
+          .replace("'", '')
+          .replace("'", '')
+        return `os.Getenv("${envVariable}")`
+      } else {
+        return `\"${options.secret.replace("'", '').replace("'", '')}\"`
       }
-    {{- else }}
-	  {{ $k }} 
-	  {{- range $argKey, $argValue := $.argsByInstruction }}
-	  	{{- if eq $argKey $k }}
-	  		{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-            {{- range $k, $arg := $argValue}}
-              {{ $arg.Key }}: \${{ $arg.Name }},
-            {{- end }}
-			{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }}
-          {{- end }}
-        {{- end }}
-		{
-        {{- range $k, $v := $v }}
-        {{- if isArray $v }}
-		  {{ $k }} 
-		  {{- range $argKey, $argValue := $.argsByInstruction }}
-		  {{- if eq $argKey $k }}
-			{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-                {{- range $k, $arg := $argValue}}
-                  {{ $arg.Key }}: \${{ $arg.Name }},
-                {{- end }}
-				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
-              {{- end }}
-            {{- end }}
-			{ 
-            {{- range $k1, $v1 := $v }}
-              {{ $v1 }}
-            {{end}}
-          }
-        {{- else }}
-		  {{ $k }} 
-		  {{- range $argKey, $argValue := $.argsByInstruction }}
-		  {{- if eq $argKey $k }}
-		  	{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-                {{- range $k, $arg := $argValue}}
-                  {{ $arg.Key }}: \${{ $arg.Name }},
-                {{- end }}
-				{{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
-              {{- end }}
-            {{- end }}
-			{
-            {{- range $k, $v := $v }}
-              {{- if isArray $v }}
-                {{ $k }} { 
-                  {{- range $k1, $v1 := $v }}
-                    {{ $v1 }}
-                  {{end}}
-                }
-              {{- else }}
-				{{ $k }} 
-				{{- range $argKey, $argValue := $.argsByInstruction }}
-				{{- if eq $argKey $k }}
-					{{- if eq (len $argValue) 0 }} {{ else }} ( {{ end }}
-                      {{- range $k, $arg := $argValue}}
-                        {{ $arg.Key }}: \${{ $arg.Name }},
-                      {{- end }}
-					  {{- if eq (len $argValue) 0 }} {{ else }} ) {{ end }} 
-                    {{- end }}
-                  {{- end }}
-				  {
-                  id
-                }
-              {{- end }}
-              {{- end }}
-          }
-        {{- end }}
-        {{- end }}
-      }
-    {{- end }}
-    {{- end }}
     }
-  \`
-
-	templateFunctions := template.FuncMap{
-		"isArray": isArray,
-	}
-
-	queryTemplate, err := template.New("query").Funcs(templateFunctions).Parse(queryTemplateString)
-	var queryBytes bytes.Buffer
-	var data = make(map[string]interface{})
-	data = map[string]interface{}{
-		"query":             query,
-		"argsByInstruction": argsByInstruction,
-		"allArgs":           allArgs,
-		"operation":         firstInstruction.Operation,
-		"operationName":     firstInstruction.Name,
-	}
-	queryTemplate.Execute(&queryBytes, data)
-
-	if client.Debug {
-		fmt.Println("Query String: ", queryBytes.String())
-	}
-	if err == nil {
-		return queryBytes.String()
-	}
-	return "Failed to generate query"
-}
-    `
   }
-
+  
   render(options: RenderOptions) {
     const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
@@ -855,30 +677,82 @@ func (client *Client) ProcessInstructions(stack []Instruction) string {
 
     const mutationType = this.schema.getMutationType()
     const mutationFields = mutationType!.getFields()
-    return `
-// Code generated by Prisma CLI (https://github.com/prisma/prisma). DO NOT EDIT.
+
+    // Code in fixed shouldn't contain any dynamic content.
+    // It could equally live in its own file
+    // to which generated code gets appened.
+    const fixed = `
+    // Code generated by Prisma CLI (https://github.com/prisma/prisma). DO NOT EDIT.
+
 package prisma
 
 import (
 	"context"
-	"fmt"
-	"reflect"
-	"strconv"
+  "errors"
+
+	"github.com/prisma/prisma-client-lib-go"
 
 	"github.com/machinebox/graphql"
-	"github.com/mitchellh/mapstructure"
 )
 
-// ID docs
-type ID struct{}
+var ErrNoResult = errors.New("query returned no result")
 
-// Queries
+func Str(v string) *string { return &v }
+func Int32(v int32) *int32 { return &v }
+func Bool(v bool) *bool    { return &v }
+
+type BatchPayloadExec struct {
+	exec *prisma.BatchPayloadExec
+}
+
+func (exec *BatchPayloadExec) Exec(ctx context.Context) (BatchPayload, error) {
+	bp, err := exec.exec.Exec(ctx)
+    return BatchPayload(bp), err
+}
+
+type BatchPayload struct {
+	Count int64 \`json:"count"\`
+}
+
+type Aggregate struct {
+	Count int64 \`json:"count"\`
+}
+
+type Client struct {
+	Client *prisma.Client
+}
+
+type Options struct {
+  Endpoint  string
+  Secret    string
+}
+
+func New(options *Options, opts ...graphql.ClientOption) *Client {
+  endpoint := DefaultEndpoint
+  secret   := Secret
+	if options != nil {
+    endpoint = options.Endpoint
+    secret = options.Secret
+	}
+	return &Client{
+		Client: prisma.New(endpoint, secret, opts...),
+	}
+}
+
+func (client *Client) GraphQL(ctx context.Context, query string, variables map[string]interface{}) (map[string]interface{}, error) {
+	return client.Client.GraphQL(ctx, query, variables)
+}
+`
+
+    // Dynamic contains the parts of the generated code that are dynamically generated.
+    const dynamic = `
+
+var DefaultEndpoint = ${this.printEndpoint(options)}
+var Secret          = ${this.printSecret(options)}
+
 ${this.printOperation(queryFields, 'query', options)}
 
-// Mutations
 ${this.printOperation(mutationFields, 'mutation', options)}
-
-// Types
 
 ${typeNames
       .map(key => {
@@ -890,34 +764,8 @@ ${typeNames
             }`
       })
       .join('\n')}
-
-// GraphQL Send a GraphQL operation request
-func (client Client) GraphQL(query string, variables map[string]interface{}) (map[string]interface{}, error) {
-	// TODO: Add auth support
-
-	req := graphql.NewRequest(query)
-	gqlClient := graphql.NewClient(
-      (map[bool]string{true: client.Endpoint, false: ${this.printEndpoint(
-        options,
-      )}})[client.Endpoint != ""],
-    )
-
-	for key, value := range variables {
-    req.Var(key, value)
-	}
-
-	ctx := context.Background()
-
-	// var respData ResponseStruct
-	var respData map[string]interface{}
-	if err := gqlClient.Run(ctx, req, &respData); err != nil {
-    if client.Debug {
-      fmt.Println("GraphQL Response:", respData)
-    }
-		return nil, err
-	}
-	return respData, nil
-}
         `
+
+    return fixed + dynamic
   }
 }

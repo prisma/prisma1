@@ -12,6 +12,7 @@ test('typescript generator', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
+    internalTypes: [],
   })
   const result = generator.render()
   t.snapshot(result)

@@ -19,7 +19,7 @@ export interface GetEndpointParams {
   folderName: string
 }
 
-export type DatabaseType = 'postgres' | 'mysql'
+export type DatabaseType = 'postgres' | 'mysql' | 'mongo'
 
 export interface DatabaseCredentials {
   type: DatabaseType
@@ -70,6 +70,7 @@ const decodeMap = {
 const defaultPorts = {
   postgres: 5432,
   mysql: 3306,
+  mongo: 27017,
 }
 
 const databaseServiceDefinitions = {
@@ -96,6 +97,19 @@ volumes:
 volumes:
   mysql:
 `,
+  mongo: `
+  mongo:
+    image: mongo:3.6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: prisma
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/var/lib/mongo
+volumes:
+  mongo:`,
 }
 
 export interface ConstructorArgs {
@@ -263,11 +277,16 @@ export class EndpointDialog {
           choice === 'Create new database'
             ? await this.askForDatabaseType()
             : 'mysql'
+        const defaultHosts = {
+          mysql: 'mysql',
+          mongo: 'mongo',
+          postgres: 'postgres',
+        }
         credentials = {
           user: type === 'mysql' ? 'root' : 'prisma',
           password: 'prisma',
           type,
-          host: type === 'mysql' ? 'mysql' : 'postgres',
+          host: defaultHosts[type],
           port: defaultPorts[type],
         }
         dockerComposeYml += this.printDatabaseConfig(credentials)
@@ -276,56 +295,60 @@ export class EndpointDialog {
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
-        this.out.log('')
-        const before = Date.now()
-        this.out.action.start(
-          credentials!.alreadyData
-            ? `Introspecting database`
-            : `Connecting to database`,
-        )
-        const client = new PGClient(this.replaceLocalDockerHost(credentials))
-        const connector = new PostgresConnector(client)
-        const introspector = new Introspector(connector)
-        let schemas
-        try {
-          schemas = await introspector.listSchemas()
-        } catch (e) {
-          throw new Error(`Could not connect to database. ${e.message}`)
-        }
-
-        if (
-          credentials &&
-          credentials.alreadyData &&
-          schemas &&
-          schemas.length > 0
-        ) {
-          const schema = credentials.schema || schemas[0]
-
-          const { numTables, sdl } = await introspector.introspect(schema)
-          await client.end()
-          if (numTables === 0) {
-            this.out.log(
-              chalk.red(
-                `\n${chalk.bold(
-                  'Error: ',
-                )}The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
-              ),
-            )
-            this.out.exit(1)
+        if (credentials.type !== 'mongo') {
+          this.out.log('')
+          const before = Date.now()
+          this.out.action.start(
+            credentials!.alreadyData
+              ? `Introspecting database`
+              : `Connecting to database`,
+          )
+          const client = new PGClient(this.replaceLocalDockerHost(credentials))
+          const connector = new PostgresConnector(client)
+          const introspector = new Introspector(connector)
+          let schemas
+          try {
+            schemas = await introspector.listSchemas()
+          } catch (e) {
+            throw new Error(`Could not connect to database. ${e.message}`)
           }
 
-          this.out.action.stop(prettyTime(Date.now() - before))
-          this.out.log(
-            `Created datamodel definition based on ${numTables} database tables.`,
-          )
-          datamodel = sdl
-        } else {
-          this.out.action.stop(prettyTime(Date.now() - before))
+          if (
+            credentials &&
+            credentials.alreadyData &&
+            schemas &&
+            schemas.length > 0
+          ) {
+            const schema = credentials.schema || schemas[0]
+
+            const { numTables, sdl } = await introspector.introspect(schema)
+            await client.end()
+            if (numTables === 0) {
+              this.out.log(
+                chalk.red(
+                  `\n${chalk.bold(
+                    'Error: ',
+                  )}The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+                ),
+              )
+              this.out.exit(1)
+            }
+
+            this.out.action.stop(prettyTime(Date.now() - before))
+            this.out.log(
+              `Created datamodel definition based on ${numTables} database tables.`,
+            )
+            datamodel = sdl
+          } else {
+            this.out.action.stop(prettyTime(Date.now() - before))
+          }
         }
         dockerComposeYml += this.printDatabaseConfig(credentials)
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       case 'Demo server':
+        writeDockerComposeYml = false
+
         const demoCluster = await this.getDemoCluster()
         if (!demoCluster) {
           return this.getEndpoint()
@@ -408,7 +431,10 @@ export class EndpointDialog {
     introspection: boolean = false,
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
-    const alreadyData = introspection || (await this.askForExistingData())
+    const alreadyData =
+      type === 'mongo'
+        ? false
+        : introspection || (await this.askForExistingData())
     const askForSchema = introspection ? true : alreadyData ? true : false
     if (type === 'mysql' && alreadyData) {
       throw new Error(
@@ -642,23 +668,22 @@ export class EndpointDialog {
   }
 
   private async askForDemoCluster(): Promise<Cluster> {
-    const clusters = this.getCloudClusters().slice(0, 2)
-    const eu1Cluster = clusters.find(c => c.name === 'prisma-eu1')!
-    const us1Cluster = clusters.find(c => c.name === 'prisma-us1')!
     const eu1Ping = await getPing('EU_WEST_1')
     const us1Ping = await getPing('US_WEST_2')
-    const eu1Name = this.getClusterName(eu1Cluster)
-    const us1Name = this.getClusterName(us1Cluster)
-    const eu1Choice = [
-      eu1Name,
-      `Hosted on AWS in eu-west-1 using MySQL [${eu1Ping.toFixed()}ms latency]`,
-    ]
-    const us1Choice = [
-      us1Name,
-      `Hosted on AWS in us-west-2 using MySQL [${us1Ping.toFixed()}ms latency]`,
-    ]
-    const rawChoices =
-      eu1Ping < us1Ping ? [eu1Choice, us1Choice] : [us1Choice, eu1Choice]
+    const clusters = this.getCloudClusters().filter(
+      c => c.name === 'prisma-eu1' || c.name === 'prisma-us1',
+    )
+
+    const rawChoices = clusters.map(c => {
+      const clusterName = this.getClusterName(c)
+      const clusterRegion = c.name === 'prisma-eu1' ? `eu-west-1` : `us-west-2`
+      const pingTime =
+        c.name === 'prisma-eu1' ? eu1Ping.toFixed() : us1Ping.toFixed()
+      return [
+        clusterName,
+        `Hosted on AWS in ${clusterRegion} using MySQL [${pingTime}ms latency]`,
+      ]
+    })
     const choices = this.convertChoices(rawChoices)
 
     const { cluster } = await this.out.prompt({
@@ -667,8 +692,10 @@ export class EndpointDialog {
       message: `Choose the region of your demo server`,
       choices,
     })
-
-    return eu1Name === cluster ? eu1Cluster : us1Cluster
+    return clusters.find(c => {
+      const clusterName = this.getClusterName(c)
+      return clusterName === cluster
+    })!
   }
 
   private getClusterDescription(c: Cluster) {
@@ -695,6 +722,12 @@ export class EndpointDialog {
       value: 'postgres',
       name: 'PostgreSQL        PostgreSQL database',
       short: 'PostgreSQL',
+    })
+
+    choices.push({
+      value: 'mongo',
+      name: 'MongoDB           Mongo Database',
+      short: 'MongoDB',
     })
 
     const { dbType } = await this.out.prompt({
