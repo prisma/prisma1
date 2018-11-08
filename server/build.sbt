@@ -163,6 +163,9 @@ lazy val connectorUtils = connectorProject("utils")
   .dependsOn(deployConnectorProjects)
   .dependsOn(apiConnectorProjects)
   .dependsOn(jdbcNative)
+  .settings(
+    libraryDependencies ++= Seq(mariaDbClient, postgresClient)
+  )
 
 lazy val connectorShared = connectorProject("shared")
   .settings(
