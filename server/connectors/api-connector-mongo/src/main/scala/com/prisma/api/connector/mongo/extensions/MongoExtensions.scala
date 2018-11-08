@@ -87,18 +87,23 @@ object BisonToGC {
 
 object DocumentToRoot {
   def apply(model: Model, document: Document): RootGCValue = {
-    val nonReservedFields = model.scalarNonListFields.filter(f => f.name != "createdAt" && f.name != "updatedAt" && f.name != "id")
+    val nonReservedFields = model.scalarNonListFields.filter(_ != model.idField_!)
 
     val scalarNonList: List[(String, GCValue)] =
       nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 
-    val createdAt: (String, GCValue) =
-      document.get("createdAt").map(v => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("createdAt" -> NullGCValue)
+//    val createdAt: Option[(String, GCValue)] = model.createdAtField match {
+//      case Some(f) => document.get(f.dbName).map(v => f.name -> BisonToGC(TypeIdentifier.DateTime, v)).orElse(Some(f.name -> NullGCValue))
+//      case None    => None
+//    }
+//
+//    val updatedAt: Option[(String, GCValue)] = model.updatedAtField match {
+//      case Some(f) => document.get(f.dbName).map(v => f.name -> BisonToGC(TypeIdentifier.DateTime, v)).orElse(Some(f.name -> NullGCValue))
+//      case None    => None
+//    }
 
-    val updatedAt: (String, GCValue) =
-      document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
-
-    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.idField_!, v)).getOrElse("id" -> StringIdGCValue.dummy)
+    val id: (String, GCValue) =
+      document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
@@ -119,7 +124,8 @@ object DocumentToRoot {
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
 
-    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ createdAt :+ updatedAt :+ id).toMap)
+//    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds ++ createdAt ++ updatedAt :+ id).toMap)
+    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
   }
 }
 
