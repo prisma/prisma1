@@ -13,6 +13,7 @@ case class PrismaSdl(
   val types: Vector[PrismaType]          = typesFn.map(_.apply(this))
   val enums: Vector[PrismaEnum]          = enumsFn.map(_.apply(this))
   val relationTables: Vector[PrismaType] = types.filter(_.isRelationTable)
+  val modelTypes: Vector[PrismaType]     = types.filter(!_.isRelationTable)
 
   def type_!(name: String) = types.find(_.name == name).get
   def enum_!(name: String) = enums.find(_.name == name).get
@@ -104,6 +105,7 @@ case class RelationalPrismaField(
 
   def hasManyToManyRelation: Boolean = isList && relatedField.forall(_.isList)
   def hasOneToManyRelation: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))
+  def hasOneToOneRelation: Boolean   = isOne && relatedField.exists(_.isOne)
   def isOne: Boolean                 = !isList
   def oneRelationField               = if (isOne) Some(this) else relatedField
 }

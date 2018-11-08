@@ -32,11 +32,17 @@ case class DataModelValidatorImpl(
   lazy val doc = result.get
 
   def validate: PrismaSdl Or Vector[DeployError] = {
-    val errors = validateSyntax
-    if (errors.isEmpty) {
-      Good(generateSDL)
+    val syntaxErrors = validateSyntax
+    if (syntaxErrors.isEmpty) {
+      val dataModel      = generateSDL
+      val semanticErrors = FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
+      if (semanticErrors.isEmpty) {
+        Good(dataModel)
+      } else {
+        Bad(semanticErrors)
+      }
     } else {
-      Bad(errors.toVector)
+      Bad(syntaxErrors.toVector)
     }
   }
 
@@ -267,7 +273,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
 
   val requiredIdDirectiveValidation = {
     val hasIdDirective = objectType.fields.exists(_.hasDirective("id"))
-    if (!hasIdDirective && !objectType.isRelationTable) {
+    if (!hasIdDirective && !objectType.isRelationTable && !objectType.isEmbedded) {
       Some(DeployError.apply(objectType.name, s"One field of the type `${objectType.name}` must be marked as the id field with the `@id` directive."))
     } else {
       None

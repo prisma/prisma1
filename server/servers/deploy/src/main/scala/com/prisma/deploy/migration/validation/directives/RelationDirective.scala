@@ -1,7 +1,8 @@
 package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
-import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType}
+import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType, PrismaSdl}
+import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
 import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.{ConnectorCapability, RelationStrategy}
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
@@ -28,6 +29,25 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   ) = {
     fieldDef.hasScalarType.toOption {
       DeployErrors.relationDirectiveNotAllowedOnScalarFields(FieldAndType(typeDef, fieldDef))
+    }
+  }
+
+  override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+    validateIfRequiredStrategyIsProvided(dataModel, capabilities)
+  }
+
+  private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+    val isMongo = capabilities.contains(MongoRelationsCapability)
+    for {
+      modelType     <- dataModel.modelTypes
+      relationField <- modelType.relationalPrismaFields
+      relatedField  <- relationField.relatedField
+      relatedType   = relatedField.tpe
+      if isMongo || relationField.isOneToOne
+      if !modelType.isEmbedded && !relatedType.isEmbedded
+      if relationField.strategy == RelationStrategy.Auto && relatedField.strategy == RelationStrategy.Auto
+    } yield {
+      DeployErrors.missingRelationStrategy(relationField)
     }
   }
 
