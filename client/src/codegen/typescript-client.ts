@@ -624,7 +624,7 @@ export const prisma = new Prisma()`
       !isScalar &&
       !addSubscription
     ) {
-      return `${typeString}Promise`
+      return typeString === 'Node' ? `Node` : `${typeString}Promise`
     }
 
     if ((node || isList) && !isScalar && !addSubscription) {

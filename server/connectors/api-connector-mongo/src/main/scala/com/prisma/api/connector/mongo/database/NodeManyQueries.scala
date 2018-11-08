@@ -29,24 +29,24 @@ trait NodeManyQueries extends FilterConditionBuilder {
   }
 
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_id")).collect().toFuture.map(_.map(DocumentToId.toCUIDGCValue))
+    val bsonFilter: Bson = buildConditionForFilter(filter)
+    database.getCollection(model.dbName).find(bsonFilter).projection(include("_id")).collect().toFuture.map(_.map(DocumentToId.toCUIDGCValue))
   }
 
   def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
-
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val skipAndLimit                          = LimitClauseHelper.skipAndLimitValues(queryArguments)
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
     val mongoFilter = extraFilter match {
       case Some(inFilter) => buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
       case None           => buildConditionForFilter(queryArguments.filter)
     }
 
-    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
+    val combinedFilter = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
+      case None         => mongoFilter
+      case Some(filter) => Filters.and(mongoFilter, filter)
+    }
 
-    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter, cursorCondition))
+    val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
     val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
     val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
 
@@ -93,8 +93,6 @@ trait NodeManyQueries extends FilterConditionBuilder {
 
   //Fixme this does not use all queryarguments
   def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-
     //    val queryArgFilter = queryArguments match {
 //      case Some(arg) => arg.filter
 //      case None      => None
@@ -117,8 +115,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
 //
 //    queryWithLimit.collect().toFuture
 
-    collection.countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
-
+    database.getCollection(model.dbName).countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
   }
 
   def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { database =>
