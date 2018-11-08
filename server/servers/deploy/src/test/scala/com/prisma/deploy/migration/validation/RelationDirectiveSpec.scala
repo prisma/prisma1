@@ -125,8 +125,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
     val dataModel = validate(dataModelString)
-    dataModel.type_!("Model").relationField_!("other").isOneToMany should be(true)
-    dataModel.type_!("Model").relationField_!("other2").isManyToMany should be(true)
+    dataModel.type_!("Model").relationField_!("other").hasOneToManyRelation should be(true)
+    dataModel.type_!("Model").relationField_!("other2").hasManyToManyRelation should be(true)
   }
   "succeed if an unambiguous relation field does not specify the relation directive" in {
     val dataModelString =

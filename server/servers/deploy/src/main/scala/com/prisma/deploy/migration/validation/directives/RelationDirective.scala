@@ -43,7 +43,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       relationField <- modelType.relationalPrismaFields
       relatedField  <- relationField.relatedField
       relatedType   = relatedField.tpe
-      if isMongo || relationField.isOneToOne
+      if isMongo || relationField.hasOneToOneRelation
       if !modelType.isEmbedded && !relatedType.isEmbedded
       if relationField.strategy == RelationStrategy.Auto && relatedField.strategy == RelationStrategy.Auto
     } yield {
