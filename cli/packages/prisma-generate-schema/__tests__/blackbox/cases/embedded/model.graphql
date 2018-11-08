@@ -2,7 +2,7 @@ type Parent {
   id: ID! @unique
   p: String @unique
   children: [Child!]!
-  j: [Join!]!
+  j: [Joint!]!
 }
 
 type Child @embedded {
@@ -15,7 +15,7 @@ type Friend {
   test: String
 }
 
-type Join {
+type Joint {
   id: ID! @unique
   j: String
 }

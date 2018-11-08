@@ -65,7 +65,7 @@ export interface IGQLType {
   /**
    * Indicates if this is an embedded type.
    */
-  embedded: boolean
+  isEmbedded: boolean
   /**
    * Indicates if this is an enum type.
    */

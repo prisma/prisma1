@@ -446,6 +446,7 @@ export interface IGenerators {
   // Update
   modelUpdateInput: ModelInputObjectTypeGenerator
   modelUpdateDataInput: ModelInputObjectTypeGenerator
+  modelUpdateManyDataInput: ModelInputObjectTypeGenerator
   modelUpdateOneInput: ModelInputObjectTypeGenerator
   modelUpdateOneRequiredInput: ModelInputObjectTypeGenerator
   modelUpdateManyInput: ModelInputObjectTypeGenerator
@@ -458,6 +459,7 @@ export interface IGenerators {
 
   modelUpdateWithWhereUniqueWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
   modelUpdateWithWhereUniqueNestedInput: ModelInputObjectTypeGenerator
+  modelUpdateManyWithWhereNestedInput: ModelInputObjectTypeGenerator
 
   // Upsert
   modelUpsertNestedInput: ModelInputObjectTypeGenerator
@@ -469,6 +471,7 @@ export interface IGenerators {
 
   // Querying
   modelWhereUniqueInput: ModelInputObjectTypeGenerator
+  modelScalarWhereInput: ModelInputObjectTypeGenerator
   modelWhereInput: ModelInputObjectTypeGenerator
   modelOrderByInput: ModelEnumTypeGeneratorBase
   modelConnection: ModelObjectTypeGenerator

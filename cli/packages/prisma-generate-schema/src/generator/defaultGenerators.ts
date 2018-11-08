@@ -8,6 +8,7 @@ import ModelCreateManyWithoutRelatedInputGenerator from './mutation/create/model
 import ScalarListCreateInput from './mutation/create/scalarListCreateInput'
 import ModelUpdateInputGenerator from './mutation/update/modelUpdateInputGenerator'
 import ModelUpdateDataInputGenerator from './mutation/update/modelUpdateDataInputGenerator'
+import ModelUpdateManyDataInputGenerator from './mutation/update/modelUpdateManyDataInputGenerator'
 import ModelUpdateOneInputTypeGenerator from './mutation/update/modelUpdateOneInputGenerator'
 import ModelUpdateOneRequiredInputTypeGenerator from './mutation/update/modelUpdateOneRequiredInputGenerator'
 import ModelUpdateManyInputTypeGenerator from './mutation/update/modelUpdateManyInputGenerator'
@@ -17,6 +18,7 @@ import ModelUpdateOneWithoutRelatedInputTypeGenerator from './mutation/update/mo
 import ModelUpdateOneRequiredWithoutRelatedInputTypeGenerator from './mutation/update/modelUpdateOneRequiredWithoutRelatedInputGenerator'
 import ModelUpdateManyWithoutRelatedInputTypeGenerator from './mutation/update/modelUpdateManyWithoutRelatedInputGenerator'
 import ModelUpdateWithWhereUniqueNestedInput from './mutation/update/modelUpdateWithWhereUniqueNestedInputGenerator'
+import ModelUpdateManyWithWhereNestedInput from './mutation/update/modelUpdateManyWithWhereNestedInputGenerator'
 import ModelUpdateWithWhereUniqueWithoutRelatedInput from './mutation/update/modelUpdateWithWhereUniqueWithoutRelatedInputGenerator'
 import ScalarListUpdateInput from './mutation/update/scalarListUpdateInput'
 import ModelUpsertNestedInputGenerator from './mutation/upsert/modelUpsertNestedInputGenerator'
@@ -25,8 +27,9 @@ import ModelUpsertWithoutRelatedInputGenerator from './mutation/upsert/modelUpse
 import ModelUpsertWithWhereUniqueNestedInputGenerator from './mutation/upsert/modelUpsertWithWhereUniqueNestedInputGenerator'
 import MutationGenerator from './mutation/mutationGenerator'
 import SubscriptionGenerator from './subscription/subscriptionGenerator'
-import ModelWhereUniqueInputGenerator from './query/modelWhereUniqueInputGenerator'
 import ModelWhereInputGenerator from './query/modelWhereInputGenerator'
+import ModelScalarWhereInputGenerator from './query/modelScalarWhereInputGenerator'
+import ModelWhereUniqueInputGenerator from './query/modelWhereUniqueInputGenerator'
 import ModelOrderByInputGenerator from './query/modelOrderByInputGenerator'
 import ModelEdgeGenerator from './query/modelEdgeGenerator'
 import ModelConnectionGenerator from './query/modelConnectionGenerator'
@@ -77,6 +80,10 @@ export default class Generators implements IGenerators {
   scalarListCreateInput = new ScalarListCreateInput(this.typeRegistry, this)
 
   modelUpdateInput = new ModelUpdateInputGenerator(this.typeRegistry, this)
+  modelUpdateManyDataInput = new ModelUpdateManyDataInputGenerator(
+    this.typeRegistry,
+    this,
+  )
   modelUpdateDataInput = new ModelUpdateDataInputGenerator(
     this.typeRegistry,
     this,
@@ -121,6 +128,10 @@ export default class Generators implements IGenerators {
     this.typeRegistry,
     this,
   )
+  modelUpdateManyWithWhereNestedInput =new ModelUpdateManyWithWhereNestedInput(
+    this.typeRegistry,
+    this,
+  )
   scalarListUpdateInput = new ScalarListUpdateInput(this.typeRegistry, this)
 
   modelUpsertNestedInput = new ModelUpsertNestedInputGenerator(
@@ -145,6 +156,7 @@ export default class Generators implements IGenerators {
     this,
   )
   modelWhereInput = new ModelWhereInputGenerator(this.typeRegistry, this)
+  modelScalarWhereInput = new ModelScalarWhereInputGenerator(this.typeRegistry, this)
   modelOrderByInput = new ModelOrderByInputGenerator(this.typeRegistry, this)
   modelConnection = new ModelConnectionGenerator(this.typeRegistry, this)
   modelEdge = new ModelEdgeGenerator(this.typeRegistry, this)

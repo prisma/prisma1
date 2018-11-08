@@ -29,9 +29,16 @@ export default class ModelUpdateManyInputTypeGenerator extends ModelInputObjectT
     }
     if (!this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)) {
       fields.delete = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
-      fields.connect = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
-      fields.disconnect = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
+      if(!model.isEmbedded) {
+        fields.connect = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
+        fields.disconnect = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
+      }
     }
+    if (!this.generators.modelScalarWhereInput.wouldBeEmpty(model, args)) {
+      fields.deleteMany = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelScalarWhereInput.generate(model, args)) }
+      fields.updateMany = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelUpdateManyWithWhereNestedInput.generate(model, args)) }
+    }
+
     return fields
   }
 }
