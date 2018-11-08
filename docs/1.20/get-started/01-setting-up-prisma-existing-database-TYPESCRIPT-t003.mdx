@@ -3,14 +3,14 @@ import QueryChooser from 'components/Markdown/QueryChooser'
 import Code from 'components/Markdown/Code'
 
 export const meta = {
-  title: 'Setting up Prisma',
+  title: 'Set up Prisma',
   position: 1,
   gettingStartedOrder: 2,
   gettingStartedTitle: 'Existing database',
   nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
   technology: 'typescript',
   technologyOrder: 3,
-  articleGroup: 'Setting up Prisma',
+  articleGroup: 'Set up Prisma',
 }
 
 ## Goals
@@ -18,7 +18,7 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Setup Prisma using Docker
+- Set up Prisma using Docker
 - Introspect your existing database and derive a datamodel
 - Use the datamodel to configure your Prisma API
 - Generate a Prisma client
@@ -62,8 +62,6 @@ npm install -g prisma
 ## Install Docker
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
-
-> Don't want to use Docker? You can also get started with a [demo database](j001) for now.
 
 ## Set up Prisma server
 
@@ -130,15 +128,15 @@ To specify the database to which Prisma should connect, replace the placeholders
 - `__YOUR_POSTGRES_PASSWORD__`: The password for the database user.
 - `__SSL_CONNECTION__`: Whether your database server uses SSL, possible values are `true` and `false`.
 
-### Start Prisma server
+### Launch Prisma
 
-To start Prisma and launch the connected database, run the following command:
+To start Prisma and connect it to your database, run the following command:
 
 ```bash copy
 docker-compose up -d
 ```
 
-Your local Prisma server is now running on `http://localhost:4466`.
+Prisma is now connected to your database and runs on `http://localhost:4466`.
 
 ## Derive Prisma datamodel from database schema
 
@@ -166,13 +164,13 @@ You now need to introspect your database schema to generate the datamodel which 
 prisma introspect
 ```
 
-The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
+The CLI generates the `datamodel-[TIMESTAMP].prisma` (e.g. `datamodel-1533886167692.prisma`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
 
 Finally, you need to rename the file to `datamodel.prisma` because that's the file name you specifed in `prisma.yml`.
 
 ## Deploy the Prisma API
 
-You now have the _minimal_ setup to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
+You now have the _minimal_ setup ready to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
 prisma deploy
@@ -200,17 +198,17 @@ Now generate the client with this command:
 prisma generate
 ```
 
-The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
+The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.
 
 ## Prepare TypeScript application
 
-Run the following command to create an empty TypeScript script:
+Create your [`tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) with the following command:
 
 ```bash copy
-touch index.ts
+touch tsconfig.json
 ```
 
-Create a `tsconfig.json` file with the following configuration:
+Add the following configuration to the `tsconfig.json` file:
 
 ```json copy
 {
@@ -224,12 +222,32 @@ Next, initialize an empty NPM project in the current directory and install the r
 
 ```bash copy
 npm init -y
-npm install --save typescript ts-node prisma-client-lib graphql@0.13
+npm install --save prisma-client-lib graphql
+npm install --save-dev typescript ts-node
 ```
+
+Almost done! Run the following command to create an empty TypeScript script:
+
+```bash copy
+touch index.ts
+```
+
+Great, you're now ready to write some code and talk to your database programmatically!
 
 ## Read and write data using the Prisma client
 
-Add the following code in `index.ts` and save it afterwards:
+The API operations of the Prisma client depend on the datamodel that was generated from the database introspection. The following sample queries assume there is a `User` type in the datamodel defined as follows:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+If you don't have such a `User` type, you need to adjust the following code snippets with a type that matches your datamodel.
+
+Add the following code in `index.ts`:
 
 ```js copy
 import { prisma } from './generated/prisma-client'
@@ -249,10 +267,40 @@ async function main() {
 main().catch(e => console.error(e))
 ```
 
-Execute the script with the following command:
+Before executing the code, go ahead and add a `start` script to `package.json` so you can comfortably run the code:
+
+<Code lines="8">
+
+```json copy
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "^14.0.2",
+    "prisma-client-lib": "^1.20.0"
+  },
+  "devDependencies": {
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.6"
+  }
+}
+```
+
+</Code>
+
+Now execute the script with the following command:
 
 ```bash copy
-ts-node index.ts
+npm run start
 ```
 
 Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
