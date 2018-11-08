@@ -236,7 +236,7 @@ case class ScalarField(
 
   override def schema = model.schema
 
-  val isId: Boolean        = behaviour.exists(_.isInstanceOf[IdBehaviour])
-  val isCreatedAt: Boolean = behaviour.contains(CreatedAtBehaviour)
-  val isUpdatedAt: Boolean = behaviour.contains(UpdatedAtBehaviour)
+  val isId: Boolean        = if (model.isLegacy) name == ReservedFields.idFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
+  val isCreatedAt: Boolean = if (model.isLegacy) name == ReservedFields.createdAtFieldName else behaviour.contains(CreatedAtBehaviour)
+  val isUpdatedAt: Boolean = if (model.isLegacy) name == ReservedFields.updatedAtFieldName else behaviour.contains(UpdatedAtBehaviour)
 }

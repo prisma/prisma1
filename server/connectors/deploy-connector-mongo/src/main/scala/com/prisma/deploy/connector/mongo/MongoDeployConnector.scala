@@ -10,7 +10,7 @@ import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTest: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
 
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
@@ -24,7 +24,8 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
   override def capabilities: Set[ConnectorCapability] = {
     val common = Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability, EmbeddedTypesCapability)
-    if (isActive) common ++ Set(MigrationsCapability) else common
+    val step1  = if (isActive) common ++ Set(MigrationsCapability) else common
+    if (isTest) step1 ++ Set(LegacyDataModelCapability) else step1
   }
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)

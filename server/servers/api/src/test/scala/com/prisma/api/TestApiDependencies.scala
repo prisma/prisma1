@@ -38,13 +38,15 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override val sssEventsPubSub       = InMemoryPubSubTestKit[String]()
   override lazy val webhookPublisher = InMemoryQueueTestKit[Webhook]()
   override lazy val apiConnector = ConnectorUtils.loadApiConnector(
-    config = config.copy(databases = config.databases.map(_.copy(pooled = false))),
-    isTest = true
+    config = config.copy(databases = config.databases.map(_.copy(pooled = false)))
   )
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
-  lazy val deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  lazy val deployConnector = ConnectorUtils.loadDeployConnector(
+    config = config.copy(databases = config.databases.map(_.copy(pooled = false))),
+    isTest = true
+  )
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 }

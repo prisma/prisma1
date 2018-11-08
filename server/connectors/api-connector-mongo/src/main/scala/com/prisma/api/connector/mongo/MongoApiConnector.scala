@@ -8,7 +8,7 @@ import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoApiConnector(config: DatabaseConfig, isTest: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
+case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val client = MongoDatabasesFactory.initialize(config)
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(client)
@@ -20,12 +20,7 @@ case class MongoApiConnector(config: DatabaseConfig, isTest: Boolean)(implicit e
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
   override def capabilities: Set[ConnectorCapability] = {
-    val common = Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability, JoinRelationsCapability)
-    if (isTest) {
-      common ++ Set(LegacyDataModelCapability)
-    } else {
-      common
-    }
+    Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability, JoinRelationsCapability)
   }
 
   override def initialize(): Future[Unit] = {

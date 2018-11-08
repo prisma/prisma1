@@ -92,16 +92,6 @@ object DocumentToRoot {
     val scalarNonList: List[(String, GCValue)] =
       nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 
-//    val createdAt: Option[(String, GCValue)] = model.createdAtField match {
-//      case Some(f) => document.get(f.dbName).map(v => f.name -> BisonToGC(TypeIdentifier.DateTime, v)).orElse(Some(f.name -> NullGCValue))
-//      case None    => None
-//    }
-//
-//    val updatedAt: Option[(String, GCValue)] = model.updatedAtField match {
-//      case Some(f) => document.get(f.dbName).map(v => f.name -> BisonToGC(TypeIdentifier.DateTime, v)).orElse(Some(f.name -> NullGCValue))
-//      case None    => None
-//    }
-
     val id: (String, GCValue) =
       document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
 

@@ -41,13 +41,13 @@ class Model(
   lazy val relationNonListFields: List[RelationField]    = relationFields.filter(!_.isList)
   lazy val visibleRelationFields: List[RelationField]    = relationFields.filter(_.isVisible)
   lazy val nonListFields                                 = fields.filter(!_.isList)
-  lazy val idField                                       = if (isLegacy) getScalarFieldByName("id") else scalarFields.find(_.isId)
+  lazy val idField                                       = scalarFields.find(_.isId)
   lazy val createdAtField                                = scalarFields.find(_.isCreatedAt)
   lazy val updatedAtField                                = scalarFields.find(_.isUpdatedAt)
-  lazy val idField_!                                     = if (isLegacy) getScalarFieldByName_!("id") else idField.get
+  lazy val idField_!                                     = idField.get
   lazy val dbNameOfIdField_!                             = idField_!.dbName
-  lazy val hasUpdatedAtField                             = if (isLegacy) getFieldByName("updatedAt").isDefined else scalarFields.exists(_.isUpdatedAt)
-  lazy val hasCreatedAtField                             = if (isLegacy) getFieldByName("createdAt").isDefined else scalarFields.exists(_.isCreatedAt)
+  lazy val hasUpdatedAtField                             = scalarFields.exists(_.isUpdatedAt)
+  lazy val hasCreatedAtField                             = scalarFields.exists(_.isCreatedAt)
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
 
   lazy val cascadingRelationFields: List[RelationField] = relationFields.collect {
