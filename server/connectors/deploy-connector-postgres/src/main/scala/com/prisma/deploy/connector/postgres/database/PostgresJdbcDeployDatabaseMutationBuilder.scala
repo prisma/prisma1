@@ -135,6 +135,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def renameTable(projectId: String, currentName: String, newName: String): DatabaseAction[Any, NoStream, Effect.All] = {
-    sqlu"""ALTER TABLE #${qualify(projectId, currentName)} RENAME TO #${qualify(projectId, newName)}"""
+    sqlu"""ALTER TABLE #${qualify(projectId, currentName)} RENAME TO #${qualify(newName)}"""
   }
 }
