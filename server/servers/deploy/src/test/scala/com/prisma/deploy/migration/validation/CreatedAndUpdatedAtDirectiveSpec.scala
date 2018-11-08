@@ -27,7 +27,7 @@ class CreatedAndUpdatedAtDirectiveSpec extends WordSpecLike with Matchers with D
     val error = validateThatMustError(dataModelString).head
     error.`type` should equal("Model")
     error.field should equal(Some("createdAt"))
-    error.description should equal("Fields that are marked as @createdAt must be of type `DateTime!` or `DateTime`.")
+    error.description should equal("Fields that are marked as `@createdAt` must be of type `DateTime!` or `DateTime`.")
   }
 
   "@createdAt should not error if the field is not required" in {
@@ -78,5 +78,19 @@ class CreatedAndUpdatedAtDirectiveSpec extends WordSpecLike with Matchers with D
       """.stripMargin
     val dataModel = validate(dataModelString)
     dataModel.type_!("Model").scalarField_!("updatedAt").behaviour should be(Some(UpdatedAtBehaviour))
+  }
+
+  "must error if @createdAt and @updatedAt are used simultaneously" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: DateTime! @updatedAt @createdAt
+        |}
+      """.stripMargin
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("field"))
+    error.description should equal("Fields cannot be marked simultaneously with `@createdAt` and `@updatedAt`.")
   }
 }
