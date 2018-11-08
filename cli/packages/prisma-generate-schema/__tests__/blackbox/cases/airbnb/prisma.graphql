@@ -472,6 +472,49 @@ input AmenitiesUpdateInput {
   place: PlaceUpdateOneRequiredWithoutAmenitiesInput
 }
 
+input AmenitiesUpdateManyMutationInput {
+  elevator: Boolean
+  petsAllowed: Boolean
+  internet: Boolean
+  kitchen: Boolean
+  wirelessInternet: Boolean
+  familyKidFriendly: Boolean
+  freeParkingOnPremises: Boolean
+  hotTub: Boolean
+  pool: Boolean
+  smokingAllowed: Boolean
+  wheelchairAccessible: Boolean
+  breakfast: Boolean
+  cableTv: Boolean
+  suitableForEvents: Boolean
+  dryer: Boolean
+  washer: Boolean
+  indoorFireplace: Boolean
+  tv: Boolean
+  heating: Boolean
+  hangers: Boolean
+  iron: Boolean
+  hairDryer: Boolean
+  doorman: Boolean
+  paidParkingOffPremises: Boolean
+  freeParkingOnStreet: Boolean
+  gym: Boolean
+  airConditioning: Boolean
+  shampoo: Boolean
+  essentials: Boolean
+  laptopFriendlyWorkspace: Boolean
+  privateEntrance: Boolean
+  buzzerWirelessIntercom: Boolean
+  babyBath: Boolean
+  babyMonitor: Boolean
+  babysitterRecommendations: Boolean
+  bathtub: Boolean
+  changingTable: Boolean
+  childrensBooksAndToys: Boolean
+  childrensDinnerware: Boolean
+  crib: Boolean
+}
+
 input AmenitiesUpdateOneRequiredWithoutPlaceInput {
   create: AmenitiesCreateWithoutPlaceInput
   connect: AmenitiesWhereUniqueInput
@@ -910,6 +953,161 @@ type BookingPreviousValues {
   endDate: DateTime!
 }
 
+input BookingScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BookingScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BookingScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BookingScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  startDate: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  startDate_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  startDate_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  startDate_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  startDate_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  startDate_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  startDate_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  startDate_gte: DateTime
+  endDate: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  endDate_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  endDate_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  endDate_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  endDate_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  endDate_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  endDate_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  endDate_gte: DateTime
+}
+
 type BookingSubscriptionPayload {
   mutation: MutationType!
   node: Booking
@@ -957,12 +1155,24 @@ input BookingUpdateInput {
   payment: PaymentUpdateOneRequiredWithoutBookingInput
 }
 
+input BookingUpdateManyDataInput {
+  startDate: DateTime
+  endDate: DateTime
+}
+
+input BookingUpdateManyMutationInput {
+  startDate: DateTime
+  endDate: DateTime
+}
+
 input BookingUpdateManyWithoutBookeeInput {
   create: [BookingCreateWithoutBookeeInput!]
   connect: [BookingWhereUniqueInput!]
   disconnect: [BookingWhereUniqueInput!]
   delete: [BookingWhereUniqueInput!]
   update: [BookingUpdateWithWhereUniqueWithoutBookeeInput!]
+  updateMany: [BookingUpdateManyWithWhereNestedInput!]
+  deleteMany: [BookingScalarWhereInput!]
   upsert: [BookingUpsertWithWhereUniqueWithoutBookeeInput!]
 }
 
@@ -972,7 +1182,14 @@ input BookingUpdateManyWithoutPlaceInput {
   disconnect: [BookingWhereUniqueInput!]
   delete: [BookingWhereUniqueInput!]
   update: [BookingUpdateWithWhereUniqueWithoutPlaceInput!]
+  updateMany: [BookingUpdateManyWithWhereNestedInput!]
+  deleteMany: [BookingScalarWhereInput!]
   upsert: [BookingUpsertWithWhereUniqueWithoutPlaceInput!]
+}
+
+input BookingUpdateManyWithWhereNestedInput {
+  where: BookingScalarWhereInput!
+  data: BookingUpdateManyDataInput!
 }
 
 input BookingUpdateOneRequiredWithoutPaymentInput {
@@ -1301,6 +1518,10 @@ input CityUpdateInput {
   neighbourhoods: NeighbourhoodUpdateManyWithoutCityInput
 }
 
+input CityUpdateManyMutationInput {
+  name: String
+}
+
 input CityUpdateOneRequiredWithoutNeighbourhoodsInput {
   create: CityCreateWithoutNeighbourhoodsInput
   connect: CityWhereUniqueInput
@@ -1603,6 +1824,17 @@ input CreditCardInformationUpdateInput {
   postalCode: String
   country: String
   paymentAccount: PaymentAccountUpdateOneWithoutCreditcardInput
+}
+
+input CreditCardInformationUpdateManyMutationInput {
+  cardNumber: String
+  expiresOnMonth: Int
+  expiresOnYear: Int
+  securityCode: String
+  firstName: String
+  lastName: String
+  postalCode: String
+  country: String
 }
 
 input CreditCardInformationUpdateOneWithoutPaymentAccountInput {
@@ -2247,6 +2479,11 @@ input ExperienceCategoryUpdateInput {
   experience: ExperienceUpdateOneWithoutCategoryInput
 }
 
+input ExperienceCategoryUpdateManyMutationInput {
+  mainColor: String
+  name: String
+}
+
 input ExperienceCategoryUpdateOneWithoutExperienceInput {
   create: ExperienceCategoryCreateWithoutExperienceInput
   connect: ExperienceCategoryWhereUniqueInput
@@ -2567,6 +2804,185 @@ type ExperiencePreviousValues {
   popularity: Int!
 }
 
+input ExperienceScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ExperienceScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ExperienceScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ExperienceScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  title: String
+  """
+  All values that are not equal to given value.
+  """
+  title_not: String
+  """
+  All values that are contained in given list.
+  """
+  title_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  title_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  title_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  title_lte: String
+  """
+  All values greater than the given value.
+  """
+  title_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  title_gte: String
+  """
+  All values containing the given string.
+  """
+  title_contains: String
+  """
+  All values not containing the given string.
+  """
+  title_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  title_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  title_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  title_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  title_not_ends_with: String
+  pricePerPerson: Int
+  """
+  All values that are not equal to given value.
+  """
+  pricePerPerson_not: Int
+  """
+  All values that are contained in given list.
+  """
+  pricePerPerson_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  pricePerPerson_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  pricePerPerson_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  pricePerPerson_lte: Int
+  """
+  All values greater than the given value.
+  """
+  pricePerPerson_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  pricePerPerson_gte: Int
+  popularity: Int
+  """
+  All values that are not equal to given value.
+  """
+  popularity_not: Int
+  """
+  All values that are contained in given list.
+  """
+  popularity_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  popularity_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  popularity_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  popularity_lte: Int
+  """
+  All values greater than the given value.
+  """
+  popularity_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  popularity_gte: Int
+}
+
 type ExperienceSubscriptionPayload {
   mutation: MutationType!
   node: Experience
@@ -2617,13 +3033,32 @@ input ExperienceUpdateInput {
   preview: PictureUpdateOneRequiredInput
 }
 
+input ExperienceUpdateManyDataInput {
+  title: String
+  pricePerPerson: Int
+  popularity: Int
+}
+
+input ExperienceUpdateManyMutationInput {
+  title: String
+  pricePerPerson: Int
+  popularity: Int
+}
+
 input ExperienceUpdateManyWithoutHostInput {
   create: [ExperienceCreateWithoutHostInput!]
   connect: [ExperienceWhereUniqueInput!]
   disconnect: [ExperienceWhereUniqueInput!]
   delete: [ExperienceWhereUniqueInput!]
   update: [ExperienceUpdateWithWhereUniqueWithoutHostInput!]
+  updateMany: [ExperienceUpdateManyWithWhereNestedInput!]
+  deleteMany: [ExperienceScalarWhereInput!]
   upsert: [ExperienceUpsertWithWhereUniqueWithoutHostInput!]
+}
+
+input ExperienceUpdateManyWithWhereNestedInput {
+  where: ExperienceScalarWhereInput!
+  data: ExperienceUpdateManyDataInput!
 }
 
 input ExperienceUpdateOneWithoutCategoryInput {
@@ -3032,6 +3467,12 @@ input GuestRequirementsUpdateInput {
   place: PlaceUpdateOneRequiredWithoutGuestRequirementsInput
 }
 
+input GuestRequirementsUpdateManyMutationInput {
+  govIssuedId: Boolean
+  recommendationsFromOtherHosts: Boolean
+  guestTripInformation: Boolean
+}
+
 input GuestRequirementsUpdateOneWithoutPlaceInput {
   create: GuestRequirementsCreateWithoutPlaceInput
   connect: GuestRequirementsWhereUniqueInput
@@ -3277,6 +3718,15 @@ input HouseRulesUpdateDataInput {
 }
 
 input HouseRulesUpdateInput {
+  suitableForChildren: Boolean
+  suitableForInfants: Boolean
+  petsAllowed: Boolean
+  smokingAllowed: Boolean
+  partiesAndEventsAllowed: Boolean
+  additionalRules: String
+}
+
+input HouseRulesUpdateManyMutationInput {
   suitableForChildren: Boolean
   suitableForInfants: Boolean
   petsAllowed: Boolean
@@ -3671,6 +4121,238 @@ type LocationPreviousValues {
   directions: String
 }
 
+input LocationScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LocationScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LocationScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LocationScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  lat: Float
+  """
+  All values that are not equal to given value.
+  """
+  lat_not: Float
+  """
+  All values that are contained in given list.
+  """
+  lat_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  lat_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  lat_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  lat_lte: Float
+  """
+  All values greater than the given value.
+  """
+  lat_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  lat_gte: Float
+  lng: Float
+  """
+  All values that are not equal to given value.
+  """
+  lng_not: Float
+  """
+  All values that are contained in given list.
+  """
+  lng_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  lng_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  lng_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  lng_lte: Float
+  """
+  All values greater than the given value.
+  """
+  lng_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  lng_gte: Float
+  address: String
+  """
+  All values that are not equal to given value.
+  """
+  address_not: String
+  """
+  All values that are contained in given list.
+  """
+  address_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  address_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  address_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  address_lte: String
+  """
+  All values greater than the given value.
+  """
+  address_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  address_gte: String
+  """
+  All values containing the given string.
+  """
+  address_contains: String
+  """
+  All values not containing the given string.
+  """
+  address_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  address_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  address_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  address_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  address_not_ends_with: String
+  directions: String
+  """
+  All values that are not equal to given value.
+  """
+  directions_not: String
+  """
+  All values that are contained in given list.
+  """
+  directions_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  directions_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  directions_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  directions_lte: String
+  """
+  All values greater than the given value.
+  """
+  directions_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  directions_gte: String
+  """
+  All values containing the given string.
+  """
+  directions_contains: String
+  """
+  All values not containing the given string.
+  """
+  directions_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  directions_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  directions_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  directions_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  directions_not_ends_with: String
+}
+
 type LocationSubscriptionPayload {
   mutation: MutationType!
   node: Location
@@ -3722,13 +4404,34 @@ input LocationUpdateInput {
   restaurant: RestaurantUpdateOneWithoutLocationInput
 }
 
+input LocationUpdateManyDataInput {
+  lat: Float
+  lng: Float
+  address: String
+  directions: String
+}
+
+input LocationUpdateManyMutationInput {
+  lat: Float
+  lng: Float
+  address: String
+  directions: String
+}
+
 input LocationUpdateManyWithoutNeighbourHoodInput {
   create: [LocationCreateWithoutNeighbourHoodInput!]
   connect: [LocationWhereUniqueInput!]
   disconnect: [LocationWhereUniqueInput!]
   delete: [LocationWhereUniqueInput!]
   update: [LocationUpdateWithWhereUniqueWithoutNeighbourHoodInput!]
+  updateMany: [LocationUpdateManyWithWhereNestedInput!]
+  deleteMany: [LocationScalarWhereInput!]
   upsert: [LocationUpsertWithWhereUniqueWithoutNeighbourHoodInput!]
+}
+
+input LocationUpdateManyWithWhereNestedInput {
+  where: LocationScalarWhereInput!
+  data: LocationUpdateManyDataInput!
 }
 
 input LocationUpdateOneRequiredWithoutExperienceInput {
@@ -4181,6 +4884,161 @@ type MessagePreviousValues {
   readAt: DateTime!
 }
 
+input MessageScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MessageScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MessageScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MessageScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  deliveredAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  deliveredAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  deliveredAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  deliveredAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  deliveredAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  deliveredAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  deliveredAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  deliveredAt_gte: DateTime
+  readAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  readAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  readAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  readAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  readAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  readAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  readAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  readAt_gte: DateTime
+}
+
 type MessageSubscriptionPayload {
   mutation: MutationType!
   node: Message
@@ -4227,12 +5085,24 @@ input MessageUpdateInput {
   to: UserUpdateOneRequiredWithoutReceivedMessagesInput
 }
 
+input MessageUpdateManyDataInput {
+  deliveredAt: DateTime
+  readAt: DateTime
+}
+
+input MessageUpdateManyMutationInput {
+  deliveredAt: DateTime
+  readAt: DateTime
+}
+
 input MessageUpdateManyWithoutFromInput {
   create: [MessageCreateWithoutFromInput!]
   connect: [MessageWhereUniqueInput!]
   disconnect: [MessageWhereUniqueInput!]
   delete: [MessageWhereUniqueInput!]
   update: [MessageUpdateWithWhereUniqueWithoutFromInput!]
+  updateMany: [MessageUpdateManyWithWhereNestedInput!]
+  deleteMany: [MessageScalarWhereInput!]
   upsert: [MessageUpsertWithWhereUniqueWithoutFromInput!]
 }
 
@@ -4242,7 +5112,14 @@ input MessageUpdateManyWithoutToInput {
   disconnect: [MessageWhereUniqueInput!]
   delete: [MessageWhereUniqueInput!]
   update: [MessageUpdateWithWhereUniqueWithoutToInput!]
+  updateMany: [MessageUpdateManyWithWhereNestedInput!]
+  deleteMany: [MessageScalarWhereInput!]
   upsert: [MessageUpsertWithWhereUniqueWithoutToInput!]
+}
+
+input MessageUpdateManyWithWhereNestedInput {
+  where: MessageScalarWhereInput!
+  data: MessageUpdateManyDataInput!
 }
 
 input MessageUpdateWithoutFromDataInput {
@@ -4530,29 +5407,29 @@ type Mutation {
   upsertNotification(where: NotificationWhereUniqueInput!, create: NotificationCreateInput!, update: NotificationUpdateInput!): Notification!
   upsertRestaurant(where: RestaurantWhereUniqueInput!, create: RestaurantCreateInput!, update: RestaurantUpdateInput!): Restaurant!
   upsertHouseRules(where: HouseRulesWhereUniqueInput!, create: HouseRulesCreateInput!, update: HouseRulesUpdateInput!): HouseRules!
-  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
-  updateManyPlaces(data: PlaceUpdateInput!, where: PlaceWhereInput): BatchPayload!
-  updateManyPricings(data: PricingUpdateInput!, where: PricingWhereInput): BatchPayload!
-  updateManyGuestRequirementses(data: GuestRequirementsUpdateInput!, where: GuestRequirementsWhereInput): BatchPayload!
-  updateManyPolicieses(data: PoliciesUpdateInput!, where: PoliciesWhereInput): BatchPayload!
-  updateManyViewses(data: ViewsUpdateInput!, where: ViewsWhereInput): BatchPayload!
-  updateManyLocations(data: LocationUpdateInput!, where: LocationWhereInput): BatchPayload!
-  updateManyNeighbourhoods(data: NeighbourhoodUpdateInput!, where: NeighbourhoodWhereInput): BatchPayload!
-  updateManyCities(data: CityUpdateInput!, where: CityWhereInput): BatchPayload!
-  updateManyExperiences(data: ExperienceUpdateInput!, where: ExperienceWhereInput): BatchPayload!
-  updateManyExperienceCategories(data: ExperienceCategoryUpdateInput!, where: ExperienceCategoryWhereInput): BatchPayload!
-  updateManyAmenitieses(data: AmenitiesUpdateInput!, where: AmenitiesWhereInput): BatchPayload!
-  updateManyReviews(data: ReviewUpdateInput!, where: ReviewWhereInput): BatchPayload!
-  updateManyBookings(data: BookingUpdateInput!, where: BookingWhereInput): BatchPayload!
-  updateManyPayments(data: PaymentUpdateInput!, where: PaymentWhereInput): BatchPayload!
-  updateManyPaymentAccounts(data: PaymentAccountUpdateInput!, where: PaymentAccountWhereInput): BatchPayload!
-  updateManyPaypalInformations(data: PaypalInformationUpdateInput!, where: PaypalInformationWhereInput): BatchPayload!
-  updateManyCreditCardInformations(data: CreditCardInformationUpdateInput!, where: CreditCardInformationWhereInput): BatchPayload!
-  updateManyMessages(data: MessageUpdateInput!, where: MessageWhereInput): BatchPayload!
-  updateManyNotifications(data: NotificationUpdateInput!, where: NotificationWhereInput): BatchPayload!
-  updateManyRestaurants(data: RestaurantUpdateInput!, where: RestaurantWhereInput): BatchPayload!
-  updateManyPictures(data: PictureUpdateInput!, where: PictureWhereInput): BatchPayload!
-  updateManyHouseRuleses(data: HouseRulesUpdateInput!, where: HouseRulesWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
+  updateManyPlaces(data: PlaceUpdateManyMutationInput!, where: PlaceWhereInput): BatchPayload!
+  updateManyPricings(data: PricingUpdateManyMutationInput!, where: PricingWhereInput): BatchPayload!
+  updateManyGuestRequirementses(data: GuestRequirementsUpdateManyMutationInput!, where: GuestRequirementsWhereInput): BatchPayload!
+  updateManyPolicieses(data: PoliciesUpdateManyMutationInput!, where: PoliciesWhereInput): BatchPayload!
+  updateManyViewses(data: ViewsUpdateManyMutationInput!, where: ViewsWhereInput): BatchPayload!
+  updateManyLocations(data: LocationUpdateManyMutationInput!, where: LocationWhereInput): BatchPayload!
+  updateManyNeighbourhoods(data: NeighbourhoodUpdateManyMutationInput!, where: NeighbourhoodWhereInput): BatchPayload!
+  updateManyCities(data: CityUpdateManyMutationInput!, where: CityWhereInput): BatchPayload!
+  updateManyExperiences(data: ExperienceUpdateManyMutationInput!, where: ExperienceWhereInput): BatchPayload!
+  updateManyExperienceCategories(data: ExperienceCategoryUpdateManyMutationInput!, where: ExperienceCategoryWhereInput): BatchPayload!
+  updateManyAmenitieses(data: AmenitiesUpdateManyMutationInput!, where: AmenitiesWhereInput): BatchPayload!
+  updateManyReviews(data: ReviewUpdateManyMutationInput!, where: ReviewWhereInput): BatchPayload!
+  updateManyBookings(data: BookingUpdateManyMutationInput!, where: BookingWhereInput): BatchPayload!
+  updateManyPayments(data: PaymentUpdateManyMutationInput!, where: PaymentWhereInput): BatchPayload!
+  updateManyPaymentAccounts(data: PaymentAccountUpdateManyMutationInput!, where: PaymentAccountWhereInput): BatchPayload!
+  updateManyPaypalInformations(data: PaypalInformationUpdateManyMutationInput!, where: PaypalInformationWhereInput): BatchPayload!
+  updateManyCreditCardInformations(data: CreditCardInformationUpdateManyMutationInput!, where: CreditCardInformationWhereInput): BatchPayload!
+  updateManyMessages(data: MessageUpdateManyMutationInput!, where: MessageWhereInput): BatchPayload!
+  updateManyNotifications(data: NotificationUpdateManyMutationInput!, where: NotificationWhereInput): BatchPayload!
+  updateManyRestaurants(data: RestaurantUpdateManyMutationInput!, where: RestaurantWhereInput): BatchPayload!
+  updateManyPictures(data: PictureUpdateManyMutationInput!, where: PictureWhereInput): BatchPayload!
+  updateManyHouseRuleses(data: HouseRulesUpdateManyMutationInput!, where: HouseRulesWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyPlaces(where: PlaceWhereInput): BatchPayload!
   deleteManyPricings(where: PricingWhereInput): BatchPayload!
@@ -4687,6 +5564,214 @@ type NeighbourhoodPreviousValues {
   popularity: Int!
 }
 
+input NeighbourhoodScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [NeighbourhoodScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [NeighbourhoodScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [NeighbourhoodScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+  slug: String
+  """
+  All values that are not equal to given value.
+  """
+  slug_not: String
+  """
+  All values that are contained in given list.
+  """
+  slug_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  slug_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  slug_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  slug_lte: String
+  """
+  All values greater than the given value.
+  """
+  slug_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  slug_gte: String
+  """
+  All values containing the given string.
+  """
+  slug_contains: String
+  """
+  All values not containing the given string.
+  """
+  slug_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  slug_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  slug_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  slug_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  slug_not_ends_with: String
+  featured: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  featured_not: Boolean
+  popularity: Int
+  """
+  All values that are not equal to given value.
+  """
+  popularity_not: Int
+  """
+  All values that are contained in given list.
+  """
+  popularity_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  popularity_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  popularity_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  popularity_lte: Int
+  """
+  All values greater than the given value.
+  """
+  popularity_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  popularity_gte: Int
+}
+
 type NeighbourhoodSubscriptionPayload {
   mutation: MutationType!
   node: Neighbourhood
@@ -4736,13 +5821,34 @@ input NeighbourhoodUpdateInput {
   city: CityUpdateOneRequiredWithoutNeighbourhoodsInput
 }
 
+input NeighbourhoodUpdateManyDataInput {
+  name: String
+  slug: String
+  featured: Boolean
+  popularity: Int
+}
+
+input NeighbourhoodUpdateManyMutationInput {
+  name: String
+  slug: String
+  featured: Boolean
+  popularity: Int
+}
+
 input NeighbourhoodUpdateManyWithoutCityInput {
   create: [NeighbourhoodCreateWithoutCityInput!]
   connect: [NeighbourhoodWhereUniqueInput!]
   disconnect: [NeighbourhoodWhereUniqueInput!]
   delete: [NeighbourhoodWhereUniqueInput!]
   update: [NeighbourhoodUpdateWithWhereUniqueWithoutCityInput!]
+  updateMany: [NeighbourhoodUpdateManyWithWhereNestedInput!]
+  deleteMany: [NeighbourhoodScalarWhereInput!]
   upsert: [NeighbourhoodUpsertWithWhereUniqueWithoutCityInput!]
+}
+
+input NeighbourhoodUpdateManyWithWhereNestedInput {
+  where: NeighbourhoodScalarWhereInput!
+  data: NeighbourhoodUpdateManyDataInput!
 }
 
 input NeighbourhoodUpdateOneWithoutLocationsInput {
@@ -5102,6 +6208,198 @@ type NotificationPreviousValues {
   readDate: DateTime!
 }
 
+input NotificationScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [NotificationScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [NotificationScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [NotificationScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  type: NOTIFICATION_TYPE
+  """
+  All values that are not equal to given value.
+  """
+  type_not: NOTIFICATION_TYPE
+  """
+  All values that are contained in given list.
+  """
+  type_in: [NOTIFICATION_TYPE!]
+  """
+  All values that are not contained in given list.
+  """
+  type_not_in: [NOTIFICATION_TYPE!]
+  link: String
+  """
+  All values that are not equal to given value.
+  """
+  link_not: String
+  """
+  All values that are contained in given list.
+  """
+  link_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  link_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  link_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  link_lte: String
+  """
+  All values greater than the given value.
+  """
+  link_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  link_gte: String
+  """
+  All values containing the given string.
+  """
+  link_contains: String
+  """
+  All values not containing the given string.
+  """
+  link_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  link_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  link_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  link_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  link_not_ends_with: String
+  readDate: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  readDate_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  readDate_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  readDate_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  readDate_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  readDate_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  readDate_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  readDate_gte: DateTime
+}
+
 type NotificationSubscriptionPayload {
   mutation: MutationType!
   node: Notification
@@ -5148,13 +6446,32 @@ input NotificationUpdateInput {
   user: UserUpdateOneRequiredWithoutNotificationsInput
 }
 
+input NotificationUpdateManyDataInput {
+  type: NOTIFICATION_TYPE
+  link: String
+  readDate: DateTime
+}
+
+input NotificationUpdateManyMutationInput {
+  type: NOTIFICATION_TYPE
+  link: String
+  readDate: DateTime
+}
+
 input NotificationUpdateManyWithoutUserInput {
   create: [NotificationCreateWithoutUserInput!]
   connect: [NotificationWhereUniqueInput!]
   disconnect: [NotificationWhereUniqueInput!]
   delete: [NotificationWhereUniqueInput!]
   update: [NotificationUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [NotificationUpdateManyWithWhereNestedInput!]
+  deleteMany: [NotificationScalarWhereInput!]
   upsert: [NotificationUpsertWithWhereUniqueWithoutUserInput!]
+}
+
+input NotificationUpdateManyWithWhereNestedInput {
+  where: NotificationScalarWhereInput!
+  data: NotificationUpdateManyDataInput!
 }
 
 input NotificationUpdateWithoutUserDataInput {
@@ -5520,6 +6837,116 @@ type PaymentAccountPreviousValues {
   type: PAYMENT_PROVIDER
 }
 
+input PaymentAccountScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PaymentAccountScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PaymentAccountScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PaymentAccountScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  type: PAYMENT_PROVIDER
+  """
+  All values that are not equal to given value.
+  """
+  type_not: PAYMENT_PROVIDER
+  """
+  All values that are contained in given list.
+  """
+  type_in: [PAYMENT_PROVIDER!]
+  """
+  All values that are not contained in given list.
+  """
+  type_not_in: [PAYMENT_PROVIDER!]
+}
+
 type PaymentAccountSubscriptionPayload {
   mutation: MutationType!
   node: PaymentAccount
@@ -5567,13 +6994,28 @@ input PaymentAccountUpdateInput {
   creditcard: CreditCardInformationUpdateOneWithoutPaymentAccountInput
 }
 
+input PaymentAccountUpdateManyDataInput {
+  type: PAYMENT_PROVIDER
+}
+
+input PaymentAccountUpdateManyMutationInput {
+  type: PAYMENT_PROVIDER
+}
+
 input PaymentAccountUpdateManyWithoutUserInput {
   create: [PaymentAccountCreateWithoutUserInput!]
   connect: [PaymentAccountWhereUniqueInput!]
   disconnect: [PaymentAccountWhereUniqueInput!]
   delete: [PaymentAccountWhereUniqueInput!]
   update: [PaymentAccountUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [PaymentAccountUpdateManyWithWhereNestedInput!]
+  deleteMany: [PaymentAccountScalarWhereInput!]
   upsert: [PaymentAccountUpsertWithWhereUniqueWithoutUserInput!]
+}
+
+input PaymentAccountUpdateManyWithWhereNestedInput {
+  where: PaymentAccountScalarWhereInput!
+  data: PaymentAccountUpdateManyDataInput!
 }
 
 input PaymentAccountUpdateOneRequiredWithoutPaymentsInput {
@@ -5857,6 +7299,190 @@ type PaymentPreviousValues {
   totalPrice: Float!
 }
 
+input PaymentScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PaymentScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PaymentScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PaymentScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  serviceFee: Float
+  """
+  All values that are not equal to given value.
+  """
+  serviceFee_not: Float
+  """
+  All values that are contained in given list.
+  """
+  serviceFee_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  serviceFee_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  serviceFee_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  serviceFee_lte: Float
+  """
+  All values greater than the given value.
+  """
+  serviceFee_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  serviceFee_gte: Float
+  placePrice: Float
+  """
+  All values that are not equal to given value.
+  """
+  placePrice_not: Float
+  """
+  All values that are contained in given list.
+  """
+  placePrice_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  placePrice_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  placePrice_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  placePrice_lte: Float
+  """
+  All values greater than the given value.
+  """
+  placePrice_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  placePrice_gte: Float
+  totalPrice: Float
+  """
+  All values that are not equal to given value.
+  """
+  totalPrice_not: Float
+  """
+  All values that are contained in given list.
+  """
+  totalPrice_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  totalPrice_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  totalPrice_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  totalPrice_lte: Float
+  """
+  All values greater than the given value.
+  """
+  totalPrice_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  totalPrice_gte: Float
+}
+
 type PaymentSubscriptionPayload {
   mutation: MutationType!
   node: Payment
@@ -5904,13 +7530,32 @@ input PaymentUpdateInput {
   paymentMethod: PaymentAccountUpdateOneRequiredWithoutPaymentsInput
 }
 
+input PaymentUpdateManyDataInput {
+  serviceFee: Float
+  placePrice: Float
+  totalPrice: Float
+}
+
+input PaymentUpdateManyMutationInput {
+  serviceFee: Float
+  placePrice: Float
+  totalPrice: Float
+}
+
 input PaymentUpdateManyWithoutPaymentMethodInput {
   create: [PaymentCreateWithoutPaymentMethodInput!]
   connect: [PaymentWhereUniqueInput!]
   disconnect: [PaymentWhereUniqueInput!]
   delete: [PaymentWhereUniqueInput!]
   update: [PaymentUpdateWithWhereUniqueWithoutPaymentMethodInput!]
+  updateMany: [PaymentUpdateManyWithWhereNestedInput!]
+  deleteMany: [PaymentScalarWhereInput!]
   upsert: [PaymentUpsertWithWhereUniqueWithoutPaymentMethodInput!]
+}
+
+input PaymentUpdateManyWithWhereNestedInput {
+  where: PaymentScalarWhereInput!
+  data: PaymentUpdateManyDataInput!
 }
 
 input PaymentUpdateOneRequiredWithoutBookingInput {
@@ -6251,6 +7896,10 @@ input PaypalInformationUpdateInput {
   paymentAccount: PaymentAccountUpdateOneRequiredWithoutPaypalInput
 }
 
+input PaypalInformationUpdateManyMutationInput {
+  email: String
+}
+
 input PaypalInformationUpdateOneWithoutPaymentAccountInput {
   create: PaypalInformationCreateWithoutPaymentAccountInput
   connect: PaypalInformationWhereUniqueInput
@@ -6484,6 +8133,74 @@ type PicturePreviousValues {
   url: String!
 }
 
+input PictureScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PictureScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PictureScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PictureScalarWhereInput!]
+  url: String
+  """
+  All values that are not equal to given value.
+  """
+  url_not: String
+  """
+  All values that are contained in given list.
+  """
+  url_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  url_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  url_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  url_lte: String
+  """
+  All values greater than the given value.
+  """
+  url_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  url_gte: String
+  """
+  All values containing the given string.
+  """
+  url_contains: String
+  """
+  All values not containing the given string.
+  """
+  url_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  url_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  url_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  url_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  url_not_ends_with: String
+}
+
 type PictureSubscriptionPayload {
   mutation: MutationType!
   node: Picture
@@ -6527,12 +8244,23 @@ input PictureUpdateDataInput {
   url: String
 }
 
-input PictureUpdateInput {
+input PictureUpdateManyDataInput {
   url: String
 }
 
 input PictureUpdateManyInput {
   create: [PictureCreateInput!]
+  updateMany: [PictureUpdateManyWithWhereNestedInput!]
+  deleteMany: [PictureScalarWhereInput!]
+}
+
+input PictureUpdateManyMutationInput {
+  url: String
+}
+
+input PictureUpdateManyWithWhereNestedInput {
+  where: PictureScalarWhereInput!
+  data: PictureUpdateManyDataInput!
 }
 
 input PictureUpdateOneInput {
@@ -7006,6 +8734,444 @@ type PlacePreviousValues {
   popularity: Int!
 }
 
+input PlaceScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PlaceScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PlaceScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PlaceScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+  size: PLACE_SIZES
+  """
+  All values that are not equal to given value.
+  """
+  size_not: PLACE_SIZES
+  """
+  All values that are contained in given list.
+  """
+  size_in: [PLACE_SIZES!]
+  """
+  All values that are not contained in given list.
+  """
+  size_not_in: [PLACE_SIZES!]
+  shortDescription: String
+  """
+  All values that are not equal to given value.
+  """
+  shortDescription_not: String
+  """
+  All values that are contained in given list.
+  """
+  shortDescription_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  shortDescription_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  shortDescription_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  shortDescription_lte: String
+  """
+  All values greater than the given value.
+  """
+  shortDescription_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  shortDescription_gte: String
+  """
+  All values containing the given string.
+  """
+  shortDescription_contains: String
+  """
+  All values not containing the given string.
+  """
+  shortDescription_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  shortDescription_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  shortDescription_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  shortDescription_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  shortDescription_not_ends_with: String
+  description: String
+  """
+  All values that are not equal to given value.
+  """
+  description_not: String
+  """
+  All values that are contained in given list.
+  """
+  description_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  description_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  description_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  description_lte: String
+  """
+  All values greater than the given value.
+  """
+  description_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  description_gte: String
+  """
+  All values containing the given string.
+  """
+  description_contains: String
+  """
+  All values not containing the given string.
+  """
+  description_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  description_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  description_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  description_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  description_not_ends_with: String
+  slug: String
+  """
+  All values that are not equal to given value.
+  """
+  slug_not: String
+  """
+  All values that are contained in given list.
+  """
+  slug_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  slug_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  slug_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  slug_lte: String
+  """
+  All values greater than the given value.
+  """
+  slug_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  slug_gte: String
+  """
+  All values containing the given string.
+  """
+  slug_contains: String
+  """
+  All values not containing the given string.
+  """
+  slug_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  slug_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  slug_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  slug_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  slug_not_ends_with: String
+  maxGuests: Int
+  """
+  All values that are not equal to given value.
+  """
+  maxGuests_not: Int
+  """
+  All values that are contained in given list.
+  """
+  maxGuests_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  maxGuests_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  maxGuests_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  maxGuests_lte: Int
+  """
+  All values greater than the given value.
+  """
+  maxGuests_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  maxGuests_gte: Int
+  numBedrooms: Int
+  """
+  All values that are not equal to given value.
+  """
+  numBedrooms_not: Int
+  """
+  All values that are contained in given list.
+  """
+  numBedrooms_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  numBedrooms_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  numBedrooms_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  numBedrooms_lte: Int
+  """
+  All values greater than the given value.
+  """
+  numBedrooms_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  numBedrooms_gte: Int
+  numBeds: Int
+  """
+  All values that are not equal to given value.
+  """
+  numBeds_not: Int
+  """
+  All values that are contained in given list.
+  """
+  numBeds_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  numBeds_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  numBeds_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  numBeds_lte: Int
+  """
+  All values greater than the given value.
+  """
+  numBeds_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  numBeds_gte: Int
+  numBaths: Int
+  """
+  All values that are not equal to given value.
+  """
+  numBaths_not: Int
+  """
+  All values that are contained in given list.
+  """
+  numBaths_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  numBaths_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  numBaths_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  numBaths_lte: Int
+  """
+  All values greater than the given value.
+  """
+  numBaths_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  numBaths_gte: Int
+  popularity: Int
+  """
+  All values that are not equal to given value.
+  """
+  popularity_not: Int
+  """
+  All values that are contained in given list.
+  """
+  popularity_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  popularity_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  popularity_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  popularity_lte: Int
+  """
+  All values greater than the given value.
+  """
+  popularity_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  popularity_gte: Int
+}
+
 type PlaceSubscriptionPayload {
   mutation: MutationType!
   node: Place
@@ -7069,13 +9235,46 @@ input PlaceUpdateInput {
   pictures: PictureUpdateManyInput
 }
 
+input PlaceUpdateManyDataInput {
+  name: String
+  size: PLACE_SIZES
+  shortDescription: String
+  description: String
+  slug: String
+  maxGuests: Int
+  numBedrooms: Int
+  numBeds: Int
+  numBaths: Int
+  popularity: Int
+}
+
+input PlaceUpdateManyMutationInput {
+  name: String
+  size: PLACE_SIZES
+  shortDescription: String
+  description: String
+  slug: String
+  maxGuests: Int
+  numBedrooms: Int
+  numBeds: Int
+  numBaths: Int
+  popularity: Int
+}
+
 input PlaceUpdateManyWithoutHostInput {
   create: [PlaceCreateWithoutHostInput!]
   connect: [PlaceWhereUniqueInput!]
   disconnect: [PlaceWhereUniqueInput!]
   delete: [PlaceWhereUniqueInput!]
   update: [PlaceUpdateWithWhereUniqueWithoutHostInput!]
+  updateMany: [PlaceUpdateManyWithWhereNestedInput!]
+  deleteMany: [PlaceScalarWhereInput!]
   upsert: [PlaceUpsertWithWhereUniqueWithoutHostInput!]
+}
+
+input PlaceUpdateManyWithWhereNestedInput {
+  where: PlaceScalarWhereInput!
+  data: PlaceUpdateManyDataInput!
 }
 
 input PlaceUpdateOneRequiredWithoutAmenitiesInput {
@@ -7980,6 +10179,12 @@ input PoliciesUpdateInput {
   place: PlaceUpdateOneRequiredWithoutPoliciesInput
 }
 
+input PoliciesUpdateManyMutationInput {
+  checkInStartTime: Float
+  checkInEndTime: Float
+  checkoutTime: Float
+}
+
 input PoliciesUpdateOneWithoutPlaceInput {
   create: PoliciesCreateWithoutPlaceInput
   connect: PoliciesWhereUniqueInput
@@ -8402,6 +10607,21 @@ input PricingUpdateInput {
   weekendPricing: Int
   currency: CURRENCY
   place: PlaceUpdateOneRequiredWithoutPricingInput
+}
+
+input PricingUpdateManyMutationInput {
+  monthlyDiscount: Int
+  weeklyDiscount: Int
+  perNight: Int
+  smartPricing: Boolean
+  basePrice: Int
+  averageWeekly: Int
+  averageMonthly: Int
+  cleaningFee: Int
+  securityDeposit: Int
+  extraGuests: Int
+  weekendPricing: Int
+  currency: CURRENCY
 }
 
 input PricingUpdateOneRequiredWithoutPlaceInput {
@@ -9035,6 +11255,14 @@ input RestaurantUpdateInput {
   location: LocationUpdateOneRequiredWithoutRestaurantInput
 }
 
+input RestaurantUpdateManyMutationInput {
+  title: String
+  avgPricePerPerson: Int
+  isCurated: Boolean
+  slug: String
+  popularity: Int
+}
+
 input RestaurantUpdateOneWithoutLocationInput {
   create: RestaurantCreateWithoutLocationInput
   connect: RestaurantWhereUniqueInput
@@ -9461,6 +11689,359 @@ type ReviewPreviousValues {
   communication: Int!
 }
 
+input ReviewScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ReviewScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ReviewScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ReviewScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  text: String
+  """
+  All values that are not equal to given value.
+  """
+  text_not: String
+  """
+  All values that are contained in given list.
+  """
+  text_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  text_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  text_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  text_lte: String
+  """
+  All values greater than the given value.
+  """
+  text_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  text_gte: String
+  """
+  All values containing the given string.
+  """
+  text_contains: String
+  """
+  All values not containing the given string.
+  """
+  text_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  text_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  text_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  text_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  text_not_ends_with: String
+  stars: Int
+  """
+  All values that are not equal to given value.
+  """
+  stars_not: Int
+  """
+  All values that are contained in given list.
+  """
+  stars_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  stars_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  stars_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  stars_lte: Int
+  """
+  All values greater than the given value.
+  """
+  stars_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  stars_gte: Int
+  accuracy: Int
+  """
+  All values that are not equal to given value.
+  """
+  accuracy_not: Int
+  """
+  All values that are contained in given list.
+  """
+  accuracy_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  accuracy_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  accuracy_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  accuracy_lte: Int
+  """
+  All values greater than the given value.
+  """
+  accuracy_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  accuracy_gte: Int
+  location: Int
+  """
+  All values that are not equal to given value.
+  """
+  location_not: Int
+  """
+  All values that are contained in given list.
+  """
+  location_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  location_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  location_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  location_lte: Int
+  """
+  All values greater than the given value.
+  """
+  location_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  location_gte: Int
+  checkIn: Int
+  """
+  All values that are not equal to given value.
+  """
+  checkIn_not: Int
+  """
+  All values that are contained in given list.
+  """
+  checkIn_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  checkIn_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  checkIn_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  checkIn_lte: Int
+  """
+  All values greater than the given value.
+  """
+  checkIn_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  checkIn_gte: Int
+  value: Int
+  """
+  All values that are not equal to given value.
+  """
+  value_not: Int
+  """
+  All values that are contained in given list.
+  """
+  value_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  value_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  value_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  value_lte: Int
+  """
+  All values greater than the given value.
+  """
+  value_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  value_gte: Int
+  cleanliness: Int
+  """
+  All values that are not equal to given value.
+  """
+  cleanliness_not: Int
+  """
+  All values that are contained in given list.
+  """
+  cleanliness_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  cleanliness_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  cleanliness_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  cleanliness_lte: Int
+  """
+  All values greater than the given value.
+  """
+  cleanliness_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  cleanliness_gte: Int
+  communication: Int
+  """
+  All values that are not equal to given value.
+  """
+  communication_not: Int
+  """
+  All values that are contained in given list.
+  """
+  communication_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  communication_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  communication_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  communication_lte: Int
+  """
+  All values greater than the given value.
+  """
+  communication_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  communication_gte: Int
+}
+
 type ReviewSubscriptionPayload {
   mutation: MutationType!
   node: Review
@@ -9513,12 +12094,36 @@ input ReviewUpdateInput {
   experience: ExperienceUpdateOneWithoutReviewsInput
 }
 
+input ReviewUpdateManyDataInput {
+  text: String
+  stars: Int
+  accuracy: Int
+  location: Int
+  checkIn: Int
+  value: Int
+  cleanliness: Int
+  communication: Int
+}
+
+input ReviewUpdateManyMutationInput {
+  text: String
+  stars: Int
+  accuracy: Int
+  location: Int
+  checkIn: Int
+  value: Int
+  cleanliness: Int
+  communication: Int
+}
+
 input ReviewUpdateManyWithoutExperienceInput {
   create: [ReviewCreateWithoutExperienceInput!]
   connect: [ReviewWhereUniqueInput!]
   disconnect: [ReviewWhereUniqueInput!]
   delete: [ReviewWhereUniqueInput!]
   update: [ReviewUpdateWithWhereUniqueWithoutExperienceInput!]
+  updateMany: [ReviewUpdateManyWithWhereNestedInput!]
+  deleteMany: [ReviewScalarWhereInput!]
   upsert: [ReviewUpsertWithWhereUniqueWithoutExperienceInput!]
 }
 
@@ -9528,7 +12133,14 @@ input ReviewUpdateManyWithoutPlaceInput {
   disconnect: [ReviewWhereUniqueInput!]
   delete: [ReviewWhereUniqueInput!]
   update: [ReviewUpdateWithWhereUniqueWithoutPlaceInput!]
+  updateMany: [ReviewUpdateManyWithWhereNestedInput!]
+  deleteMany: [ReviewScalarWhereInput!]
   upsert: [ReviewUpsertWithWhereUniqueWithoutPlaceInput!]
+}
+
+input ReviewUpdateManyWithWhereNestedInput {
+  where: ReviewScalarWhereInput!
+  data: ReviewUpdateManyDataInput!
 }
 
 input ReviewUpdateWithoutExperienceDataInput {
@@ -10322,6 +12934,17 @@ input UserUpdateInput {
   notifications: NotificationUpdateManyWithoutUserInput
   profilePicture: PictureUpdateOneInput
   hostingExperiences: ExperienceUpdateManyWithoutHostInput
+}
+
+input UserUpdateManyMutationInput {
+  firstName: String
+  lastName: String
+  email: String
+  password: String
+  phone: String
+  responseRate: Float
+  responseTime: Int
+  isSuperHost: Boolean
 }
 
 input UserUpdateOneRequiredWithoutBookingsInput {
@@ -11163,6 +13786,10 @@ input ViewsSubscriptionWhereInput {
 input ViewsUpdateInput {
   lastWeek: Int
   place: PlaceUpdateOneRequiredWithoutViewsInput
+}
+
+input ViewsUpdateManyMutationInput {
+  lastWeek: Int
 }
 
 input ViewsUpdateOneRequiredWithoutPlaceInput {
