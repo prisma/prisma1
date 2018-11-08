@@ -6,6 +6,10 @@ import org.jooq.impl.DSL
 
 trait JdbcBase extends SharedSlickExtensions with SharedJdbcExtensions {
   lazy val placeHolder = "?"
-  lazy val sql         = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
   lazy val database    = slickDatabase.database
+
+  implicit lazy val sql = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+
+  // Dialect specific name qualification and escaping. Use this for direct interpolations, for example into slick sql""
+  def qualify(n: String*): String = sql.render(DSL.name(n: _*))
 }

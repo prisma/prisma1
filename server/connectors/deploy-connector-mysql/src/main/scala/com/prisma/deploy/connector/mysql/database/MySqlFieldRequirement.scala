@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mysql.impls
+package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.shared.models.FieldTemplate

@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.JdbcBase
-import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import org.jooq.impl.DSL._
 import org.jooq.impl.SQLDataType
@@ -19,6 +19,10 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   /*
    * Connector-specific functions
    */
+  def truncateProjectTables(project: Project): DBIOAction[Any, NoStream, Effect.All]
+  def deleteProjectDatabase(projectId: String): DBIOAction[Any, NoStream, Effect.All]
+  def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All]
+
   def createModelTable(projectId: String, model: Model): DBIOAction[Any, NoStream, Effect.All]
   def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
   def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model): DBIOAction[Any, NoStream, Effect.All]
@@ -59,24 +63,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     DBIO.seq(schema, table)
   }
 
-  def truncateProjectTables(project: Project) = {
-    val listTableNames: List[String] = project.models.flatMap { model =>
-      model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
-    }
-
-    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
-    val queries = tables.map(tableName => {
-      changeDatabaseQueryToDBIO(sql.truncate(name(project.id, tableName)).cascade())()
-    })
-
-    DBIO.seq(queries: _*)
-  }
-
-  def deleteProjectDatabase(projectId: String) = {
-    val query = sql.dropSchemaIfExists(projectId).cascade()
-    changeDatabaseQueryToDBIO(query)()
-  }
-
   def dropTable(projectId: String, tableName: String) = {
     val query = sql.dropTable(name(projectId, tableName))
     changeDatabaseQueryToDBIO(query)()
@@ -88,14 +74,14 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    val query = sql.alterTable(name(projectId, s"${modelName}_$fieldName")).renameTo(name(s"${newModelName}_$newFieldName"))
+    val query = sql.alterTable(name(projectId, s"${modelName}_$fieldName")).renameTo(name(projectId, s"${newModelName}_$newFieldName"))
     changeDatabaseQueryToDBIO(query)()
   }
 
-  def renameTable(projectId: String, currentName: String, newName: String) = {
-    val query = sql.alterTable(name(projectId, currentName)).renameTo(name(newName))
-    changeDatabaseQueryToDBIO(query)()
-  }
+//  def renameTable(projectId: String, currentName: String, newName: String) = {
+//    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
+//    changeDatabaseQueryToDBIO(query)()
+//  }
 
   def deleteColumn(projectId: String, tableName: String, columnName: String) = {
     val query = sql.alterTable(name(projectId, tableName)).dropColumn(name(columnName))

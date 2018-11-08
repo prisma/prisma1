@@ -2,9 +2,9 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
-import com.prisma.deploy.connector.mysql.database.{MySqlDeployDatabaseMutationBuilder, MySqlInternalDatabaseSchema}
-import com.prisma.deploy.connector.mysql.impls._
+import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MysqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
@@ -26,6 +26,8 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary
   lazy val projectDatabase      = databases.primary.database
+  lazy val mySqlTypeMapper      = MysqlTypeMapper()
+  lazy val mutationBuilder      = MysqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
   override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
@@ -33,15 +35,15 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
 
   override def capabilities                                     = Set(MigrationsCapability, NonEmbeddedScalarListCapability)
-  override val deployMutactionExecutor: DeployMutactionExecutor = MySqlDeployMutactionExecutor(projectDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = MySqlDeployDatabaseMutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
     projectDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    val action = MySqlDeployDatabaseMutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+    val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
     projectDatabase.run(action)
   }
 
@@ -58,7 +60,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
     projectDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = MySqlClientDbQueries(project, projectDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, databases.primary)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
