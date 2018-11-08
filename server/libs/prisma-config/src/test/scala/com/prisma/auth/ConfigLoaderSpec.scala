@@ -207,4 +207,23 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
     exception shouldBe a[InvalidConfiguration]
     exception.getMessage should equal("The parameter connectionLimit must be set to at least 2.")
   }
+
+  "fail if the mongo connector specifies `migrations: true`" in {
+    val invalidConfig = """
+                        |port: 4466
+                        |databases:
+                        |  default:
+                        |    connector: mongo
+                        |    host: localhost
+                        |    port: 3306
+                        |    user: root
+                        |    password: prisma
+                        |    migrations: true
+                      """.stripMargin
+    val config        = ConfigLoader.tryLoadString(invalidConfig)
+    config.isSuccess shouldBe false
+    val exception = config.failed.get
+    exception shouldBe a[InvalidConfiguration]
+    exception.getMessage should equal("The mongo connector may not set the migrations setting to true.")
+  }
 }

@@ -35,9 +35,12 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override val invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage] = {
     invalidationTestKit.map[SchemaInvalidatedMessage]((_: String) => SchemaInvalidated)
   }
-  override val sssEventsPubSub                  = InMemoryPubSubTestKit[String]()
-  override lazy val webhookPublisher            = InMemoryQueueTestKit[Webhook]()
-  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  override val sssEventsPubSub       = InMemoryPubSubTestKit[String]()
+  override lazy val webhookPublisher = InMemoryQueueTestKit[Webhook]()
+  override lazy val apiConnector = ConnectorUtils.loadApiConnector(
+    config = config.copy(databases = config.databases.map(_.copy(pooled = false))),
+    isTest = true
+  )
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 

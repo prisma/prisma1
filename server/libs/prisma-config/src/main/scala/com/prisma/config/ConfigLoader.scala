@@ -233,6 +233,9 @@ object ConfigLoader {
         throw InvalidConfiguration("The parameter connectionLimit must be set to at least 2.")
       }
     }
+    if (config.connector == "mongo" && config.active) {
+      throw InvalidConfiguration("The mongo connector may not set the migrations setting to true.")
+    }
 
     config
   }
