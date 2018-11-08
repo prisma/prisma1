@@ -17,13 +17,12 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     return fields
   }
 
-
   public getTypeName(input: IGQLType, args: {}) {
     return `${input.name}WhereInput`
   }
 
   //#region Scalar filter generator
-  public generateScalarFilterFields(field: IGQLField) : GraphQLInputFieldConfigMap {
+  public generateScalarFilterFields(field: IGQLField) : GraphQLInputFieldConfigMap  {
     GQLAssert.isScalar(field, this.generators.scalarTypeGenerator)
 
     if (field.isList) {
@@ -80,12 +79,12 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     return ModelWhereInputGenerator.generateFiltersForSuffix(['_in', '_not_in'], field, type)
   }
 
-  public generateAlphanumericFilters(field: IGQLField): GraphQLInputFieldConfigMap {
+  public generateAlphanumericFilters(field: IGQLField): GraphQLInputFieldConfigMap { 
     const type = this.generators.scalarTypeGenerator.generate(field.type, {})
     return ModelWhereInputGenerator.generateFiltersForSuffix(['_lt', '_lte', '_gt', '_gte'], field, type)
   }
 
-  public generateStringFilters(field: IGQLField): GraphQLInputFieldConfigMap {
+  public generateStringFilters(field: IGQLField): GraphQLInputFieldConfigMap { 
     const type = this.generators.scalarTypeGenerator.generate(field.type, {})
     const filters = [
       '_contains',
@@ -101,7 +100,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
 
   //#region Relation filter generator
 
-  public generateRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap {
+  public generateRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap | null {
     GQLAssert.isRelation(field, this.generators.scalarTypeGenerator)
     if (field.isList) {
       return this.generateManyRelationFilterFields(field)
@@ -111,12 +110,12 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
   }
 
   public generateOneRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap {
-    const type = this.generators.modelWhereInput.generate(field.type as IGQLType, {})
+    const type = this.generate(field.type as IGQLType, {})
     return ModelWhereInputGenerator.generateFiltersForSuffix([''], field, type)
   }
 
   public generateManyRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap {
-    const type = this.generators.modelWhereInput.generate(field.type as IGQLType, {})
+    const type = this.generate(field.type as IGQLType, {})
     return ModelWhereInputGenerator.generateFiltersForSuffix(['_every', '_some', '_none'], field, type)
   }
 
@@ -140,7 +139,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     const recursiveFilter = ModelWhereInputGenerator.generateFiltersForSuffix(
       ['AND', 'OR', 'NOT'],
       null,
-      this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereInput.generate(model, {}))
+      this.generators.scalarTypeGenerator.wrapList(this.generate(model, {}))
     )
 
     fields = FieldConfigUtils.merge(fields, recursiveFilter)

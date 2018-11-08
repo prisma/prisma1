@@ -51,7 +51,12 @@ export interface IGQLField {
  */
 export interface IGQLType {
   /**
-   * Indicates if this is an enum type. 
+   * Indicates if this is an embedded type.
+   */
+  isEmbedded: boolean
+  
+  /**
+   * Indicates if this is an enum type.
    */
   isEnum: boolean
   /**

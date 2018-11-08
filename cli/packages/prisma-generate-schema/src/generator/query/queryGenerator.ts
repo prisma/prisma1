@@ -8,7 +8,7 @@ export default class QueryGenerator extends RootGenerator {
     return 'Query'
   }
   protected generateInternal(input: IGQLType[], args: {}) {
-    const fieldMaps = input.filter(type => !type.isEnum).map(type => 
+    const fieldMaps = input.filter(type => !type.isEnum && !type.isEmbedded).map(type => 
       FieldConfigUtils.merge(
         this.generateOneQueryField(type),
         this.generateManyQueryField(type)

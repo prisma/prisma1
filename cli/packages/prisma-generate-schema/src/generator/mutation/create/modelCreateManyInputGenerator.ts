@@ -18,7 +18,7 @@ export abstract class ModelCreateOneOrManyInputGenerator extends ModelInputObjec
       fields.create = { type: this.maybeWrapList(this.generators.modelCreateInput.generate(model, {})) }
     }
 
-    if (TypeFromModelGenerator.hasUniqueField(model.fields)) {
+    if (TypeFromModelGenerator.hasUniqueField(model.fields) && !model.isEmbedded) {
       fields.connect = { type: this.maybeWrapList(this.generators.modelWhereUniqueInput.generate(model, {})) }
     }
 

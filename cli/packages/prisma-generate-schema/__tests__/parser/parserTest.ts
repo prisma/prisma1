@@ -50,7 +50,29 @@ test("Parse a type with scalars correctly.", () => {
   expectField(userType, 'anotherInt', true, false, 'Int', '10')
 })
 
-test("Parse a type with an enum correctly.", () => {
+
+test('Parse a type with @embedded directive correctly.', () => {
+  const model = `
+    type User @embedded {
+      requiredInt: Int!
+      stringList: [String!]!
+      optionalDateTime: DateTime
+      anotherInt: Int! @default(value: 10)
+    }
+  `
+
+  const types = DatamodelParser.parseFromSchemaString(model)
+
+  const userType = expectType(types, 'User')
+
+  expectField(userType, 'requiredInt', true, false, 'Int')
+  expectField(userType, 'stringList', false, true, 'String')
+  expectField(userType, 'optionalDateTime', false, false, 'DateTime')
+  expectField(userType, 'anotherInt', true, false, 'Int', '10')
+  expect(userType.isEmbedded).toBe(true)
+})
+
+test('Parse a type with an enum correctly.', () => {
   const model = `
     type User {
       enumField: UserRole!
