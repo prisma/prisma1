@@ -3,6 +3,7 @@ import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
@@ -146,7 +147,7 @@ case class DataModelValidatorImpl(
 
   def validateTypes(): Seq[DeployError] = {
     doc.objectTypes.filter(!_.isRelationTable).flatMap { objectType =>
-      ModelValidator(doc, objectType).validate()
+      ModelValidator(doc, objectType, capabilities).validate()
     }
   }
 
@@ -245,13 +246,14 @@ case class EnumValidator(doc: Document) {
   }
 }
 
-case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
+case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]) {
   def validate(): Vector[DeployError] = {
     val allValidations = Vector(
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields)
+      tryValidation(validateDuplicateFields),
+      tryValidation(validateEmbeddedDirectives.toVector)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -284,6 +286,15 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition) {
     objectType.fields
       .filter(!_.hasScalarType)
       .collect { case fieldDef if !doc.isObjectOrEnumType(fieldDef.typeName) => DeployErrors.missingType(objectType, fieldDef) }
+  }
+
+  val validateEmbeddedDirectives: Option[DeployError] = {
+    val supportsEmbeddedTypes = capabilities.contains(EmbeddedTypesCapability)
+    if (objectType.isEmbedded && !supportsEmbeddedTypes) {
+      Some(DeployErrors.embeddedTypesAreNotSupported(objectType.name))
+    } else {
+      None
+    }
   }
 
   def validateDuplicateFields: Seq[DeployError] = {

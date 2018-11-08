@@ -36,6 +36,13 @@ object DeployErrors {
     DeployError(relationField.tpe.name, relationField.name, s"The field `${relationField.name}` must provide a relation strategy.")
   }
 
+  def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      tpe.name,
+      s"The type `${tpe.name}` does not specify a back relation field. It is referenced from the type `${relationField.tpe.name}` in the field `${relationField.name}`."
+    )
+  }
+
   def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }
@@ -227,6 +234,10 @@ object DeployErrors {
 
   def schemaFileHeaderIsReferencingWrongVersion(expected: Int) = {
     DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
+  }
+
+  def embeddedTypesAreNotSupported(typeName: String) = {
+    DeployError(typeName, s"The type `${typeName}` is marked as embedded but this connector does not support embedded types.")
   }
 
   def error(fieldAndType: FieldAndType, description: String): DeployError = {

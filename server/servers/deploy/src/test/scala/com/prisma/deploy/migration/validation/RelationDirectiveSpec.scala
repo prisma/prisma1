@@ -5,6 +5,51 @@ import com.prisma.shared.models.{OnDelete, RelationStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
+  "succeed if an unambiguous relation field does not specify the relation directive" in {
+    val dataModelString =
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String
+        |  comments: [Comment!]!
+        |}
+        |
+        |type Comment {
+        |  id: ID! @id
+        |  text: String
+        |}
+      """.stripMargin
+    validate(dataModelString)
+  }
+
+  "fail if a back relation field is missing for Mongo" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  others: [Other!]!
+        |  others2: [Other2!]!
+        |}
+        |type Other {
+        |  id: ID! @id
+        |}
+        |type Other2 {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+    println(errors)
+    errors should have(size(2))
+    val (error1, error2) = (errors.head, errors(1))
+    error1.`type` should equal("Other")
+    error1.field should be(None)
+    error1.description should equal("The type `Other` does not specify a back relation field. It is referenced from the type `Model` in the field `others`.")
+    error2.`type` should equal("Other2")
+    error2.field should be(None)
+    error2.description should equal("The type `Other2` does not specify a back relation field. It is referenced from the type `Model` in the field `others2`.")
+  }
+
   "@relation settings must be detected" in {
     val dataModelString =
       """
@@ -127,22 +172,6 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val dataModel = validate(dataModelString)
     dataModel.type_!("Model").relationField_!("other").hasOneToManyRelation should be(true)
     dataModel.type_!("Model").relationField_!("other2").hasManyToManyRelation should be(true)
-  }
-  "succeed if an unambiguous relation field does not specify the relation directive" in {
-    val dataModelString =
-      """
-        |type Todo {
-        |  id: ID! @id
-        |  title: String
-        |  comments: [Comment!]!
-        |}
-        |
-        |type Comment {
-        |  id: ID! @id
-        |  text: String
-        |}
-      """.stripMargin
-    validate(dataModelString)
   }
 
   "fail if ambiguous relation fields do not specify the relation directive" in {
