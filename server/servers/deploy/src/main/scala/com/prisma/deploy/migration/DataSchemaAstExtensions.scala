@@ -115,8 +115,7 @@ object DataSchemaAstExtensions {
 
     def dbName: Option[String] = fieldDefinition.directiveArgumentAsString("db", "name")
 
-    def isUnique: Boolean =
-      fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined || fieldDefinition.directive("id").isDefined
+    def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
 
     def isRequired: Boolean = fieldDefinition.fieldType.isRequired
 

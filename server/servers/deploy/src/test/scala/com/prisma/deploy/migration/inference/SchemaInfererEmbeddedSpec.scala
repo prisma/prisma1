@@ -3,6 +3,7 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MongoRelationsCapability}
 import com.prisma.shared.models.{ConnectorCapability, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
@@ -15,14 +16,15 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       val types =
         """
           |type Todo {
-          |  comments: [Comment!]! @relation(name:"MyRelationName")
+          |  id: ID! @id
+          |  comments: [Comment!]! @relation(name: "MyRelationName", strategy: EMBED)
           |}
           |
           |type Comment @embedded {
-          |  todo: Todo!
+          |  test: String
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")

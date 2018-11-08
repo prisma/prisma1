@@ -536,7 +536,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Todo {
          |  id: ID! @id
          |  name: String!
-         |  comments: [Comment!]!
+         |  comments: [Comment!]! @relation(strategy: EMBED)
          |}
          |type Comment {
          |  id: ID! @id
