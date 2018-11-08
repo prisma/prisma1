@@ -17,7 +17,6 @@ trait SharedSlickExtensions {
   }
 
   def changeDatabaseQueryToDBIO(query: JooqQuery)(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit] = {
-    println(query.getSQL())
     jooqToDBIO(query, setParams) { ps =>
       ps.execute()
     }
