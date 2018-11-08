@@ -88,7 +88,7 @@ case class DataModelValidatorImpl(
             columnName = x.dbName,
             isList = x.isList,
             isRequired = x.isRequired,
-            isUnique = x.isUnique,
+            isUnique = UniqueDirective.value(doc, typeDef, x, capabilities).getOrElse(false),
             typeIdentifier = doc.typeIdentifierForTypename(x.fieldType),
             defaultValue = DefaultDirective.value(doc, typeDef, x, capabilities),
             behaviour = FieldDirective.behaviour.flatMap(_.value(doc, typeDef, x, capabilities)).headOption
