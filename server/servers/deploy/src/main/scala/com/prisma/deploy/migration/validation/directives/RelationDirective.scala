@@ -27,9 +27,10 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    fieldDef.hasScalarType.toOption {
+    val placementError = fieldDef.hasScalarType.toOption {
       DeployErrors.relationDirectiveNotAllowedOnScalarFields(FieldAndType(typeDef, fieldDef))
     }
+    placementError.toVector
   }
 
   override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {

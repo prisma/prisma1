@@ -21,15 +21,15 @@ object DefaultDirective extends FieldDirective[GCValue] {
       fieldDef: FieldDefinition,
       directive: Directive,
       capabilities: Set[ConnectorCapability]
-  ): Option[DeployError] = {
+  ) = {
     val placementIsInvalid = !document.isEnumType(fieldDef.typeName) && !fieldDef.isValidScalarNonListType
-    if (placementIsInvalid) {
-      return Some(DeployError(typeDef, fieldDef, "The `@default` directive must only be placed on scalar fields that are not lists."))
+    val placementError = placementIsInvalid.toOption {
+      DeployError(typeDef, fieldDef, "The `@default` directive must only be placed on scalar fields that are not lists.")
     }
 
     val value          = directive.argument_!(valueArg).value
     val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType).asInstanceOf[ScalarTypeIdentifier]
-    (typeIdentifier, value) match {
+    val typeError = (typeIdentifier, value) match {
       case (TypeIdentifier.String, _: StringValue)   => None
       case (TypeIdentifier.Float, _: FloatValue)     => None
       case (TypeIdentifier.Boolean, _: BooleanValue) => None
@@ -45,6 +45,8 @@ object DefaultDirective extends FieldDirective[GCValue] {
       }
       case (ti, v) => Some(DeployError(typeDef, fieldDef, s"The value ${v.renderPretty} is not a valid default for fields of type ${ti.code}."))
     }
+
+    (placementError ++ typeError).toVector
   }
 
   override def value(
