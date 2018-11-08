@@ -225,6 +225,10 @@ object DeployErrors {
     DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
   }
 
+  def embeddedTypesAreNotSupported(typeName: String) = {
+    DeployError(typeName, s"The type `${typeName}` is marked as embedded but this connector does not support embedded types.")
+  }
+
   def error(fieldAndType: FieldAndType, description: String): DeployError = {
     error(fieldAndType.objectType, fieldAndType.fieldDef, description)
   }
