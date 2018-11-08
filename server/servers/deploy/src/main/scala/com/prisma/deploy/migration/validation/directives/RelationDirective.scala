@@ -33,31 +33,33 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   }
 
   override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
-    validateIfRequiredStrategyIsProvided(dataModel, capabilities) ++ validateBackRelationFields(dataModel, capabilities)
+    validateIfRequiredStrategyIsProvided(dataModel, capabilities)
   }
 
-  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
-    for {
-      modelType     <- dataModel.modelTypes
-      relationField <- modelType.relationFields
-      relatedType   = relationField.relatedType
-      if capabilities.contains(MongoRelationsCapability)
-      if relationField.relatedField.isEmpty && !relatedType.isEmbedded
-    } yield {
-      DeployErrors.missingBackRelationField(relatedType, relationField)
-    }
-  }
+//  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+//    for {
+//      modelType     <- dataModel.modelTypes
+//      relationField <- modelType.relationFields
+//      relatedType   = relationField.relatedType
+//      if capabilities.contains(MongoRelationsCapability)
+//      if relationField.relatedField.isEmpty && !relatedType.isEmbedded
+//    } yield {
+//      DeployErrors.missingBackRelationField(relatedType, relationField)
+//    }
+//  }
 
   private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
     val isMongo = capabilities.contains(MongoRelationsCapability)
     for {
-      modelType     <- dataModel.modelTypes
-      relationField <- modelType.relationFields
-      relatedField  <- relationField.relatedField
-      relatedType   = relatedField.tpe
-      if isMongo || relationField.hasOneToOneRelation
-      if !modelType.isEmbedded && !relatedType.isEmbedded
-      if relationField.strategy == RelationStrategy.Auto && relatedField.strategy == RelationStrategy.Auto
+      modelType                <- dataModel.modelTypes
+      relationField            <- modelType.relationFields
+      relatedType              = relationField.relatedType
+      relatedField             = relationField.relatedField
+      strategies               = Set(relationField.strategy) ++ relatedField.map(_.strategy)
+      containsOnlyAutoStrategy = strategies == Set(RelationStrategy.Auto)
+      if containsOnlyAutoStrategy
+      if isMongo || relationField.isOneToOne
+      if modelType.isNotEmbedded || relatedType.isNotEmbedded
     } yield {
       DeployErrors.missingRelationStrategy(relationField)
     }
