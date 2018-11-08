@@ -1,6 +1,5 @@
 package com.prisma.shared.models
 
-import enumeratum.EnumEntry.{Camelcase, LowerCamelcase}
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
 object Manifestations {
