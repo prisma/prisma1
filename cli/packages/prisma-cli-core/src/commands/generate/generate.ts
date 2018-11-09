@@ -187,7 +187,7 @@ export default class GenereateCommand extends Command {
   ) {
     const schema = buildSchema(schemaString)
 
-    const generator = new JavascriptGenerator({ schema })
+    const generator = new JavascriptGenerator({ schema, internalTypes })
     const generatorTS = new TypescriptDefinitionsGenerator({
       schema,
       internalTypes,
