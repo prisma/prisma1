@@ -38,7 +38,7 @@ object GCBisonTransformer {
 
 object NodeSelectorBsonTransformer {
   implicit def whereToBson(where: NodeSelector): Bson = {
-    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
+    val fieldName = if (where.field.isId) "_id" else where.fieldName
     val value     = GCToBson(where.fieldGCValue)
 
     Filters.eq(fieldName, value)
@@ -148,8 +148,8 @@ object ArrayFilter extends FilterConditionBuilder {
     case Some(ToManyFilterSegment(rf, whereFilter)) => Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter))
   }
 
-  def fieldName(where: NodeSelector): String = where.fieldName match {
-    case "id" => "_id"
-    case x    => x
+  def fieldName(where: NodeSelector): String = where.field.isId match {
+    case true  => "_id"
+    case false => where.field.name
   }
 }
