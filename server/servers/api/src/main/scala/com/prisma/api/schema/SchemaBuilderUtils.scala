@@ -62,8 +62,8 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
   def relationFilterInputFieldHelper(field: models.RelationField, withJoin: Boolean): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
     val relatedModelInputType = withJoin match {
-      case true => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
-      case true => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeWithOutJoinRelationFilters
+      case true  => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
+      case false => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeWithOutJoinRelationFilters
     }
 
     (field.isHidden, field.isList) match {
