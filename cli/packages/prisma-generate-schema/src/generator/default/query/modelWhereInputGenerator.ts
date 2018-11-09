@@ -22,7 +22,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
   }
 
   //#region Scalar filter generator
-  public generateScalarFilterFields(field: IGQLField) : GraphQLInputFieldConfigMap  {
+  public generateScalarFilterFields(model: IGQLType, field: IGQLField) : GraphQLInputFieldConfigMap  {
     GQLAssert.isScalar(field, this.generators.scalarTypeGenerator)
 
     if (field.isList) {
@@ -100,7 +100,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
 
   //#region Relation filter generator
 
-  public generateRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap | null {
+  public generateRelationFilterFields(model: IGQLType, field: IGQLField): GraphQLInputFieldConfigMap | null {
     GQLAssert.isRelation(field, this.generators.scalarTypeGenerator)
     if (field.isList) {
       return this.generateManyRelationFilterFields(field)
@@ -128,8 +128,8 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
 
       const fieldsToAdd =
         this.generators.scalarTypeGenerator.isScalarField(field) ?
-          this.generateScalarFilterFields(field) :
-          this.generateRelationFilterFields(field)
+          this.generateScalarFilterFields(model, field) :
+          this.generateRelationFilterFields(model, field)
 
       if (fieldsToAdd !== null) {
         fields = FieldConfigUtils.merge(fields, fieldsToAdd)

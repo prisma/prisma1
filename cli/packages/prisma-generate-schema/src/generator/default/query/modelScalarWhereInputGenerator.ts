@@ -12,7 +12,7 @@ export default class ModelScalarWhereInputGenerator extends ModelWhereInputGener
     return !this.hasScalarFields(input.fields)
   }
 
-  public generateRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap | null {
+  public generateRelationFilterFields(model: IGQLType, field: IGQLField): GraphQLInputFieldConfigMap | null {
     return null;
   }
 }
