@@ -105,7 +105,8 @@ case class DataModelValidatorImpl(
           isUnique = false,
           typeIdentifier = TypeIdentifier.Cuid,
           defaultValue = None,
-          behaviour = Some(IdBehaviour(IdStrategy.Auto))
+          behaviour = Some(IdBehaviour(IdStrategy.Auto)),
+          isHidden = true
         )(_)
       }
       PrismaType(

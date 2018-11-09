@@ -59,7 +59,8 @@ case class ScalarPrismaField(
     isUnique: Boolean,
     typeIdentifier: TypeIdentifier,
     defaultValue: Option[GCValue],
-    behaviour: Option[FieldBehaviour]
+    behaviour: Option[FieldBehaviour],
+    isHidden: Boolean = false
 )(val tpe: PrismaType)
     extends PrismaField
 

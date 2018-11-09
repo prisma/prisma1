@@ -142,7 +142,8 @@ case class SchemaInferrerImpl(
               relationName = None,
               relationSide = None,
               manifestation = scalarField.columnName.map(FieldManifestation),
-              behaviour = scalarField.behaviour
+              behaviour = scalarField.behaviour,
+              isHidden = scalarField.isHidden
             ))
 
         case enumField: EnumPrismaField =>
