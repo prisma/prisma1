@@ -176,7 +176,7 @@ cd cli/packages/
 # Build prisma-generate-schema
 #
 
-if [ $generateSchemaChanged ]; then
+if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   cd prisma-generate-schema
   sleep 3.0
   ../../scripts/doubleInstall.sh
@@ -203,7 +203,7 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn install
   yarn build
   npm version $newVersion
-  yarn add prisma-generate-schema@$generateSchemaVersion
+  yarn add prisma-generate-schema@$newVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
