@@ -2,7 +2,7 @@ import { TypescriptGenerator } from './typescript-client'
 import { getExistsFlowTypes } from '../utils'
 
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment';
+import { codeComment } from '../utils/codeComment'
 
 export interface RenderOptions {
   endpoint?: string

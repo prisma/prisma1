@@ -164,17 +164,46 @@ else
 fi
 
 
+
+
+######################
+# Build cli/packages #
+######################
+
+cd cli/packages/
+
+#
+# Build prisma-generate-schema
+#
+
+if [ $generateSchemaChanged ]; then
+  cd prisma-generate-schema
+  sleep 3.0
+  ../../scripts/doubleInstall.sh
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
+export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
+
 #
 # Build prisma-client-lib
 #
 
-cd client
+cd ../../client
 export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
   yarn install
   yarn build
   npm version $newVersion
+  yarn add prisma-generate-schema@$generateSchemaVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
@@ -185,14 +214,13 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn install
 fi
 export clientVersion=$(cat package.json | jq -r '.version')
-cd ..
+cd ../cli/packages
 
 
-######################
-# Build cli/packages #
-######################
 
-cd cli/packages/
+########################
+# Back to cli/packages #
+########################
 
 #
 # Build prisma-yml
@@ -262,27 +290,6 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCL
   cd ..
 fi
 export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '.version')
-
-
-#
-# Build prisma-generate-schema
-#
-
-if [ $generateSchemaChanged ]; then
-  cd prisma-generate-schema
-  sleep 3.0
-  ../../scripts/doubleInstall.sh
-  yarn build
-  npm version $newVersion
-
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
-  else
-    npm publish --tag $CIRCLE_BRANCH
-  fi
-  cd ..
-fi
-export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
 
 
 #

@@ -5,7 +5,6 @@ import {
   isObjectType,
   isEnumType,
   GraphQLObjectType,
-  GraphQLSchema,
   GraphQLUnionType,
   GraphQLInterfaceType,
   GraphQLInputObjectType,
@@ -152,9 +151,6 @@ export type ${type.name}_Output = string`
     },
   }
 
-  constructor({ schema }: { schema: GraphQLSchema }) {
-    super({ schema })
-  }
   format(code: string, options: prettier.Options = {}) {
     return prettier.format(code, {
       ...options,
@@ -165,7 +161,22 @@ export type ${type.name}_Output = string`
     return `type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
   }
 
+  renderModels() {
+    const models = this.internalTypes
+      .map(
+        i => `{
+    name: '${i.name}',
+    embedded: ${i.embedded}
+  }`,
+      )
+      .join(',\n')
+
+    return `export const models = [${models}]`
+  }
+
   render(options?: RenderOptions) {
+    const queries = this.renderQueries()
+    const mutations = this.renderMutations()
     return this.format(this.compile`\
 ${this.renderImports()}
 
@@ -191,25 +202,25 @@ ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
    * Queries
   */
 
-${this.renderQueries()};
+${queries}${queries.length > 0 ? ';' : ''}
 
   /**
    * Mutations
   */
 
-${this.renderMutations()};
+${mutations}${mutations.length > 0 ? ';' : ''}
 
 
   /**
    * Subscriptions
   */
 
-  $subscribe: Subscription
+  $subscribe: Subscription;
 
 }
 
 export interface Subscription {
-${this.renderSubscriptions()};
+${this.renderSubscriptions()}
 }
 
 ${this.renderClientConstructor}
@@ -225,6 +236,13 @@ ${this.renderTypes()}
 */
 
 ${this.renderExports(options)}
+
+
+/**
+ * Model Metadata
+*/
+
+${this.renderModels()}
 `)
   }
   renderClientConstructor() {
@@ -254,7 +272,7 @@ import { typeDefs } from './prisma-schema'`
       }
     }
 
-    return `{typeDefs${endpointString}${secretString}}`
+    return `{typeDefs, models, ${endpointString}${secretString}}`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
@@ -287,7 +305,7 @@ export const prisma = new Prisma()`
   renderMutations() {
     const mutationType = this.schema.getMutationType()
     if (!mutationType) {
-      return '{}'
+      return ''
     }
     return this.renderMainMethodFields(
       'mutation',
@@ -418,6 +436,7 @@ export const prisma = new Prisma()`
       renderFunction: false,
       isMutation,
       operation: false,
+      embedded: false,
     })
   }
 
@@ -446,6 +465,7 @@ export const prisma = new Prisma()`
           isMutation,
           isSubscription: operation === 'subscription',
           operation: true,
+          embedded: false,
         })}`
       })
       .join(';\n')
@@ -472,6 +492,17 @@ export const prisma = new Prisma()`
     return `Promise<T>`
   }
 
+  isEmbeddedType(
+    type: GraphQLScalarType | GraphQLObjectType | GraphQLEnumType,
+  ) {
+    const internalType = this.internalTypes.find(i => i.name === type.name)
+    if (internalType && internalType.embedded) {
+      return true
+    }
+
+    return false
+  }
+
   renderInterfaceOrObject(
     type: GraphQLObjectTypeRef | GraphQLInputObjectType | GraphQLInterfaceType,
     node = true,
@@ -481,10 +512,14 @@ export const prisma = new Prisma()`
     const fieldDefinition = Object.keys(fields)
       .filter(f => {
         const deepType = this.getDeepType(fields[f].type)
-        return node ? !isObjectType(deepType) : true
+        return node
+          ? !isObjectType(deepType) || this.isEmbeddedType(deepType)
+          : true
       })
       .map(f => {
         const field = fields[f]
+        const deepType = this.getDeepType(fields[f].type)
+        const embedded = this.isEmbeddedType(deepType)
         return `  ${this.renderFieldName(field, node)}: ${this.renderFieldType({
           field,
           node,
@@ -494,6 +529,7 @@ export const prisma = new Prisma()`
           isMutation: false,
           isSubscription: subscription,
           operation: false,
+          embedded,
         })}`
       })
       .join(`${this.lineBreakDelimiter}\n`)
@@ -543,7 +579,8 @@ export const prisma = new Prisma()`
     renderFunction,
     isMutation = false,
     isSubscription = false,
-    operation = false
+    operation = false,
+    embedded = false,
   }: {
     field
     node: boolean
@@ -553,6 +590,7 @@ export const prisma = new Prisma()`
     isMutation: boolean
     isSubscription?: boolean
     operation: boolean
+    embedded: boolean
     // node: boolean = true,
     // input: boolean = false,
     // partial: boolean = false,
@@ -578,8 +616,15 @@ export const prisma = new Prisma()`
 
     const addSubscription = !partial && isSubscription && !isScalar
 
-    if (operation && !node && !isInput && !isList && !isScalar && !addSubscription && !partial && !isOptional) {
-      return `${typeString}Promise`
+    if (
+      operation &&
+      !node &&
+      !isInput &&
+      !isList &&
+      !isScalar &&
+      !addSubscription
+    ) {
+      return typeString === 'Node' ? `Node` : `${typeString}Promise`
     }
 
     if ((node || isList) && !isScalar && !addSubscription) {
@@ -631,6 +676,10 @@ export const prisma = new Prisma()`
 
     if (partial) {
       typeString = `${this.partialType}<${typeString}>`
+    }
+
+    if (embedded && node) {
+      return typeString
     }
 
     if (node && (!isInput || isScalar)) {
@@ -711,7 +760,9 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${promise && !subscription ? 'Promise' : ''}${subscription ? 'Subscription' : ''}${
+        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${
+            promise && !subscription ? 'Promise' : ''
+          }${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
               ? ` extends ${actualInterfaces.map(i => i.name).join(', ')}`
               : ''

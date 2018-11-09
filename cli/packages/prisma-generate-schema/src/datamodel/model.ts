@@ -1,5 +1,17 @@
-import { GraphQLScalarType, GraphQLNonNull, GraphQLList, GraphQLObjectType, GraphQLType } from "graphql"
-import { GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID } from 'graphql/type'
+import {
+  GraphQLScalarType,
+  GraphQLNonNull,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLType,
+} from 'graphql'
+import {
+  GraphQLString,
+  GraphQLInt,
+  GraphQLFloat,
+  GraphQLBoolean,
+  GraphQLID,
+} from 'graphql/type'
 
 // tslint:disable:max-classes-per-file
 
@@ -8,11 +20,11 @@ import { GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID } fr
  */
 export interface IGQLField {
   /**
-   * The name of thi sfield. 
+   * The name of thi sfield.
    */
   name: string
   /**
-   * The type of this field. A value of 
+   * The type of this field. A value of
    * type string indicates a scalar type.
    */
   type: string | IGQLType
@@ -23,7 +35,7 @@ export interface IGQLField {
   /**
    * Inidicates if this field holds
    * a list of values. Can be set for
-   * scalars or relations. 
+   * scalars or relations.
    */
   isList: boolean
   /**
@@ -36,12 +48,12 @@ export interface IGQLField {
    */
   relatedField: IGQLField | null
   /**
-   * This is only set for relations with a name given via 
-   * an directive. 
+   * This is only set for relations with a name given via
+   * an directive.
    */
   relationName: string | null
   /**
-   * Indicates if this field is uniqe across the model. 
+   * Indicates if this field is uniqe across the model.
    */
   isUnique: boolean
 }
@@ -51,7 +63,11 @@ export interface IGQLField {
  */
 export interface IGQLType {
   /**
-   * Indicates if this is an enum type. 
+   * Indicates if this is an embedded type.
+   */
+  embedded: boolean
+  /**
+   * Indicates if this is an enum type.
    */
   isEnum: boolean
   /**
@@ -60,7 +76,7 @@ export interface IGQLType {
   name: string
   /**
    * A list of all fields of this type.
-   * 
+   *
    * If this is an enum type, only the name properties of each
    * field are relevant.
    */
@@ -68,7 +84,7 @@ export interface IGQLType {
 }
 
 /**
- * Internal manifestations of the interfaces declared above. 
+ * Internal manifestations of the interfaces declared above.
  */
 export class GQLFieldBase implements IGQLField {
   public name: string
@@ -97,13 +113,13 @@ export class GQLScalarField extends GQLFieldBase {
     super(name, type, isRequired)
   }
 }
-export class GQLOneRelationField extends GQLFieldBase  {
+export class GQLOneRelationField extends GQLFieldBase {
   constructor(name: string, type: IGQLType, isRequired?: boolean) {
     super(name, type, isRequired)
   }
 }
 
-// TODO: Create abstract base class for testing. 
+// TODO: Create abstract base class for testing.
 export class GQLMultiRelationField extends GQLFieldBase {
   constructor(name: string, type: IGQLType, isRequired?: boolean) {
     super(name, type, isRequired)
