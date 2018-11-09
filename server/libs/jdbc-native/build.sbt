@@ -7,10 +7,9 @@ buildNativeLib := {
 
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jdbc-native-rs/")
+  val build = sys.env.get("RUST_BACKTRACE").map(_ => "build").getOrElse("build-release")
 
-  Process("make build", nativePath) ! logger
-
-  if ((Process("make build", nativePath) ! logger) != 0) {
+  if ((Process(s"make $build", nativePath) ! logger) != 0) {
     sys.error("Rust library build failed.")
   }
 }
