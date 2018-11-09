@@ -103,8 +103,7 @@ case class FieldTemplate(
 }
 
 object Field {
-  val magicalBackRelationPrefix     = "_MagicalBackRelation_"
-  private val excludedFromMutations = Vector("updatedAt", "createdAt", "id")
+  val magicalBackRelationPrefix = "_MagicalBackRelation_"
 }
 
 sealed trait Field {
@@ -129,7 +128,6 @@ sealed trait Field {
   lazy val isScalarNonList: Boolean   = isScalar && !isList
   lazy val isRelationList: Boolean    = isRelation && isList
   lazy val isRelationNonList: Boolean = isRelation && !isList
-  lazy val isWritable: Boolean        = !isReadonly && !Field.excludedFromMutations.contains(name)
   lazy val isVisible: Boolean         = !isHidden
 
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
@@ -228,11 +226,12 @@ case class ScalarField(
 ) extends Field {
   import template._
 
-  override def isRelation     = false
-  override def isScalar       = true
-  override def relationOpt    = None
-  override val dbName: String = manifestation.map(_.dbName).getOrElse(name)
-  override def isUnique       = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
+  override def isRelation      = false
+  override def isScalar        = true
+  override def relationOpt     = None
+  override val dbName: String  = manifestation.map(_.dbName).getOrElse(name)
+  override def isUnique        = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
+  lazy val isWritable: Boolean = !isReadonly && !isId && !isCreatedAt && !isUpdatedAt
 
   override def schema = model.schema
 
