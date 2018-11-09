@@ -12,7 +12,7 @@ services:
         databases:
           default:
             connector: mongo
-            migrations: true
+            migrations: false
             host: test-db
             port: 27017
             user: prisma
