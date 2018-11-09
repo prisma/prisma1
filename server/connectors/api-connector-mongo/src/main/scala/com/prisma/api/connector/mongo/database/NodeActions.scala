@@ -105,7 +105,7 @@ trait NodeActions extends NodeSingleQueries {
     val nonListValues: List[(String, GCValue)] =
       mutaction.model.scalarNonListFields
         .filter(field => mutaction.nonListArgs.hasArgFor(field) && mutaction.nonListArgs.getFieldValue(field.name).get != NullGCValue)
-        .map(field => field.name -> mutaction.nonListArgs.getFieldValue(field).get)
+        .map(field => field.dbName -> mutaction.nonListArgs.getFieldValue(field).get)
 
     val id = StringIdGCValue(ObjectId.get().toString)
     val currentParent: NodeAddress = (parent, relationField) match {
@@ -129,7 +129,7 @@ trait NodeActions extends NodeSingleQueries {
       val rf: RelationField = t._1
       val documents         = t._2.map(_.toBsonDocument)
 
-      if (rf.isList) map + (rf.name -> BsonArray(documents)) else map + (rf.name -> documents.head)
+      if (rf.isList) map + (rf.dbName -> BsonArray(documents)) else map + (rf.dbName -> documents.head)
     }
 
     (nestedCreateFields, childResults)

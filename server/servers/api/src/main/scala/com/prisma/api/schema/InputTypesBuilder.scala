@@ -144,7 +144,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
             name = typeName,
             fieldsFn = () => {
               List(
-                InputField[Any]("where", computeInputObjectTypeForScalarWhere_!(subModel)),
+                InputField[Any]("where", FilterObjectTypeBuilder(subModel, project).scalarFilterObjectType.get),
                 InputField[Any]("data", updateManyDataInput)
               )
             }
@@ -255,9 +255,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       )
     }
   }
-
-  protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any]         = FilterObjectTypeBuilder(model, project).filterObjectType
-  protected def computeInputObjectTypeForScalarWhere_!(model: Model): InputObjectType[Any] = FilterObjectTypeBuilder(model, project).scalarFilterObjectType.get
 
   protected def computeInputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
     val uniqueFields = model.scalarFields.filter(f => f.isUnique && f.isVisible)
