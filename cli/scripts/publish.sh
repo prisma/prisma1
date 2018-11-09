@@ -143,7 +143,7 @@ if [ -z "$CIRCLE_TAG" ]; then
   # calc next minor
   step=1
   if [ $CIRCLE_BRANCH == "alpha" ]; then
-    step=4
+    step=5
   fi
   nextMinor=$((latestMinor + step))
 
@@ -239,7 +239,7 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   else
     npm publish --tag $CIRCLE_BRANCH
   fi
-  yarn install
+  ../../scripts/doubleInstall.sh
   cd ..
 fi
 export ymlVersion=$(cat prisma-yml/package.json | jq -r '.version')
