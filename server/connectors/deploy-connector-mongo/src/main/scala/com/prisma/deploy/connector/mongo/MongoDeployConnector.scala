@@ -11,7 +11,7 @@ import org.mongodb.scala.MongoClient
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTest: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def fieldRequirements: FieldRequirementsInterface = null
+  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementImpl(isActive)
 
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
