@@ -88,17 +88,25 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
       }
     )
 
-  lazy val scalarFilterObjectType: InputObjectType[Any] =
-    InputObjectType[Any](
-      s"${model.name}ScalarWhereInput",
-      fieldsFn = () => {
-        List(
-          InputField("AND", OptionInputType(ListInputType(scalarFilterObjectType)), description = FilterArguments.ANDFilter.description),
-          InputField("OR", OptionInputType(ListInputType(scalarFilterObjectType)), description = FilterArguments.ORFilter.description),
-          InputField("NOT", OptionInputType(ListInputType(scalarFilterObjectType)), description = FilterArguments.NOTFilter.description)
-        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField)
-      }
-    )
+  lazy val scalarFilterObjectType: Option[InputObjectType[Any]] = {
+    val fields = model.scalarFields.filterNot(_.isHidden)
+
+    if (fields.nonEmpty) {
+      Some(
+        InputObjectType[Any](
+          s"${model.name}ScalarWhereInput",
+          fieldsFn = () => {
+            List(
+              InputField("AND", OptionInputType(ListInputType(scalarFilterObjectType.get)), description = FilterArguments.ANDFilter.description),
+              InputField("OR", OptionInputType(ListInputType(scalarFilterObjectType.get)), description = FilterArguments.ORFilter.description),
+              InputField("NOT", OptionInputType(ListInputType(scalarFilterObjectType.get)), description = FilterArguments.NOTFilter.description)
+            ) ++ fields.flatMap(SchemaBuilderUtils.mapToInputField)
+          }
+        ))
+    } else {
+      None
+    }
+  }
 
   // this is just a dummy schema as it is only used by graphiql to validate the subscription input
   lazy val subscriptionFilterObjectType: InputObjectType[Any] =
