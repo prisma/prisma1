@@ -230,7 +230,7 @@ export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish yml"
   cd prisma-yml
-  yarn install
+  ../../scripts/doubleInstall.sh
   yarn build
   npm version $newVersion
 
@@ -307,7 +307,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   sleep 0.2
   yarn add prisma-client-lib@$clientVersion
   sleep 0.3
-  yarn install
+  ../../scripts/doubleInstall.sh
 
   # new docker tag
   sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
@@ -335,7 +335,7 @@ cd prisma-cli
 cp ../../../README.md ./
 sleep 0.5
 yarn add prisma-cli-engine@$engineVersion prisma-cli-core@$coreVersion
-yarn install
+../../scripts/doubleInstall.sh
 yarn build
 
 if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
