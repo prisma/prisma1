@@ -200,8 +200,8 @@ export class EndpointDialog {
             : undefined,
         user: credentials.user,
         password: credentials.password,
-        migrations: !credentials.alreadyData,
-        rawAccess: true,
+        migrations: !credentials.alreadyData && credentials.type !== 'mongo',
+        rawAccess: credentials.type !== 'mongo',
       }),
     )
     return yaml
