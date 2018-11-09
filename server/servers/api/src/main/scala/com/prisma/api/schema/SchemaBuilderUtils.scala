@@ -56,23 +56,20 @@ object SchemaBuilderUtils {
 }
 
 case class FilterObjectTypeBuilder(model: Model, project: Project) {
-  def mapToRelationFilterInputField(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+  def mapToRelationFilterInputField(field: models.RelationField)                     = relationFilterInputFieldHelper(field, withJoin = true)
+  def mapToRelationFilterInputFieldWithoutJoinRelations(field: models.RelationField) = relationFilterInputFieldHelper(field, withJoin = false)
+
+  def relationFilterInputFieldHelper(field: models.RelationField, withJoin: Boolean): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
-    val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
+    val relatedModelInputType = withJoin match {
+      case true  => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
+      case false => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeWithOutJoinRelationFilters
+    }
 
     (field.isHidden, field.isList) match {
-      case (true, _) =>
-        List.empty
-
-      case (_, false) =>
-        List(InputField(field.name, OptionInputType(relatedModelInputType)))
-
-      case (_, true) =>
-        FilterArguments
-          .getFieldFilters(field)
-          .map { filter =>
-            InputField(field.name + filter.name, OptionInputType(relatedModelInputType))
-          }
+      case (true, _)  => List.empty
+      case (_, false) => List(InputField(field.name, OptionInputType(relatedModelInputType)))
+      case (_, true)  => FilterArguments.getFieldFilters(field).map(f => InputField(field.name + f.name, OptionInputType(relatedModelInputType)))
     }
   }
 
@@ -118,7 +115,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
           InputField("NOT", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.NOTFilter.description)
         ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
           .filter(_.relatedModel_!.isEmbedded)
-          .flatMap(mapToRelationFilterInputField)
+          .flatMap(mapToRelationFilterInputFieldWithoutJoinRelations)
       }
     )
 
