@@ -106,7 +106,7 @@
     "opn": "^5.1.0",
     "pause": "^0.1.0",
     "portfinder": "^1.0.13",
-    "prisma-client-lib": "1.21.0-test.3",
+    "prisma-client-lib": "1.21.0-test.4",
     "prisma-db-introspection": "0.0.7",
     "prisma-generate-schema": "1.22.0-alpha.0.1",
     "prisma-json-schema": "0.1.3",

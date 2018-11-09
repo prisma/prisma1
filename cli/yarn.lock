@@ -5762,10 +5762,10 @@ pretty-format@^23.6.0:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-client-lib@1.21.0-test.3:
-  version "1.21.0-test.3"
-  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-1.21.0-test.3.tgz#372b41700a6076038c0aafbc82e1c8fb651bbf81"
-  integrity sha512-jx4v9XlxNc9kv23Y7ZBFKlg9MEdy2FBa6tkg7jW9F8RVI77BgKgqKmKkyFmYpUFvkS0P2432tKS77t1vvfR1Jw==
+prisma-client-lib@1.21.0-test.4:
+  version "1.21.0-test.4"
+  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-1.21.0-test.4.tgz#54b1f2ad706d3878e1eb204c9edcbd2605d86731"
+  integrity sha512-aO0UFxt8zQMjzHfVG3XKu0iya/KeUnB10f3MVnln1ZoGcOe7gCjkSGZG5GgAzT5vamoudsMx8cc8sE6rATTOPg==
   dependencies:
     "@types/node" "^10.12.0"
     "@types/prettier" "^1.13.2"
@@ -5775,22 +5775,11 @@ prisma-client-lib@1.21.0-test.3:
     jsonwebtoken "^8.3.0"
     lodash.flatten "^4.4.0"
     prettier "^1.14.3"
-    prisma-generate-schema "1.21.0-alpha.52"
+    prisma-generate-schema "1.22.0-alpha.0.1"
     subscriptions-transport-ws "^0.9.15"
     uppercamelcase "^3.0.0"
     ws "^6.1.0"
     zen-observable "^0.8.10"
-
-prisma-generate-schema@1.21.0-alpha.52:
-  version "1.21.0-alpha.52"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.21.0-alpha.52.tgz#d8be399a9491071f809f4c67d8500ee081c772f2"
-  integrity sha512-Nt7NOjGIdiSH4rJj3jczYz/L1cQbOeCEOtki6zR1d+4GfZnrP0H5+pI0ax2nqfMQAFKYaJn8fisuVQItL/Gy4w==
-  dependencies:
-    graphql "^14.0.2"
-    pluralize "^7.0.0"
-    popsicle "10"
-    tslint-config-prettier "^1.15.0"
-    tslint-eslint-rules "^5.4.0"
 
 prisma-json-schema@0.1.3:
   version "0.1.3"
