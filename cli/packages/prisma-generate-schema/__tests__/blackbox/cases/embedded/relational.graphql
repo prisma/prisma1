@@ -20,11 +20,13 @@ type BatchPayload {
 type Child {
   c: String
   friendsOpt(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Friend!]
+  jointOpt: Joint!
 }
 
 input ChildCreateInput {
   c: String
   friendsOpt: FriendCreateManyInput
+  jointOpt: JointCreateOneInput!
 }
 
 input ChildCreateManyInput {
@@ -145,6 +147,7 @@ input ChildSubscriptionWhereInput {
 input ChildUpdateDataInput {
   c: String
   friendsOpt: FriendUpdateManyInput
+  jointOpt: JointUpdateOneRequiredInput
 }
 
 input ChildUpdateManyDataInput {
@@ -245,6 +248,7 @@ input ChildWhereInput {
   friendsOpt_every: FriendWhereInput
   friendsOpt_some: FriendWhereInput
   friendsOpt_none: FriendWhereInput
+  jointOpt: JointWhereInput
 }
 
 input ChildWhereUniqueInput {
@@ -674,6 +678,11 @@ input JointCreateManyInput {
   connect: [JointWhereUniqueInput!]
 }
 
+input JointCreateOneInput {
+  create: JointCreateInput
+  connect: JointWhereUniqueInput
+}
+
 """
 An edge in a connection.
 """
@@ -896,9 +905,21 @@ input JointUpdateManyWithWhereNestedInput {
   data: JointUpdateManyDataInput!
 }
 
+input JointUpdateOneRequiredInput {
+  create: JointCreateInput
+  connect: JointWhereUniqueInput
+  update: JointUpdateDataInput
+  upsert: JointUpsertNestedInput
+}
+
 input JointUpdateWithWhereUniqueNestedInput {
   where: JointWhereUniqueInput!
   data: JointUpdateDataInput!
+}
+
+input JointUpsertNestedInput {
+  update: JointUpdateDataInput!
+  create: JointCreateInput!
 }
 
 input JointUpsertWithWhereUniqueNestedInput {

@@ -7,9 +7,10 @@ import DocumentGenerator from '../../src/generator/document'
 import AstTools from '../../src/util/astTools'
 import * as fs from 'fs'
 import * as path from 'path'
+import { DatabaseType } from '../../src/index';
 
-export default function blackBoxTest(name: string, databaseType: string) {
-  const generator = databaseType === 'relational' ?
+export default function blackBoxTest(name: string, databaseType: DatabaseType) {
+  const generator = databaseType === DatabaseType.relational ?
      new RelationalGenerator() :
      new DocumentGenerator()
 
@@ -46,9 +47,9 @@ const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
 
 for (const testName of testNames) {
   test(`Generates schema for ${testName}/relational correctly`, () => {
-    blackBoxTest(testName, 'relational')
+    blackBoxTest(testName, DatabaseType.relational)
   })
   test(`Generates schema for ${testName}/document correctly`, () => {
-    blackBoxTest(testName, 'document')
+    blackBoxTest(testName, DatabaseType.document)
   })
 }

@@ -8,6 +8,7 @@ type Parent {
 type Child @embedded {
   c: String @unique
   friendsOpt: [Friend!]! @mongoRelation(field: "friends")
+  jointOpt: Joint! @mongoRelation(field: "joint")
 }
 
 type Friend {
