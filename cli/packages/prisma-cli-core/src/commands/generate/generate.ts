@@ -14,6 +14,7 @@ import {
 import { spawnSync } from 'npm-run'
 import generateCRUDSchemaString, {
   parseInternalTypes,
+  DatabaseType,
 } from 'prisma-generate-schema'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
 import { IGQLType } from 'prisma-generate-schema/dist/src/datamodel/model'
@@ -75,7 +76,14 @@ export default class GenereateCommand extends Command {
             )} is missing in your prisma.yml`,
           )
         }
-        schemaString = generateCRUDSchemaString(this.definition.typesString!)
+        const databaseType =
+          this.definition.definition!.databaseType! === 'document'
+            ? DatabaseType.document
+            : DatabaseType.relational
+        schemaString = generateCRUDSchemaString(
+          this.definition.typesString!,
+          databaseType,
+        )
       }
 
       if (!schemaString) {
