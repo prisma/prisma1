@@ -74,7 +74,7 @@ export default abstract class DatamodelParser {
           }
         }
 
-        const embedded =
+        const isEmbedded =
           type.directives &&
           type.directives.length > 0 &&
           type.directives.some(d => d.name.value === 'embedded')
@@ -83,7 +83,7 @@ export default abstract class DatamodelParser {
           name: type.name.value,
           fields,
           isEnum: false,
-          embedded,
+          isEmbedded,
         })
       }
     }
@@ -105,7 +105,7 @@ export default abstract class DatamodelParser {
           name: type.name.value,
           fields: values,
           isEnum: true,
-          embedded: false,
+          isEmbedded: false,
         })
       }
     }

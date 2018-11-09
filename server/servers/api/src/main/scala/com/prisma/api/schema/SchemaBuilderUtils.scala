@@ -88,6 +88,26 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
       }
     )
 
+  lazy val scalarFilterObjectType: Option[InputObjectType[Any]] = {
+    val fields = model.scalarFields.filterNot(_.isHidden)
+
+    if (fields.nonEmpty) {
+      Some(
+        InputObjectType[Any](
+          s"${model.name}ScalarWhereInput",
+          fieldsFn = () => {
+            List(
+              InputField("AND", OptionInputType(ListInputType(scalarFilterObjectType.get)), description = FilterArguments.ANDFilter.description),
+              InputField("OR", OptionInputType(ListInputType(scalarFilterObjectType.get)), description = FilterArguments.ORFilter.description),
+              InputField("NOT", OptionInputType(ListInputType(scalarFilterObjectType.get)), description = FilterArguments.NOTFilter.description)
+            ) ++ fields.flatMap(SchemaBuilderUtils.mapToInputField)
+          }
+        ))
+    } else {
+      None
+    }
+  }
+
   lazy val filterObjectTypeWithOutJoinRelationFilters: InputObjectType[Any] =
     InputObjectType[Any](
       s"${model.name}WhereInput",
@@ -99,18 +119,6 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
         ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
           .filter(_.relatedModel_!.isEmbedded)
           .flatMap(mapToRelationFilterInputField)
-      }
-    )
-
-  lazy val scalarFilterObjectType: InputObjectType[Any] =
-    InputObjectType[Any](
-      s"${model.name}ScalarWhereInput",
-      fieldsFn = () => {
-        List(
-          InputField("AND", OptionInputType(ListInputType(scalarFilterObjectType)), description = FilterArguments.ANDFilter.description),
-          InputField("OR", OptionInputType(ListInputType(scalarFilterObjectType)), description = FilterArguments.ORFilter.description),
-          InputField("NOT", OptionInputType(ListInputType(scalarFilterObjectType)), description = FilterArguments.NOTFilter.description)
-        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField)
       }
     )
 

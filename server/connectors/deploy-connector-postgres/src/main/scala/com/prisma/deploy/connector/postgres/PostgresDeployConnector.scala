@@ -29,7 +29,8 @@ case class PostgresDeployConnector(
   override lazy val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(managementDatabase)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = PostgresDeployMutactionExecutor(projectDatabase)
   override def capabilities: Set[ConnectorCapability] = {
-    val common: Set[ConnectorCapability] = Set(LegacyDataModelCapability, TransactionalExecutionCapability, JoinRelationsFilterCapability)
+    val common: Set[ConnectorCapability] =
+      Set(LegacyDataModelCapability, TransactionalExecutionCapability, JoinRelationsFilterCapability, IntrospectionCapability)
     if (isActive) common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability) else common
   }
 
