@@ -9,7 +9,7 @@ import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.ApiConnectorCapability.LegacyDataModelCapability
+import com.prisma.shared.models.ApiConnectorCapability.{IntrospectionCapability, LegacyDataModelCapability}
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, UpdateSecrets}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.future.FutureUtils.FutureOr
@@ -84,7 +84,7 @@ case class DeployMutation(
   }
 
   private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (!deployConnector.isActive) {
+    if (!deployConnector.isActive && deployConnector.capabilities.contains(IntrospectionCapability)) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
         Future.successful(Good(()))
