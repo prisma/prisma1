@@ -5,6 +5,7 @@ import { printSchema } from 'graphql/utilities'
 import { GraphQLSchema } from 'graphql/type'
 import { IGQLType } from './datamodel/model'
 
+// Please replace this type as needed.
 export enum DatabaseType {
   document = 'document',
   relational = 'relational'

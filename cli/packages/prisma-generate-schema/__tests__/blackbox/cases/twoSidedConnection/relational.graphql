@@ -440,21 +440,6 @@ enum AWithCOrderByInput {
   createdAt_DESC
 }
 
-input AWithCScalarWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [AWithCScalarWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithCScalarWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithCScalarWhereInput!]
-}
-
 type AWithCSubscriptionPayload {
   mutation: MutationType!
   node: AWithC
@@ -495,7 +480,6 @@ input AWithCSubscriptionWhereInput {
 
 input AWithCUpdateManyWithoutXInput {
   create: [AWithCCreateWithoutXInput!]
-  deleteMany: [AWithCScalarWhereInput!]
 }
 
 input AWithCWhereInput {
@@ -2210,21 +2194,6 @@ enum BWithCOrderByInput {
   createdAt_DESC
 }
 
-input BWithCScalarWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [BWithCScalarWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithCScalarWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithCScalarWhereInput!]
-}
-
 type BWithCSubscriptionPayload {
   mutation: MutationType!
   node: BWithC
@@ -2265,7 +2234,6 @@ input BWithCSubscriptionWhereInput {
 
 input BWithCUpdateManyWithoutXInput {
   create: [BWithCCreateWithoutXInput!]
-  deleteMany: [BWithCScalarWhereInput!]
 }
 
 input BWithCWhereInput {
@@ -3981,21 +3949,6 @@ enum CWithCOrderByInput {
   createdAt_DESC
 }
 
-input CWithCScalarWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [CWithCScalarWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithCScalarWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithCScalarWhereInput!]
-}
-
 type CWithCSubscriptionPayload {
   mutation: MutationType!
   node: CWithC
@@ -4036,7 +3989,6 @@ input CWithCSubscriptionWhereInput {
 
 input CWithCUpdateManyWithoutXInput {
   create: [CWithCCreateWithoutXInput!]
-  deleteMany: [CWithCScalarWhereInput!]
 }
 
 input CWithCWhereInput {

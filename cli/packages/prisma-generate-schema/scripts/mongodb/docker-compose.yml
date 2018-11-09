@@ -1,7 +1,7 @@
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.21-alpha
+    image: prismagraphql/prisma:1.22-alpha
     restart: always
     ports:
     - "4466:4466"
@@ -17,7 +17,7 @@ services:
             port: 27017
             user: prisma
             password: prisma
-            migrations: true
+            migrations: false
             rawAccess: true
   mongo:
     image: mongo:3.6
