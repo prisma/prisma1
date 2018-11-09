@@ -166,7 +166,7 @@ export type ${type.name}_Output = string`
       .map(
         i => `{
     name: '${i.name}',
-    embedded: ${i.embedded}
+    embedded: ${i.isEmbedded}
   }`,
       )
       .join(',\n')
@@ -496,7 +496,7 @@ export const prisma = new Prisma()`
     type: GraphQLScalarType | GraphQLObjectType | GraphQLEnumType,
   ) {
     const internalType = this.internalTypes.find(i => i.name === type.name)
-    if (internalType && internalType.embedded) {
+    if (internalType && internalType.isEmbedded) {
       return true
     }
 
