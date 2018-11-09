@@ -25,7 +25,6 @@ export class FlowGenerator extends TypescriptGenerator {
 ${codeComment}
 
 import type { GraphQLSchema, DocumentNode } from 'graphql'
-import type { IResolvers } from 'graphql-tools/dist/Interfaces'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
 import { makePrismaClientClass } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`

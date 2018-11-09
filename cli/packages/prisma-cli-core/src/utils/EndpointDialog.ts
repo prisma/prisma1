@@ -326,6 +326,8 @@ export class EndpointDialog {
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       case 'Demo server':
+        writeDockerComposeYml = false
+
         const demoCluster = await this.getDemoCluster()
         if (!demoCluster) {
           return this.getEndpoint()

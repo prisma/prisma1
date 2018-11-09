@@ -6,7 +6,7 @@
 
 **Prisma is a data layer for modern applications**. It replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. Prisma is used to build **GraphQL servers, REST APIs & more**.
 
-- **Prisma client for various languages** such as JavaScript, TypeScript,Flow, Go.
+- **Prisma client for various languages** such as JavaScript, TypeScript, Flow, Go.
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
 - **Type-safe database access** including filters, aggregations, pagination and transactions.
 - **Realtime event systems for your database** to get notified about database events.
@@ -180,10 +180,10 @@ const postsByAuthor = await prisma
 
 Here is what you can do next:
 
-- [Use Prisma with an existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/)
-- [Build an app with Prisma client](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/)
+- [Use Prisma with an existing database](https://www.prisma.io/docs/get-started/01-setting-up-prisma-existing-database-a003/)
+- [Build an app with Prisma client](https://www.prisma.io/docs/get-started/03-build-graphql-servers-with-prisma-e001/)
 - [Check out some examples](#examples)
-- [Read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
+- [Read more about how Prisma works](https://www.prisma.io/docs/understand-prisma/prisma-introduction-what-why-how-j9ff/).
 
 ## Examples
 

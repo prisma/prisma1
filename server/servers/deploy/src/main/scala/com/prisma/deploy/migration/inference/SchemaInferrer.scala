@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
+import com.prisma.deploy.connector.{InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
@@ -37,7 +37,11 @@ case class SchemaInferrerImpl(
     inferredTables: InferredTables
 ) extends AwaitUtils {
 
-  def infer(): Schema = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
+  def infer(): Schema = {
+    val schemaWithOutOptionalBackrelations = Schema(modelTemplates = nextModels.toList, relationTemplates = nextRelations.toList, enums = nextEnums.toList)
+    val schemaWithOptionalBackRelations    = MissingBackRelations.add(schemaWithOutOptionalBackrelations)
+    schemaWithOptionalBackRelations
+  }
 
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.types.map { prismaType =>
