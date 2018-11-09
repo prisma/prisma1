@@ -74,7 +74,7 @@ case class DeployMutation(
     val validator = if (deployConnector.capabilities.contains(LegacyDataModelCapability)) {
       LegacyDataModelValidator
     } else {
-      LegacyDataModelValidator
+      DataModelValidatorImpl
     }
     validator.validate(args.types, deployConnector.fieldRequirements, deployConnector.capabilities)
   }

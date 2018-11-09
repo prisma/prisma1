@@ -3,6 +3,7 @@ package com.prisma.shared.models
 import java.util.UUID
 
 import com.prisma.gc_values._
+import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.MigrationStepsJsonFormatter._
@@ -233,6 +234,39 @@ object ProjectJsonFormatter {
   implicit val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
   implicit lazy val enum                                            = Json.format[Enum]
 
+  implicit val fieldBehaviourFormat = new OFormat[FieldBehaviour] {
+    val discriminatorField = "type"
+    val strategyField      = "strategy"
+    val createdAtType      = "createdAt"
+    val updatedAtType      = "updatedAt"
+    val idType             = "id"
+    val scalarListType     = "scalarList"
+
+    override def writes(behaviour: FieldBehaviour) = {
+      behaviour match {
+        case CreatedAtBehaviour            => Json.obj(discriminatorField -> createdAtType)
+        case UpdatedAtBehaviour            => Json.obj(discriminatorField -> updatedAtType)
+        case IdBehaviour(strategy)         => Json.obj(discriminatorField -> idType, strategyField -> strategy.entryName)
+        case ScalarListBehaviour(strategy) => Json.obj(discriminatorField -> scalarListType, strategyField -> strategy.entryName)
+      }
+    }
+
+    override def reads(json: JsValue): JsResult[FieldBehaviour] = {
+      (json \ discriminatorField).validate[String].flatMap {
+        case `createdAtType` => JsSuccess(CreatedAtBehaviour)
+        case `updatedAtType` => JsSuccess(UpdatedAtBehaviour)
+        case `idType` =>
+          (json \ strategyField).validate[String].map { strategy =>
+            IdBehaviour(IdStrategy.withName(strategy))
+          }
+        case `scalarListType` =>
+          (json \ strategyField).validate[String].map { strategy =>
+            ScalarListBehaviour(ScalarListStrategy.withName(strategy))
+          }
+      }
+    }
+  }
+
   implicit val fieldReads: Reads[FieldTemplate] = (
     (JsPath \ "name").read[String] and
       (JsPath \ "typeIdentifier").read[TypeIdentifier.Value] and
@@ -246,7 +280,8 @@ object ProjectJsonFormatter {
       (JsPath \ "defaultValue").readNullable[GCValue] and
       readEitherPathNullable[String](JsPath \ "relation" \ "name", JsPath \ "relationName") and
       (JsPath \ "relationSide").readNullable[RelationSide.Value] and
-      (JsPath \ "manifestation").readNullable[FieldManifestation]
+      (JsPath \ "manifestation").readNullable[FieldManifestation] and
+      (JsPath \ "behaviour").readNullable[FieldBehaviour]
   )(FieldTemplate.apply _)
 
   implicit val fieldWrites: Writes[FieldTemplate] = (
@@ -262,7 +297,8 @@ object ProjectJsonFormatter {
       (JsPath \ "defaultValue").writeNullable[GCValue] and
       (JsPath \ "relationName").writeNullable[String] and
       (JsPath \ "relationSide").writeNullable[RelationSide.Value] and
-      (JsPath \ "manifestation").writeNullable[FieldManifestation]
+      (JsPath \ "manifestation").writeNullable[FieldManifestation] and
+      (JsPath \ "behaviour").writeNullable[FieldBehaviour]
   )(unlift(FieldTemplate.unapply))
 
   implicit val modelReads: Reads[ModelTemplate] = (
@@ -284,14 +320,16 @@ object ProjectJsonFormatter {
   val schemaReads: Reads[Schema] = (
     (JsPath \ "models").read[List[ModelTemplate]] and
       (JsPath \ "relations").read[List[RelationTemplate]] and
-      (JsPath \ "enums").read[List[Enum]]
+      (JsPath \ "enums").read[List[Enum]] and
+      (JsPath \ "version").readNullable[String]
   )(Schema.apply _)
 
   val schemaWrites: Writes[Schema] = (
     (JsPath \ "models").write[List[ModelTemplate]] and
       (JsPath \ "relations").write[List[RelationTemplate]] and
-      (JsPath \ "enums").write[List[Enum]]
-  )(s => (s.modelTemplates, s.relationTemplates, s.enums))
+      (JsPath \ "enums").write[List[Enum]] and
+      (JsPath \ "version").writeNullable[String]
+  )(s => (s.modelTemplates, s.relationTemplates, s.enums, s.version))
 
   implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat         = Json.format[Project]
