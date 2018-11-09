@@ -143,7 +143,7 @@ if [ -z "$CIRCLE_TAG" ]; then
   # calc next minor
   step=1
   if [ $CIRCLE_BRANCH == "alpha" ]; then
-    step=5
+    step=6
   fi
   nextMinor=$((latestMinor + step))
 
