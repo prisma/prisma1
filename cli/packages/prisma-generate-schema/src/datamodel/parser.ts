@@ -1,6 +1,7 @@
 import { IGQLType, IGQLField, GQLScalarField } from './model'
 import { parse } from 'graphql'
 
+const isIdDirectiveKey = 'id'
 const isUniqueDirectiveKey = 'unique'
 const defaultValueDirectiveKey = 'default'
 const relationDirectiveKey = 'relation'
@@ -43,7 +44,9 @@ export default abstract class DatamodelParser {
 
             const isUnique =
               field.directives.filter(
-                x => x.name.value === isUniqueDirectiveKey,
+                x =>
+                  x.name.value === isUniqueDirectiveKey ||
+                  x.name.value === isIdDirectiveKey,
               ).length > 0
             const defaultValueDirective = field.directives.filter(
               x => x.name.value === defaultValueDirectiveKey,

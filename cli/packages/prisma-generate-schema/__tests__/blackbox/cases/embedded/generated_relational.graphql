@@ -1,0 +1,681 @@
+type AggregateFriend {
+  count: Int!
+}
+
+type AggregateJoint {
+  count: Int!
+}
+
+type AggregateParent {
+  count: Int!
+}
+
+type BatchPayload {
+  count: Long!
+}
+
+type Child {
+  c: String
+  friendsOpt(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Friend!]
+  jointOpt: Joint!
+}
+
+input ChildCreateInput {
+  c: String
+  friendsOpt: FriendCreateManyInput
+  jointOpt: JointCreateOneInput!
+}
+
+input ChildCreateManyInput {
+  create: [ChildCreateInput!]
+}
+
+type ChildPreviousValues {
+  c: String
+}
+
+input ChildScalarWhereInput {
+  c: String
+  c_not: String
+  c_in: [String!]
+  c_not_in: [String!]
+  c_lt: String
+  c_lte: String
+  c_gt: String
+  c_gte: String
+  c_contains: String
+  c_not_contains: String
+  c_starts_with: String
+  c_not_starts_with: String
+  c_ends_with: String
+  c_not_ends_with: String
+  AND: [ChildScalarWhereInput!]
+  OR: [ChildScalarWhereInput!]
+  NOT: [ChildScalarWhereInput!]
+}
+
+type ChildSubscriptionPayload {
+  mutation: MutationType!
+  node: Child
+  updatedFields: [String!]
+  previousValues: ChildPreviousValues
+}
+
+input ChildSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: ChildWhereInput
+  AND: [ChildSubscriptionWhereInput!]
+  OR: [ChildSubscriptionWhereInput!]
+  NOT: [ChildSubscriptionWhereInput!]
+}
+
+input ChildUpdateDataInput {
+  c: String
+  friendsOpt: FriendUpdateManyInput
+  jointOpt: JointUpdateOneRequiredInput
+}
+
+input ChildUpdateManyDataInput {
+  c: String
+}
+
+input ChildUpdateManyInput {
+  create: [ChildCreateInput!]
+  update: [ChildUpdateWithWhereUniqueNestedInput!]
+  upsert: [ChildUpsertWithWhereUniqueNestedInput!]
+  delete: [ChildWhereUniqueInput!]
+  deleteMany: [ChildScalarWhereInput!]
+  updateMany: [ChildUpdateManyWithWhereNestedInput!]
+}
+
+input ChildUpdateManyWithWhereNestedInput {
+  where: ChildScalarWhereInput!
+  data: ChildUpdateManyDataInput!
+}
+
+input ChildUpdateWithWhereUniqueNestedInput {
+  where: ChildWhereUniqueInput!
+  data: ChildUpdateDataInput!
+}
+
+input ChildUpsertWithWhereUniqueNestedInput {
+  where: ChildWhereUniqueInput!
+  update: ChildUpdateDataInput!
+  create: ChildCreateInput!
+}
+
+input ChildWhereInput {
+  c: String
+  c_not: String
+  c_in: [String!]
+  c_not_in: [String!]
+  c_lt: String
+  c_lte: String
+  c_gt: String
+  c_gte: String
+  c_contains: String
+  c_not_contains: String
+  c_starts_with: String
+  c_not_starts_with: String
+  c_ends_with: String
+  c_not_ends_with: String
+  friendsOpt_every: FriendWhereInput
+  friendsOpt_some: FriendWhereInput
+  friendsOpt_none: FriendWhereInput
+  jointOpt: JointWhereInput
+  AND: [ChildWhereInput!]
+  OR: [ChildWhereInput!]
+  NOT: [ChildWhereInput!]
+}
+
+input ChildWhereUniqueInput {
+  c: String
+}
+
+type Friend {
+  f: String
+  test: String
+}
+
+type FriendConnection {
+  pageInfo: PageInfo!
+  edges: [FriendEdge]!
+  aggregate: AggregateFriend!
+}
+
+input FriendCreateInput {
+  f: String
+  test: String
+}
+
+input FriendCreateManyInput {
+  create: [FriendCreateInput!]
+  connect: [FriendWhereUniqueInput!]
+}
+
+type FriendEdge {
+  node: Friend!
+  cursor: String!
+}
+
+enum FriendOrderByInput {
+  f_ASC
+  f_DESC
+  test_ASC
+  test_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type FriendPreviousValues {
+  f: String
+  test: String
+}
+
+input FriendScalarWhereInput {
+  f: String
+  f_not: String
+  f_in: [String!]
+  f_not_in: [String!]
+  f_lt: String
+  f_lte: String
+  f_gt: String
+  f_gte: String
+  f_contains: String
+  f_not_contains: String
+  f_starts_with: String
+  f_not_starts_with: String
+  f_ends_with: String
+  f_not_ends_with: String
+  test: String
+  test_not: String
+  test_in: [String!]
+  test_not_in: [String!]
+  test_lt: String
+  test_lte: String
+  test_gt: String
+  test_gte: String
+  test_contains: String
+  test_not_contains: String
+  test_starts_with: String
+  test_not_starts_with: String
+  test_ends_with: String
+  test_not_ends_with: String
+  AND: [FriendScalarWhereInput!]
+  OR: [FriendScalarWhereInput!]
+  NOT: [FriendScalarWhereInput!]
+}
+
+type FriendSubscriptionPayload {
+  mutation: MutationType!
+  node: Friend
+  updatedFields: [String!]
+  previousValues: FriendPreviousValues
+}
+
+input FriendSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: FriendWhereInput
+  AND: [FriendSubscriptionWhereInput!]
+  OR: [FriendSubscriptionWhereInput!]
+  NOT: [FriendSubscriptionWhereInput!]
+}
+
+input FriendUpdateDataInput {
+  f: String
+  test: String
+}
+
+input FriendUpdateInput {
+  f: String
+  test: String
+}
+
+input FriendUpdateManyDataInput {
+  f: String
+  test: String
+}
+
+input FriendUpdateManyInput {
+  create: [FriendCreateInput!]
+  update: [FriendUpdateWithWhereUniqueNestedInput!]
+  upsert: [FriendUpsertWithWhereUniqueNestedInput!]
+  delete: [FriendWhereUniqueInput!]
+  connect: [FriendWhereUniqueInput!]
+  disconnect: [FriendWhereUniqueInput!]
+  deleteMany: [FriendScalarWhereInput!]
+  updateMany: [FriendUpdateManyWithWhereNestedInput!]
+}
+
+input FriendUpdateManyMutationInput {
+  f: String
+  test: String
+}
+
+input FriendUpdateManyWithWhereNestedInput {
+  where: FriendScalarWhereInput!
+  data: FriendUpdateManyDataInput!
+}
+
+input FriendUpdateWithWhereUniqueNestedInput {
+  where: FriendWhereUniqueInput!
+  data: FriendUpdateDataInput!
+}
+
+input FriendUpsertWithWhereUniqueNestedInput {
+  where: FriendWhereUniqueInput!
+  update: FriendUpdateDataInput!
+  create: FriendCreateInput!
+}
+
+input FriendWhereInput {
+  f: String
+  f_not: String
+  f_in: [String!]
+  f_not_in: [String!]
+  f_lt: String
+  f_lte: String
+  f_gt: String
+  f_gte: String
+  f_contains: String
+  f_not_contains: String
+  f_starts_with: String
+  f_not_starts_with: String
+  f_ends_with: String
+  f_not_ends_with: String
+  test: String
+  test_not: String
+  test_in: [String!]
+  test_not_in: [String!]
+  test_lt: String
+  test_lte: String
+  test_gt: String
+  test_gte: String
+  test_contains: String
+  test_not_contains: String
+  test_starts_with: String
+  test_not_starts_with: String
+  test_ends_with: String
+  test_not_ends_with: String
+  AND: [FriendWhereInput!]
+  OR: [FriendWhereInput!]
+  NOT: [FriendWhereInput!]
+}
+
+input FriendWhereUniqueInput {
+  f: String
+}
+
+type Joint {
+  id: ID!
+  j: String
+}
+
+type JointConnection {
+  pageInfo: PageInfo!
+  edges: [JointEdge]!
+  aggregate: AggregateJoint!
+}
+
+input JointCreateInput {
+  j: String
+}
+
+input JointCreateManyInput {
+  create: [JointCreateInput!]
+  connect: [JointWhereUniqueInput!]
+}
+
+input JointCreateOneInput {
+  create: JointCreateInput
+  connect: JointWhereUniqueInput
+}
+
+type JointEdge {
+  node: Joint!
+  cursor: String!
+}
+
+enum JointOrderByInput {
+  id_ASC
+  id_DESC
+  j_ASC
+  j_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type JointPreviousValues {
+  id: ID!
+  j: String
+}
+
+input JointScalarWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  j: String
+  j_not: String
+  j_in: [String!]
+  j_not_in: [String!]
+  j_lt: String
+  j_lte: String
+  j_gt: String
+  j_gte: String
+  j_contains: String
+  j_not_contains: String
+  j_starts_with: String
+  j_not_starts_with: String
+  j_ends_with: String
+  j_not_ends_with: String
+  AND: [JointScalarWhereInput!]
+  OR: [JointScalarWhereInput!]
+  NOT: [JointScalarWhereInput!]
+}
+
+type JointSubscriptionPayload {
+  mutation: MutationType!
+  node: Joint
+  updatedFields: [String!]
+  previousValues: JointPreviousValues
+}
+
+input JointSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: JointWhereInput
+  AND: [JointSubscriptionWhereInput!]
+  OR: [JointSubscriptionWhereInput!]
+  NOT: [JointSubscriptionWhereInput!]
+}
+
+input JointUpdateDataInput {
+  j: String
+}
+
+input JointUpdateInput {
+  j: String
+}
+
+input JointUpdateManyDataInput {
+  j: String
+}
+
+input JointUpdateManyInput {
+  create: [JointCreateInput!]
+  update: [JointUpdateWithWhereUniqueNestedInput!]
+  upsert: [JointUpsertWithWhereUniqueNestedInput!]
+  delete: [JointWhereUniqueInput!]
+  connect: [JointWhereUniqueInput!]
+  disconnect: [JointWhereUniqueInput!]
+  deleteMany: [JointScalarWhereInput!]
+  updateMany: [JointUpdateManyWithWhereNestedInput!]
+}
+
+input JointUpdateManyMutationInput {
+  j: String
+}
+
+input JointUpdateManyWithWhereNestedInput {
+  where: JointScalarWhereInput!
+  data: JointUpdateManyDataInput!
+}
+
+input JointUpdateOneRequiredInput {
+  create: JointCreateInput
+  update: JointUpdateDataInput
+  upsert: JointUpsertNestedInput
+  connect: JointWhereUniqueInput
+}
+
+input JointUpdateWithWhereUniqueNestedInput {
+  where: JointWhereUniqueInput!
+  data: JointUpdateDataInput!
+}
+
+input JointUpsertNestedInput {
+  update: JointUpdateDataInput!
+  create: JointCreateInput!
+}
+
+input JointUpsertWithWhereUniqueNestedInput {
+  where: JointWhereUniqueInput!
+  update: JointUpdateDataInput!
+  create: JointCreateInput!
+}
+
+input JointWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  j: String
+  j_not: String
+  j_in: [String!]
+  j_not_in: [String!]
+  j_lt: String
+  j_lte: String
+  j_gt: String
+  j_gte: String
+  j_contains: String
+  j_not_contains: String
+  j_starts_with: String
+  j_not_starts_with: String
+  j_ends_with: String
+  j_not_ends_with: String
+  AND: [JointWhereInput!]
+  OR: [JointWhereInput!]
+  NOT: [JointWhereInput!]
+}
+
+input JointWhereUniqueInput {
+  id: ID
+}
+
+scalar Long
+
+type Mutation {
+  createParent(data: ParentCreateInput!): Parent!
+  updateParent(data: ParentUpdateInput!, where: ParentWhereUniqueInput!): Parent
+  updateManyParents(data: ParentUpdateManyMutationInput!, where: ParentWhereInput): BatchPayload!
+  upsertParent(where: ParentWhereUniqueInput!, create: ParentCreateInput!, update: ParentUpdateInput!): Parent!
+  deleteParent(where: ParentWhereUniqueInput!): Parent
+  deleteManyParents(where: ParentWhereInput): BatchPayload!
+  createFriend(data: FriendCreateInput!): Friend!
+  updateFriend(data: FriendUpdateInput!, where: FriendWhereUniqueInput!): Friend
+  updateManyFriends(data: FriendUpdateManyMutationInput!, where: FriendWhereInput): BatchPayload!
+  upsertFriend(where: FriendWhereUniqueInput!, create: FriendCreateInput!, update: FriendUpdateInput!): Friend!
+  deleteFriend(where: FriendWhereUniqueInput!): Friend
+  deleteManyFriends(where: FriendWhereInput): BatchPayload!
+  createJoint(data: JointCreateInput!): Joint!
+  updateJoint(data: JointUpdateInput!, where: JointWhereUniqueInput!): Joint
+  updateManyJoints(data: JointUpdateManyMutationInput!, where: JointWhereInput): BatchPayload!
+  upsertJoint(where: JointWhereUniqueInput!, create: JointCreateInput!, update: JointUpdateInput!): Joint!
+  deleteJoint(where: JointWhereUniqueInput!): Joint
+  deleteManyJoints(where: JointWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Parent {
+  id: ID!
+  p: String
+  children: [Child!]
+  j(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Joint!]
+}
+
+type ParentConnection {
+  pageInfo: PageInfo!
+  edges: [ParentEdge]!
+  aggregate: AggregateParent!
+}
+
+input ParentCreateInput {
+  p: String
+  children: ChildCreateManyInput
+  j: JointCreateManyInput
+}
+
+type ParentEdge {
+  node: Parent!
+  cursor: String!
+}
+
+enum ParentOrderByInput {
+  id_ASC
+  id_DESC
+  p_ASC
+  p_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type ParentPreviousValues {
+  id: ID!
+  p: String
+}
+
+type ParentSubscriptionPayload {
+  mutation: MutationType!
+  node: Parent
+  updatedFields: [String!]
+  previousValues: ParentPreviousValues
+}
+
+input ParentSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: ParentWhereInput
+  AND: [ParentSubscriptionWhereInput!]
+  OR: [ParentSubscriptionWhereInput!]
+  NOT: [ParentSubscriptionWhereInput!]
+}
+
+input ParentUpdateInput {
+  p: String
+  children: ChildUpdateManyInput
+  j: JointUpdateManyInput
+}
+
+input ParentUpdateManyMutationInput {
+  p: String
+}
+
+input ParentWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  p: String
+  p_not: String
+  p_in: [String!]
+  p_not_in: [String!]
+  p_lt: String
+  p_lte: String
+  p_gt: String
+  p_gte: String
+  p_contains: String
+  p_not_contains: String
+  p_starts_with: String
+  p_not_starts_with: String
+  p_ends_with: String
+  p_not_ends_with: String
+  children_every: ChildWhereInput
+  children_some: ChildWhereInput
+  children_none: ChildWhereInput
+  j_every: JointWhereInput
+  j_some: JointWhereInput
+  j_none: JointWhereInput
+  AND: [ParentWhereInput!]
+  OR: [ParentWhereInput!]
+  NOT: [ParentWhereInput!]
+}
+
+input ParentWhereUniqueInput {
+  id: ID
+  p: String
+}
+
+type Query {
+  parent(where: ParentWhereUniqueInput!): Parent
+  parents(where: ParentWhereInput, orderBy: ParentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Parent]!
+  parentsConnection(where: ParentWhereInput, orderBy: ParentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ParentConnection!
+  friend(where: FriendWhereUniqueInput!): Friend
+  friends(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Friend]!
+  friendsConnection(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FriendConnection!
+  joint(where: JointWhereUniqueInput!): Joint
+  joints(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Joint]!
+  jointsConnection(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): JointConnection!
+  node(id: ID!): Node
+}
+
+type Subscription {
+  parent(where: ParentSubscriptionWhereInput): ParentSubscriptionPayload
+  child(where: ChildSubscriptionWhereInput): ChildSubscriptionPayload
+  friend(where: FriendSubscriptionWhereInput): FriendSubscriptionPayload
+  joint(where: JointSubscriptionWhereInput): JointSubscriptionPayload
+}

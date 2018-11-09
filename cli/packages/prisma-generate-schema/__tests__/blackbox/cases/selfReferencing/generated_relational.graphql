@@ -1,0 +1,1415 @@
+type AggregateMultiSelfReferencingB {
+  count: Int!
+}
+
+type AggregateMultiSelfReferencingBWithId {
+  count: Int!
+}
+
+type AggregateMultiSelfReferencingC {
+  count: Int!
+}
+
+type AggregateMultiSelfReferencingCWithId {
+  count: Int!
+}
+
+type AggregateSelfReferencingA {
+  count: Int!
+}
+
+type AggregateSelfReferencingAWithId {
+  count: Int!
+}
+
+type AggregateSelfReferencingB {
+  count: Int!
+}
+
+type AggregateSelfReferencingBWithId {
+  count: Int!
+}
+
+type AggregateSelfReferencingC {
+  count: Int!
+}
+
+type AggregateSelfReferencingCWithId {
+  count: Int!
+}
+
+type BatchPayload {
+  count: Long!
+}
+
+scalar Long
+
+type MultiSelfReferencingB {
+  a: MultiSelfReferencingB
+  b: MultiSelfReferencingB
+}
+
+type MultiSelfReferencingBConnection {
+  pageInfo: PageInfo!
+  edges: [MultiSelfReferencingBEdge]!
+  aggregate: AggregateMultiSelfReferencingB!
+}
+
+input MultiSelfReferencingBCreateInput {
+  a: MultiSelfReferencingBCreateOneWithoutBInput
+  b: MultiSelfReferencingBCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBCreateOneWithoutAInput {
+  create: MultiSelfReferencingBCreateWithoutAInput
+}
+
+input MultiSelfReferencingBCreateOneWithoutBInput {
+  create: MultiSelfReferencingBCreateWithoutBInput
+}
+
+input MultiSelfReferencingBCreateWithoutAInput {
+  b: MultiSelfReferencingBCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBCreateWithoutBInput {
+  a: MultiSelfReferencingBCreateOneWithoutBInput
+}
+
+type MultiSelfReferencingBEdge {
+  node: MultiSelfReferencingB!
+  cursor: String!
+}
+
+enum MultiSelfReferencingBOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type MultiSelfReferencingBSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingB
+  updatedFields: [String!]
+}
+
+input MultiSelfReferencingBSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingBWhereInput
+  AND: [MultiSelfReferencingBSubscriptionWhereInput!]
+  OR: [MultiSelfReferencingBSubscriptionWhereInput!]
+  NOT: [MultiSelfReferencingBSubscriptionWhereInput!]
+}
+
+input MultiSelfReferencingBWhereInput {
+  a: MultiSelfReferencingBWhereInput
+  b: MultiSelfReferencingBWhereInput
+  AND: [MultiSelfReferencingBWhereInput!]
+  OR: [MultiSelfReferencingBWhereInput!]
+  NOT: [MultiSelfReferencingBWhereInput!]
+}
+
+type MultiSelfReferencingBWithId {
+  id: ID!
+  a: MultiSelfReferencingBWithId
+  b: MultiSelfReferencingBWithId
+}
+
+type MultiSelfReferencingBWithIdConnection {
+  pageInfo: PageInfo!
+  edges: [MultiSelfReferencingBWithIdEdge]!
+  aggregate: AggregateMultiSelfReferencingBWithId!
+}
+
+input MultiSelfReferencingBWithIdCreateInput {
+  a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
+  b: MultiSelfReferencingBWithIdCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdCreateOneWithoutAInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutAInput
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+}
+
+input MultiSelfReferencingBWithIdCreateOneWithoutBInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutBInput
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+}
+
+input MultiSelfReferencingBWithIdCreateWithoutAInput {
+  b: MultiSelfReferencingBWithIdCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdCreateWithoutBInput {
+  a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
+}
+
+type MultiSelfReferencingBWithIdEdge {
+  node: MultiSelfReferencingBWithId!
+  cursor: String!
+}
+
+enum MultiSelfReferencingBWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type MultiSelfReferencingBWithIdPreviousValues {
+  id: ID!
+}
+
+type MultiSelfReferencingBWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingBWithId
+  updatedFields: [String!]
+  previousValues: MultiSelfReferencingBWithIdPreviousValues
+}
+
+input MultiSelfReferencingBWithIdSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingBWithIdWhereInput
+  AND: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
+  OR: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
+  NOT: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
+}
+
+input MultiSelfReferencingBWithIdUpdateInput {
+  a: MultiSelfReferencingBWithIdUpdateOneWithoutBInput
+  b: MultiSelfReferencingBWithIdUpdateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdUpdateOneWithoutAInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutAInput
+  update: MultiSelfReferencingBWithIdUpdateWithoutADataInput
+  upsert: MultiSelfReferencingBWithIdUpsertWithoutAInput
+  delete: Boolean
+  disconnect: Boolean
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+}
+
+input MultiSelfReferencingBWithIdUpdateOneWithoutBInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutBInput
+  update: MultiSelfReferencingBWithIdUpdateWithoutBDataInput
+  upsert: MultiSelfReferencingBWithIdUpsertWithoutBInput
+  delete: Boolean
+  disconnect: Boolean
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+}
+
+input MultiSelfReferencingBWithIdUpdateWithoutADataInput {
+  b: MultiSelfReferencingBWithIdUpdateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdUpdateWithoutBDataInput {
+  a: MultiSelfReferencingBWithIdUpdateOneWithoutBInput
+}
+
+input MultiSelfReferencingBWithIdUpsertWithoutAInput {
+  update: MultiSelfReferencingBWithIdUpdateWithoutADataInput!
+  create: MultiSelfReferencingBWithIdCreateWithoutAInput!
+}
+
+input MultiSelfReferencingBWithIdUpsertWithoutBInput {
+  update: MultiSelfReferencingBWithIdUpdateWithoutBDataInput!
+  create: MultiSelfReferencingBWithIdCreateWithoutBInput!
+}
+
+input MultiSelfReferencingBWithIdWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a: MultiSelfReferencingBWithIdWhereInput
+  b: MultiSelfReferencingBWithIdWhereInput
+  AND: [MultiSelfReferencingBWithIdWhereInput!]
+  OR: [MultiSelfReferencingBWithIdWhereInput!]
+  NOT: [MultiSelfReferencingBWithIdWhereInput!]
+}
+
+input MultiSelfReferencingBWithIdWhereUniqueInput {
+  id: ID
+}
+
+type MultiSelfReferencingC {
+  a(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC!]
+  b(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC!]
+}
+
+type MultiSelfReferencingCConnection {
+  pageInfo: PageInfo!
+  edges: [MultiSelfReferencingCEdge]!
+  aggregate: AggregateMultiSelfReferencingC!
+}
+
+input MultiSelfReferencingCCreateInput {
+  a: MultiSelfReferencingCCreateManyWithoutBInput
+  b: MultiSelfReferencingCCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCCreateManyWithoutAInput {
+  create: [MultiSelfReferencingCCreateWithoutAInput!]
+}
+
+input MultiSelfReferencingCCreateManyWithoutBInput {
+  create: [MultiSelfReferencingCCreateWithoutBInput!]
+}
+
+input MultiSelfReferencingCCreateWithoutAInput {
+  b: MultiSelfReferencingCCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCCreateWithoutBInput {
+  a: MultiSelfReferencingCCreateManyWithoutBInput
+}
+
+type MultiSelfReferencingCEdge {
+  node: MultiSelfReferencingC!
+  cursor: String!
+}
+
+enum MultiSelfReferencingCOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type MultiSelfReferencingCSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingC
+  updatedFields: [String!]
+}
+
+input MultiSelfReferencingCSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingCWhereInput
+  AND: [MultiSelfReferencingCSubscriptionWhereInput!]
+  OR: [MultiSelfReferencingCSubscriptionWhereInput!]
+  NOT: [MultiSelfReferencingCSubscriptionWhereInput!]
+}
+
+input MultiSelfReferencingCWhereInput {
+  a_every: MultiSelfReferencingCWhereInput
+  a_some: MultiSelfReferencingCWhereInput
+  a_none: MultiSelfReferencingCWhereInput
+  b_every: MultiSelfReferencingCWhereInput
+  b_some: MultiSelfReferencingCWhereInput
+  b_none: MultiSelfReferencingCWhereInput
+  AND: [MultiSelfReferencingCWhereInput!]
+  OR: [MultiSelfReferencingCWhereInput!]
+  NOT: [MultiSelfReferencingCWhereInput!]
+}
+
+type MultiSelfReferencingCWithId {
+  id: ID!
+  a(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId!]
+  b(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId!]
+}
+
+type MultiSelfReferencingCWithIdConnection {
+  pageInfo: PageInfo!
+  edges: [MultiSelfReferencingCWithIdEdge]!
+  aggregate: AggregateMultiSelfReferencingCWithId!
+}
+
+input MultiSelfReferencingCWithIdCreateInput {
+  a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
+  b: MultiSelfReferencingCWithIdCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdCreateManyWithoutAInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutAInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+}
+
+input MultiSelfReferencingCWithIdCreateManyWithoutBInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutBInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+}
+
+input MultiSelfReferencingCWithIdCreateWithoutAInput {
+  b: MultiSelfReferencingCWithIdCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdCreateWithoutBInput {
+  a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
+}
+
+type MultiSelfReferencingCWithIdEdge {
+  node: MultiSelfReferencingCWithId!
+  cursor: String!
+}
+
+enum MultiSelfReferencingCWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type MultiSelfReferencingCWithIdPreviousValues {
+  id: ID!
+}
+
+input MultiSelfReferencingCWithIdScalarWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  AND: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  OR: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  NOT: [MultiSelfReferencingCWithIdScalarWhereInput!]
+}
+
+type MultiSelfReferencingCWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingCWithId
+  updatedFields: [String!]
+  previousValues: MultiSelfReferencingCWithIdPreviousValues
+}
+
+input MultiSelfReferencingCWithIdSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingCWithIdWhereInput
+  AND: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
+  OR: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
+  NOT: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
+}
+
+input MultiSelfReferencingCWithIdUpdateInput {
+  a: MultiSelfReferencingCWithIdUpdateManyWithoutBInput
+  b: MultiSelfReferencingCWithIdUpdateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdUpdateManyWithoutAInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutAInput!]
+  delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutAInput!]
+  upsert: [MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutAInput!]
+  deleteMany: [MultiSelfReferencingCWithIdScalarWhereInput!]
+}
+
+input MultiSelfReferencingCWithIdUpdateManyWithoutBInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutBInput!]
+  delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutBInput!]
+  upsert: [MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutBInput!]
+  deleteMany: [MultiSelfReferencingCWithIdScalarWhereInput!]
+}
+
+input MultiSelfReferencingCWithIdUpdateWithoutADataInput {
+  b: MultiSelfReferencingCWithIdUpdateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdUpdateWithoutBDataInput {
+  a: MultiSelfReferencingCWithIdUpdateManyWithoutBInput
+}
+
+input MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutAInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  data: MultiSelfReferencingCWithIdUpdateWithoutADataInput!
+}
+
+input MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutBInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  data: MultiSelfReferencingCWithIdUpdateWithoutBDataInput!
+}
+
+input MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutAInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  update: MultiSelfReferencingCWithIdUpdateWithoutADataInput!
+  create: MultiSelfReferencingCWithIdCreateWithoutAInput!
+}
+
+input MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutBInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  update: MultiSelfReferencingCWithIdUpdateWithoutBDataInput!
+  create: MultiSelfReferencingCWithIdCreateWithoutBInput!
+}
+
+input MultiSelfReferencingCWithIdWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a_every: MultiSelfReferencingCWithIdWhereInput
+  a_some: MultiSelfReferencingCWithIdWhereInput
+  a_none: MultiSelfReferencingCWithIdWhereInput
+  b_every: MultiSelfReferencingCWithIdWhereInput
+  b_some: MultiSelfReferencingCWithIdWhereInput
+  b_none: MultiSelfReferencingCWithIdWhereInput
+  AND: [MultiSelfReferencingCWithIdWhereInput!]
+  OR: [MultiSelfReferencingCWithIdWhereInput!]
+  NOT: [MultiSelfReferencingCWithIdWhereInput!]
+}
+
+input MultiSelfReferencingCWithIdWhereUniqueInput {
+  id: ID
+}
+
+type Mutation {
+  createSelfReferencingAWithId(data: SelfReferencingAWithIdCreateInput!): SelfReferencingAWithId!
+  updateSelfReferencingAWithId(data: SelfReferencingAWithIdUpdateInput!, where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
+  updateManySelfReferencingAWithIds(data: SelfReferencingAWithIdUpdateManyMutationInput!, where: SelfReferencingAWithIdWhereInput): BatchPayload!
+  upsertSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!, create: SelfReferencingAWithIdCreateInput!, update: SelfReferencingAWithIdUpdateInput!): SelfReferencingAWithId!
+  deleteSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
+  deleteManySelfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput): BatchPayload!
+  createSelfReferencingBWithId(data: SelfReferencingBWithIdCreateInput!): SelfReferencingBWithId!
+  updateSelfReferencingBWithId(data: SelfReferencingBWithIdUpdateInput!, where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
+  updateManySelfReferencingBWithIds(data: SelfReferencingBWithIdUpdateManyMutationInput!, where: SelfReferencingBWithIdWhereInput): BatchPayload!
+  upsertSelfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!, create: SelfReferencingBWithIdCreateInput!, update: SelfReferencingBWithIdUpdateInput!): SelfReferencingBWithId!
+  deleteSelfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
+  deleteManySelfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput): BatchPayload!
+  createSelfReferencingCWithId(data: SelfReferencingCWithIdCreateInput!): SelfReferencingCWithId!
+  updateSelfReferencingCWithId(data: SelfReferencingCWithIdUpdateInput!, where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
+  updateManySelfReferencingCWithIds(data: SelfReferencingCWithIdUpdateManyMutationInput!, where: SelfReferencingCWithIdWhereInput): BatchPayload!
+  upsertSelfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!, create: SelfReferencingCWithIdCreateInput!, update: SelfReferencingCWithIdUpdateInput!): SelfReferencingCWithId!
+  deleteSelfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
+  deleteManySelfReferencingCWithIds(where: SelfReferencingCWithIdWhereInput): BatchPayload!
+  createSelfReferencingA(data: SelfReferencingACreateInput!): SelfReferencingA!
+  updateSelfReferencingA(data: SelfReferencingAUpdateInput!, where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
+  updateManySelfReferencingAs(data: SelfReferencingAUpdateManyMutationInput!, where: SelfReferencingAWhereInput): BatchPayload!
+  upsertSelfReferencingA(where: SelfReferencingAWhereUniqueInput!, create: SelfReferencingACreateInput!, update: SelfReferencingAUpdateInput!): SelfReferencingA!
+  deleteSelfReferencingA(where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
+  deleteManySelfReferencingAs(where: SelfReferencingAWhereInput): BatchPayload!
+  createSelfReferencingB(data: SelfReferencingBCreateInput!): SelfReferencingB!
+  updateSelfReferencingB(data: SelfReferencingBUpdateInput!, where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
+  updateManySelfReferencingBs(data: SelfReferencingBUpdateManyMutationInput!, where: SelfReferencingBWhereInput): BatchPayload!
+  upsertSelfReferencingB(where: SelfReferencingBWhereUniqueInput!, create: SelfReferencingBCreateInput!, update: SelfReferencingBUpdateInput!): SelfReferencingB!
+  deleteSelfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
+  deleteManySelfReferencingBs(where: SelfReferencingBWhereInput): BatchPayload!
+  createSelfReferencingC(data: SelfReferencingCCreateInput!): SelfReferencingC!
+  updateSelfReferencingC(data: SelfReferencingCUpdateInput!, where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
+  updateManySelfReferencingCs(data: SelfReferencingCUpdateManyMutationInput!, where: SelfReferencingCWhereInput): BatchPayload!
+  upsertSelfReferencingC(where: SelfReferencingCWhereUniqueInput!, create: SelfReferencingCCreateInput!, update: SelfReferencingCUpdateInput!): SelfReferencingC!
+  deleteSelfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
+  deleteManySelfReferencingCs(where: SelfReferencingCWhereInput): BatchPayload!
+  createMultiSelfReferencingCWithId(data: MultiSelfReferencingCWithIdCreateInput!): MultiSelfReferencingCWithId!
+  updateMultiSelfReferencingCWithId(data: MultiSelfReferencingCWithIdUpdateInput!, where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
+  upsertMultiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!, create: MultiSelfReferencingCWithIdCreateInput!, update: MultiSelfReferencingCWithIdUpdateInput!): MultiSelfReferencingCWithId!
+  deleteMultiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
+  deleteManyMultiSelfReferencingCWithIds(where: MultiSelfReferencingCWithIdWhereInput): BatchPayload!
+  createMultiSelfReferencingBWithId(data: MultiSelfReferencingBWithIdCreateInput!): MultiSelfReferencingBWithId!
+  updateMultiSelfReferencingBWithId(data: MultiSelfReferencingBWithIdUpdateInput!, where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
+  upsertMultiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!, create: MultiSelfReferencingBWithIdCreateInput!, update: MultiSelfReferencingBWithIdUpdateInput!): MultiSelfReferencingBWithId!
+  deleteMultiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
+  deleteManyMultiSelfReferencingBWithIds(where: MultiSelfReferencingBWithIdWhereInput): BatchPayload!
+  createMultiSelfReferencingC(data: MultiSelfReferencingCCreateInput!): MultiSelfReferencingC!
+  deleteManyMultiSelfReferencingCs(where: MultiSelfReferencingCWhereInput): BatchPayload!
+  createMultiSelfReferencingB(data: MultiSelfReferencingBCreateInput!): MultiSelfReferencingB!
+  deleteManyMultiSelfReferencingBs(where: MultiSelfReferencingBWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Query {
+  selfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
+  selfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingAWithId]!
+  selfReferencingAWithIdsConnection(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAWithIdConnection!
+  selfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
+  selfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingBWithId]!
+  selfReferencingBWithIdsConnection(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBWithIdConnection!
+  selfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
+  selfReferencingCWithIds(where: SelfReferencingCWithIdWhereInput, orderBy: SelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingCWithId]!
+  selfReferencingCWithIdsConnection(where: SelfReferencingCWithIdWhereInput, orderBy: SelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCWithIdConnection!
+  selfReferencingA(where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
+  selfReferencingAs(where: SelfReferencingAWhereInput, orderBy: SelfReferencingAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingA]!
+  selfReferencingAsConnection(where: SelfReferencingAWhereInput, orderBy: SelfReferencingAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAConnection!
+  selfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
+  selfReferencingBs(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingB]!
+  selfReferencingBsConnection(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBConnection!
+  selfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
+  selfReferencingCs(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC]!
+  selfReferencingCsConnection(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCConnection!
+  multiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
+  multiSelfReferencingCWithIds(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId]!
+  multiSelfReferencingCWithIdsConnection(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingCWithIdConnection!
+  multiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
+  multiSelfReferencingBWithIds(where: MultiSelfReferencingBWithIdWhereInput, orderBy: MultiSelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingBWithId]!
+  multiSelfReferencingBWithIdsConnection(where: MultiSelfReferencingBWithIdWhereInput, orderBy: MultiSelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingBWithIdConnection!
+  multiSelfReferencingCs(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC]!
+  multiSelfReferencingCsConnection(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingCConnection!
+  multiSelfReferencingBs(where: MultiSelfReferencingBWhereInput, orderBy: MultiSelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingB]!
+  multiSelfReferencingBsConnection(where: MultiSelfReferencingBWhereInput, orderBy: MultiSelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingBConnection!
+  node(id: ID!): Node
+}
+
+type SelfReferencingA {
+  id: ID!
+  a: SelfReferencingAWithId!
+  field: Int!
+}
+
+type SelfReferencingAConnection {
+  pageInfo: PageInfo!
+  edges: [SelfReferencingAEdge]!
+  aggregate: AggregateSelfReferencingA!
+}
+
+input SelfReferencingACreateInput {
+  a: SelfReferencingAWithIdCreateOneInput!
+  field: Int!
+}
+
+type SelfReferencingAEdge {
+  node: SelfReferencingA!
+  cursor: String!
+}
+
+enum SelfReferencingAOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type SelfReferencingAPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+type SelfReferencingASubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingA
+  updatedFields: [String!]
+  previousValues: SelfReferencingAPreviousValues
+}
+
+input SelfReferencingASubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingAWhereInput
+  AND: [SelfReferencingASubscriptionWhereInput!]
+  OR: [SelfReferencingASubscriptionWhereInput!]
+  NOT: [SelfReferencingASubscriptionWhereInput!]
+}
+
+input SelfReferencingAUpdateInput {
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
+  field: Int
+}
+
+input SelfReferencingAUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingAWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a: SelfReferencingAWithIdWhereInput
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingAWhereInput!]
+  OR: [SelfReferencingAWhereInput!]
+  NOT: [SelfReferencingAWhereInput!]
+}
+
+input SelfReferencingAWhereUniqueInput {
+  id: ID
+}
+
+type SelfReferencingAWithId {
+  id: ID!
+  a: SelfReferencingAWithId!
+  field: Int!
+}
+
+type SelfReferencingAWithIdConnection {
+  pageInfo: PageInfo!
+  edges: [SelfReferencingAWithIdEdge]!
+  aggregate: AggregateSelfReferencingAWithId!
+}
+
+input SelfReferencingAWithIdCreateInput {
+  a: SelfReferencingAWithIdCreateOneInput!
+  field: Int!
+}
+
+input SelfReferencingAWithIdCreateOneInput {
+  create: SelfReferencingAWithIdCreateInput
+  connect: SelfReferencingAWithIdWhereUniqueInput
+}
+
+type SelfReferencingAWithIdEdge {
+  node: SelfReferencingAWithId!
+  cursor: String!
+}
+
+enum SelfReferencingAWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type SelfReferencingAWithIdPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+type SelfReferencingAWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingAWithId
+  updatedFields: [String!]
+  previousValues: SelfReferencingAWithIdPreviousValues
+}
+
+input SelfReferencingAWithIdSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingAWithIdWhereInput
+  AND: [SelfReferencingAWithIdSubscriptionWhereInput!]
+  OR: [SelfReferencingAWithIdSubscriptionWhereInput!]
+  NOT: [SelfReferencingAWithIdSubscriptionWhereInput!]
+}
+
+input SelfReferencingAWithIdUpdateDataInput {
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
+  field: Int
+}
+
+input SelfReferencingAWithIdUpdateInput {
+  a: SelfReferencingAWithIdUpdateOneRequiredInput
+  field: Int
+}
+
+input SelfReferencingAWithIdUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingAWithIdUpdateOneRequiredInput {
+  create: SelfReferencingAWithIdCreateInput
+  update: SelfReferencingAWithIdUpdateDataInput
+  upsert: SelfReferencingAWithIdUpsertNestedInput
+  connect: SelfReferencingAWithIdWhereUniqueInput
+}
+
+input SelfReferencingAWithIdUpsertNestedInput {
+  update: SelfReferencingAWithIdUpdateDataInput!
+  create: SelfReferencingAWithIdCreateInput!
+}
+
+input SelfReferencingAWithIdWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a: SelfReferencingAWithIdWhereInput
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingAWithIdWhereInput!]
+  OR: [SelfReferencingAWithIdWhereInput!]
+  NOT: [SelfReferencingAWithIdWhereInput!]
+}
+
+input SelfReferencingAWithIdWhereUniqueInput {
+  id: ID
+}
+
+type SelfReferencingB {
+  id: ID!
+  a: SelfReferencingB
+  field: Int!
+}
+
+type SelfReferencingBConnection {
+  pageInfo: PageInfo!
+  edges: [SelfReferencingBEdge]!
+  aggregate: AggregateSelfReferencingB!
+}
+
+input SelfReferencingBCreateInput {
+  a: SelfReferencingBCreateOneInput
+  field: Int!
+}
+
+input SelfReferencingBCreateOneInput {
+  create: SelfReferencingBCreateInput
+  connect: SelfReferencingBWhereUniqueInput
+}
+
+type SelfReferencingBEdge {
+  node: SelfReferencingB!
+  cursor: String!
+}
+
+enum SelfReferencingBOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type SelfReferencingBPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+type SelfReferencingBSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingB
+  updatedFields: [String!]
+  previousValues: SelfReferencingBPreviousValues
+}
+
+input SelfReferencingBSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingBWhereInput
+  AND: [SelfReferencingBSubscriptionWhereInput!]
+  OR: [SelfReferencingBSubscriptionWhereInput!]
+  NOT: [SelfReferencingBSubscriptionWhereInput!]
+}
+
+input SelfReferencingBUpdateDataInput {
+  a: SelfReferencingBUpdateOneInput
+  field: Int
+}
+
+input SelfReferencingBUpdateInput {
+  a: SelfReferencingBUpdateOneInput
+  field: Int
+}
+
+input SelfReferencingBUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingBUpdateOneInput {
+  create: SelfReferencingBCreateInput
+  update: SelfReferencingBUpdateDataInput
+  upsert: SelfReferencingBUpsertNestedInput
+  delete: Boolean
+  disconnect: Boolean
+  connect: SelfReferencingBWhereUniqueInput
+}
+
+input SelfReferencingBUpsertNestedInput {
+  update: SelfReferencingBUpdateDataInput!
+  create: SelfReferencingBCreateInput!
+}
+
+input SelfReferencingBWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a: SelfReferencingBWhereInput
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingBWhereInput!]
+  OR: [SelfReferencingBWhereInput!]
+  NOT: [SelfReferencingBWhereInput!]
+}
+
+input SelfReferencingBWhereUniqueInput {
+  id: ID
+}
+
+type SelfReferencingBWithId {
+  id: ID!
+  a: SelfReferencingBWithId
+  field: Int!
+}
+
+type SelfReferencingBWithIdConnection {
+  pageInfo: PageInfo!
+  edges: [SelfReferencingBWithIdEdge]!
+  aggregate: AggregateSelfReferencingBWithId!
+}
+
+input SelfReferencingBWithIdCreateInput {
+  a: SelfReferencingBWithIdCreateOneInput
+  field: Int!
+}
+
+input SelfReferencingBWithIdCreateManyInput {
+  create: [SelfReferencingBWithIdCreateInput!]
+  connect: [SelfReferencingBWithIdWhereUniqueInput!]
+}
+
+input SelfReferencingBWithIdCreateOneInput {
+  create: SelfReferencingBWithIdCreateInput
+  connect: SelfReferencingBWithIdWhereUniqueInput
+}
+
+type SelfReferencingBWithIdEdge {
+  node: SelfReferencingBWithId!
+  cursor: String!
+}
+
+enum SelfReferencingBWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type SelfReferencingBWithIdPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+input SelfReferencingBWithIdScalarWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingBWithIdScalarWhereInput!]
+  OR: [SelfReferencingBWithIdScalarWhereInput!]
+  NOT: [SelfReferencingBWithIdScalarWhereInput!]
+}
+
+type SelfReferencingBWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingBWithId
+  updatedFields: [String!]
+  previousValues: SelfReferencingBWithIdPreviousValues
+}
+
+input SelfReferencingBWithIdSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingBWithIdWhereInput
+  AND: [SelfReferencingBWithIdSubscriptionWhereInput!]
+  OR: [SelfReferencingBWithIdSubscriptionWhereInput!]
+  NOT: [SelfReferencingBWithIdSubscriptionWhereInput!]
+}
+
+input SelfReferencingBWithIdUpdateDataInput {
+  a: SelfReferencingBWithIdUpdateOneInput
+  field: Int
+}
+
+input SelfReferencingBWithIdUpdateInput {
+  a: SelfReferencingBWithIdUpdateOneInput
+  field: Int
+}
+
+input SelfReferencingBWithIdUpdateManyDataInput {
+  field: Int
+}
+
+input SelfReferencingBWithIdUpdateManyInput {
+  create: [SelfReferencingBWithIdCreateInput!]
+  update: [SelfReferencingBWithIdUpdateWithWhereUniqueNestedInput!]
+  upsert: [SelfReferencingBWithIdUpsertWithWhereUniqueNestedInput!]
+  delete: [SelfReferencingBWithIdWhereUniqueInput!]
+  connect: [SelfReferencingBWithIdWhereUniqueInput!]
+  disconnect: [SelfReferencingBWithIdWhereUniqueInput!]
+  deleteMany: [SelfReferencingBWithIdScalarWhereInput!]
+  updateMany: [SelfReferencingBWithIdUpdateManyWithWhereNestedInput!]
+}
+
+input SelfReferencingBWithIdUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingBWithIdUpdateManyWithWhereNestedInput {
+  where: SelfReferencingBWithIdScalarWhereInput!
+  data: SelfReferencingBWithIdUpdateManyDataInput!
+}
+
+input SelfReferencingBWithIdUpdateOneInput {
+  create: SelfReferencingBWithIdCreateInput
+  update: SelfReferencingBWithIdUpdateDataInput
+  upsert: SelfReferencingBWithIdUpsertNestedInput
+  delete: Boolean
+  disconnect: Boolean
+  connect: SelfReferencingBWithIdWhereUniqueInput
+}
+
+input SelfReferencingBWithIdUpdateWithWhereUniqueNestedInput {
+  where: SelfReferencingBWithIdWhereUniqueInput!
+  data: SelfReferencingBWithIdUpdateDataInput!
+}
+
+input SelfReferencingBWithIdUpsertNestedInput {
+  update: SelfReferencingBWithIdUpdateDataInput!
+  create: SelfReferencingBWithIdCreateInput!
+}
+
+input SelfReferencingBWithIdUpsertWithWhereUniqueNestedInput {
+  where: SelfReferencingBWithIdWhereUniqueInput!
+  update: SelfReferencingBWithIdUpdateDataInput!
+  create: SelfReferencingBWithIdCreateInput!
+}
+
+input SelfReferencingBWithIdWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a: SelfReferencingBWithIdWhereInput
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingBWithIdWhereInput!]
+  OR: [SelfReferencingBWithIdWhereInput!]
+  NOT: [SelfReferencingBWithIdWhereInput!]
+}
+
+input SelfReferencingBWithIdWhereUniqueInput {
+  id: ID
+}
+
+type SelfReferencingC {
+  id: ID!
+  a(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC!]
+  field: Int!
+}
+
+type SelfReferencingCConnection {
+  pageInfo: PageInfo!
+  edges: [SelfReferencingCEdge]!
+  aggregate: AggregateSelfReferencingC!
+}
+
+input SelfReferencingCCreateInput {
+  a: SelfReferencingCCreateManyInput
+  field: Int!
+}
+
+input SelfReferencingCCreateManyInput {
+  create: [SelfReferencingCCreateInput!]
+  connect: [SelfReferencingCWhereUniqueInput!]
+}
+
+type SelfReferencingCEdge {
+  node: SelfReferencingC!
+  cursor: String!
+}
+
+enum SelfReferencingCOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type SelfReferencingCPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+input SelfReferencingCScalarWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingCScalarWhereInput!]
+  OR: [SelfReferencingCScalarWhereInput!]
+  NOT: [SelfReferencingCScalarWhereInput!]
+}
+
+type SelfReferencingCSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingC
+  updatedFields: [String!]
+  previousValues: SelfReferencingCPreviousValues
+}
+
+input SelfReferencingCSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingCWhereInput
+  AND: [SelfReferencingCSubscriptionWhereInput!]
+  OR: [SelfReferencingCSubscriptionWhereInput!]
+  NOT: [SelfReferencingCSubscriptionWhereInput!]
+}
+
+input SelfReferencingCUpdateDataInput {
+  a: SelfReferencingCUpdateManyInput
+  field: Int
+}
+
+input SelfReferencingCUpdateInput {
+  a: SelfReferencingCUpdateManyInput
+  field: Int
+}
+
+input SelfReferencingCUpdateManyDataInput {
+  field: Int
+}
+
+input SelfReferencingCUpdateManyInput {
+  create: [SelfReferencingCCreateInput!]
+  update: [SelfReferencingCUpdateWithWhereUniqueNestedInput!]
+  upsert: [SelfReferencingCUpsertWithWhereUniqueNestedInput!]
+  delete: [SelfReferencingCWhereUniqueInput!]
+  connect: [SelfReferencingCWhereUniqueInput!]
+  disconnect: [SelfReferencingCWhereUniqueInput!]
+  deleteMany: [SelfReferencingCScalarWhereInput!]
+  updateMany: [SelfReferencingCUpdateManyWithWhereNestedInput!]
+}
+
+input SelfReferencingCUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingCUpdateManyWithWhereNestedInput {
+  where: SelfReferencingCScalarWhereInput!
+  data: SelfReferencingCUpdateManyDataInput!
+}
+
+input SelfReferencingCUpdateWithWhereUniqueNestedInput {
+  where: SelfReferencingCWhereUniqueInput!
+  data: SelfReferencingCUpdateDataInput!
+}
+
+input SelfReferencingCUpsertWithWhereUniqueNestedInput {
+  where: SelfReferencingCWhereUniqueInput!
+  update: SelfReferencingCUpdateDataInput!
+  create: SelfReferencingCCreateInput!
+}
+
+input SelfReferencingCWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a_every: SelfReferencingCWhereInput
+  a_some: SelfReferencingCWhereInput
+  a_none: SelfReferencingCWhereInput
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingCWhereInput!]
+  OR: [SelfReferencingCWhereInput!]
+  NOT: [SelfReferencingCWhereInput!]
+}
+
+input SelfReferencingCWhereUniqueInput {
+  id: ID
+}
+
+type SelfReferencingCWithId {
+  id: ID!
+  a(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingBWithId!]
+  field: Int!
+}
+
+type SelfReferencingCWithIdConnection {
+  pageInfo: PageInfo!
+  edges: [SelfReferencingCWithIdEdge]!
+  aggregate: AggregateSelfReferencingCWithId!
+}
+
+input SelfReferencingCWithIdCreateInput {
+  a: SelfReferencingBWithIdCreateManyInput
+  field: Int!
+}
+
+type SelfReferencingCWithIdEdge {
+  node: SelfReferencingCWithId!
+  cursor: String!
+}
+
+enum SelfReferencingCWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type SelfReferencingCWithIdPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+type SelfReferencingCWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingCWithId
+  updatedFields: [String!]
+  previousValues: SelfReferencingCWithIdPreviousValues
+}
+
+input SelfReferencingCWithIdSubscriptionWhereInput {
+  mutation_in: [MutationType!]
+  updatedFields_contains: String
+  updatedFields_contains_every: [String!]
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingCWithIdWhereInput
+  AND: [SelfReferencingCWithIdSubscriptionWhereInput!]
+  OR: [SelfReferencingCWithIdSubscriptionWhereInput!]
+  NOT: [SelfReferencingCWithIdSubscriptionWhereInput!]
+}
+
+input SelfReferencingCWithIdUpdateInput {
+  a: SelfReferencingBWithIdUpdateManyInput
+  field: Int
+}
+
+input SelfReferencingCWithIdUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingCWithIdWhereInput {
+  id: ID
+  id_not: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_gt: ID
+  id_gte: ID
+  id_contains: ID
+  id_not_contains: ID
+  id_starts_with: ID
+  id_not_starts_with: ID
+  id_ends_with: ID
+  id_not_ends_with: ID
+  a_every: SelfReferencingBWithIdWhereInput
+  a_some: SelfReferencingBWithIdWhereInput
+  a_none: SelfReferencingBWithIdWhereInput
+  field: Int
+  field_not: Int
+  field_in: [Int!]
+  field_not_in: [Int!]
+  field_lt: Int
+  field_lte: Int
+  field_gt: Int
+  field_gte: Int
+  AND: [SelfReferencingCWithIdWhereInput!]
+  OR: [SelfReferencingCWithIdWhereInput!]
+  NOT: [SelfReferencingCWithIdWhereInput!]
+}
+
+input SelfReferencingCWithIdWhereUniqueInput {
+  id: ID
+}
+
+type Subscription {
+  selfReferencingAWithId(where: SelfReferencingAWithIdSubscriptionWhereInput): SelfReferencingAWithIdSubscriptionPayload
+  selfReferencingBWithId(where: SelfReferencingBWithIdSubscriptionWhereInput): SelfReferencingBWithIdSubscriptionPayload
+  selfReferencingCWithId(where: SelfReferencingCWithIdSubscriptionWhereInput): SelfReferencingCWithIdSubscriptionPayload
+  selfReferencingA(where: SelfReferencingASubscriptionWhereInput): SelfReferencingASubscriptionPayload
+  selfReferencingB(where: SelfReferencingBSubscriptionWhereInput): SelfReferencingBSubscriptionPayload
+  selfReferencingC(where: SelfReferencingCSubscriptionWhereInput): SelfReferencingCSubscriptionPayload
+  multiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdSubscriptionWhereInput): MultiSelfReferencingCWithIdSubscriptionPayload
+  multiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdSubscriptionWhereInput): MultiSelfReferencingBWithIdSubscriptionPayload
+  multiSelfReferencingC(where: MultiSelfReferencingCSubscriptionWhereInput): MultiSelfReferencingCSubscriptionPayload
+  multiSelfReferencingB(where: MultiSelfReferencingBSubscriptionWhereInput): MultiSelfReferencingBSubscriptionPayload
+}
