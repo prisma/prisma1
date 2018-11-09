@@ -56,7 +56,7 @@ class Model(
   }
 
   lazy val inlineFields = relationFields.collect {
-    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelId == this.name => rf
+    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelName == this.name => rf
   }
 
   def filterScalarFields(fn: ScalarField => Boolean): Model = {

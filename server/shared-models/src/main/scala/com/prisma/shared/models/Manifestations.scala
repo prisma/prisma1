@@ -6,9 +6,9 @@ object Manifestations {
   case class ModelManifestation(dbName: String)
   case class FieldManifestation(dbName: String)
 
-  sealed trait RelationManifestation
-  case class InlineRelationManifestation(inTableOfModelId: String, referencingColumn: String)      extends RelationManifestation
-  case class RelationTableManifestation(table: String, modelAColumn: String, modelBColumn: String) extends RelationManifestation
+  sealed trait RelationLinkManifestation
+  case class EmbeddedRelationLink(inTableOfModelName: String, referencingColumn: String) extends RelationLinkManifestation
+  case class RelationTable(table: String, modelAColumn: String, modelBColumn: String)    extends RelationLinkManifestation
 }
 
 sealed trait FieldBehaviour

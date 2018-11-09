@@ -2,7 +2,7 @@ package com.prisma.deploy.database.schema.mutations
 
 import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.deploy.specutils.PassiveDeploySpecBase
-import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, ModelManifestation, RelationTable}
 import org.scalatest.{FlatSpec, Matchers}
 
 class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeploySpecBase {
@@ -101,7 +101,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     todoModel.fields should have(size(3))
     result.schema.relations should have(size(1))
     val relation = result.schema.relations.head
-    relation.manifestation should be(Some(InlineRelationManifestation("Todo", "list_id")))
+    relation.manifestation should be(Some(EmbeddedRelationLink("Todo", "list_id")))
   }
 
   "a schema with an inferred inline relation" should "work" in {
@@ -142,7 +142,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     todoModel.fields should have(size(3))
     result.schema.relations should have(size(1))
     val relation = result.schema.relations.head
-    relation.manifestation should be(Some(InlineRelationManifestation("Todo", "list_id")))
+    relation.manifestation should be(Some(EmbeddedRelationLink("Todo", "list_id")))
   }
 
   "a schema with an explicit relation table relation" should "work" in {
@@ -187,7 +187,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     val relation = result.schema.relations.head
     relation.modelAName should be("List")
     relation.modelBName should be("Todo")
-    relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
+    relation.manifestation should be(Some(RelationTable(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
   }
 
   "a schema with an inferred relation table relation" should "work" in {
@@ -232,7 +232,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
     val relation = result.schema.relations.head
     relation.modelAName should be("List")
     relation.modelBName should be("Todo")
-    relation.manifestation should be(Some(RelationTableManifestation(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
+    relation.manifestation should be(Some(RelationTable(table = "todotolist", modelAColumn = "list_id", modelBColumn = "todo_id")))
   }
 
   "a sdl schema with an inline relation that does not match the db schema" should "return a error" in {

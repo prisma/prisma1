@@ -5,7 +5,7 @@ import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.ListGCValue
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models.Model
 import org.mongodb.scala.MongoWriteException
 
@@ -54,7 +54,7 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
       mutationBuilder: MongoActionsBuilder,
       parent: NodeAddress
   )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relation.manifestation match {
-    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
+    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name => // ID is stored on this Node
       val inlineRelation = c.isList match {
         case true  => List((m.referencingColumn, ListGCValue(Vector(parent.idValue))))
         case false => List((m.referencingColumn, parent.idValue))

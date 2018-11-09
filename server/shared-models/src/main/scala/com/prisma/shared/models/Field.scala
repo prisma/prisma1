@@ -153,17 +153,17 @@ case class RelationField(
   override def schema         = model.schema
 
   lazy val dbName: String = relation.manifestation match {
-    case Some(m: InlineRelationManifestation) => m.referencingColumn
+    case Some(m: EmbeddedRelationLink) => m.referencingColumn
 
     case _ => this.name
   }
 
   lazy val relationIsInlinedInParent = relation.manifestation match {
-    case Some(m: InlineRelationManifestation) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
-    case Some(m: InlineRelationManifestation) if relation.isSelfRelation && relationSide == RelationSide.A                            => false
-    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name                                                     => true
-    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == relatedModel_!.name                                            => false
-    case _                                                                                                                            => false
+    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
+    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && relationSide == RelationSide.A                            => false
+    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name                                                   => true
+    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == relatedModel_!.name                                          => false
+    case _                                                                                                                     => false
   }
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)

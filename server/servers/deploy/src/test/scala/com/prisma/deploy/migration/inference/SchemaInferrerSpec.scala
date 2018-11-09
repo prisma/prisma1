@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, MongoRelationsCapability}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation, RelationTable}
 import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
@@ -439,7 +439,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     relation.modelAName should equal("List")
     relation.modelBName should equal("Todo")
 
-    val expectedManifestation = RelationTableManifestation(table = "ListToTodo", modelAColumn = "A", modelBColumn = "B")
+    val expectedManifestation = RelationTable(table = "ListToTodo", modelAColumn = "A", modelBColumn = "B")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
@@ -461,7 +461,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
-    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list")
+    val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
@@ -483,7 +483,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
-    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list")
+    val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
@@ -527,7 +527,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |""".stripMargin
     val schema                = infer(emptyProject.schema, types, capabilities = Set.empty)
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
-    val expectedManifestation = RelationTableManifestation(table = "CommentToTodo", modelAColumn = "A", modelBColumn = "B")
+    val expectedManifestation = RelationTable(table = "CommentToTodo", modelAColumn = "A", modelBColumn = "B")
     relationField.relation.manifestation should be(Some(expectedManifestation))
   }
 
@@ -545,7 +545,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |""".stripMargin
     val schema                = infer(emptyProject.schema, types, capabilities = Set(MongoRelationsCapability))
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
-    val expectedManifestation = InlineRelationManifestation("Todo", "comments")
+    val expectedManifestation = EmbeddedRelationLink("Todo", "comments")
     relationField.relation.manifestation should be(Some(expectedManifestation))
   }
 

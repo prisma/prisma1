@@ -6,7 +6,7 @@ import com.prisma.deploy.migration.validation.{DataModelValidatorImpl, LegacyDat
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MongoRelationsCapability}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
@@ -92,8 +92,8 @@ object SchemaDsl extends AwaitUtils {
         }
         val modelToLinkTo          = fieldToRepresentAsInlineRelation.model
         val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!
-        val manifestation = InlineRelationManifestation(
-          inTableOfModelId = modelToPutRelationInto.name,
+        val manifestation = EmbeddedRelationLink(
+          inTableOfModelName = modelToPutRelationInto.name,
           referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
         )
         relation.template.copy(manifestation = Some(manifestation))

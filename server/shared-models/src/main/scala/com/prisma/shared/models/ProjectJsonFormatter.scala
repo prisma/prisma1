@@ -181,18 +181,18 @@ object ProjectJsonFormatter {
     private def addDiscriminator(json: JsObject, fn: Function) = json ++ Json.obj(discriminatorField -> fn.typeCode.toString)
   }
 
-  val inlineRelationManifestationFormat: OFormat[InlineRelationManifestation] = (
+  val inlineRelationManifestationFormat: OFormat[EmbeddedRelationLink] = (
     (JsPath \ "inTableOfModelId").format[String] and
       (JsPath \ "referencingColumn").format[String]
-  )(InlineRelationManifestation.apply, unlift(InlineRelationManifestation.unapply))
+  )(EmbeddedRelationLink.apply, unlift(EmbeddedRelationLink.unapply))
 
-  val relationTableManifestationFormat: OFormat[RelationTableManifestation] = (
+  val relationTableManifestationFormat: OFormat[RelationTable] = (
     (JsPath \ "table").format[String] and
       (JsPath \ "modelAColumn").format[String] and
       (JsPath \ "modelBColumn").format[String]
-  )(RelationTableManifestation.apply, unlift(RelationTableManifestation.unapply))
+  )(RelationTable.apply, unlift(RelationTable.unapply))
 
-  implicit lazy val relationManifestation = new Format[RelationManifestation] {
+  implicit lazy val relationManifestation = new Format[RelationLinkManifestation] {
     val discriminatorField = "relationManifestationType"
     val inlineRelationType = "inline"
     val relationTableType  = "relation_table"
@@ -202,10 +202,10 @@ object ProjectJsonFormatter {
       case `relationTableType`  => relationTableManifestationFormat.reads(json)
     }
 
-    override def writes(mani: RelationManifestation) = {
+    override def writes(mani: RelationLinkManifestation) = {
       mani match {
-        case x: InlineRelationManifestation => inlineRelationManifestationFormat.writes(x) ++ Json.obj(discriminatorField -> inlineRelationType)
-        case x: RelationTableManifestation  => relationTableManifestationFormat.writes(x) ++ Json.obj(discriminatorField  -> relationTableType)
+        case x: EmbeddedRelationLink => inlineRelationManifestationFormat.writes(x) ++ Json.obj(discriminatorField -> inlineRelationType)
+        case x: RelationTable        => relationTableManifestationFormat.writes(x) ++ Json.obj(discriminatorField  -> relationTableType)
       }
     }
   }
@@ -216,7 +216,7 @@ object ProjectJsonFormatter {
       (JsPath \ "modelBId").write[String] and
       (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
       (JsPath \ "modelBOnDelete").write[OnDelete.Value] and
-      (JsPath \ "manifestation").writeNullable[RelationManifestation]
+      (JsPath \ "manifestation").writeNullable[RelationLinkManifestation]
   )(unlift(RelationTemplate.unapply))
 
   implicit val relationReads: Reads[RelationTemplate] = (
@@ -225,7 +225,7 @@ object ProjectJsonFormatter {
       (JsPath \ "modelBId").read[String] and
       (JsPath \ "modelAOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
       (JsPath \ "modelBOnDelete").readNullable[OnDelete.Value].map(_.getOrElse(OnDelete.SetNull)) and
-      (JsPath \ "manifestation").readNullable[RelationManifestation]
+      (JsPath \ "manifestation").readNullable[RelationLinkManifestation]
   )(RelationTemplate.apply _)
 
   implicit val modelManifestationWrites: Writes[ModelManifestation] = Writes(manifestation => Json.obj("dbName" -> manifestation.dbName))

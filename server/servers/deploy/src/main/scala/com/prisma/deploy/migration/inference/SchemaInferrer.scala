@@ -267,7 +267,7 @@ case class SchemaInferrerImpl(
       prismaType: PrismaType,
       relationField: RelationalPrismaField,
       relationName: String
-  ): Option[RelationManifestation] = {
+  ): Option[RelationLinkManifestation] = {
     if (!isLegacy) { //new
       import RelationStrategy._
 
@@ -297,7 +297,7 @@ case class SchemaInferrerImpl(
     }
   }
 
-  private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationManifestation] = {
+  private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationLinkManifestation] = {
     val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
       if (capabilities.contains(MongoRelationsCapability)) {
         RelationStrategy.Embed
@@ -317,20 +317,20 @@ case class SchemaInferrerImpl(
         if (relationField.relatedType.isEmbedded) {
           None
         } else if (capabilities.contains(MongoRelationsCapability)) {
-          Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = relationField.name))
+          Some(EmbeddedRelationLink(inTableOfModelName = prismaType.name, referencingColumn = relationField.name))
         } else {
           // this can be only one to many in SQL
           val oneRelationField = relationField.oneRelationField.get
-          Some(InlineRelationManifestation(inTableOfModelId = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
+          Some(EmbeddedRelationLink(inTableOfModelName = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
         }
 
       case RelationStrategy.RelationTable =>
         // TODO: This must be tested with the SQL connectors that actually support this strategy
         prismaSdl.relationTables.find(_.name == relationName) match {
           case Some(relationTable) =>
-            Some(RelationTableManifestation(table = relationTable.finalTableName, modelAColumn = ???, modelBColumn = ???))
+            Some(RelationTable(table = relationTable.finalTableName, modelAColumn = ???, modelBColumn = ???))
           case None =>
-            Some(RelationTableManifestation(table = relationName, modelAColumn = "A", modelBColumn = "B"))
+            Some(RelationTable(table = relationName, modelAColumn = "A", modelBColumn = "B"))
         }
 
       case RelationStrategy.Auto =>
@@ -338,17 +338,17 @@ case class SchemaInferrerImpl(
     }
   }
 
-  def legacyRelationManifestationOnField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationManifestation] = {
+  def legacyRelationManifestationOnField(prismaType: PrismaType, relationField: RelationalPrismaField): Option[RelationLinkManifestation] = {
     val relatedType         = relationField.relatedType
     val tableForThisType    = prismaType.finalTableName
     val tableForRelatedType = relatedType.finalTableName
     val isThisModelA        = isModelA(prismaType.name, relationField.referencesType)
     relationField.relationDbDirective match {
       case Some(inlineDirective: MongoInlineRelationDirective) =>
-        Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.field))
+        Some(EmbeddedRelationLink(inTableOfModelName = prismaType.name, referencingColumn = inlineDirective.field))
 
       case Some(inlineDirective: PGInlineRelationDirective) =>
-        Some(InlineRelationManifestation(inTableOfModelId = prismaType.name, referencingColumn = inlineDirective.column))
+        Some(EmbeddedRelationLink(inTableOfModelName = prismaType.name, referencingColumn = inlineDirective.column))
 
       case Some(tableDirective: RelationTableDirective) =>
         val inferredTable        = inferredTables.relationTables.find(_.name == tableDirective.table)
@@ -359,7 +359,7 @@ case class SchemaInferrerImpl(
           modelAColumn <- if (isThisModelA) columnForThisType else columnForRelatedType
           modelBColumn <- if (isThisModelA) columnForRelatedType else columnForThisType
         } yield {
-          RelationTableManifestation(
+          RelationTable(
             table = tableDirective.table,
             modelAColumn = modelAColumn,
             modelBColumn = modelBColumn
@@ -379,7 +379,7 @@ case class SchemaInferrerImpl(
               modelAColumn <- if (isThisModelA) columnForThisType else columnForRelatedType
               modelBColumn <- if (isThisModelA) columnForRelatedType else columnForThisType
             } yield {
-              RelationTableManifestation(
+              RelationTable(
                 table = inferredTable.name,
                 modelAColumn = modelAColumn,
                 modelBColumn = modelBColumn
@@ -392,7 +392,7 @@ case class SchemaInferrerImpl(
               modelTable     <- inferredTables.modelTables.find(_.name == prismaType.finalTableName)
               column         <- modelTable.columnNameForReferencedTable(referencedType.tableName.getOrElse(referencedType.name))
             } yield {
-              InlineRelationManifestation(prismaType.name, column)
+              EmbeddedRelationLink(prismaType.name, column)
             }
           }
     }

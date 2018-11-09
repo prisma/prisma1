@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation, RelationTable}
 import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
@@ -366,7 +366,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     relation.modelAName should equal("List")
     relation.modelBName should equal("Todo")
 
-    val expectedManifestation = RelationTableManifestation(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
+    val expectedManifestation = RelationTable(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
@@ -386,7 +386,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
-    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
+    val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list_id")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
@@ -406,7 +406,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
-    val expectedManifestation = InlineRelationManifestation(inTableOfModelId = "Todo", referencingColumn = "list_id")
+    val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list_id")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
