@@ -1,0 +1,490 @@
+type A {
+  toB: B!
+  toB2: B!
+  toC: C
+}
+
+"""
+A connection to a list of items.
+"""
+type AConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [AEdge]!
+  aggregate: AggregateA!
+}
+
+input ACreateInput {
+  toB: BCreateOneWithoutToAInput!
+  toB2: BCreateOneWithoutToA2Input!
+  toC: CCreateOneWithoutToAInput
+}
+
+input ACreateManyWithoutToCInput {
+  create: [ACreateWithoutToCInput!]
+}
+
+input ACreateOneWithoutToB2Input {
+  create: ACreateWithoutToB2Input
+}
+
+input ACreateOneWithoutToBInput {
+  create: ACreateWithoutToBInput
+}
+
+input ACreateWithoutToB2Input {
+  toB: BCreateOneWithoutToAInput!
+  toC: CCreateOneWithoutToAInput
+}
+
+input ACreateWithoutToBInput {
+  toB2: BCreateOneWithoutToA2Input!
+  toC: CCreateOneWithoutToAInput
+}
+
+input ACreateWithoutToCInput {
+  toB: BCreateOneWithoutToAInput!
+  toB2: BCreateOneWithoutToA2Input!
+}
+
+"""
+An edge in a connection.
+"""
+type AEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: A!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+type AggregateA {
+  count: Int!
+}
+
+type AggregateB {
+  count: Int!
+}
+
+type AggregateC {
+  count: Int!
+}
+
+enum AOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type ASubscriptionPayload {
+  mutation: MutationType!
+  node: A
+  updatedFields: [String!]
+}
+
+input ASubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ASubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: AWhereInput
+}
+
+input AWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWhereInput!]
+  toB: BWhereInput
+  toB2: BWhereInput
+  toC: CWhereInput
+}
+
+type B {
+  toA: A!
+  toA2: A!
+  toC: C!
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+"""
+A connection to a list of items.
+"""
+type BConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [BEdge]!
+  aggregate: AggregateB!
+}
+
+input BCreateInput {
+  toA: ACreateOneWithoutToBInput!
+  toA2: ACreateOneWithoutToB2Input!
+  toC: CCreateOneWithoutToBInput!
+}
+
+input BCreateManyWithoutToCInput {
+  create: [BCreateWithoutToCInput!]
+}
+
+input BCreateOneWithoutToA2Input {
+  create: BCreateWithoutToA2Input
+}
+
+input BCreateOneWithoutToAInput {
+  create: BCreateWithoutToAInput
+}
+
+input BCreateWithoutToA2Input {
+  toA: ACreateOneWithoutToBInput!
+  toC: CCreateOneWithoutToBInput!
+}
+
+input BCreateWithoutToAInput {
+  toA2: ACreateOneWithoutToB2Input!
+  toC: CCreateOneWithoutToBInput!
+}
+
+input BCreateWithoutToCInput {
+  toA: ACreateOneWithoutToBInput!
+  toA2: ACreateOneWithoutToB2Input!
+}
+
+"""
+An edge in a connection.
+"""
+type BEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: B!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum BOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type BSubscriptionPayload {
+  mutation: MutationType!
+  node: B
+  updatedFields: [String!]
+}
+
+input BSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: BWhereInput
+}
+
+input BWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BWhereInput!]
+  toA: AWhereInput
+  toA2: AWhereInput
+  toC: CWhereInput
+}
+
+type C {
+  toB(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
+  toA(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+}
+
+"""
+A connection to a list of items.
+"""
+type CConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [CEdge]!
+  aggregate: AggregateC!
+}
+
+input CCreateInput {
+  toB: BCreateManyWithoutToCInput
+  toA: ACreateManyWithoutToCInput
+}
+
+input CCreateOneWithoutToAInput {
+  create: CCreateWithoutToAInput
+}
+
+input CCreateOneWithoutToBInput {
+  create: CCreateWithoutToBInput
+}
+
+input CCreateWithoutToAInput {
+  toB: BCreateManyWithoutToCInput
+}
+
+input CCreateWithoutToBInput {
+  toA: ACreateManyWithoutToCInput
+}
+
+"""
+An edge in a connection.
+"""
+type CEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: C!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum COrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type CSubscriptionPayload {
+  mutation: MutationType!
+  node: C
+  updatedFields: [String!]
+}
+
+input CSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: CWhereInput
+}
+
+input CWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CWhereInput!]
+  toB_every: BWhereInput
+  toB_some: BWhereInput
+  toB_none: BWhereInput
+  toA_every: AWhereInput
+  toA_some: AWhereInput
+  toA_none: AWhereInput
+}
+
+"""
+Raw JSON value
+"""
+scalar Json
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createA(data: ACreateInput!): A!
+  createB(data: BCreateInput!): B!
+  createC(data: CCreateInput!): C!
+  deleteManyAs(where: AWhereInput): BatchPayload!
+  deleteManyBs(where: BWhereInput): BatchPayload!
+  deleteManyCs(where: CWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
+  bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
+  cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
+  asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
+  bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
+  csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  a(where: ASubscriptionWhereInput): ASubscriptionPayload
+  b(where: BSubscriptionWhereInput): BSubscriptionPayload
+  c(where: CSubscriptionWhereInput): CSubscriptionPayload
+}
+
