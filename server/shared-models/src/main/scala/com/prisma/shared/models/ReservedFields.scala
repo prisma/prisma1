@@ -1,5 +1,7 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
+
 object ReservedFields {
   val idFieldName        = "id"
   val updatedAtFieldName = "updatedAt"
@@ -28,7 +30,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -45,7 +48,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -62,7 +66,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = Some(IdBehaviour(strategy = FieldBehaviour.IdStrategy.Auto))
     )
   }
 }

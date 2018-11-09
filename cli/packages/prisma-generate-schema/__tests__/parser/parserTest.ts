@@ -74,7 +74,7 @@ test('Parse a type with @embedded directive correctly.', () => {
   expectField(userType, 'stringList', false, true, 'String')
   expectField(userType, 'optionalDateTime', false, false, 'DateTime')
   expectField(userType, 'anotherInt', true, false, 'Int', '10')
-  expect(userType.embedded).toBe(true)
+  expect(userType.isEmbedded).toBe(true)
 })
 
 test('Parse a type with an enum correctly.', () => {

@@ -35,10 +35,10 @@ trait ImportActions extends BuilderBase {
           model.scalarNonListFields.zipWithIndex.foreach {
             case (field, index) =>
               arg.rootGCMap.get(field.name) match {
-                case Some(NullGCValue) if field.name == createdAtField || field.name == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case Some(gCValue)                                                                     => itemInsert.setGcValue(index + 1, gCValue)
-                case None if field.name == createdAtField || field.name == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case None                                                                              => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+                case Some(NullGCValue) if field.isCreatedAt || field.isUpdatedAt => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case Some(gCValue)                                               => itemInsert.setGcValue(index + 1, gCValue)
+                case None if field.isCreatedAt || field.isUpdatedAt              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case None                                                        => itemInsert.setNull(index + 1, java.sql.Types.NULL)
               }
           }
           itemInsert.addBatch()

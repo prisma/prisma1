@@ -118,6 +118,22 @@ export abstract class TypeFromModelGenerator<
   public static hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
     return fields.filter(field => !fieldNames.includes(field.name)).length > 0
   }
+  
+  /**
+   * Checks if the given list of fields contains at least one scalar field.
+   * @param fields 
+   */
+  public hasScalarFields(fields: IGQLField[]) {
+    return this.getScalarFields(fields).length > 0
+  }
+
+  /**
+   * Returns all scalar fields from the given field list.
+   * @param fields 
+   */
+  public getScalarFields(fields: IGQLField[]) {
+    return fields.filter(field => this.generators.scalarTypeGenerator.isScalarField(field))
+  }
 
   /**
    * Indicates if the resulting type would be empty.
@@ -446,9 +462,11 @@ export interface IGenerators {
   // Update
   modelUpdateInput: ModelInputObjectTypeGenerator
   modelUpdateDataInput: ModelInputObjectTypeGenerator
+  modelUpdateManyDataInput: ModelInputObjectTypeGenerator
   modelUpdateOneInput: ModelInputObjectTypeGenerator
   modelUpdateOneRequiredInput: ModelInputObjectTypeGenerator
   modelUpdateManyInput: ModelInputObjectTypeGenerator
+  modelUpdateManyMutationInput: ModelInputObjectTypeGenerator
   modelUpdateWithoutRelatedDataInput: RelatedModelInputObjectTypeGenerator
   modelUpdateOneWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
   modelUpdateOneRequiredWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
@@ -457,6 +475,7 @@ export interface IGenerators {
 
   modelUpdateWithWhereUniqueWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
   modelUpdateWithWhereUniqueNestedInput: ModelInputObjectTypeGenerator
+  modelUpdateManyWithWhereNestedInput: ModelInputObjectTypeGenerator
 
   // Upsert
   modelUpsertNestedInput: ModelInputObjectTypeGenerator
@@ -468,6 +487,7 @@ export interface IGenerators {
 
   // Querying
   modelWhereUniqueInput: ModelInputObjectTypeGenerator
+  modelScalarWhereInput: ModelInputObjectTypeGenerator
   modelWhereInput: ModelInputObjectTypeGenerator
   modelOrderByInput: ModelEnumTypeGeneratorBase
   modelConnection: ModelObjectTypeGenerator
