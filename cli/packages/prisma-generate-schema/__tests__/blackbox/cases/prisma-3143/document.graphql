@@ -131,10 +131,6 @@ type StoryEdge {
 enum StoryOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type StoryPreviousValues {
@@ -373,10 +369,6 @@ type UserSpaceEdge {
 enum UserSpaceOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type UserSpacePreviousValues {

@@ -42,7 +42,8 @@ Long can represent values between -(2^63) and 2^63 - 1.
 """
 scalar Long
 
-type LotsOfRequiredScalars {
+type LotsOfRequiredScalars implements Node {
+  id: ID!
   int: Int!
   string: String!
   float: Float!
@@ -90,6 +91,8 @@ type LotsOfRequiredScalarsEdge {
 }
 
 enum LotsOfRequiredScalarsOrderByInput {
+  id_ASC
+  id_DESC
   int_ASC
   int_DESC
   string_ASC
@@ -102,15 +105,10 @@ enum LotsOfRequiredScalarsOrderByInput {
   json_DESC
   boolean_ASC
   boolean_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LotsOfRequiredScalarsPreviousValues {
+  id: ID!
   int: Int!
   string: String!
   float: Float!
@@ -158,6 +156,15 @@ input LotsOfRequiredScalarsSubscriptionWhereInput {
   node: LotsOfRequiredScalarsWhereInput
 }
 
+input LotsOfRequiredScalarsUpdateInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
 input LotsOfRequiredScalarsUpdateManyMutationInput {
   int: Int
   string: String
@@ -180,6 +187,59 @@ input LotsOfRequiredScalarsWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [LotsOfRequiredScalarsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   int: Int
   """
   All values that are not equal to given value.
@@ -327,6 +387,10 @@ input LotsOfRequiredScalarsWhereInput {
   boolean_not: Boolean
 }
 
+input LotsOfRequiredScalarsWhereUniqueInput {
+  id: ID
+}
+
 type LotsOfRequiredScalarsWithID implements Node {
   id: ID!
   int: Int!
@@ -390,10 +454,6 @@ enum LotsOfRequiredScalarsWithIDOrderByInput {
   json_DESC
   boolean_ASC
   boolean_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LotsOfRequiredScalarsWithIDPreviousValues {
@@ -680,7 +740,8 @@ input LotsOfRequiredScalarsWithIDWhereUniqueInput {
   id: ID
 }
 
-type LotsOfScalarLists {
+type LotsOfScalarLists implements Node {
+  id: ID!
   int: [Int!]!
   string: [String!]!
   float: [Float!]!
@@ -754,13 +815,10 @@ type LotsOfScalarListsEdge {
 enum LotsOfScalarListsOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LotsOfScalarListsPreviousValues {
+  id: ID!
   int: [Int!]!
   string: [String!]!
   float: [Float!]!
@@ -820,6 +878,15 @@ input LotsOfScalarListsUpdatefloatInput {
   set: [Float!]
 }
 
+input LotsOfScalarListsUpdateInput {
+  int: LotsOfScalarListsUpdateintInput
+  string: LotsOfScalarListsUpdatestringInput
+  float: LotsOfScalarListsUpdatefloatInput
+  dateTime: LotsOfScalarListsUpdatedateTimeInput
+  json: LotsOfScalarListsUpdatejsonInput
+  boolean: LotsOfScalarListsUpdatebooleanInput
+}
+
 input LotsOfScalarListsUpdateintInput {
   set: [Int!]
 }
@@ -854,6 +921,63 @@ input LotsOfScalarListsWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [LotsOfScalarListsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+}
+
+input LotsOfScalarListsWhereUniqueInput {
+  id: ID
 }
 
 type LotsOfScalarListsWithID implements Node {
@@ -931,10 +1055,6 @@ type LotsOfScalarListsWithIDEdge {
 enum LotsOfScalarListsWithIDOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LotsOfScalarListsWithIDPreviousValues {
@@ -1100,7 +1220,8 @@ input LotsOfScalarListsWithIDWhereUniqueInput {
   id: ID
 }
 
-type LotsOfScalars {
+type LotsOfScalars implements Node {
+  id: ID!
   int: Int
   string: String
   float: Float
@@ -1148,6 +1269,8 @@ type LotsOfScalarsEdge {
 }
 
 enum LotsOfScalarsOrderByInput {
+  id_ASC
+  id_DESC
   int_ASC
   int_DESC
   string_ASC
@@ -1160,15 +1283,10 @@ enum LotsOfScalarsOrderByInput {
   json_DESC
   boolean_ASC
   boolean_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LotsOfScalarsPreviousValues {
+  id: ID!
   int: Int
   string: String
   float: Float
@@ -1216,6 +1334,15 @@ input LotsOfScalarsSubscriptionWhereInput {
   node: LotsOfScalarsWhereInput
 }
 
+input LotsOfScalarsUpdateInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
 input LotsOfScalarsUpdateManyMutationInput {
   int: Int
   string: String
@@ -1238,6 +1365,59 @@ input LotsOfScalarsWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [LotsOfScalarsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   int: Int
   """
   All values that are not equal to given value.
@@ -1385,6 +1565,10 @@ input LotsOfScalarsWhereInput {
   boolean_not: Boolean
 }
 
+input LotsOfScalarsWhereUniqueInput {
+  id: ID
+}
+
 type LotsOfScalarsWithID implements Node {
   id: ID!
   int: Int
@@ -1448,10 +1632,6 @@ enum LotsOfScalarsWithIDOrderByInput {
   json_DESC
   boolean_ASC
   boolean_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LotsOfScalarsWithIDPreviousValues {
@@ -1745,12 +1925,21 @@ type Mutation {
   createLotsOfScalarsWithID(data: LotsOfScalarsWithIDCreateInput!): LotsOfScalarsWithID!
   createLotsOfRequiredScalarsWithID(data: LotsOfRequiredScalarsWithIDCreateInput!): LotsOfRequiredScalarsWithID!
   createLotsOfScalarListsWithID(data: LotsOfScalarListsWithIDCreateInput!): LotsOfScalarListsWithID!
+  updateLotsOfScalars(data: LotsOfScalarsUpdateInput!, where: LotsOfScalarsWhereUniqueInput!): LotsOfScalars
+  updateLotsOfRequiredScalars(data: LotsOfRequiredScalarsUpdateInput!, where: LotsOfRequiredScalarsWhereUniqueInput!): LotsOfRequiredScalars
+  updateLotsOfScalarLists(data: LotsOfScalarListsUpdateInput!, where: LotsOfScalarListsWhereUniqueInput!): LotsOfScalarLists
   updateLotsOfScalarsWithID(data: LotsOfScalarsWithIDUpdateInput!, where: LotsOfScalarsWithIDWhereUniqueInput!): LotsOfScalarsWithID
   updateLotsOfRequiredScalarsWithID(data: LotsOfRequiredScalarsWithIDUpdateInput!, where: LotsOfRequiredScalarsWithIDWhereUniqueInput!): LotsOfRequiredScalarsWithID
   updateLotsOfScalarListsWithID(data: LotsOfScalarListsWithIDUpdateInput!, where: LotsOfScalarListsWithIDWhereUniqueInput!): LotsOfScalarListsWithID
+  deleteLotsOfScalars(where: LotsOfScalarsWhereUniqueInput!): LotsOfScalars
+  deleteLotsOfRequiredScalars(where: LotsOfRequiredScalarsWhereUniqueInput!): LotsOfRequiredScalars
+  deleteLotsOfScalarLists(where: LotsOfScalarListsWhereUniqueInput!): LotsOfScalarLists
   deleteLotsOfScalarsWithID(where: LotsOfScalarsWithIDWhereUniqueInput!): LotsOfScalarsWithID
   deleteLotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDWhereUniqueInput!): LotsOfRequiredScalarsWithID
   deleteLotsOfScalarListsWithID(where: LotsOfScalarListsWithIDWhereUniqueInput!): LotsOfScalarListsWithID
+  upsertLotsOfScalars(where: LotsOfScalarsWhereUniqueInput!, create: LotsOfScalarsCreateInput!, update: LotsOfScalarsUpdateInput!): LotsOfScalars!
+  upsertLotsOfRequiredScalars(where: LotsOfRequiredScalarsWhereUniqueInput!, create: LotsOfRequiredScalarsCreateInput!, update: LotsOfRequiredScalarsUpdateInput!): LotsOfRequiredScalars!
+  upsertLotsOfScalarLists(where: LotsOfScalarListsWhereUniqueInput!, create: LotsOfScalarListsCreateInput!, update: LotsOfScalarListsUpdateInput!): LotsOfScalarLists!
   upsertLotsOfScalarsWithID(where: LotsOfScalarsWithIDWhereUniqueInput!, create: LotsOfScalarsWithIDCreateInput!, update: LotsOfScalarsWithIDUpdateInput!): LotsOfScalarsWithID!
   upsertLotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDWhereUniqueInput!, create: LotsOfRequiredScalarsWithIDCreateInput!, update: LotsOfRequiredScalarsWithIDUpdateInput!): LotsOfRequiredScalarsWithID!
   upsertLotsOfScalarListsWithID(where: LotsOfScalarListsWithIDWhereUniqueInput!, create: LotsOfScalarListsWithIDCreateInput!, update: LotsOfScalarListsWithIDUpdateInput!): LotsOfScalarListsWithID!
@@ -1813,6 +2002,9 @@ type Query {
   lotsOfScalarsWithIDs(where: LotsOfScalarsWithIDWhereInput, orderBy: LotsOfScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfScalarsWithID]!
   lotsOfRequiredScalarsWithIDs(where: LotsOfRequiredScalarsWithIDWhereInput, orderBy: LotsOfRequiredScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfRequiredScalarsWithID]!
   lotsOfScalarListsWithIDs(where: LotsOfScalarListsWithIDWhereInput, orderBy: LotsOfScalarListsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfScalarListsWithID]!
+  lotsOfScalars(where: LotsOfScalarsWhereUniqueInput!): LotsOfScalars
+  lotsOfRequiredScalars(where: LotsOfRequiredScalarsWhereUniqueInput!): LotsOfRequiredScalars
+  lotsOfScalarLists(where: LotsOfScalarListsWhereUniqueInput!): LotsOfScalarLists
   lotsOfScalarsWithID(where: LotsOfScalarsWithIDWhereUniqueInput!): LotsOfScalarsWithID
   lotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDWhereUniqueInput!): LotsOfRequiredScalarsWithID
   lotsOfScalarListsWithID(where: LotsOfScalarListsWithIDWhereUniqueInput!): LotsOfScalarListsWithID

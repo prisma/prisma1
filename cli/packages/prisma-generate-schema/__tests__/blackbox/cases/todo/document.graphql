@@ -149,10 +149,6 @@ enum TodoOrderByInput {
   text_DESC
   done_ASC
   done_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type TodoPreviousValues {
@@ -389,10 +385,6 @@ enum UserOrderByInput {
   id_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type UserPreviousValues {

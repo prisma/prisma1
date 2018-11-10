@@ -1,5 +1,6 @@
 type A {
   field: Int!
+  id: Int!
   a: A!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
   c: C
@@ -31,18 +32,22 @@ input ACreateInput {
 
 input ACreateOneInput {
   create: ACreateInput
+  connect: AWhereUniqueInput
 }
 
 input ACreateOneWithoutBInput {
   create: ACreateWithoutBInput
+  connect: AWhereUniqueInput
 }
 
 input ACreateOneWithoutCInput {
   create: ACreateWithoutCInput
+  connect: AWhereUniqueInput
 }
 
 input ACreateOneWithoutEInput {
   create: ACreateWithoutEInput
+  connect: AWhereUniqueInput
 }
 
 input ACreateWithoutBInput {
@@ -105,14 +110,11 @@ enum AOrderByInput {
   field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type APreviousValues {
   field: Int!
+  id: Int!
 }
 
 type ASubscriptionPayload {
@@ -154,8 +156,95 @@ input ASubscriptionWhereInput {
   node: AWhereInput
 }
 
+input AUpdateDataInput {
+  field: Int
+  a: AUpdateOneRequiredInput
+  b: BUpdateManyWithoutAInput
+  c: CUpdateOneWithoutAInput
+  e: EUpdateManyWithoutAInput
+}
+
+input AUpdateInput {
+  field: Int
+  a: AUpdateOneRequiredInput
+  b: BUpdateManyWithoutAInput
+  c: CUpdateOneWithoutAInput
+  e: EUpdateManyWithoutAInput
+}
+
 input AUpdateManyMutationInput {
   field: Int
+}
+
+input AUpdateOneRequiredInput {
+  create: ACreateInput
+  connect: AWhereUniqueInput
+  update: AUpdateDataInput
+  upsert: AUpsertNestedInput
+}
+
+input AUpdateOneRequiredWithoutBInput {
+  create: ACreateWithoutBInput
+  connect: AWhereUniqueInput
+  update: AUpdateWithoutBDataInput
+  upsert: AUpsertWithoutBInput
+}
+
+input AUpdateOneRequiredWithoutEInput {
+  create: ACreateWithoutEInput
+  connect: AWhereUniqueInput
+  update: AUpdateWithoutEDataInput
+  upsert: AUpsertWithoutEInput
+}
+
+input AUpdateOneWithoutCInput {
+  create: ACreateWithoutCInput
+  connect: AWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: AUpdateWithoutCDataInput
+  upsert: AUpsertWithoutCInput
+}
+
+input AUpdateWithoutBDataInput {
+  field: Int
+  a: AUpdateOneRequiredInput
+  c: CUpdateOneWithoutAInput
+  e: EUpdateManyWithoutAInput
+}
+
+input AUpdateWithoutCDataInput {
+  field: Int
+  a: AUpdateOneRequiredInput
+  b: BUpdateManyWithoutAInput
+  e: EUpdateManyWithoutAInput
+}
+
+input AUpdateWithoutEDataInput {
+  field: Int
+  a: AUpdateOneRequiredInput
+  b: BUpdateManyWithoutAInput
+  c: CUpdateOneWithoutAInput
+}
+
+input AUpsertNestedInput {
+  update: AUpdateDataInput!
+  create: ACreateInput!
+}
+
+input AUpsertWithoutBInput {
+  update: AUpdateWithoutBDataInput!
+  create: ACreateWithoutBInput!
+}
+
+input AUpsertWithoutCInput {
+  update: AUpdateWithoutCDataInput!
+  create: ACreateWithoutCInput!
+}
+
+input AUpsertWithoutEInput {
+  update: AUpdateWithoutEDataInput!
+  create: ACreateWithoutEInput!
 }
 
 input AWhereInput {
@@ -200,9 +289,43 @@ input AWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input AWhereUniqueInput {
+  id: Int
 }
 
 type B {
+  id: Int!
   field: [String!]!
   c: C
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
@@ -246,22 +369,27 @@ input BCreateInput {
 
 input BCreateManyInput {
   create: [BCreateInput!]
+  connect: [BWhereUniqueInput!]
 }
 
 input BCreateManyWithoutAInput {
   create: [BCreateWithoutAInput!]
+  connect: [BWhereUniqueInput!]
 }
 
 input BCreateManyWithoutCInput {
   create: [BCreateWithoutCInput!]
+  connect: [BWhereUniqueInput!]
 }
 
 input BCreateOneInput {
   create: BCreateInput
+  connect: BWhereUniqueInput
 }
 
 input BCreateOneWithoutC2Input {
   create: BCreateWithoutC2Input
+  connect: BWhereUniqueInput
 }
 
 input BCreateWithoutAInput {
@@ -302,14 +430,55 @@ type BEdge {
 enum BOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type BPreviousValues {
+  id: Int!
   field: [String!]!
+}
+
+input BScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BScalarWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
 }
 
 type BSubscriptionPayload {
@@ -351,12 +520,150 @@ input BSubscriptionWhereInput {
   node: BWhereInput
 }
 
+input BUpdateDataInput {
+  field: BUpdatefieldInput
+  c: CUpdateOneWithoutBInput
+  b: BUpdateManyInput
+  a: AUpdateOneRequiredWithoutBInput
+  c2: CUpdateOneWithoutB2Input
+}
+
 input BUpdatefieldInput {
   set: [String!]
 }
 
+input BUpdateInput {
+  field: BUpdatefieldInput
+  c: CUpdateOneWithoutBInput
+  b: BUpdateManyInput
+  a: AUpdateOneRequiredWithoutBInput
+  c2: CUpdateOneWithoutB2Input
+}
+
+input BUpdateManyDataInput {
+  field: BUpdatefieldInput
+}
+
+input BUpdateManyInput {
+  create: [BCreateInput!]
+  connect: [BWhereUniqueInput!]
+  disconnect: [BWhereUniqueInput!]
+  delete: [BWhereUniqueInput!]
+  update: [BUpdateWithWhereUniqueNestedInput!]
+  updateMany: [BUpdateManyWithWhereNestedInput!]
+  deleteMany: [BScalarWhereInput!]
+  upsert: [BUpsertWithWhereUniqueNestedInput!]
+}
+
 input BUpdateManyMutationInput {
   field: BUpdatefieldInput
+}
+
+input BUpdateManyWithoutAInput {
+  create: [BCreateWithoutAInput!]
+  connect: [BWhereUniqueInput!]
+  disconnect: [BWhereUniqueInput!]
+  delete: [BWhereUniqueInput!]
+  update: [BUpdateWithWhereUniqueWithoutAInput!]
+  updateMany: [BUpdateManyWithWhereNestedInput!]
+  deleteMany: [BScalarWhereInput!]
+  upsert: [BUpsertWithWhereUniqueWithoutAInput!]
+}
+
+input BUpdateManyWithoutCInput {
+  create: [BCreateWithoutCInput!]
+  connect: [BWhereUniqueInput!]
+  disconnect: [BWhereUniqueInput!]
+  delete: [BWhereUniqueInput!]
+  update: [BUpdateWithWhereUniqueWithoutCInput!]
+  updateMany: [BUpdateManyWithWhereNestedInput!]
+  deleteMany: [BScalarWhereInput!]
+  upsert: [BUpsertWithWhereUniqueWithoutCInput!]
+}
+
+input BUpdateManyWithWhereNestedInput {
+  where: BScalarWhereInput!
+  data: BUpdateManyDataInput!
+}
+
+input BUpdateOneRequiredInput {
+  create: BCreateInput
+  connect: BWhereUniqueInput
+  update: BUpdateDataInput
+  upsert: BUpsertNestedInput
+}
+
+input BUpdateOneWithoutC2Input {
+  create: BCreateWithoutC2Input
+  connect: BWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: BUpdateWithoutC2DataInput
+  upsert: BUpsertWithoutC2Input
+}
+
+input BUpdateWithoutADataInput {
+  field: BUpdatefieldInput
+  c: CUpdateOneWithoutBInput
+  b: BUpdateManyInput
+  c2: CUpdateOneWithoutB2Input
+}
+
+input BUpdateWithoutC2DataInput {
+  field: BUpdatefieldInput
+  c: CUpdateOneWithoutBInput
+  b: BUpdateManyInput
+  a: AUpdateOneRequiredWithoutBInput
+}
+
+input BUpdateWithoutCDataInput {
+  field: BUpdatefieldInput
+  b: BUpdateManyInput
+  a: AUpdateOneRequiredWithoutBInput
+  c2: CUpdateOneWithoutB2Input
+}
+
+input BUpdateWithWhereUniqueNestedInput {
+  where: BWhereUniqueInput!
+  data: BUpdateDataInput!
+}
+
+input BUpdateWithWhereUniqueWithoutAInput {
+  where: BWhereUniqueInput!
+  data: BUpdateWithoutADataInput!
+}
+
+input BUpdateWithWhereUniqueWithoutCInput {
+  where: BWhereUniqueInput!
+  data: BUpdateWithoutCDataInput!
+}
+
+input BUpsertNestedInput {
+  update: BUpdateDataInput!
+  create: BCreateInput!
+}
+
+input BUpsertWithoutC2Input {
+  update: BUpdateWithoutC2DataInput!
+  create: BCreateWithoutC2Input!
+}
+
+input BUpsertWithWhereUniqueNestedInput {
+  where: BWhereUniqueInput!
+  update: BUpdateDataInput!
+  create: BCreateInput!
+}
+
+input BUpsertWithWhereUniqueWithoutAInput {
+  where: BWhereUniqueInput!
+  update: BUpdateWithoutADataInput!
+  create: BCreateWithoutAInput!
+}
+
+input BUpsertWithWhereUniqueWithoutCInput {
+  where: BWhereUniqueInput!
+  update: BUpdateWithoutCDataInput!
+  create: BCreateWithoutCInput!
 }
 
 input BWhereInput {
@@ -372,9 +679,43 @@ input BWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input BWhereUniqueInput {
+  id: Int
 }
 
 type C {
+  id: Int!
   expirationDate: DateTime
   c: C!
   b(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
@@ -407,18 +748,22 @@ input CCreateInput {
 
 input CCreateOneInput {
   create: CCreateInput
+  connect: CWhereUniqueInput
 }
 
 input CCreateOneWithoutAInput {
   create: CCreateWithoutAInput
+  connect: CWhereUniqueInput
 }
 
 input CCreateOneWithoutB2Input {
   create: CCreateWithoutB2Input
+  connect: CWhereUniqueInput
 }
 
 input CCreateOneWithoutBInput {
   create: CCreateWithoutBInput
+  connect: CWhereUniqueInput
 }
 
 input CCreateWithoutAInput {
@@ -457,17 +802,14 @@ type CEdge {
 }
 
 enum COrderByInput {
-  expirationDate_ASC
-  expirationDate_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+  expirationDate_ASC
+  expirationDate_DESC
 }
 
 type CPreviousValues {
+  id: Int!
   expirationDate: DateTime
 }
 
@@ -510,8 +852,99 @@ input CSubscriptionWhereInput {
   node: CWhereInput
 }
 
+input CUpdateDataInput {
+  expirationDate: DateTime
+  c: CUpdateOneRequiredInput
+  b: BUpdateManyWithoutCInput
+  a: AUpdateOneWithoutCInput
+  b2: BUpdateOneWithoutC2Input
+}
+
+input CUpdateInput {
+  expirationDate: DateTime
+  c: CUpdateOneRequiredInput
+  b: BUpdateManyWithoutCInput
+  a: AUpdateOneWithoutCInput
+  b2: BUpdateOneWithoutC2Input
+}
+
 input CUpdateManyMutationInput {
   expirationDate: DateTime
+}
+
+input CUpdateOneRequiredInput {
+  create: CCreateInput
+  connect: CWhereUniqueInput
+  update: CUpdateDataInput
+  upsert: CUpsertNestedInput
+}
+
+input CUpdateOneWithoutAInput {
+  create: CCreateWithoutAInput
+  connect: CWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: CUpdateWithoutADataInput
+  upsert: CUpsertWithoutAInput
+}
+
+input CUpdateOneWithoutB2Input {
+  create: CCreateWithoutB2Input
+  connect: CWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: CUpdateWithoutB2DataInput
+  upsert: CUpsertWithoutB2Input
+}
+
+input CUpdateOneWithoutBInput {
+  create: CCreateWithoutBInput
+  connect: CWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: CUpdateWithoutBDataInput
+  upsert: CUpsertWithoutBInput
+}
+
+input CUpdateWithoutADataInput {
+  expirationDate: DateTime
+  c: CUpdateOneRequiredInput
+  b: BUpdateManyWithoutCInput
+  b2: BUpdateOneWithoutC2Input
+}
+
+input CUpdateWithoutB2DataInput {
+  expirationDate: DateTime
+  c: CUpdateOneRequiredInput
+  b: BUpdateManyWithoutCInput
+  a: AUpdateOneWithoutCInput
+}
+
+input CUpdateWithoutBDataInput {
+  expirationDate: DateTime
+  c: CUpdateOneRequiredInput
+  a: AUpdateOneWithoutCInput
+  b2: BUpdateOneWithoutC2Input
+}
+
+input CUpsertNestedInput {
+  update: CUpdateDataInput!
+  create: CCreateInput!
+}
+
+input CUpsertWithoutAInput {
+  update: CUpdateWithoutADataInput!
+  create: CCreateWithoutAInput!
+}
+
+input CUpsertWithoutB2Input {
+  update: CUpdateWithoutB2DataInput!
+  create: CCreateWithoutB2Input!
+}
+
+input CUpsertWithoutBInput {
+  update: CUpdateWithoutBDataInput!
+  create: CCreateWithoutBInput!
 }
 
 input CWhereInput {
@@ -527,6 +960,35 @@ input CWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [CWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
   expirationDate: DateTime
   """
   All values that are not equal to given value.
@@ -558,7 +1020,12 @@ input CWhereInput {
   expirationDate_gte: DateTime
 }
 
+input CWhereUniqueInput {
+  id: Int
+}
+
 type D {
+  id: Int!
   field: Json
   c: C!
   b: B!
@@ -593,6 +1060,7 @@ input DCreateInput {
 
 input DCreateManyInput {
   create: [DCreateInput!]
+  connect: [DWhereUniqueInput!]
 }
 
 """
@@ -610,18 +1078,59 @@ type DEdge {
 }
 
 enum DOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+  field_ASC
+  field_DESC
 }
 
 type DPreviousValues {
+  id: Int!
   field: Json
+}
+
+input DScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [DScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DScalarWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
 }
 
 type DSubscriptionPayload {
@@ -663,8 +1172,55 @@ input DSubscriptionWhereInput {
   node: DWhereInput
 }
 
+input DUpdateDataInput {
+  field: Json
+  c: CUpdateOneRequiredInput
+  b: BUpdateOneRequiredInput
+  a: AUpdateOneRequiredInput
+  d: DUpdateManyInput
+}
+
+input DUpdateInput {
+  field: Json
+  c: CUpdateOneRequiredInput
+  b: BUpdateOneRequiredInput
+  a: AUpdateOneRequiredInput
+  d: DUpdateManyInput
+}
+
+input DUpdateManyDataInput {
+  field: Json
+}
+
+input DUpdateManyInput {
+  create: [DCreateInput!]
+  connect: [DWhereUniqueInput!]
+  disconnect: [DWhereUniqueInput!]
+  delete: [DWhereUniqueInput!]
+  update: [DUpdateWithWhereUniqueNestedInput!]
+  updateMany: [DUpdateManyWithWhereNestedInput!]
+  deleteMany: [DScalarWhereInput!]
+  upsert: [DUpsertWithWhereUniqueNestedInput!]
+}
+
 input DUpdateManyMutationInput {
   field: Json
+}
+
+input DUpdateManyWithWhereNestedInput {
+  where: DScalarWhereInput!
+  data: DUpdateManyDataInput!
+}
+
+input DUpdateWithWhereUniqueNestedInput {
+  where: DWhereUniqueInput!
+  data: DUpdateDataInput!
+}
+
+input DUpsertWithWhereUniqueNestedInput {
+  where: DWhereUniqueInput!
+  update: DUpdateDataInput!
+  create: DCreateInput!
 }
 
 input DWhereInput {
@@ -680,9 +1236,43 @@ input DWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [DWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input DWhereUniqueInput {
+  id: Int
 }
 
 type E {
+  id: Int!
   field: Json
   a: A!
 }
@@ -709,6 +1299,7 @@ input ECreateInput {
 
 input ECreateManyWithoutAInput {
   create: [ECreateWithoutAInput!]
+  connect: [EWhereUniqueInput!]
 }
 
 input ECreateWithoutAInput {
@@ -730,18 +1321,59 @@ type EEdge {
 }
 
 enum EOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+  field_ASC
+  field_DESC
 }
 
 type EPreviousValues {
+  id: Int!
   field: Json
+}
+
+input EScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [EScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [EScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [EScalarWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
 }
 
 type ESubscriptionPayload {
@@ -783,8 +1415,48 @@ input ESubscriptionWhereInput {
   node: EWhereInput
 }
 
+input EUpdateInput {
+  field: Json
+  a: AUpdateOneRequiredWithoutEInput
+}
+
+input EUpdateManyDataInput {
+  field: Json
+}
+
 input EUpdateManyMutationInput {
   field: Json
+}
+
+input EUpdateManyWithoutAInput {
+  create: [ECreateWithoutAInput!]
+  connect: [EWhereUniqueInput!]
+  disconnect: [EWhereUniqueInput!]
+  delete: [EWhereUniqueInput!]
+  update: [EUpdateWithWhereUniqueWithoutAInput!]
+  updateMany: [EUpdateManyWithWhereNestedInput!]
+  deleteMany: [EScalarWhereInput!]
+  upsert: [EUpsertWithWhereUniqueWithoutAInput!]
+}
+
+input EUpdateManyWithWhereNestedInput {
+  where: EScalarWhereInput!
+  data: EUpdateManyDataInput!
+}
+
+input EUpdateWithoutADataInput {
+  field: Json
+}
+
+input EUpdateWithWhereUniqueWithoutAInput {
+  where: EWhereUniqueInput!
+  data: EUpdateWithoutADataInput!
+}
+
+input EUpsertWithWhereUniqueWithoutAInput {
+  where: EWhereUniqueInput!
+  update: EUpdateWithoutADataInput!
+  create: ECreateWithoutAInput!
 }
 
 input EWhereInput {
@@ -800,6 +1472,39 @@ input EWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [EWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input EWhereUniqueInput {
+  id: Int
 }
 
 """
@@ -815,19 +1520,34 @@ scalar Long
 
 type Mutation {
   createE(data: ECreateInput!): E!
+  createC(data: CCreateInput!): C!
   createD(data: DCreateInput!): D!
   createA(data: ACreateInput!): A!
-  createC(data: CCreateInput!): C!
   createB(data: BCreateInput!): B!
+  updateE(data: EUpdateInput!, where: EWhereUniqueInput!): E
+  updateC(data: CUpdateInput!, where: CWhereUniqueInput!): C
+  updateD(data: DUpdateInput!, where: DWhereUniqueInput!): D
+  updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
+  deleteE(where: EWhereUniqueInput!): E
+  deleteC(where: CWhereUniqueInput!): C
+  deleteD(where: DWhereUniqueInput!): D
+  deleteA(where: AWhereUniqueInput!): A
+  deleteB(where: BWhereUniqueInput!): B
+  upsertE(where: EWhereUniqueInput!, create: ECreateInput!, update: EUpdateInput!): E!
+  upsertC(where: CWhereUniqueInput!, create: CCreateInput!, update: CUpdateInput!): C!
+  upsertD(where: DWhereUniqueInput!, create: DCreateInput!, update: DUpdateInput!): D!
+  upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
   updateManyEs(data: EUpdateManyMutationInput!, where: EWhereInput): BatchPayload!
+  updateManyCs(data: CUpdateManyMutationInput!, where: CWhereInput): BatchPayload!
   updateManyDs(data: DUpdateManyMutationInput!, where: DWhereInput): BatchPayload!
   updateManyAs(data: AUpdateManyMutationInput!, where: AWhereInput): BatchPayload!
-  updateManyCs(data: CUpdateManyMutationInput!, where: CWhereInput): BatchPayload!
   updateManyBs(data: BUpdateManyMutationInput!, where: BWhereInput): BatchPayload!
   deleteManyEs(where: EWhereInput): BatchPayload!
+  deleteManyCs(where: CWhereInput): BatchPayload!
   deleteManyDs(where: DWhereInput): BatchPayload!
   deleteManyAs(where: AWhereInput): BatchPayload!
-  deleteManyCs(where: CWhereInput): BatchPayload!
   deleteManyBs(where: BWhereInput): BatchPayload!
 }
 
@@ -871,14 +1591,19 @@ type PageInfo {
 
 type Query {
   es(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E]!
+  cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
   ds(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D]!
   as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
-  cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
   bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
+  e(where: EWhereUniqueInput!): E
+  c(where: CWhereUniqueInput!): C
+  d(where: DWhereUniqueInput!): D
+  a(where: AWhereUniqueInput!): A
+  b(where: BWhereUniqueInput!): B
   esConnection(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): EConnection!
+  csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
   dsConnection(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): DConnection!
   asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
-  csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
   """
   Fetches an object given its ID
@@ -893,9 +1618,9 @@ type Query {
 
 type Subscription {
   e(where: ESubscriptionWhereInput): ESubscriptionPayload
+  c(where: CSubscriptionWhereInput): CSubscriptionPayload
   d(where: DSubscriptionWhereInput): DSubscriptionPayload
   a(where: ASubscriptionWhereInput): ASubscriptionPayload
-  c(where: CSubscriptionWhereInput): CSubscriptionPayload
   b(where: BSubscriptionWhereInput): BSubscriptionPayload
 }
 

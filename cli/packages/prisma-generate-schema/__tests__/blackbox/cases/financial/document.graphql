@@ -139,10 +139,6 @@ enum CampusOrderByInput {
   isActive_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type CampusPreviousValues {
@@ -699,10 +695,6 @@ enum FinancialAccountOrderByInput {
   isActive_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialAccountPreviousValues {
@@ -1369,10 +1361,6 @@ enum FinancialPaymentDetailOrderByInput {
   expirationDate_DESC
   nameOnCard_ASC
   nameOnCard_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialPaymentDetailPreviousValues {
@@ -1812,10 +1800,6 @@ enum FinancialScheduledTransactionOrderByInput {
   frequency_DESC
   amount_ASC
   amount_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialScheduledTransactionPreviousValues {
@@ -2404,10 +2388,6 @@ enum FinancialTransactionOrderByInput {
   transactionDate_DESC
   amount_ASC
   amount_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialTransactionPreviousValues {
@@ -3069,10 +3049,6 @@ enum GroupInviteOrderByInput {
   email_DESC
   status_ASC
   status_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupInvitePreviousValues {
@@ -3497,10 +3473,6 @@ type GroupMemberEdge {
 enum GroupMemberOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupMemberPreviousValues {
@@ -3729,10 +3701,6 @@ enum GroupOrderByInput {
   isActive_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupPreviousValues {
@@ -3827,10 +3795,6 @@ enum GroupRoleOrderByInput {
   name_DESC
   type_ASC
   type_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupRolePreviousValues {
@@ -4723,10 +4687,6 @@ enum GroupTypeOrderByInput {
   description_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupTypePreviousValues {
@@ -5458,10 +5418,6 @@ enum LocationOrderByInput {
   street1_DESC
   street2_ASC
   street2_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LocationPreviousValues {
@@ -5918,12 +5874,12 @@ type Mutation {
   createGroupMember(data: GroupMemberCreateInput!): GroupMember!
   createGroupType(data: GroupTypeCreateInput!): GroupType!
   createCampus(data: CampusCreateInput!): Campus!
-  createFinancialAccount(data: FinancialAccountCreateInput!): FinancialAccount!
-  createGroup(data: GroupCreateInput!): Group!
   createPerson(data: PersonCreateInput!): Person!
+  createGroup(data: GroupCreateInput!): Group!
+  createFinancialAccount(data: FinancialAccountCreateInput!): FinancialAccount!
+  createPhoneNumber(data: PhoneNumberCreateInput!): PhoneNumber!
   createGroupRole(data: GroupRoleCreateInput!): GroupRole!
   createLocation(data: LocationCreateInput!): Location!
-  createPhoneNumber(data: PhoneNumberCreateInput!): PhoneNumber!
   createFinancialPaymentDetail(data: FinancialPaymentDetailCreateInput!): FinancialPaymentDetail!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateFinancialScheduledTransaction(data: FinancialScheduledTransactionUpdateInput!, where: FinancialScheduledTransactionWhereUniqueInput!): FinancialScheduledTransaction
@@ -5932,12 +5888,12 @@ type Mutation {
   updateGroupMember(data: GroupMemberUpdateInput!, where: GroupMemberWhereUniqueInput!): GroupMember
   updateGroupType(data: GroupTypeUpdateInput!, where: GroupTypeWhereUniqueInput!): GroupType
   updateCampus(data: CampusUpdateInput!, where: CampusWhereUniqueInput!): Campus
-  updateFinancialAccount(data: FinancialAccountUpdateInput!, where: FinancialAccountWhereUniqueInput!): FinancialAccount
-  updateGroup(data: GroupUpdateInput!, where: GroupWhereUniqueInput!): Group
   updatePerson(data: PersonUpdateInput!, where: PersonWhereUniqueInput!): Person
+  updateGroup(data: GroupUpdateInput!, where: GroupWhereUniqueInput!): Group
+  updateFinancialAccount(data: FinancialAccountUpdateInput!, where: FinancialAccountWhereUniqueInput!): FinancialAccount
+  updatePhoneNumber(data: PhoneNumberUpdateInput!, where: PhoneNumberWhereUniqueInput!): PhoneNumber
   updateGroupRole(data: GroupRoleUpdateInput!, where: GroupRoleWhereUniqueInput!): GroupRole
   updateLocation(data: LocationUpdateInput!, where: LocationWhereUniqueInput!): Location
-  updatePhoneNumber(data: PhoneNumberUpdateInput!, where: PhoneNumberWhereUniqueInput!): PhoneNumber
   updateFinancialPaymentDetail(data: FinancialPaymentDetailUpdateInput!, where: FinancialPaymentDetailWhereUniqueInput!): FinancialPaymentDetail
   deleteUser(where: UserWhereUniqueInput!): User
   deleteFinancialScheduledTransaction(where: FinancialScheduledTransactionWhereUniqueInput!): FinancialScheduledTransaction
@@ -5946,12 +5902,12 @@ type Mutation {
   deleteGroupMember(where: GroupMemberWhereUniqueInput!): GroupMember
   deleteGroupType(where: GroupTypeWhereUniqueInput!): GroupType
   deleteCampus(where: CampusWhereUniqueInput!): Campus
-  deleteFinancialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
-  deleteGroup(where: GroupWhereUniqueInput!): Group
   deletePerson(where: PersonWhereUniqueInput!): Person
+  deleteGroup(where: GroupWhereUniqueInput!): Group
+  deleteFinancialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
+  deletePhoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   deleteGroupRole(where: GroupRoleWhereUniqueInput!): GroupRole
   deleteLocation(where: LocationWhereUniqueInput!): Location
-  deletePhoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   deleteFinancialPaymentDetail(where: FinancialPaymentDetailWhereUniqueInput!): FinancialPaymentDetail
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertFinancialScheduledTransaction(where: FinancialScheduledTransactionWhereUniqueInput!, create: FinancialScheduledTransactionCreateInput!, update: FinancialScheduledTransactionUpdateInput!): FinancialScheduledTransaction!
@@ -5960,24 +5916,24 @@ type Mutation {
   upsertGroupMember(where: GroupMemberWhereUniqueInput!, create: GroupMemberCreateInput!, update: GroupMemberUpdateInput!): GroupMember!
   upsertGroupType(where: GroupTypeWhereUniqueInput!, create: GroupTypeCreateInput!, update: GroupTypeUpdateInput!): GroupType!
   upsertCampus(where: CampusWhereUniqueInput!, create: CampusCreateInput!, update: CampusUpdateInput!): Campus!
-  upsertFinancialAccount(where: FinancialAccountWhereUniqueInput!, create: FinancialAccountCreateInput!, update: FinancialAccountUpdateInput!): FinancialAccount!
-  upsertGroup(where: GroupWhereUniqueInput!, create: GroupCreateInput!, update: GroupUpdateInput!): Group!
   upsertPerson(where: PersonWhereUniqueInput!, create: PersonCreateInput!, update: PersonUpdateInput!): Person!
+  upsertGroup(where: GroupWhereUniqueInput!, create: GroupCreateInput!, update: GroupUpdateInput!): Group!
+  upsertFinancialAccount(where: FinancialAccountWhereUniqueInput!, create: FinancialAccountCreateInput!, update: FinancialAccountUpdateInput!): FinancialAccount!
+  upsertPhoneNumber(where: PhoneNumberWhereUniqueInput!, create: PhoneNumberCreateInput!, update: PhoneNumberUpdateInput!): PhoneNumber!
   upsertGroupRole(where: GroupRoleWhereUniqueInput!, create: GroupRoleCreateInput!, update: GroupRoleUpdateInput!): GroupRole!
   upsertLocation(where: LocationWhereUniqueInput!, create: LocationCreateInput!, update: LocationUpdateInput!): Location!
-  upsertPhoneNumber(where: PhoneNumberWhereUniqueInput!, create: PhoneNumberCreateInput!, update: PhoneNumberUpdateInput!): PhoneNumber!
   upsertFinancialPaymentDetail(where: FinancialPaymentDetailWhereUniqueInput!, create: FinancialPaymentDetailCreateInput!, update: FinancialPaymentDetailUpdateInput!): FinancialPaymentDetail!
   updateManyFinancialScheduledTransactions(data: FinancialScheduledTransactionUpdateManyMutationInput!, where: FinancialScheduledTransactionWhereInput): BatchPayload!
   updateManyFinancialTransactions(data: FinancialTransactionUpdateManyMutationInput!, where: FinancialTransactionWhereInput): BatchPayload!
   updateManyGroupInvites(data: GroupInviteUpdateManyMutationInput!, where: GroupInviteWhereInput): BatchPayload!
   updateManyGroupTypes(data: GroupTypeUpdateManyMutationInput!, where: GroupTypeWhereInput): BatchPayload!
   updateManyCampuses(data: CampusUpdateManyMutationInput!, where: CampusWhereInput): BatchPayload!
-  updateManyFinancialAccounts(data: FinancialAccountUpdateManyMutationInput!, where: FinancialAccountWhereInput): BatchPayload!
-  updateManyGroups(data: GroupUpdateManyMutationInput!, where: GroupWhereInput): BatchPayload!
   updateManyPersons(data: PersonUpdateManyMutationInput!, where: PersonWhereInput): BatchPayload!
+  updateManyGroups(data: GroupUpdateManyMutationInput!, where: GroupWhereInput): BatchPayload!
+  updateManyFinancialAccounts(data: FinancialAccountUpdateManyMutationInput!, where: FinancialAccountWhereInput): BatchPayload!
+  updateManyPhoneNumbers(data: PhoneNumberUpdateManyMutationInput!, where: PhoneNumberWhereInput): BatchPayload!
   updateManyGroupRoles(data: GroupRoleUpdateManyMutationInput!, where: GroupRoleWhereInput): BatchPayload!
   updateManyLocations(data: LocationUpdateManyMutationInput!, where: LocationWhereInput): BatchPayload!
-  updateManyPhoneNumbers(data: PhoneNumberUpdateManyMutationInput!, where: PhoneNumberWhereInput): BatchPayload!
   updateManyFinancialPaymentDetails(data: FinancialPaymentDetailUpdateManyMutationInput!, where: FinancialPaymentDetailWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyFinancialScheduledTransactions(where: FinancialScheduledTransactionWhereInput): BatchPayload!
@@ -5986,12 +5942,12 @@ type Mutation {
   deleteManyGroupMembers(where: GroupMemberWhereInput): BatchPayload!
   deleteManyGroupTypes(where: GroupTypeWhereInput): BatchPayload!
   deleteManyCampuses(where: CampusWhereInput): BatchPayload!
-  deleteManyFinancialAccounts(where: FinancialAccountWhereInput): BatchPayload!
-  deleteManyGroups(where: GroupWhereInput): BatchPayload!
   deleteManyPersons(where: PersonWhereInput): BatchPayload!
+  deleteManyGroups(where: GroupWhereInput): BatchPayload!
+  deleteManyFinancialAccounts(where: FinancialAccountWhereInput): BatchPayload!
+  deleteManyPhoneNumbers(where: PhoneNumberWhereInput): BatchPayload!
   deleteManyGroupRoles(where: GroupRoleWhereInput): BatchPayload!
   deleteManyLocations(where: LocationWhereInput): BatchPayload!
-  deleteManyPhoneNumbers(where: PhoneNumberWhereInput): BatchPayload!
   deleteManyFinancialPaymentDetails(where: FinancialPaymentDetailWhereInput): BatchPayload!
 }
 
@@ -6139,10 +6095,6 @@ enum PersonOrderByInput {
   firstName_DESC
   lastName_ASC
   lastName_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PersonPreviousValues {
@@ -6577,10 +6529,6 @@ enum PhoneNumberOrderByInput {
   id_DESC
   number_ASC
   number_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PhoneNumberPreviousValues {
@@ -6924,12 +6872,12 @@ type Query {
   groupMembers(where: GroupMemberWhereInput, orderBy: GroupMemberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupMember]!
   groupTypes(where: GroupTypeWhereInput, orderBy: GroupTypeOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupType]!
   campuses(where: CampusWhereInput, orderBy: CampusOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Campus]!
-  financialAccounts(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialAccount]!
-  groups(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Group]!
   persons(where: PersonWhereInput, orderBy: PersonOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Person]!
+  groups(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Group]!
+  financialAccounts(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialAccount]!
+  phoneNumbers(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PhoneNumber]!
   groupRoles(where: GroupRoleWhereInput, orderBy: GroupRoleOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupRole]!
   locations(where: LocationWhereInput, orderBy: LocationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Location]!
-  phoneNumbers(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PhoneNumber]!
   financialPaymentDetails(where: FinancialPaymentDetailWhereInput, orderBy: FinancialPaymentDetailOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialPaymentDetail]!
   user(where: UserWhereUniqueInput!): User
   financialScheduledTransaction(where: FinancialScheduledTransactionWhereUniqueInput!): FinancialScheduledTransaction
@@ -6938,12 +6886,12 @@ type Query {
   groupMember(where: GroupMemberWhereUniqueInput!): GroupMember
   groupType(where: GroupTypeWhereUniqueInput!): GroupType
   campus(where: CampusWhereUniqueInput!): Campus
-  financialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
-  group(where: GroupWhereUniqueInput!): Group
   person(where: PersonWhereUniqueInput!): Person
+  group(where: GroupWhereUniqueInput!): Group
+  financialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
+  phoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   groupRole(where: GroupRoleWhereUniqueInput!): GroupRole
   location(where: LocationWhereUniqueInput!): Location
-  phoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   financialPaymentDetail(where: FinancialPaymentDetailWhereUniqueInput!): FinancialPaymentDetail
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   financialScheduledTransactionsConnection(where: FinancialScheduledTransactionWhereInput, orderBy: FinancialScheduledTransactionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialScheduledTransactionConnection!
@@ -6952,12 +6900,12 @@ type Query {
   groupMembersConnection(where: GroupMemberWhereInput, orderBy: GroupMemberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupMemberConnection!
   groupTypesConnection(where: GroupTypeWhereInput, orderBy: GroupTypeOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupTypeConnection!
   campusesConnection(where: CampusWhereInput, orderBy: CampusOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CampusConnection!
-  financialAccountsConnection(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialAccountConnection!
-  groupsConnection(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupConnection!
   personsConnection(where: PersonWhereInput, orderBy: PersonOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PersonConnection!
+  groupsConnection(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupConnection!
+  financialAccountsConnection(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialAccountConnection!
+  phoneNumbersConnection(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PhoneNumberConnection!
   groupRolesConnection(where: GroupRoleWhereInput, orderBy: GroupRoleOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupRoleConnection!
   locationsConnection(where: LocationWhereInput, orderBy: LocationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LocationConnection!
-  phoneNumbersConnection(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PhoneNumberConnection!
   financialPaymentDetailsConnection(where: FinancialPaymentDetailWhereInput, orderBy: FinancialPaymentDetailOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialPaymentDetailConnection!
   """
   Fetches an object given its ID
@@ -6978,12 +6926,12 @@ type Subscription {
   groupMember(where: GroupMemberSubscriptionWhereInput): GroupMemberSubscriptionPayload
   groupType(where: GroupTypeSubscriptionWhereInput): GroupTypeSubscriptionPayload
   campus(where: CampusSubscriptionWhereInput): CampusSubscriptionPayload
-  financialAccount(where: FinancialAccountSubscriptionWhereInput): FinancialAccountSubscriptionPayload
-  group(where: GroupSubscriptionWhereInput): GroupSubscriptionPayload
   person(where: PersonSubscriptionWhereInput): PersonSubscriptionPayload
+  group(where: GroupSubscriptionWhereInput): GroupSubscriptionPayload
+  financialAccount(where: FinancialAccountSubscriptionWhereInput): FinancialAccountSubscriptionPayload
+  phoneNumber(where: PhoneNumberSubscriptionWhereInput): PhoneNumberSubscriptionPayload
   groupRole(where: GroupRoleSubscriptionWhereInput): GroupRoleSubscriptionPayload
   location(where: LocationSubscriptionWhereInput): LocationSubscriptionPayload
-  phoneNumber(where: PhoneNumberSubscriptionWhereInput): PhoneNumberSubscriptionPayload
   financialPaymentDetail(where: FinancialPaymentDetailSubscriptionWhereInput): FinancialPaymentDetailSubscriptionPayload
 }
 
@@ -7045,10 +6993,6 @@ type UserEdge {
 enum UserOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type UserPreviousValues {

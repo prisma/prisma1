@@ -1,7 +1,6 @@
 type A {
-  a: Int
-  b: Int!
   c: String!
+  removeThisIdd: Int!
   d: String
 }
 
@@ -21,8 +20,6 @@ type AConnection {
 }
 
 input ACreateInput {
-  a: Int
-  b: Int
   c: String!
   d: String
 }
@@ -59,26 +56,19 @@ type AggregateB {
 }
 
 enum AOrderByInput {
-  a_ASC
-  a_DESC
-  b_ASC
-  b_DESC
   c_ASC
   c_DESC
+  removeThisIdd_ASC
+  removeThisIdd_DESC
   d_ASC
   d_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type APreviousValues {
-  a: Int
-  b: Int!
   c: String!
+  removeThisIdd: Int!
   d: String
 }
 
@@ -95,64 +85,6 @@ input AScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AScalarWhereInput!]
-  a: Int
-  """
-  All values that are not equal to given value.
-  """
-  a_not: Int
-  """
-  All values that are contained in given list.
-  """
-  a_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  a_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  a_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  a_lte: Int
-  """
-  All values greater than the given value.
-  """
-  a_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  a_gte: Int
-  b: Int
-  """
-  All values that are not equal to given value.
-  """
-  b_not: Int
-  """
-  All values that are contained in given list.
-  """
-  b_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  b_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  b_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  b_lte: Int
-  """
-  All values greater than the given value.
-  """
-  b_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  b_gte: Int
   c: String
   """
   All values that are not equal to given value.
@@ -206,6 +138,35 @@ input AScalarWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
+  removeThisIdd: Int
+  """
+  All values that are not equal to given value.
+  """
+  removeThisIdd_not: Int
+  """
+  All values that are contained in given list.
+  """
+  removeThisIdd_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisIdd_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  removeThisIdd_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  removeThisIdd_lte: Int
+  """
+  All values greater than the given value.
+  """
+  removeThisIdd_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisIdd_gte: Int
   d: String
   """
   All values that are not equal to given value.
@@ -301,22 +262,16 @@ input ASubscriptionWhereInput {
 }
 
 input AUpdateDataInput {
-  a: Int
-  b: Int
   c: String
   d: String
 }
 
 input AUpdateInput {
-  a: Int
-  b: Int
   c: String
   d: String
 }
 
 input AUpdateManyDataInput {
-  a: Int
-  b: Int
   c: String
   d: String
 }
@@ -333,8 +288,6 @@ input AUpdateManyInput {
 }
 
 input AUpdateManyMutationInput {
-  a: Int
-  b: Int
   c: String
   d: String
 }
@@ -368,64 +321,6 @@ input AWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AWhereInput!]
-  a: Int
-  """
-  All values that are not equal to given value.
-  """
-  a_not: Int
-  """
-  All values that are contained in given list.
-  """
-  a_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  a_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  a_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  a_lte: Int
-  """
-  All values greater than the given value.
-  """
-  a_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  a_gte: Int
-  b: Int
-  """
-  All values that are not equal to given value.
-  """
-  b_not: Int
-  """
-  All values that are contained in given list.
-  """
-  b_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  b_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  b_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  b_lte: Int
-  """
-  All values greater than the given value.
-  """
-  b_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  b_gte: Int
   c: String
   """
   All values that are not equal to given value.
@@ -479,6 +374,35 @@ input AWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
+  removeThisIdd: Int
+  """
+  All values that are not equal to given value.
+  """
+  removeThisIdd_not: Int
+  """
+  All values that are contained in given list.
+  """
+  removeThisIdd_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisIdd_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  removeThisIdd_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  removeThisIdd_lte: Int
+  """
+  All values greater than the given value.
+  """
+  removeThisIdd_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisIdd_gte: Int
   d: String
   """
   All values that are not equal to given value.
@@ -535,14 +459,12 @@ input AWhereInput {
 }
 
 input AWhereUniqueInput {
-  a: Int
   c: String
+  removeThisIdd: Int
 }
 
 type AWithId implements Node {
   id: ID!
-  a: Int
-  b: Int!
   c: String!
   d: String
   b2: B!
@@ -564,8 +486,6 @@ type AWithIdConnection {
 }
 
 input AWithIdCreateInput {
-  a: Int
-  b: Int
   c: String!
   d: String
   b2: BCreateOneWithoutA2Input!
@@ -577,8 +497,6 @@ input AWithIdCreateOneWithoutB2Input {
 }
 
 input AWithIdCreateWithoutB2Input {
-  a: Int
-  b: Int
   c: String!
   d: String
 }
@@ -600,24 +518,14 @@ type AWithIdEdge {
 enum AWithIdOrderByInput {
   id_ASC
   id_DESC
-  a_ASC
-  a_DESC
-  b_ASC
-  b_DESC
   c_ASC
   c_DESC
   d_ASC
   d_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type AWithIdPreviousValues {
   id: ID!
-  a: Int
-  b: Int!
   c: String!
   d: String
 }
@@ -662,18 +570,33 @@ input AWithIdSubscriptionWhereInput {
 }
 
 input AWithIdUpdateInput {
-  a: Int
-  b: Int
   c: String
   d: String
   b2: BUpdateOneRequiredWithoutA2Input
 }
 
 input AWithIdUpdateManyMutationInput {
-  a: Int
-  b: Int
   c: String
   d: String
+}
+
+input AWithIdUpdateOneWithoutB2Input {
+  create: AWithIdCreateWithoutB2Input
+  connect: AWithIdWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: AWithIdUpdateWithoutB2DataInput
+  upsert: AWithIdUpsertWithoutB2Input
+}
+
+input AWithIdUpdateWithoutB2DataInput {
+  c: String
+  d: String
+}
+
+input AWithIdUpsertWithoutB2Input {
+  update: AWithIdUpdateWithoutB2DataInput!
+  create: AWithIdCreateWithoutB2Input!
 }
 
 input AWithIdWhereInput {
@@ -742,64 +665,6 @@ input AWithIdWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
-  a: Int
-  """
-  All values that are not equal to given value.
-  """
-  a_not: Int
-  """
-  All values that are contained in given list.
-  """
-  a_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  a_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  a_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  a_lte: Int
-  """
-  All values greater than the given value.
-  """
-  a_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  a_gte: Int
-  b: Int
-  """
-  All values that are not equal to given value.
-  """
-  b_not: Int
-  """
-  All values that are contained in given list.
-  """
-  b_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  b_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  b_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  b_lte: Int
-  """
-  All values greater than the given value.
-  """
-  b_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  b_gte: Int
   c: String
   """
   All values that are not equal to given value.
@@ -910,12 +775,12 @@ input AWithIdWhereInput {
 
 input AWithIdWhereUniqueInput {
   id: ID
-  a: Int
   c: String
 }
 
-type B {
+type B implements Node {
   a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+  id: ID!
   a2: AWithId
 }
 
@@ -948,6 +813,7 @@ input BCreateInput {
 
 input BCreateOneWithoutA2Input {
   create: BCreateWithoutA2Input
+  connect: BWhereUniqueInput
 }
 
 input BCreateWithoutA2Input {
@@ -971,16 +837,17 @@ type BEdge {
 enum BOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type BPreviousValues {
+  id: ID!
 }
 
 type BSubscriptionPayload {
   mutation: MutationType!
   node: B
   updatedFields: [String!]
+  previousValues: BPreviousValues
 }
 
 input BSubscriptionWhereInput {
@@ -1015,8 +882,14 @@ input BSubscriptionWhereInput {
   node: BWhereInput
 }
 
+input BUpdateInput {
+  a: AUpdateManyInput
+  a2: AWithIdUpdateOneWithoutB2Input
+}
+
 input BUpdateOneRequiredWithoutA2Input {
   create: BCreateWithoutA2Input
+  connect: BWhereUniqueInput
   update: BUpdateWithoutA2DataInput
   upsert: BUpsertWithoutA2Input
 }
@@ -1043,6 +916,63 @@ input BWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+}
+
+input BWhereUniqueInput {
+  id: ID
 }
 
 """
@@ -1061,10 +991,13 @@ type Mutation {
   createB(data: BCreateInput!): B!
   createA(data: ACreateInput!): A!
   updateAWithId(data: AWithIdUpdateInput!, where: AWithIdWhereUniqueInput!): AWithId
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
   updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
   deleteAWithId(where: AWithIdWhereUniqueInput!): AWithId
+  deleteB(where: BWhereUniqueInput!): B
   deleteA(where: AWhereUniqueInput!): A
   upsertAWithId(where: AWithIdWhereUniqueInput!, create: AWithIdCreateInput!, update: AWithIdUpdateInput!): AWithId!
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
   upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
   updateManyAWithIds(data: AWithIdUpdateManyMutationInput!, where: AWithIdWhereInput): BatchPayload!
   updateManyAs(data: AUpdateManyMutationInput!, where: AWhereInput): BatchPayload!
@@ -1116,6 +1049,7 @@ type Query {
   bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
   as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
   aWithId(where: AWithIdWhereUniqueInput!): AWithId
+  b(where: BWhereUniqueInput!): B
   a(where: AWhereUniqueInput!): A
   aWithIdsConnection(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AWithIdConnection!
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
