@@ -5,8 +5,8 @@ import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, Grap
 export abstract class ModelCreateOneOrManyInputGenerator extends ModelInputObjectTypeGenerator {
 
   public wouldBeEmpty(model: IGQLType, args: {}) {
-    return !TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields) &&
-      !TypeFromModelGenerator.hasUniqueField(model.fields)
+    return !this.hasWriteableFields(model.fields) &&
+      !this.hasUniqueField(model.fields)
   }
 
   protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType
@@ -14,11 +14,11 @@ export abstract class ModelCreateOneOrManyInputGenerator extends ModelInputObjec
   protected generateFields(model: IGQLType, args: {}) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    if (TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields)) {
+    if (this.hasWriteableFields(model.fields)) {
       fields.create = { type: this.maybeWrapList(this.generators.modelCreateInput.generate(model, {})) }
     }
 
-    if (TypeFromModelGenerator.hasUniqueField(model.fields) && !model.isEmbedded) {
+    if (this.hasUniqueField(model.fields) && !model.isEmbedded) {
       fields.connect = { type: this.maybeWrapList(this.generators.modelWhereUniqueInput.generate(model, {})) }
     }
 

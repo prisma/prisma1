@@ -12,7 +12,7 @@ export default class ModelUpdateOneInputTypeGenerator extends ModelUpdateInputGe
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    if (TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields)) {
+    if (this.hasWriteableFields(model.fields)) {
       fields.create = { type: this.generators.modelCreateInput.generate(model, {}) }
       fields.update = { type: this.generators.modelUpdateDataInput.generate(model, {}) }
       fields.upsert = { type: this.generators.modelUpsertNestedInput.generate(model, {}) }

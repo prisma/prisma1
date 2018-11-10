@@ -6,7 +6,7 @@ export default class ModelWhereUniqueInputGenerator extends ModelInputObjectType
     return `${input.name}WhereUniqueInput`
   }
   public wouldBeEmpty(model: IGQLType, args: {}) {
-    return !TypeFromModelGenerator.hasUniqueField(model.fields)
+    return !this.hasUniqueField(model.fields)
   }
 
   protected generateRelationFieldType(model: IGQLType, args: {}, field: IGQLField) {
