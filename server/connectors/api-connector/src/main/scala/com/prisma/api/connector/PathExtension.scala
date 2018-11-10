@@ -13,6 +13,7 @@ case class Path(segments: List[PathSegment]) {
   def stringForField(field: String): String                           = stringGen(field, segments).mkString(".")
   def operatorName(field: RelationField, where: NodeSelector)         = s"${field.name}X${where.fieldName}X${where.hashCode().toString.replace("-", "M")}"
   def operatorName(field: RelationField, whereFilter: Option[Filter]) = s"${field.name}X${whereFilter.hashCode().toString.replace("-", "M")}"
+  def dropLast: Path                                                  = this.copy(segments = this.segments.dropRight(1))
 
   private def stringGen(field: String, segments: List[PathSegment]): Vector[String] = segments match {
     case Nil                                          => Vector(field)

@@ -114,7 +114,6 @@ object DocumentToRoot {
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
 
-//    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds ++ createdAt ++ updatedAt :+ id).toMap)
     RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
   }
 }
@@ -142,10 +141,17 @@ object ArrayFilter extends FilterConditionBuilder {
   //Fixme: we are using uniques here, but these might change during an update
 
   def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
-    case None                                       => Vector.empty
-    case Some(ToOneSegment(_))                      => Vector.empty
-    case Some(ToManySegment(rf, where))             => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
-    case Some(ToManyFilterSegment(rf, whereFilter)) => Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter))
+    case None =>
+      Vector.empty
+
+    case Some(ToOneSegment(_)) =>
+      Vector.empty ++ arrayFilter(path.dropLast)
+
+    case Some(ToManySegment(rf, where)) =>
+      Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue))) ++ arrayFilter(path.dropLast)
+
+    case Some(ToManyFilterSegment(rf, whereFilter)) =>
+      Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter)) ++ arrayFilter(path.dropLast)
   }
 
   def fieldName(where: NodeSelector): String = where.field.isId match {

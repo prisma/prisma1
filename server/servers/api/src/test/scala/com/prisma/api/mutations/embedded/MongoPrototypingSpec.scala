@@ -1619,4 +1619,173 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
+  "Lydia deleteMany bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog!]!
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s""" mutation {
+         |  createPost(data: {
+         |    title:"nice"
+         |    author: {
+         |      create: {
+         |        name: "Lydia"
+         |      }
+         |    }
+         |  }) {
+         |    title
+         |    author{name}
+         |  }
+         |} """,
+      project
+    )
+
+    create.toString should be("""{"data":{"createPost":{"title":"nice","author":{"name":"Lydia"}}}}""")
+
+    val result = server.query(
+      s""" mutation {
+         |  deleteManyUsers(where: {
+         |    pets_some: {
+         |      breed: "Test"
+         |    }
+         |  }) {
+         |    count
+         |  }
+         |} """,
+      project
+    )
+
+    result.toString should be("""{"data":{"deleteManyUsers":{"count":0}}}""")
+
+    val result2 = server.query(
+      s""" mutation {
+         |  deleteManyUsers(where: {
+         |    pets_every: {
+         |      breed: "Test"
+         |    }
+         |  }) {
+         |    count
+         |  }
+         |} """,
+      project
+    )
+
+    result2.toString should be("""{"data":{"deleteManyUsers":{"count":1}}}""")
+
+  }
+
+  "Self relations bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  updatedAt: DateTime!
+        |  nick: String! @unique
+        |}
+        |
+        |type Todo {
+        |  id: ID! @unique
+        |  title: String! @unique
+        |  comments: [Comment!]!
+        |}
+        |
+        |type Comment @embedded {
+        |  text: String!
+        |  user: User! @mongoRelation(field: "user")
+        |  snarkyRemark: Comment
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query("""mutation{createTodo(data:{title:"todoTitle"}){title}}""", project)
+    create.toString should be("""{"data":{"createTodo":{"title":"todoTitle"}}}""")
+
+    val create2 = server.query("""mutation{createUser(data:{nick:"Marcus"}){nick}}""", project)
+    create2.toString should be("""{"data":{"createUser":{"nick":"Marcus"}}}""")
+
+    val update = server.query(
+      s"""mutation c{
+  updateTodo(
+    where: { title: "todoTitle" }
+    data: {
+      comments: {
+        create: [
+          {
+            text:"This is very important"
+            user: {
+              connect: {
+                nick: "Marcus"
+              }
+            }
+            snarkyRemark: {
+              create: {
+                text:"This is very very imporanto!"
+                user: {
+                  connect: {nick:"Marcus"}
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ){
+    title
+  }
+}""",
+      project
+    )
+
+    update.toString should be("""{"data":{"updateTodo":{"title":"todoTitle"}}}""")
+
+    val result = server.query(
+      s"""query commentsOfAUser {
+         |  todoes(where: {
+         |    comments_some: {
+         |      text_contains: "This"
+         |    }
+         |  }) {
+         |    title
+         |    comments {
+         |      text
+         |      snarkyRemark{
+         |         text
+         |         user{
+         |            nick
+         |         }
+         |      }
+         |    }
+         |  }
+         |} """,
+      project
+    )
+
+    result.toString should be(
+      """{"data":{"todoes":[{"title":"todoTitle","comments":[{"text":"This is very important","snarkyRemark":{"text":"This is very very imporanto!","user":{"nick":"Marcus"}}}]}]}}""")
+
+  }
+
 }
