@@ -11,7 +11,9 @@ import Parser from '../../src/datamodel'
 export default function blackBoxTest(name: string, databaseType: DatabaseType) {
   const generator = Generator.create(databaseType)
 
-  const modelPath = path.join(__dirname, `cases/${name}/model.graphql`)
+  console.log(generator.constructor)
+
+  const modelPath = path.join(__dirname, `cases/${name}/model_${databaseType}.graphql`)
   const prismaPath = path.join(__dirname, `cases/${name}/${databaseType}.graphql`)
 
   expect(fs.existsSync(modelPath))

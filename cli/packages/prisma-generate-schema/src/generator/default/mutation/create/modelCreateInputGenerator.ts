@@ -31,7 +31,7 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
   }
 
   public static generateScalarFieldTypeForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
-    if (TypeFromModelGenerator.reservedFields.includes(field.name)) {
+    if (field.isReadOnly) {
       return null
     } else {
       if (field.isList) {
@@ -43,7 +43,7 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
   }
 
   public wouldBeEmpty(model: IGQLType, args: {}) {
-    return !TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields)
+    return !this.hasWriteableFields(model.fields)
   }
 
   public getTypeName(input: IGQLType, args: {}) {
