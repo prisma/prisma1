@@ -9,12 +9,12 @@ export const updatedAtFieldName = 'updatedAt'
  */
 export default class RelationalParser extends Parser {
   protected isIdField(field: any): boolean {
-    return field.name === idFieldName
+    return field.name.value === idFieldName
   }
   protected isReadOnly(field: any): boolean {
-    return field.name === idFieldName ||
-      field.name === createdAtFieldName ||
-      field.name === updatedAtFieldName
+    return field.name.value === idFieldName ||
+      field.name.value === createdAtFieldName ||
+      field.name.value === updatedAtFieldName
   }
   protected isEmbedded(type: any): boolean {
     // Related models are never embedded
