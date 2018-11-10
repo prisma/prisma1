@@ -1601,14 +1601,12 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     create.toString should be("""{"data":{"createUser":{"nick":"marcus"}}}""")
 
-    server.query(
+    val result = server.query(
       s"""query users {
   users{
     nick
     memberships {
-      id
       list {
-        id
         name
       }
     }
@@ -1616,6 +1614,9 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 }""",
       project
     )
+
+    result.toString should be("""{"data":{"users":[{"nick":"marcus","memberships":[{"list":{"name":"Personal Inbox"}}]}]}}""")
+
   }
 
 }
