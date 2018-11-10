@@ -232,7 +232,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project,
       errorCode = 3043,
       errorContains =
-        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.test'"""
+        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.updatedAt'"""
     )
   }
 

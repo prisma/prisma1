@@ -284,7 +284,7 @@ case class SchemaInferrerImpl(
         case None =>
           manifestationForField(prismaType, relationField, relationName)
       }
-    } else if (!capabilities.contains(MigrationsCapability)) { //passive
+    } else if (!capabilities.contains(MigrationsCapability) || capabilities.contains(MongoRelationsCapability)) { //passive or mongo
       val manifestationOnThisField = legacyRelationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
@@ -292,7 +292,7 @@ case class SchemaInferrerImpl(
       }
 
       manifestationOnThisField.orElse(manifestationOnRelatedField)
-    } else { // active
+    } else { // active sql
       None
     }
   }
