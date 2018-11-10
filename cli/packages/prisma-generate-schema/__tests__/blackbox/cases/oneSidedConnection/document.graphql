@@ -1,4 +1,5 @@
 type A {
+  id: Int!
   x: TypeWithId!
   y: TypeWithoutId!
 }
@@ -72,16 +73,17 @@ type AggregateTypeWithoutId {
 enum AOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type APreviousValues {
+  id: Int!
 }
 
 type ASubscriptionPayload {
   mutation: MutationType!
   node: A
   updatedFields: [String!]
+  previousValues: APreviousValues
 }
 
 input ASubscriptionWhereInput {
@@ -116,6 +118,11 @@ input ASubscriptionWhereInput {
   node: AWhereInput
 }
 
+input AUpdateInput {
+  x: TypeWithIdUpdateOneRequiredInput
+  y: TypeWithoutIdUpdateOneRequiredInput
+}
+
 input AWhereInput {
   """
   Logical AND on all given filters.
@@ -129,9 +136,43 @@ input AWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input AWhereUniqueInput {
+  id: Int
 }
 
 type B {
+  id: Int!
   x: TypeWithId
   y: TypeWithoutId
 }
@@ -180,16 +221,17 @@ type BEdge {
 enum BOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type BPreviousValues {
+  id: Int!
 }
 
 type BSubscriptionPayload {
   mutation: MutationType!
   node: B
   updatedFields: [String!]
+  previousValues: BPreviousValues
 }
 
 input BSubscriptionWhereInput {
@@ -224,6 +266,11 @@ input BSubscriptionWhereInput {
   node: BWhereInput
 }
 
+input BUpdateInput {
+  x: TypeWithIdUpdateOneInput
+  y: TypeWithoutIdUpdateOneInput
+}
+
 input BWhereInput {
   """
   Logical AND on all given filters.
@@ -237,9 +284,43 @@ input BWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input BWhereUniqueInput {
+  id: Int
 }
 
 type C {
+  id: Int!
   x(where: TypeWithIdWhereInput, orderBy: TypeWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithId!]
   y(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithoutId!]
 }
@@ -281,16 +362,17 @@ type CEdge {
 enum COrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type CPreviousValues {
+  id: Int!
 }
 
 type CSubscriptionPayload {
   mutation: MutationType!
   node: C
   updatedFields: [String!]
+  previousValues: CPreviousValues
 }
 
 input CSubscriptionWhereInput {
@@ -325,6 +407,11 @@ input CSubscriptionWhereInput {
   node: CWhereInput
 }
 
+input CUpdateInput {
+  x: TypeWithIdUpdateManyInput
+  y: TypeWithoutIdUpdateManyInput
+}
+
 input CWhereInput {
   """
   Logical AND on all given filters.
@@ -338,6 +425,39 @@ input CWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [CWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
+}
+
+input CWhereUniqueInput {
+  id: Int
 }
 
 type D implements Node {
@@ -383,10 +503,6 @@ type DEdge {
 enum DOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type DPreviousValues {
@@ -552,10 +668,6 @@ type EEdge {
 enum EOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type EPreviousValues {
@@ -721,10 +833,6 @@ type FEdge {
 enum FOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FPreviousValues {
@@ -867,17 +975,29 @@ type Mutation {
   createF(data: FCreateInput!): F!
   createTypeWithoutId(data: TypeWithoutIdCreateInput!): TypeWithoutId!
   createTypeWithId(data: TypeWithIdCreateInput!): TypeWithId!
+  updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
+  updateC(data: CUpdateInput!, where: CWhereUniqueInput!): C
   updateD(data: DUpdateInput!, where: DWhereUniqueInput!): D
   updateE(data: EUpdateInput!, where: EWhereUniqueInput!): E
   updateF(data: FUpdateInput!, where: FWhereUniqueInput!): F
+  updateTypeWithoutId(data: TypeWithoutIdUpdateInput!, where: TypeWithoutIdWhereUniqueInput!): TypeWithoutId
   updateTypeWithId(data: TypeWithIdUpdateInput!, where: TypeWithIdWhereUniqueInput!): TypeWithId
+  deleteA(where: AWhereUniqueInput!): A
+  deleteB(where: BWhereUniqueInput!): B
+  deleteC(where: CWhereUniqueInput!): C
   deleteD(where: DWhereUniqueInput!): D
   deleteE(where: EWhereUniqueInput!): E
   deleteF(where: FWhereUniqueInput!): F
+  deleteTypeWithoutId(where: TypeWithoutIdWhereUniqueInput!): TypeWithoutId
   deleteTypeWithId(where: TypeWithIdWhereUniqueInput!): TypeWithId
+  upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
+  upsertC(where: CWhereUniqueInput!, create: CCreateInput!, update: CUpdateInput!): C!
   upsertD(where: DWhereUniqueInput!, create: DCreateInput!, update: DUpdateInput!): D!
   upsertE(where: EWhereUniqueInput!, create: ECreateInput!, update: EUpdateInput!): E!
   upsertF(where: FWhereUniqueInput!, create: FCreateInput!, update: FUpdateInput!): F!
+  upsertTypeWithoutId(where: TypeWithoutIdWhereUniqueInput!, create: TypeWithoutIdCreateInput!, update: TypeWithoutIdUpdateInput!): TypeWithoutId!
   upsertTypeWithId(where: TypeWithIdWhereUniqueInput!, create: TypeWithIdCreateInput!, update: TypeWithIdUpdateInput!): TypeWithId!
   updateManyTypeWithoutIds(data: TypeWithoutIdUpdateManyMutationInput!, where: TypeWithoutIdWhereInput): BatchPayload!
   updateManyTypeWithIds(data: TypeWithIdUpdateManyMutationInput!, where: TypeWithIdWhereInput): BatchPayload!
@@ -938,9 +1058,13 @@ type Query {
   fs(where: FWhereInput, orderBy: FOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [F]!
   typeWithoutIds(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithoutId]!
   typeWithIds(where: TypeWithIdWhereInput, orderBy: TypeWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithId]!
+  a(where: AWhereUniqueInput!): A
+  b(where: BWhereUniqueInput!): B
+  c(where: CWhereUniqueInput!): C
   d(where: DWhereUniqueInput!): D
   e(where: EWhereUniqueInput!): E
   f(where: FWhereUniqueInput!): F
+  typeWithoutId(where: TypeWithoutIdWhereUniqueInput!): TypeWithoutId
   typeWithId(where: TypeWithIdWhereUniqueInput!): TypeWithId
   asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
@@ -1025,10 +1149,6 @@ enum TypeWithIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type TypeWithIdPreviousValues {
@@ -1386,6 +1506,7 @@ input TypeWithIdWhereUniqueInput {
 }
 
 type TypeWithoutId {
+  id: Int!
   field: String!
 }
 
@@ -1410,10 +1531,12 @@ input TypeWithoutIdCreateInput {
 
 input TypeWithoutIdCreateManyInput {
   create: [TypeWithoutIdCreateInput!]
+  connect: [TypeWithoutIdWhereUniqueInput!]
 }
 
 input TypeWithoutIdCreateOneInput {
   create: TypeWithoutIdCreateInput
+  connect: TypeWithoutIdWhereUniqueInput
 }
 
 """
@@ -1431,17 +1554,14 @@ type TypeWithoutIdEdge {
 }
 
 enum TypeWithoutIdOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+  field_ASC
+  field_DESC
 }
 
 type TypeWithoutIdPreviousValues {
+  id: Int!
   field: String!
 }
 
@@ -1458,6 +1578,35 @@ input TypeWithoutIdScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [TypeWithoutIdScalarWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
   field: String
   """
   All values that are not equal to given value.
@@ -1556,14 +1705,23 @@ input TypeWithoutIdUpdateDataInput {
   field: String
 }
 
+input TypeWithoutIdUpdateInput {
+  field: String
+}
+
 input TypeWithoutIdUpdateManyDataInput {
   field: String
 }
 
 input TypeWithoutIdUpdateManyInput {
   create: [TypeWithoutIdCreateInput!]
+  connect: [TypeWithoutIdWhereUniqueInput!]
+  disconnect: [TypeWithoutIdWhereUniqueInput!]
+  delete: [TypeWithoutIdWhereUniqueInput!]
+  update: [TypeWithoutIdUpdateWithWhereUniqueNestedInput!]
   updateMany: [TypeWithoutIdUpdateManyWithWhereNestedInput!]
   deleteMany: [TypeWithoutIdScalarWhereInput!]
+  upsert: [TypeWithoutIdUpsertWithWhereUniqueNestedInput!]
 }
 
 input TypeWithoutIdUpdateManyMutationInput {
@@ -1577,6 +1735,7 @@ input TypeWithoutIdUpdateManyWithWhereNestedInput {
 
 input TypeWithoutIdUpdateOneInput {
   create: TypeWithoutIdCreateInput
+  connect: TypeWithoutIdWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: TypeWithoutIdUpdateDataInput
@@ -1585,11 +1744,23 @@ input TypeWithoutIdUpdateOneInput {
 
 input TypeWithoutIdUpdateOneRequiredInput {
   create: TypeWithoutIdCreateInput
+  connect: TypeWithoutIdWhereUniqueInput
   update: TypeWithoutIdUpdateDataInput
   upsert: TypeWithoutIdUpsertNestedInput
 }
 
+input TypeWithoutIdUpdateWithWhereUniqueNestedInput {
+  where: TypeWithoutIdWhereUniqueInput!
+  data: TypeWithoutIdUpdateDataInput!
+}
+
 input TypeWithoutIdUpsertNestedInput {
+  update: TypeWithoutIdUpdateDataInput!
+  create: TypeWithoutIdCreateInput!
+}
+
+input TypeWithoutIdUpsertWithWhereUniqueNestedInput {
+  where: TypeWithoutIdWhereUniqueInput!
   update: TypeWithoutIdUpdateDataInput!
   create: TypeWithoutIdCreateInput!
 }
@@ -1607,6 +1778,35 @@ input TypeWithoutIdWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [TypeWithoutIdWhereInput!]
+  id: Int
+  """
+  All values that are not equal to given value.
+  """
+  id_not: Int
+  """
+  All values that are contained in given list.
+  """
+  id_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  id_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: Int
+  """
+  All values greater than the given value.
+  """
+  id_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: Int
   field: String
   """
   All values that are not equal to given value.
@@ -1660,5 +1860,9 @@ input TypeWithoutIdWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+}
+
+input TypeWithoutIdWhereUniqueInput {
+  id: Int
 }
 
