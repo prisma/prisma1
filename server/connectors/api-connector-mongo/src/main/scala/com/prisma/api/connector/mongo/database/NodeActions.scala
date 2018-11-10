@@ -73,8 +73,9 @@ trait NodeActions extends NodeSingleQueries {
             Future.successful(MutactionResults(results))
           } else {
             val combinedUpdates = CustomUpdateCombiner.customCombine(allUpdates)
-
-            val updateOptions = UpdateOptions().arrayFilters((arrayFilters ++ arrayFilters2 ++ arrayFilters3 ++ arrayFilters4).toList.asJava)
+            val allArrayFilters = arrayFilters ++ arrayFilters2 ++ arrayFilters3 ++ arrayFilters4
+            val setArrayFilters = CustomUpdateCombiner.removeDuplicateArrayFilters(allArrayFilters)
+            val updateOptions   = UpdateOptions().arrayFilters(setArrayFilters.toList.asJava)
 
             database
               .getCollection(mutaction.model.dbName)
