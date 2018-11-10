@@ -83,7 +83,7 @@ export default abstract class Parser {
    * @param name 
    */
   protected hasDirective(fieldOrType: any, name: string): boolean {
-    return this.getDirectiveByName(fieldOrType, name).length > 0
+    return this.getDirectiveByName(fieldOrType, name) != null
   }
 
   /**
@@ -95,21 +95,23 @@ export default abstract class Parser {
   }
 
   /**
-   * Gets this fields default value. If no default
+   * Gets a fields default value. If no default
    * value is given, returns null.
    * @param field 
    */
   protected getDefaultValue(field: any): any {
-    return this.getDirectiveByName(field, defaultValueDirectiveKey).arguments[0].value.value
+    const directive = this.getDirectiveByName(field, defaultValueDirectiveKey)
+    return directive === null ? null : directive.arguments[0].value.value
   }
 
   /**
-   * Gets this fields relation name. If no relation
+   * Gets a fields relation name. If no relation
    * exists, returns null.
    * @param field 
    */
   protected getRelationName(field: any): string | null {
-    return this.getDirectiveByName(field, relationDirectiveKey).arguments[0].value.value
+    const directive = this.getDirectiveByName(field, relationDirectiveKey)
+    return directive === null ? null : directive.arguments[0].value.value
   }
 
   /**

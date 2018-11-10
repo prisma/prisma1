@@ -34,20 +34,19 @@ describe(`Document parser specific tests`, () => {
     const userType = expectType(types, 'User')
 
     expectField(userType, 'email', true, false, 'String', true, true, null)
-    expectField(userType, 'wasCreatedAt', true, false, 'String', false, true, null)
-    expectField(userType, 'wasUpdatedAt', true, false, 'String', false, true, null)
+    expectField(userType, 'wasCreatedAt', true, false, 'Date', false, true, null)
+    expectField(userType, 'wasUpdatedAt', true, false, 'Date', false, true, null)
   })
 
   test('Mark an embedded types correctly.', () => {
     const model = `
-      @embedded
-      type User {
+      type User @embedded {
         email: String! @id
       }
     `
 
     const types = new DocumentParser().parseFromSchemaString(model)
 
-    const userType = expectType(types, 'User', true)
+    const userType = expectType(types, 'User', false, true)
   })
 })
