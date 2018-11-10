@@ -1,97 +1,202 @@
 import { IGQLType, IGQLField, GQLScalarField } from './model'
 import { parse } from 'graphql'
 
-const isIdDirectiveKey = 'id'
-const isUniqueDirectiveKey = 'unique'
-const defaultValueDirectiveKey = 'default'
-const relationDirectiveKey = 'relation'
+export const isUniqueDirectiveKey = 'unique'
+export const defaultValueDirectiveKey = 'default'
+export const relationDirectiveKey = 'relation'
 
 /**
  * Parses a datamodel given as DSL
  * to an internal representation, convenient for
  * working with.
  */
-export default abstract class DatamodelParser {
+export default abstract class Parser {
   /**
    * Shorthand to parse the datamodel, given an SDL string.
    * @param schemaString The datamodel as SDL string.
    * @returns A list of types found in the datamodel.
    */
-  public static parseFromSchemaString(schemaString: string) {
+  public parseFromSchemaString(schemaString: string) {
     const schema = parse(schemaString)
-    return DatamodelParser.parseFromSchema(schema)
+    return this.parseFromSchema(schema)
   }
+
 
   /**
    * Parses the datamodel from a graphql-js schema.
    * @param schema The graphql-js schema, representing the datamodel.
    * @returns A list of types found in the datamodel.
    */
-  public static parseFromSchema(schema: any): IGQLType[] {
-    const objectTypes: IGQLType[] = []
+  public parseFromSchema(schema: any): IGQLType[] {
+    const types = [...this.parseObjectTypes(schema), ...this.parseEnumTypes(schema)]
+    
+    this.resolveRelations(types)
+    
+    // Sort types alphabetically
+    types.sort(({ name: a }, { name: b }) =>
+      a > b ? 1 : -1,
+    )
 
-    // Parse all object types.
-    for (const type of schema.definitions) {
-      if (type.kind === 'ObjectTypeDefinition') {
-        // For each object type, parse each field.
-        const fields: IGQLField[] = []
-        for (const field of type.fields) {
-          if (field.kind === 'FieldDefinition') {
-            // Check for type, kind, name and directives.
-            const name = field.name.value
-            const kind = DatamodelParser.parseKind(field.type, null)
-            const fieldType = DatamodelParser.parseType(field.type)
+    // That's it.
+    // We could check our model here, if we wanted to.
+    // Possible checks:
+    // * Check if we still use strings for identifying types for non-scalar types
+    // * Check if all double-sided relations are connected correctly
+    // * Check for duplicate type names
+    // * Check for conflicting relations
+    return types
+  }
 
-            const isUnique =
-              field.directives.filter(
-                x =>
-                  x.name.value === isUniqueDirectiveKey ||
-                  x.name.value === isIdDirectiveKey,
-              ).length > 0
-            const defaultValueDirective = field.directives.filter(
-              x => x.name.value === defaultValueDirectiveKey,
-            )
-            const defaultValue =
-              defaultValueDirective.length > 0
-                ? defaultValueDirective[0].arguments[0].value.value
-                : null
+  /**
+   * Checks if the given field is an ID field
+   * @param field 
+   */
+  protected abstract isIdField(field: any): boolean
 
-            const relationDirective = field.directives.filter(
-              x => x.name.value === relationDirectiveKey,
-            )
-            const relationName =
-              relationDirective.length > 0
-                ? relationDirective[0].arguments[0].value.value
-                : null
+  /**
+   * Checks if the given field is read-only.
+   * If the field is an ID field, this method is not called and
+   * read-only is assumed. 
+   * @param field 
+   */
+  protected abstract isReadOnly(field: any): boolean
 
-            fields.push({
-              name,
-              type: fieldType,
-              relationName,
-              defaultValue,
-              isUnique,
-              isList: kind === 'ListType',
-              isRequired: kind === 'NonNullType',
-              relatedField: null,
-            })
-          }
-        }
+  /**
+   * Finds a directive on a field or type by name.
+   * @param fieldOrType 
+   * @param name 
+   */
+  protected getDirectiveByName(fieldOrType: any, name: string): any {
+    const directive = fieldOrType.directives.filter(
+      x => x.name.value === name,
+    )
 
-        const isEmbedded =
-          type.directives &&
-          type.directives.length > 0 &&
-          type.directives.some(d => d.name.value === 'embedded')
+    return directive.length > 0
+      ? directive[0]
+      : null
+  }
 
-        objectTypes.push({
-          name: type.name.value,
-          fields,
-          isEnum: false,
-          isEmbedded,
-        })
+  /**
+   * Checks if a directive on a given field or type ecists
+   * @param fieldOrType 
+   * @param name 
+   */
+  protected hasDirective(fieldOrType: any, name: string): boolean {
+    return this.getDirectiveByName(fieldOrType, name).length > 0
+  }
+
+  /**
+   * Checks if the given field is unique.
+   * @param field 
+   */
+  protected isUniqe(field: any): boolean {
+    return this.hasDirective(field, isUniqueDirectiveKey)
+  }
+
+  /**
+   * Gets this fields default value. If no default
+   * value is given, returns null.
+   * @param field 
+   */
+  protected getDefaultValue(field: any): any {
+    return this.getDirectiveByName(field, defaultValueDirectiveKey).arguments[0].value.value
+  }
+
+  /**
+   * Gets this fields relation name. If no relation
+   * exists, returns null.
+   * @param field 
+   */
+  protected getRelationName(field: any): string | null {
+    return this.getDirectiveByName(field, relationDirectiveKey).arguments[0].value.value
+  }
+
+  /**
+   * Parses a model field, respects all 
+   * known directives. 
+   * @param field
+   */
+  protected parseField(field: any): IGQLField {
+    const name = field.name.value
+
+    const kind = this.parseKind(field.type, null)
+    const fieldType = this.parseType(field.type)
+    const isId = this.isIdField(field)
+    const isUnique = isId || this.isUniqe(field)
+    const isReadOnly = isId || this.isReadOnly(field)
+    const defaultValue = this.getDefaultValue(field)
+    const relationName = this.getRelationName(field)
+
+    return {
+      name,
+      type: fieldType,
+      relationName,
+      defaultValue,
+      isUnique,
+      isList: kind === 'ListType',
+      isRequired: kind === 'NonNullType',
+      relatedField: null,
+      isId,
+      isReadOnly
+    }
+  }
+
+  /**
+   * Checks if the given type is an embedded type.
+   * @param type 
+   */
+  protected abstract isEmbedded(type: any): boolean 
+//  public isEmbedded(type: any): boolean {
+//    return type.directives &&
+//      type.directives.length > 0 &&
+//      type.directives.some(d => d.name.value === 'embedded')
+//  }
+
+  /**
+   * Parases an object type. 
+   * @param type
+   */
+  protected parseObjectType(type: any): IGQLType {
+    const fields: IGQLField[] = []
+    for (const field of type.fields) {
+      if (field.kind === 'FieldDefinition') {
+        // Check for type, kind, name and directives.
+        fields.push(this.parseField(field))
       }
     }
 
-    // Parse all enum types
+    const isEmbedded = this.isEmbedded(type)
+
+    return {
+      name: type.name.value,
+      fields,
+      isEnum: false,
+      isEmbedded,
+    }
+  }
+
+  /**
+   * Parses all object types in the schema.
+   * @param schema
+   */
+  protected parseObjectTypes(schema: any): IGQLType[] {
+    const objectTypes: IGQLType[] = []
+
+    for (const type of schema.definitions) {
+      if (type.kind === 'ObjectTypeDefinition') {
+        objectTypes.push(this.parseObjectType(type))   
+      }
+    }
+
+    return objectTypes
+  }
+
+  /**
+   * Parses all enum types in the schema.
+   * @param schema 
+   */
+  protected parseEnumTypes(schema: any): IGQLType[] {
+    const enumTypes: IGQLType[] = []
     for (const type of schema.definitions) {
       if (type.kind === 'EnumTypeDefinition') {
         const values: IGQLField[] = []
@@ -104,7 +209,7 @@ export default abstract class DatamodelParser {
           }
         }
 
-        objectTypes.push({
+        enumTypes.push({
           name: type.name.value,
           fields: values,
           isEnum: true,
@@ -113,12 +218,21 @@ export default abstract class DatamodelParser {
       }
     }
 
-    // Now, find all types that we know,
+    return enumTypes
+  }
+
+  /**
+   * Resolves and connects all realtion fields found
+   * in the given type list.
+   * @param types 
+   */
+  protected resolveRelations(types: IGQLType[]) {
+    // Find all types that we know,
     // and assign a proper type object instead
     // of the string.
-    for (const typeA of objectTypes) {
+    for (const typeA of types) {
       for (const fieldA of typeA.fields) {
-        for (const typeB of objectTypes) {
+        for (const typeB of types) {
           // At this stage, every type is a string
           if ((fieldA.type as string) === typeB.name) {
             fieldA.type = typeB
@@ -128,7 +242,7 @@ export default abstract class DatamodelParser {
     }
 
     // Connect all relations that are named.
-    for (const typeA of objectTypes) {
+    for (const typeA of types) {
       for (const fieldA of typeA.fields) {
         if (typeof fieldA.type === 'string') {
           continue // Assume scalar
@@ -152,7 +266,7 @@ export default abstract class DatamodelParser {
     // Connect  obvious relations which are lacking the relatioName directive.
     // We explicitely DO NOT ignore fields with a given relationName, in accordance
     // to the prisma implementation.
-    for (const typeA of objectTypes) {
+    for (const typeA of types) {
       searchThroughAFields: for (const fieldA of typeA.fields) {
         if (typeof fieldA.type === 'string') {
           continue // Assume scalar.
@@ -188,15 +302,6 @@ export default abstract class DatamodelParser {
         }
       }
     }
-
-    // That's it.
-    // We could check our model here, if we wanted to.
-    // Possible checks:
-    // * Check if we still use strings for identifying types for non-scalar types
-    // * Check if all double-sided relations are connected correctly
-    // * Check for duplicate type names
-    // * Check for conflicting relations
-    return objectTypes
   }
 
   /**
@@ -204,9 +309,9 @@ export default abstract class DatamodelParser {
    * This will skip modifiers like NonNullType or ListType.
    * @param type
    */
-  private static parseType(type: any) {
+  protected parseType(type: any) {
     if (type.type) {
-      return DatamodelParser.parseType(type.type)
+      return this.parseType(type.type)
     } else if (type.kind !== 'NamedType') {
       throw new Error()
     }
@@ -219,7 +324,7 @@ export default abstract class DatamodelParser {
    * @param type
    * @param acc
    */
-  private static parseKind(type: any, acc: any) {
+  protected parseKind(type: any, acc: any) {
     if (!acc) {
       acc = type.kind
     }
@@ -236,7 +341,7 @@ export default abstract class DatamodelParser {
 
     // When we reach the end, return whatever we have stored.
     if (type.type) {
-      return DatamodelParser.parseKind(type.type, acc)
+      return this.parseKind(type.type, acc)
     } else {
       return acc
     }
