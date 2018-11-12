@@ -150,6 +150,14 @@ export abstract class TypeFromModelGenerator<
   }
 
   /**
+   * Returns all scalar fields from the given field list.
+   * @param fields 
+   */
+  public getRelationFields(fields: IGQLField[]) {
+    return fields.filter(field => !this.generators.scalarTypeGenerator.isScalarField(field))
+  }
+
+  /**
    * Indicates if the resulting type would be empty.
    * @param model
    * @param args
@@ -176,6 +184,11 @@ export abstract class TypeFromModelGenerator<
       if (fieldSchema !== null) {
         fields[field.name] = fieldSchema
       }
+    }
+
+
+    if(this.getTypeName(model, args) === 'OnlyRelationCreateInput') {
+      console.log(fields)
     }
 
     return fields
