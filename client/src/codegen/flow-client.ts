@@ -2,7 +2,7 @@ import { TypescriptGenerator } from './typescript-client'
 import { getExistsFlowTypes } from '../utils'
 
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment';
+import { codeComment } from '../utils/codeComment'
 
 export interface RenderOptions {
   endpoint?: string
@@ -33,7 +33,6 @@ type NodePromise = Promise<Node>`
   }
   renderClientConstructor() {
     return `export type ClientConstructor<T> = (options?: BPOType) => T
-}
 `
   }
   format(code: string, options: prettier.Options = {}) {
@@ -61,7 +60,7 @@ type NodePromise = Promise<Node>`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
-    
+
     return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
 
 export const prisma = new Prisma()`
