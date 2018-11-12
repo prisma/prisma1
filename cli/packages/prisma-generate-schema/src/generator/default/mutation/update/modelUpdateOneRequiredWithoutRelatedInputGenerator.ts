@@ -13,7 +13,7 @@ export default class ModelUpdateOneWithoutRelatedInputTypeGenerator extends Rela
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    if (TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields, (args.relatedField.relatedField as IGQLField).name)) {
+    if (this.hasFieldsExcept(this.getWriteableFields(model.fields), (args.relatedField.relatedField as IGQLField).name)) {
       fields.create = { type: this.generators.modelCreateWithoutRelatedInput.generate(model, args) }
       fields.update = { type: this.generators.modelUpdateWithoutRelatedDataInput.generate(model, args) }
       fields.upsert = { type: this.generators.modelUpsertWithoutRelatedInput.generate(model, args) }

@@ -9,9 +9,7 @@ export default class ModelUpdateManyDataInputGenerator extends ModelUpdateInputG
   }
 
   public wouldBeEmpty(model: IGQLType, args: {}) {
-    return !TypeFromModelGenerator.hasFieldsExcept(
-      this.getScalarFields(model.fields), ...TypeFromModelGenerator.reservedFields
-    )
+    return !this.hasWriteableFields(this.getScalarFields(model.fields))
   }
 
   protected generateRelationField(model: IGQLType, args: {}, field: IGQLField) {

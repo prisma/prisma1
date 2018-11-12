@@ -1,3 +1,7 @@
+type AggregateChild {
+  count: Int!
+}
+
 type AggregateFriend {
   count: Int!
 }
@@ -23,6 +27,21 @@ type Child {
   jointOpt: Joint!
 }
 
+"""
+A connection to a list of items.
+"""
+type ChildConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [ChildEdge]!
+  aggregate: AggregateChild!
+}
+
 input ChildCreateInput {
   c: String
   friendsOpt: FriendCreateManyInput
@@ -31,6 +50,32 @@ input ChildCreateInput {
 
 input ChildCreateManyInput {
   create: [ChildCreateInput!]
+  connect: [ChildWhereUniqueInput!]
+}
+
+"""
+An edge in a connection.
+"""
+type ChildEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: Child!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum ChildOrderByInput {
+  c_ASC
+  c_DESC
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type ChildPreviousValues {
@@ -150,17 +195,29 @@ input ChildUpdateDataInput {
   jointOpt: JointUpdateOneRequiredInput
 }
 
+input ChildUpdateInput {
+  c: String
+  friendsOpt: FriendUpdateManyInput
+  jointOpt: JointUpdateOneRequiredInput
+}
+
 input ChildUpdateManyDataInput {
   c: String
 }
 
 input ChildUpdateManyInput {
   create: [ChildCreateInput!]
+  connect: [ChildWhereUniqueInput!]
+  disconnect: [ChildWhereUniqueInput!]
   delete: [ChildWhereUniqueInput!]
   update: [ChildUpdateWithWhereUniqueNestedInput!]
   updateMany: [ChildUpdateManyWithWhereNestedInput!]
   deleteMany: [ChildScalarWhereInput!]
   upsert: [ChildUpsertWithWhereUniqueNestedInput!]
+}
+
+input ChildUpdateManyMutationInput {
+  c: String
 }
 
 input ChildUpdateManyWithWhereNestedInput {
@@ -1066,21 +1123,27 @@ scalar Long
 
 type Mutation {
   createParent(data: ParentCreateInput!): Parent!
+  createChild(data: ChildCreateInput!): Child!
   createJoint(data: JointCreateInput!): Joint!
   createFriend(data: FriendCreateInput!): Friend!
   updateParent(data: ParentUpdateInput!, where: ParentWhereUniqueInput!): Parent
+  updateChild(data: ChildUpdateInput!, where: ChildWhereUniqueInput!): Child
   updateJoint(data: JointUpdateInput!, where: JointWhereUniqueInput!): Joint
   updateFriend(data: FriendUpdateInput!, where: FriendWhereUniqueInput!): Friend
   deleteParent(where: ParentWhereUniqueInput!): Parent
+  deleteChild(where: ChildWhereUniqueInput!): Child
   deleteJoint(where: JointWhereUniqueInput!): Joint
   deleteFriend(where: FriendWhereUniqueInput!): Friend
   upsertParent(where: ParentWhereUniqueInput!, create: ParentCreateInput!, update: ParentUpdateInput!): Parent!
+  upsertChild(where: ChildWhereUniqueInput!, create: ChildCreateInput!, update: ChildUpdateInput!): Child!
   upsertJoint(where: JointWhereUniqueInput!, create: JointCreateInput!, update: JointUpdateInput!): Joint!
   upsertFriend(where: FriendWhereUniqueInput!, create: FriendCreateInput!, update: FriendUpdateInput!): Friend!
   updateManyParents(data: ParentUpdateManyMutationInput!, where: ParentWhereInput): BatchPayload!
+  updateManyChildren(data: ChildUpdateManyMutationInput!, where: ChildWhereInput): BatchPayload!
   updateManyJoints(data: JointUpdateManyMutationInput!, where: JointWhereInput): BatchPayload!
   updateManyFriends(data: FriendUpdateManyMutationInput!, where: FriendWhereInput): BatchPayload!
   deleteManyParents(where: ParentWhereInput): BatchPayload!
+  deleteManyChildren(where: ChildWhereInput): BatchPayload!
   deleteManyJoints(where: JointWhereInput): BatchPayload!
   deleteManyFriends(where: FriendWhereInput): BatchPayload!
 }
@@ -1126,7 +1189,7 @@ type PageInfo {
 type Parent implements Node {
   id: ID!
   p: String
-  children: [Child!]
+  children(where: ChildWhereInput, orderBy: ChildOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Child!]
   j(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Joint!]
 }
 
@@ -1364,12 +1427,15 @@ input ParentWhereUniqueInput {
 
 type Query {
   parents(where: ParentWhereInput, orderBy: ParentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Parent]!
+  children(where: ChildWhereInput, orderBy: ChildOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Child]!
   joints(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Joint]!
   friends(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Friend]!
   parent(where: ParentWhereUniqueInput!): Parent
+  child(where: ChildWhereUniqueInput!): Child
   joint(where: JointWhereUniqueInput!): Joint
   friend(where: FriendWhereUniqueInput!): Friend
   parentsConnection(where: ParentWhereInput, orderBy: ParentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ParentConnection!
+  childrenConnection(where: ChildWhereInput, orderBy: ChildOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChildConnection!
   jointsConnection(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): JointConnection!
   friendsConnection(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FriendConnection!
   """

@@ -1,22 +1,22 @@
 type Parent {
-  id: ID! @unique
+  id: ID! @id
   p: String @unique
   children: [Child!]!
-  j: [Joint!]!
+  j: [Joint!]! @relation(strategy: EMBED)
 }
 
 type Child @embedded {
-  c: String @unique
+  c: String
   friendsOpt: [Friend!]! @mongoRelation(field: "friends")
   jointOpt: Joint! @mongoRelation(field: "joint")
 }
 
 type Friend {
   f: String @unique
-  test: String
+  test: Int! @id
 }
 
 type Joint {
-  id: ID! @unique
+  id: ID! @id
   j: String
 }

@@ -7,8 +7,8 @@ import { camelCase, plural, capitalize } from '../../../../util/util';
 export abstract class ModelCreateOneOrManyWithoutRelatedInputGenerator extends RelatedModelInputObjectTypeGenerator {
 
   public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
-    return !TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields, (args.relatedField.relatedField as IGQLField).name) &&
-      !TypeFromModelGenerator.hasUniqueField(model.fields)
+    return !this.hasFieldsExcept(this.getWriteableFields(model.fields), (args.relatedField.relatedField as IGQLField).name) &&
+      !this.hasUniqueField(model.fields)
   }
 
   protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType
@@ -16,11 +16,11 @@ export abstract class ModelCreateOneOrManyWithoutRelatedInputGenerator extends R
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    if (TypeFromModelGenerator.hasFieldsExcept(model.fields, ...TypeFromModelGenerator.reservedFields, (args.relatedField.relatedField as IGQLField).name)) {
+    if (this.hasFieldsExcept(this.getWriteableFields(model.fields), (args.relatedField.relatedField as IGQLField).name)) {
       fields.create = { type: this.maybeWrapList(this.generators.modelCreateWithoutRelatedInput.generate(model, args)) }
     }
 
-    if (TypeFromModelGenerator.hasUniqueField(model.fields)) {
+    if (this.hasUniqueField(model.fields)) {
       fields.connect = { type: this.maybeWrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
     }
 

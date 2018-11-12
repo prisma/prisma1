@@ -87,10 +87,6 @@ enum BillingInfoOrderByInput {
   id_DESC
   account_ASC
   account_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type BillingInfoPreviousValues {
@@ -287,8 +283,13 @@ input BillingInfoWhereUniqueInput {
   id: ID
 }
 
-type BillingInfoWithoutConnection {
+type BillingInfoWithoutConnection implements Node {
+  removeThisId: ID!
   account: String!
+  """
+  The id of the object.
+  """
+  id: ID!
 }
 
 """
@@ -312,6 +313,7 @@ input BillingInfoWithoutConnectionCreateInput {
 
 input BillingInfoWithoutConnectionCreateOneInput {
   create: BillingInfoWithoutConnectionCreateInput
+  connect: BillingInfoWithoutConnectionWhereUniqueInput
 }
 
 """
@@ -329,17 +331,16 @@ type BillingInfoWithoutConnectionEdge {
 }
 
 enum BillingInfoWithoutConnectionOrderByInput {
+  removeThisId_ASC
+  removeThisId_DESC
   account_ASC
   account_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type BillingInfoWithoutConnectionPreviousValues {
+  removeThisId: ID!
   account: String!
 }
 
@@ -386,12 +387,17 @@ input BillingInfoWithoutConnectionUpdateDataInput {
   account: String
 }
 
+input BillingInfoWithoutConnectionUpdateInput {
+  account: String
+}
+
 input BillingInfoWithoutConnectionUpdateManyMutationInput {
   account: String
 }
 
 input BillingInfoWithoutConnectionUpdateOneRequiredInput {
   create: BillingInfoWithoutConnectionCreateInput
+  connect: BillingInfoWithoutConnectionWhereUniqueInput
   update: BillingInfoWithoutConnectionUpdateDataInput
   upsert: BillingInfoWithoutConnectionUpsertNestedInput
 }
@@ -414,6 +420,59 @@ input BillingInfoWithoutConnectionWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BillingInfoWithoutConnectionWhereInput!]
+  removeThisId: ID
+  """
+  All values that are not equal to given value.
+  """
+  removeThisId_not: ID
+  """
+  All values that are contained in given list.
+  """
+  removeThisId_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisId_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  removeThisId_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  removeThisId_lte: ID
+  """
+  All values greater than the given value.
+  """
+  removeThisId_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisId_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisId_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisId_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisId_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisId_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisId_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisId_not_ends_with: ID
   account: String
   """
   All values that are not equal to given value.
@@ -469,6 +528,10 @@ input BillingInfoWithoutConnectionWhereInput {
   account_not_ends_with: String
 }
 
+input BillingInfoWithoutConnectionWhereUniqueInput {
+  removeThisId: ID
+}
+
 """
 Raw JSON value
 """
@@ -486,34 +549,43 @@ type Mutation {
   createBillingInfo(data: BillingInfoCreateInput!): BillingInfo!
   createOptionalDetails(data: OptionalDetailsCreateInput!): OptionalDetails!
   createOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionCreateInput!): OptionalDetailsWithoutConnection!
-  createPostWithoutConnection(data: PostWithoutConnectionCreateInput!): PostWithoutConnection!
   createBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionCreateInput!): BillingInfoWithoutConnection!
+  createPostWithoutConnection(data: PostWithoutConnectionCreateInput!): PostWithoutConnection!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
   updateBillingInfo(data: BillingInfoUpdateInput!, where: BillingInfoWhereUniqueInput!): BillingInfo
+  updateOptionalDetails(data: OptionalDetailsUpdateInput!, where: OptionalDetailsWhereUniqueInput!): OptionalDetails
+  updateOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionUpdateInput!, where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
+  updateBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionUpdateInput!, where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   updatePostWithoutConnection(data: PostWithoutConnectionUpdateInput!, where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   deleteUser(where: UserWhereUniqueInput!): User
   deletePost(where: PostWhereUniqueInput!): Post
   deleteBillingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
+  deleteOptionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
+  deleteOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
+  deleteBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   deletePostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
   upsertBillingInfo(where: BillingInfoWhereUniqueInput!, create: BillingInfoCreateInput!, update: BillingInfoUpdateInput!): BillingInfo!
+  upsertOptionalDetails(where: OptionalDetailsWhereUniqueInput!, create: OptionalDetailsCreateInput!, update: OptionalDetailsUpdateInput!): OptionalDetails!
+  upsertOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!, create: OptionalDetailsWithoutConnectionCreateInput!, update: OptionalDetailsWithoutConnectionUpdateInput!): OptionalDetailsWithoutConnection!
+  upsertBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!, create: BillingInfoWithoutConnectionCreateInput!, update: BillingInfoWithoutConnectionUpdateInput!): BillingInfoWithoutConnection!
   upsertPostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!, create: PostWithoutConnectionCreateInput!, update: PostWithoutConnectionUpdateInput!): PostWithoutConnection!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
   updateManyBillingInfoes(data: BillingInfoUpdateManyMutationInput!, where: BillingInfoWhereInput): BatchPayload!
   updateManyOptionalDetailses(data: OptionalDetailsUpdateManyMutationInput!, where: OptionalDetailsWhereInput): BatchPayload!
   updateManyOptionalDetailsWithoutConnections(data: OptionalDetailsWithoutConnectionUpdateManyMutationInput!, where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
-  updateManyPostWithoutConnections(data: PostWithoutConnectionUpdateManyMutationInput!, where: PostWithoutConnectionWhereInput): BatchPayload!
   updateManyBillingInfoWithoutConnections(data: BillingInfoWithoutConnectionUpdateManyMutationInput!, where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
+  updateManyPostWithoutConnections(data: PostWithoutConnectionUpdateManyMutationInput!, where: PostWithoutConnectionWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyPosts(where: PostWhereInput): BatchPayload!
   deleteManyBillingInfoes(where: BillingInfoWhereInput): BatchPayload!
   deleteManyOptionalDetailses(where: OptionalDetailsWhereInput): BatchPayload!
   deleteManyOptionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
-  deleteManyPostWithoutConnections(where: PostWithoutConnectionWhereInput): BatchPayload!
   deleteManyBillingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
+  deleteManyPostWithoutConnections(where: PostWithoutConnectionWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -532,9 +604,14 @@ interface Node {
   id: ID!
 }
 
-type OptionalDetails {
+type OptionalDetails implements Node {
+  removeThisId: ID!
   text: String!
   user: User!
+  """
+  The id of the object.
+  """
+  id: ID!
 }
 
 """
@@ -559,6 +636,7 @@ input OptionalDetailsCreateInput {
 
 input OptionalDetailsCreateOneWithoutUserInput {
   create: OptionalDetailsCreateWithoutUserInput
+  connect: OptionalDetailsWhereUniqueInput
 }
 
 input OptionalDetailsCreateWithoutUserInput {
@@ -580,17 +658,16 @@ type OptionalDetailsEdge {
 }
 
 enum OptionalDetailsOrderByInput {
+  removeThisId_ASC
+  removeThisId_DESC
   text_ASC
   text_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type OptionalDetailsPreviousValues {
+  removeThisId: ID!
   text: String!
 }
 
@@ -633,12 +710,18 @@ input OptionalDetailsSubscriptionWhereInput {
   node: OptionalDetailsWhereInput
 }
 
+input OptionalDetailsUpdateInput {
+  text: String
+  user: UserUpdateOneRequiredWithoutOptionalDetailsInput
+}
+
 input OptionalDetailsUpdateManyMutationInput {
   text: String
 }
 
 input OptionalDetailsUpdateOneWithoutUserInput {
   create: OptionalDetailsCreateWithoutUserInput
+  connect: OptionalDetailsWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: OptionalDetailsUpdateWithoutUserDataInput
@@ -667,6 +750,59 @@ input OptionalDetailsWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [OptionalDetailsWhereInput!]
+  removeThisId: ID
+  """
+  All values that are not equal to given value.
+  """
+  removeThisId_not: ID
+  """
+  All values that are contained in given list.
+  """
+  removeThisId_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisId_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  removeThisId_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  removeThisId_lte: ID
+  """
+  All values greater than the given value.
+  """
+  removeThisId_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisId_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisId_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisId_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisId_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisId_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisId_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisId_not_ends_with: ID
   text: String
   """
   All values that are not equal to given value.
@@ -722,8 +858,17 @@ input OptionalDetailsWhereInput {
   text_not_ends_with: String
 }
 
-type OptionalDetailsWithoutConnection {
+input OptionalDetailsWhereUniqueInput {
+  removeThisId: ID
+}
+
+type OptionalDetailsWithoutConnection implements Node {
+  removeThisId: ID!
   text: String!
+  """
+  The id of the object.
+  """
+  id: ID!
 }
 
 """
@@ -747,6 +892,7 @@ input OptionalDetailsWithoutConnectionCreateInput {
 
 input OptionalDetailsWithoutConnectionCreateOneInput {
   create: OptionalDetailsWithoutConnectionCreateInput
+  connect: OptionalDetailsWithoutConnectionWhereUniqueInput
 }
 
 """
@@ -764,17 +910,16 @@ type OptionalDetailsWithoutConnectionEdge {
 }
 
 enum OptionalDetailsWithoutConnectionOrderByInput {
+  removeThisId_ASC
+  removeThisId_DESC
   text_ASC
   text_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type OptionalDetailsWithoutConnectionPreviousValues {
+  removeThisId: ID!
   text: String!
 }
 
@@ -821,12 +966,17 @@ input OptionalDetailsWithoutConnectionUpdateDataInput {
   text: String
 }
 
+input OptionalDetailsWithoutConnectionUpdateInput {
+  text: String
+}
+
 input OptionalDetailsWithoutConnectionUpdateManyMutationInput {
   text: String
 }
 
 input OptionalDetailsWithoutConnectionUpdateOneInput {
   create: OptionalDetailsWithoutConnectionCreateInput
+  connect: OptionalDetailsWithoutConnectionWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: OptionalDetailsWithoutConnectionUpdateDataInput
@@ -851,6 +1001,59 @@ input OptionalDetailsWithoutConnectionWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [OptionalDetailsWithoutConnectionWhereInput!]
+  removeThisId: ID
+  """
+  All values that are not equal to given value.
+  """
+  removeThisId_not: ID
+  """
+  All values that are contained in given list.
+  """
+  removeThisId_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisId_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  removeThisId_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  removeThisId_lte: ID
+  """
+  All values greater than the given value.
+  """
+  removeThisId_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisId_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisId_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisId_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisId_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisId_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisId_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisId_not_ends_with: ID
   text: String
   """
   All values that are not equal to given value.
@@ -904,6 +1107,10 @@ input OptionalDetailsWithoutConnectionWhereInput {
   All values not ending with the given string.
   """
   text_not_ends_with: String
+}
+
+input OptionalDetailsWithoutConnectionWhereUniqueInput {
+  removeThisId: ID
 }
 
 """
@@ -1001,10 +1208,6 @@ enum PostOrderByInput {
   text_DESC
   count_ASC
   count_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PostPreviousValues {
@@ -1486,10 +1689,6 @@ enum PostWithoutConnectionOrderByInput {
   text_DESC
   count_ASC
   count_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PostWithoutConnectionPreviousValues {
@@ -1894,19 +2093,22 @@ type Query {
   billingInfoes(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfo]!
   optionalDetailses(where: OptionalDetailsWhereInput, orderBy: OptionalDetailsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OptionalDetails]!
   optionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput, orderBy: OptionalDetailsWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OptionalDetailsWithoutConnection]!
-  postWithoutConnections(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection]!
   billingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfoWithoutConnection]!
+  postWithoutConnections(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection]!
   user(where: UserWhereUniqueInput!): User
   post(where: PostWhereUniqueInput!): Post
   billingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
+  optionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
+  optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
+  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   postWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
   billingInfoesConnection(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoConnection!
   optionalDetailsesConnection(where: OptionalDetailsWhereInput, orderBy: OptionalDetailsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OptionalDetailsConnection!
   optionalDetailsWithoutConnectionsConnection(where: OptionalDetailsWithoutConnectionWhereInput, orderBy: OptionalDetailsWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OptionalDetailsWithoutConnectionConnection!
-  postWithoutConnectionsConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostWithoutConnectionConnection!
   billingInfoWithoutConnectionsConnection(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoWithoutConnectionConnection!
+  postWithoutConnectionsConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostWithoutConnectionConnection!
   """
   Fetches an object given its ID
   """
@@ -1924,8 +2126,8 @@ type Subscription {
   billingInfo(where: BillingInfoSubscriptionWhereInput): BillingInfoSubscriptionPayload
   optionalDetails(where: OptionalDetailsSubscriptionWhereInput): OptionalDetailsSubscriptionPayload
   optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionSubscriptionWhereInput): OptionalDetailsWithoutConnectionSubscriptionPayload
-  postWithoutConnection(where: PostWithoutConnectionSubscriptionWhereInput): PostWithoutConnectionSubscriptionPayload
   billingInfoWithoutConnection(where: BillingInfoWithoutConnectionSubscriptionWhereInput): BillingInfoWithoutConnectionSubscriptionPayload
+  postWithoutConnection(where: PostWithoutConnectionSubscriptionWhereInput): PostWithoutConnectionSubscriptionPayload
 }
 
 type User implements Node {
@@ -2045,10 +2247,6 @@ enum UserOrderByInput {
   id_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type UserPreviousValues {
@@ -2258,6 +2456,13 @@ input UserUpdateOneRequiredWithoutBillingInfoInput {
   upsert: UserUpsertWithoutBillingInfoInput
 }
 
+input UserUpdateOneRequiredWithoutOptionalDetailsInput {
+  create: UserCreateWithoutOptionalDetailsInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateWithoutOptionalDetailsDataInput
+  upsert: UserUpsertWithoutOptionalDetailsInput
+}
+
 input UserUpdateOneRequiredWithoutPostsInput {
   create: UserCreateWithoutPostsInput
   connect: UserWhereUniqueInput
@@ -2285,6 +2490,16 @@ input UserUpdateWithoutLikesDataInput {
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
 }
 
+input UserUpdateWithoutOptionalDetailsDataInput {
+  name: String
+  posts: PostUpdateManyWithoutUserInput
+  postsWithoutConnection: PostWithoutConnectionUpdateManyInput
+  billingInfo: BillingInfoUpdateOneRequiredWithoutUserInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
+  likes: PostUpdateManyWithoutLikesInput
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
+}
+
 input UserUpdateWithoutPostsDataInput {
   name: String
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
@@ -2303,6 +2518,11 @@ input UserUpdateWithWhereUniqueWithoutLikesInput {
 input UserUpsertWithoutBillingInfoInput {
   update: UserUpdateWithoutBillingInfoDataInput!
   create: UserCreateWithoutBillingInfoInput!
+}
+
+input UserUpsertWithoutOptionalDetailsInput {
+  update: UserUpdateWithoutOptionalDetailsDataInput!
+  create: UserCreateWithoutOptionalDetailsInput!
 }
 
 input UserUpsertWithoutPostsInput {

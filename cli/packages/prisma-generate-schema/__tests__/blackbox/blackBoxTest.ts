@@ -1,20 +1,19 @@
-import DatamodelParser from '../../src/datamodel/parser'
 import * as util from 'util'
 import { parse } from 'graphql'
 import { printSchema, buildSchema } from 'graphql/utilities'
-import RelationalGenerator from '../../src/generator/default'
-import DocumentGenerator from '../../src/generator/document'
 import AstTools from '../../src/util/astTools'
 import * as fs from 'fs'
 import * as path from 'path'
-import { DatabaseType } from '../../src/index';
+import { DatabaseType } from '../../src/databaseType'
+import Generator from '../../src/generator'
+import Parser from '../../src/datamodel'
 
 export default function blackBoxTest(name: string, databaseType: DatabaseType) {
-  const generator = databaseType === DatabaseType.relational ?
-     new RelationalGenerator() :
-     new DocumentGenerator()
+  const generator = Generator.create(databaseType)
 
-  const modelPath = path.join(__dirname, `cases/${name}/model.graphql`)
+  console.log(generator.constructor)
+
+  const modelPath = path.join(__dirname, `cases/${name}/model_${databaseType}.graphql`)
   const prismaPath = path.join(__dirname, `cases/${name}/${databaseType}.graphql`)
 
   expect(fs.existsSync(modelPath))
@@ -23,7 +22,7 @@ export default function blackBoxTest(name: string, databaseType: DatabaseType) {
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const prisma = fs.readFileSync(prismaPath, { encoding: 'UTF-8' })
 
-  const types = DatamodelParser.parseFromSchemaString(model)
+  const types = Parser.create(databaseType).parseFromSchemaString(model)
   const ourSchema = generator.schema.generate(types, {})
 
   const ourPrintedSchema = printSchema(ourSchema)

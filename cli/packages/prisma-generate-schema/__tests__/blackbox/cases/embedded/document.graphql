@@ -144,39 +144,19 @@ input ChildSubscriptionWhereInput {
   node: ChildWhereInput
 }
 
-input ChildUpdateDataInput {
-  c: String
-  friendsOpt: FriendUpdateManyInput
-  jointOpt: JointUpdateOneRequiredInput
-}
-
 input ChildUpdateManyDataInput {
   c: String
 }
 
 input ChildUpdateManyInput {
   create: [ChildCreateInput!]
-  delete: [ChildWhereUniqueInput!]
-  update: [ChildUpdateWithWhereUniqueNestedInput!]
   updateMany: [ChildUpdateManyWithWhereNestedInput!]
   deleteMany: [ChildScalarWhereInput!]
-  upsert: [ChildUpsertWithWhereUniqueNestedInput!]
 }
 
 input ChildUpdateManyWithWhereNestedInput {
   where: ChildScalarWhereInput!
   data: ChildUpdateManyDataInput!
-}
-
-input ChildUpdateWithWhereUniqueNestedInput {
-  where: ChildWhereUniqueInput!
-  data: ChildUpdateDataInput!
-}
-
-input ChildUpsertWithWhereUniqueNestedInput {
-  where: ChildWhereUniqueInput!
-  update: ChildUpdateDataInput!
-  create: ChildCreateInput!
 }
 
 input ChildWhereInput {
@@ -245,19 +225,11 @@ input ChildWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-  friendsOpt_every: FriendWhereInput
-  friendsOpt_some: FriendWhereInput
-  friendsOpt_none: FriendWhereInput
-  jointOpt: JointWhereInput
-}
-
-input ChildWhereUniqueInput {
-  c: String
 }
 
 type Friend {
   f: String
-  test: String
+  test: Int!
 }
 
 """
@@ -277,7 +249,6 @@ type FriendConnection {
 
 input FriendCreateInput {
   f: String
-  test: String
 }
 
 input FriendCreateManyInput {
@@ -306,136 +277,11 @@ enum FriendOrderByInput {
   test_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FriendPreviousValues {
   f: String
-  test: String
-}
-
-input FriendScalarWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [FriendScalarWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FriendScalarWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FriendScalarWhereInput!]
-  f: String
-  """
-  All values that are not equal to given value.
-  """
-  f_not: String
-  """
-  All values that are contained in given list.
-  """
-  f_in: [String!]
-  """
-  All values that are not contained in given list.
-  """
-  f_not_in: [String!]
-  """
-  All values less than the given value.
-  """
-  f_lt: String
-  """
-  All values less than or equal the given value.
-  """
-  f_lte: String
-  """
-  All values greater than the given value.
-  """
-  f_gt: String
-  """
-  All values greater than or equal the given value.
-  """
-  f_gte: String
-  """
-  All values containing the given string.
-  """
-  f_contains: String
-  """
-  All values not containing the given string.
-  """
-  f_not_contains: String
-  """
-  All values starting with the given string.
-  """
-  f_starts_with: String
-  """
-  All values not starting with the given string.
-  """
-  f_not_starts_with: String
-  """
-  All values ending with the given string.
-  """
-  f_ends_with: String
-  """
-  All values not ending with the given string.
-  """
-  f_not_ends_with: String
-  test: String
-  """
-  All values that are not equal to given value.
-  """
-  test_not: String
-  """
-  All values that are contained in given list.
-  """
-  test_in: [String!]
-  """
-  All values that are not contained in given list.
-  """
-  test_not_in: [String!]
-  """
-  All values less than the given value.
-  """
-  test_lt: String
-  """
-  All values less than or equal the given value.
-  """
-  test_lte: String
-  """
-  All values greater than the given value.
-  """
-  test_gt: String
-  """
-  All values greater than or equal the given value.
-  """
-  test_gte: String
-  """
-  All values containing the given string.
-  """
-  test_contains: String
-  """
-  All values not containing the given string.
-  """
-  test_not_contains: String
-  """
-  All values starting with the given string.
-  """
-  test_starts_with: String
-  """
-  All values not starting with the given string.
-  """
-  test_not_starts_with: String
-  """
-  All values ending with the given string.
-  """
-  test_ends_with: String
-  """
-  All values not ending with the given string.
-  """
-  test_not_ends_with: String
+  test: Int!
 }
 
 type FriendSubscriptionPayload {
@@ -477,51 +323,12 @@ input FriendSubscriptionWhereInput {
   node: FriendWhereInput
 }
 
-input FriendUpdateDataInput {
-  f: String
-  test: String
-}
-
 input FriendUpdateInput {
   f: String
-  test: String
-}
-
-input FriendUpdateManyDataInput {
-  f: String
-  test: String
-}
-
-input FriendUpdateManyInput {
-  create: [FriendCreateInput!]
-  connect: [FriendWhereUniqueInput!]
-  disconnect: [FriendWhereUniqueInput!]
-  delete: [FriendWhereUniqueInput!]
-  update: [FriendUpdateWithWhereUniqueNestedInput!]
-  updateMany: [FriendUpdateManyWithWhereNestedInput!]
-  deleteMany: [FriendScalarWhereInput!]
-  upsert: [FriendUpsertWithWhereUniqueNestedInput!]
 }
 
 input FriendUpdateManyMutationInput {
   f: String
-  test: String
-}
-
-input FriendUpdateManyWithWhereNestedInput {
-  where: FriendScalarWhereInput!
-  data: FriendUpdateManyDataInput!
-}
-
-input FriendUpdateWithWhereUniqueNestedInput {
-  where: FriendWhereUniqueInput!
-  data: FriendUpdateDataInput!
-}
-
-input FriendUpsertWithWhereUniqueNestedInput {
-  where: FriendWhereUniqueInput!
-  update: FriendUpdateDataInput!
-  create: FriendCreateInput!
 }
 
 input FriendWhereInput {
@@ -590,63 +397,40 @@ input FriendWhereInput {
   All values not ending with the given string.
   """
   f_not_ends_with: String
-  test: String
+  test: Int
   """
   All values that are not equal to given value.
   """
-  test_not: String
+  test_not: Int
   """
   All values that are contained in given list.
   """
-  test_in: [String!]
+  test_in: [Int!]
   """
   All values that are not contained in given list.
   """
-  test_not_in: [String!]
+  test_not_in: [Int!]
   """
   All values less than the given value.
   """
-  test_lt: String
+  test_lt: Int
   """
   All values less than or equal the given value.
   """
-  test_lte: String
+  test_lte: Int
   """
   All values greater than the given value.
   """
-  test_gt: String
+  test_gt: Int
   """
   All values greater than or equal the given value.
   """
-  test_gte: String
-  """
-  All values containing the given string.
-  """
-  test_contains: String
-  """
-  All values not containing the given string.
-  """
-  test_not_contains: String
-  """
-  All values starting with the given string.
-  """
-  test_starts_with: String
-  """
-  All values not starting with the given string.
-  """
-  test_not_starts_with: String
-  """
-  All values ending with the given string.
-  """
-  test_ends_with: String
-  """
-  All values not ending with the given string.
-  """
-  test_not_ends_with: String
+  test_gte: Int
 }
 
 input FriendWhereUniqueInput {
   f: String
+  test: Int
 }
 
 type Joint implements Node {
@@ -702,10 +486,6 @@ enum JointOrderByInput {
   id_DESC
   j_ASC
   j_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type JointPreviousValues {
@@ -905,21 +685,9 @@ input JointUpdateManyWithWhereNestedInput {
   data: JointUpdateManyDataInput!
 }
 
-input JointUpdateOneRequiredInput {
-  create: JointCreateInput
-  connect: JointWhereUniqueInput
-  update: JointUpdateDataInput
-  upsert: JointUpsertNestedInput
-}
-
 input JointUpdateWithWhereUniqueNestedInput {
   where: JointWhereUniqueInput!
   data: JointUpdateDataInput!
-}
-
-input JointUpsertNestedInput {
-  update: JointUpdateDataInput!
-  create: JointCreateInput!
 }
 
 input JointUpsertWithWhereUniqueNestedInput {
@@ -1170,10 +938,6 @@ enum ParentOrderByInput {
   id_DESC
   p_ASC
   p_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type ParentPreviousValues {

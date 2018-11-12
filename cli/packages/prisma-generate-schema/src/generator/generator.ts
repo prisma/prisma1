@@ -97,14 +97,13 @@ export abstract class TypeFromModelGenerator<
     | GraphQLEnumValueConfigMap
     | GraphQLInputFieldConfigMap
 > extends TypeGenerator<IGQLType, Args, Type> {
-  public static reservedFields = ['id', 'createdAt', 'updatedAt']
 
   /**
    * Checks if the given list of fields has
    * a unique field.
    * @param fields
    */
-  public static hasUniqueField(fields: IGQLField[]) {
+  public hasUniqueField(fields: IGQLField[]) {
     return fields.filter(field => field.isUnique).length > 0
   }
 
@@ -115,8 +114,23 @@ export abstract class TypeFromModelGenerator<
    * @param fields
    * @param fieldNames
    */
-  public static hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
+  public hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
     return fields.filter(field => !fieldNames.includes(field.name)).length > 0
+  } 
+
+  /**
+   * Returns all writeable fields in the given field list.
+   * @param fields
+   */
+  public getWriteableFields(fields: IGQLField[]) {
+    return fields.filter(field => !field.isReadOnly)
+  }
+
+  /**
+   * Checks if the given field list contains at least one writeable field.
+   */
+  public hasWriteableFields(fields: IGQLField[]) {
+    return this.getWriteableFields(fields).length > 0
   }
   
   /**
