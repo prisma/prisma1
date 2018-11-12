@@ -4,14 +4,12 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
@@ -20,7 +18,7 @@ import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
-import com.prisma.metrics.MetricsRegistry
+//import com.prisma.metrics.MetricsRegistry
 import com.prisma.native_jdbc.CustomJdbcDriver
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
@@ -42,7 +40,7 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   val config: PrismaConfig = ConfigLoader.load()
   val managementSecret     = config.managementApiSecret.getOrElse("")
 
-  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+//  MetricsRegistry.init(deployConnector.cloudSecretPersistence) todo
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
   override lazy val projectFetcher: ProjectFetcher = {

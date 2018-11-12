@@ -1,6 +1,6 @@
 package com.prisma.messagebus.testkits
 
-import com.prisma.errors.BugsnagErrorReporter
+import com.prisma.errors.DummyErrorReporter
 import com.prisma.messagebus.Conversions
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
@@ -10,7 +10,7 @@ class RabbitQueueTestKitSpec extends WordSpecLike with Matchers with BeforeAndAf
 
   case class TestMessage(id: String, testOpt: Option[Int], testSeq: Seq[String])
 
-  implicit val reporter          = BugsnagErrorReporter("")
+  implicit val reporter          = DummyErrorReporter
   implicit val testMessageFormat = Json.format[TestMessage]
   implicit val testMarshaller    = Conversions.Marshallers.FromJsonBackedType[TestMessage]()
   implicit val testUnmarshaller  = Conversions.Unmarshallers.ToJsonBackedType[TestMessage]()

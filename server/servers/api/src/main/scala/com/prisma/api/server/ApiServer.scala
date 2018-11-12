@@ -10,7 +10,6 @@ import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.Server
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
-import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
@@ -18,12 +17,10 @@ import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.ProjectId
 import com.prisma.util.env.EnvUtils
-import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json._
 
-import scala.concurrent.Future
 import scala.language.postfixOps
 
 case class ApiServer(
@@ -34,11 +31,9 @@ case class ApiServer(
     system: ActorSystem,
     materializer: ActorMaterializer
 ) extends Server
-    with PlayJsonSupport
-    with LazyLogging {
+    with PlayJsonSupport {
   import system.dispatcher
 
-  val log: String => Unit   = (msg: String) => logger.info(msg)
   val requestPrefix         = sys.env.getOrElse("ENV", "local")
   val projectFetcher        = apiDependencies.projectFetcher
   val reservedSegments      = Set("private", "import", "export")

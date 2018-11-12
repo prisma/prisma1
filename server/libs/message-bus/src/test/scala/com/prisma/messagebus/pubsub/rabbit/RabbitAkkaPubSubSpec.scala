@@ -2,7 +2,7 @@ package com.prisma.messagebus.pubsub.rabbit
 
 import akka.testkit.{TestKit, TestProbe}
 import com.prisma.akkautil.SingleThreadedActorSystem
-import com.prisma.errors.BugsnagErrorReporter
+import com.prisma.errors.DummyErrorReporter
 import com.prisma.messagebus.Conversions
 import com.prisma.messagebus.pubsub.{Everything, Message, Only}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
@@ -18,7 +18,7 @@ class RabbitAkkaPubSubSpec
   override def afterAll = shutdown(verifySystemShutdown = true)
 
   val amqpUri           = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
-  implicit val reporter = BugsnagErrorReporter("")
+  implicit val reporter = DummyErrorReporter
 
   val testTopic = Only("testTopic")
   val testMsg   = "testMsg"

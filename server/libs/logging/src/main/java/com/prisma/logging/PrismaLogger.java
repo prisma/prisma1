@@ -3,7 +3,6 @@ package com.prisma.logging;
 import org.slf4j.Marker;
 import org.slf4j.event.Level;
 
-
 // Super simple logging implementation
 public class PrismaLogger implements org.slf4j.Logger {
     @Override
@@ -18,6 +17,7 @@ public class PrismaLogger implements org.slf4j.Logger {
         if (env == null) {
             System.out.println("No log level set, defaulting to INFO.");
             return Level.INFO;
+
         } else {
             env = env.toUpperCase();
         }

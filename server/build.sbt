@@ -93,7 +93,7 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
   .dependsOn(jdbcNative)
   .enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
   "--enable-all-security-services",
-//  "--report-unsupported-elements-at-runtime", // todo no idea why postgres is still destroying the build
+//  "--report-unsupported-elements-at-runtime",
   "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
   "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
   //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
@@ -277,7 +277,6 @@ lazy val akkaUtils = libProject("akka-utils")
     akkaStream,
     akkaHttp,
     akkaTestKit,
-    finagle,
     akkaHttpCors,
     playJson,
     specs2,

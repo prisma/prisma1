@@ -53,7 +53,6 @@ object Dependencies {
 
   val jsr305        = "com.google.code.findbugs"      % "jsr305"                % "3.0.0"
   val caffeine      = "com.github.ben-manes.caffeine" % "caffeine"              % "2.6.2"
-  val finagle       = "com.twitter"                   %% "finagle-http"         % "6.44.0"
   val guava         = "com.google.guava"              % "guava"                 % "19.0"
   val datadogStatsd = "com.datadoghq"                 % "java-dogstatsd-client" % "2.3"
 
@@ -75,6 +74,7 @@ object Dependencies {
   val amqp              = "com.rabbitmq"               % "amqp-client"                    % "4.1.0"
   val java8Compat       = "org.scala-lang.modules"     %% "scala-java8-compat"            % "0.8.0"
   val scalaLogging      = "com.typesafe.scala-logging" %% "scala-logging"                 % "3.7.0"
+  val log4j             = "log4j"                      % "log4j"                          % "1.2.17"
   val jwt               = "com.pauldijou"              %% "jwt-core"                      % "0.14.1"
   val scalajHttp        = "org.scalaj"                 %% "scalaj-http"                   % "2.3.0"
   val evoInflector      = "org.atteo"                  % "evo-inflector"                  % "1.2"
@@ -83,13 +83,16 @@ object Dependencies {
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"                   % "9.3.0.v20150612"
   val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.3.1"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators"      % "1.0.4"
-  val apacheCommons     = "commons-lang"               % "commons-lang"                   % "2.6"
+  val apacheCommons     = "org.apache.commons"         % "commons-lang3"                  % "3.8.1"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"        % "3.11.0",
-    "org.jooq" %% "jooq-scala" % "3.11.0"
+    "org.jooq" % "jooq"        % "3.11.7",
+    "org.jooq" %% "jooq-scala" % "3.11.7"
   )
   lazy val jna = "net.java.dev.jna" % "jna" % "4.5.2"
+
+  lazy val javax = "javax.xml.bind"    % "jaxb-api"              % "2.2.12"
+  val wat        = "javax.persistence" % "javax.persistence-api" % "2.2"
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,
@@ -109,8 +112,11 @@ object Dependencies {
     scalajHttp,
     scalaLogging,
     evoInflector,
+    apacheCommons,
     cuid,
-    finagle,
-    jwt
+    jwt,
+    log4j,
+    javax,
+    wat
   )
 }

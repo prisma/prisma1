@@ -14,7 +14,6 @@ import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContex
 import com.prisma.errors.RequestMetadata
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.sangria.utils.ErrorHandler
-import com.typesafe.scalalogging.LazyLogging
 import cool.graph.cuid.Cuid.createCuid
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{Json, _}
@@ -30,14 +29,12 @@ case class ManagementServer(prefix: String = "")(
     materializer: ActorMaterializer,
     dependencies: DeployDependencies
 ) extends Server
-    with LazyLogging
     with PlayJsonSupport {
   import com.prisma.deploy.server.JsonMarshalling._
   import system.dispatcher
 
   val schemaBuilder: SchemaBuilder           = dependencies.managementSchemaBuilder
   val projectPersistence: ProjectPersistence = dependencies.projectPersistence
-  val log: String => Unit                    = (msg: String) => logger.info(msg)
   val requestPrefix                          = sys.env.getOrElse("ENV", "local")
   val projectIdEncoder                       = dependencies.projectIdEncoder
   val telemetryActor                         = dependencies.telemetryActor
@@ -128,6 +125,7 @@ case class ManagementServer(prefix: String = "")(
       }
     }
   }
+
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
     case e: DeployApiError =>
       complete(OK -> Json.obj("code" -> e.code, "requestId" -> requestId, "error" -> e.getMessage))

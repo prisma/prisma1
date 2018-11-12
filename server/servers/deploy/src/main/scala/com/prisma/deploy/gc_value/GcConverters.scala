@@ -3,7 +3,7 @@ package com.prisma.deploy.gc_value
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.lang3.StringEscapeUtils
 import org.joda.time.{DateTime, DateTimeZone}
 import org.parboiled2.{Parser, ParserInput}
 import org.scalactic.{Bad, Good, Or}
@@ -93,7 +93,7 @@ private case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, i
     }
   }
 
-  private def escape(str: String): String = "\"" + StringEscapeUtils.escapeJava(str) + "\""
+  private def escape(str: String): String = ??? // "\"" + StringEscapeUtils.escapeJava(str) + "\""
 
   def fromAbleToHandleJsonLists(string: String): Or[SangriaValue, InvalidValueForScalarType] = {
 

@@ -8,7 +8,7 @@ import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
-import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
+import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
 import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.shared.models.{ProjectIdEncoder, Schema}
@@ -19,7 +19,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   val config = ConfigLoader.load()
 
-  implicit val reporter: ErrorReporter    = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  implicit val reporter: ErrorReporter    = DummyErrorReporter
   override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)
   override lazy val managementAuth        = Auth.none()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()

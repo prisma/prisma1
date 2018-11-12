@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 
 import akka.actor.ActorSystem
 import akka.testkit.{TestKit, TestProbe}
-import com.prisma.errors.BugsnagErrorReporter
+import com.prisma.errors.DummyErrorReporter
 import com.prisma.messagebus.queue.ConstantBackoff
 import com.prisma.messagebus.utils.RabbitUtils
 import com.prisma.rabbit.Bindings.RoutingKey
@@ -27,7 +27,7 @@ class RabbitQueueSpec
   val amqpUri                                          = sys.env.getOrElse("RABBITMQ_URI", sys.error("RABBITMQ_URI required for testing"))
   implicit val testMarshaller: String => Array[Byte]   = str => str.getBytes("utf-8")
   implicit val testUnmarshaller: Array[Byte] => String = bytes => new String(bytes, Charset.forName("UTF-8"))
-  implicit val reporter                                = BugsnagErrorReporter("")
+  implicit val reporter                                = DummyErrorReporter
 
   var rabbitQueue: RabbitQueue[String]        = _
   var failingRabbitQueue: RabbitQueue[String] = _

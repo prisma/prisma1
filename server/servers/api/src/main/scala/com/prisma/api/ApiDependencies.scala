@@ -9,7 +9,7 @@ import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
 import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
 import com.prisma.config.PrismaConfig
-import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
+import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
 import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
@@ -38,7 +38,7 @@ trait ApiDependencies extends AwaitUtils {
   def projectIdEncoder: ProjectIdEncoder
   def capabilities: Set[ConnectorCapability] = apiConnector.capabilities
 
-  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  implicit lazy val reporter: ErrorReporter             = DummyErrorReporter
   lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
   lazy val auth: Auth                                   = Auth.jna(Algorithm.HS256)
   lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
