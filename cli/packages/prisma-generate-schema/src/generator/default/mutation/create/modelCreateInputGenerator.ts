@@ -1,4 +1,4 @@
-import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, ModelInputObjectTypeGenerator, TypeFromModelGenerator } from '../../../generator'
+import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, ModelInputObjectTypeGenerator, TypeFromModelGenerator, RelatedModelInputObjectTypeGenerator } from '../../../generator'
 import { IGQLType, IGQLField } from '../../../../datamodel/model'
 import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLList, GraphQLInputObjectType, GraphQLString } from "graphql/type"
 
@@ -13,23 +13,35 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
    * @param generators 
    */
   public static generateRelationFieldForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
+    const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
+    const generator = ModelCreateInputGenerator.getGeneratorForRelation(model, field, generators)
+    const schemaField = generator.generate(field.type as IGQLType, relationInfo)
+    return generators.scalarTypeGenerator.requiredIf(field.isRequired, schemaField)
+  }
+
+  public static relationWouldBeEmpty(model: IGQLType, field: IGQLField, generators: IGenerators) {
+    const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
+    const generator = ModelCreateInputGenerator.getGeneratorForRelation(model, field, generators)
+    return generator.wouldBeEmpty(field.type as IGQLType, relationInfo)
+  }
+
+  public static getGeneratorForRelation(model: IGQLType, field: IGQLField, generators: IGenerators) : RelatedModelInputObjectTypeGenerator {
     if (field.relatedField !== null) {
-      const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
       if (field.isList) {
-        return generators.scalarTypeGenerator.requiredIf(field.isRequired, generators.modelCreateManyWithoutRelatedInput.generate(field.type as IGQLType, relationInfo))
+        return generators.modelCreateManyWithoutRelatedInput
       } else {
-        return generators.scalarTypeGenerator.requiredIf(field.isRequired, generators.modelCreateOneWithoutRelatedInput.generate(field.type as IGQLType, relationInfo))
+        return generators.modelCreateOneWithoutRelatedInput
       }
     } else {
-      const relationInfo = { relatedField: field, relatedType: model, relationName: null }
       if (field.isList) {
-        return generators.scalarTypeGenerator.requiredIf(field.isRequired, generators.modelCreateManyInput.generate(field.type as IGQLType, relationInfo))
+        return generators.modelCreateManyInput
       } else {
-        return generators.scalarTypeGenerator.requiredIf(field.isRequired, generators.modelCreateOneInput.generate(field.type as IGQLType, relationInfo))
+        return generators.modelCreateOneInput
       }
     }
   }
 
+  // TODO: Make all those instance members.
   public static generateScalarFieldTypeForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
     if (field.isReadOnly) {
       return null
@@ -43,7 +55,8 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
   }
 
   public wouldBeEmpty(model: IGQLType, args: {}) {
-    return !this.hasWriteableFields(model.fields)
+    return !this.hasWriteableFields(this.getScalarFields(model.fields)) &&
+      this.getRelationFields(model.fields).every(field => ModelCreateInputGenerator.relationWouldBeEmpty(model, field, this.generators))
   }
 
   public getTypeName(input: IGQLType, args: {}) {

@@ -20,33 +20,45 @@ export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTy
    * @param generators 
    */
   public static generateRelationFieldForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
+    const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
+    const generator = ModelUpdateInputGenerator.getGeneratorForRelation(model, field, generators)
+    return generator.generate(field.type as IGQLType, relationInfo)
+  }
+  public static relationWouldBeEmpty(model: IGQLType, field: IGQLField, generators: IGenerators) {
+    const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
+    const generator = ModelUpdateInputGenerator.getGeneratorForRelation(model, field, generators)
+    return generator.wouldBeEmpty(field.type as IGQLType, relationInfo)
+  }
+
+  public static getGeneratorForRelation(model: IGQLType, field: IGQLField, generators: IGenerators) : RelatedModelInputObjectTypeGenerator{
     if (field.relatedField !== null) {
-      const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
       if (field.isList) {
-        return generators.modelUpdateManyWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
+        return generators.modelUpdateManyWithoutRelatedInput
       } else {
         if (field.isRequired) {
-          return generators.modelUpdateOneRequiredWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
+          return generators.modelUpdateOneRequiredWithoutRelatedInput
         } else {
-          return generators.modelUpdateOneWithoutRelatedInput.generate(field.type as IGQLType, relationInfo)
+          return generators.modelUpdateOneWithoutRelatedInput
         }
       }
     } else {
-      const relationInfo = { relatedField: field, relatedType: model, relationName: null }
       if (field.isList) {
-        return generators.modelUpdateManyInput.generate(field.type as IGQLType, relationInfo)
+        return generators.modelUpdateManyInput
       } else {
         if (field.isRequired) {
-          return generators.modelUpdateOneRequiredInput.generate(field.type as IGQLType, relationInfo)
+          return generators.modelUpdateOneRequiredInput
         } else {
-          return generators.modelUpdateOneInput.generate(field.type as IGQLType, relationInfo)
+          return generators.modelUpdateOneInput
         }
       }
     }
   }
 
-  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {  
     return !this.hasWriteableFields(model.fields)
+    // TODO: We should add the following check, but this requires
+    // a caching mechanism to avoid recursive checks.   
+    // this.getRelationFields(model.fields).every(field => ModelUpdateInputGenerator.relationWouldBeEmpty(model, field, this.generators))
   }
 
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
