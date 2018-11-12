@@ -28,11 +28,12 @@ import type { GraphQLSchema, DocumentNode } from 'graphql'
 import type { IResolvers } from 'graphql-tools/dist/Interfaces'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
 import { makePrismaClientClass } from 'prisma-client-lib'
-import { typeDefs } from './prisma-schema'`
+import { typeDefs } from './prisma-schema'
+
+type NodePromise = Promise<Node>`
   }
   renderClientConstructor() {
-    return `export interface ClientConstructor<T> {
-  new(options?: BPOType): T
+    return `export type ClientConstructor<T> = (options?: BPOType) => T
 }
 `
   }
@@ -62,11 +63,8 @@ import { typeDefs } from './prisma-schema'`
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
     
-    return `if (!process.env['PRISMA_API_SECRET'])
-throw new Error('Please provide a PRISMA_API_SECRET env variable.');
+    return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
 
-export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
-
-export const prisma: ${this.prismaInterface} = new Prisma()`
+export const prisma = new Prisma()`
   }
 }
