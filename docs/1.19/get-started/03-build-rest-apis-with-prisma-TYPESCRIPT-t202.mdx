@@ -6,7 +6,7 @@ export const meta = {
   gettingStartedOrder: 2,
   gettingStartedTitle: 'REST API',
   nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a REST API.',
-  technology: 'node',
+  technology: 'typescript',
   technologyOrder: 2,
   articleGroup: 'Build an App with Prisma',
 }
@@ -15,16 +15,16 @@ export const meta = {
 
 On this page, you will learn how to:
 
-- Configure a Node app
+- Configure a Node app with TypeScript
 - Implement a REST API using [Express.js](https://expressjs.com/) & Prisma client
 - Test your REST API using `curl`
 
 ## Configure project
 
-You'll use Express.js as your web server. Add the `express` and `body-parser` dependencies to your project with this command:
+You'll use Express.js as your web server. Add the `typescript`, `ts-node`, `express` and `body-parser` dependencies to your project with this command:
 
 ```bash
-npm install --save express body-parser
+npm install --save typescript ts-node express body-parser
 ```
 
 ## Define and implement API
@@ -44,10 +44,11 @@ There will be six routes that provide the API for a simple blogging application:
 Replace the current contents of `index.js` with the following code:
 
 ```js lineNumbers,copy
-const { prisma } = require('./generated/prisma-client')
+import { prisma } from './generated/prisma-client'
+import express from 'express'
+import bodyParser from 'body-parser'
+
 const app = express()
-const express = require('express')
-const bodyParser = require('body-parser')
 
 app.use(bodyParser.json())
 
@@ -100,7 +101,7 @@ app.listen(3000, () => console.log('Server is running on http://localhost:3000')
 Start the server with this command:
 
 ```js
-node index.js
+ts-node index.ts
 ```
 
 You can now use a tool like `curl` or [Postman](https://www.getpostman.com/) to explore your the functionlity of the routes.

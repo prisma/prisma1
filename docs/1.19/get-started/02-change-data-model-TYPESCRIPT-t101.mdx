@@ -5,8 +5,10 @@ export const meta = {
   position: 2,
   step: 2,
   nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma client.',
-  technology: 'node',
-  technologyOrder: 1,
+  technology: 'typescript',
+  technologyOrder: 2,
+  gettingStartedOrder: 1,
+  articleGroup: 'Change Datamodel',
 }
 
 ## Goals
@@ -20,7 +22,7 @@ On this page, you will learn how to:
 
 <Warning>
 
-This page is only relevant if you started with a [new database](a002) or a [demo server](a001). If you configured Prisma with an [existing database](a003), you need to run migrations directly against your database.
+This page is only relevant if you started with a [new database](t002) or a [demo server](t001). If you configured Prisma with an [existing database](t003), you need to run migrations directly against your database.
 
 </Warning>
 
@@ -59,7 +61,7 @@ prisma deploy
 ```
 
 ## Regenerate your Prisma client
- 
+
 Because the Prisma client is based on your datamodel, it needs to be regenerated every time the datamodel is updated:
 
 ```bash copy
@@ -72,10 +74,10 @@ The Prisma client library in the `/generated/prisma-client` directory is now bei
 
 The Prisma client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
 
-Update your `index.js` to look as follows:
+Update your `index.ts` to look as follows:
 
 ```js copy
-const { prisma } = require('./generated/prisma-client')
+import { prisma } from './generated/prisma-client'
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -107,7 +109,7 @@ main().catch(e => console.error(e))
 Run the script with the following command:
 
 ```bash copy
-node index.js
+ts-node index.ts
 ```
 
 ## Query relational data
@@ -115,7 +117,7 @@ node index.js
 With the Prisma client API, you can navigate relations in your data graph using simple method calls. Here is how you can query the `posts` written by a certain `User`:
 
 ```js copy
-const { prisma } = require('./generated/prisma-client')
+import { prisma } from './generated/prisma-client'
 
 // A `main` function so that we can use async/await
 async function main() {
