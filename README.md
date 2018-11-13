@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/wD4rVt4.png" alt="Prisma" height="160px"></a></p>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://www.prisma.io/blog) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com) • [中文文档](https://prisma.1wire.com)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://www.prisma.io/blog) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
@@ -254,13 +254,20 @@ Join the discussion or contribute to influence which we'll work on next!
 
 Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
+### Channels
+
 - [Forum](https://www.prisma.io/forum)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
 - [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Europe](https://www.graphql-europe.org/)
+- [GraphQL Conf](https://www.graphqlconf.org/)
 - [Email](mailto:hello@prisma.io)
+
+### Resources
+
+- [Chinese translation of the Prisma docs](https://prisma.1wire.com/) (Thanks to [Victor Kang](https://github.com/Victorkangsh))
+- [Awesome Prisma](https://github.com/catalinmiron/awesome-prisma) (Thanks to [Catalin Miron](https://github.com/catalinmiron))
 
 ## Contributing
 
