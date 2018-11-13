@@ -27,12 +27,12 @@ ${codeComment}
 import type { GraphQLSchema, DocumentNode } from 'graphql'
 import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
 import { makePrismaClientClass } from 'prisma-client-lib'
-import { typeDefs } from './prisma-schema'`
+import { typeDefs } from './prisma-schema'
+
+type NodePromise = Promise<Node>`
   }
   renderClientConstructor() {
-    return `export interface ClientConstructor<T> {
-  new(options?: BPOType): T
-}
+    return `export type ClientConstructor<T> = (options?: BPOType) => T
 `
   }
   format(code: string, options: prettier.Options = {}) {
@@ -46,7 +46,7 @@ import { typeDefs } from './prisma-schema'`
     return `type AtLeastOne<T> = $Shape<T>`
   }
   renderGraphQL() {
-    return `$graphql: <T: any>(query: string, variables?: {[key: string]: any}) => Promise<T>;`
+    return `$graphql: <T: mixed>(query: string, variables?: {[key: string]: mixed}) => Promise<T>;`
   }
   renderInputListType(type) {
     return `${type}[]`
@@ -58,9 +58,11 @@ import { typeDefs } from './prisma-schema'`
     }
     return ''
   }
-  // renderExports(options?: RenderOptions) {
-  //   const args = this.renderPrismaClassArgs(options)
+  renderExports(options?: RenderOptions) {
+    const args = this.renderPrismaClassArgs(options)
 
-  //   return `export const prisma: Prisma = makePrismaClientClass(${args})`
-  // }
+    return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
+
+export const prisma = new Prisma()`
+  }
 }

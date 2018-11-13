@@ -267,7 +267,7 @@ export default abstract class Parser {
 
     // Connect  obvious relations which are lacking the relatioName directive.
     // We explicitely DO NOT ignore fields with a given relationName, in accordance
-    // to the prisma implementation.
+   // to the prisma implementation.
     for (const typeA of types) {
       searchThroughAFields: for (const fieldA of typeA.fields) {
         if (typeof fieldA.type === 'string') {
@@ -342,7 +342,7 @@ export default abstract class Parser {
     }
 
     // When we reach the end, return whatever we have stored.
-    if (type.type) {
+   if (type.type) {
       return this.parseKind(type.type, acc)
     } else {
       return acc

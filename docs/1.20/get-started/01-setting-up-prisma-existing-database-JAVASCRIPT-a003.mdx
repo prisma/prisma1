@@ -3,14 +3,14 @@ import QueryChooser from 'components/Markdown/QueryChooser'
 import Code from 'components/Markdown/Code'
 
 export const meta = {
-  title: 'Setting up Prisma',
+  title: 'Set up Prisma',
   position: 1,
   gettingStartedOrder: 2,
   gettingStartedTitle: 'Existing database',
   nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
   technology: 'node',
   technologyOrder: 1,
-  articleGroup: 'Setting up Prisma',
+  articleGroup: 'Set up Prisma',
 }
 
 ## Goals
@@ -18,7 +18,7 @@ export const meta = {
 On this page, you will learn how to:
 
 - Install the Prisma CLI
-- Setup Prisma using Docker
+- Set up Prisma using Docker
 - Introspect your existing database and derive a datamodel
 - Use the datamodel to configure your Prisma API
 - Generate a Prisma client
@@ -63,8 +63,6 @@ npm install -g prisma
 
 To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
 
-> Don't want to use Docker? You can also get started with a [demo database](a001) for now.
-
 ## Set up Prisma server
 
 ### Create new directory
@@ -92,7 +90,7 @@ Paste the following contents into the Docker Compose file you just created:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.19
+    image: prismagraphql/prisma:1.20
     restart: always
     ports:
     - "4466:4466"
@@ -130,15 +128,15 @@ To specify the database to which Prisma should connect, replace the placeholders
 - `__YOUR_POSTGRES_PASSWORD__`: The password for the database user.
 - `__SSL_CONNECTION__`: Whether your database server uses SSL, possible values are `true` and `false`.
 
-### Start Prisma server
+### Launch Prisma
 
-To start Prisma and launch the connected database, run the following command:
+To start Prisma and connect it to your database, run the following command:
 
 ```bash copy
 docker-compose up -d
 ```
 
-Your local Prisma server is now running on `http://localhost:4466`.
+Prisma is now connected to your database and runs on `http://localhost:4466`.
 
 ## Derive Prisma datamodel from database schema
 
@@ -166,13 +164,13 @@ You now need to introspect your database schema to generate the datamodel which 
 prisma introspect
 ```
 
-The CLI generates the `datamodel-[TIMESTAMP].graphql` (e.g. `datamodel-1533886167692.graphql`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
+The CLI generates the `datamodel-[TIMESTAMP].prisma` (e.g. `datamodel-1533886167692.prisma`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
 
 Finally, you need to rename the file to `datamodel.prisma` because that's the file name you specifed in `prisma.yml`.
 
 ## Deploy the Prisma API
 
-You now have the _minimal_ setup to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
+You now have the _minimal_ setup ready to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
 
 ```bash copy
 prisma deploy
@@ -194,14 +192,13 @@ generate:
     output: ./generated/prisma-client/
 ```
 
-
 Now generate the client with this command:
 
 ``` copy
 prisma generate
 ```
 
-The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
+The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.
 
 ## Prepare Node application
 
@@ -215,7 +212,7 @@ Next, initialize an empty NPM project in the current directory and install the r
 
 ```bash copy
 npm init -y
-npm install --save prisma-client-lib graphql@0.13
+npm install --save prisma-client-lib graphql
 ```
 
 ## Read and write data using the Prisma client
@@ -231,7 +228,7 @@ type User {
 
 If you don't have such a `User` type, you need to adjust the following code snippets with a type that matches your datamodel.
 
-Add the following code in `index.js` and save it afterwards:
+Add the following code in `index.js`:
 
 ```js copy
 const { prisma } = require('./generated/prisma-client')

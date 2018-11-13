@@ -3,7 +3,6 @@ import { IGQLType, IGQLField } from '../../../../datamodel/model'
 import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
 import { plural, capitalize } from '../../../../util/util';
 
-
 export default class ModelUpdateManyWithoutRelatedInputTypeGenerator extends RelatedModelInputObjectTypeGenerator {
 
   public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
