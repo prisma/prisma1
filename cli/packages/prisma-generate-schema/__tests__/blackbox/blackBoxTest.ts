@@ -46,7 +46,4 @@ for (const testName of testNames) {
   test(`Generates schema for ${testName}/relational correctly`, () => {
     blackBoxTest(testName, DatabaseType.relational)
   })
-  test(`Generates schema for ${testName}/document correctly`, () => {
-    blackBoxTest(testName, DatabaseType.document)
-  })
 }
