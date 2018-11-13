@@ -2,11 +2,19 @@ import { GraphQLSchema } from 'graphql'
 import flatten from './utils/flatten'
 import { interleave } from './utils/interleave'
 import { Interpolation } from './types'
+import { IGQLType } from 'prisma-generate-schema/dist/src/datamodel/model'
+
+export interface GeneratorInput {
+  schema: GraphQLSchema
+  internalTypes: IGQLType[]
+}
 
 export class Generator {
   schema: GraphQLSchema
+  internalTypes: IGQLType[] = []
 
-  constructor({ schema }: { schema: GraphQLSchema }) {
+  constructor({ schema, internalTypes }: GeneratorInput) {
+    this.internalTypes = internalTypes
     this.schema = schema
   }
   compile(

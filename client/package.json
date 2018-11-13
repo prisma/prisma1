@@ -1,6 +1,6 @@
 {
   "name": "prisma-client-lib",
-  "version": "0.2.59",
+  "version": "1.21.0-test.4",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "Apache-2.0",
   "files": [
@@ -17,7 +17,7 @@
     "test-ts-definitions-generator-only": "npm run build && ava dist/codegen/typescript-definitions.test.js",
     "test-go-generator-only": "npm run build && ava dist/codegen/go-client.test.js",
     "test-flow-generator-only": "npm run build && ava dist/codegen/flow-client.test.js",
-    "test": "tslint src/**/*.ts && npm run test-generator-only"
+    "test": "tslint src/**/*.ts && npm run test-only"
   },
   "dependencies": {
     "@types/node": "^10.12.0",
@@ -28,6 +28,7 @@
     "jsonwebtoken": "^8.3.0",
     "lodash.flatten": "^4.4.0",
     "prettier": "^1.14.3",
+    "prisma-generate-schema": "1.22.0-alpha.0.1",
     "subscriptions-transport-ws": "^0.9.15",
     "uppercamelcase": "^3.0.0",
     "ws": "^6.1.0",
