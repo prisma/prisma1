@@ -1,6 +1,5 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.ModelManifestation
 
 import scala.language.implicitConversions
