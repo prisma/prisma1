@@ -1,0 +1,35 @@
+
+
+type OnlyId {
+    id: ID! @id
+}
+
+type OnlyIdAndARelation {
+    id: ID! @id
+    ref: OnlyId! @relation(strategy: EMBED)
+}
+
+type OnlyIdAndARelation2 {
+    id: ID! @id
+    ref: OnlyId @relation(strategy: EMBED)
+}
+
+type OnlyDate {
+    id: ID! @id
+    createdAt: DateTime! @createdAt
+}
+
+type OnlyRelation {
+    id: ID! @id
+    ref: [OnlyDate!]! @relation(strategy: EMBED)
+}
+
+type OnlyRelationA {
+    id: ID! @id
+    ref: OnlyRelationA! @relation(strategy: EMBED)
+}
+
+type OnlyRelationB {
+    id: ID! @id
+    ref: OnlyRelationB @relation(strategy: EMBED)
+}
