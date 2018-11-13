@@ -61,7 +61,6 @@ case class SangriaHandlerImpl()(
   }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
-    println(request.path)
     if (request.path == Vector("management")) {
       handleQueryForManagementApi(request, query)
     } else {
