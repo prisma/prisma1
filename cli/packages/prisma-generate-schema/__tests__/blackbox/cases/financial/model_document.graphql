@@ -1,0 +1,179 @@
+type User {
+  id: ID! @id
+  person: Person! @relation(strategy: EMBED)
+}
+
+type Person {
+  id: ID! @id
+  email: String
+  firstName: String
+  lastName: String
+  phoneNumbers: [PhoneNumber!]! @relation(strategy: EMBED)
+  scheduledTransactions: [FinancialScheduledTransaction!]! @relation(strategy: EMBED)
+  transactions: [FinancialTransaction!]! @relation(strategy: EMBED)
+  user: User
+}
+
+type PhoneNumber {
+  id: ID! @id
+  number: String!
+}
+
+type FinancialAccount {
+  id: ID! @id
+  key: String @unique
+  campuses: [Campus!]! @relation(strategy: EMBED)
+  description: String!
+  isActive: Boolean!
+  name: String
+}
+
+enum CREDIT_CARD {
+  VISA
+  MASTERCARD
+  AMEX
+  DISCOVER
+}
+
+enum CURRENCY_TYPE {
+  ACH
+  CC
+}
+
+enum ACH_TYPE {
+  SAVINGS
+  CHECKING
+}
+
+type FinancialPaymentDetail {
+  id: ID! @id
+  accountNumberMasked: String!
+  billingLocation: Location @relation(strategy: EMBED)
+  creditCardType: CREDIT_CARD
+  achType: ACH_TYPE
+  currencyType: CURRENCY_TYPE
+  expirationDate: DateTime!
+  nameOnCard: String
+}
+
+enum TRANSACTION_FREQUENCY {
+  DAILY
+  MONTHLY
+  BIWEEKLY
+  CUSTOM
+}
+
+type FinancialScheduledTransaction {
+  id: ID! @id
+  person: Person
+  endDate: DateTime
+  payment: FinancialPaymentDetail @relation(strategy: EMBED)
+  isActive: Boolean!
+  startDate: DateTime
+  frequency: TRANSACTION_FREQUENCY
+  transactions: [FinancialTransaction!]!
+  account: FinancialAccount @relation(strategy: EMBED)
+  amount: Float!
+}
+
+enum TRANSACTION_STATUS {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+type FinancialTransaction {
+  id: ID! @id
+  payment: FinancialPaymentDetail @relation(strategy: EMBED)
+  person: Person
+  processedDate: DateTime
+  scheduledTransaction: FinancialScheduledTransaction @relation(strategy: EMBED)
+  status: TRANSACTION_STATUS!
+  transactionDate: DateTime
+  amount: Float!
+  account: FinancialAccount @relation(strategy: EMBED)
+  organization: Group! @relation(strategy: EMBED)
+}
+
+enum GROUP_INVITE_STATUS {
+  PENDING
+  JOINED
+}
+
+enum GROUP_ROLE_TYPE {
+  ADMIN
+  OWNER
+  MEMBER
+}
+
+type GroupInvite {
+  id: ID! @id
+  email: String!
+  group: Group! @relation(strategy: EMBED)
+  groupRole: GroupRole @relation(strategy: EMBED)
+  status: GROUP_INVITE_STATUS!
+}
+
+type GroupMember {
+  id: ID! @id
+  group: Group
+  role: GroupRole @relation(strategy: EMBED)
+  person: Person @relation(strategy: EMBED)
+}
+
+type GroupRole {
+  id: ID! @id
+  canEdit: Boolean!
+  canView: Boolean!
+  description: String!
+  groupType: GroupType @relation(strategy: EMBED)
+  isLeader: Boolean
+  name: String! @unique
+  type: GROUP_ROLE_TYPE
+}
+
+type GroupType {
+  id: ID! @id
+  description: String
+  groups: [Group!]!
+  name: String! @unique
+  roles: [GroupRole!]!
+}
+
+type Group {
+  id: ID! @id
+  key: String @unique
+  description: String
+  type: GroupType! @relation(strategy: EMBED)
+  invites: [GroupInvite!]!
+  isActive: Boolean!
+  members: [GroupMember!]! @relation(strategy: EMBED)
+  name: String!
+  organization: Group @relation(strategy: EMBED)
+}
+
+type Campus {
+  id: ID! @id
+  accounts: [FinancialAccount!]!
+  description: String
+  isActive: Boolean
+  organization: Group @relation(strategy: EMBED)
+  location: Location @relation(strategy: EMBED)
+  name: String!
+  phoneNumbers: [PhoneNumber!]! @relation(strategy: EMBED)
+}
+
+enum LOCATION_TYPE {
+  HOME
+  WORK
+}
+
+type Location {
+  id: ID! @id
+  city: String
+  locationType: LOCATION_TYPE
+  postalCode: String
+  state: String
+  street1: String
+  street2: String
+}

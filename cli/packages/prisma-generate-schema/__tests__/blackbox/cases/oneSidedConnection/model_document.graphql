@@ -1,0 +1,48 @@
+# One-sided connection 
+# With/Without ID
+
+type TypeWithId {
+  id: ID! @id
+  field: String!
+}
+
+type TypeWithoutId {
+  id: Int! @id
+  field: String!
+}
+
+type A {
+  id: Int! @id
+  x: TypeWithId! @relation(strategy: EMBED)
+  y: TypeWithoutId! @relation(strategy: EMBED)
+}
+
+type B {
+  id: Int! @id
+  x: TypeWithId @relation(strategy: EMBED)
+  y: TypeWithoutId @relation(strategy: EMBED)
+}
+
+type C {
+  id: Int! @id
+  x: [TypeWithId!]! @relation(strategy: EMBED)
+  y: [TypeWithoutId!]! @relation(strategy: EMBED)
+}
+
+type D {
+  id: ID! @id
+  x: TypeWithId! @relation(strategy: EMBED)
+  y: TypeWithoutId! @relation(strategy: EMBED)
+}
+
+type E {
+  id: ID! @id
+  x: TypeWithId @relation(strategy: EMBED)
+  y: TypeWithoutId @relation(strategy: EMBED)
+}
+
+type F {
+  id: ID! @id
+  x: [TypeWithId!]! @relation(strategy: EMBED)
+  y: [TypeWithoutId!]! @relation(strategy: EMBED)
+}

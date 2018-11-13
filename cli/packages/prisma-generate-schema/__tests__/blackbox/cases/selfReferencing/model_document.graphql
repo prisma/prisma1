@@ -1,0 +1,76 @@
+type SelfReferencingAWithId {
+    id: ID! @id
+    a: SelfReferencingAWithId! @relation(strategy: EMBED)
+    field: Int!
+}
+
+type SelfReferencingBWithId {
+    id: ID! @id
+    a: SelfReferencingBWithId @relation(strategy: EMBED)
+    field: Int!
+}
+
+type SelfReferencingCWithId {
+    id: ID! @id
+    a: [SelfReferencingBWithId!]! @relation(strategy: EMBED)
+    field: Int!
+}
+
+type SelfReferencingA {
+    removeThisId: ID! @id
+    a: SelfReferencingAWithId! @relation(strategy: EMBED)
+    field: Int!
+}
+
+type SelfReferencingB {
+    removeThisId: ID! @id
+    a: SelfReferencingB @relation(strategy: EMBED)
+    field: Int!
+}
+
+# TODO: Remove all id fields that jeopardize the unit test.
+
+type SelfReferencingC {
+    removeThisId: ID! @id
+    a: [SelfReferencingC!]! @relation(strategy: EMBED)
+    field: Int!
+}
+
+# TODO: Put these back in.
+
+#type MultiSelfReferencingCWithId {
+#    id: ID! @id
+#    a: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", strategy: EMBED)
+#    b: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", strategy: EMBED)
+#}
+
+#type MultiSelfReferencingBWithId {
+#    id: ID! @id
+#    a: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", strategy: EMBED)
+#    b: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", strategy: EMBED)
+#}
+
+# Prisma does not allow this
+#type MultiSelfReferencingCWithId {
+#    id: ID! @id
+#    a: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", strategy: EMBED)
+#    b: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", strategy: EMBED)
+#}
+
+#type MultiSelfReferencingC {
+#    removeThisId: ID! @id
+#    a: [MultiSelfReferencingC!]! @relation(name: "AToA", strategy: EMBED)
+#    b: [MultiSelfReferencingC!]! @relation(name: "AToA", strategy: EMBED)
+#}
+
+#type MultiSelfReferencingB {
+#    removeThisId: ID! @id
+#    a: MultiSelfReferencingB @relation(name: "AToA2", strategy: EMBED)
+#    b: MultiSelfReferencingB @relation(name: "AToA2", strategy: EMBED)
+#}
+
+# Prisma does not allow this
+#type MultiSelfReferencingC {
+#    a: MultiSelfReferencingC! @relation(name: "AToA3", strategy: EMBED)
+#    b: MultiSelfReferencingC! @relation(name: "AToA3", strategy: EMBED)
+#}
