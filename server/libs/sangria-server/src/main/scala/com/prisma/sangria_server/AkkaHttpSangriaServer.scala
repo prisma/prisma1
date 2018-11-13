@@ -1,6 +1,5 @@
 package com.prisma.sangria_server
 
-import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
@@ -9,11 +8,11 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.model.{ContentTypes, HttpMethods, HttpRequest, RemoteAddress}
 import akka.http.scaladsl.server.Directives.{as, entity, extractClientIP, _}
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
-import akka.http.scaladsl.server.{Route, UnsupportedWebSocketSubprotocolRejection}
+import akka.http.scaladsl.server.{ExceptionHandler, Route, UnsupportedWebSocketSubprotocolRejection}
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{BidiFlow, Flow}
+import akka.stream.scaladsl.Flow
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 import scala.concurrent.{Await, Future}
 
@@ -31,30 +30,40 @@ case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefi
 
   val routes = {
     extractRequest { request =>
-      extractClientIP { clientIp =>
-        post {
-          entity(as[JsValue]) { requestJson =>
-            val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp)
-            complete(OK -> server.handleRawRequest(rawRequest))
-          }
-        } ~ get {
-          extractUpgradeToWebSocket { upgrade =>
-            upgrade.requestedProtocols.headOption match {
-              case Some(protocol) if server.supportedWebsocketProtocols.contains(protocol) =>
-                val originalFlow = server.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol))
-                val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
-                handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
-              case _ =>
-                reject(UnsupportedWebSocketSubprotocolRejection(server.supportedWebsocketProtocols.head))
+      val requestId = createRequestId()
+      handleExceptions(toplevelExceptionHandler(requestId)) {
+        extractClientIP { clientIp =>
+          post {
+            entity(as[JsValue]) { requestJson =>
+              val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
+              complete(OK -> server.handleRawRequest(rawRequest))
             }
-          } ~
-            getFromResource("graphiql.html", ContentTypes.`text/html(UTF-8)`)
+          } ~ get {
+            extractUpgradeToWebSocket { upgrade =>
+              upgrade.requestedProtocols.headOption match {
+                case Some(protocol) if server.supportedWebsocketProtocols.contains(protocol) =>
+                  val originalFlow = server.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
+                  val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
+                  handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
+                case _ =>
+                  reject(UnsupportedWebSocketSubprotocolRejection(server.supportedWebsocketProtocols.head))
+              }
+            } ~
+              getFromResource("graphiql.html", ContentTypes.`text/html(UTF-8)`)
+          }
         }
       }
     }
   }
 
-  private def akkaRequestToRawRequest(req: HttpRequest, json: JsValue, ip: RemoteAddress): RawRequest = {
+  def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: Throwable =>
+      println(e.getMessage)
+      e.printStackTrace()
+      complete(InternalServerError -> JsonErrorHelper.errorJson(requestId, e.getMessage))
+  }
+
+  private def akkaRequestToRawRequest(req: HttpRequest, json: JsValue, ip: RemoteAddress, requestId: String): RawRequest = {
     val reqMethod = req.method match {
       case HttpMethods.GET  => HttpMethod.Get
       case HttpMethods.POST => HttpMethod.Post
@@ -63,7 +72,7 @@ case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefi
     val headers = req.headers.map(h => h.name -> h.value).toMap
     val path    = req.uri.path.toString.split('/')
     RawRequest(
-      id = createRequestId(),
+      id = requestId,
       method = reqMethod,
       path = path.toVector,
       headers = headers,
@@ -72,11 +81,11 @@ case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefi
     )
   }
 
-  private def akkaRequestToRawWebsocketRequest(req: HttpRequest, ip: RemoteAddress, protocol: String): RawWebsocketRequest = {
+  private def akkaRequestToRawWebsocketRequest(req: HttpRequest, ip: RemoteAddress, protocol: String, requestId: String): RawWebsocketRequest = {
     val headers = req.headers.map(h => h.name -> h.value).toMap
     val path    = req.uri.path.toString.split('/')
     RawWebsocketRequest(
-      id = createRequestId(),
+      id = requestId,
       path = path.toVector,
       headers = headers,
       ip = ip.toString,
@@ -108,4 +117,13 @@ case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefi
   }
 
   def stopBlocking(duration: Duration = 15.seconds): Unit = Await.result(stop, duration)
+}
+
+object JsonErrorHelper {
+
+  def errorJson(requestId: String, message: String, errorCode: Int): JsObject = errorJson(requestId, message, Some(errorCode))
+  def errorJson(requestId: String, message: String, errorCode: Option[Int] = None): JsObject = errorCode match {
+    case None       => Json.obj("errors" -> Seq(Json.obj("message" -> message, "requestId" -> requestId)))
+    case Some(code) => Json.obj("errors" -> Seq(Json.obj("message" -> message, "code"      -> code, "requestId" -> requestId)))
+  }
 }

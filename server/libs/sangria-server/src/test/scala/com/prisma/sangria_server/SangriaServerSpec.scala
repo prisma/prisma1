@@ -10,7 +10,7 @@ import akka.http.scaladsl.{Http => AkkaHttp}
 import akka.stream.ActorMaterializer
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json._
 import scalaj.http._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,20 +31,28 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     }
   }
 
-  val server = executor.create(handler, port = 8765, requestPrefix = "test")
+  val failingHandler = new SangriaHandler {
+    override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext) = sys.error("boom!")
+  }
+
+  val server        = executor.create(handler, port = 8765, requestPrefix = "test")
+  val failingServer = executor.create(failingHandler, port = 8764, requestPrefix = "test")
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     server.start()
+    failingServer.start()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
     server.stop()
+    failingServer.stop()
   }
 
   val serverAddress     = "localhost:8765"
   val httpUrl           = "http://" + serverAddress
+  val failingHttpUrl    = "http://localhost:8764"
   val wsUrl             = "ws://" + serverAddress
   val validGraphQlQuery = "{ someField }"
 
@@ -58,6 +66,15 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     val response = Http(httpUrl).header("content-type", "application/json").postData(graphQlRequest(validGraphQlQuery)).asString
     response.body.asJson should be("""{"message":"hello from the handler"}""".asJson)
     response.header("Content-Type") should be(Some("application/json"))
+  }
+
+  "it should return a properly formatted error if an exception occurs" in {
+    val response = Http(failingHttpUrl).header("content-type", "application/json").postData(graphQlRequest(validGraphQlQuery)).asString
+    response.code should be(500)
+    response.header("Content-Type") should be(Some("application/json"))
+    val errors = response.body.asJsObject.value("errors").asInstanceOf[JsArray]
+    errors.value should have(size(1))
+    errors.head.as[JsObject].value("message") should equal(JsString("boom!"))
   }
 
   "it should reject incoming websocket connections that use the wrong protocol" in {
@@ -104,7 +121,8 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   }
 
   implicit class StringExtensions(str: String) {
-    def asJson: JsValue = Json.parse(str)
+    def asJson: JsValue      = Json.parse(str)
+    def asJsObject: JsObject = asJson.asInstanceOf[JsObject]
   }
 }
 
