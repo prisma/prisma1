@@ -6,7 +6,7 @@ export abstract class ModelCreateOneOrManyInputGenerator extends ModelInputObjec
 
   public wouldBeEmpty(model: IGQLType, args: {}) {
     return !this.hasWriteableFields(model.fields) &&
-      !this.hasUniqueField(model.fields)
+      !(this.hasUniqueField(model.fields) && !model.isEmbedded)
   }
 
   protected abstract maybeWrapList(input: GraphQLInputObjectType): GraphQLList<GraphQLNonNull<GraphQLInputObjectType>> | GraphQLInputObjectType

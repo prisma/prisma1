@@ -150,6 +150,14 @@ export abstract class TypeFromModelGenerator<
   }
 
   /**
+   * Returns all scalar fields from the given field list.
+   * @param fields 
+   */
+  public getRelationFields(fields: IGQLField[]) {
+    return fields.filter(field => !this.generators.scalarTypeGenerator.isScalarField(field))
+  }
+
+  /**
    * Indicates if the resulting type would be empty.
    * @param model
    * @param args
@@ -177,7 +185,7 @@ export abstract class TypeFromModelGenerator<
         fields[field.name] = fieldSchema
       }
     }
-
+    
     return fields
   }
 
