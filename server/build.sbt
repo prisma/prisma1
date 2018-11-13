@@ -313,6 +313,14 @@ lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies
 
 lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
 
+lazy val sangriaServer = libProject("sangria-server")
+  .dependsOn(sangriaUtils)
+  .dependsOn(scalaUtils)
+  .settings(libraryDependencies ++= Seq(
+    akkaHttpPlayJson,
+    scalajHttp % Test
+  ))
+
 val allDockerImageProjects = List(
   prismaLocal,
   prismaProd
