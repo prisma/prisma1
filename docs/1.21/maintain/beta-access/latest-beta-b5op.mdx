@@ -1,0 +1,92 @@
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Latest Beta',
+  position: 100
+}
+
+## Overview
+
+### Prisma CLI
+
+You can get access to the latest beta release of the Prisma CLI by appending the `@beta`-tag when installing it via NPM:
+
+```
+npm install -g prisma@beta
+```
+
+### Prisma server (Docker)
+
+You can find the latest beta Prisma Docker image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/). To use the latest version of a Prisma server, you need to configure the `image` property in your Docker Compose file accordingly by appending `-beta` to the the version number, e.g.:
+
+<Code lines="4">
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.21-beta
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+        port: __YOUR_PRISMA_SERVER_PORT__
+        databases:
+          default:
+            connector: __YOUR_DATABASE_CONNECTOR__
+            migrations: __ENABLE_DB_MIGRATIONS__
+            host: __YOUR_DATABASE_HOST__
+            port: __YOUR_DATABASE_PORT__
+            user: __YOUR_DATABASE_USER__
+            password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+You can also pull the latest beta version directly using the Docker CLI:
+
+```bash
+docker pull prismagraphql/prisma:1.21-beta
+```
+
+## 1.21-beta: Mongo DB
+
+With the `1.21-beta`-release, Prisma introduces a database connector for [MongoDB](https://www.mongodb.com/).
+
+### 1. Setup
+
+Install the latest version of the Prisma CLI using the instructions [above](#prisma-cli) and run the following command to initialize a new Prisma service:
+
+```
+prisma init hello-mongo
+```
+
+This launches the interactive wizard that helps you configure Prisma. To test the Mongo connector, you need to select the following answers for the first two questions:
+
+- **Create new database**
+- **MongoDB**
+
+As a last step in the wizard, you need to select your preferred language for the Prisma client.
+
+The Prisma CLI now created a `hello-mongo` directory for you which contains your project setup. The Docker Compose file is used to launch a Prisma server that's backed by a MongoDB. Navigate into the project directory and run the following command to start the Prisma server:
+
+```
+docker-compose up -d
+```
+
+> Note: This might throw an error if you already have Prisma Docker containers running locally. In that case, you can [reset your Docker containers](rty1-hard-resetting-the-docker-environment).
+
+You can verify that the Docker containers for Prisma and for your MongoDB have been started correctly by running `docker ps`. This should print something similar to this:
+
+```
+$ docker ps
+CONTAINER ID        IMAGE                             COMMAND                  CREATED              STATUS              PORTS                      NAMES
+5f3d8cc20699        mongo:3.6                         "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:27017->27017/tcp   hello-mongo_mongo_1
+fc261a149740        prismagraphql/prisma:1.21-beta    "/bin/sh -c /app/sta…"   About a minute ago   Up About a minute   0.0.0.0:4466->4466/tcp     hello-mongo_prisma_1
+```
+
+### 2. Configuring the datamodel
+
+The MongoDB connector uses different datamodel [directives](knul#sdl-directives) than the existing database connectors.
