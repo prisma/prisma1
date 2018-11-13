@@ -185,12 +185,7 @@ export abstract class TypeFromModelGenerator<
         fields[field.name] = fieldSchema
       }
     }
-
-
-    if(this.getTypeName(model, args) === 'OnlyRelationCreateInput') {
-      console.log(fields)
-    }
-
+    
     return fields
   }
 
