@@ -28,6 +28,10 @@ export interface InstructionsMap {
   [key: string]: Array<Instruction>
 }
 
+export interface InstructionPromiseMap {
+  [key: string]: Promise<any>
+}
+
 export interface Instruction {
   fieldName: string
   args?: any
@@ -52,7 +56,8 @@ export class Client {
   schema: GraphQLSchema
   _token: string
   _currentInstructions: InstructionsMap = {}
-  _models: Model[]
+  _models: Model[] = []
+  _promises: InstructionPromiseMap = {}
 
   constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
     this.debug = debug
@@ -116,6 +121,14 @@ export class Client {
         },
       ],
     }
+  }
+
+  processInstructionsOnce = (id: number): Promise<any> => {
+    if (!this._promises[id]) {
+      this._promises[id] = this.processInstructions(id)
+    }
+
+    return this._promises[id]
   }
 
   processInstructions = async (id: number): Promise<any> => {
@@ -187,9 +200,7 @@ export class Client {
   then = async (id, resolve, reject) => {
     let result
     try {
-      // const before = Date.now()
-      result = await this.processInstructions(id)
-      // console.log(`then: ${Date.now() - before}`)
+      result = await this.processInstructionsOnce(id)
       this._currentInstructions[id] = []
       if (typeof resolve === 'function') {
         return resolve(result)
@@ -205,7 +216,7 @@ export class Client {
 
   catch = async (id, reject) => {
     try {
-      return await this.processInstructions(id)
+      return await this.processInstructionsOnce(id)
     } catch (e) {
       this._currentInstructions[id] = []
       return reject(e)
@@ -357,7 +368,8 @@ export class Client {
           return true
         }
         const fieldType = this.getDeepType(subField.type)
-        const model = this._models.find(m => m.name === fieldType.name)
+        const model =
+          this._models && this._models.find(m => m.name === fieldType.name)
         const embedded = model && model.embedded
 
         return embedded
