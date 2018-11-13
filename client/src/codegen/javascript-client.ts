@@ -21,6 +21,19 @@ var typeDefs = require("./prisma-schema").typeDefs
 
 exports.Prisma = prisma_lib_1.makePrismaClientClass(${args});
 exports.prisma = new exports.Prisma();
+${this.renderModels()}
 `)
+  }
+  renderModels() {
+    const models = this.internalTypes
+      .map(
+        i => `{
+    name: '${i.name}',
+    embedded: ${i.isEmbedded}
+  }`,
+      )
+      .join(',\n')
+
+    return `exports.models = [${models}]`
   }
 }
