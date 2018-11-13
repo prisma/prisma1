@@ -4,25 +4,37 @@ import org.graalvm.nativeimage.c.function.CFunction;
 import org.graalvm.nativeimage.c.function.CLibrary;
 import org.graalvm.nativeimage.c.type.CCharPointer;
 
-@CLibrary("hello")
+@CLibrary("jdbc_native")
 public class RustInterfaceGraal {
     @CFunction
     static native CIntegration.RustConnection newConnection(CCharPointer url);
 
     @CFunction
-    static native void startTransaction(CIntegration.RustConnection connection);
+    static native CIntegration.PointerAndError prepareStatement(CIntegration.RustConnection conn, CCharPointer query);
 
     @CFunction
-    static native void commitTransaction(CIntegration.RustConnection connection);
+    static native CCharPointer startTransaction(CIntegration.RustConnection connection);
 
     @CFunction
-    static native void rollbackTransaction(CIntegration.RustConnection connection);
+    static native CCharPointer commitTransaction(CIntegration.RustConnection connection);
 
     @CFunction
-    static native void closeConnection(CIntegration.RustConnection connection);
+    static native CCharPointer rollbackTransaction(CIntegration.RustConnection connection);
 
     @CFunction
-    static native void sqlExecute(CIntegration.RustConnection connection, CCharPointer query, CCharPointer params);
+    static native CCharPointer closeConnection(CIntegration.RustConnection connection);
+
+    @CFunction
+    static native CCharPointer closeStatement(CIntegration.RustStatement stmt);
+
+    @CFunction
+    static native CCharPointer executePreparedstatement(CIntegration.RustStatement stmt, CCharPointer params);
+
+    @CFunction
+    static native CCharPointer queryPreparedstatement(CIntegration.RustStatement stmt, CCharPointer params);
+
+    @CFunction
+    static native CCharPointer sqlExecute(CIntegration.RustConnection connection, CCharPointer query, CCharPointer params);
 
     @CFunction
     static native CCharPointer sqlQuery(CIntegration.RustConnection connection, CCharPointer query, CCharPointer params);

@@ -74,7 +74,7 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val httpClient       = SimpleHttpClient()
   override lazy val apiAuth          = Auth.jna(Algorithm.HS256)
 
-  lazy val driver = CustomJdbcDriver.jna()
+  lazy val driver = CustomJdbcDriver.graal
 
   lazy val databaseConfig                         = config.databases.head
   override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, driver, isActive = databaseConfig.active)

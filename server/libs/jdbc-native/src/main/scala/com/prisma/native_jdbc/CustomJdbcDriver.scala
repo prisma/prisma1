@@ -4,31 +4,24 @@ import java.net.URLDecoder
 import java.sql.{Driver, DriverManager}
 import java.util.Properties
 
+import com.prisma.native_jdbc.graalvm.RustBindingGraal
+import com.prisma.native_jdbc.jna.RustBindingJna
+
 object CustomJdbcDriver {
-//  private lazy val jnaDriver = {
-//    val driver = new CustomJdbcDriver(RustJnaImpl.asInstanceOf[RustBinding])
-//    driver.register()
-//    println("Registered JNA driver")
-//    driver
-//  }
+  lazy val jna   = driverWithBinding(RustBindingJna)
+  lazy val graal = driverWithBinding(RustBindingGraal)
 
-  def jna(): CustomJdbcDriver = {
-    println("Loading JNA driver")
-    val driver = new CustomJdbcDriver(RustJnaBinding.asInstanceOf[RustBinding])
+  def driverWithBinding(binding: RustBinding): CustomJdbcDriver = {
+    val driver = CustomJdbcDriver(binding)
     driver.register()
-    println("Registered JNA driver")
     driver
-//    jnaDriver
   }
-
-//  def graal
 }
 
 case class PgUrl(var dbName: String, var port: String, var host: String)
 
 case class CustomJdbcDriver(binding: RustBinding) extends Driver {
-  override def getParentLogger = ???
-
+  override def getParentLogger                                = ???
   override def getMajorVersion                                = 1
   override def getMinorVersion                                = 0
   override def jdbcCompliant()                                = false
@@ -36,19 +29,13 @@ case class CustomJdbcDriver(binding: RustBinding) extends Driver {
   override def getPropertyInfo(url: String, info: Properties) = Array.empty
 
   override def connect(url: String, info: Properties) = {
-    println(s"Connecting to: $url")
-    println(info)
-
     val props  = parseURL(url, new Properties())
     val dbName = props.getProperty("PGDBNAME")
     val port   = props.getProperty("PGPORT").toInt
     val host   = props.getProperty("PGHOST")
     val schema = props.getProperty("currentSchema")
-
-    val user = info.getProperty("user")
-    val pass = info.getProperty("password")
-
-    println(s"postgres://$user:$pass@$host:$port/$dbName?search_path=$schema")
+    val user   = info.getProperty("user")
+    val pass   = info.getProperty("password")
 
     new CustomJdbcConnection(s"postgres://$user:$pass@$host:$port/$dbName?search_path=$schema", binding)
   }
@@ -121,68 +108,4 @@ case class CustomJdbcDriver(binding: RustBinding) extends Driver {
     }
     urlProps
   }
-//  def parseURL(url: String): PgUrl = {
-//    val pgUrl = PgUrl("", "", "")
-//
-//    var l_urlServer = url
-//    var l_urlArgs   = ""
-//    val l_qPos      = url.indexOf('?')
-//    if (l_qPos != -1) {
-//      l_urlServer = url.substring(0, l_qPos)
-//      l_urlArgs = url.substring(l_qPos + 1)
-//    }
-//    if (!l_urlServer.startsWith("jdbc:postgresql:")) return null
-//    l_urlServer = l_urlServer.substring("jdbc:postgresql:".length)
-//
-//    if (l_urlServer.startsWith("//")) {
-//      l_urlServer = l_urlServer.substring(2)
-//      val slash = l_urlServer.indexOf('/')
-//      if (slash == -1) return null
-//
-//      pgUrl.dbName = URLDecoder.decode(l_urlServer.substring(slash + 1), "UTF-8")
-//
-//      val addresses = l_urlServer.substring(0, slash).split(",")
-//      val hosts     = new StringBuilder
-//      val ports     = new StringBuilder
-//
-//      for (address <- addresses) {
-//        val portIdx = address.lastIndexOf(':')
-//        if (portIdx != -1 && address.lastIndexOf(']') < portIdx) {
-//          val portStr = address.substring(portIdx + 1)
-//          try // squid:S2201 The return value of "parseInt" must be used.
-//          // The side effect is NumberFormatException, thus ignore sonar error here
-//          portStr.toInt //NOSONAR
-//          catch {
-//            case ex: NumberFormatException =>
-//              return null
-//          }
-//          ports.append(portStr)
-//          hosts.append(address.subSequence(0, portIdx))
-//        } else {
-//          ports.append("5432")
-//          hosts.append(address)
-//        }
-//        ports.append(',')
-//        hosts.append(',')
-//      }
-//
-//      ports.setLength(ports.length - 1)
-//      hosts.setLength(hosts.length - 1)
-//
-//      pgUrl.port = ports.toString
-//      pgUrl.host = hosts.toString
-//    }
-//
-//    // parse the args part of the url
-//    //    val args = l_urlArgs.split("&")
-//    //    for (token <- args) {
-//    //      if (token.nonEmpty) {
-//    //        val l_pos = token.indexOf('=')
-//    //        if (l_pos == -1) urlProps.setProperty(token, "")
-//    //        else urlProps.setProperty(token.substring(0, l_pos), URLDecoder.decode(token.substring(l_pos + 1)))
-//    //      }
-//    //    }
-//
-//    pgUrl
-//  }
 }

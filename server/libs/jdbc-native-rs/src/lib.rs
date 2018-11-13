@@ -43,9 +43,9 @@ pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConn
 }
 
 #[no_mangle]
-pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> PointerAndError<driver::PsqlPreparedStatement<'a>> {
+pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> *mut PointerAndError<driver::PsqlPreparedStatement<'a>> {
     println!("Preparing: {}", to_string(query));
-    match conn.prepareStatement(to_string(query)) {
+    let pointerAndError = match conn.prepareStatement(to_string(query)) {
         Ok(pStmt) => PointerAndError {
             error: serializeCallResult(Ok(CallResult::empty())),
             pointer: Box::into_raw(Box::new(pStmt)),
@@ -55,7 +55,9 @@ pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, que
             error: serializeCallResult(Ok(errorToCallResult(e))),
             pointer: std::ptr::null_mut(),
         }
-    }
+    };
+
+    Box::into_raw(Box::new(pointerAndError))
 }
 
 #[no_mangle]

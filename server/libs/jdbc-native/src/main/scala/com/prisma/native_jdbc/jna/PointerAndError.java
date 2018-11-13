@@ -1,4 +1,4 @@
-package com.prisma.native_jdbc;
+package com.prisma.native_jdbc.jna;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
@@ -6,8 +6,7 @@ import com.sun.jna.Structure;
 import java.util.Arrays;
 import java.util.List;
 
-
-public class PointerAndError extends Structure implements Structure.ByValue {
+public class PointerAndError extends Structure implements Structure.ByReference {
     public String error;
     public Pointer pointer;
 

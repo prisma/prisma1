@@ -1,4 +1,4 @@
-package com.prisma.native_jdbc;
+package com.prisma.native_jdbc.jna;
 
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
