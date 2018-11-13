@@ -41,7 +41,7 @@ test('related type', t => {
   client.user()
 
   const document = client.getDocumentForInstructions(
-    Object.keys(client.currentInstructions)[0],
+    Object.keys(client._currentInstructions)[0],
   )
 
   t.snapshot(print(document))
@@ -85,7 +85,7 @@ test('embedded type', t => {
   client.user()
 
   const document = client.getDocumentForInstructions(
-    Object.keys(client.currentInstructions)[0],
+    Object.keys(client._currentInstructions)[0],
   )
 
   t.snapshot(print(document))
@@ -138,7 +138,7 @@ test('nested mbedded type', t => {
   client.user()
 
   const document = client.getDocumentForInstructions(
-    Object.keys(client.currentInstructions)[0],
+    Object.keys(client._currentInstructions)[0],
   )
 
   t.snapshot(print(document))
