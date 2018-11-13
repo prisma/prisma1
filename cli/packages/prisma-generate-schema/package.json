@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "graphql": "^14.0.2",
+    "jest-cli": "^23.6.0",
+    "node-fetch": "^2.2.1",
     "pluralize": "^7.0.0",
     "popsicle": "10",
     "tslint-config-prettier": "^1.15.0",
@@ -31,6 +33,7 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": ["/node_modules/", "helpers.ts"],
     "moduleFileExtensions": [
       "ts",
       "tsx",
