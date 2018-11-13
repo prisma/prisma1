@@ -3,10 +3,11 @@ package com.prisma.shared.models
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 
 object ReservedFields {
-  val idFieldName        = "id"
-  val updatedAtFieldName = "updatedAt"
-  val createdAtFieldName = "createdAt"
-  val reservedFieldNames = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
+  val idFieldName         = "id"
+  val internalIdFieldName = "_id"
+  val updatedAtFieldName  = "updatedAt"
+  val createdAtFieldName  = "createdAt"
+  val reservedFieldNames  = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
 
   def reservedFieldFor(name: String): FieldTemplate = {
     name match {

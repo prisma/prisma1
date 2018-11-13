@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
-import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapability, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -98,7 +98,7 @@ case class DataModelValidatorImpl(
       // FIXME: it should not be needed that embedded types have a hidden id field
       val extraField = typeDef.isEmbedded.toOption {
         ScalarPrismaField(
-          name = "id",
+          name = ReservedFields.internalIdFieldName,
           columnName = None,
           isList = false,
           isRequired = false,
