@@ -1,15 +1,12 @@
 package com.prisma.sangria_server
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import play.api.libs.json.{JsObject, JsValue, Json}
-
-import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json.{JsValue, Json}
 import scalaj.http._
 
+import scala.concurrent.{ExecutionContext, Future}
+
 trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAfterAll {
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   def executor: SangriaServerExecutor
 
@@ -42,7 +39,7 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
 
   "it should call the handler" in {
     val response = Http(serverUrl).header("content-type", "application/json").postData(graphQlRequest(validGraphQlQuery)).asString
-    response.body should be("""{"message":"hello from the handler"}""")
+    response.body.asJson should be("""{"message":"hello from the handler"}""".asJson)
     response.header("Content-Type") should be(Some("application/json"))
   }
 
@@ -52,6 +49,10 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
       |  "query":"$query"
       |}
     """.stripMargin
+  }
+
+  implicit class StringExtensions(str: String) {
+    def asJson: JsValue = Json.parse(str)
   }
 }
 
