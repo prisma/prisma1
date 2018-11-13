@@ -1,5 +1,8 @@
 package com.prisma.native
 
+import java.sql.DriverManager
+import java.io.PrintWriter
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.ServerExecutor
@@ -16,6 +19,8 @@ object PrismaNativeMain {
     implicit val system       = ActorSystem("single-server", StaticAkkaConfig.config)
     implicit val materializer = ActorMaterializer()
     implicit val dependencies = PrismaNativeDependencies()
+
+    DriverManager.setLogWriter(new PrintWriter(System.out))
 
     dependencies.initialize()(system.dispatcher)
     dependencies.migrator.initialize

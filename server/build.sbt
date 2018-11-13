@@ -81,6 +81,7 @@ lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(allConnectorProjects)
 
 lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native")
+  .settings(libraryDependencies ++= Seq(registry, checks))
   .dependsOn(prismaImageShared)
   .dependsOn(api)
   .dependsOn(deploy)
@@ -91,20 +92,29 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
   .dependsOn(deployConnectorPostgres)
   .dependsOn(apiConnectorPostgres)
   .dependsOn(jdbcNative)
-  .enablePlugins(GraalVMNativeImagePlugin).settings(graalVMNativeImageOptions ++= Seq(
-  "--enable-all-security-services",
-//  "--report-unsupported-elements-at-runtime",
-  "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext",
-  "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
-  //  "-H:ReflectionConfigurationFiles=akka_reflection_config.json",
-  "-H:+JNI",
-  "--verbose"),
-  mappings in Universal := (mappings in Universal).value.filter { case(jar, path) => {
-    val check = path.contains("mariadb") || path.contains("org.postgresql")
-    println(s"$path -> $check")
-    !check
-  }}
-)
+  .enablePlugins(GraalVMNativeImagePlugin)
+  .settings(
+    graalVMNativeImageOptions ++= Seq(
+      "--enable-all-security-services",
+    //  "--delay-class-initialization-to-runtime=com.github.benmanes.caffeine.cache.LocalAsyncLoadingCache",
+    //  "--report-unsupported-elements-at-runtime",
+      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver",
+      "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
+      s"-H:ReflectionConfigurationFiles=$akkaReflectionConfigPath",
+      "-H:+JNI",
+      "--verbose"
+    ),
+    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar"),
+    mappings in Universal := (mappings in Universal).value.filter { case(jar, path) => {
+      val check = path.contains("mariadb") || path.contains("org.postgresql")
+      println(s"$path -> $check")
+      !check
+    }}
+  )
+
+def akkaReflectionConfigPath: String = {
+  s"${System.getProperty("user.dir")}/images/prisma-native/akka_reflection_config.json"
+}
 
 lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(api)
@@ -254,14 +264,16 @@ lazy val jdbcNative = libProject("jdbc-native")
     jna,
     scalaTest,
     playJson
-  ))
+  ),
+  unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
 
 lazy val jwtNative = libProject("jwt-native")
   .settings(libraryDependencies ++= Seq(
     jna,
     scalaTest,
     playJson
-  ) ++ jooq)
+  ) ++ jooq,
+  unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
 
 lazy val gcValues = libProject("gc-values")
   .settings(libraryDependencies ++= Seq(

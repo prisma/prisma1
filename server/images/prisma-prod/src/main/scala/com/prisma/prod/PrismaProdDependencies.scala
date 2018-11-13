@@ -80,7 +80,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val webhookPublisher: QueuePublisher[Webhook] =
     RabbitQueue.publisher[Webhook](rabbitUri, "webhooks")(reporter, Webhook.marshaller)
   override lazy val webhooksConsumer: QueueConsumer[WorkerWebhook] =
-    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller)
+    RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller, system)
 
   override lazy val httpClient                           = SimpleHttpClient()
   override lazy val apiAuth                              = Auth.jna(Algorithm.HS256)

@@ -5,13 +5,22 @@ import java.sql.{Driver, DriverManager}
 import java.util.Properties
 
 object CustomJdbcDriver {
-  private lazy val jnaDriver = {
-    val driver = new CustomJdbcDriver(RustJnaImpl.asInstanceOf[RustBinding])
+//  private lazy val jnaDriver = {
+//    val driver = new CustomJdbcDriver(RustJnaImpl.asInstanceOf[RustBinding])
+//    driver.register()
+//    println("Registered JNA driver")
+//    driver
+//  }
+
+  def jna(): CustomJdbcDriver = {
+    println("Loading JNA driver")
+    val driver = new CustomJdbcDriver(RustJnaBinding.asInstanceOf[RustBinding])
     driver.register()
+    println("Registered JNA driver")
     driver
+//    jnaDriver
   }
 
-  def jna(): CustomJdbcDriver = jnaDriver
 //  def graal
 }
 
@@ -27,6 +36,9 @@ case class CustomJdbcDriver(binding: RustBinding) extends Driver {
   override def getPropertyInfo(url: String, info: Properties) = Array.empty
 
   override def connect(url: String, info: Properties) = {
+    println(s"Connecting to: $url")
+    println(info)
+
     val props  = parseURL(url, new Properties())
     val dbName = props.getProperty("PGDBNAME")
     val port   = props.getProperty("PGPORT").toInt
@@ -35,6 +47,8 @@ case class CustomJdbcDriver(binding: RustBinding) extends Driver {
 
     val user = info.getProperty("user")
     val pass = info.getProperty("password")
+
+    println(s"postgres://$user:$pass@$host:$port/$dbName?search_path=$schema")
 
     new CustomJdbcConnection(s"postgres://$user:$pass@$host:$port/$dbName?search_path=$schema", binding)
   }

@@ -1,5 +1,6 @@
 package com.prisma.messagebus.queue
 
+import akka.actor.ActorSystem
 import akka.pattern.after
 import com.prisma.akkautil.SingleThreadedActorSystem
 
@@ -8,7 +9,7 @@ import scala.concurrent.duration.FiniteDuration
 
 object BackoffStrategy {
   import scala.concurrent.ExecutionContext.Implicits.global
-  val system = SingleThreadedActorSystem("backoff")
+//  val system = SingleThreadedActorSystem("backoff")
 
   def backoffDurationFor(currentTry: Int, strategy: BackoffStrategy): FiniteDuration = {
     strategy match {
@@ -17,7 +18,7 @@ object BackoffStrategy {
     }
   }
 
-  def backoff(duration: FiniteDuration): Future[Unit] = after(duration, system.scheduler)(Future.successful(Unit))
+  def backoff(duration: FiniteDuration)(implicit sys: ActorSystem): Future[Unit] = after(duration, sys.scheduler)(Future.successful(Unit))
 }
 
 sealed trait BackoffStrategy {

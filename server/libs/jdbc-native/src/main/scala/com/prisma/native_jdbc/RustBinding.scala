@@ -2,14 +2,16 @@ package com.prisma.native_jdbc
 
 import java.sql.{BatchUpdateException, SQLException}
 
+import com.prisma.native_jdbc.graalvm.CIntegration
 import com.sun.jna.{Native, Pointer}
+import org.graalvm.nativeimage.c.`type`.{CCharPointer, CTypeConversion}
 import play.api.libs.json.{JsArray, Json}
 
 import scala.util.Try
 
 sealed trait RustConnection
-//class RustConnectionGraal(val conn: CIntegration.RustConnection) extends RustConnection
-class RustConnectionJna(val conn: Pointer) extends RustConnection
+class RustConnectionGraal(val conn: CIntegration.RustConnection) extends RustConnection
+class RustConnectionJna(val conn: Pointer)                       extends RustConnection
 
 sealed trait RustPreparedStatement
 class RustPreparedStatementJna(val stmt: Pointer) extends RustPreparedStatement
@@ -73,22 +75,37 @@ case class RustResultSet(columns: Vector[ResultColumn], data: IndexedSeq[JsArray
 
 case class ResultColumn(name: String, discriminator: String)
 
-//object RustGraalImpl extends RustBinding[RustConnectionGraal] {
-//  def toJavaString(str: CCharPointer) = CTypeConversion.toJavaString(str)
-//  def toCString(str: String)          = CTypeConversion.toCString(str).get()
-//
-//  override def newConnection(url: String): RustConnectionGraal            = new RustConnectionGraal(RustInterfaceGraal.newConnection(toCString(url)))
-//  override def startTransaction(connection: RustConnectionGraal): Unit    = RustInterfaceGraal.startTransaction(connection.conn)
-//  override def commitTransaction(connection: RustConnectionGraal): Unit   = RustInterfaceGraal.commitTransaction(connection.conn)
-//  override def rollbackTransaction(connection: RustConnectionGraal): Unit = RustInterfaceGraal.rollbackTransaction(connection.conn)
-//  override def closeConnection(connection: RustConnectionGraal): Unit     = RustInterfaceGraal.closeConnection(connection.conn)
-//  override def sqlExecute(connection: RustConnectionGraal, query: String, params: String): Unit =
-//    RustInterfaceGraal.sqlExecute(connection.conn, toCString(query), toCString(params))
-//  override def sqlQuery(connection: RustConnectionGraal, query: String, params: String): String =
-//    toJavaString(RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params)))
-//}
+object RustGraalBinding extends RustBinding {
+  def toJavaString(str: CCharPointer) = CTypeConversion.toJavaString(str)
+  def toCString(str: String)          = CTypeConversion.toCString(str).get()
 
-object RustJnaImpl extends RustBinding {
+  override type Conn = RustConnectionGraal
+  override type Stmt = this.type
+
+  override def newConnection(url: String): RustGraalImpl = ???
+
+  override def prepareStatement(connection: RustGraalImpl, query: String): RustGraalImpl = ???
+
+  override def closeStatement(stmt: RustGraalImpl): RustCallResult = ???
+
+  override def startTransaction(connection: RustGraalImpl): RustCallResult = ???
+
+  override def commitTransaction(connection: RustGraalImpl): RustCallResult = ???
+
+  override def rollbackTransaction(connection: RustGraalImpl): RustCallResult = ???
+
+  override def closeConnection(connection: RustGraalImpl): RustCallResult = ???
+
+  override def sqlExecute(connection: RustGraalImpl, query: String, params: String): RustCallResult = ???
+
+  override def sqlQuery(connection: RustGraalImpl, query: String, params: String): RustCallResult = ???
+
+  override def executePreparedstatement(stmt: RustGraalImpl, params: String): RustCallResult = ???
+
+  override def queryPreparedstatement(stmt: RustGraalImpl, params: String): RustCallResult = ???
+}
+
+object RustJnaBinding extends RustBinding {
   type Conn = RustConnectionJna
   type Stmt = RustPreparedStatementJna
 
@@ -107,6 +124,7 @@ object RustJnaImpl extends RustBinding {
   }
 
   override def newConnection(url: String): RustConnectionJna = {
+    println("[Jna] Connecting...")
     new RustConnectionJna(library.newConnection(url))
   }
 

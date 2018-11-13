@@ -8,7 +8,7 @@ object Dependencies {
     */
   object v {
     val sangria     = "1.3.3"
-    val akka        = "2.5.11"
+    val akka        = "2.5.12"
     val akkaHttp    = "10.1.0"
     val joda        = "2.9.4"
     val jodaConvert = "1.7"
@@ -89,10 +89,11 @@ object Dependencies {
     "org.jooq" % "jooq"        % "3.11.7",
     "org.jooq" %% "jooq-scala" % "3.11.7"
   )
-  lazy val jna = "net.java.dev.jna" % "jna" % "4.5.2"
 
-  lazy val javax = "javax.xml.bind"    % "jaxb-api"              % "2.2.12"
-  val wat        = "javax.persistence" % "javax.persistence-api" % "2.2"
+  val jna              = "net.java.dev.jna"      % "jna"                   % "4.5.2"
+  val javaxPersistence = "javax.persistence"     % "javax.persistence-api" % "2.2"
+  val registry         = "io.dropwizard.metrics" % "metrics-core"          % "3.2.4"
+  val checks           = "io.dropwizard.metrics" % "metrics-healthchecks"  % "3.2.4"
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,
@@ -116,7 +117,6 @@ object Dependencies {
     cuid,
     jwt,
     log4j,
-    javax,
-    wat
+    javaxPersistence
   )
 }
