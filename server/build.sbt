@@ -318,6 +318,7 @@ lazy val sangriaServer = libProject("sangria-server")
   .dependsOn(scalaUtils)
   .settings(libraryDependencies ++= Seq(
     akkaHttpPlayJson,
+    cuid,
     scalajHttp % Test
   ))
 

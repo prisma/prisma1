@@ -1,8 +1,11 @@
 package com.prisma.sangria_server
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Flow
 import com.prisma.utils.`try`.TryUtil
+import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json._
 import sangria.parser.QueryParser
 
@@ -10,13 +13,17 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Try}
 
 trait SangriaServerExecutor {
-  def create(server: RequestHandler, port: Int): SangriaServer
+  def create(server: RequestHandler, port: Int, requestPrefix: String): SangriaServer
 }
 
 trait SangriaServer {
   def start(): Future[Unit]
   def startBlocking(): Unit
   def stop(): Future[Unit]
+
+  def requestPrefix: String
+
+  protected def createRequestId(): String = requestPrefix + ":" + createCuid()
 }
 
 trait RequestHandler {
@@ -43,6 +50,12 @@ trait RequestHandler {
   }
 
   def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue]
+
+  def supportedWebsocketProtocols: Vector[String] = Vector.empty
+
+  def newWebsocketSession(request: RawWebsocketRequest): Flow[WebSocketMessage, WebSocketMessage, NotUsed] = {
+    Flow[WebSocketMessage]
+  }
 
   private def parseAsGraphqlQuery(json: JsValue): Try[GraphQlQuery] = Try {
     // FIXME: remove those .get calls
@@ -83,6 +96,16 @@ case class RawRequest(
     json: JsValue,
     ip: String
 )
+
+case class RawWebsocketRequest(
+    id: String,
+    path: Vector[String],
+    headers: Map[String, String],
+    ip: String,
+    protocol: String
+)
+
+case class WebSocketMessage(body: String)
 
 case class GraphQlRequest(
     raw: RawRequest,
