@@ -18,10 +18,10 @@ import play.api.libs.json.JsValue
 import scala.concurrent.{Await, Future}
 
 object AkkaHttpSangriaServer extends SangriaServerExecutor {
-  override def create(server: RequestHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(server, port, requestPrefix)
+  override def create(server: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(server, port, requestPrefix)
 }
 
-case class AkkaHttpSangriaServer(server: RequestHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
+case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
   import scala.concurrent.duration._
 
   implicit val system       = ActorSystem("sangria-server")

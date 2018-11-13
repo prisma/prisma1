@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Try}
 
 trait SangriaServerExecutor {
-  def create(server: RequestHandler, port: Int, requestPrefix: String): SangriaServer
+  def create(server: SangriaHandler, port: Int, requestPrefix: String): SangriaServer
 }
 
 trait SangriaServer {
@@ -26,7 +26,7 @@ trait SangriaServer {
   protected def createRequestId(): String = requestPrefix + ":" + createCuid()
 }
 
-trait RequestHandler {
+trait SangriaHandler {
   import com.prisma.utils.`try`.TryExtensions._
 
   def handleRawRequest(request: RawRequest)(implicit ec: ExecutionContext): Future[JsValue] = {

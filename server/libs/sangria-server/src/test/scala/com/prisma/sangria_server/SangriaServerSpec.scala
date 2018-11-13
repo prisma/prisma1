@@ -19,7 +19,7 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
 
   def executor: SangriaServerExecutor
 
-  val handler = new RequestHandler {
+  val handler = new SangriaHandler {
     override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
       Future.successful(Json.obj("message" -> "hello from the handler"))
     }
