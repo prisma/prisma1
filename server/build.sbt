@@ -72,6 +72,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
+  .dependsOn(sangriaServer)
 
 // ####################
 //       SERVERS

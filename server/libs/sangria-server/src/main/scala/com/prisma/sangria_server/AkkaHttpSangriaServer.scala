@@ -17,10 +17,10 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import scala.concurrent.{Await, Future}
 
 object AkkaHttpSangriaServer extends SangriaServerExecutor {
-  override def create(server: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(server, port, requestPrefix)
+  override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(handler, port, requestPrefix)
 }
 
-case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
+case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
   import scala.concurrent.duration._
 
   implicit val system       = ActorSystem("sangria-server")
@@ -36,17 +36,17 @@ case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefi
           post {
             entity(as[JsValue]) { requestJson =>
               val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
-              complete(OK -> server.handleRawRequest(rawRequest))
+              complete(OK -> handler.handleRawRequest(rawRequest))
             }
           } ~ get {
             extractUpgradeToWebSocket { upgrade =>
               upgrade.requestedProtocols.headOption match {
-                case Some(protocol) if server.supportedWebsocketProtocols.contains(protocol) =>
-                  val originalFlow = server.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
+                case Some(protocol) if handler.supportedWebsocketProtocols.contains(protocol) =>
+                  val originalFlow = handler.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
                   val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
                   handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
                 case _ =>
-                  reject(UnsupportedWebSocketSubprotocolRejection(server.supportedWebsocketProtocols.head))
+                  reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
               }
             } ~
               getFromResource("graphiql.html", ContentTypes.`text/html(UTF-8)`)
@@ -70,7 +70,7 @@ case class AkkaHttpSangriaServer(server: SangriaHandler, port: Int, requestPrefi
       case _                => sys.error("not allowed")
     }
     val headers = req.headers.map(h => h.name -> h.value).toMap
-    val path    = req.uri.path.toString.split('/')
+    val path    = req.uri.path.toString.split('/').filter(_.nonEmpty)
     RawRequest(
       id = requestId,
       method = reqMethod,

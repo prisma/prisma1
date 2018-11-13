@@ -7,9 +7,13 @@ import play.api.libs.json.{JsValue, Json}
 import sangria.execution.{Executor, HandledException}
 import sangria.marshalling.ResultMarshaller
 
+import scala.collection.immutable.Seq
+
 case class ErrorHandler(
     requestId: String,
-    request: HttpRequest,
+    method: String,
+    uri: String,
+    headers: Seq[(String, String)],
     query: String,
     variables: JsValue,
     reporter: ErrorReporter,
@@ -28,7 +32,7 @@ case class ErrorHandler(
       val variablesAsString = variables.toString()
       error.printStackTrace()
       logError(LogKey.UnhandledError, error, requestId, query, variablesAsString, projectId)
-      val requestMetadata = RequestMetadata(requestId, request.method.value, request.uri.toString(), request.headers.map(h => h.name() -> h.value()))
+      val requestMetadata = RequestMetadata(requestId, method, uri, headers)
       val graphQlMetadata = GraphQlMetadata(query, variablesAsString)
       val projectMetadata = projectId.map(pid => ProjectMetadata(pid))
       reporter.report(error, Seq(requestMetadata, graphQlMetadata) ++ projectMetadata: _*)

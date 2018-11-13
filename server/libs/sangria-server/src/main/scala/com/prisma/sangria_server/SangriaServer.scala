@@ -82,10 +82,10 @@ trait SangriaHandler {
   }
 }
 
-sealed trait HttpMethod
+sealed trait HttpMethod { def name: String }
 object HttpMethod {
-  object Get  extends HttpMethod
-  object Post extends HttpMethod
+  object Get  extends HttpMethod { def name = "GET"  }
+  object Post extends HttpMethod { def name = "POST" }
 }
 
 case class RawRequest(

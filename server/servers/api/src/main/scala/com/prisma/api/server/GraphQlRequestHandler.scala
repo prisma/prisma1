@@ -58,7 +58,9 @@ case class GraphQlRequestHandlerImpl(
     val context = ApiUserContext(clientId = "clientId")
     val errorHandler = ErrorHandler(
       request.id,
-      HttpRequest(HttpMethods.POST),
+      "POST",
+      "",
+      Seq.empty,
       query.queryString,
       query.variables,
       apiDependencies.reporter,
