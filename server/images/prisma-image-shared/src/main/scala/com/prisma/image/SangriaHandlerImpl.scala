@@ -1,7 +1,9 @@
 package com.prisma.image
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Flow
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
@@ -10,10 +12,12 @@ import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
-import com.prisma.sangria_server.{GraphQlQuery, RawRequest, SangriaHandler}
+import com.prisma.sangria_server._
 import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.ProjectId
+import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.util.env.EnvUtils
+import com.prisma.websocket.WebsocketServer
 import play.api.libs.json.JsValue
 import sangria.execution.{Executor, QueryAnalysisError}
 
@@ -23,7 +27,8 @@ case class SangriaHandlerImpl()(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     deployDependencies: DeployDependencies,
-    apiDependencies: ApiDependencies
+    apiDependencies: ApiDependencies,
+    subscriptionDependencies: SubscriptionDependencies
 ) extends SangriaHandler {
   import com.prisma.utils.future.FutureUtils._
   import scala.concurrent.duration._
@@ -32,6 +37,7 @@ case class SangriaHandlerImpl()(
   val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
   val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
   val projectIdEncoder      = apiDependencies.projectIdEncoder
+  val websocketServer       = WebsocketServer(subscriptionDependencies)
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
     case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(projectIdEncoder.fromEncodedString)
@@ -60,6 +66,24 @@ case class SangriaHandlerImpl()(
       handleQueryForManagementApi(request, query)
     } else {
       handleQueryForServiceApi(request, query)
+    }
+  }
+
+  override def supportedWebsocketProtocols = websocketServer.supportedProtocols
+
+  override def newWebsocketSession(request: RawWebsocketRequest) = {
+    val projectId          = projectIdEncoder.toEncodedString(projectIdEncoder.fromSegments(request.path.toList))
+    val isV7               = request.protocol == websocketServer.v7ProtocolName
+    val originalFlow       = websocketServer.newSession(projectId, isV7)
+    val sangriaHandlerFlow = Flow[WebSocketMessage].map(modelToAkkaWebsocketMessage).via(originalFlow).map(akkaWebSocketMessageToModel)
+    sangriaHandlerFlow
+  }
+
+  private def modelToAkkaWebsocketMessage(message: WebSocketMessage): Message = TextMessage(message.body)
+  private def akkaWebSocketMessageToModel(message: Message) = {
+    message match {
+      case TextMessage.Strict(body) => WebSocketMessage(body)
+      case x                        => sys.error(s"Not supported: $x")
     }
   }
 
