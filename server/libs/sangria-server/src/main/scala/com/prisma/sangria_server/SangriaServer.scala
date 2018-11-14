@@ -99,7 +99,10 @@ case class RawRequest(
     headers: Map[String, String],
     json: JsValue,
     ip: String
-)
+) {
+  val timestampInNanos: Long  = System.nanoTime()
+  val timestampInMillis: Long = System.currentTimeMillis()
+}
 
 case class RawWebsocketRequest(
     id: String,

@@ -144,13 +144,13 @@ case class SangriaHandlerImpl(
 
       case Some("private") =>
         val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-        result.onComplete(_ => logRequestEnd(projectIdAsString))
+        result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
         result.map(_._2)
 
       case Some("import") =>
         if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
           val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-          result.onComplete(_ => logRequestEnd(projectIdAsString))
+          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
           result.map(_._2)
         } else {
           sys.error(s"The connector is missing the import / export capability.")
@@ -159,7 +159,7 @@ case class SangriaHandlerImpl(
       case Some("export") =>
         if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
           val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-          result.onComplete(_ => logRequestEnd(projectIdAsString))
+          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
           result.map(_._2)
         } else {
           sys.error(s"The connector is missing the import / export capability.")
@@ -209,13 +209,13 @@ case class SangriaHandlerImpl(
   def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
     val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest.toLegacy)
     result.onComplete { _ =>
-      logRequestEndAndQueryIfEnabled(projectIdEncoder.toEncodedString(projectId), rawRequest.json)
+      logRequestEndAndQueryIfEnabled(rawRequest, projectIdEncoder.toEncodedString(projectId), rawRequest.json)
     }
     result.map(_._2)
   }
 
-  def logRequestEndAndQueryIfEnabled(projectId: String, json: JsValue, throttledBy: Long = 0) = {
-    val actualDuration = logRequestEnd(projectId, throttledBy)
+  def logRequestEndAndQueryIfEnabled(rawRequest: RawRequest, projectId: String, json: JsValue, throttledBy: Long = 0) = {
+    val actualDuration = logRequestEnd(rawRequest, projectId, throttledBy)
 
     if (logSlowQueries && actualDuration > slowQueryLogThreshold) {
       println("SLOW QUERY - DURATION: " + actualDuration)
@@ -223,9 +223,9 @@ case class SangriaHandlerImpl(
     }
   }
 
-  def logRequestEnd(projectId: String, throttledBy: Long = 0) = {
+  def logRequestEnd(rawRequest: RawRequest, projectId: String, throttledBy: Long = 0) = {
     val end            = System.currentTimeMillis()
-    val actualDuration = 0 //FIXME: end - requestBeginningTime - throttledBy
+    val actualDuration = end - rawRequest.timestampInMillis - throttledBy
     val metricKey      = metricKeyFor(projectId)
 
     ApiMetrics.requestDuration.record(actualDuration, Seq(metricKey))
