@@ -68,6 +68,12 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     response.header("Content-Type") should be(Some("application/json"))
   }
 
+  "it should have a status endpoint" in {
+    val response = Http(httpUrl + "/status").asString
+    println(response.body)
+    response.body should equal("\"OK\"")
+  }
+
   "it should return a properly formatted error if an exception occurs" in {
     val response = Http(failingHttpUrl).header("content-type", "application/json").postData(graphQlRequest(validGraphQlQuery)).asString
     response.code should be(500)

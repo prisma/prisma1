@@ -38,6 +38,8 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
               val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
               complete(OK -> handler.handleRawRequest(rawRequest))
             }
+          } ~ (get & path("status")) {
+            complete("OK")
           } ~ get {
             extractUpgradeToWebSocket { upgrade =>
               upgrade.requestedProtocols.headOption match {
