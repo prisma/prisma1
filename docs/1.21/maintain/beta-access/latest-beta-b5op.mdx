@@ -55,8 +55,6 @@ docker pull prismagraphql/prisma:1.21-beta
 
 With the `1.21-beta`-release, Prisma introduces a database connector for [MongoDB](https://www.mongodb.com/).
 
-In Mongo, the `@id` field is required!
-
 ### Concepts
 
 MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database) which stands in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database). 
@@ -86,14 +84,14 @@ With MongoDB, relations can be expressed either by _embedding_ data directly in 
 
 The MongoDB connector introduces the concept of _embedded types_. An embedded type ...
 
-- is always annotated with the `@embedded` directive.
-- always has one _parent type_.
-- is always stored directly _within_ its _parent type's_ [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. it does not have its own collection).
-- can not have an ID (i.e. a field annotated with the `@id` directive).
-- can not have unique fields (i.e. fields annotated with the `@unique` directive).
-- can not have have a (back-)relation to its parent type (but it can have relations to other non-embedded types).
-- can not be queried directly using the Prisma API but only via _nested operations_ through the parent type. 
-- can not be created, updated or deleted directly using the Prisma API but only via _nested operations_ through the parent type. 
+- ... always is annotated with the `@embedded` directive.
+- ... always has one _parent type_.
+- ... always sis stored directly _within_ its _parent type's_ [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. it does not have its own collection).
+- ... can not have an ID (i.e. a field annotated with the `@id` directive).
+- ... can not have unique fields (i.e. fields annotated with the `@unique` directive).
+- ... can not have have a (back-)relation to its parent type (but it can have relations to other non-embedded types).
+- ... can not be queried directly using the Prisma API but only via _nested operations_ through the parent type. 
+- ... can not be created, updated or deleted directly using the Prisma API but only via _nested operations_ through the parent type. 
 
 Here is an example of a datamodel where `Coordinates` is defined as an embedded type:
 
@@ -114,24 +112,26 @@ With this setup, it is _not_ possible to query any instances of `Coordinates` di
 
 > You can learn more about embedded types in the [specification](https://github.com/prisma/prisma/issues/2836).
 
-#### Links & Relations
+#### Link relations
 
 With MongoDB, you can model relations in two ways:
 
 - Using an [embedded type](#embedded-types) as explained above
+- Using _references_ which are called _links_ in Prisma terminology
 
-A relation with the Mongo connector works in the way that:
+A _link relation_ with the MongoDB connector works in the way that:
 
-- One side of the relation stores the ID of the object on the other side
-- The other side of the relation has no reference to the other object
+- One side (A) of the relation stores the ID of the document on the other side (B), this is called an _inlined link_
+- The other side (B) of the relation has _no reference_ to the document on the initial side (A)
+- Each side of the relation is represented by its own collection in the underlying MongoDB, i.e. a link relation always spans accross multiple collections. 
 
-You can denote the side of the relation that should store the ID using the `strategy` parameter of the `@relation` directive. In the following example, the `User` type stores the ID values of all the `Post` objects it's related to. A `Post` object however doesn't store any information about its `author` in the underlying Mongo database:
+You can denote the side of the relation that should store the ID using the `link` parameter of the `@relation` directive. In the following example, the `User` type stores the ID values of all the `Post` documents it's related to. A `Post` document however doesn't store any information about its `author` in the underlying Mongo database:
 
 ```graphql
 type User {
   id: ID! @id
   name: String!
-  posts: [Post!]! @relation(strategy: EMBED)
+  posts: [Post!]! @relation(link: INLINE)
 }
 
 type Post {
@@ -141,12 +141,75 @@ type Post {
 }
 ```
 
-Consequently, operations that go from a `Post` to a `User` via the `author` field will be more expensive. This is because the underlying `Post` objects don't know who their `author`s are and Prisma needs to filter all `User`s to find who the `author` of `Post` is.
+While this approach enables querying for `Post` documents directly in the Prisma API (as opposed to embedded types which can only be queried through nested operations via their parent types), there are performance considerations when modeling relations this way.
 
+Operations that go from a `Post` to a `User` via the `author` field will be more expensive. This is because the underlying `Post` objects don't know who their `author`s are and Prisma needs to filter all `User`s to find who the `author` of `Post` is.
+
+#### Directives
+
+The MongoDB connector introduces a number of new directives and slight changes in the way how the datamodel behaves.
+
+> If you are interested in this topic, you can follow the discussion around the [specification](https://github.com/prisma/prisma/issues/3408).
+
+##### `@id`
+
+In previous versions of the datamodel, there was only one way to assign a globally unique [ID](https://www.prisma.io/docs/data-model-and-migrations/data-model-knul/#id) to a model:
+
+```graphql
+type User {
+  id: ID! @unique
+}
+```
+
+If a field was defined like this in a previous version of the datamodel, Prisma would generate a globally unique ID and insert this ID as the value for the `id` field whenever a new record was being created.
+
+The `@id` directive now gives more flexibility to developers since it can be applied to _any_ field in your datamodel (at most once per model). It always implies that the respective field is _unique_ (without the need to explicitly specify the `@unique` directive). Note that for the MongoDB connector, the `@id` directive is **required** on every model that's not [embedded](#embedded-types). 
+
+> Learn more in the [specification](https://github.com/prisma/prisma/issues/3403).
+
+##### `@createdAt` & `@updatedAt`
+
+In previous versions of the datamodel, the [system fields](knul##system-fields:-createdat-and-updatedat) `createdAt` and `updatedAt` could be used to store when a record was created as well as when a record was las updated:
+
+```graphql
+type User {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+```
+
+The new version of the datamodel removes the opinionation about how the fields need to be named. Instead, you can annonate any field of the `DateTime!` type with the `@createdAt` or `@updatedAt` directive to achieve the same functionality:
+
+```graphql
+type User {
+  id: ID! @id
+  created_at: DateTime! @createdAt
+  updated_at: DateTime! @updatedAt
+}
+```
+
+##### `@db`
+
+The `@db(name: String!)` directive lets you be more explicit about mapping types and fields in your datamodel to the underlying database, i.e. it lets you specify a different name for a model in the API than the name that's used for the collection of the underlying database. Previously, Prisma would simply name the underlying table/collection after the model. The `name` argument of the directive defines the name of the collection or field that should be used in the database.
+
+```graphql
+type User @db(name: "user") {
+  id: ID! @id
+  name: String!
+}
+
+type Post @db(name: "post") {
+  id: ID! @id
+  stars: Int! @db(name: "starCount")
+}
+```
+
+##### `@embedded`
+
+The `@embedded` directive is used for _embedded types_. Find more info [above](#embedded-types).
 
 ### Get Started
-
-#### 1. Setup
 
 Install the latest version of the Prisma CLI using the instructions [above](#prisma-cli). Then run the following command to initialize a new Prisma service:
 
@@ -154,12 +217,12 @@ Install the latest version of the Prisma CLI using the instructions [above](#pri
 prisma init hello-mongo
 ```
 
-This launches the interactive wizard that helps you configure Prisma. To test the Mongo connector, you need to select the following answers for the first two questions:
+This launches the interactive wizard that helps you configure Prisma. To test the new MongoDB connector, you need to select the following answers for the first two questions:
 
-- **Create new database**
-- **MongoDB**
+1. **Create new database**
+1. **MongoDB**
 
-As a last step in the wizard, you need to select your preferred language for the Prisma client.
+As a last step in the wizard, you need to select your preferred language for the Prisma client that's used to read and write data against the Mongo database, we're choosing the **JavaScript Prisma Client** for this guide.
 
 The Prisma CLI now created a `hello-mongo` directory for you which contains your project setup. The Docker Compose file is used to launch a Prisma server that's backed by a MongoDB. Navigate into the project directory and run the following command to start the Prisma server:
 
@@ -178,9 +241,34 @@ CONTAINER ID        IMAGE                             COMMAND                  C
 fc261a149740        prismagraphql/prisma:1.21-beta    "/bin/sh -c /app/sta…"   About a minute ago   Up About a minute   0.0.0.0:4466->4466/tcp     hello-mongo_prisma_1
 ```
 
-#### 2. Configuring the datamodel
+Once you're sure the Prisma server is running, you can deploy the Prisma service:
 
-The MongoDB connector uses a slight variation of datamodel syntax compated to the existing database connectors.
+```
+prisma deploy
+```
 
-### The `@id` directive
+You can now play around with the generated Prisma client. Feel free to adjust the datamodel and explore some of the new features:
 
+```graphql
+type User @db(name: "user") {
+  id: ID! @id
+  email: String! @unique
+  name: String!
+  posts: [Post!]! @relation(link: INLINE)
+}
+
+type Post @db(name: "post") {
+  id: ID! @id
+  wasCreated: DateTime! @createdAt
+  wasUpdated: DateTime! @updatedAt
+  title: String!
+  published: Boolean @default(value: false)
+  author: User
+  comments: [Comment!]!
+}
+
+type Comment @embedded @db(name: "comment") {
+  text: String!
+  writtenBy: User!
+}
+```
