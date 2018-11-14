@@ -1,7 +1,9 @@
 package com.prisma.image
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.server.Directives.complete
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import com.prisma.akkautil.throttler.Throttler
@@ -20,7 +22,7 @@ import com.prisma.util.env.EnvUtils
 import com.prisma.websocket.WebsocketServer
 import com.prisma.workers.WorkerServer
 import com.prisma.workers.dependencies.WorkerDependencies
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import sangria.execution.{Executor, QueryAnalysisError}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -100,7 +102,6 @@ case class SangriaHandlerImpl(
   }
 
   private def handleQueryForManagementApi(request: RawRequest, query: GraphQlQuery): Future[JsValue] = {
-    // FIXME: recover DeployErrors
     import com.prisma.deploy.server.JsonMarshalling._
     def errorExtractor(t: Throwable): Option[Int] = t match {
       case e: DeployApiError => Some(e.code)
@@ -129,12 +130,14 @@ case class SangriaHandlerImpl(
         exceptionHandler = errorHandler.sangriaExceptionHandler
       )
       .recover {
-        case e: QueryAnalysisError => e.resolveError
+        case e: QueryAnalysisError =>
+          e.resolveError
+        case e: DeployApiError =>
+          Json.obj("code" -> e.code, "requestId" -> request.id, "error" -> e.getMessage)
       }
   }
 
   private def handleQueryForServiceApi(rawRequest: RawRequest, query: GraphQlQuery): Future[JsValue] = {
-    // FIXME: recover ApiErrors
     val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
     val projectId                          = projectIdEncoder.fromSegments(projectSegments)
     val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
