@@ -30,3 +30,7 @@ const char *sqlExecute(const PsqlConnection *conn, const char *query, const char
 const char *sqlQuery(const PsqlConnection *conn, const char *query, const char *params);
 
 const char *startTransaction(PsqlConnection *conn);
+
+void destroy(PointerAndError *pointerAndError);
+
+void destroy_string(const char *s);

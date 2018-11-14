@@ -21,54 +21,90 @@ object RustBindingGraal extends RustBinding {
     val ptrAndErr: CIntegration.PointerAndError = RustInterfaceGraal.prepareStatement(connection.conn, toCString(query))
     println(s"[Graal] Prepare result: ${ptrAndErr.error}")
     RustCallResult.fromString(toJavaString(ptrAndErr.error))
-    new RustPreparedStatementGraal(ptrAndErr.pointer.asInstanceOf[CIntegration.RustStatement])
+    val result = new RustPreparedStatementGraal(ptrAndErr.pointer.asInstanceOf[CIntegration.RustStatement])
+
+    // The pointer will still be valid after dropping the envelope
+    RustInterfaceGraal.destroy(ptrAndErr)
+    result
   }
 
   override def closeStatement(stmt: RustPreparedStatementGraal): RustCallResult = {
-    RustCallResult.fromString(toJavaString(RustInterfaceGraal.closeStatement(stmt.stmt)))
+    val raw    = RustInterfaceGraal.closeStatement(stmt.stmt)
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def startTransaction(connection: RustConnectionGraal): RustCallResult = {
-    RustCallResult.fromString(toJavaString(RustInterfaceGraal.startTransaction(connection.conn)))
+    val raw    = RustInterfaceGraal.startTransaction(connection.conn)
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def commitTransaction(connection: RustConnectionGraal): RustCallResult = {
-    RustCallResult.fromString(toJavaString(RustInterfaceGraal.commitTransaction(connection.conn)))
+    val raw    = RustInterfaceGraal.commitTransaction(connection.conn)
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def rollbackTransaction(connection: RustConnectionGraal): RustCallResult = {
-    RustCallResult.fromString(toJavaString(RustInterfaceGraal.rollbackTransaction(connection.conn)))
+    val raw    = RustInterfaceGraal.rollbackTransaction(connection.conn)
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def closeConnection(connection: RustConnectionGraal): RustCallResult = {
-    RustCallResult.fromString(toJavaString(RustInterfaceGraal.closeConnection(connection.conn)))
+    val raw    = RustInterfaceGraal.closeConnection(connection.conn)
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def sqlExecute(connection: RustConnectionGraal, query: String, params: String): RustCallResult = {
     println(s"[Graal] Execute: '$query' with params: $params")
-    val result = RustInterfaceGraal.sqlExecute(connection.conn, toCString(query), toCString(params))
-    println(s"[Graal] Result: $result")
-    RustCallResult.fromString(toJavaString(result))
+    val raw = RustInterfaceGraal.sqlExecute(connection.conn, toCString(query), toCString(params))
+    println(s"[Graal] Result: $raw")
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def sqlQuery(connection: RustConnectionGraal, query: String, params: String): RustCallResult = {
     println(s"[Graal] Query: '$query' with params: $params")
-    val result = RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params))
-    println(s"[Graal] Result: $result")
-    RustCallResult.fromString(toJavaString(result))
+    val raw = RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params))
+    println(s"[Graal] Result: $raw")
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def executePreparedstatement(stmt: RustPreparedStatementGraal, params: String): RustCallResult = {
     println(s"[Graal] PreparedStatement: Executing with params: $params")
-    val result = RustInterfaceGraal.executePreparedstatement(stmt.stmt, toCString(params))
-    println(s"[Graal] Result: $result")
-    RustCallResult.fromString(toJavaString(result))
+    val raw = RustInterfaceGraal.executePreparedstatement(stmt.stmt, toCString(params))
+    println(s"[Graal] Result: $raw")
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def queryPreparedstatement(stmt: RustPreparedStatementGraal, params: String): RustCallResult = {
     println(s"[Graal] PreparedStatement: Executing with params: $params")
-    val result = RustInterfaceGraal.queryPreparedstatement(stmt.stmt, toCString(params))
-    println(s"[Graal] Result: $result")
-    RustCallResult.fromString(toJavaString(result))
+    val raw = RustInterfaceGraal.queryPreparedstatement(stmt.stmt, toCString(params))
+    println(s"[Graal] Result: $raw")
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 }

@@ -29,9 +29,22 @@ use serialization::ResultSet;
 // todo pointerandresult
 #[repr(C)]
 #[no_mangle]
-pub struct PointerAndError<T> {
+pub struct PointerAndError<'a> {
     error: *const c_char,
-    pointer: *mut T
+    pointer: *mut driver::PsqlPreparedStatement<'a>
+}
+
+impl<'a> Drop for PointerAndError<'a> {
+    fn drop(&mut self) {
+        // Do NOT drop the contained statement, it will be closed separately. This drop is only dropping the protocol structure.
+        println!("[Rust] Dropping PointerAndError");
+        if !self.error.is_null() {
+            println!("[Rust] Dropping contained error");
+            drop(unsafe {
+                String::from_utf8(CString::from_raw(self.error as *mut c_char).into_bytes()).unwrap()
+            });
+        }
+    }
 }
 
 #[no_mangle]
@@ -43,7 +56,7 @@ pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConn
 }
 
 #[no_mangle]
-pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> *mut PointerAndError<driver::PsqlPreparedStatement<'a>> {
+pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> *mut PointerAndError {
     println!("Preparing: {}", to_string(query));
     let pointerAndError = match conn.prepareStatement(to_string(query)) {
         Ok(pStmt) => PointerAndError {
@@ -223,6 +236,20 @@ pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c
     connection.close();
 
     return serializeCallResult(Ok(CallResult::empty()));
+}
+
+#[no_mangle]
+pub extern "C" fn destroy(pointerAndError: *mut PointerAndError) {
+    unsafe {
+        Box::from_raw(pointerAndError)
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn destroy_string(s: *mut c_char) {
+    unsafe {
+        String::from_utf8(CString::from_raw(s).into_bytes()).unwrap()
+    };
 }
 
 #[no_mangle]

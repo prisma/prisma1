@@ -38,4 +38,10 @@ public class RustInterfaceGraal {
 
     @CFunction
     static native CCharPointer sqlQuery(CIntegration.RustConnection connection, CCharPointer query, CCharPointer params);
+
+    @CFunction
+    static native void destroy(CIntegration.PointerAndError pointerAndError);
+
+    @CFunction
+    static native void destroy_string(CCharPointer s);
 }

@@ -25,5 +25,8 @@ public interface JnaRustBridge extends Library {
     String queryPreparedstatement(Pointer stmt, String params);
 
     String closeStatement(Pointer stmt);
-}
 
+    void destroy(PointerAndError pointerAndError);
+
+    void destroy_string(String s);
+}
