@@ -11,7 +11,7 @@ import com.prisma.akkautil.http.Server
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.APIErrors.ProjectNotFound
-import com.prisma.api.schema.CommonErrors.ThrottlerBufferFullException
+import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
@@ -115,7 +115,7 @@ case class ApiServer(
           }
 
         case scala.util.Failure(_: ThrottleBufferFullException) =>
-          throw ThrottlerBufferFullException()
+          throw ThrottlerBufferFull()
 
         case scala.util.Failure(exception) =>
           throw exception

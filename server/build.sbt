@@ -72,6 +72,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
+  .dependsOn(sangriaServer)
 
 // ####################
 //       SERVERS
@@ -312,6 +313,15 @@ lazy val slickUtils = libProject("slick-utils").settings(libraryDependencies ++=
 lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies ++= Seq(snakeYML, scalaUri))
 
 lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
+
+lazy val sangriaServer = libProject("sangria-server")
+  .dependsOn(sangriaUtils)
+  .dependsOn(scalaUtils)
+  .settings(libraryDependencies ++= Seq(
+    akkaHttpPlayJson,
+    cuid,
+    scalajHttp % Test
+  ) ++ http4s ++ ujson)
 
 val allDockerImageProjects = List(
   prismaLocal,

@@ -21,6 +21,7 @@ case class WebsocketServer(dependencies: SubscriptionDependencies, prefix: Strin
 
   val v5ProtocolName       = "graphql-subscriptions"
   val v7ProtocolName       = "graphql-ws"
+  val supportedProtocols   = Vector(v5ProtocolName, v7ProtocolName)
   val subscriptionsManager = system.actorOf(Props(new SubscriptionsManager()(dependencies)), "subscriptions-manager")
 
   val innerRoutes =
