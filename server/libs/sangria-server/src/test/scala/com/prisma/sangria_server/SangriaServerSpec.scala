@@ -35,8 +35,9 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext) = sys.error("boom!")
   }
 
-  val server        = executor.create(handler, port = 8765, requestPrefix = "test")
-  val failingServer = executor.create(failingHandler, port = 8764, requestPrefix = "test")
+  val requestPrefix = "test"
+  val server        = executor.create(handler, port = 8765, requestPrefix = requestPrefix)
+  val failingServer = executor.create(failingHandler, port = 8764, requestPrefix = requestPrefix)
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -70,11 +71,13 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     response.code should be(200)
     response.body.asJson should be("""{"message":"hello from the handler"}""".asJson)
     response.header("Content-Type") should be(Some("application/json"))
+    val requestIdHeader = response.header("Request-Id")
+    requestIdHeader should not(be(empty))
+    requestIdHeader.get should startWith(requestPrefix + ":")
   }
 
   "it should have a status endpoint" in {
     val response = Http(httpUrl + "/status").asString
-    println(response.body)
     response.body should equal("\"OK\"")
   }
 
@@ -82,6 +85,9 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     val response = Http(failingHttpUrl).header("content-type", "application/json").postData(graphQlRequest(validGraphQlQuery)).asString
     response.code should be(500)
     response.header("Content-Type") should be(Some("application/json"))
+    val requestIdHeader = response.header("Request-Id")
+    requestIdHeader should not(be(empty))
+    requestIdHeader.get should startWith(requestPrefix + ":")
     val errors = response.body.asJsObject.value("errors").asInstanceOf[JsArray]
     errors.value should have(size(1))
     errors.head.as[JsObject].value("message") should equal(JsString("boom!"))

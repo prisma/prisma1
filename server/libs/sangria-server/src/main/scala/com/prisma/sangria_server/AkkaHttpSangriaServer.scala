@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.model.{ContentTypes, HttpMethods, HttpRequest, RemoteAddress}
 import akka.http.scaladsl.server.Directives.{as, entity, extractClientIP, _}
@@ -36,9 +37,11 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
       handleExceptions(toplevelExceptionHandler(requestId)) {
         extractClientIP { clientIp =>
           post {
-            entity(as[JsValue]) { requestJson =>
-              val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
-              complete(OK -> handler.handleRawRequest(rawRequest))
+            respondWithHeader(RawHeader("Request-Id", requestId)) {
+              entity(as[JsValue]) { requestJson =>
+                val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
+                complete(OK -> handler.handleRawRequest(rawRequest))
+              }
             }
           } ~ (get & path("status")) {
             complete("OK")
