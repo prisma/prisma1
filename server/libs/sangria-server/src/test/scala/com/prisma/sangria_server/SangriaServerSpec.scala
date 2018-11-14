@@ -66,6 +66,16 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   val wsUrl             = "ws://" + serverAddress
   val validGraphQlQuery = "{ someField }"
 
+  "it should return an error if the query is not valid" in {
+    val invalidQuery = "woot"
+    val response     = Http(httpUrl).header("content-type", "application/json").postData(graphQlRequest(invalidQuery)).asString
+    response.code should be(500)
+    response.header("Content-Type") should be(Some("application/json"))
+    val errors = response.body.asJsObject.value("errors").asInstanceOf[JsArray]
+    errors.value should have(size(1))
+    errors.head.as[JsObject].value("message").as[JsString].value should include("Syntax error while parsing GraphQL query. Invalid input")
+  }
+
   "start on the handler must have been called" in {
     import scala.language.reflectiveCalls
     handler.startHasBeenCalled should be(1)

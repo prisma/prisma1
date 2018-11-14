@@ -55,14 +55,10 @@ trait SangriaHandler {
 
   def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue]
 
-  def supportedWebsocketProtocols: Vector[String] = Vector.empty
-
-  def newWebsocketSession(request: RawWebsocketRequest): Flow[WebSocketMessage, WebSocketMessage, NotUsed] = {
-    Flow[WebSocketMessage]
-  }
+  def supportedWebsocketProtocols: Vector[String]                                                          = Vector.empty
+  def newWebsocketSession(request: RawWebsocketRequest): Flow[WebSocketMessage, WebSocketMessage, NotUsed] = Flow[WebSocketMessage]
 
   private def parseAsGraphqlQuery(json: JsValue): Try[GraphQlQuery] = Try {
-    // FIXME: remove those .get calls
     val result = json match {
       case obj: JsObject =>
         for {
