@@ -41,7 +41,10 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
     } yield ()
   }
 
-  override def shutdown(): Future[Unit] = Future.unit
+  override def shutdown(): Future[Unit] = {
+    mongoClient.close()
+    Future.unit
+  }
 
   override def createProjectDatabase(id: String): Future[Unit] = { // This is a hack
     mongoClient.getDatabase(id).listCollectionNames().toFuture().map(_ -> Unit)
