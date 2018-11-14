@@ -25,7 +25,9 @@ import sangria.execution.{Executor, QueryAnalysisError}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SangriaHandlerImpl()(
+case class SangriaHandlerImpl(
+    managementApiEnabled: Boolean
+)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     deployDependencies: DeployDependencies,
@@ -64,10 +66,15 @@ case class SangriaHandlerImpl()(
     }
   }
 
-  override def onStart() = workerServer.onStart.map(_ => ())
+  override def onStart() = {
+    if (managementApiEnabled) {
+      deployDependencies.migrator.initialize
+    }
+    workerServer.onStart.map(_ => ())
+  }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
-    if (request.path == Vector("management")) {
+    if (request.path == Vector("management") && managementApiEnabled) {
       handleQueryForManagementApi(request, query)
     } else {
       handleQueryForServiceApi(request, query)
