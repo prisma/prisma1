@@ -18,6 +18,8 @@ import scala.concurrent.{Await, Future}
 
 object AkkaHttpSangriaServer extends SangriaServerExecutor {
   override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(handler, port, requestPrefix)
+
+  override def supportsWebsockets = true
 }
 
 case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {

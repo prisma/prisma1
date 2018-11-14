@@ -13,7 +13,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Try}
 
 trait SangriaServerExecutor {
-  def create(server: SangriaHandler, port: Int, requestPrefix: String): SangriaServer
+  def create(handler: SangriaHandler, port: Int, requestPrefix: String): SangriaServer
+
+  def supportsWebsockets: Boolean
 }
 
 trait SangriaServer {

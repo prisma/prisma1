@@ -321,7 +321,7 @@ lazy val sangriaServer = libProject("sangria-server")
     akkaHttpPlayJson,
     cuid,
     scalajHttp % Test
-  ))
+  ) ++ http4s ++ ujson)
 
 val allDockerImageProjects = List(
   prismaLocal,

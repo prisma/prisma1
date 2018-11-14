@@ -59,11 +59,15 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   "it should return the playground " in {
     val response = Http(httpUrl).asString
     response.body should include("//cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js")
-    response.header("Content-Type") should be(Some("text/html; charset=UTF-8"))
+    response.header("Content-Type") should (
+      be(Some("text/html; charset=UTF-8")) or
+        be(Some("text/html"))
+    )
   }
 
   "it should call the handler" in {
     val response = Http(httpUrl).header("content-type", "application/json").postData(graphQlRequest(validGraphQlQuery)).asString
+    response.code should be(200)
     response.body.asJson should be("""{"message":"hello from the handler"}""".asJson)
     response.header("Content-Type") should be(Some("application/json"))
   }
@@ -91,13 +95,15 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   }
 
   "it should handle valid websocket connections correctly" in {
-    val msg                             = "hello world!"
-    val (upgradeResponse, firstMessage) = singleWebsocketMessage(msg, protocol = handler.supportedWebsocketProtocols.head)
-    upgradeResponse.response.status should be(StatusCodes.SwitchingProtocols)
-    firstMessage.get.asTextMessage.getStrictText should equal(s"Received: $msg")
+    if (executor.supportsWebsockets) {
+      val msg                             = "hello world!"
+      val (upgradeResponse, firstMessage) = singleWebsocketMessage(msg, protocol = handler.supportedWebsocketProtocols.head)
+      upgradeResponse.response.status should be(StatusCodes.SwitchingProtocols)
+      firstMessage.get.asTextMessage.getStrictText should equal(s"Received: $msg")
+    }
   }
 
-  private def singleWebsocketMessage(msg: String, protocol: String): (WebSocketUpgradeResponse, Option[Message]) = {
+  def singleWebsocketMessage(msg: String, protocol: String): (WebSocketUpgradeResponse, Option[Message]) = {
     implicit val system                          = ActorSystem()
     implicit val materializer                    = ActorMaterializer()
     val incoming: Sink[Message, Future[Message]] = Sink.head[Message]
@@ -118,7 +124,7 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     }
   }
 
-  private def graphQlRequest(query: String): String = {
+  def graphQlRequest(query: String): String = {
     s"""
       |{
       |  "query":"$query"
@@ -134,4 +140,8 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
 
 class AkkaHttpSangriaServerSpec extends SangriaServerSpecBase {
   override def executor = AkkaHttpSangriaServer
+}
+
+class BlazeSangriaServerSpec extends SangriaServerSpecBase {
+  override def executor = BlazeSangriaServer
 }
