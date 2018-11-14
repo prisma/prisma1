@@ -57,19 +57,43 @@ With the `1.21-beta`-release, Prisma introduces a database connector for [MongoD
 
 In Mongo, the `@id` field is required!
 
-### New concepts
+### Concepts
+
+MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database) which stands in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database). 
+
+![](https://imgur.com/vItK7n8.png)
+*Source: [MongoDB Documentation](https://www.mongodb.com/blog/post/thinking-documents-part-1)*
+
+#### Tables vs Collections
+
+Relational databases store their data in **tables** that are defined within the database _schema_. Data is [normalized](https://en.wikipedia.org/wiki/Database_normalization) (_flattened_) and relations between tables are implemented using _keys_ as references between data records. A table contains a number of **rows** which represent _instances_ of the table.
+
+MongoDB doesn't have the concept of tables. It is a _schemaless_ database that stores its data in **[collections](https://docs.mongodb.com/manual/reference/glossary/#term-collection)**. A collection contains a number of **[documents](https://docs.mongodb.com/manual/reference/glossary/#term-document)**. A document is the most basic unit of data in MongoDB and stored in [BSON](http://bsonspec.org/).
+
+> **Note**: While MongoDB is a schemaless database, using it with Prisma does effectively impose a schema on it.
+
+#### Relations
+
+One of the biggest differences between document and relational databases is the way how _relations_ between data types are handled. 
+
+While relational databases use [database normalization](https://en.wikipedia.org/wiki/Database_normalization) to store flat data records that reference each other via keys, document databases are able to store an object physically co-located to a related object in the same collection. The latter is called _embedding_ data (i.e. a document can have _embedded_ sub-documents/arrays).
+
+With MongoDB, relations can be expressed either by _embedding_ data directly in a parent document or by using _references_. A good overview on the differences can be found in the MongoDB [documentation](https://www.mongodb.com/blog/post/thinking-documents-part-2#modeling-relationships-with-embedding-and-referencing). Prisma adops the idea of _embedded_ types when modeling data for MongoDB.
+
+### Data modeling
 
 #### Embedded types
 
-The MongoDB connector introduces the concept of _embedded types_. An embedded type always:
+The MongoDB connector introduces the concept of _embedded types_. An embedded type ...
 
-- is annotated with the `@embedded` directive.
-- has one _parent type_.
-- is stored directly _within_ its _parent type's_ [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. it does not have its own collection).
+- is always annotated with the `@embedded` directive.
+- always has one _parent type_.
+- is always stored directly _within_ its _parent type's_ [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. it does not have its own collection).
 - can not have an ID (i.e. a field annotated with the `@id` directive).
 - can not have unique fields (i.e. fields annotated with the `@unique` directive).
 - can not have have a (back-)relation to its parent type (but it can have relations to other non-embedded types).
-- can not be queried directly using the Prisma API but only via _nested operations_ through the parent type.
+- can not be queried directly using the Prisma API but only via _nested operations_ through the parent type. 
+- can not be created, updated or deleted directly using the Prisma API but only via _nested operations_ through the parent type. 
 
 Here is an example of a datamodel where `Coordinates` is defined as an embedded type:
 
@@ -86,12 +110,38 @@ type Coordinates @embedded {
 }
 ```
 
-With this setup, it is _not_ possible to query any instances of `Coordinates` directly because `Coordinates` is an embedded type. `Coordinates` can only be queried via the `City` type.
+With this setup, it is _not_ possible to query any instances of `Coordinates` directly because `Coordinates` is an embedded type. `Coordinates` can only be queried via the `City` type. Similarly, you can not create, update or delete coordinates directly, instead you need to create, update or delete a `City` in order to perform such operation on an instance of `Coordinates`. 
 
 > You can learn more about embedded types in the [specification](https://github.com/prisma/prisma/issues/2836).
 
-#### JOIN relations
+#### Links & Relations
 
+With MongoDB, you can model relations in two ways:
+
+- Using an [embedded type](#embedded-types) as explained above
+
+A relation with the Mongo connector works in the way that:
+
+- One side of the relation stores the ID of the object on the other side
+- The other side of the relation has no reference to the other object
+
+You can denote the side of the relation that should store the ID using the `strategy` parameter of the `@relation` directive. In the following example, the `User` type stores the ID values of all the `Post` objects it's related to. A `Post` object however doesn't store any information about its `author` in the underlying Mongo database:
+
+```graphql
+type User {
+  id: ID! @id
+  name: String!
+  posts: [Post!]! @relation(strategy: EMBED)
+}
+
+type Post {
+  id: ID! @id
+  title: String!
+  author: User!
+}
+```
+
+Consequently, operations that go from a `Post` to a `User` via the `author` field will be more expensive. This is because the underlying `Post` objects don't know who their `author`s are and Prisma needs to filter all `User`s to find who the `author` of `Post` is.
 
 
 ### Get Started
