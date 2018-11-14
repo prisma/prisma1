@@ -280,7 +280,19 @@ export class Client {
         })
       }
 
-      let node
+      let node: any = {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: instruction.fieldName,
+        },
+        arguments: args,
+        directives: [],
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: [] as any[],
+        },
+      }
 
       const type = this.getDeepType(instruction.field.type)
       if (
