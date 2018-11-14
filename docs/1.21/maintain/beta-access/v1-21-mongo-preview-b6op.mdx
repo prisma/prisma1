@@ -19,7 +19,7 @@ Relational databases store their data in **tables** that are defined within the 
 
 MongoDB doesn't have the concept of tables. It is a _schemaless_ database that stores its data in **[collections](https://docs.mongodb.com/manual/reference/glossary/#term-collection)**. A collection contains a number of **[documents](https://docs.mongodb.com/manual/reference/glossary/#term-document)**. A document is the most basic unit of data in MongoDB and stored in [BSON](http://bsonspec.org/).
 
-> **Note**: While MongoDB is a schemaless database, using it with Prisma does effectively impose a schema on it.
+> While MongoDB is a schemaless database, using it with Prisma does effectively impose a schema on it.
 
 ### Relations
 
@@ -124,7 +124,7 @@ type User {
 
 The `@id` directive always implies that the respective field is _unique_ (without the need to explicitly specify the `@unique` directive). Note that for the MongoDB connector, the `@id` directive is **required** on every model that's not [embedded](#embedded-types). 
 
-> Learn more in twhe [specification](https://github.com/prisma/prisma/issues/3403).
+> Learn more in the [specification](https://github.com/prisma/prisma/issues/3403).
 
 #### `@createdAt` & `@updatedAt`
 
@@ -193,7 +193,7 @@ The Prisma CLI now created a `hello-mongo` directory for you which contains your
 docker-compose up -d
 ```
 
-> Note: This might throw an error if you already have Prisma Docker containers running locally. In that case, you can [reset your Docker containers](rty1-hard-resetting-the-docker-environment).
+> This might throw an error if you already have Prisma Docker containers running locally. In that case, you can [reset your Docker containers](rty1-hard-resetting-the-docker-environment).
 
 You can verify that the Docker containers for Prisma and for your MongoDB have been started correctly by running `docker ps`. This should print something similar to this:
 
