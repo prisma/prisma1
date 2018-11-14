@@ -37,22 +37,25 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
   override def stop() = Future.successful(())
 
   val service = HttpService[IO] {
-    case request =>
+    case request if request.method == GET && request.pathInfo == "/status" =>
+      Ok("\"OK\"")
+
+    case request if request.method == GET =>
+      val requestCasted = request.asInstanceOf[Request[IO]] // the compiler cannot figure it out itself
+      StaticFile.fromResource("/graphiql.html", Some(requestCasted)).getOrElseF(NotFound())
+
+    case request if request.method == POST =>
       val requestId       = createRequestId()
       val requestIdHeader = Header("Request-Id", requestId)
-      val x: IO[Response[IO]] = request.method match {
-        case POST =>
-          val x: IO[Response[IO]] = for {
-            rawRequest <- blazeRequestToRawRequet(request.asInstanceOf[Request[IO]], requestId)
-            result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
-            response   <- Ok.apply(result, requestIdHeader)
-          } yield response
-          x
-        case GET if request.pathInfo == "/status" => Ok("\"OK\"")
-        case GET                                  => StaticFile.fromResource("/graphiql.html", Some(request.asInstanceOf[Request[IO]])).getOrElseF(NotFound())
-        case _                                    => NotFound("not found")
-      }
-      x.handleErrorWith { exception =>
+      val requestCasted   = request.asInstanceOf[Request[IO]] // the compiler cannot figure it out itself
+
+      val response: IO[Response[IO]] = for {
+        rawRequest <- blazeRequestToRawRequet(requestCasted, requestId)
+        result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
+        response   <- Ok.apply(result, requestIdHeader)
+      } yield response
+
+      response.handleErrorWith { exception =>
         val playJson = JsonErrorHelper.errorJson(requestId, exception.getMessage)
         InternalServerError(playJsonToCircleJson(playJson), requestIdHeader)
       }
