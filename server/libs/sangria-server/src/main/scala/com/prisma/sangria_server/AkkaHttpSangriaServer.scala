@@ -122,12 +122,3 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
 
   def stopBlocking(duration: Duration = 15.seconds): Unit = Await.result(stop, duration)
 }
-
-object JsonErrorHelper {
-
-  def errorJson(requestId: String, message: String, errorCode: Int): JsObject = errorJson(requestId, message, Some(errorCode))
-  def errorJson(requestId: String, message: String, errorCode: Option[Int] = None): JsObject = errorCode match {
-    case None       => Json.obj("errors" -> Seq(Json.obj("message" -> message, "requestId" -> requestId)))
-    case Some(code) => Json.obj("errors" -> Seq(Json.obj("message" -> message, "code"      -> code, "requestId" -> requestId)))
-  }
-}

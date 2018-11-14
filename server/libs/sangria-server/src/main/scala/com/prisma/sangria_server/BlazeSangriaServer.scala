@@ -1,6 +1,7 @@
 package com.prisma.sangria_server
 
-import cats.effect.IO
+import cats.effect._
+import cats.implicits._
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
@@ -37,44 +38,30 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
   override def stop() = Future.successful(())
 
   val service = HttpService[IO] {
-//    case request @ GET -> Root / "status" =>
-//      println("status")
-//      val x: Message[IO] = request
-//      Ok("\"OK\"")
-//    case request @ GET =>
-//      println("get")
-//      StaticFile.fromResource("/graphiql.html", Some(request.asInstanceOf[Request[IO]])).getOrElseF(NotFound())
-//
-//    case request @ POST =>
-//      println("post")
-//      val x: IO[Response[IO]] = for {
-//        rawRequest <- blazeRequestToRawRequet(request.asInstanceOf[Request[IO]])
-////        future: Future[Json] =
-//        result   <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
-//        response <- Ok.apply(result)
-//      } yield response
-//      x
-
     case request =>
-      request.method match {
+      val requestId = createRequestId()
+      val x: IO[Response[IO]] = request.method match {
         case POST =>
           val x: IO[Response[IO]] = for {
-            rawRequest <- blazeRequestToRawRequet(request.asInstanceOf[Request[IO]])
-            //        future: Future[Json] =
-            result   <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
-            response <- Ok.apply(result)
+            rawRequest <- blazeRequestToRawRequet(request.asInstanceOf[Request[IO]], requestId)
+            result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
+            response   <- Ok.apply(result)
           } yield response
           x
         case GET if request.pathInfo == "/status" => Ok("\"OK\"")
         case GET                                  => StaticFile.fromResource("/graphiql.html", Some(request.asInstanceOf[Request[IO]])).getOrElseF(NotFound())
         case x                                    => NotFound("not found")
       }
+      x.handleErrorWith { exception =>
+        val playJson = JsonErrorHelper.errorJson(requestId, exception.getMessage)
+        InternalServerError(playJsonToCircleJson(playJson))
+      }
   }
 
-  def blazeRequestToRawRequet(request: Request[IO]): IO[RawRequest] = {
+  def blazeRequestToRawRequet(request: Request[IO], requestId: String): IO[RawRequest] = {
     request.as[Json].map { json =>
       RawRequest(
-        id = createRequestId(),
+        id = requestId,
         method = HttpMethod.Post,
         path = request.uri.path.split('/').filter(_.nonEmpty).toVector,
         headers = request.headers.map(h => h.name.value -> h.value).toMap,
