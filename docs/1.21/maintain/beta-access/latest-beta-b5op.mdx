@@ -191,7 +191,9 @@ type User {
 
 ##### `@db`
 
-The `@db(name: String!)` directive lets you be more explicit about mapping types and fields in your datamodel to the underlying database, i.e. it lets you specify a different name for a model in the API than the name that's used for the collection of the underlying database. Previously, Prisma would simply name the underlying table/collection after the model. The `name` argument of the directive defines the name of the collection or field that should be used in the database.
+The `@db(name: String!)` directive lets you be more explicit about mapping types and fields in your datamodel to the underlying database, i.e. it lets you specify a different name for a model in the API than the name that's used for the collection of the underlying database. This only works for non-embedded types, since embedded types don't have a collection that could be named.
+
+Previously, Prisma would simply name the underlying table/collection after the model. The `name` argument of the directive defines the name of the collection or field that should be used in the database.
 
 ```graphql
 type User @db(name: "user") {
@@ -247,7 +249,7 @@ Once you're sure the Prisma server is running, you can deploy the Prisma service
 prisma deploy
 ```
 
-You can now play around with the generated Prisma client. Feel free to adjust the datamodel and explore some of the new features:
+You can now play around with the generated Prisma client. Feel free to adjust the datamodel and explore some of the new features, for example:
 
 ```graphql
 type User @db(name: "user") {
@@ -267,8 +269,15 @@ type Post @db(name: "post") {
   comments: [Comment!]!
 }
 
-type Comment @embedded @db(name: "comment") {
+type Comment @embedded {
   text: String!
   writtenBy: User!
 }
+```
+
+Don't forget to update the Prisma API and regenerate your Prisma client after you changed `datamodel.prisma`:
+
+```
+prisma deploy
+prisma generate
 ```
