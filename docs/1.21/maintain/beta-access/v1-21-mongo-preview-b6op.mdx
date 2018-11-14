@@ -114,9 +114,17 @@ type User {
 
 If a field was defined like this in a previous version of the datamodel, Prisma would generate a globally unique ID and insert this ID as the value for the `id` field whenever a new record was being created.
 
-The `@id` directive now gives more flexibility to developers since it can be applied to _any_ field in your datamodel (at most once per model). It always implies that the respective field is _unique_ (without the need to explicitly specify the `@unique` directive). Note that for the MongoDB connector, the `@id` directive is **required** on every model that's not [embedded](#embedded-types). 
+The `@id` directive now gives more flexibility to developers since it can be applied to _any_ field in your datamodel (at most once per model), here is an example where the ID is stored in a field called `myID`:
 
-> Learn more in the [specification](https://github.com/prisma/prisma/issues/3403).
+```graphql
+type User {
+  myID: ID! @id
+}
+```
+
+The `@id` directive always implies that the respective field is _unique_ (without the need to explicitly specify the `@unique` directive). Note that for the MongoDB connector, the `@id` directive is **required** on every model that's not [embedded](#embedded-types). 
+
+> Learn more in twhe [specification](https://github.com/prisma/prisma/issues/3403).
 
 #### `@createdAt` & `@updatedAt`
 
@@ -164,6 +172,8 @@ The `@embedded` directive is used for _embedded types_. Find more info [above](#
 
 ## Get Started
 
+### 1. Setup
+
 Install the latest version of the Prisma CLI using the instructions [above](#prisma-cli). Then run the following command to initialize a new Prisma service:
 
 ```
@@ -200,7 +210,41 @@ Once you're sure the Prisma server is running, you can deploy the Prisma service
 prisma deploy
 ```
 
-You can now play around with the generated Prisma client. Feel free to adjust the datamodel and explore some of the new features, for example:
+### 2. Use the Prisma client to read and write data
+
+You can now play around with the generated Prisma client. Run the following commands to initialize a simple Node app:
+
+```
+npm init -y
+npm install --save prisma-client-lib graphql
+touch index.js
+```
+
+Now add the following code to `index.js`:
+
+```js
+const { prisma } = require('./generated/prisma-client')
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user called `Alice`
+  const newUser = await prisma.createUser({ name: 'Alice' })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+}
+
+main().catch(e => console.error(e))
+```
+
+This first creates a new document in the `User` collection and then retrieves all the documents from the `User` collection.
+
+### 3. Update the datamodel
+
+Feel free to adjust the datamodel and explore some of the new features, for example:
 
 ```graphql
 type User @db(name: "user") {
@@ -284,5 +328,24 @@ Here are two examples:
 - A service with the endpoint `http://localhost:4466` (which is equivalent to `http://localhost:4466/default/default`) creates a database called `default_default`.
 - A service with the endpoint `http://localhost:4466/hello-mongo/dev` creates a database called `hello-mongo_dev`
 
+Switch to the database of your Prisma service, e.g. using this command:
 
+```
+use default_default
+```
 
+Now you can list all available collections with this command:
+
+```
+show collections
+```
+
+If you have a `User` collection available, you can run the following command to retrieve a single document from it:
+
+```
+db.User.findOne()
+```
+
+Learn more about the Mongo shell API [here](https://docs.mongodb.com/manual/reference/method/js-collection/).
+
+### 5. 
