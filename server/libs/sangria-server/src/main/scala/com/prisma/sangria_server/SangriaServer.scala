@@ -31,6 +31,8 @@ trait SangriaServer {
 trait SangriaHandler {
   import com.prisma.utils.`try`.TryExtensions._
 
+  def onStart(): Future[Unit]
+
   def handleRawRequest(request: RawRequest)(implicit ec: ExecutionContext): Future[JsValue] = {
     request.json match {
       case JsArray(requests) =>

@@ -24,11 +24,15 @@ object BlazeSangriaServer extends SangriaServerExecutor {
 case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val server = BlazeBuilder[IO]
-    .bindHttp(port, "0.0.0.0")
-    .mountService(service)
-    .start
-    .unsafeToFuture()
+  lazy val server = {
+    handler.onStart().flatMap { _ =>
+      BlazeBuilder[IO]
+        .bindHttp(port, "0.0.0.0")
+        .mountService(service)
+        .start
+        .unsafeToFuture()
+    }
+  }
 
   def start()         = server.map(_ => ())
   override def stop() = server.map(_.shutdownNow())

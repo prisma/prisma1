@@ -34,29 +34,29 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
   val routes = {
     extractRequest { request =>
       val requestId = createRequestId()
-      handleExceptions(toplevelExceptionHandler(requestId)) {
-        extractClientIP { clientIp =>
-          post {
-            respondWithHeader(RawHeader("Request-Id", requestId)) {
+      respondWithHeader(RawHeader("Request-Id", requestId)) {
+        handleExceptions(toplevelExceptionHandler(requestId)) {
+          extractClientIP { clientIp =>
+            post {
               entity(as[JsValue]) { requestJson =>
                 val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
                 complete(OK -> handler.handleRawRequest(rawRequest))
               }
+            } ~ (get & path("status")) {
+              complete("OK")
+            } ~ get {
+              extractUpgradeToWebSocket { upgrade =>
+                upgrade.requestedProtocols.headOption match {
+                  case Some(protocol) if handler.supportedWebsocketProtocols.contains(protocol) =>
+                    val originalFlow = handler.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
+                    val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
+                    handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
+                  case _ =>
+                    reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
+                }
+              } ~
+                getFromResource("graphiql.html", ContentTypes.`text/html(UTF-8)`)
             }
-          } ~ (get & path("status")) {
-            complete("OK")
-          } ~ get {
-            extractUpgradeToWebSocket { upgrade =>
-              upgrade.requestedProtocols.headOption match {
-                case Some(protocol) if handler.supportedWebsocketProtocols.contains(protocol) =>
-                  val originalFlow = handler.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
-                  val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
-                  handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
-                case _ =>
-                  reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
-              }
-            } ~
-              getFromResource("graphiql.html", ContentTypes.`text/html(UTF-8)`)
           }
         }
       }
@@ -109,9 +109,13 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
   }
 
   lazy val serverBinding: Future[ServerBinding] = {
-    val binding = Http().bindAndHandle(Route.handlerFlow(routes), "0.0.0.0", port)
-    binding.foreach(b => println(s"Server running on :${b.localAddress.getPort}"))
-    binding
+    for {
+      _       <- handler.onStart()
+      binding <- Http().bindAndHandle(Route.handlerFlow(routes), "0.0.0.0", port)
+    } yield {
+      println(s"Server running on :${binding.localAddress.getPort}")
+      binding
+    }
   }
 
   def start: Future[Unit] = serverBinding.map(_ => ())

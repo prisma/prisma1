@@ -20,6 +20,13 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   def executor: SangriaServerExecutor
 
   val handler = new SangriaHandler {
+    var startHasBeenCalled = 0
+
+    override def onStart() = {
+      startHasBeenCalled += 1
+      Future.successful(())
+    }
+
     override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
       Future.successful(Json.obj("message" -> "hello from the handler"))
     }
@@ -32,6 +39,8 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   }
 
   val failingHandler = new SangriaHandler {
+    override def onStart() = Future.successful(())
+
     override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext) = sys.error("boom!")
   }
 
@@ -41,14 +50,14 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    server.start()
-    failingServer.start()
+    server.start().await()
+    failingServer.start().await()
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    server.stop()
-    failingServer.stop()
+    server.stop().await()
+    failingServer.stop().await()
   }
 
   val serverAddress     = "localhost:8765"
@@ -56,6 +65,11 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
   val failingHttpUrl    = "http://localhost:8764"
   val wsUrl             = "ws://" + serverAddress
   val validGraphQlQuery = "{ someField }"
+
+  "start on the handler must have been called" in {
+    import scala.language.reflectiveCalls
+    handler.startHasBeenCalled should be(1)
+  }
 
   "it should return the playground " in {
     val response = Http(httpUrl).asString
