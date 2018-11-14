@@ -5002,17 +5002,15 @@ pretty-ms@^3.0.0:
   dependencies:
     parse-ms "^1.0.0"
 
-prisma-generate-schema@1.22.0-alpha.0.1:
-  version "1.22.0-alpha.0.1"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.22.0-alpha.0.1.tgz#44ab29bd4e9d9213ffdd297069ec966523ead32a"
-  integrity sha512-7E4CzJN3gM6To3+dw0A5alwPJRWE5j0yLgsl2zayKwbe8vrobBVDYAKx1CPWQLbwEyADVTfMaAHFBHsntebDEw==
+prisma-generate-schema@1.20.4:
+  version "1.20.4"
+  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.20.4.tgz#d13f2bd0475e59a95a89b67a83358fe24f0471c5"
+  integrity sha512-o7JPEcv2zu2uAIj0hgUdQ+oWR2tKU49nDu6rO0BUR5RYAMbcR+BqS1mchAoWpNGX8nhZqDqHQ524WyWZu7pr3A==
   dependencies:
     graphql "^14.0.2"
     node-fetch "^2.2.1"
     pluralize "^7.0.0"
     popsicle "10"
-    tslint-config-prettier "^1.15.0"
-    tslint-eslint-rules "^5.4.0"
 
 private@^0.1.8:
   version "0.1.8"
@@ -6267,11 +6265,6 @@ tslib@^1.8.0, tslib@^1.8.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
   integrity sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ==
 
-tslint-config-prettier@^1.15.0:
-  version "1.15.0"
-  resolved "https://registry.yarnpkg.com/tslint-config-prettier/-/tslint-config-prettier-1.15.0.tgz#76b9714399004ab6831fdcf76d89b73691c812cf"
-  integrity sha512-06CgrHJxJmNYVgsmeMoa1KXzQRoOdvfkqnJth6XUkNeOz707qxN0WfxfhYwhL5kXHHbYJRby2bqAPKwThlZPhw==
-
 tslint-config-standard@8.0.1:
   version "8.0.1"
   resolved "https://registry.yarnpkg.com/tslint-config-standard/-/tslint-config-standard-8.0.1.tgz#e4dd3128e84b0e34b51990b68715a641f2b417e4"
@@ -6279,7 +6272,7 @@ tslint-config-standard@8.0.1:
   dependencies:
     tslint-eslint-rules "^5.3.1"
 
-tslint-eslint-rules@^5.3.1, tslint-eslint-rules@^5.4.0:
+tslint-eslint-rules@^5.3.1:
   version "5.4.0"
   resolved "https://registry.yarnpkg.com/tslint-eslint-rules/-/tslint-eslint-rules-5.4.0.tgz#e488cc9181bf193fe5cd7bfca213a7695f1737b5"
   integrity sha512-WlSXE+J2vY/VPgIcqQuijMQiel+UtmXS+4nvK4ZzlDiqBfXse8FAvkNnTcYhnQyOTW5KFM+uRRGXxYhFpuBc6w==

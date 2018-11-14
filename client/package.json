@@ -28,7 +28,7 @@
     "jsonwebtoken": "^8.3.0",
     "lodash.flatten": "^4.4.0",
     "prettier": "^1.14.3",
-    "prisma-generate-schema": "1.22.0-alpha.0.1",
+    "prisma-generate-schema": "1.20.4",
     "subscriptions-transport-ws": "^0.9.15",
     "uppercamelcase": "^3.0.0",
     "ws": "^6.1.0",
