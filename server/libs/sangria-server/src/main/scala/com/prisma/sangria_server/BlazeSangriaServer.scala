@@ -28,6 +28,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
     handler.onStart().flatMap { _ =>
       BlazeBuilder[IO]
         .bindHttp(port, "0.0.0.0")
+        .withWebSockets(true)
         .mountService(service)
         .start
         .unsafeToFuture()
@@ -46,7 +47,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       Ok("\"OK\"")
 
     case request if request.method == GET =>
-      StaticFile.fromResource("/graphiql.html", Some(request)).getOrElseF(NotFound())
+      StaticFile.fromResource("/playground.html", Some(request)).getOrElseF(NotFound())
 
     case request if request.method == POST =>
       val requestId       = createRequestId()

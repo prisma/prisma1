@@ -55,7 +55,7 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
                     reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
                 }
               } ~
-                getFromResource("graphiql.html", ContentTypes.`text/html(UTF-8)`)
+                getFromResource("playground.html", ContentTypes.`text/html(UTF-8)`)
             }
           }
         }
