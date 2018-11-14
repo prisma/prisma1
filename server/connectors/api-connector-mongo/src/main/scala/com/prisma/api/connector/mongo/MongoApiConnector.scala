@@ -29,6 +29,7 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
   }
 
   override def shutdown(): Future[Unit] = {
+    client.close()
     Future.unit
   }
 }
