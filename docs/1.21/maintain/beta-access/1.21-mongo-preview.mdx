@@ -1,68 +1,19 @@
-import Code from 'components/Markdown/Code'
-
 export const meta = {
-  title: 'Latest Beta',
+  title: '1.21-beta: MongoDB Preview',
   position: 100
 }
 
-## Overview
 
-### Prisma CLI
-
-You can get access to the latest beta release of the Prisma CLI by appending the `@beta`-tag when installing it via NPM:
-
-```
-npm install -g prisma@beta
-```
-
-### Prisma server (Docker)
-
-You can find the latest beta Prisma Docker image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/). To use the latest version of a Prisma server, you need to configure the `image` property in your Docker Compose file accordingly by appending `-beta` to the the version number, e.g.:
-
-<Code lines="4">
-
-```yml
-version: '3'
-services:
-  prisma:
-    image: prismagraphql/prisma:1.21-beta
-    restart: always
-    ports:
-    - "4466:4466"
-    environment:
-      PRISMA_CONFIG: |
-        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
-        port: __YOUR_PRISMA_SERVER_PORT__
-        databases:
-          default:
-            connector: __YOUR_DATABASE_CONNECTOR__
-            migrations: __ENABLE_DB_MIGRATIONS__
-            host: __YOUR_DATABASE_HOST__
-            port: __YOUR_DATABASE_PORT__
-            user: __YOUR_DATABASE_USER__
-            password: __YOUR_DATABASE_PASSWORD__
-```
-
-</Code>
-
-You can also pull the latest beta version directly using the Docker CLI:
-
-```bash
-docker pull prismagraphql/prisma:1.21-beta
-```
-
-## 1.21-beta: Mongo DB
+## Concepts
 
 With the `1.21-beta`-release, Prisma introduces a database connector for [MongoDB](https://www.mongodb.com/).
-
-### Concepts
 
 MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database) which stands in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database). 
 
 ![](https://imgur.com/vItK7n8.png)
 *Source: [MongoDB Documentation](https://www.mongodb.com/blog/post/thinking-documents-part-1)*
 
-#### Tables vs Collections
+### Tables vs Collections
 
 Relational databases store their data in **tables** that are defined within the database _schema_. Data is [normalized](https://en.wikipedia.org/wiki/Database_normalization) (_flattened_) and relations between tables are implemented using _keys_ as references between data records. A table contains a number of **rows** which represent _instances_ of the table.
 
@@ -70,7 +21,7 @@ MongoDB doesn't have the concept of tables. It is a _schemaless_ database that s
 
 > **Note**: While MongoDB is a schemaless database, using it with Prisma does effectively impose a schema on it.
 
-#### Relations
+### Relations
 
 One of the biggest differences between document and relational databases is the way how _relations_ between data types are handled. 
 
@@ -78,9 +29,9 @@ While relational databases use [database normalization](https://en.wikipedia.org
 
 With MongoDB, relations can be expressed either by _embedding_ data directly in a parent document or by using _references_. A good overview on the differences can be found in the MongoDB [documentation](https://www.mongodb.com/blog/post/thinking-documents-part-2#modeling-relationships-with-embedding-and-referencing). Prisma adops the idea of _embedded_ types when modeling data for MongoDB.
 
-### Data modeling
+## Data modeling
 
-#### Embedded types
+### Embedded types
 
 The MongoDB connector introduces the concept of _embedded types_. An embedded type ...
 
@@ -112,7 +63,7 @@ With this setup, it is _not_ possible to query any instances of `Coordinates` di
 
 > You can learn more about embedded types in the [specification](https://github.com/prisma/prisma/issues/2836).
 
-#### Link relations
+### Link relations
 
 With MongoDB, you can model relations in two ways:
 
@@ -145,13 +96,13 @@ While this approach enables querying for `Post` documents directly in the Prisma
 
 Operations that go from a `Post` to a `User` via the `author` field will be more expensive. This is because the underlying `Post` objects don't know who their `author`s are and Prisma needs to filter all `User`s to find who the `author` of `Post` is.
 
-#### Directives
+### Directives
 
 The MongoDB connector introduces a number of new directives and slight changes in the way how the datamodel behaves.
 
 > If you are interested in this topic, you can follow the discussion around the [specification](https://github.com/prisma/prisma/issues/3408).
 
-##### `@id`
+#### `@id`
 
 In previous versions of the datamodel, there was only one way to assign a globally unique [ID](https://www.prisma.io/docs/data-model-and-migrations/data-model-knul/#id) to a model:
 
@@ -167,7 +118,7 @@ The `@id` directive now gives more flexibility to developers since it can be app
 
 > Learn more in the [specification](https://github.com/prisma/prisma/issues/3403).
 
-##### `@createdAt` & `@updatedAt`
+#### `@createdAt` & `@updatedAt`
 
 In previous versions of the datamodel, the [system fields](knul##system-fields:-createdat-and-updatedat) `createdAt` and `updatedAt` could be used to store when a record was created as well as when a record was las updated:
 
@@ -189,7 +140,7 @@ type User {
 }
 ```
 
-##### `@db`
+#### `@db`
 
 The `@db(name: String!)` directive lets you be more explicit about mapping types and fields in your datamodel to the underlying database, i.e. it lets you specify a different name for a model in the API than the name that's used for the collection of the underlying database. This only works for non-embedded types, since embedded types don't have a collection that could be named.
 
@@ -207,11 +158,11 @@ type Post @db(name: "post") {
 }
 ```
 
-##### `@embedded`
+#### `@embedded`
 
 The `@embedded` directive is used for _embedded types_. Find more info [above](#embedded-types).
 
-### Get Started
+## Get Started
 
 Install the latest version of the Prisma CLI using the instructions [above](#prisma-cli). Then run the following command to initialize a new Prisma service:
 
