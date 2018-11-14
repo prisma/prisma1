@@ -12,7 +12,8 @@ import play.api.libs.json.{JsValue => PlayJsValue}
 import ujson.circe.CirceJson
 import ujson.play.PlayJson
 
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 object BlazeSangriaServer extends SangriaServerExecutor {
   override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = BlazeSangriaServer(handler, port, requestPrefix)
@@ -23,18 +24,18 @@ object BlazeSangriaServer extends SangriaServerExecutor {
 case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def start() = {
-    BlazeBuilder[IO]
-      .bindHttp(port, "0.0.0.0")
-      .mountService(service)
-      .start
-      .unsafeRunSync()
-    Future.successful(())
+  lazy val server = BlazeBuilder[IO]
+    .bindHttp(port, "0.0.0.0")
+    .mountService(service)
+    .start
+    .unsafeToFuture()
+
+  def start()         = server.map(_ => ())
+  override def stop() = server.map(_.shutdownNow())
+  override def startBlocking(): Unit = {
+    start()
+    Await.result(Future.never, Duration.Inf)
   }
-
-  override def startBlocking(): Unit = ???
-
-  override def stop() = Future.successful(())
 
   val service = HttpService[IO] {
     case request if request.method == GET && request.pathInfo == "/status" =>
