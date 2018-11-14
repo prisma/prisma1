@@ -18,6 +18,8 @@ import com.prisma.shared.models.ProjectId
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.util.env.EnvUtils
 import com.prisma.websocket.WebsocketServer
+import com.prisma.workers.WorkerServer
+import com.prisma.workers.dependencies.WorkerDependencies
 import play.api.libs.json.JsValue
 import sangria.execution.{Executor, QueryAnalysisError}
 
@@ -28,7 +30,8 @@ case class SangriaHandlerImpl()(
     materializer: ActorMaterializer,
     deployDependencies: DeployDependencies,
     apiDependencies: ApiDependencies,
-    subscriptionDependencies: SubscriptionDependencies
+    subscriptionDependencies: SubscriptionDependencies,
+    workerDependencies: WorkerDependencies
 ) extends SangriaHandler {
   import com.prisma.utils.future.FutureUtils._
   import scala.concurrent.duration._
@@ -38,6 +41,7 @@ case class SangriaHandlerImpl()(
   val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
   val projectIdEncoder      = apiDependencies.projectIdEncoder
   val websocketServer       = WebsocketServer(subscriptionDependencies)
+  val workerServer          = WorkerServer(workerDependencies)
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
     case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(projectIdEncoder.fromEncodedString)
@@ -59,6 +63,8 @@ case class SangriaHandlerImpl()(
       )
     }
   }
+
+  override def onStart() = workerServer.onStart.map(_ => ())
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
     if (request.path == Vector("management")) {
