@@ -41,16 +41,14 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       Ok("\"OK\"")
 
     case request if request.method == GET =>
-      val requestCasted = request.asInstanceOf[Request[IO]] // the compiler cannot figure it out itself
-      StaticFile.fromResource("/graphiql.html", Some(requestCasted)).getOrElseF(NotFound())
+      StaticFile.fromResource("/graphiql.html", Some(request)).getOrElseF(NotFound())
 
     case request if request.method == POST =>
       val requestId       = createRequestId()
       val requestIdHeader = Header("Request-Id", requestId)
-      val requestCasted   = request.asInstanceOf[Request[IO]] // the compiler cannot figure it out itself
 
       val response: IO[Response[IO]] = for {
-        rawRequest <- blazeRequestToRawRequet(requestCasted, requestId)
+        rawRequest <- http4sRequestToRawRequest(request, requestId)
         result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
         response   <- Ok.apply(result, requestIdHeader)
       } yield response
@@ -61,7 +59,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       }
   }
 
-  def blazeRequestToRawRequet(request: Request[IO], requestId: String): IO[RawRequest] = {
+  def http4sRequestToRawRequest(request: Request[IO], requestId: String): IO[RawRequest] = {
     request.as[Json].map { json =>
       RawRequest(
         id = requestId,
