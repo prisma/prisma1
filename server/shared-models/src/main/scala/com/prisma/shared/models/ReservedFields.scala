@@ -61,7 +61,7 @@ object ReservedFields {
       isRequired = true,
       isList = false,
       isUnique = true,
-      isHidden = true,
+      isHidden = false,
       isReadonly = true,
       enum = None,
       defaultValue = None,
