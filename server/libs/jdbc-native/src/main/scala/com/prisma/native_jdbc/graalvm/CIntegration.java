@@ -16,7 +16,7 @@ public class CIntegration {
     static class CIntegrationDirectives implements CContext.Directives {
         @Override
         public List<String> getHeaderFiles() {
-            return Collections.singletonList("\"resources/jdbc_native.h\"");
+            return Collections.singletonList("<" + CIntegration.class.getClassLoader().getResource("jdbc_native.h").getPath() + ">");
         }
     }
 

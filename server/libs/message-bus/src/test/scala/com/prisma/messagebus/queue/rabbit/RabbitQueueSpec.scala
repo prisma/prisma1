@@ -131,7 +131,8 @@ class RabbitQueueSpec
       failingRabbitQueue.shutdown
 
       // First create a new queue consumer that has a > 60s constant backoff and that always fails messages
-      val longBackoffFailingRabbitQueue = RabbitQueue[String](amqpUri, "test-failing", ConstantBackoff(61.seconds))(reporter, testMarshaller, testUnmarshaller)
+      val longBackoffFailingRabbitQueue =
+        RabbitQueue[String](amqpUri, "test-failing", ConstantBackoff(61.seconds))(reporter, testMarshaller, testUnmarshaller, system)
 
       longBackoffFailingRabbitQueue.withConsumer((str: String) => Future.failed(new Exception("This is expected to happen")))
 

@@ -98,9 +98,11 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
       "--enable-all-security-services",
     //  "--delay-class-initialization-to-runtime=com.github.benmanes.caffeine.cache.LocalAsyncLoadingCache",
     //  "--report-unsupported-elements-at-runtime",
-      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver",
-      "-H:IncludeResources=org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
-      s"-H:ReflectionConfigurationFiles=$akkaReflectionConfigPath",
+      s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
+      s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
+      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool",
+      "-H:IncludeResources=.*/.*.h$|org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
+      s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/akka_reflection_config.json")}",
       "-H:+JNI",
       "--verbose"
     ),
@@ -112,8 +114,8 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
     }}
   )
 
-def akkaReflectionConfigPath: String = {
-  s"${System.getProperty("user.dir")}/images/prisma-native/akka_reflection_config.json"
+def absolute(relativePathToProjectRoot: String) = {
+  s"${System.getProperty("user.dir")}/${relativePathToProjectRoot.stripPrefix("/")}"
 }
 
 lazy val prismaImageShared = imageProject("prisma-image-shared")

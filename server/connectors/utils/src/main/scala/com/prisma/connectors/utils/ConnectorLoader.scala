@@ -20,7 +20,7 @@ object ConnectorLoader {
       case ("mysql", true)  => MySqlApiConnector(databaseConfig, new org.mariadb.jdbc.Driver)
       case ("mysql", false) => sys.error("There is not passive mysql deploy connector yet!")
 //      case ("postgres", isActive) => PostgresApiConnector(databaseConfig, new org.postgresql.Driver, isActive = isActive)
-      case ("postgres", isActive) => PostgresApiConnector(databaseConfig, CustomJdbcDriver.jna(), isActive = isActive) // todo tmp solution for tests
+      case ("postgres", isActive) => PostgresApiConnector(databaseConfig, CustomJdbcDriver.jna, isActive = isActive) // todo tmp solution for tests
       case ("mongo", _)           => MongoApiConnector(databaseConfig)
       case (conn, _)              => sys.error(s"Unknown connector $conn")
     }
@@ -32,7 +32,7 @@ object ConnectorLoader {
       case ("mysql", true)  => MySqlDeployConnector(databaseConfig, new org.mariadb.jdbc.Driver)
       case ("mysql", false) => sys.error("There is not passive mysql deploy connector yet!")
 //      case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, new org.postgresql.Driver, isActive)
-      case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, CustomJdbcDriver.jna(), isActive) // todo tmp solution for tests
+      case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, CustomJdbcDriver.jna, isActive) // todo tmp solution for tests
       case ("mongo", isActive)    => MongoDeployConnector(databaseConfig, isActive = true)
       case (conn, _)              => sys.error(s"Unknown connector $conn")
     }

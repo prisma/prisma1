@@ -5,7 +5,7 @@ import java.sql.Driver
 import com.prisma.config.DatabaseConfig
 import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import slick.jdbc.PostgresProfile
+import slick.jdbc.{DataSourceJdbcDataSource, DriverDataSource, PostgresProfile}
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.hikaricp.HikariCPJdbcDataSource
 
@@ -17,20 +17,37 @@ object PostgresDatabasesFactory {
   val schema = "public" // default schema
 
   def initialize(dbConfig: DatabaseConfig, driver: Driver): Databases = {
-    val masterDb                     = databaseForConfig(dbConfig)
+    val masterDb                     = databaseForConfig(dbConfig, driver)
     val slickDatabase: SlickDatabase = SlickDatabase(PostgresProfile, masterDb)
 
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
-  def databaseForConfig(dbConfig: DatabaseConfig) = {
-    val source         = hikariDataSource(dbConfig)
+  def databaseForConfig(dbConfig: DatabaseConfig, driver: Driver) = {
+//    val source         = hikariDataSource(dbConfig)
+    val source         = simpleDataSource(dbConfig, driver)
     val poolName       = "database"
     val numThreads     = dbConfig.connectionLimit.getOrElse(10) - 1
     val maxConnections = numThreads
     val executor       = AsyncExecutor(poolName, numThreads, numThreads, 1000, maxConnections, registerMbeans = false)
 
     Database.forSource(source, executor)
+  }
+
+  def simpleDataSource(dbConfig: DatabaseConfig, driver: Driver) = {
+    val database = dbConfig.database.getOrElse(defaultDatabase)
+
+    new DataSourceJdbcDataSource(
+      new DriverDataSource(
+        url =
+          s"jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory",
+        user = dbConfig.user,
+        password = dbConfig.password.getOrElse(""),
+        driverObject = driver
+      ),
+      keepAliveConnection = true,
+      maxConnections = None
+    )
   }
 
   def hikariDataSource(dbConfig: DatabaseConfig) = {

@@ -5,6 +5,8 @@ import java.util.Properties
 import java.util.concurrent.Executor
 
 class CustomJdbcConnection(url: String, outerBinding: RustBinding) extends Connection {
+  var closed = false
+
   val bindingAndConnection = new BindingAndConnection {
     override val binding: RustBinding     = outerBinding
     override val connection: binding.Conn = binding.newConnection(url)
@@ -101,7 +103,15 @@ class CustomJdbcConnection(url: String, outerBinding: RustBinding) extends Conne
   override def setSavepoint(name: String) = ???
 
   override def close() = {
-    binding.closeConnection(connection)
+    if (!closed) {
+      this.synchronized {
+        binding.closeConnection(connection)
+        closed = true
+      }
+    } else {
+      println("[JDBC Connection] Calling close on already closed connection")
+      Thread.dumpStack()
+    }
   }
 
   override def createNClob() = ???

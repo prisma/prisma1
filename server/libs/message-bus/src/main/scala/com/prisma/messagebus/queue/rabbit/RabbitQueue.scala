@@ -94,7 +94,7 @@ object RabbitQueue {
       autoDelete: Boolean = true,
       durableExchange: Boolean = false,
       backoff: BackoffStrategy = LinearBackoff(5.seconds)
-  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T]): RabbitPlainQueueConsumer[T] = {
+  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T], system: ActorSystem): RabbitPlainQueueConsumer[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, exchangeConcurrency, durableExchange)
 
     RabbitPlainQueueConsumer[T](queueName, exchange, backoff, autoDelete = autoDelete, onShutdown = () => exchange.channel.close())
