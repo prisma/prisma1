@@ -1,9 +1,7 @@
 package com.prisma.image
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.server.Directives.complete
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import com.prisma.akkautil.throttler.Throttler
@@ -38,8 +36,9 @@ case class SangriaHandlerImpl(
     workerDependencies: WorkerDependencies
 ) extends SangriaHandler {
   import com.prisma.utils.future.FutureUtils._
-  import scala.concurrent.duration._
   import system.dispatcher
+
+  import scala.concurrent.duration._
 
   val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
   val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
@@ -73,6 +72,34 @@ case class SangriaHandlerImpl(
       deployDependencies.migrator.initialize
     }
     workerServer.onStart.map(_ => ())
+  }
+
+  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext) = {
+    val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
+    val projectId                          = projectIdEncoder.fromSegments(projectSegments)
+    val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
+    reservedSegment match {
+      case Some("import") =>
+        if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
+          val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
+          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
+          result.map(_._2)
+        } else {
+          sys.error(s"The connector is missing the import / export capability.")
+        }
+
+      case Some("export") =>
+        if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
+          val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
+          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
+          result.map(_._2)
+        } else {
+          sys.error(s"The connector is missing the import / export capability.")
+        }
+
+      case _ =>
+        super.handleRawRequest(rawRequest)
+    }
   }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
@@ -150,26 +177,8 @@ case class SangriaHandlerImpl(
         result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
         result.map(_._2)
 
-      case Some("import") =>
-        if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
-          val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-          result.map(_._2)
-        } else {
-          sys.error(s"The connector is missing the import / export capability.")
-        }
-
-      case Some("export") =>
-        if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
-          val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-          result.map(_._2)
-        } else {
-          sys.error(s"The connector is missing the import / export capability.")
-        }
-
       case Some(x) =>
-        sys.error("cannot happen.")
+        sys.error(s"cannot happen: $x")
     }
   }
 

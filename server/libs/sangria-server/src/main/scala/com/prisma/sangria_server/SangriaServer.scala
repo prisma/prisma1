@@ -1,16 +1,13 @@
 package com.prisma.sangria_server
 
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import com.prisma.utils.`try`.TryUtil
 import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json._
 import sangria.parser.QueryParser
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 trait SangriaServerExecutor {
   def create(handler: SangriaHandler, port: Int, requestPrefix: String): SangriaServer
