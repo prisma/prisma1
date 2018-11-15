@@ -154,7 +154,8 @@ object ConfigLoader {
       schema = schema,
       managementSchema = mgmtSchema,
       ssl = ssl,
-      rawAccess = rawAccess
+      rawAccess = rawAccess,
+      authSource = None
     )
   }
 
@@ -170,6 +171,7 @@ object ConfigLoader {
     val mgmtSchema  = extractStringOpt("managementSchema", db)
     val pooled      = extractBooleanOpt("pooled", db)
     val database    = extractStringOpt("database", db)
+    val authSource  = extractStringOpt("authSource", db)
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
     val rawAccess   = extractBooleanOpt("rawAccess", db)
@@ -188,7 +190,8 @@ object ConfigLoader {
       schema = schema,
       managementSchema = mgmtSchema,
       ssl = ssl,
-      rawAccess = rawAccess
+      rawAccess = rawAccess,
+      authSource = authSource
     )
   }
 
@@ -206,7 +209,8 @@ object ConfigLoader {
       schema: Option[String],
       managementSchema: Option[String],
       ssl: Option[Boolean],
-      rawAccess: Option[Boolean]
+      rawAccess: Option[Boolean],
+      authSource: Option[String]
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -222,7 +226,8 @@ object ConfigLoader {
       schema = schema,
       managementSchema = managementSchema,
       ssl = ssl.getOrElse(false),
-      rawAccess = rawAccess.getOrElse(false)
+      rawAccess = rawAccess.getOrElse(false),
+      authSource = authSource
     )
     validateDatabaseConfig(config)
   }
@@ -316,7 +321,8 @@ case class DatabaseConfig(
     database: Option[String],
     schema: Option[String],
     ssl: Boolean,
-    rawAccess: Boolean
+    rawAccess: Boolean,
+    authSource: Option[String]
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
