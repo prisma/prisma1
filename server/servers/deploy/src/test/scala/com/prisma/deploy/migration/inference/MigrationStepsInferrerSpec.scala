@@ -242,7 +242,7 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     steps should contain allOf (
       DeleteField("Todo", "comments"),
       DeleteField("Comment", "todo"),
-      DeleteRelation(previousProject.relations.head.name)
+      DeleteRelation(previousProject.relations.head.name, "Todo", "Comment")
     )
   }
 

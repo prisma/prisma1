@@ -188,7 +188,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
 
     steps should have(size(4))
     steps should contain allOf (
-      DeleteRelation("ManualRelationName1"),
+      DeleteRelation("ManualRelationName1", "Comment", "Todo"),
       CreateRelation("ManualRelationName2", "Comment", "Todo", OnDelete.SetNull, OnDelete.SetNull),
       UpdateField(
         model = "Todo",
