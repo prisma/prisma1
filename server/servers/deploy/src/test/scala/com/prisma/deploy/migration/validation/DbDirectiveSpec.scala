@@ -18,6 +18,26 @@ class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     field.columnName should be(Some("some_columns"))
   }
 
+  "it must error on relation fields" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  other: Other @db(name: "some_columns")
+        |}
+        |
+        |type Other {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.description should be("The field `other` specifies the `@db` directive. Relation fields must not specify this directive.")
+    error.field should be(Some("other"))
+  }
+
   "it should work on types" in {
     val dataModelString =
       """

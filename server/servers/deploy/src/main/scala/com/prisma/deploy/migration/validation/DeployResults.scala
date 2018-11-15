@@ -272,6 +272,10 @@ object DeployErrors {
     DeployError(typeName, s"The type `$typeName` is specifies the `@db` directive. Embedded types must not specify this directive.")
   }
 
+  def relationFieldsMustNotSpecifyDbName(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+    DeployError(typeDef, fieldDef, s"The field `${fieldDef.name}` specifies the `@db` directive. Relation fields must not specify this directive.")
+  }
+
   def error(fieldAndType: FieldAndType, description: String): DeployError = {
     error(fieldAndType.objectType, fieldAndType.fieldDef, description)
   }

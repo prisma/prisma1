@@ -73,7 +73,7 @@ case class DataModelValidatorImpl(
         case x if isEnumField(x) =>
           EnumPrismaField(
             name = x.name,
-            columnName = x.dbName,
+            columnName = FieldDbDirective.value(doc, typeDef, x, capabilities),
             isList = x.isList,
             isRequired = x.isRequired,
             isUnique = x.isUnique,
@@ -85,7 +85,7 @@ case class DataModelValidatorImpl(
         case x if isScalarField(x) =>
           ScalarPrismaField(
             name = x.name,
-            columnName = x.dbName,
+            columnName = FieldDbDirective.value(doc, typeDef, x, capabilities),
             isList = x.isList,
             isRequired = x.isRequired,
             isUnique = UniqueDirective.value(doc, typeDef, x, capabilities).getOrElse(false),
@@ -111,7 +111,7 @@ case class DataModelValidatorImpl(
       }
       PrismaType(
         name = typeDef.name,
-        tableName = DbDirective.value(doc, typeDef, capabilities),
+        tableName = TypeDbDirective.value(doc, typeDef, capabilities),
         isEmbedded = typeDef.isEmbedded,
         isRelationTable = typeDef.isRelationTable,
         fieldFn = prismaFields ++ extraField
