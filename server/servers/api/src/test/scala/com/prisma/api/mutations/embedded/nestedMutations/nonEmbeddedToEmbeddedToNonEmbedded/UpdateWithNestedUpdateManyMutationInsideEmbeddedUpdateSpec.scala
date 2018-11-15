@@ -2,13 +2,13 @@ package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbeddedT
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, JoinRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, JoinRelationLinksCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateWithNestedUpdateManyMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability, EmbeddedTypesCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, EmbeddedTypesCapability)
 
   "a PM to CM  relation " should "work" in {
     val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }

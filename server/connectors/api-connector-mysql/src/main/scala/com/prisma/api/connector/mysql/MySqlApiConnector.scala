@@ -31,7 +31,7 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override val capabilities: Set[ConnectorCapability] = {
     val isActive = true
-    val common   = Set(TransactionalExecutionCapability, JoinRelationsCapability, JoinRelationsFilterCapability)
+    val common   = Set(TransactionalExecutionCapability, JoinRelationLinksCapability, JoinRelationsFilterCapability, RelationLinkTableCapability)
     if (isActive) {
       Set(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {

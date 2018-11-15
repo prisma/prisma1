@@ -4,7 +4,7 @@ import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapab
 import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
-class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
+class eScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
   "@scalarList should be optional" in {
     val dataModelString =
       """
@@ -28,9 +28,20 @@ class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelV
         |  tags: [String!] @scalarList(strategy: FOOBAR)
         |}
       """.stripMargin
-    val error = validateThatMustError(dataModelString).head
+
+    val error = validateThatMustError(dataModelString, Set(EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability)).head
     error.`type` should equal("Model")
     error.field should equal(Some("tags"))
-    error.description should include("Valid values for the strategy argument of `@scalarList` are:")
+    error.description should equal("Valid values for the strategy argument of `@scalarList` are: EMBEDDED, RELATION.")
+
+    val error2 = validateThatMustError(dataModelString, Set(NonEmbeddedScalarListCapability)).head
+    error2.`type` should equal("Model")
+    error2.field should equal(Some("tags"))
+    error2.description should equal("Valid values for the strategy argument of `@scalarList` are: RELATION.")
+
+    val error3 = validateThatMustError(dataModelString, Set(EmbeddedScalarListsCapability)).head
+    error3.`type` should equal("Model")
+    error3.field should equal(Some("tags"))
+    error3.description should equal("Valid values for the strategy argument of `@scalarList` are: EMBEDDED.")
   }
 }

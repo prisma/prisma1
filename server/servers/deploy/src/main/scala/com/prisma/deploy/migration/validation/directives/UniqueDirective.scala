@@ -6,9 +6,9 @@ import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 object UniqueDirective extends FieldDirective[Boolean] {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
-  override def name         = "unique"
-  override def requiredArgs = Vector.empty
-  override def optionalArgs = Vector.empty
+  override def name                                                 = "unique"
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
   override def validate(
       document: Document,

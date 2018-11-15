@@ -97,6 +97,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       if previousModel.getFieldByName(previousFieldName).isEmpty
+      if !fieldOfNextModel.isMagicalBackRelation
     } yield {
       CreateField(
         model = nextModel.name,
@@ -170,7 +171,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     for {
       previousRelation <- previousSchema.relations.toVector
       if relationNotInNextSchema(nextSchema, previousSchema = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
-    } yield DeleteRelation(previousRelation.name)
+    } yield DeleteRelation(previousRelation.name, modelAName = previousRelation.modelAName, modelBName = previousRelation.modelBName)
   }
 
   lazy val relationsToUpdate: Vector[UpdateRelation] = {

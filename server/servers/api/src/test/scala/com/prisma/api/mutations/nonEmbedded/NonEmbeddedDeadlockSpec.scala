@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.time.{Seconds, Span}
@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability, ScalarListsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, ScalarListsCapability)
 
   import testDependencies.system.dispatcher
 

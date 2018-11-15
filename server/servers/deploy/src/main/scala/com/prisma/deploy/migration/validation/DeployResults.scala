@@ -36,8 +36,20 @@ object DeployErrors {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }
 
-  def missingRelationStrategy(relationField: RelationalPrismaField): DeployError = {
-    DeployError(relationField.tpe.name, relationField.name, s"The field `${relationField.name}` must provide a relation strategy.")
+  def missingRelationStrategy(relationField: RelationalPrismaField, validModes: Vector[String]): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The field `${relationField.name}` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: ${validModes
+        .mkString(",")}"
+    )
+  }
+  def moreThanOneRelationStrategy(relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The `link` argument must be specified only on one side of a relation. The field `${relationField.name}` provides a link mode and the opposite field `${relationField.relatedField.get.name}` as well.}"
+    )
   }
 
   def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
@@ -173,6 +185,10 @@ object DeployErrors {
     error(fieldAndType, s"The field `${fieldAndType.fieldDef.name}` specifies a directive more than once. Directives must appear exactly once on a field.")
   }
 
+  def directivesMustAppearExactlyOnce(objectType: ObjectTypeDefinition) = {
+    error(objectType, s"The type `${objectType.name}` specifies a directive more than once. Directives must appear exactly once on a type.")
+  }
+
   def manyRelationFieldsMustBeRequired(fieldAndType: FieldAndType) = {
     error(fieldAndType, s"Many relation fields must be marked as required.")
   }
@@ -249,7 +265,15 @@ object DeployErrors {
   }
 
   def embeddedTypesAreNotSupported(typeName: String) = {
-    DeployError(typeName, s"The type `${typeName}` is marked as embedded but this connector does not support embedded types.")
+    DeployError(typeName, s"The type `$typeName` is marked as embedded but this connector does not support embedded types.")
+  }
+
+  def embeddedTypesMustNotSpecifyDbName(typeName: String) = {
+    DeployError(typeName, s"The type `$typeName` is specifies the `@db` directive. Embedded types must not specify this directive.")
+  }
+
+  def relationFieldsMustNotSpecifyDbName(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+    DeployError(typeDef, fieldDef, s"The field `${fieldDef.name}` specifies the `@db` directive. Relation fields must not specify this directive.")
   }
 
   def error(fieldAndType: FieldAndType, description: String): DeployError = {

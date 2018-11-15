@@ -12,9 +12,9 @@ object IdDirective extends FieldDirective[IdBehaviour] {
   val noneValue           = "NONE"
   val validStrategyValues = Set(autoValue, noneValue)
 
-  override def name         = "id"
-  override def requiredArgs = Vector.empty
-  override def optionalArgs = Vector(ArgumentRequirement("strategy", isStrategyValueValid))
+  override def name                                                 = "id"
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(ArgumentRequirement("strategy", isStrategyValueValid))
 
   private def isStrategyValueValid(value: sangria.ast.Value): Option[String] = {
     if (validStrategyValues.contains(value.asString)) {

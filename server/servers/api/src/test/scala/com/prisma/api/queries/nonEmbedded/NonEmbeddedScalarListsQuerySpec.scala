@@ -1,12 +1,12 @@
 package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationLinksCapability)
 
   "Nested scalar lists" should "work in creates " in {
 

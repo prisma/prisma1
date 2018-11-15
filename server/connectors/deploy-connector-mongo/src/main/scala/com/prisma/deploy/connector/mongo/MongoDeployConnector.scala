@@ -27,7 +27,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
 
   override def capabilities: Set[ConnectorCapability] = {
-    val common = Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability, EmbeddedTypesCapability)
+    val common = Set(EmbeddedScalarListsCapability, JoinRelationLinksCapability, RelationLinkListCapability, EmbeddedTypesCapability)
     val step1  = if (isActive) common ++ Set(MigrationsCapability) else common
     if (isTest) step1 ++ Set(LegacyDataModelCapability) else step1
   }

@@ -1,6 +1,11 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{
+  EmbeddedTypesCapability,
+  JoinRelationLinksCapability,
+  RelationLinkListCapability,
+  RelationLinkTableCapability
+}
 import com.prisma.shared.models.{OnDelete, RelationStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -72,12 +77,12 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     error.description should be("The type `Other` specifies the back relation field `model`, which is disallowed for embedded types.")
   }
 
-  "@relation settings must be detected" in {
+  " settings must be detected" in {
     val dataModelString =
       """
         |type Model {
         |  id: ID! @id
-        |  model: Model @relation(name: "MyRelation", strategy: EMBED, onDelete: CASCADE)
+        |  model: Model @relation(name: "MyRelation", link: INLINE, onDelete: CASCADE)
         |}
       """.stripMargin
 
@@ -85,10 +90,43 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(Some("MyRelation"))
     field.cascade should equal(OnDelete.Cascade)
-    field.strategy should equal(RelationStrategy.Embed)
+    field.strategy should equal(Some(RelationStrategy.Inline))
   }
 
-  "@relation must be optional" in {
+  "settings must be detected 2" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "MyRelation", link: TABLE, onDelete: SET_NULL)
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString, Set(RelationLinkTableCapability))
+    val field     = dataModel.type_!("Model").relationField_!("model")
+    field.relationName should equal(Some("MyRelation"))
+    field.cascade should equal(OnDelete.SetNull)
+    field.strategy should equal(Some(RelationStrategy.Table))
+  }
+
+  "the link mode TABLE must be invalid if the connector does not support it" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(link: TABLE)
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString)
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.description should be("Valid values for the argument `link` are: AUTO,INLINE.")
+    error.field should be(Some("model"))
+  }
+
+  "must be optional" in {
     val dataModelString =
       """
         |type Model {
@@ -101,10 +139,10 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(None)
     field.cascade should equal(OnDelete.SetNull)
-    field.strategy should equal(RelationStrategy.Auto)
+    field.strategy should equal(None)
   }
 
-  "@relation strategy must be required between non-embedded types in Mongo" in {
+  "the argument link must be required between non-embedded types in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -118,19 +156,21 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationLinksCapability))
     errors should have(size(2))
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
     error1.field should equal(Some("other"))
-    error1.description should equal("The field `other` must provide a relation strategy.")
+    error1.description should equal(
+      "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
 
     error2.`type` should equal("Other")
     error2.field should equal(Some("model"))
-    error2.description should equal("The field `model` must provide a relation strategy.")
+    error2.description should equal(
+      "The field `model` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
   }
 
-  "@relation strategy must be required for relations to non-embedded types in Mongo" in {
+  "the argument link must be required for relations to non-embedded types in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -143,16 +183,16 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationLinksCapability))
     errors should have(size(1))
     val error = errors.head
-    println(error)
     error.`type` should be("Model")
     error.field should be(Some("other"))
-    error.description should be("The field `other` must provide a relation strategy.")
+    error.description should be(
+      "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
   }
 
-  "@relation strategy must be optional if an embedded type is involved in Mongo" in {
+  "the argument link must be optional if an embedded type is involved in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -169,7 +209,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
 
   }
 
-  "@relation strategy must be required for one-to-one relations in SQL" in {
+  "the argument link must be required for one-to-one relations in SQL" in {
     val dataModelString =
       """
         |type Model {
@@ -183,19 +223,21 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set())
+    val errors = validateThatMustError(dataModelString, Set(JoinRelationLinksCapability, RelationLinkTableCapability))
     errors should have(size(2))
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
     error1.field should equal(Some("other"))
-    error1.description should equal("The field `other` must provide a relation strategy.")
+    error1.description should equal(
+      "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
 
     error2.`type` should equal("Other")
     error2.field should equal(Some("model"))
-    error2.description should equal("The field `model` must provide a relation strategy.")
+    error2.description should equal(
+      "The field `model` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
   }
 
-  "@relation strategy must be optional for one-to-many and many-to-many relations in SQL" in {
+  "the argument link must be optional for one-to-many and many-to-many relations in SQL" in {
     val dataModelString =
       """
         |type Model {
@@ -216,6 +258,35 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val dataModel = validate(dataModelString)
     dataModel.type_!("Model").relationField_!("other").hasOneToManyRelation should be(true)
     dataModel.type_!("Model").relationField_!("other2").hasManyToManyRelation should be(true)
+  }
+
+  "fail if both sides of a relation specify the link argument" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  other: Other @relation(link: TABLE)
+        |}
+        |
+        |type Other {
+        |  id: ID! @id
+        |  model: Model @relation(link: INLINE)
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    println(errors)
+    errors should have(size(2))
+    val (error1, error2) = (errors(0), errors(1))
+    error1.`type` should be("Model")
+    error1.description should include(
+      "The `link` argument must be specified only on one side of a relation. The field `other` provides a link mode and the opposite field `model` as well.")
+    error1.field should be(Some("other"))
+
+    error2.`type` should be("Other")
+    error2.field should be(Some("model"))
+    error2.description should include(
+      "The `link` argument must be specified only on one side of a relation. The field `model` provides a link mode and the opposite field `other` as well.")
   }
 
   "fail if ambiguous relation fields do not specify the relation directive" in {
@@ -377,7 +448,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       """.stripMargin
     val errors = validateThatMustError(dataModelString)
     errors should have(size(1))
-    errors.head.description should include("Valid values are: CASCADE,SET_NULL.")
+    errors.head.description should include("Valid values for the argument `onDelete` are: CASCADE,SET_NULL.")
   }
 
   // TODO: adapt

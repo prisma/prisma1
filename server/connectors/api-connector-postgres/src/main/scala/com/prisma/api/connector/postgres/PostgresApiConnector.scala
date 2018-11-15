@@ -28,7 +28,7 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
   override val capabilities: Set[ConnectorCapability] = {
-    val common = Set(TransactionalExecutionCapability, JoinRelationsCapability, JoinRelationsFilterCapability)
+    val common = Set(TransactionalExecutionCapability, JoinRelationLinksCapability, JoinRelationsFilterCapability, RelationLinkTableCapability)
     if (isActive) {
       Set(NodeQueryCapability, ImportExportCapability, NonEmbeddedScalarListCapability) ++ common
     } else {

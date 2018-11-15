@@ -1,14 +1,14 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, SupportsExistingDatabasesCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationLinksCapability, SupportsExistingDatabasesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def doNotRunForPrototypes: Boolean = true
   override def doNotRunForCapabilities        = Set(SupportsExistingDatabasesCapability)
-  override def runOnlyForCapabilities         = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities         = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() {
     """type Human{

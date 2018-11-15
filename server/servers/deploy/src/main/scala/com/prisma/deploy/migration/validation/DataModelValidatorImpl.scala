@@ -73,7 +73,7 @@ case class DataModelValidatorImpl(
         case x if isEnumField(x) =>
           EnumPrismaField(
             name = x.name,
-            columnName = x.dbName,
+            columnName = FieldDbDirective.value(doc, typeDef, x, capabilities),
             isList = x.isList,
             isRequired = x.isRequired,
             isUnique = x.isUnique,
@@ -85,7 +85,7 @@ case class DataModelValidatorImpl(
         case x if isScalarField(x) =>
           ScalarPrismaField(
             name = x.name,
-            columnName = x.dbName,
+            columnName = FieldDbDirective.value(doc, typeDef, x, capabilities),
             isList = x.isList,
             isRequired = x.isRequired,
             isUnique = UniqueDirective.value(doc, typeDef, x, capabilities).getOrElse(false),
@@ -111,8 +111,8 @@ case class DataModelValidatorImpl(
       }
       PrismaType(
         name = typeDef.name,
-        tableName = typeDef.dbName,
-        isEmbedded = typeDef.isEmbedded,
+        tableName = TypeDbDirective.value(doc, typeDef, capabilities),
+        isEmbedded = EmbeddedDirective.value(doc, typeDef, capabilities).getOrElse(false),
         isRelationTable = typeDef.isRelationTable,
         fieldFn = prismaFields ++ extraField
       )(_)
@@ -132,15 +132,18 @@ case class DataModelValidatorImpl(
   } yield FieldAndType(objectType, field)
 
   def validateInternal: Seq[DeployError] = {
-    val globalValidations            = tryValidation(GlobalValidations(doc).validate())
-    val reservedFieldsValidations    = tryValidation(validateTypes())
-    val fieldDirectiveValidationsNew = tryValidation(validateFieldDirectives())
-    val enumValidations              = tryValidation(EnumValidator(doc).validate())
+    val globalValidations         = tryValidation(GlobalValidations(doc).validate())
+    val reservedFieldsValidations = tryValidation(validateTypes())
+    val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
+    val typeDirectiveValidations  = tryValidation(validateTypeDirectives())
+    val enumValidations           = tryValidation(EnumValidator(doc).validate())
+
     val allValidations = Vector(
       globalValidations,
       reservedFieldsValidations,
-      fieldDirectiveValidationsNew,
-      enumValidations
+      fieldDirectiveValidations,
+      enumValidations,
+      typeDirectiveValidations
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -167,6 +170,18 @@ case class DataModelValidatorImpl(
     }
   }
 
+  def validateTypeDirectives(): Seq[DeployError] = {
+    for {
+      objectType <- doc.objectTypes
+      directive  <- objectType.directives
+      validator  <- TypeDirective.all
+      if directive.name == validator.name
+      duplicateErrors  = validateDirectiveUniqueness(objectType)
+      validationErrors = validator.validate(doc, objectType, directive, capabilities)
+      error            <- duplicateErrors ++ validationErrors
+    } yield error
+  }
+
   def validateFieldDirectives(): Seq[DeployError] = {
     for {
       fieldAndType    <- allFieldAndTypes
@@ -174,9 +189,9 @@ case class DataModelValidatorImpl(
       directive       <- fieldAndType.fieldDef.directives
       validator       <- FieldDirective.all
       if directive.name == validator.name
-      argumentErrors  = validateDirectiveArguments(directive, validator, fieldAndType)
-      validationError = validator.validate(doc, fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
-      error           <- duplicateErrors ++ argumentErrors ++ validationError
+      argumentErrors   = validateDirectiveArguments(directive, validator, fieldAndType)
+      validationErrors = validator.validate(doc, fieldAndType.objectType, fieldAndType.fieldDef, directive, capabilities)
+      error            <- duplicateErrors ++ argumentErrors ++ validationErrors
     } yield {
       error
     }
@@ -184,7 +199,7 @@ case class DataModelValidatorImpl(
 
   def validateDirectiveArguments(directive: Directive, validator: FieldDirective[_], fieldAndType: FieldAndType): Vector[DeployError] = {
     val requiredArgErrors = for {
-      argumentRequirement <- validator.requiredArgs
+      argumentRequirement <- validator.requiredArgs(capabilities)
       schemaError <- directive.argument(argumentRequirement.name) match {
                       case None =>
                         Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
@@ -194,7 +209,7 @@ case class DataModelValidatorImpl(
     } yield schemaError
 
     val optionalArgErrors = for {
-      argumentRequirement <- validator.optionalArgs
+      argumentRequirement <- validator.optionalArgs(capabilities)
       argument            <- directive.argument(argumentRequirement.name)
       schemaError <- argumentRequirement.validate(argument.value).map { errorMsg =>
                       DeployError(fieldAndType, errorMsg)
@@ -209,6 +224,16 @@ case class DataModelValidatorImpl(
     val uniqueDirectives = directives.map(_.name).toSet
     if (uniqueDirectives.size != directives.size) {
       Some(DeployErrors.directivesMustAppearExactlyOnce(fieldAndType))
+    } else {
+      None
+    }
+  }
+
+  def validateDirectiveUniqueness(objectType: ObjectTypeDefinition): Option[DeployError] = {
+    val directives       = objectType.directives
+    val uniqueDirectives = directives.map(_.name).toSet
+    if (uniqueDirectives.size != directives.size) {
+      Some(DeployErrors.directivesMustAppearExactlyOnce(objectType))
     } else {
       None
     }
@@ -268,8 +293,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields),
-      tryValidation(validateEmbeddedDirectives.toVector)
+      tryValidation(validateDuplicateFields)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -302,15 +326,6 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     objectType.fields
       .filter(!_.hasScalarType)
       .collect { case fieldDef if !doc.isObjectOrEnumType(fieldDef.typeName) => DeployErrors.missingType(objectType, fieldDef) }
-  }
-
-  val validateEmbeddedDirectives: Option[DeployError] = {
-    val supportsEmbeddedTypes = capabilities.contains(EmbeddedTypesCapability)
-    if (objectType.isEmbedded && !supportsEmbeddedTypes) {
-      Some(DeployErrors.embeddedTypesAreNotSupported(objectType.name))
-    } else {
-      None
-    }
   }
 
   def validateDuplicateFields: Seq[DeployError] = {

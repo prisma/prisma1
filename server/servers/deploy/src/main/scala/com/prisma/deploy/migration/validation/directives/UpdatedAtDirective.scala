@@ -7,9 +7,9 @@ import com.prisma.shared.models.FieldBehaviour.UpdatedAtBehaviour
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 
 object UpdatedAtDirective extends FieldDirective[UpdatedAtBehaviour.type] {
-  override def name         = "updatedAt"
-  override def requiredArgs = Vector.empty
-  override def optionalArgs = Vector.empty
+  override def name                                                 = "updatedAt"
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
   override def validate(
       document: Document,
