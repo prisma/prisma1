@@ -24,13 +24,13 @@ object ConnectorLoader {
     }
   }
 
-  def loadDeployConnector(config: PrismaConfig)(implicit ec: ExecutionContext): DeployConnector = {
+  def loadDeployConnector(config: PrismaConfig, isTest: Boolean = false)(implicit ec: ExecutionContext): DeployConnector = {
     val databaseConfig = config.databases.head
     (databaseConfig.connector, databaseConfig.active) match {
       case ("mysql", true)        => MySqlDeployConnector(databaseConfig)
       case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
       case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, isActive)
-      case ("mongo", isActive)    => MongoDeployConnector(databaseConfig, isActive)
+      case ("mongo", _)           => MongoDeployConnector(databaseConfig, isActive = true, isTest = isTest)
       case (conn, _)              => sys.error(s"Unknown connector $conn")
     }
   }

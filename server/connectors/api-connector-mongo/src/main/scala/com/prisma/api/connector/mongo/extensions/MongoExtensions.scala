@@ -38,7 +38,7 @@ object GCBisonTransformer {
 
 object NodeSelectorBsonTransformer {
   implicit def whereToBson(where: NodeSelector): Bson = {
-    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
+    val fieldName = if (where.field.isId) "_id" else where.fieldName
     val value     = GCToBson(where.fieldGCValue)
 
     Filters.eq(fieldName, value)
@@ -87,24 +87,19 @@ object BisonToGC {
 
 object DocumentToRoot {
   def apply(model: Model, document: Document): RootGCValue = {
-    val nonReservedFields = model.scalarNonListFields.filter(f => f.name != "createdAt" && f.name != "updatedAt" && f.name != "id")
+    val nonReservedFields = model.scalarNonListFields.filter(_ != model.idField_!)
 
     val scalarNonList: List[(String, GCValue)] =
       nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 
-    val createdAt: (String, GCValue) =
-      document.get("createdAt").map(v => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("createdAt" -> NullGCValue)
-
-    val updatedAt: (String, GCValue) =
-      document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
-
-    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.idField_!, v)).getOrElse("id" -> StringIdGCValue.dummy)
+    val id: (String, GCValue) =
+      document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
       model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
     val relationFields: List[(String, GCValue)] = model.relationFields.collect {
-      case f if !f.relation.isInlineRelation => f.name -> document.get(f.name).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+      case f if !f.relation.isInlineRelation => f.name -> document.get(f.dbName).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
     }
 
     //inline Ids, needs to fetch lists or single values
@@ -119,7 +114,7 @@ object DocumentToRoot {
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
 
-    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ createdAt :+ updatedAt :+ id).toMap)
+    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
   }
 }
 
@@ -146,14 +141,21 @@ object ArrayFilter extends FilterConditionBuilder {
   //Fixme: we are using uniques here, but these might change during an update
 
   def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
-    case None                                       => Vector.empty
-    case Some(ToOneSegment(_))                      => Vector.empty
-    case Some(ToManySegment(rf, where))             => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
-    case Some(ToManyFilterSegment(rf, whereFilter)) => Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter))
+    case None =>
+      Vector.empty
+
+    case Some(ToOneSegment(_)) =>
+      Vector.empty ++ arrayFilter(path.dropLast)
+
+    case Some(ToManySegment(rf, where)) =>
+      Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue))) ++ arrayFilter(path.dropLast)
+
+    case Some(ToManyFilterSegment(rf, whereFilter)) =>
+      Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter)) ++ arrayFilter(path.dropLast)
   }
 
-  def fieldName(where: NodeSelector): String = where.fieldName match {
-    case "id" => "_id"
-    case x    => x
+  def fieldName(where: NodeSelector): String = where.field.isId match {
+    case true  => "_id"
+    case false => where.field.name
   }
 }

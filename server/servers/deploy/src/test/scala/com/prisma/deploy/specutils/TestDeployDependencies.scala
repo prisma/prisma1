@@ -29,7 +29,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  def deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  def deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))), isTest = true)
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 

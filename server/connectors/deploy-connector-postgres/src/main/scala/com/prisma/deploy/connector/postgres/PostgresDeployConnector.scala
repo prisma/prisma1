@@ -24,7 +24,8 @@ case class PostgresDeployConnector(
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
   override def capabilities: Set[ConnectorCapability] = {
-    val common: Set[ConnectorCapability] = Set(LegacyDataModelCapability, TransactionalExecutionCapability, JoinRelationsFilterCapability)
+    val common: Set[ConnectorCapability] =
+      Set(LegacyDataModelCapability, TransactionalExecutionCapability, JoinRelationsFilterCapability, IntrospectionCapability)
     if (isActive) common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability) else common
   }
 

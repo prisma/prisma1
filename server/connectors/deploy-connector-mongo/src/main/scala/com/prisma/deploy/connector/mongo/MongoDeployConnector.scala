@@ -11,7 +11,7 @@ import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTest: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def fieldRequirements: FieldRequirementsInterface = MongoFieldRequirement(isActive)
 
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
@@ -23,15 +23,16 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
   override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
 
-  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient, config.database)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
 
   override def capabilities: Set[ConnectorCapability] = {
-    val common = Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability, LegacyDataModelCapability)
-    if (isActive) common ++ Set(MigrationsCapability) else common
+    val common = Set(EmbeddedScalarListsCapability, JoinRelationsCapability, MongoRelationsCapability, EmbeddedTypesCapability)
+    val step1  = if (isActive) common ++ Set(MigrationsCapability) else common
+    if (isTest) step1 ++ Set(LegacyDataModelCapability) else step1
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
+  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
   override def initialize(): Future[Unit] = Future.unit
@@ -44,14 +45,17 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean)(impli
     } yield ()
   }
 
-  override def shutdown(): Future[Unit] = Future.unit
+  override def shutdown(): Future[Unit] = {
+    mongoClient.close()
+    Future.unit
+  }
 
   override def createProjectDatabase(id: String): Future[Unit] = { // This is a hack
-    mongoClient.getDatabase(id).listCollectionNames().toFuture().map(_ -> Unit)
+    mongoClient.getDatabase(config.database.getOrElse(id)).listCollectionNames().toFuture().map(_ -> Unit)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    mongoClient.getDatabase(id).drop().toFuture().map(_ -> Unit)
+    mongoClient.getDatabase(config.database.getOrElse(id)).drop().toFuture().map(_ -> Unit)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = Future.successful(Vector.empty)

@@ -59,6 +59,9 @@ Either try using a new directory name, or remove the files listed above.
       this.out.exit(1)
     }
 
+    /**
+     * If there is a predefined endpoint provided as a cli arg
+     */
     if (endpoint) {
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'datamodel.prisma'),
@@ -66,22 +69,18 @@ Either try using a new directory name, or remove the files listed above.
           path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
         ),
       )
+
+      /**
+       * Write prisma.yml
+       */
+      const prismaYml = `\
+endpoint: ${endpoint}
+datamodel: datamodel.prisma
+`
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'prisma.yml'),
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml')),
+        prismaYml,
       )
-
-      const endpointDefinitionPath = path.join(
-        this.config.definitionDir,
-        'prisma.yml',
-      )
-      const endpointPrismaYml = fs.readFileSync(endpointDefinitionPath, 'utf-8')
-
-      const newEndpointPrismaYml = endpointPrismaYml.replace(
-        'ENDPOINT',
-        endpoint,
-      )
-      fs.writeFileSync(endpointDefinitionPath, newEndpointPrismaYml)
 
       const endpointSteps: string[] = []
 
@@ -128,8 +127,12 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
     const results = await endpointDialog.getEndpoint()
 
-    let prismaYmlString = `endpoint: ENDPOINT
-datamodel: datamodel.prisma`
+    const databaseTypeString =
+      results.database && results.database.type === 'mongo'
+        ? '\ndatabaseType: document'
+        : ''
+    let prismaYmlString = `endpoint: ${results.endpoint}
+datamodel: datamodel.prisma${databaseTypeString}`
 
     if (results.generator && results.generator !== 'no-generation') {
       prismaYmlString += this.getGeneratorConfig(results.generator)
@@ -155,12 +158,6 @@ datamodel: datamodel.prisma`
         `PRISMA_MANAGEMENT_API_SECRET=${results.managementSecret}`,
       )
     }
-
-    const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
-    const prismaYml = fs.readFileSync(definitionPath, 'utf-8')
-
-    const newPrismaYml = prismaYml.replace('ENDPOINT', results.endpoint)
-    fs.writeFileSync(definitionPath, newPrismaYml)
 
     const dir = this.args!.dirName
 

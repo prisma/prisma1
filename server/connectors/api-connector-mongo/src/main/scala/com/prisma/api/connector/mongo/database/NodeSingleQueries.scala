@@ -40,7 +40,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
     database
       .getCollection(where.model.dbName)
       .find(where)
-      .projection(include("_.id"))
+      .projection(include("_id"))
       .collect()
       .toFuture
       .map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
@@ -112,8 +112,8 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
   }
 
   def generateFilterForFieldAndId(relationField: RelationField, id: IdGCValue) = relationField.isList match {
-    case true  => ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Contains(id))
-    case false => ScalarFilter(relationField.model.idField_!.copy(name = relationField.dbName), Equals(id))
+    case true  => ScalarFilter(relationField.model.dummyField(name = relationField.dbName, true), Contains(id))
+    case false => ScalarFilter(relationField.model.dummyField(name = relationField.dbName, false), Equals(id))
   }
 
 }

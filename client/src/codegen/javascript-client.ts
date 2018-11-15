@@ -29,7 +29,7 @@ ${this.renderModels()}
       .map(
         i => `{
     name: '${i.name}',
-    embedded: ${i.embedded}
+    embedded: ${i.isEmbedded}
   }`,
       )
       .join(',\n')

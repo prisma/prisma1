@@ -1,10 +1,13 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
+
 object ReservedFields {
-  val idFieldName        = "id"
-  val updatedAtFieldName = "updatedAt"
-  val createdAtFieldName = "createdAt"
-  val reservedFieldNames = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
+  val idFieldName         = "id"
+  val internalIdFieldName = "_id"
+  val updatedAtFieldName  = "updatedAt"
+  val createdAtFieldName  = "createdAt"
+  val reservedFieldNames  = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
 
   def reservedFieldFor(name: String): FieldTemplate = {
     name match {
@@ -28,7 +31,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -45,7 +49,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -62,7 +67,8 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = Some(IdBehaviour(strategy = FieldBehaviour.IdStrategy.Auto))
     )
   }
 }

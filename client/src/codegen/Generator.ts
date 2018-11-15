@@ -11,7 +11,7 @@ export interface GeneratorInput {
 
 export class Generator {
   schema: GraphQLSchema
-  internalTypes: IGQLType[]
+  internalTypes: IGQLType[] = []
 
   constructor({ schema, internalTypes }: GeneratorInput) {
     this.internalTypes = internalTypes

@@ -61,11 +61,18 @@ object MongoDeployDatabaseMutationBuilder {
 
   //Collection
   def createCollection(collectionName: String) = DeployMongoAction { database =>
-    database.createCollection(collectionName).toFuture().map(_ -> Unit)
+    database.listCollectionNames().toFuture().map { names =>
+      if (names.contains(collectionName)) {
+        Future.successful(())
+      } else {
+        database.createCollection(collectionName).toFuture().map(_ -> Unit)
+      }
+    }
   }
 
   def dropCollection(collectionName: String) = DeployMongoAction { database =>
-    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
+    Future.successful(())
+//    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
   def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
