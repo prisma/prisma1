@@ -1,30 +1,24 @@
 package com.prisma.api.connector.jdbc.database
 
-import java.sql.{PreparedStatement, ResultSet, Statement}
-
 import com.prisma.api.connector.jdbc.extensions.{JdbcExtensions, JooqExtensions, SlickExtensions}
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models._
 import com.prisma.slick.ResultSetExtensions
+import org.jooq.Field
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
-import org.jooq.{Field, Query => JooqQuery, _}
-import slick.jdbc.PositionedParameters
 
 import scala.collection.JavaConverters._
 
 trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtensions with ResultSetReaders with QueryBuilderConstants with ResultSetExtensions {
-
   def schemaName: String
   val slickDatabase: SlickDatabase
 
   val isMySql    = slickDatabase.isMySql
   val isPostgres = slickDatabase.isPostgres
-
-  import slickDatabase.profile.api._
-
-  val sql = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  val sql        = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
 
   private val relayIdTableName                                               = "_RelayId"
   val relayIdColumn                                                          = field(name(schemaName, relayIdTableName, "id"))
@@ -46,40 +40,4 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def aliasColumn(scalarField: ScalarField)                                  = field(name(topLevelAlias, scalarField.dbName))
   def placeHolders(vector: Iterable[Any])                                    = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                        = field.model.dbName + "_" + field.dbName
-
-  def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
-    jooqToDBIO(query, setParams) { ps =>
-      val rs = ps.executeQuery()
-      readResult(rs)
-    }
-  }
-  def insertReturningGeneratedKeysToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit, readResult: ResultSet => T): DBIO[T] = {
-    jooqToDBIO(query, setParams, returnGeneratedKeys = true)(
-      statementFn = { ps =>
-        ps.execute()
-        readResult(ps.getGeneratedKeys)
-      }
-    )
-  }
-  def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
-  def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())
-  def updateToDBIO(query: Update[Record])(setParams: PositionedParameters => Unit): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.executeUpdate)
-  def truncateToDBIO(query: Truncate[Record]): DBIO[Unit]                                         = jooqToDBIO(query, _ => ())(_.executeUpdate())
-
-  private def jooqToDBIO[T](
-      query: JooqQuery,
-      setParams: PositionedParameters => Unit,
-      returnGeneratedKeys: Boolean = false
-  )(statementFn: PreparedStatement => T): DBIO[T] = {
-    SimpleDBIO { ctx =>
-      val ps = if (returnGeneratedKeys) {
-        ctx.connection.prepareStatement(query.getSQL, Statement.RETURN_GENERATED_KEYS)
-      } else {
-        ctx.connection.prepareStatement(query.getSQL)
-      }
-      val pp = new PositionedParameters(ps)
-      setParams(pp)
-      statementFn(ps)
-    }
-  }
 }
