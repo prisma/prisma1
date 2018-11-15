@@ -1,25 +1,38 @@
+import Warning from 'components/Markdown/Warning'
+
 export const meta = {
   title: 'MongoDB Preview',
   position: 200
 }
 
-
 ## Concepts
 
-With the `1.21-beta`-release, Prisma introduces a database connector for [MongoDB](https://www.mongodb.com/). MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database) which stands in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database) (RDBMS). 
+With the `1.21-beta`-release, Prisma introduces a database connector for [MongoDB](https://www.mongodb.com/). MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database). Document databases stand in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database) (RDBMS). 
 
 Here is an overview of how the vocabulary differs between the two database types:
 
-![](https://imgur.com/vItK7n8.png)
+| RDBMS | MongoDB |
+| --- | --- |
+| Database | Database |
+| Table | Collection |
+| Row | Document |
+| Index | Index |
+| JOIN | Embedded Document _or_ Reference |
 *Source: [MongoDB Documentation](https://www.mongodb.com/blog/post/thinking-documents-part-1)*
 
 ### Tables vs Collections
 
 Relational databases store their data in **tables** that are defined within the database _schema_. Data is [normalized](https://en.wikipedia.org/wiki/Database_normalization) (_flattened_) and relations between tables are implemented using _keys_ as references between data records. A table contains a number of **rows** which represent _instances_ of the table.
 
-MongoDB doesn't have the concept of tables. It is a _schemaless_ database that stores its data in **[collections](https://docs.mongodb.com/manual/reference/glossary/#term-collection)**. A collection contains a number of **[documents](https://docs.mongodb.com/manual/reference/glossary/#term-document)**. A document is the most basic unit of data in MongoDB and stored in [BSON](http://bsonspec.org/).
+MongoDB doesn't have the concept of tables. It is a _schemaless_ database that stores its data in **[collections](https://docs.mongodb.com/manual/reference/glossary/#term-collection)**. A collection contains a number of **[documents](https://docs.mongodb.com/manual/reference/glossary/#term-document)**. A document is the most basic unit of data in MongoDB and is stored in [BSON](http://bsonspec.org/) format.
 
-> While MongoDB is a schemaless database, using it with Prisma does effectively impose a schema on it.
+<Warning>
+
+While MongoDB is a **schemaless** database, using it with Prisma does effectively impose a schema on it (in the form of the Prisma [datamodel](knul)). When writing data to MongoDB only through the Prisma API, Prisma guarantees that the data is consistent with the defined schema. 
+
+**If you start writing to MongoDB directly, Prisma can not guarantee that the data in the database still adheres to the schema.**
+
+</Warning>
 
 ### Relations
 
@@ -27,7 +40,7 @@ One of the biggest differences between document and relational databases is the 
 
 While relational databases use [database normalization](https://en.wikipedia.org/wiki/Database_normalization) to store flat data records that reference each other via keys, document databases are able to store an object physically co-located to a related object in the same collection. The latter is called _embedding_ data (i.e. a document can have _embedded_ sub-documents/arrays).
 
-With MongoDB, relations can be expressed either by _embedding_ data directly in a parent document or by using _references_. A good overview on the differences can be found in the MongoDB [documentation](https://www.mongodb.com/blog/post/thinking-documents-part-2#modeling-relationships-with-embedding-and-referencing). Prisma adops the idea of _embedded_ types when modeling data for MongoDB.
+With MongoDB, relations can be expressed either by _embedding_ data directly in a parent document or by using _references_. A good overview on the differences can be found in the MongoDB [documentation](https://www.mongodb.com/blog/post/thinking-documents-part-2#modeling-relationships-with-embedding-and-referencing). Prisma adopts the idea of _embedded_ types when modeling data for an underlying MongoDB.
 
 ## Data modeling
 
@@ -37,12 +50,12 @@ The MongoDB connector introduces the concept of _embedded types_. An embedded ty
 
 - ... always is annotated with the `@embedded` directive.
 - ... always has one _parent type_.
-- ... always sis stored directly _within_ its _parent type's_ [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. it does not have its own collection).
+- ... always is stored directly _within_ its parent type's [collection](https://docs.mongodb.com/manual/reference/glossary/#term-collection) in the underlying Mongo database (i.e. an embedded type never has its own collection).
 - ... can not have an ID (i.e. a field annotated with the `@id` directive).
 - ... can not have unique fields (i.e. fields annotated with the `@unique` directive).
 - ... can not have have a (back-)relation to its parent type (but it can have relations to other non-embedded types).
-- ... can not be queried directly using the Prisma API but only via _nested operations_ through the parent type. 
-- ... can not be created, updated or deleted directly using the Prisma API but only via _nested operations_ through the parent type. 
+- ... can not be queried _directly_ using the Prisma API but only via _nested operations_ through the parent type. 
+- ... can not be created, updated or deleted _directly_ using the Prisma API but only via _nested operations_ through the parent type. 
 
 Here is an example of a datamodel where `Coordinates` is defined as an embedded type:
 
@@ -73,7 +86,7 @@ With MongoDB, you can model relations in two ways:
 A _link relation_ with the MongoDB connector works in the way that:
 
 - One side (A) of the relation stores the ID of the document on the other side (B), this is called an _inlined link_
-- The other side (B) of the relation has _no reference_ to the document on the initial side (A)
+- The other side (B) of the relation has _no reference_ at all to the document on the initial side (A)
 - Each side of the relation is represented by its own collection in the underlying MongoDB, i.e. a link relation always spans accross multiple collections. 
 
 You can denote the side of the relation that should store the ID using the `link` parameter of the `@relation` directive. In the following example, the `User` type stores the ID values of all the `Post` documents it's related to. A `Post` document however doesn't store any information about its `author` in the underlying Mongo database:
@@ -170,13 +183,13 @@ type Post @db(name: "post") {
 
 The `@embedded` directive is used for _embedded types_. Find more info [above](#embedded-types).
 
-## Get Started
+## Get started with a new database
 
 ### 1. Setup
 
-Install the latest version of the Prisma CLI using the instructions [above](#prisma-cli). Then run the following command to initialize a new Prisma service:
+Install the latest version of the Prisma CLI using the instructions [here](b5op#prisma-cli). Then run the following command to initialize a new Prisma service:
 
-```
+```bash copy
 prisma init hello-mongo
 ```
 
@@ -189,7 +202,7 @@ As a last step in the wizard, you need to select your preferred language for the
 
 The Prisma CLI now created a `hello-mongo` directory for you which contains your project setup. The Docker Compose file is used to launch a Prisma server that's backed by a MongoDB. Navigate into the project directory and run the following command to start the Prisma server:
 
-```
+```bash copy
 docker-compose up -d
 ```
 
@@ -206,7 +219,7 @@ fc261a149740        prismagraphql/prisma:1.21-beta    "/bin/sh -c /app/sta…"  
 
 Once you're sure the Prisma server is running, you can deploy the Prisma service:
 
-```
+```bash copy
 prisma deploy
 ```
 
@@ -214,7 +227,7 @@ prisma deploy
 
 You can now play around with the generated Prisma client. Run the following commands to initialize a simple Node app:
 
-```
+```bash copy
 npm init -y
 npm install --save prisma-client-lib graphql
 touch index.js
@@ -222,7 +235,7 @@ touch index.js
 
 Now add the following code to `index.js`:
 
-```js
+```js copy
 const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
@@ -240,16 +253,22 @@ async function main() {
 main().catch(e => console.error(e))
 ```
 
+You can run this script using the following command:
+
+```bash copy
+node index.js
+```
+
 This first creates a new document in the `User` collection and then retrieves all the documents from the `User` collection via the Prisma API.
 
 ### 3. Update the datamodel
 
 Feel free to adjust the datamodel and explore some of the new features, for example:
 
-```graphql
+```graphql copy
 type User @db(name: "user") {
   id: ID! @id
-  email: String! @unique
+  email: String @unique
   name: String!
   posts: [Post!]! @relation(link: INLINE)
 }
@@ -272,10 +291,191 @@ type Comment @embedded {
 
 Don't forget to update the Prisma API and regenerate your Prisma client after you changed `datamodel.prisma`:
 
-```
+```bash copy
 prisma deploy
 prisma generate
 ```
+
+## Get started with an existing database
+
+MongoDB is a _schemaless_ database, which means it is _possible_ to insert data of various structures into it. MongoDB will never complain because some piece of inserted data doesn't adhere to some predefined format. This is different from relational databases where data that's inserted needs to adhere to the predefined [database schema](https://en.wikipedia.org/wiki/Database_schema).
+
+This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Prisma [datamodel](knul)) on top of MongoDB. 
+
+Throughout your use of MongoDB with Prisma, when you're writing to the underlying MongoDB ...
+
+- ... **only through the Prisma API**, it is guaranteed that the data that's stored in the database always adheres to the schema.
+- ... **directly**, it can not be guaranteed that the data that's stored in the database always adheres to the schema. In that case, you are responsible to ensure that the data that's written adheres to the schema.
+
+**Therefore, when starting out with an existing MongoDB, it is extremely important that the legacy data is consistent and that it can be modeled accurately as a Prisma datamodel.**
+
+### 1. Setup
+
+When starting with an existing database, ensure you have the following information handy:
+
+- The **IP of the host machine** that's running the MongoDB server `mongod`, e.g. `localhost`.
+- The **port** where `mongod` is running on the host machine.
+- The **credentials** for a MongoDB [admin user](https://docs.mongodb.com/manual/tutorial/enable-authentication/#user-administrator).
+- The name of the **MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored**. (Default: `admin`).
+- The name of the **MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) that you want to use with Prisma**.
+- Whether the MongoDB is configured to use **SSL** or not.
+
+Create a new directory for your Prisma service and add a Docker Compose file to it:
+
+```bash copy
+mkdir hello-mongo
+cd hello-mongo
+touch docker-compose.yml
+```
+
+Then add the following contents into the `docker-compose.yml`:
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.22-beta
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mongo
+            host: __MONGO_DB_HOST__
+            port: __MONGO_DB_PORT__
+            user: __MONGO_DB_ADMIN_USERNAME__
+            password: __MONGO_DB_ADMIN_PASSWORD__
+            authSource: __MONGO_DB_ADMIN_DATABASE_NAME__
+            database: __MONGO_DB_DATABASE_NAME__
+            rawAccess: false
+            ssl: __USE_SSL__
+```
+
+Replace the seven placeholders that are written in uppercase letters with the appropriate values, e.g.:
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.22-beta
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mongo
+            host: localhost
+            port: 27017
+            user: myAdminUser
+            password: abc123
+            authSource: admin
+            database: mydb
+            rawAccess: false
+```
+
+Once you're done, launch the Prisma server with the following command:
+
+```bash copy
+docker-compose up -d
+```
+
+The Prisma server is now connected to your MongoDB and runs on `http://localhost:4466`.
+
+Next, you need to create your Prisma service configuration. Run the following command:
+
+```bash copy
+prisma init --endpoint http://localhost:4466
+```
+
+This creates the `prisma.yml` and `datamodel.prisma` files that make up your service configuration.
+
+### 2. Data modeling and ensuring data consistency
+
+This step is very important when you're starting out with an existing MongoDB! The goal is to create a [datamodel](knul) that represents the data that's currently stored in the collections of your MongoDB. Next to modeling the data properly, you need to ensure that _all_ data in the database adheres to the datamodel that you specify - otherwise the Prisma API might throw errors at runtime.
+
+Here a few few rules of thumb for modelling the data:
+
+- Every collection in your MongoDB database should be represented by its own _model type_ in the Prisma datamodel.
+- When a document inside a collection has _embedded_ documents, the structure of these embedded documents needs to be modeled as an an [embedded type](#embedded-type).
+- A relation between documents of two separate collections needs to be modelled as a [link relation](#link-relations).
+- Every model type needs to have exactly one field of type `ID!` that's annotated with the `@id` directive. This field gets mapped to the [MongoDB object ID](https://docs.mongodb.com/manual/core/document/#the-id-field) called `_id`.
+
+### 3. Deploy the Prisma API and generate the Prisma client
+
+Once you are ready with defining your datamodel and have ensured that all currently stored data in the database adheres to the specified schema, you can start deploying the Prisma API.
+
+For that, you first need to adjust the contents of your `prisma.yml`:
+
+```yml copy
+datamodel: datamodel.prisma
+endpoint: http://localhost:4466
+
+generate:
+  - generator: javascript-client
+    output: ./generated
+```
+
+Next, run the following two commands to deploy your Prisma API and generate the Prisma client:
+
+```bash copy
+prisma deploy
+prisma generate
+```
+
+### 4. Use the Prisma client to read and write data
+
+The API of the generated Prisma client depends on your datamodel. For this example, we're assuming that your datamodel has a type `User` that's defined as follows:
+
+```graphql
+type User {
+  id: ID! @id
+  name: String!
+}
+```
+
+Run the following commands to initialize a simple Node app:
+
+```bash copy
+npm init -y
+npm install --save prisma-client-lib graphql
+touch index.js
+```
+
+Now add the following code to `index.js`:
+
+```js copy
+const { prisma } = require('./generated/prisma-client')
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user called `Alice`
+  const newUser = await prisma.createUser({ name: 'Alice' })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+}
+
+main().catch(e => console.error(e))
+```
+
+You can run this script using the following command:
+
+```bash copy
+node index.js
+```
+
+This first creates a new document in the `User` collection and then retrieves all the documents from the `User` collection via the Prisma API.
+
+
 
 ## Using the Mongo shell
 
@@ -293,18 +493,18 @@ Once it's installed, you can use the `mongo` command in your terminal to launch 
 
 In the Docker Compose file that was created by the `prisma init` command, Prisma configured an _admin_ user with the following credentials:
 
-- Username: prisma
-- Password: prisma
+- Username: `prisma`
+- Password: `prisma`
 
 To use the admin user, you first need to switch to the `admin` database that MongoDB creates by default. You can do so using the following command:
 
-```
+```bash copy
 use admin
 ```
 
 Now you can authenticate using the credentials that were set through the Docker Compose file:
 
-```js
+```js copy
 db.auth("prisma", "prisma")
 ```
 
@@ -330,21 +530,54 @@ Here are two examples:
 
 Switch to the database of your Prisma service, e.g. using this command:
 
-```
+```bash copy
 use default_default
 ```
 
 Now you can list all available collections with this command:
 
-```
+```bash copy
 show collections
 ```
 
 If you have a `User` collection available, you can run the following command to retrieve a single document from it:
 
-```
+```js copy
 db.User.findOne()
 ```
 
 Learn more about the Mongo shell API [here](https://docs.mongodb.com/manual/reference/method/js-collection/).
 
+## PRISMA_CONFIG
+
+`PRISMA_CONFIG` is the environment variable that needs to be provided to the Prisma Docker image specifying to which database the Prisma server should connect.
+
+Here is the reference with some example values for what `PRISMA_CONFIG` looks like for MongoDB:
+
+```yml
+PRISMA_CONFIG: |
+  port: 4466
+  databases:
+    default:
+      connector: mongo
+      host: localhost
+      port: 27017
+      user: prisma
+      password: prisma
+      authSource: admin
+      database: mydb
+      rawAccess: false
+      ssl: false
+```
+
+Here is an overview of the available properties:
+
+- `connector`: Specifies which database connector the Prisma server should use. Use `mongo` for MongoDB.
+- `host`: The IP of the host machine that's running the MongoDB server `mongod`, e.g. `localhost`.
+- `port`: The port where `mongod` is running on the host machine. ([Default](https://docs.mongodb.com/manual/reference/default-mongodb-port/): `27017`).
+- `user` & `password`: The credentials for a MongoDB [admin user](https://docs.mongodb.com/manual/tutorial/enable-authentication/#user-administrator).
+  - When starting with a **new database**, Prisma will create this user.
+  - When starting with an **existing database**, Prisma looks up the user with these credentials in the `authSource` database (see next property).
+- `authSource`: The  MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored. (Default: `admin`).
+- `database`: The MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) you want to connect to. This property is only required if you want to connect to an existing database.
+- `rawAccess`: Specifies whether the `executeRaw` mutation will be enabled in the Prisma API. The MongoDB connector currently doesn't support raw access, so you need to set this to `false` or omit it.
