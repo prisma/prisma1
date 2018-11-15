@@ -90,7 +90,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(Some("MyRelation"))
     field.cascade should equal(OnDelete.Cascade)
-    field.strategy should equal(RelationStrategy.Inline)
+    field.strategy should equal(Some(RelationStrategy.Inline))
   }
 
   "settings must be detected 2" in {
@@ -106,7 +106,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(Some("MyRelation"))
     field.cascade should equal(OnDelete.SetNull)
-    field.strategy should equal(RelationStrategy.Table)
+    field.strategy should equal(Some(RelationStrategy.Table))
   }
 
   "the link mode TABLE must be invalid if the connector does not support it" in {
