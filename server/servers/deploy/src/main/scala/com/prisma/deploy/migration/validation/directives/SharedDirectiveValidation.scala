@@ -10,11 +10,11 @@ trait SharedDirectiveValidation {
     }
   }
 
-  def validateEnumValue(validValues: Vector[String])(value: sangria.ast.Value): Option[String] = {
+  def validateEnumValue(argument: String)(validValues: Vector[String])(value: sangria.ast.Value): Option[String] = {
     if (validValues.contains(value.asString)) {
       None
     } else {
-      Some(s"Valid values are: ${validValues.mkString(",")}.")
+      Some(s"Valid values for the argument `$argument` are: ${validValues.mkString(",")}.")
     }
   }
 }

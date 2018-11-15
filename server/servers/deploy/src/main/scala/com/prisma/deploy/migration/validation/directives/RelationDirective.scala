@@ -12,16 +12,16 @@ case class RelationDirectiveData(name: Option[String], onDelete: OnDelete, strat
 object RelationDirective extends FieldDirective[RelationDirectiveData] {
   override def name = "relation"
 
-  override def requiredArgs = Vector.empty
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
-  val validLinkModes = Vector("AUTO", "INLINE", "TABLE")
-  val linkArgument   = ArgumentRequirement("link", validateEnumValue(validLinkModes))
-
-  override def optionalArgs = Vector(
-    ArgumentRequirement("name", validateStringValue),
-    ArgumentRequirement("onDelete", validateEnumValue(Vector("CASCADE", "SET_NULL"))),
-    linkArgument
-  )
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = {
+    val validLinkModes = Vector("AUTO", "INLINE") ++ capabilities.contains(RelationLinkTableCapability).toOption("TABLE")
+    Vector(
+      ArgumentRequirement("name", validateStringValue),
+      ArgumentRequirement("onDelete", validateEnumValue("onDelete")(Vector("CASCADE", "SET_NULL"))),
+      ArgumentRequirement("link", validateEnumValue("link")(validLinkModes))
+    )
+  }
 
   override def validate(
       document: Document,

@@ -8,15 +8,20 @@ import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour}
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 
 object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
-  override def name         = "scalarList"
-  override def requiredArgs = Vector.empty
-  override def optionalArgs = Vector(ArgumentRequirement("strategy", isValidStrategyArgument))
+  override def name                                                 = "scalarList"
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(ArgumentRequirement("strategy", isValidStrategyArgument(capabilities)))
 
   val embeddedValue       = "EMBEDDED"
   val relationValue       = "RELATION"
   val validStrategyValues = Set(embeddedValue, relationValue)
 
-  private def isValidStrategyArgument(value: sangria.ast.Value): Option[String] = {
+  private def isValidStrategyArgument(capabilities: Set[ConnectorCapability])(value: sangria.ast.Value): Option[String] = {
+    val validStrategyValues = (
+      capabilities.contains(EmbeddedScalarListsCapability).toOption(embeddedValue) ++
+        capabilities.contains(NonEmbeddedScalarListCapability).toOption(relationValue)
+    ).toVector
+
     if (validStrategyValues.contains(value.asString)) {
       None
     } else {

@@ -11,9 +11,9 @@ import sangria.ast._
 object DefaultDirective extends FieldDirective[GCValue] {
   val valueArg = "value"
 
-  override def name         = "default"
-  override def requiredArgs = Vector(ArgumentRequirement("value", _ => None))
-  override def optionalArgs = Vector.empty
+  override def name                                                 = "default"
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector(ArgumentRequirement("value", _ => None))
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
   override def validate(
       document: Document,

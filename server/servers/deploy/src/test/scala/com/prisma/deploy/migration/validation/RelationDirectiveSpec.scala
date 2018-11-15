@@ -102,11 +102,28 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val dataModel = validate(dataModelString)
+    val dataModel = validate(dataModelString, Set(RelationLinkTableCapability))
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(Some("MyRelation"))
     field.cascade should equal(OnDelete.SetNull)
     field.strategy should equal(RelationStrategy.Table)
+  }
+
+  "the link mode TABLE must be invalid if the connector does not support it" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(link: TABLE)
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString)
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.description should be("Valid values for the argument `link` are: AUTO,INLINE.")
+    error.field should be(Some("model"))
   }
 
   "@relation must be optional" in {
@@ -402,7 +419,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       """.stripMargin
     val errors = validateThatMustError(dataModelString)
     errors should have(size(1))
-    errors.head.description should include("Valid values are: CASCADE,SET_NULL.")
+    errors.head.description should include("Valid values for the argument `onDelete` are: CASCADE,SET_NULL.")
   }
 
   // TODO: adapt

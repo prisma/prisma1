@@ -7,8 +7,8 @@ import sangria.ast.{Document, FieldDefinition, ObjectTypeDefinition}
 
 trait FieldDirective[T] extends BooleanUtils with SharedDirectiveValidation { // could introduce a new interface for type level directives
   def name: String
-  def requiredArgs: Vector[ArgumentRequirement]
-  def optionalArgs: Vector[ArgumentRequirement]
+  def requiredArgs(capabilities: Set[ConnectorCapability]): Vector[ArgumentRequirement]
+  def optionalArgs(capabilities: Set[ConnectorCapability]): Vector[ArgumentRequirement]
 
   // gets called if the directive was found. Can return an error message
   def validate(

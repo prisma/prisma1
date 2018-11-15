@@ -3,8 +3,8 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, RelationLinkListCapability}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation, RelationTable}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation, RelationTable}
 import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
@@ -429,7 +429,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  todos: [Todo!]! @relation(link: TABLE)
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = Set(RelationLinkTableCapability))
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
