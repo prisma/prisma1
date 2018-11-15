@@ -144,11 +144,13 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
     error1.field should equal(Some("other"))
-    error1.description should equal("The field `other` must provide a relation link mode. Valid values are: `@relation(link: INLINE)`")
+    error1.description should equal(
+      "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
 
     error2.`type` should equal("Other")
     error2.field should equal(Some("model"))
-    error2.description should equal("The field `model` must provide a relation link mode. Valid values are: `@relation(link: INLINE)`")
+    error2.description should equal(
+      "The field `model` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
   }
 
   "@relation link must be required for relations to non-embedded types in Mongo" in {
@@ -169,7 +171,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val error = errors.head
     error.`type` should be("Model")
     error.field should be(Some("other"))
-    error.description should be("The field `other` must provide a relation link mode. Valid values are: `@relation(link: INLINE)`")
+    error.description should be(
+      "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
   }
 
   "@relation link must be optional if an embedded type is involved in Mongo" in {
@@ -208,11 +211,13 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
     error1.field should equal(Some("other"))
-    error1.description should equal("The field `other` must provide a relation link mode. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
+    error1.description should equal(
+      "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
 
     error2.`type` should equal("Other")
     error2.field should equal(Some("model"))
-    error2.description should equal("The field `model` must provide a relation link mode. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
+    error2.description should equal(
+      "The field `model` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
   }
 
   "@relation link must be optional for one-to-many and many-to-many relations in SQL" in {

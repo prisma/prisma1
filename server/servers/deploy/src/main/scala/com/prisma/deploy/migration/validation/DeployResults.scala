@@ -40,7 +40,8 @@ object DeployErrors {
     DeployError(
       relationField.tpe.name,
       relationField.name,
-      s"The field `${relationField.name}` must provide a relation link mode. Valid values are: ${validModes.mkString(",")}"
+      s"The field `${relationField.name}` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: ${validModes
+        .mkString(",")}"
     )
   }
 
