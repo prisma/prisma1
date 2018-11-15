@@ -70,13 +70,13 @@ trait NodeManyQueries extends FilterConditionBuilder {
           case true =>
             val tuples = for {
               result <- results
-              id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asString()).map(x => StringIdGCValue(x.getValue))
+              id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
             } yield (id, result)
 
             tuples.groupBy(_._1).mapValues(_.map(_._2))
 
           case false =>
-            results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asString().getValue))
+            results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
         }
 
         fromNodeIds.map { id =>

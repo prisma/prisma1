@@ -34,7 +34,7 @@ trait NodeActions extends NodeSingleQueries {
   def deleteNodeById(model: Model, id: IdGCValue) = deleteNodes(model, Vector(id))
 
   def deleteNodes(model: Model, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
-    database.getCollection(model.dbName).deleteMany(in("_id", ids.map(_.value): _*)).toFuture()
+    database.getCollection(model.dbName).deleteMany(in("_id", ids.map(x => GCToBson(x)): _*)).toFuture()
   }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): MongoAction[MutactionResults] = {
@@ -75,7 +75,7 @@ trait NodeActions extends NodeSingleQueries {
             val combinedUpdates = CustomUpdateCombiner.customCombine(allUpdates)
             val allArrayFilters = arrayFilters ++ arrayFilters2 ++ arrayFilters3 ++ arrayFilters4
             val setArrayFilters = CustomUpdateCombiner.removeDuplicateArrayFilters(allArrayFilters)
-            val updateOptions   = UpdateOptions().arrayFilters(setArrayFilters.toList.asJava)
+            val updateOptions   = UpdateOptions().arrayFilters(setArrayFilters.asJava)
 
             database
               .getCollection(mutaction.model.dbName)
@@ -92,7 +92,7 @@ trait NodeActions extends NodeSingleQueries {
     val scalarUpdates   = scalarUpdateValues(mutaction, nodeAddress)
     val combinedUpdates = CustomUpdateCombiner.customCombine(scalarUpdates)
 
-    database.getCollection(mutaction.model.dbName).updateMany(in("_id", ids.map(_.value): _*), combinedUpdates).toFuture()
+    database.getCollection(mutaction.model.dbName).updateMany(in("_id", ids.map(x => GCToBson(x)): _*), combinedUpdates).toFuture()
   }
 
   //endregion

@@ -9,7 +9,7 @@ import com.prisma.shared.models._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonString, BsonTransformer, BsonValue}
+import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonObjectId, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Filters.notEqual
 import play.api.libs.json.Json
@@ -25,7 +25,7 @@ object GCBisonTransformer {
       case FloatGCValue(v)    => BsonDouble(v)
       case JsonGCValue(v)     => BsonString(v.toString())
       case EnumGCValue(v)     => BsonString(v)
-      case StringIdGCValue(v) => BsonString(v)
+      case StringIdGCValue(v) => BsonObjectId(v)
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
       case BooleanGCValue(v)  => BsonBoolean(v)
@@ -46,7 +46,7 @@ object NodeSelectorBsonTransformer {
 }
 
 object DocumentToId {
-  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asString.getValue)
+  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asObjectId().getValue.toString)
 }
 
 object BisonToGC {
@@ -75,7 +75,7 @@ object BisonToGC {
     case (TypeIdentifier.Int, value: BsonInt32)         => IntGCValue(value.getValue)
     case (TypeIdentifier.Float, value: BsonDouble)      => FloatGCValue(value.getValue)
     case (TypeIdentifier.Enum, value: BsonString)       => EnumGCValue(value.getValue)
-    case (TypeIdentifier.Cuid, value: BsonString)       => StringIdGCValue(value.getValue)
+    case (TypeIdentifier.Cuid, value: BsonObjectId)     => StringIdGCValue(value.getValue.toString)
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
