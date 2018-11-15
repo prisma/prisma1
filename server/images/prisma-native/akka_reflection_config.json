@@ -102,6 +102,18 @@
     ]
   },
   {
+    "name": "akka.dispatch.UnboundedDequeBasedMailbox",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.ActorSystem$Settings",
+          "com.typesafe.config.Config"
+        ]
+      }
+    ]
+  },
+  {
     "name": "akka.dispatch.UnboundedMailbox",
     "methods": [
       {

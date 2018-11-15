@@ -51,8 +51,13 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
   override lazy val managementAuth = {
     config.managementApiSecret match {
-      case Some(jwtSecret) if jwtSecret.nonEmpty => Auth.jna(Algorithm.HS256)
-      case _                                     => println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server."); Auth.none()
+      case Some(jwtSecret) if jwtSecret.nonEmpty =>
+        println("[Warning] Management authentication is currently not implemented.")
+        Auth.none() //Auth.jna(Algorithm.HS256) todo
+
+      case _ =>
+        println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server.")
+        Auth.none()
     }
   }
 
@@ -72,7 +77,11 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-  override lazy val apiAuth          = Auth.jna(Algorithm.HS256)
+  override lazy val apiAuth = {
+    println("[Warning] Project authentication is currently not implemented.")
+    Auth.none()
+    // Auth.jna(Algorithm.HS256) todo
+  }
 
   lazy val driver = CustomJdbcDriver.graal
 

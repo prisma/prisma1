@@ -46,6 +46,7 @@ pub enum JdbcParameterType {
     DateTime,
     Long,
     UUID,
+    VOID
 }
 
 #[derive(Serialize, Deserialize)]

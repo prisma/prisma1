@@ -32,6 +32,7 @@ fn mapColumn(col: &Column) -> Result<ResultColumn> {
         &postgres::types::BPCHAR => Ok(JdbcParameterType::String),
         &postgres::types::TIMESTAMP => Ok(JdbcParameterType::DateTime),
         &postgres::types::UUID => Ok(JdbcParameterType::UUID),
+        &postgres::types::VOID => Ok(JdbcParameterType::VOID),
         x =>  Err(DriverError::GenericError(format!(
             "Unhandled type in map column: {}",
             x
@@ -99,6 +100,9 @@ impl ResultSet {
                         serde_json::Value::String(uuid.to_string())
                     },
                     &postgres::types::BPCHAR => serde_json::Value::String(row.get(i)),
+                    &postgres::types::VOID => {
+                        serde_json::Value::Null
+                    },
                     x => {
                         return Err(DriverError::GenericError(format!(
                             "Unhandled type in json serialize: {}",

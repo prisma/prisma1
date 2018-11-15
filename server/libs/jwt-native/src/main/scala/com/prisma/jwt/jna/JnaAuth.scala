@@ -16,9 +16,6 @@ object JnaAuth {
     Native.loadLibrary("jwt_native", classOf[JnaRustBridge])
   }
 
-  // No expiration value for the native code
-  val NO_EXP: Int = -1
-
   def apply(algorithm: Algorithm): JnaAuth = new JnaAuth(algorithm)
 }
 

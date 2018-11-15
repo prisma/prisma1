@@ -1,18 +1,22 @@
 package com.prisma.jwt
 
 import com.prisma.jwt.Algorithm.Algorithm
+import com.prisma.jwt.graal.GraalAuth
 import com.prisma.jwt.jna.JnaAuth
 
 import scala.util.Try
 
 object Auth {
-  def jna(algorithm: Algorithm): Auth = JnaAuth(algorithm)
-  def graal(): Auth                   = ???
-  def none(): Auth                    = NoAuth
+  def jna(algorithm: Algorithm): Auth   = JnaAuth(algorithm)
+  def graal(algorithm: Algorithm): Auth = GraalAuth(algorithm)
+  def none(): Auth                      = NoAuth
 }
 
 trait Auth {
   val algorithm: Algorithm
+
+  // No expiration value for the native code
+  val NO_EXP: Int = -1
 
   def extractToken(header: Option[String]): String = {
     header match {
