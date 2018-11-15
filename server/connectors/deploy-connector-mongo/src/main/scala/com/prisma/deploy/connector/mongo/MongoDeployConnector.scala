@@ -19,7 +19,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
 
   override val migrationPersistence: MigrationPersistence       = MigrationPersistenceImpl(internalDatabase)
   override val projectPersistence: ProjectPersistence           = ProjectPersistenceImpl(internalDatabase, migrationPersistence)
-  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient, config.database)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val cloudSecretPersistence: CloudSecretPersistence   = CloudSecretPersistenceImpl(internalDatabase)
   override def capabilities: Set[ConnectorCapability] = {
@@ -28,7 +28,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
     if (isTest) step1 ++ Set(LegacyDataModelCapability) else step1
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
+  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
   override def initialize(): Future[Unit] = Future.unit
@@ -47,11 +47,11 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   }
 
   override def createProjectDatabase(id: String): Future[Unit] = { // This is a hack
-    mongoClient.getDatabase(id).listCollectionNames().toFuture().map(_ -> Unit)
+    mongoClient.getDatabase(config.database.getOrElse(id)).listCollectionNames().toFuture().map(_ -> Unit)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    mongoClient.getDatabase(id).drop().toFuture().map(_ -> Unit)
+    mongoClient.getDatabase(config.database.getOrElse(id)).drop().toFuture().map(_ -> Unit)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = Future.successful(Vector.empty)

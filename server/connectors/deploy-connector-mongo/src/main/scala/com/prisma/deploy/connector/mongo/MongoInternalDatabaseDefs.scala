@@ -1,22 +1,20 @@
 package com.prisma.deploy.connector.mongo
 
-import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import com.prisma.config.DatabaseConfig
-import org.mongodb.scala.connection.{ClusterSettings, SslSettings}
-import org.mongodb.scala.{MongoClient, MongoClientSettings, MongoCredential, ServerAddress}
+import org.mongodb.scala.MongoClient
 
 case class MongoInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   val uri: String = (dbConfig.database, dbConfig.ssl) match {
     case (None, false) =>
-      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=admin"
+      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=${dbConfig.authSource.getOrElse("admin")}"
     case (None, true) =>
       System.setProperty("org.mongodb.async.type", "netty")
 
-      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=admin&ssl=true"
-    case (Some(db), true) =>
+      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=${dbConfig.authSource.getOrElse("admin")}&ssl=true"
+    case (Some(_), true) =>
       System.setProperty("org.mongodb.async.type", "netty")
 
-      s"mongodb+srv://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}/$db"
+      s"mongodb+srv://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}/${dbConfig.authSource.getOrElse("admin")}"
     case (_, _) => sys.error("Database provided, but ssl set to true.")
   }
 
