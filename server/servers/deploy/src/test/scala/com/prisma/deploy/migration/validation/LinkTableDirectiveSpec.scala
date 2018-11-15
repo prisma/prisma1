@@ -11,7 +11,7 @@ class RelationTableDirectiveSpec extends WordSpecLike with Matchers with DataMod
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @relationTable {
+        |type ModelToModelRelation @linkTable {
         |  A: Model!
         |  B: Model!
         |}

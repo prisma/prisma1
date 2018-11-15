@@ -5,8 +5,28 @@ import com.prisma.shared.models.ConnectorCapability
 import com.prisma.utils.boolean.BooleanUtils
 import sangria.ast.{Document, FieldDefinition, ObjectTypeDefinition}
 
-trait FieldDirective[T] extends BooleanUtils with SharedDirectiveValidation { // could introduce a new interface for type level directives
+trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
   def name: String
+
+  def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = Vector.empty
+}
+
+trait TypeDirective[T] extends DirectiveBase {
+  def validate(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      directive: sangria.ast.Directive,
+      capabilities: Set[ConnectorCapability]
+  ): Vector[DeployError]
+
+  def value(
+      document: Document,
+      typeDef: ObjectTypeDefinition,
+      capabilities: Set[ConnectorCapability]
+  ): Option[T]
+}
+
+trait FieldDirective[T] extends DirectiveBase {
   def requiredArgs(capabilities: Set[ConnectorCapability]): Vector[ArgumentRequirement]
   def optionalArgs(capabilities: Set[ConnectorCapability]): Vector[ArgumentRequirement]
 
@@ -25,8 +45,6 @@ trait FieldDirective[T] extends BooleanUtils with SharedDirectiveValidation { //
       fieldDef: FieldDefinition,
       capabilities: Set[ConnectorCapability]
   ): Option[T]
-
-  def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = Vector.empty
 }
 
 object FieldDirective {
