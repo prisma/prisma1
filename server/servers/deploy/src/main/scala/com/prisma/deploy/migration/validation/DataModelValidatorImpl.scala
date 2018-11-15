@@ -293,8 +293,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields),
-      tryValidation(validateEmbeddedDirectives.toVector)
+      tryValidation(validateDuplicateFields)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -327,15 +326,6 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     objectType.fields
       .filter(!_.hasScalarType)
       .collect { case fieldDef if !doc.isObjectOrEnumType(fieldDef.typeName) => DeployErrors.missingType(objectType, fieldDef) }
-  }
-
-  val validateEmbeddedDirectives: Option[DeployError] = {
-    val supportsEmbeddedTypes = capabilities.contains(EmbeddedTypesCapability)
-    if (objectType.isEmbedded && !supportsEmbeddedTypes) {
-      Some(DeployErrors.embeddedTypesAreNotSupported(objectType.name))
-    } else {
-      None
-    }
   }
 
   def validateDuplicateFields: Seq[DeployError] = {
