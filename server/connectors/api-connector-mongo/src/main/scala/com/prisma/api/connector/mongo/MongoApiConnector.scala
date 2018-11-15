@@ -20,7 +20,7 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
   override def capabilities: Set[ConnectorCapability] = {
-    Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability, JoinRelationsCapability, RelationLinkListCapability)
+    Set(NodeQueryCapability, EmbeddedScalarListsCapability, EmbeddedTypesCapability, JoinRelationLinksCapability, RelationLinkListCapability)
   }
 
   override def initialize(): Future[Unit] = {

@@ -25,7 +25,7 @@ object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
   object MigrationsCapability                extends ConnectorCapability
   object LegacyDataModelCapability           extends ConnectorCapability
   object IntrospectionCapability             extends ConnectorCapability
-  object JoinRelationsCapability             extends ConnectorCapability // the ability to join using relation links
+  object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
   object RelationLinkListCapability          extends ConnectorCapability // relation links can be stored inline in a node in a list
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
   // IntrospectionCapability

@@ -2,7 +2,7 @@ package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.ConnectorTag.{MongoConnectorTag, PostgresConnectorTag}
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -52,7 +52,7 @@ class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
 
 trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
   val project: Project
 
   override protected def beforeAll(): Unit = {

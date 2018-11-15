@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType, PrismaSdl}
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.{ConnectorCapability, RelationStrategy}
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
@@ -76,7 +76,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       if isMongo || relationField.hasOneToOneRelation
       if modelType.isNotEmbedded && relatedType.isNotEmbedded
     } yield {
-      val inlineMode = capabilities.contains(JoinRelationsCapability).toOption("`@relation(link: INLINE)`")
+      val inlineMode = capabilities.contains(JoinRelationLinksCapability).toOption("`@relation(link: INLINE)`")
       val tableMode  = capabilities.contains(RelationLinkTableCapability).toOption("`@relation(link: TABLE)`")
       val validModes = (tableMode ++ inlineMode).toVector
       DeployErrors.missingRelationStrategy(relationField, validModes)

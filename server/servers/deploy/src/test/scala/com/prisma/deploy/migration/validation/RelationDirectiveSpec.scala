@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.shared.models.ApiConnectorCapability.{
   EmbeddedTypesCapability,
-  JoinRelationsCapability,
+  JoinRelationLinksCapability,
   RelationLinkListCapability,
   RelationLinkTableCapability
 }
@@ -139,7 +139,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationsCapability))
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationLinksCapability))
     errors should have(size(2))
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
@@ -164,7 +164,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationsCapability))
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationLinksCapability))
     errors should have(size(1))
     val error = errors.head
     error.`type` should be("Model")
@@ -203,7 +203,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(JoinRelationsCapability, RelationLinkTableCapability))
+    val errors = validateThatMustError(dataModelString, Set(JoinRelationLinksCapability, RelationLinkTableCapability))
     errors should have(size(2))
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
