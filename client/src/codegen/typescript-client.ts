@@ -615,6 +615,19 @@ export const prisma = new Prisma()`
 
     const addSubscription = !partial && isSubscription && !isScalar
 
+    // if (typeString === 'AggregatePost') {
+    //   // console.log({
+    //   //   typeString,
+    //   //   node,
+    //   //   input,
+    //   //   operation,
+    //   //   isInput,
+    //   //   isList,
+    //   //   isScalar,
+    //   //   addSubscription,
+    //   // })
+    // }
+
     if (
       operation &&
       !node &&
@@ -689,7 +702,10 @@ export const prisma = new Prisma()`
       return typeString
     }
 
-    return `<T ${this.genericsDelimiter} ${typeString}>(${
+    const promiseString =
+      !isList && !isScalar && !isSubscription ? 'Promise' : ''
+
+    return `<T ${this.genericsDelimiter} ${typeString}${promiseString}>(${
       field.args && field.args.length > 0
         ? this.renderArgs(field, isMutation, false)
         : ''
