@@ -77,7 +77,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     error.description should be("The type `Other` specifies the back relation field `model`, which is disallowed for embedded types.")
   }
 
-  "@relation settings must be detected" in {
+  " settings must be detected" in {
     val dataModelString =
       """
         |type Model {
@@ -93,7 +93,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     field.strategy should equal(RelationStrategy.Inline)
   }
 
-  "@relation settings must be detected 2" in {
+  "settings must be detected 2" in {
     val dataModelString =
       """
         |type Model {
@@ -126,7 +126,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     error.field should be(Some("model"))
   }
 
-  "@relation must be optional" in {
+  "must be optional" in {
     val dataModelString =
       """
         |type Model {
@@ -139,10 +139,10 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(None)
     field.cascade should equal(OnDelete.SetNull)
-    field.strategy should equal(RelationStrategy.Auto)
+    field.strategy should equal(None)
   }
 
-  "@relation link must be required between non-embedded types in Mongo" in {
+  "the argument link must be required between non-embedded types in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -170,7 +170,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       "The field `model` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
   }
 
-  "@relation link must be required for relations to non-embedded types in Mongo" in {
+  "the argument link must be required for relations to non-embedded types in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -192,7 +192,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       "The field `other` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: INLINE)`")
   }
 
-  "@relation link must be optional if an embedded type is involved in Mongo" in {
+  "the argument link must be optional if an embedded type is involved in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -209,7 +209,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
 
   }
 
-  "@relation link must be required for one-to-one relations in SQL" in {
+  "the argument link must be required for one-to-one relations in SQL" in {
     val dataModelString =
       """
         |type Model {
@@ -237,7 +237,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       "The field `model` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
   }
 
-  "@relation link must be optional for one-to-many and many-to-many relations in SQL" in {
+  "the argument link must be optional for one-to-many and many-to-many relations in SQL" in {
     val dataModelString =
       """
         |type Model {
@@ -258,6 +258,35 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val dataModel = validate(dataModelString)
     dataModel.type_!("Model").relationField_!("other").hasOneToManyRelation should be(true)
     dataModel.type_!("Model").relationField_!("other2").hasManyToManyRelation should be(true)
+  }
+
+  "fail if both sides of a relation specify the link argument" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  other: Other @relation(link: TABLE)
+        |}
+        |
+        |type Other {
+        |  id: ID! @id
+        |  model: Model @relation(link: INLINE)
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    println(errors)
+    errors should have(size(2))
+    val (error1, error2) = (errors(0), errors(1))
+    error1.`type` should be("Model")
+    error1.description should include(
+      "The `link` argument must be specified only on one side of a relation. The field `other` provides a link mode and the opposite field `model` as well.")
+    error1.field should be(Some("other"))
+
+    error2.`type` should be("Other")
+    error2.field should be(Some("model"))
+    error2.description should include(
+      "The `link` argument must be specified only on one side of a relation. The field `model` provides a link mode and the opposite field `other` as well.")
   }
 
   "fail if ambiguous relation fields do not specify the relation directive" in {

@@ -272,10 +272,10 @@ case class SchemaInferrerImpl(
       relationField.relatedField match {
         case Some(relatedField) =>
           (relationField.strategy, relatedField.strategy) match {
-            case (Auto, Auto) if relationField.isOne  => manifestationForField(prismaType, relationField, relationName)
-            case (Auto, Auto) if relationField.isList => manifestationForField(relatedField.tpe, relatedField, relationName)
-            case (_, Auto)                            => manifestationForField(prismaType, relationField, relationName)
-            case (Auto, _)                            => manifestationForField(relatedField.tpe, relatedField, relationName)
+            case (None, None) if relationField.isOne  => manifestationForField(prismaType, relationField, relationName)
+            case (None, None) if relationField.isList => manifestationForField(relatedField.tpe, relatedField, relationName)
+            case (_, None)                            => manifestationForField(prismaType, relationField, relationName)
+            case (None, _)                            => manifestationForField(relatedField.tpe, relatedField, relationName)
             case (_, _)                               => sys.error("must not happen")
           }
 
@@ -296,7 +296,7 @@ case class SchemaInferrerImpl(
   }
 
   private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationLinkManifestation] = {
-    val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
+    val activeStrategy = if (relationField.strategy.isEmpty) {
       if (capabilities.contains(RelationLinkListCapability)) {
         RelationStrategy.Inline
       } else if (relationField.hasManyToManyRelation) {
@@ -330,9 +330,6 @@ case class SchemaInferrerImpl(
           case None =>
             Some(RelationTable(table = relationName, modelAColumn = "A", modelBColumn = "B"))
         }
-
-      case RelationStrategy.Auto =>
-        sys.error("this case must not happen")
     }
   }
 

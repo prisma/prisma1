@@ -40,7 +40,6 @@ sealed abstract class RelationStrategy(override val entryName: String) extends E
 object RelationStrategy extends Enumeratum[RelationStrategy] {
   override def values = findValues
 
-  object Auto   extends RelationStrategy("Auto")
   object Inline extends RelationStrategy("Inline")
   object Table  extends RelationStrategy("Table")
 }

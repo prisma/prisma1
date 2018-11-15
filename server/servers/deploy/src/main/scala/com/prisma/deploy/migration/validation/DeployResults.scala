@@ -44,6 +44,13 @@ object DeployErrors {
         .mkString(",")}"
     )
   }
+  def moreThanOneRelationStrategy(relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The `link` argument must be specified only on one side of a relation. The field `${relationField.name}` provides a link mode and the opposite field `${relationField.relatedField.get.name}` as well.}"
+    )
+  }
 
   def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
     DeployError(
