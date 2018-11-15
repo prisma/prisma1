@@ -1,0 +1,282 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Setting up Prisma',
+  position: 1,
+  gettingStartedOrder: 1,
+  gettingStartedTitle: 'New database',
+  nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and (re-)generate your Prisma client.',
+  technology: 'flow',
+  technologyOrder: 2,
+  articleGroup: 'Setting up Prisma',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Setup Prisma using Docker
+- Configure your Prisma API
+- Generate the Prisma client
+- Read and write data using the Prisma client
+
+## Install the Prisma CLI
+
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew tap prisma/prisma
+brew install prisma
+```
+
+```bash copy
+npm install -g prisma
+```
+
+</Code>
+
+## Install Docker
+
+To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
+
+> Don't want to use Docker? You can also get started with a [demo database](j001) for now.
+
+## Set up database and Prisma server
+
+### Create new directory
+
+```bash copy
+mkdir hello-world
+cd hello-world
+```
+
+### Create Docker Compose file
+
+To launch Prisma on your machine, you need a [Docker Compose file](https://docs.docker.com/compose/compose-file/) that configures Prisma and specifies the database it can connect to.
+
+```bash copy
+touch docker-compose.yml
+```
+
+### Add Prisma and database Docker images
+
+Paste the following contents into the Docker Compose file you just created:
+
+<Code languages={["MySQL", "PostgreSQL"]}>
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.19
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: mysql
+            port: 3306
+            user: root
+            password: prisma
+            migrations: true
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
+```
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.19
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: postgres
+            host: postgres
+            port: 5432
+            user: prisma
+            password: prisma
+            migrations: true
+  postgres:
+    image: postgres:10.5
+    restart: always
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
+```
+
+</Code>
+
+> You can switch between **MySQL** and **PostgreSQL** by using the tabs above the code block.
+
+### Start database and Prisma server
+
+To start Prisma and launch the connected database, run the following command:
+
+```bash copy
+docker-compose up -d
+```
+
+Your local Prisma server is now running on `http://localhost:4466`.
+
+## Configure your Prisma API
+
+To bootstrap the configuration files for your Prisma client run the following command:
+
+```bash copy
+prisma init --endpoint http://localhost:4466
+```
+
+> The `endpoint` needs to match the URL of a running Prisma server.
+
+## Deploy the Prisma API
+
+The `prisma init` command created the _minimal_ setup needed to deploy the Prisma API: `prisma.yml` and `datamodel.prisma`.
+
+With these configuration files, you can now _deploy_ the Prisma API:
+
+```bash copy
+prisma deploy
+```
+
+Congratulations, you have successfully set up Prisma. You can now start using the Prisma client to talk to your database from code.
+
+## Generate your Prisma client
+
+The Prisma client is a custom, auto-generated library that connects to your Prisma API. Append the following lines to the end of your `prisma.yml`:
+
+```yml copy
+generate:
+  - generator: flow-client
+    output: ./generated/prisma-client/
+```
+
+Now generate the client with this command:
+
+```bash copy
+prisma generate
+```
+
+The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
+
+## Prepare Flow application
+
+Run the following command to create an empty script:
+
+```bash copy
+touch index.js
+```
+
+Next, initialize an empty NPM project in the current directory and install the required dependencies:
+
+```bash copy
+npm init -y
+npm install --save prisma-client-lib graphql@0.13
+npm install --save-dev babel-cli babel-preset-env
+```
+
+Create a `.babelrc` file with the following configuration:
+
+```json copy
+{
+  presets: ["env"]
+}
+```
+
+Finally, add a start script to your `package.json`:
+
+```json copy
+{
+  "scripts": {
+    "start": "babel-node index.js"
+  }
+}
+
+## Read and write data using the Prisma client
+
+Add the following code in `index.js` and save it afterwards:
+
+```js copy
+import { prisma } from './generated/prisma-client'
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user called `Alice`
+  const newUser = await prisma.createUser({ name: 'Alice' })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+}
+
+main().catch(e => console.error(e))
+```
+
+Execute the script with the following command:
+
+```bash copy
+npm start
+```
+
+Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
+
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+
+<QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
+
+```js lineNumbers,copy
+const user = await prisma
+  .user({ id: '__USER_ID__' })
+```
+
+```js lineNumbers,copy
+const usersCalledAlice = await prisma
+  .users({
+    where: {
+      name: 'Alice'
+    }
+  })
+```
+
+```js lineNumbers,copy
+ const updatedUser = await prisma
+  .updateUser({
+    where: { id: '__USER_ID__' },
+    data: { name: 'Bob' }
+  })
+```
+
+```js lineNumbers,copy
+ const deletedUser = await prisma
+  .deleteUser({ id: '__USER_ID__' })
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.

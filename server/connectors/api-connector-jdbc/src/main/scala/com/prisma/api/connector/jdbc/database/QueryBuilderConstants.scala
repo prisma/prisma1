@@ -15,6 +15,4 @@ trait QueryBuilderConstants {
   val valueFieldName      = "value"
   val placeHolder         = "?"
   val relayTableName      = "_RelayId"
-  val updatedAtField      = "updatedAt"
-  val createdAtField      = "createdAt"
 }

@@ -1,2 +1,0 @@
-datamodel: model.graphql
-endpoint: http://localhost:4466/schema-generator/financial

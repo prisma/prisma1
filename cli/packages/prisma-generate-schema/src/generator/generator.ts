@@ -97,14 +97,13 @@ export abstract class TypeFromModelGenerator<
     | GraphQLEnumValueConfigMap
     | GraphQLInputFieldConfigMap
 > extends TypeGenerator<IGQLType, Args, Type> {
-  public static reservedFields = ['id', 'createdAt', 'updatedAt']
 
   /**
    * Checks if the given list of fields has
    * a unique field.
    * @param fields
    */
-  public static hasUniqueField(fields: IGQLField[]) {
+  public hasUniqueField(fields: IGQLField[]) {
     return fields.filter(field => field.isUnique).length > 0
   }
 
@@ -115,8 +114,47 @@ export abstract class TypeFromModelGenerator<
    * @param fields
    * @param fieldNames
    */
-  public static hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
+  public hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
     return fields.filter(field => !fieldNames.includes(field.name)).length > 0
+  } 
+
+  /**
+   * Returns all writeable fields in the given field list.
+   * @param fields
+   */
+  public getWriteableFields(fields: IGQLField[]) {
+    return fields.filter(field => !field.isReadOnly)
+  }
+
+  /**
+   * Checks if the given field list contains at least one writeable field.
+   */
+  public hasWriteableFields(fields: IGQLField[]) {
+    return this.getWriteableFields(fields).length > 0
+  }
+  
+  /**
+   * Checks if the given list of fields contains at least one scalar field.
+   * @param fields 
+   */
+  public hasScalarFields(fields: IGQLField[]) {
+    return this.getScalarFields(fields).length > 0
+  }
+
+  /**
+   * Returns all scalar fields from the given field list.
+   * @param fields 
+   */
+  public getScalarFields(fields: IGQLField[]) {
+    return fields.filter(field => this.generators.scalarTypeGenerator.isScalarField(field))
+  }
+
+  /**
+   * Returns all scalar fields from the given field list.
+   * @param fields 
+   */
+  public getRelationFields(fields: IGQLField[]) {
+    return fields.filter(field => !this.generators.scalarTypeGenerator.isScalarField(field))
   }
 
   /**
@@ -147,7 +185,7 @@ export abstract class TypeFromModelGenerator<
         fields[field.name] = fieldSchema
       }
     }
-
+    
     return fields
   }
 
@@ -446,6 +484,7 @@ export interface IGenerators {
   // Update
   modelUpdateInput: ModelInputObjectTypeGenerator
   modelUpdateDataInput: ModelInputObjectTypeGenerator
+  modelUpdateManyDataInput: ModelInputObjectTypeGenerator
   modelUpdateOneInput: ModelInputObjectTypeGenerator
   modelUpdateOneRequiredInput: ModelInputObjectTypeGenerator
   modelUpdateManyInput: ModelInputObjectTypeGenerator
@@ -458,6 +497,7 @@ export interface IGenerators {
 
   modelUpdateWithWhereUniqueWithoutRelatedInput: RelatedModelInputObjectTypeGenerator
   modelUpdateWithWhereUniqueNestedInput: ModelInputObjectTypeGenerator
+  modelUpdateManyWithWhereNestedInput: ModelInputObjectTypeGenerator
 
   // Upsert
   modelUpsertNestedInput: ModelInputObjectTypeGenerator
@@ -469,6 +509,7 @@ export interface IGenerators {
 
   // Querying
   modelWhereUniqueInput: ModelInputObjectTypeGenerator
+  modelScalarWhereInput: ModelInputObjectTypeGenerator
   modelWhereInput: ModelInputObjectTypeGenerator
   modelOrderByInput: ModelEnumTypeGeneratorBase
   modelConnection: ModelObjectTypeGenerator

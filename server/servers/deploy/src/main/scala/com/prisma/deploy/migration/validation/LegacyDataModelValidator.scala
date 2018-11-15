@@ -4,8 +4,7 @@ import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, ScalarListsCapability}
-import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
-import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.{ConnectorCapability, RelationStrategy, TypeIdentifier}
 import com.prisma.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -19,7 +18,24 @@ case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[Re
 case class RequiredArg(name: String, mustBeAString: Boolean)
 case class Argument(name: String, isValid: sangria.ast.Value => Boolean)
 
-case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition)
+case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition) {
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
+
+  def isSelfRelation: Boolean = fieldDef.typeName == objectType.name
+
+  def relationCount(doc: Document): Int = {
+    def fieldsWithType(objectType: ObjectTypeDefinition, typeName: String): Seq[FieldDefinition] = objectType.fields.filter(_.typeName == typeName)
+
+    val oppositeObjectType = doc.objectType_!(fieldDef.typeName)
+    val fieldsOnTypeA      = fieldsWithType(objectType, fieldDef.typeName)
+    val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, objectType.name)
+
+    isSelfRelation match {
+      case true  => fieldsOnTypeB.count(_.relationName == fieldDef.relationName)
+      case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldDef.relationName)
+    }
+  }
+}
 
 object FieldRequirementHelper {
   implicit class FieldRequirementExtensions(req: FieldRequirement) {
@@ -109,16 +125,49 @@ case class LegacyDataModelValidator(
     val prismaTypes: Vector[PrismaSdl => PrismaType] = doc.objectTypes.map { definition =>
       val prismaFields = definition.fields.map {
         case x if isRelationField(x) =>
-          RelationalPrismaField(x.name, x.relationDBDirective, x.isList, x.isRequired, x.typeName, x.relationName, x.onDelete)(_)
+          RelationalPrismaField(
+            name = x.name,
+            relationDbDirective = x.relationDBDirective,
+            strategy = RelationStrategy.Auto,
+            isList = x.isList,
+            isRequired = x.isRequired,
+            referencesType = x.typeName,
+            relationName = x.relationName,
+            cascade = x.onDelete
+          )(_)
 
         case x if isEnumField(x) =>
-          EnumPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, x.typeName, getDefaultValueFromField_!(x))(_)
+          EnumPrismaField(
+            name = x.name,
+            columnName = x.columnName,
+            isList = x.isList,
+            isRequired = x.isRequired,
+            isUnique = x.isUnique,
+            enumName = x.typeName,
+            defaultValue = getDefaultValueFromField_!(x),
+            behaviour = None
+          )(_)
 
         case x if isScalarField(x) =>
-          ScalarPrismaField(x.name, x.columnName, x.isList, x.isRequired, x.isUnique, typeIdentifierForTypename(x.fieldType), getDefaultValueFromField_!(x))(_)
+          ScalarPrismaField(
+            name = x.name,
+            columnName = x.columnName,
+            isList = x.isList,
+            isRequired = x.isRequired,
+            isUnique = x.isUnique,
+            typeIdentifier = typeIdentifierForTypename(x.fieldType),
+            defaultValue = getDefaultValueFromField_!(x),
+            behaviour = None
+          )(_)
       }
 
-      PrismaType(definition.name, definition.tableNameDirective, definition.isEmbedded, prismaFields)(_)
+      PrismaType(
+        name = definition.name,
+        tableName = definition.tableNameDirective,
+        isEmbedded = definition.isEmbedded,
+        isRelationTable = false,
+        fieldFn = prismaFields
+      )(_)
     }
 
     PrismaSdl(typesFn = prismaTypes, enumsFn = enumTypes)
@@ -233,7 +282,7 @@ case class LegacyDataModelValidator(
     val ambiguousRelationFields = doc.objectTypes.flatMap(ambiguousRelationFieldsForType)
 
     val (schemaErrors, _) = partition(ambiguousRelationFields) {
-      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirective =>
+      case fieldAndType if !fieldAndType.fieldDef.hasRelationDirectiveWithNameArg =>
         Left(DeployErrors.missingRelationDirective(fieldAndType))
 
       case fieldAndType if !isSelfRelation(fieldAndType) && relationCount(fieldAndType) > 2 =>
@@ -249,7 +298,7 @@ case class LegacyDataModelValidator(
     val relationFieldsWithRelationDirective = for {
       objectType <- doc.objectTypes
       field      <- objectType.fields
-      if field.hasRelationDirective
+      if field.hasRelationDirectiveWithNameArg
       if isRelationField(field)
     } yield FieldAndType(objectType, field)
 
@@ -261,7 +310,7 @@ case class LegacyDataModelValidator(
       case thisType if !isSelfRelation(thisType) && relationCount(thisType) == 1 =>
         val oppositeObjectType               = doc.objectType_!(thisType.fieldDef.typeName)
         val fieldsOnOppositeObjectType       = oppositeObjectType.fields.filter(_.typeName == thisType.objectType.name)
-        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirective && isRelationField(f))
+        val relationFieldsWithoutDirective   = fieldsOnOppositeObjectType.filter(f => !f.hasRelationDirectiveWithNameArg && isRelationField(f))
         val relationFieldsPointingToThisType = relationFieldsWithoutDirective.filter(f => f.typeName == thisType.objectType.name)
         if (relationFieldsPointingToThisType.nonEmpty) Some(DeployErrors.ambiguousRelationSinceThereIsOnlyOneRelationDirective(thisType)) else None
 
@@ -347,7 +396,7 @@ case class LegacyDataModelValidator(
     }
 
     def ensureRelationDirectivesArePlacedCorrectly(fieldAndType: FieldAndType): Option[DeployError] = {
-      if (!isRelationField(fieldAndType.fieldDef) && fieldAndType.fieldDef.hasRelationDirective) {
+      if (!isRelationField(fieldAndType.fieldDef) && fieldAndType.fieldDef.hasRelationDirectiveWithNameArg) {
         Some(DeployErrors.relationDirectiveNotAllowedOnScalarFields(fieldAndType))
       } else {
         None

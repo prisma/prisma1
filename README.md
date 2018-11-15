@@ -180,10 +180,10 @@ const postsByAuthor = await prisma
 
 Here is what you can do next:
 
-- [Use Prisma with an existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/)
-- [Build an app with Prisma client](https://www.prisma.io/docs/1.16/get-started/03-build-graphql-servers-with-prisma-e001/)
+- [Use Prisma with an existing database](https://www.prisma.io/docs/get-started/01-setting-up-prisma-existing-database-a003/)
+- [Build an app with Prisma client](https://www.prisma.io/docs/get-started/03-build-graphql-servers-with-prisma-e001/)
 - [Check out some examples](#examples)
-- [Read more about how Prisma works](https://www.prisma.io/docs/1.16/understand-prisma/prisma-introduction-what-why-how-j9ff/).
+- [Read more about how Prisma works](https://www.prisma.io/docs/understand-prisma/prisma-introduction-what-why-how-j9ff/).
 
 ## Examples
 

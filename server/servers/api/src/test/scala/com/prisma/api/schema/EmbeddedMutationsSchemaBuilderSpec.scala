@@ -44,9 +44,7 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
     val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
-    println(schema)
     schema should include(
       "input EmbeddedUpdateOneInput {\n  create: EmbeddedCreateInput\n  delete: Boolean\n  update: EmbeddedUpdateDataInput\n  upsert: EmbeddedUpsertNestedInput\n}")
   }
-
 }

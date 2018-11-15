@@ -91,8 +91,17 @@ case class ManagementServer(prefix: String = "")(
                       Future.successful(BadRequest -> Json.obj("error" -> error.getMessage))
 
                     case Success(queryAst) =>
-                      val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
-                      val errorHandler = ErrorHandler(requestId, req, query, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
+                      val userContext = SystemUserContext(authorizationHeader = authorizationHeader)
+                      val errorHandler = ErrorHandler(
+                        requestId,
+                        req.method.value,
+                        req.uri.toString(),
+                        req.headers.map(h => h.name() -> h.value()),
+                        query,
+                        variables,
+                        dependencies.reporter,
+                        errorCodeExtractor = errorExtractor
+                      )
                       val result: Future[(StatusCode, JsValue)] =
                         Executor
                           .execute(

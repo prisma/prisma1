@@ -1,0 +1,19 @@
+type A {
+  toB: B! @relation(name: "RaToB", strategy: EMBED)
+  toB2: B! @relation(name: "RaToB2", strategy: EMBED)
+  toC: C
+  id: Int! @id
+}
+
+type B {
+  toA: A! @relation(name: "RaToB")
+  toA2: A! @relation(name: "RaToB2")
+  toC: C!
+  id: Int! @id
+}
+
+type C {
+  toB: [B!]! @relation(strategy: EMBED)
+  toA: [A!]! @relation(strategy: EMBED)
+  id: Int! @id
+}

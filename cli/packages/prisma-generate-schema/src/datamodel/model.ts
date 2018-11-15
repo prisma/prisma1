@@ -56,6 +56,16 @@ export interface IGQLField {
    * Indicates if this field is uniqe across the model.
    */
   isUnique: boolean
+
+  /**
+   * Indicates if this field is the unique identifyer.
+   */
+  isId: boolean
+
+  /**
+   * Indicates if this field is read-only. 
+   */
+  isReadOnly: boolean
 }
 
 /**
@@ -65,7 +75,7 @@ export interface IGQLType {
   /**
    * Indicates if this is an embedded type.
    */
-  embedded: boolean
+  isEmbedded: boolean
   /**
    * Indicates if this is an enum type.
    */
@@ -95,6 +105,8 @@ export class GQLFieldBase implements IGQLField {
   public relationName: string | null
   public isUnique: boolean
   public defaultValue: null
+  public isId: boolean
+  public isReadOnly: boolean
 
   constructor(name: string, type: IGQLType | string, isRequired?: boolean) {
     this.name = name
@@ -105,6 +117,8 @@ export class GQLFieldBase implements IGQLField {
     this.relationName = null
     this.isUnique = false
     this.defaultValue = null
+    this.isId = false
+    this.isReadOnly = false
   }
 }
 

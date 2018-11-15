@@ -144,7 +144,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
             name = typeName,
             fieldsFn = () => {
               List(
-                InputField[Any]("where", computeInputObjectTypeForScalarWhere(subModel)),
+                InputField[Any]("where", FilterObjectTypeBuilder(subModel, project).scalarFilterObjectType.get),
                 InputField[Any]("data", updateManyDataInput)
               )
             }
@@ -156,13 +156,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   protected def computeInputObjectTypeForNestedDeleteMany(parentField: RelationField): Option[InputObjectType[Any]] = {
-    if (parentField.isList) {
-      val utils                              = FilterObjectTypeBuilder(parentField.relatedModel_!, project)
-      val filterObject: InputObjectType[Any] = utils.scalarFilterObjectType
-      Some(filterObject)
-    } else {
-      None
-    }
+    if (parentField.isList) FilterObjectTypeBuilder(parentField.relatedModel_!, project).scalarFilterObjectType else None
   }
 
   protected def computeInputObjectTypeForNestedUpdateData(parentField: RelationField): Option[InputObjectType[Any]] = {
@@ -261,9 +255,6 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
       )
     }
   }
-
-  protected def computeInputObjectTypeForWhere(model: Model): InputObjectType[Any]       = FilterObjectTypeBuilder(model, project).filterObjectType
-  protected def computeInputObjectTypeForScalarWhere(model: Model): InputObjectType[Any] = FilterObjectTypeBuilder(model, project).scalarFilterObjectType
 
   protected def computeInputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]] = {
     val uniqueFields = model.scalarFields.filter(f => f.isUnique && f.isVisible)

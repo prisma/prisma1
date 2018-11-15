@@ -262,18 +262,23 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   override def setBlob(parameterIndex: Int, inputStream: InputStream) = ???
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp) = {
-    val isoDate = new DateTime(x.getTime)
-    val date = MagicDateTime(
-      isoDate.year().get(),
-      isoDate.monthOfYear().get(),
-      isoDate.dayOfMonth().get(),
-      isoDate.hourOfDay().get(),
-      isoDate.minuteOfHour().get(),
-      isoDate.secondOfMinute().get(),
-      isoDate.millisOfSecond().get()
-    )
+    if (x != null) {
+      val isoDate = new DateTime(x.getTime)
+      val date = MagicDateTime(
+        isoDate.year().get(),
+        isoDate.monthOfYear().get(),
+        isoDate.dayOfMonth().get(),
+        isoDate.hourOfDay().get(),
+        isoDate.minuteOfHour().get(),
+        isoDate.secondOfMinute().get(),
+        isoDate.millisOfSecond().get()
+      )
 
-    currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> Json.toJson(date)))
+      currentParams.put(parameterIndex, Json.obj("discriminator" -> "DateTime", "value" -> Json.toJson(date)))
+    } else {
+      currentParams.put(parameterIndex, Json.obj("discriminator" -> "Null", "value" -> JsNull))
+    }
+
   }
 
   override def setTimestamp(parameterIndex: Int, x: Timestamp, cal: Calendar) = {

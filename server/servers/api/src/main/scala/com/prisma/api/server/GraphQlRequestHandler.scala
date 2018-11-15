@@ -2,6 +2,7 @@ package com.prisma.api.server
 
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives.complete
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
 import com.prisma.cache.Cache
@@ -58,7 +59,9 @@ case class GraphQlRequestHandlerImpl(
     val context = ApiUserContext(clientId = "clientId")
     val errorHandler = ErrorHandler(
       request.id,
-      HttpRequest(HttpMethods.POST),
+      "POST",
+      "",
+      Seq.empty,
       query.queryString,
       query.variables,
       apiDependencies.reporter,
@@ -85,6 +88,7 @@ case class GraphQlRequestHandlerImpl(
 
     result.recover {
       case e: QueryAnalysisError => e.resolveError
+      case e: UserFacingError    => JsonErrorHelper.errorJson(request.id, e.getMessage, e.code)
     }
   }
 

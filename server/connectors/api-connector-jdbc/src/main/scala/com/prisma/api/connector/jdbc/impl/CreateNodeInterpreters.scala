@@ -7,7 +7,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
@@ -66,7 +66,7 @@ case class NestedCreateNodeInterpreter(
       parentId: IdGCValue
   )(implicit ec: ExecutionContext) = {
     relation.manifestation match {
-      case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name =>
+      case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name =>
         val inlineField  = relation.getFieldOnModel(model.name)
         val argsMap      = mutaction.nonListArgs.raw.asRoot.map
         val modifiedArgs = argsMap.updated(inlineField.name, parentId)

@@ -166,7 +166,7 @@ export type ${type.name}_Output = string`
       .map(
         i => `{
     name: '${i.name}',
-    embedded: ${i.embedded}
+    embedded: ${i.isEmbedded}
   }`,
       )
       .join(',\n')
@@ -232,17 +232,16 @@ ${this.renderClientConstructor}
 ${this.renderTypes()}
 
 /**
- * Type Defs
-*/
-
-${this.renderExports(options)}
-
-
-/**
  * Model Metadata
 */
 
 ${this.renderModels()}
+
+/**
+ * Type Defs
+*/
+
+${this.renderExports(options)}
 `)
   }
   renderClientConstructor() {
@@ -272,7 +271,7 @@ import { typeDefs } from './prisma-schema'`
       }
     }
 
-    return `{typeDefs, models, ${endpointString}${secretString}}`
+    return `{typeDefs, models${endpointString}${secretString}}`
   }
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
@@ -496,7 +495,7 @@ export const prisma = new Prisma()`
     type: GraphQLScalarType | GraphQLObjectType | GraphQLEnumType,
   ) {
     const internalType = this.internalTypes.find(i => i.name === type.name)
-    if (internalType && internalType.embedded) {
+    if (internalType && internalType.isEmbedded) {
       return true
     }
 

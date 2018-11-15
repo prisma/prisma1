@@ -4191,6 +4191,11 @@ node-fetch@^2.1.1:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.2.0.tgz#4ee79bde909262f9775f731e3656d0db55ced5b5"
   integrity sha512-OayFWziIxiHY8bCUyLX6sTpDH8Jsbp4FfYd1j1f7vZyfgkcOnAyM4oQR16f8a0s7Gl/viMGRey8eScYk4V4EZA==
 
+node-fetch@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.2.1.tgz#1fe551e0ded6c45b3b3b937d0fb46f76df718d1e"
+  integrity sha512-ObXBpNCD3A/vYQiQtEWl7DuqjAXjfptYFuGHLdPl5U19/6kJuZV+8uMHLrkj3wJrJoyfg4nhgyFixZdaZoAiEQ==
+
 node-gyp@^3.7.0, node-gyp@^3.8.0:
   version "3.8.0"
   resolved "https://registry.yarnpkg.com/node-gyp/-/node-gyp-3.8.0.tgz#540304261c330e80d0d5edce253a68cb3964218c"
@@ -4997,12 +5002,13 @@ pretty-ms@^3.0.0:
   dependencies:
     parse-ms "^1.0.0"
 
-prisma-generate-schema@1.21.0-alpha.52:
-  version "1.21.0-alpha.52"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.21.0-alpha.52.tgz#d8be399a9491071f809f4c67d8500ee081c772f2"
-  integrity sha512-Nt7NOjGIdiSH4rJj3jczYz/L1cQbOeCEOtki6zR1d+4GfZnrP0H5+pI0ax2nqfMQAFKYaJn8fisuVQItL/Gy4w==
+prisma-generate-schema@1.22.0-alpha.0.1:
+  version "1.22.0-alpha.0.1"
+  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.22.0-alpha.0.1.tgz#44ab29bd4e9d9213ffdd297069ec966523ead32a"
+  integrity sha512-7E4CzJN3gM6To3+dw0A5alwPJRWE5j0yLgsl2zayKwbe8vrobBVDYAKx1CPWQLbwEyADVTfMaAHFBHsntebDEw==
   dependencies:
     graphql "^14.0.2"
+    node-fetch "^2.2.1"
     pluralize "^7.0.0"
     popsicle "10"
     tslint-config-prettier "^1.15.0"

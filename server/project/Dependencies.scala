@@ -7,17 +7,18 @@ object Dependencies {
     * with akka being a good example.
     */
   object v {
-    val sangria     = "1.3.3"
-    val akka        = "2.5.12"
-    val akkaHttp    = "10.1.0"
-    val joda        = "2.9.4"
-    val jodaConvert = "1.7"
-    val cuid        = "0.1.1"
-    val play        = "2.6.8"
-    val scalactic   = "3.0.4"
-    val scalaTest   = "3.0.4"
-    val slick       = "3.2.3"
-    val jackson     = "2.8.4"
+    val sangria       = "1.3.3"
+    val akka          = "2.5.12"
+    val akkaHttp      = "10.1.0"
+    val joda          = "2.9.4"
+    val jodaConvert   = "1.7"
+    val cuid          = "0.1.1"
+    val play          = "2.6.8"
+    val scalactic     = "3.0.4"
+    val scalaTest     = "3.0.4"
+    val slick         = "3.2.3"
+    val jackson       = "2.8.4"
+    val http4sVersion = "0.18.21"
   }
 
   val jodaTime    = "joda-time" % "joda-time" % v.joda
@@ -94,6 +95,18 @@ object Dependencies {
   val javaxPersistence = "javax.persistence"     % "javax.persistence-api" % "2.2"
   val registry         = "io.dropwizard.metrics" % "metrics-core"          % "3.2.4"
   val checks           = "io.dropwizard.metrics" % "metrics-healthchecks"  % "3.2.4"
+
+  val http4s = Seq(
+    "org.http4s" %% "http4s-blaze-server" % v.http4sVersion,
+    "org.http4s" %% "http4s-blaze-client" % v.http4sVersion,
+    "org.http4s" %% "http4s-circe"        % v.http4sVersion,
+    "org.http4s" %% "http4s-dsl"          % v.http4sVersion
+  )
+
+  val ujson = Seq(
+    "com.lihaoyi" %% "ujson-circe" % "0.6.6",
+    "com.lihaoyi" %% "ujson-play"  % "0.6.6"
+  )
 
   lazy val common: Seq[ModuleID] = Seq(
     java8Compat,

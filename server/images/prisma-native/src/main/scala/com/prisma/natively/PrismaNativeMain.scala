@@ -1,16 +1,12 @@
 package com.prisma.natively
 
-import java.sql.DriverManager
 import java.io.PrintWriter
+import java.sql.DriverManager
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.akkautil.http.ServerExecutor
-import com.prisma.api.server.ApiServer
-import com.prisma.deploy.server.ManagementServer
-import com.prisma.image.Version
-import com.prisma.websocket.WebsocketServer
-import com.prisma.workers.WorkerServer
+import com.prisma.image.{SangriaHandlerImpl, Version}
+import com.prisma.sangria_server.BlazeSangriaServer
 
 object PrismaNativeMain {
   System.setProperty("org.jooq.no-logo", "true")
@@ -27,12 +23,17 @@ object PrismaNativeMain {
 
     Version.check()
 
-    ServerExecutor(
-      port = dependencies.config.port.getOrElse(4466),
-      ManagementServer("management"),
-      WebsocketServer(dependencies),
-      ApiServer(dependencies.apiSchemaBuilder),
-      WorkerServer(dependencies)
-    ).startBlocking()
+//    ServerExecutor(
+//      port = dependencies.config.port.getOrElse(4466),
+//      ManagementServer("management"),
+//      WebsocketServer(dependencies),
+//      ApiServer(dependencies.apiSchemaBuilder),
+//      WorkerServer(dependencies)
+//    ).startBlocking()
+
+    val sangriaHandler = SangriaHandlerImpl(managementApiEnabled = true)
+    val executor       = BlazeSangriaServer
+    val server         = executor.create(handler = sangriaHandler, port = dependencies.config.port.getOrElse(4466), requestPrefix = sys.env.getOrElse("ENV", "local"))
+    server.startBlocking()
   }
 }

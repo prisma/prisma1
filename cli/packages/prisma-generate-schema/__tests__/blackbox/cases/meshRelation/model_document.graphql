@@ -1,0 +1,42 @@
+type A {
+    field: Int!
+    id: Int! @id
+    a: A! @relation(strategy: EMBED)
+    b: [B!]! @relation(strategy: EMBED)
+    c: C @relation(strategy: EMBED)
+    e: [E!]! @relation(strategy: EMBED)
+}
+
+type B {
+    id: Int! @id
+    field: [String!]!
+    c: C @relation(name: "BToC", strategy: EMBED)
+    b: [B!]!@relation(strategy: EMBED)
+    a: A!
+    c2: C @relation(name: "BToC2", strategy: EMBED)
+}
+
+type C {
+    id: Int! @id
+    expirationDate: DateTime
+    c: C! @relation(strategy: EMBED)
+    b: [B!]! @relation(name: "BToC")
+    a: A
+    b2: B @relation(name: "BToC2")
+}
+
+type D {
+    id: Int! @id
+    field: Json
+    c: C! @relation(strategy: EMBED)
+    b: B! @relation(strategy: EMBED)
+    a: A! @relation(strategy: EMBED)
+    d: [D!]! @relation(strategy: EMBED)
+}
+
+
+type E {
+    id: Int! @id
+    field: Json
+    a: A!
+}
