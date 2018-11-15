@@ -97,6 +97,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       if previousModel.getFieldByName(previousFieldName).isEmpty
+      if !fieldOfNextModel.isMagicalBackRelation
     } yield {
       CreateField(
         model = nextModel.name,
