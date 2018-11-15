@@ -615,19 +615,6 @@ export const prisma = new Prisma()`
 
     const addSubscription = !partial && isSubscription && !isScalar
 
-    // if (typeString === 'AggregatePost') {
-    //   // console.log({
-    //   //   typeString,
-    //   //   node,
-    //   //   input,
-    //   //   operation,
-    //   //   isInput,
-    //   //   isList,
-    //   //   isScalar,
-    //   //   addSubscription,
-    //   // })
-    // }
-
     if (
       operation &&
       !node &&
