@@ -5,19 +5,20 @@ import org.mongodb.scala._
 object MongoDatabasesFactory {
 
   def initialize(config: DatabaseConfig) = {
-    val uri: String = (config.database, config.ssl) match {
-      case (None, false) =>
-        s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=${config.authSource.getOrElse("admin")}"
-      case (None, true) =>
-        System.setProperty("org.mongodb.async.type", "netty")
+    val authSource = config.authSource.getOrElse("admin")
 
-        s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=${config.authSource.getOrElse("admin")}&ssl=true"
-      case (Some(_), true) =>
-        System.setProperty("org.mongodb.async.type", "netty")
+    val uri: String = config.protocol match {
+      case Some("mongodb") =>
+        s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=$authSource&ssl=${config.ssl}"
 
-        s"mongodb+srv://${config.user}:${config.password.getOrElse("")}@${config.host}/${config.authSource.getOrElse("admin")}"
-      case (_, _) => sys.error("Database provided, but ssl set to true.")
+      case Some("mongodb+srv") =>
+        s"mongodb+srv://${config.user}:${config.password.getOrElse("")}@${config.host}/$authSource?ssl=${config.ssl}"
+
+      case _ =>
+        sys.error("Invalid Mongo protocol specified")
     }
+
+    if (config.ssl) System.setProperty("org.mongodb.async.type", "netty")
 
     println(s"mongoUri: $uri")
 
