@@ -2,8 +2,8 @@ package com.prisma.deploy.migration.validation
 
 import org.scalatest.{Matchers, WordSpecLike}
 
-class RelationTableDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
-  "@relationTable must be detected" in {
+class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
+  "it must be detected" in {
     val dataModelString =
       """
         |type Model {

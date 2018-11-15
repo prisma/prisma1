@@ -1,9 +1,10 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
-  "@db should work on fields" in {
+  "it should work on fields" in {
     val dataModelString =
       """
         |type Model {
@@ -17,7 +18,7 @@ class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     field.columnName should be(Some("some_columns"))
   }
 
-  "@db should work on types" in {
+  "it should work on types" in {
     val dataModelString =
       """
         |type Model @db(name:"some_table") {
@@ -29,5 +30,20 @@ class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     val dataModel = validate(dataModelString)
     val model     = dataModel.type_!("Model")
     model.tableName should equal(Some("some_table"))
+  }
+
+  "it must not be valid on embedded types" in {
+    val dataModelString =
+      """
+        |type Model @db(name:"some_table") @embedded {
+        |  field: String
+        |}
+      """.stripMargin
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.description should be("The type `Model` is specifies the `@db` directive. Embedded types must not specify this directive.")
+    error.field should be(None)
   }
 }

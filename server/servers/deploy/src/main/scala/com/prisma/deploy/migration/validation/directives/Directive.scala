@@ -11,6 +11,10 @@ trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
   def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = Vector.empty
 }
 
+object TypeDirective {
+  val all = Vector(DbDirective)
+}
+
 trait TypeDirective[T] extends DirectiveBase {
   def validate(
       document: Document,

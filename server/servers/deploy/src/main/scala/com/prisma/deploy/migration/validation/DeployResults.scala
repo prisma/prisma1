@@ -185,6 +185,10 @@ object DeployErrors {
     error(fieldAndType, s"The field `${fieldAndType.fieldDef.name}` specifies a directive more than once. Directives must appear exactly once on a field.")
   }
 
+  def directivesMustAppearExactlyOnce(objectType: ObjectTypeDefinition) = {
+    error(objectType, s"The type `${objectType.name}` specifies a directive more than once. Directives must appear exactly once on a type.")
+  }
+
   def manyRelationFieldsMustBeRequired(fieldAndType: FieldAndType) = {
     error(fieldAndType, s"Many relation fields must be marked as required.")
   }
@@ -261,7 +265,11 @@ object DeployErrors {
   }
 
   def embeddedTypesAreNotSupported(typeName: String) = {
-    DeployError(typeName, s"The type `${typeName}` is marked as embedded but this connector does not support embedded types.")
+    DeployError(typeName, s"The type `$typeName` is marked as embedded but this connector does not support embedded types.")
+  }
+
+  def embeddedTypesMustNotSpecifyDbName(typeName: String) = {
+    DeployError(typeName, s"The type `$typeName` is specifies the `@db` directive. Embedded types must not specify this directive.")
   }
 
   def error(fieldAndType: FieldAndType, description: String): DeployError = {
