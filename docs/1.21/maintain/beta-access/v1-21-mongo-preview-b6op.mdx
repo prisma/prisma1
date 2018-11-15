@@ -399,12 +399,18 @@ This creates the `prisma.yml` and `datamodel.prisma` files that make up your ser
 
 This step is very important when you're starting out with an existing MongoDB! The goal is to create a [datamodel](knul) that represents the data that's currently stored in the collections of your MongoDB. Next to modeling the data properly, you need to ensure that _all_ data in the database adheres to the datamodel that you specify - otherwise the Prisma API might throw errors at runtime.
 
-Here a few few rules of thumb for modelling the data:
+Here are a few rules of thumb for modelling the data:
 
 - Every collection in your MongoDB database should be represented by its own _model type_ in the Prisma datamodel.
 - When a document inside a collection has _embedded_ documents, the structure of these embedded documents needs to be modeled as an an [embedded type](#embedded-type).
 - A relation between documents of two separate collections needs to be modelled as a [link relation](#link-relations).
 - Every model type needs to have exactly one field of type `ID!` that's annotated with the `@id` directive. This field gets mapped to the [MongoDB object ID](https://docs.mongodb.com/manual/core/document/#the-id-field) called `_id`.
+
+<Warning>
+
+The `prisma introspect` can currently not be used to suggest a datamodel. Leave a +1 on [this](https://github.com/prisma/prisma/issues/3529) feature request if you're interested in this feature.
+
+</Warning>
 
 ### 3. Deploy the Prisma API and generate the Prisma client
 
