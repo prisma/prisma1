@@ -3,7 +3,8 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models.{ConnectorCapability, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
@@ -17,14 +18,14 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName", strategy: EMBED)
+          |  comments: [Comment!]! @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
           |  test: String
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
@@ -35,6 +36,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       todo.isEmbedded should be(false)
       val comment = schema.getModelByName_!("Comment")
       comment.isEmbedded should be(true)
+      relation.manifestation should be(None)
     }
 
     "work if one with a relation from embedded to non-parent non embedded type" in {
@@ -42,26 +44,30 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName", strategy: EMBED)
+          |  comments: [Comment!]! @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
           |  test: String
-          |  other: Other @relation(name: "MyOtherRelationName", strategy: EMBED)
+          |  other: Other @relation(name: "MyOtherRelationName")
           |}
           |
           |type Other {
           |  id: ID! @id
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("MyRelationName")
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Todo")
+      relation.manifestation should be(None)
+
       val relation2 = schema.getRelationByName_!("MyOtherRelationName")
       relation2.modelAName should equal("Comment")
       relation2.modelBName should equal("Other")
+      relation2.manifestation should be(Some(EmbeddedRelationLink("Comment", "other")))
+
       schema.models should have(size(3))
       val todo = schema.getModelByName_!("Todo")
       todo.isEmbedded should be(false)
@@ -76,26 +82,30 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName", strategy: EMBED)
+          |  comments: [Comment!]! @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
           |  test: String
-          |  other: Other @relation(name: "MyOtherRelationName", strategy: EMBED)
+          |  other: Other @relation(name: "MyOtherRelationName")
           |}
           |
           |type Other @embedded{
           |  test: String
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("MyRelationName")
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Todo")
+      relation.manifestation should be(None)
+
       val relation2 = schema.getRelationByName_!("MyOtherRelationName")
       relation2.modelAName should equal("Comment")
       relation2.modelBName should equal("Other")
+      relation2.manifestation should be(None)
+
       schema.models should have(size(3))
       val todo = schema.getModelByName_!("Todo")
       todo.isEmbedded should be(false)
@@ -110,26 +120,30 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(strategy: EMBED)
+          |  comments: [Comment!]!
           |}
           |
           |type Comment @embedded {
           |  test: String
-          |  other: Other @relation(strategy: EMBED)
+          |  other: Other
           |}
           |
           |type Other @embedded{
           |  test: String
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(2))
       val relation = schema.relations.head
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Other")
+      relation.manifestation should be(None)
+
       val relation2 = schema.relations.reverse.head
       relation2.modelAName should equal("Comment")
       relation2.modelBName should equal("Todo")
+      relation2.manifestation should be(None)
+
       schema.models should have(size(3))
       val todo = schema.getModelByName_!("Todo")
       todo.isEmbedded should be(false)

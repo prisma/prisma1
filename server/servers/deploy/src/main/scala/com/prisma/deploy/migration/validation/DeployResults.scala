@@ -36,8 +36,12 @@ object DeployErrors {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }
 
-  def missingRelationStrategy(relationField: RelationalPrismaField): DeployError = {
-    DeployError(relationField.tpe.name, relationField.name, s"The field `${relationField.name}` must provide a relation strategy.")
+  def missingRelationStrategy(relationField: RelationalPrismaField, validModes: Vector[String]): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The field `${relationField.name}` must provide a relation link mode. Valid values are: ${validModes.mkString(",")}"
+    )
   }
 
   def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {

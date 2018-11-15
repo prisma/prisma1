@@ -1,6 +1,11 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{
+  EmbeddedTypesCapability,
+  JoinRelationsCapability,
+  RelationLinkListCapability,
+  RelationLinkTableCapability
+}
 import com.prisma.shared.models.{OnDelete, RelationStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -77,7 +82,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       """
         |type Model {
         |  id: ID! @id
-        |  model: Model @relation(name: "MyRelation", strategy: EMBED, onDelete: CASCADE)
+        |  model: Model @relation(name: "MyRelation", link: INLINE, onDelete: CASCADE)
         |}
       """.stripMargin
 
@@ -85,7 +90,23 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     val field     = dataModel.type_!("Model").relationField_!("model")
     field.relationName should equal(Some("MyRelation"))
     field.cascade should equal(OnDelete.Cascade)
-    field.strategy should equal(RelationStrategy.Embed)
+    field.strategy should equal(RelationStrategy.Inline)
+  }
+
+  "@relation settings must be detected 2" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "MyRelation", link: TABLE, onDelete: SET_NULL)
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").relationField_!("model")
+    field.relationName should equal(Some("MyRelation"))
+    field.cascade should equal(OnDelete.SetNull)
+    field.strategy should equal(RelationStrategy.Table)
   }
 
   "@relation must be optional" in {
@@ -104,7 +125,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     field.strategy should equal(RelationStrategy.Auto)
   }
 
-  "@relation strategy must be required between non-embedded types in Mongo" in {
+  "@relation link must be required between non-embedded types in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -118,19 +139,19 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationsCapability))
     errors should have(size(2))
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
     error1.field should equal(Some("other"))
-    error1.description should equal("The field `other` must provide a relation strategy.")
+    error1.description should equal("The field `other` must provide a relation link mode. Valid values are: `@relation(link: INLINE)`")
 
     error2.`type` should equal("Other")
     error2.field should equal(Some("model"))
-    error2.description should equal("The field `model` must provide a relation strategy.")
+    error2.description should equal("The field `model` must provide a relation link mode. Valid values are: `@relation(link: INLINE)`")
   }
 
-  "@relation strategy must be required for relations to non-embedded types in Mongo" in {
+  "@relation link must be required for relations to non-embedded types in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -143,16 +164,15 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set(MongoRelationsCapability))
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkListCapability, JoinRelationsCapability))
     errors should have(size(1))
     val error = errors.head
-    println(error)
     error.`type` should be("Model")
     error.field should be(Some("other"))
-    error.description should be("The field `other` must provide a relation strategy.")
+    error.description should be("The field `other` must provide a relation link mode. Valid values are: `@relation(link: INLINE)`")
   }
 
-  "@relation strategy must be optional if an embedded type is involved in Mongo" in {
+  "@relation link must be optional if an embedded type is involved in Mongo" in {
     val dataModelString =
       """
         |type Model {
@@ -169,7 +189,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
 
   }
 
-  "@relation strategy must be required for one-to-one relations in SQL" in {
+  "@relation link must be required for one-to-one relations in SQL" in {
     val dataModelString =
       """
         |type Model {
@@ -183,19 +203,19 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
       """.stripMargin
 
-    val errors = validateThatMustError(dataModelString, Set())
+    val errors = validateThatMustError(dataModelString, Set(JoinRelationsCapability, RelationLinkTableCapability))
     errors should have(size(2))
     val (error1, error2) = (errors.head, errors(1))
     error1.`type` should equal("Model")
     error1.field should equal(Some("other"))
-    error1.description should equal("The field `other` must provide a relation strategy.")
+    error1.description should equal("The field `other` must provide a relation link mode. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
 
     error2.`type` should equal("Other")
     error2.field should equal(Some("model"))
-    error2.description should equal("The field `model` must provide a relation strategy.")
+    error2.description should equal("The field `model` must provide a relation link mode. Valid values are: `@relation(link: TABLE)`,`@relation(link: INLINE)`")
   }
 
-  "@relation strategy must be optional for one-to-many and many-to-many relations in SQL" in {
+  "@relation link must be optional for one-to-many and many-to-many relations in SQL" in {
     val dataModelString =
       """
         |type Model {

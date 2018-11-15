@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.gc_values.{EnumGCValue, StringGCValue}
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, MongoRelationsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, RelationLinkListCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.{OnDelete, RelationStrategy, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}

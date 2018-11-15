@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType, PrismaSdl}
-import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
+import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.{ConnectorCapability, RelationStrategy}
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
@@ -14,10 +14,13 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
 
   override def requiredArgs = Vector.empty
 
+  val validLinkModes = Vector("AUTO", "INLINE", "TABLE")
+  val linkArgument   = ArgumentRequirement("link", validateEnumValue(validLinkModes))
+
   override def optionalArgs = Vector(
     ArgumentRequirement("name", validateStringValue),
     ArgumentRequirement("onDelete", validateEnumValue(Vector("CASCADE", "SET_NULL"))),
-    ArgumentRequirement("strategy", validateEnumValue(Vector("AUTO", "EMBED", "RELATION_TABLE")))
+    linkArgument
   )
 
   override def validate(
@@ -61,7 +64,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   }
 
   private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
-    val isMongo = capabilities.contains(MongoRelationsCapability)
+    val isMongo = capabilities.contains(RelationLinkListCapability)
     for {
       modelType                <- dataModel.modelTypes
       relationField            <- modelType.relationFields
@@ -73,17 +76,20 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       if isMongo || relationField.hasOneToOneRelation
       if modelType.isNotEmbedded && relatedType.isNotEmbedded
     } yield {
-      DeployErrors.missingRelationStrategy(relationField)
+      val inlineMode = capabilities.contains(JoinRelationsCapability).toOption("`@relation(link: INLINE)`")
+      val tableMode  = capabilities.contains(RelationLinkTableCapability).toOption("`@relation(link: TABLE)`")
+      val validModes = (tableMode ++ inlineMode).toVector
+      DeployErrors.missingRelationStrategy(relationField, validModes)
     }
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
     if (fieldDef.isRelationField(document)) {
-      val strategy = fieldDef.directiveArgumentAsString(name, "strategy") match {
-        case Some("AUTO")           => RelationStrategy.Auto
-        case Some("EMBED")          => RelationStrategy.Embed
-        case Some("RELATION_TABLE") => RelationStrategy.RelationTable
-        case _                      => RelationStrategy.Auto
+      val strategy = fieldDef.directiveArgumentAsString(name, "link") match {
+        case Some("AUTO")   => RelationStrategy.Auto
+        case Some("INLINE") => RelationStrategy.Inline
+        case Some("TABLE")  => RelationStrategy.Table
+        case _              => RelationStrategy.Auto
       }
       Some(RelationDirectiveData(fieldDef.relationName, fieldDef.onDelete, strategy))
     } else {

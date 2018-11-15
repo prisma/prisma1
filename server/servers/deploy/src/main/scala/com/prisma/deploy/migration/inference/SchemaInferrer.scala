@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective,
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidRelationName
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, RelationLinkListCapability}
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
@@ -282,7 +282,7 @@ case class SchemaInferrerImpl(
         case None =>
           manifestationForField(prismaType, relationField, relationName)
       }
-    } else if (!capabilities.contains(MigrationsCapability) || capabilities.contains(MongoRelationsCapability)) { //passive or mongo
+    } else if (!capabilities.contains(MigrationsCapability) || capabilities.contains(RelationLinkListCapability)) { //passive or mongo
       val manifestationOnThisField = legacyRelationManifestationOnField(prismaType, relationField)
       val manifestationOnRelatedField = relationField.relatedField.flatMap { relatedField =>
         val relatedType = prismaSdl.types.find(_.name == relationField.referencesType).get
@@ -297,12 +297,12 @@ case class SchemaInferrerImpl(
 
   private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationLinkManifestation] = {
     val activeStrategy = if (relationField.strategy == RelationStrategy.Auto) {
-      if (capabilities.contains(MongoRelationsCapability)) {
-        RelationStrategy.Embed
+      if (capabilities.contains(RelationLinkListCapability)) {
+        RelationStrategy.Inline
       } else if (relationField.hasManyToManyRelation) {
-        RelationStrategy.RelationTable
+        RelationStrategy.Table
       } else if (relationField.hasOneToManyRelation && relationField.isOne) {
-        RelationStrategy.Embed
+        RelationStrategy.Inline
       } else {
         sys.error("One to one relations must not have the AUTO strategy")
       }
@@ -311,10 +311,10 @@ case class SchemaInferrerImpl(
     }
 
     activeStrategy match {
-      case RelationStrategy.Embed =>
+      case RelationStrategy.Inline =>
         if (relationField.relatedType.isEmbedded) {
           None
-        } else if (capabilities.contains(MongoRelationsCapability)) {
+        } else if (capabilities.contains(RelationLinkListCapability)) {
           Some(EmbeddedRelationLink(inTableOfModelName = prismaType.name, referencingColumn = relationField.name))
         } else {
           // this can be only one to many in SQL
@@ -322,7 +322,7 @@ case class SchemaInferrerImpl(
           Some(EmbeddedRelationLink(inTableOfModelName = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
         }
 
-      case RelationStrategy.RelationTable =>
+      case RelationStrategy.Table =>
         // TODO: This must be tested with the SQL connectors that actually support this strategy
         prismaSdl.relationTables.find(_.name == relationName) match {
           case Some(relationTable) =>
