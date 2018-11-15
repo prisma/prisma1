@@ -13,7 +13,7 @@ export const meta = {
 The datamodel of your service configuration has two major roles:
 
 - **Define the underlying database schema** (they are mapped to database tables or equivalent structures, like _documents_, in the case of schemaless databases).
-- It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
+- It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API.
 
 The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.graphql`-files](#files). These `.graphql`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
 
@@ -867,7 +867,7 @@ The relations that are included in your schema affect the available operations i
 - [Nested mutations](qwe2#nested-mutations) allow you to create, connect, update, upsert and delete multiple related nodes within the same mutation.
 - [Relation subscriptions](qwe3#relation-subscriptions) allow you to get notified of changes to a relation.
 
-## GraphQL directives
+## SDL directives
 
 Directives are used to provide additional information in your datamodel. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
 

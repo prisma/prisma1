@@ -12,7 +12,7 @@ export default abstract class AstTools {
    * @param original 
    * @param toCheck 
    */
-  public static assertTypesEqual(original : GraphQLSchema, toCheck: GraphQLSchema) {
+  public static assertTypesEqual(original : GraphQLSchema, toCheck: GraphQLSchema, modelName: string) {
 
     const typeMapA = original.getTypeMap()
     const typeMapB = toCheck.getTypeMap()
@@ -20,8 +20,8 @@ export default abstract class AstTools {
     const errors = AstTools.allTypesFromAInB(typeMapA, typeMapB, true) + AstTools.allTypesFromAInB(typeMapB, typeMapA, false)
     
     if(errors > 0) {
-      console.error(`${errors} type checking errors. Type equality check failed.`)
-      GQLAssert.raise('${errors} type checking errors. Type equality check failed.')
+      console.error(`${errors} type checking errors. Type equality check for model ${modelName} failed.`)
+      GQLAssert.raise(`${errors} type checking errors. Type equality check for model ${modelName} failed.`)
     }
   }
 
