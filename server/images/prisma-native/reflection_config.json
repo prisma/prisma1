@@ -251,5 +251,17 @@
         "parameterTypes": []
       }
     ]
+  },
+  {
+    "name" : "com.github.benmanes.caffeine.cache.SSMS",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "com.github.benmanes.caffeine.cache.PSMS",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "com.github.benmanes.caffeine.cache.PSMW",
+    "allDeclaredConstructors" : true
   }
 ]

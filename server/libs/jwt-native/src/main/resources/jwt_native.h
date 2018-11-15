@@ -1,18 +1,16 @@
-#include <cstdint>
-#include <cstdlib>
+#include <stdint.h>
+#include <stdlib.h>
 
-struct ProtocolBuffer {
+typedef struct ProtocolBuffer {
   char *error;
   uint8_t *data;
   uintptr_t data_len;
-};
+} ProtocolBuffer;
 
-struct ExtGrant {
+typedef struct ExtGrant {
   const char *target;
   const char *action;
-};
-
-extern "C" {
+} ExtGrant;
 
 ProtocolBuffer *create_token(const char *algorithm,
                              const char *secret,
@@ -25,5 +23,3 @@ ProtocolBuffer *verify_token(const char *token,
                              const char *secrets,
                              int64_t num_secrets,
                              const ExtGrant *grant);
-
-} // extern "C"

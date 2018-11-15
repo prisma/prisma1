@@ -102,7 +102,7 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
       s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
       "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool",
       "-H:IncludeResources=.*/.*.h$|org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
-      s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/akka_reflection_config.json")}",
+      s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
       "-H:+JNI",
       "--verbose"
     ),
