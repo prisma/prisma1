@@ -112,7 +112,7 @@ case class DataModelValidatorImpl(
       PrismaType(
         name = typeDef.name,
         tableName = TypeDbDirective.value(doc, typeDef, capabilities),
-        isEmbedded = typeDef.isEmbedded,
+        isEmbedded = EmbeddedDirective.value(doc, typeDef, capabilities).getOrElse(false),
         isRelationTable = typeDef.isRelationTable,
         fieldFn = prismaFields ++ extraField
       )(_)
