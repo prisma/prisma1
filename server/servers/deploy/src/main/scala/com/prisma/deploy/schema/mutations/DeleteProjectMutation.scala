@@ -1,7 +1,8 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{DeployConnector, ProjectPersistence}
+import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.schema.InvalidProjectId
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only

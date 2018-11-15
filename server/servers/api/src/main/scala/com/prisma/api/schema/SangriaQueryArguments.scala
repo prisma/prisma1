@@ -12,7 +12,7 @@ object SangriaQueryArguments {
 
   def orderByArgument(model: Model, name: String = "orderBy") = {
     val values = for {
-      field     <- model.visibleScalarNonListFields
+      field     <- model.scalarNonListFields
       sortOrder <- List("ASC", "DESC")
     } yield EnumValue(field.name + "_" + sortOrder, description = None, OrderBy(field, SortOrder.withName(sortOrder.toLowerCase())))
 

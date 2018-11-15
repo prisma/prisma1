@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.Server
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.ProjectPersistence
+import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import com.prisma.errors.RequestMetadata
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl

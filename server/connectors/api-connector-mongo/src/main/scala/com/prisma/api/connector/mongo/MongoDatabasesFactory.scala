@@ -1,26 +1,24 @@
 package com.prisma.api.connector.mongo
 
-import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import com.prisma.config.DatabaseConfig
 import org.mongodb.scala._
 object MongoDatabasesFactory {
 
   def initialize(config: DatabaseConfig) = {
-    val uri: String = (config.database, config.ssl) match {
-      case (None, false) =>
-        s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=admin"
-      case (None, true) =>
-        System.setProperty("org.mongodb.async.type", "netty")
+    val authSource = config.authSource.getOrElse("admin")
 
-        s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=admin&ssl=true"
-      case (Some(db), true) =>
-        System.setProperty("org.mongodb.async.type", "netty")
+    val uri: String = config.protocol match {
+      case Some("mongodb") =>
+        s"mongodb://${config.user}:${config.password.getOrElse("")}@${config.host}:${config.port}/?authSource=$authSource&ssl=${config.ssl}"
 
-        s"mongodb+srv://${config.user}:${config.password.getOrElse("")}@${config.host}/$db"
-      case (_, _) => sys.error("Database provided, but ssl set to false.")
+      case Some("mongodb+srv") =>
+        s"mongodb+srv://${config.user}:${config.password.getOrElse("")}@${config.host}/$authSource?ssl=${config.ssl}"
+
+      case _ =>
+        sys.error("Invalid Mongo protocol specified")
     }
 
-    System.setProperty("org.mongodb.async.type", "netty")
+    if (config.ssl) System.setProperty("org.mongodb.async.type", "netty")
 
     println(s"mongoUri: $uri")
 

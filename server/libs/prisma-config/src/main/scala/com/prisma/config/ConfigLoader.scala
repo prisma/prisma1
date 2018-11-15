@@ -154,7 +154,9 @@ object ConfigLoader {
       schema = schema,
       managementSchema = mgmtSchema,
       ssl = ssl,
-      rawAccess = rawAccess
+      rawAccess = rawAccess,
+      authSource = None,
+      protocol = None
     )
   }
 
@@ -163,16 +165,30 @@ object ConfigLoader {
     val dbConnector = extractString("connector", db)
     val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
     val dbHost      = extractString("host", db)
-    val dbPort      = extractInt("port", db)
     val dbUser      = extractString("user", db)
     val dbPass      = extractStringOpt("password", db)
     val connLimit   = extractIntOpt("connectionLimit", db)
     val mgmtSchema  = extractStringOpt("managementSchema", db)
     val pooled      = extractBooleanOpt("pooled", db)
     val database    = extractStringOpt("database", db)
+    val authSource  = extractStringOpt("authSource", db)
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
     val rawAccess   = extractBooleanOpt("rawAccess", db)
+
+    val protocol = (dbConnector, extractStringOpt("protocol", db)) match {
+      case ("mongo", None)                => Some("mongodb")
+      case ("mongo", Some("mongodb"))     => Some("mongodb")
+      case ("mongo", Some("mongodb+srv")) => Some("mongodb+srv")
+      case ("mongo", Some(other))         => sys.error(s"$other is not a valid entry for protocol for the Mongo connector.")
+      case (_, Some(other))               => sys.error(s"Only MongoDB supports protocols")
+      case (_, None)                      => None
+    }
+
+    val dbPort = protocol match {
+      case Some("mongodb+srv") => 0
+      case _                   => extractInt("port", db)
+    }
 
     databaseConfig(
       name = dbName,
@@ -188,7 +204,9 @@ object ConfigLoader {
       schema = schema,
       managementSchema = mgmtSchema,
       ssl = ssl,
-      rawAccess = rawAccess
+      rawAccess = rawAccess,
+      authSource = authSource,
+      protocol = protocol
     )
   }
 
@@ -206,7 +224,9 @@ object ConfigLoader {
       schema: Option[String],
       managementSchema: Option[String],
       ssl: Option[Boolean],
-      rawAccess: Option[Boolean]
+      rawAccess: Option[Boolean],
+      authSource: Option[String],
+      protocol: Option[String]
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -222,7 +242,9 @@ object ConfigLoader {
       schema = schema,
       managementSchema = managementSchema,
       ssl = ssl.getOrElse(false),
-      rawAccess = rawAccess.getOrElse(false)
+      rawAccess = rawAccess.getOrElse(false),
+      authSource = authSource,
+      protocol = protocol
     )
     validateDatabaseConfig(config)
   }
@@ -316,7 +338,9 @@ case class DatabaseConfig(
     database: Option[String],
     schema: Option[String],
     ssl: Boolean,
-    rawAccess: Boolean
+    rawAccess: Boolean,
+    authSource: Option[String],
+    protocol: Option[String]
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)

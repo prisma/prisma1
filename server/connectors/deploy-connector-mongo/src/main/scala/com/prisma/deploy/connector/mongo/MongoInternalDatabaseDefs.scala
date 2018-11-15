@@ -1,24 +1,23 @@
 package com.prisma.deploy.connector.mongo
 
-import com.mongodb.connection.netty.NettyStreamFactoryFactory
 import com.prisma.config.DatabaseConfig
-import org.mongodb.scala.connection.{ClusterSettings, SslSettings}
-import org.mongodb.scala.{MongoClient, MongoClientSettings, MongoCredential, ServerAddress}
+import org.mongodb.scala.MongoClient
 
 case class MongoInternalDatabaseDefs(dbConfig: DatabaseConfig) {
-  val uri: String = (dbConfig.database, dbConfig.ssl) match {
-    case (None, false) =>
-      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=admin"
-    case (None, true) =>
-      System.setProperty("org.mongodb.async.type", "netty")
+  val authSource = dbConfig.authSource.getOrElse("admin")
 
-      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=admin&ssl=true"
-    case (Some(db), true) =>
-      System.setProperty("org.mongodb.async.type", "netty")
+  val uri: String = dbConfig.protocol match {
+    case Some("mongodb") =>
+      s"mongodb://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}:${dbConfig.port}/?authSource=$authSource&ssl=${dbConfig.ssl}"
 
-      s"mongodb+srv://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}/$db"
-    case (_, _) => sys.error("Database provided, but ssl set to true.")
+    case Some("mongodb+srv") =>
+      s"mongodb+srv://${dbConfig.user}:${dbConfig.password.getOrElse("")}@${dbConfig.host}/$authSource?ssl=${dbConfig.ssl}"
+
+    case _ =>
+      sys.error("Invalid Mongo protocol specified")
   }
+
+  if (dbConfig.ssl) System.setProperty("org.mongodb.async.type", "netty")
 
   println(s"mongoUri: $uri")
 
@@ -29,19 +28,19 @@ case class MongoInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 //
 //  // ...
 //
-//  val user: String          = dbConfig.user // the user name
-//  val source: String        = dbConfig.database.getOrElse("admin") // the source where the user is defined
-//  val password: Array[Char] = dbConfig.password.getOrElse("").toCharArray // the password as a character array
+//  val user: String          = dbdbConfig.user // the user name
+//  val source: String        = dbdbConfig.database.getOrElse("admin") // the source where the user is defined
+//  val password: Array[Char] = dbdbConfig.password.getOrElse("").toCharArray // the password as a character array
 //  // ...
 //  val credential: MongoCredential = createCredential(user, source, password)
 //
-//  val settings: MongoClientSettings = dbConfig.ssl match {
+//  val settings: MongoClientSettings = dbdbConfig.ssl match {
 //    case true =>
 //      System.setProperty("org.mongodb.async.type", "netty")
 //
 //      MongoClientSettings
 //        .builder()
-//        .applyToClusterSettings(b => b.hosts(List(new ServerAddress(dbConfig.host, dbConfig.port)).asJava))
+//        .applyToClusterSettings(b => b.hosts(List(new ServerAddress(dbdbConfig.host, dbdbConfig.port)).asJava))
 //        .credential(credential)
 //        .applyToSslSettings(b => b.enabled(true).build())
 //        .build()
@@ -49,7 +48,7 @@ case class MongoInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 //    case false =>
 //      MongoClientSettings
 //        .builder()
-//        .applyToClusterSettings(b => b.hosts(List(new ServerAddress(dbConfig.host, dbConfig.port)).asJava))
+//        .applyToClusterSettings(b => b.hosts(List(new ServerAddress(dbdbConfig.host, dbdbConfig.port)).asJava))
 //        .credential(credential)
 //        .applyToSslSettings(b => b.enabled(false).build())
 //        .build()

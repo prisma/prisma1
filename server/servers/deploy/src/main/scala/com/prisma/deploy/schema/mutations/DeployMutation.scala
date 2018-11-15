@@ -1,7 +1,8 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{DeployConnector, InferredTables, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.{DeployConnector, InferredTables}
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator

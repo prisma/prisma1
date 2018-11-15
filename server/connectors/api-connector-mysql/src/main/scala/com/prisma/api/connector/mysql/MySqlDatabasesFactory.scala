@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
+import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -13,6 +13,7 @@ object MySqlDatabasesFactory {
     val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
     val masterDb                     = Database.forConfig("database", config, driver = dbDriver)
     val slickDatabase: SlickDatabase = SlickDatabase(MySQLProfile, masterDb)
+
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
