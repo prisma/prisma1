@@ -122,7 +122,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     errors should have(size(1))
     val error = errors.head
     error.`type` should be("Model")
-    error.description should be("Valid values for the argument `link` are: AUTO,INLINE.")
+    error.description should be("Valid values for the argument `link` are: INLINE.")
     error.field should be(Some("model"))
   }
 
