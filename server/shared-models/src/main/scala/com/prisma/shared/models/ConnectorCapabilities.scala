@@ -30,4 +30,8 @@ object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
   // IntrospectionCapability
   // RawAccessCapability
+
+  sealed trait IdCapability extends ConnectorCapability
+  object IntIdCapability    extends IdCapability
+  object UuidIdCapability   extends IdCapability
 }

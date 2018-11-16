@@ -2,9 +2,10 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.shared.models.ApiConnectorCapability.{IntIdCapability, UuidIdCapability}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
-import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
-import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour}
+import com.prisma.shared.models.TypeIdentifier.{IdTypeIdentifier, ScalarTypeIdentifier, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
 import sangria.ast._
 
 object IdDirective extends FieldDirective[IdBehaviour] {
@@ -19,7 +20,7 @@ object IdDirective extends FieldDirective[IdBehaviour] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    val errors = validatePlacement(typeDef, fieldDef) ++ validateFieldType(doc, typeDef, fieldDef)
+    val errors = validatePlacement(typeDef, fieldDef) ++ validateFieldType(doc, typeDef, fieldDef, capabilities)
     errors.toVector
   }
 
@@ -29,14 +30,25 @@ object IdDirective extends FieldDirective[IdBehaviour] {
     }
   }
 
-  def validateFieldType(doc: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
-    // TODO: the valid types are connector dependent
-//    val validTypes = Set(TypeIdentifier.Int, TypeIdentifier.Float, TypeIdentifier.UUID, TypeIdentifier.Cuid)
-    if (fieldDef.typeIdentifier(doc).isInstanceOf[IdTypeIdentifier]) {
-      None
-    } else {
-      Some(DeployError(typeDef, fieldDef, s"The field `${fieldDef.name}` is marked as id and therefore has to have the type `Int!`, `ID!`, or `UUID!`."))
+  def validateFieldType(doc: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+    val supportsUuid   = capabilities.contains(UuidIdCapability)
+    val supportsInt    = capabilities.contains(IntIdCapability)
+    val validTypes     = Set[TypeIdentifier](TypeIdentifier.Cuid) ++ supportsUuid.toOption(TypeIdentifier.UUID) ++ supportsInt.toOption(TypeIdentifier.Int)
+    val hasInvalidType = !validTypes.contains(fieldDef.typeIdentifier(doc))
+    val isNotRequired  = !fieldDef.isRequired
+
+    val requiredError = isNotRequired.toOption(DeployError(typeDef, fieldDef, s"Fields that are marked as id must be required."))
+    val typeError = hasInvalidType.toOption {
+      val validTypesString = validTypes
+        .map {
+          case t if t == TypeIdentifier.Cuid => s"`ID!`"
+          case t                             => s"`${t.code}!`"
+        }
+        .mkString(",")
+      DeployError(typeDef, fieldDef, s"The field `${fieldDef.name}` is marked as id must have one of the following types: $validTypesString.")
     }
+
+    requiredError ++ typeError
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
