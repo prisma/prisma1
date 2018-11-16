@@ -1,4 +1,4 @@
 node_modules
 dist
 
-__tests__/**/*/generatedi_*.graphql
+__tests__/**/*/generated*.graphql

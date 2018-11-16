@@ -92,13 +92,16 @@ export function printDocumentFromInfo(info: GraphQLResolveInfo) {
   return print(doc)
 }
 
+function lowerCaseFirst(str) {
+  return str[0].toLowerCase() + str.slice(1)
+}
+
 export function getExistsTypes(queryType: GraphQLObjectType) {
   const types = getTypesAndWhere(queryType)
   return types
     .map(
       ({ type, where }) =>
-        `  ${type[0].toLowerCase() +
-          type.slice(1)}: (where?: ${where}) => Promise<boolean>`,
+        `  ${lowerCaseFirst(type)}: (where?: ${where}) => Promise<boolean>`,
     )
     .join('\n')
 }
@@ -106,7 +109,10 @@ export function getExistsTypes(queryType: GraphQLObjectType) {
 export function getExistsFlowTypes(queryType: GraphQLObjectType) {
   const types = getTypesAndWhere(queryType)
   return types
-    .map(({ type, where }) => `${type}(where?: ${where}): Promise<boolean>;`)
+    .map(
+      ({ type, where }) =>
+        `${lowerCaseFirst(type)}(where?: ${where}): Promise<boolean>;`,
+    )
     .join('\n')
 }
 

@@ -106,7 +106,10 @@ export default class GenereateCommand extends Command {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
-        const internalTypes = parseInternalTypes(this.definition.typesString!)
+        const internalTypes = parseInternalTypes(
+          this.definition.typesString!,
+          DatabaseType.relational,
+        )
 
         if (generator === 'typescript-client') {
           await this.generateTypescript(
