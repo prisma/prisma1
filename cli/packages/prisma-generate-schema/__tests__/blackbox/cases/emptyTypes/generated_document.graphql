@@ -442,10 +442,11 @@ type OnlyRelationAConnection {
 }
 
 input OnlyRelationACreateInput {
-  ref: OnlyRelationACreateOneWithoutRefInput!
+  ref: OnlyRelationACreateOneInput!
 }
 
-input OnlyRelationACreateOneWithoutRefInput {
+input OnlyRelationACreateOneInput {
+  create: OnlyRelationACreateInput
   connect: OnlyRelationAWhereUniqueInput
 }
 
@@ -481,12 +482,24 @@ input OnlyRelationASubscriptionWhereInput {
   NOT: [OnlyRelationASubscriptionWhereInput!]
 }
 
-input OnlyRelationAUpdateInput {
-  ref: OnlyRelationAUpdateOneRequiredWithoutRefInput
+input OnlyRelationAUpdateDataInput {
+  ref: OnlyRelationAUpdateOneRequiredInput
 }
 
-input OnlyRelationAUpdateOneRequiredWithoutRefInput {
+input OnlyRelationAUpdateInput {
+  ref: OnlyRelationAUpdateOneRequiredInput
+}
+
+input OnlyRelationAUpdateOneRequiredInput {
+  create: OnlyRelationACreateInput
+  update: OnlyRelationAUpdateDataInput
+  upsert: OnlyRelationAUpsertNestedInput
   connect: OnlyRelationAWhereUniqueInput
+}
+
+input OnlyRelationAUpsertNestedInput {
+  update: OnlyRelationAUpdateDataInput!
+  create: OnlyRelationACreateInput!
 }
 
 input OnlyRelationAWhereInput {
@@ -525,10 +538,11 @@ type OnlyRelationBConnection {
 }
 
 input OnlyRelationBCreateInput {
-  ref: OnlyRelationBCreateOneWithoutRefInput
+  ref: OnlyRelationBCreateOneInput
 }
 
-input OnlyRelationBCreateOneWithoutRefInput {
+input OnlyRelationBCreateOneInput {
+  create: OnlyRelationBCreateInput
   connect: OnlyRelationBWhereUniqueInput
 }
 
@@ -564,14 +578,26 @@ input OnlyRelationBSubscriptionWhereInput {
   NOT: [OnlyRelationBSubscriptionWhereInput!]
 }
 
-input OnlyRelationBUpdateInput {
-  ref: OnlyRelationBUpdateOneWithoutRefInput
+input OnlyRelationBUpdateDataInput {
+  ref: OnlyRelationBUpdateOneInput
 }
 
-input OnlyRelationBUpdateOneWithoutRefInput {
+input OnlyRelationBUpdateInput {
+  ref: OnlyRelationBUpdateOneInput
+}
+
+input OnlyRelationBUpdateOneInput {
+  create: OnlyRelationBCreateInput
+  update: OnlyRelationBUpdateDataInput
+  upsert: OnlyRelationBUpsertNestedInput
   delete: Boolean
   disconnect: Boolean
   connect: OnlyRelationBWhereUniqueInput
+}
+
+input OnlyRelationBUpsertNestedInput {
+  update: OnlyRelationBUpdateDataInput!
+  create: OnlyRelationBCreateInput!
 }
 
 input OnlyRelationBWhereInput {

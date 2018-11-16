@@ -21,21 +21,21 @@ export default abstract class Parser {
     return this.parseFromSchema(schema)
   }
 
-
   /**
    * Parses the datamodel from a graphql-js schema.
    * @param schema The graphql-js schema, representing the datamodel.
    * @returns A list of types found in the datamodel.
    */
   public parseFromSchema(schema: any): IGQLType[] {
-    const types = [...this.parseObjectTypes(schema), ...this.parseEnumTypes(schema)]
-    
+    const types = [
+      ...this.parseObjectTypes(schema),
+      ...this.parseEnumTypes(schema),
+    ]
+
     this.resolveRelations(types)
-    
+
     // Sort types alphabetically
-    types.sort(({ name: a }, { name: b }) =>
-      a > b ? 1 : -1,
-    )
+    types.sort(({ name: a }, { name: b }) => (a > b ? 1 : -1))
 
     // That's it.
     // We could check our model here, if we wanted to.
@@ -49,37 +49,33 @@ export default abstract class Parser {
 
   /**
    * Checks if the given field is an ID field
-   * @param field 
+   * @param field
    */
   protected abstract isIdField(field: any): boolean
 
   /**
    * Checks if the given field is read-only.
    * If the field is an ID field, this method is not called and
-   * read-only is assumed. 
-   * @param field 
+   * read-only is assumed.
+   * @param field
    */
   protected abstract isReadOnly(field: any): boolean
 
   /**
    * Finds a directive on a field or type by name.
-   * @param fieldOrType 
-   * @param name 
+   * @param fieldOrType
+   * @param name
    */
   protected getDirectiveByName(fieldOrType: any, name: string): any {
-    const directive = fieldOrType.directives.filter(
-      x => x.name.value === name,
-    )
+    const directive = fieldOrType.directives.filter(x => x.name.value === name)
 
-    return directive.length > 0
-      ? directive[0]
-      : null
+    return directive.length > 0 ? directive[0] : null
   }
 
   /**
    * Checks if a directive on a given field or type ecists
-   * @param fieldOrType 
-   * @param name 
+   * @param fieldOrType
+   * @param name
    */
   protected hasDirective(fieldOrType: any, name: string): boolean {
     return this.getDirectiveByName(fieldOrType, name) != null
@@ -87,7 +83,7 @@ export default abstract class Parser {
 
   /**
    * Checks if the given field is unique.
-   * @param field 
+   * @param field
    */
   protected isUniqe(field: any): boolean {
     return this.hasDirective(field, isUniqueDirectiveKey)
@@ -96,7 +92,7 @@ export default abstract class Parser {
   /**
    * Gets a fields default value. If no default
    * value is given, returns null.
-   * @param field 
+   * @param field
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, defaultValueDirectiveKey)
@@ -106,16 +102,23 @@ export default abstract class Parser {
   /**
    * Gets a fields relation name. If no relation
    * exists, returns null.
-   * @param field 
+   * @param field
    */
   protected getRelationName(field: any): string | null {
     const directive = this.getDirectiveByName(field, relationDirectiveKey)
-    return directive === null ? null : directive.arguments[0].value.value
+    if (directive && directive.arguments) {
+      const nameArgument = directive.arguments.find(
+        a => a.name.value === 'name',
+      )
+      return nameArgument ? nameArgument.value.value : null
+    }
+
+    return null
   }
 
   /**
-   * Parses a model field, respects all 
-   * known directives. 
+   * Parses a model field, respects all
+   * known directives.
    * @param field
    */
   protected parseField(field: any): IGQLField {
@@ -139,23 +142,23 @@ export default abstract class Parser {
       isRequired: kind === 'NonNullType',
       relatedField: null,
       isId,
-      isReadOnly
+      isReadOnly,
     }
   }
 
   /**
    * Checks if the given type is an embedded type.
-   * @param type 
+   * @param type
    */
-  protected abstract isEmbedded(type: any): boolean 
-//  public isEmbedded(type: any): boolean {
-//    return type.directives &&
-//      type.directives.length > 0 &&
-//      type.directives.some(d => d.name.value === 'embedded')
-//  }
+  protected abstract isEmbedded(type: any): boolean
+  //  public isEmbedded(type: any): boolean {
+  //    return type.directives &&
+  //      type.directives.length > 0 &&
+  //      type.directives.some(d => d.name.value === 'embedded')
+  //  }
 
   /**
-   * Parases an object type. 
+   * Parases an object type.
    * @param type
    */
   protected parseObjectType(type: any): IGQLType {
@@ -186,7 +189,7 @@ export default abstract class Parser {
 
     for (const type of schema.definitions) {
       if (type.kind === 'ObjectTypeDefinition') {
-        objectTypes.push(this.parseObjectType(type))   
+        objectTypes.push(this.parseObjectType(type))
       }
     }
 
@@ -195,7 +198,7 @@ export default abstract class Parser {
 
   /**
    * Parses all enum types in the schema.
-   * @param schema 
+   * @param schema
    */
   protected parseEnumTypes(schema: any): IGQLType[] {
     const enumTypes: IGQLType[] = []
@@ -226,7 +229,7 @@ export default abstract class Parser {
   /**
    * Resolves and connects all realtion fields found
    * in the given type list.
-   * @param types 
+   * @param types
    */
   protected resolveRelations(types: IGQLType[]) {
     // Find all types that we know,
@@ -254,7 +257,9 @@ export default abstract class Parser {
           for (const fieldB of fieldA.type.fields) {
             if (fieldB.relationName === fieldA.relationName) {
               if (fieldB.type !== typeA) {
-                throw new Error('Relation type mismatch.')
+                throw new Error(
+                  `Relation type mismatch for relation ${fieldA.relationName}`,
+                )
               }
               fieldA.relatedField = fieldB
               fieldB.relatedField = fieldA
@@ -267,7 +272,7 @@ export default abstract class Parser {
 
     // Connect  obvious relations which are lacking the relatioName directive.
     // We explicitely DO NOT ignore fields with a given relationName, in accordance
-   // to the prisma implementation.
+    // to the prisma implementation.
     for (const typeA of types) {
       searchThroughAFields: for (const fieldA of typeA.fields) {
         if (typeof fieldA.type === 'string') {
@@ -342,7 +347,7 @@ export default abstract class Parser {
     }
 
     // When we reach the end, return whatever we have stored.
-   if (type.type) {
+    if (type.type) {
       return this.parseKind(type.type, acc)
     } else {
       return acc

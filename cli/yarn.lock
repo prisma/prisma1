@@ -5779,16 +5779,6 @@ prisma-client-lib@1.21.0-test.8:
     ws "^6.1.0"
     zen-observable "^0.8.10"
 
-prisma-generate-schema@^1.20.6:
-  version "1.20.7"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.20.7.tgz#f93b45cbf8845786b46e32c12216491841addb1f"
-  integrity sha512-BOKqENHrw+AMeevkgSTWB8inYvsNRgJpGWFZxAN2sQg+5srPUQtZjGX1GMs0oL7SMUwxB3O9OSDIyzuBiu6TSA==
-  dependencies:
-    graphql "^14.0.2"
-    node-fetch "^2.2.1"
-    pluralize "^7.0.0"
-    popsicle "10"
-
 prisma-json-schema@0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.1.3.tgz#6c302db8f464f8b92e8694d3f7dd3f41ac9afcbe"

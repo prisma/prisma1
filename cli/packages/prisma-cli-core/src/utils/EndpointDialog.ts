@@ -465,7 +465,7 @@ export class EndpointDialog {
       key: 'password',
     })
     const database =
-      type === 'postgres'
+      type === 'postgres' || type === 'mongo'
         ? await this.ask({
             message: alreadyData
               ? `Enter name of existing database`
