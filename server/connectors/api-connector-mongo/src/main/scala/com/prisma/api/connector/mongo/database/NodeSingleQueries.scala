@@ -1,9 +1,10 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
-import com.prisma.gc_values.{StringIdGCValue, IdGCValue, ListGCValue}
+import com.prisma.gc_values.{IdGCValue, ListGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Project, RelationField}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections._
@@ -17,7 +18,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
   def getModelForGlobalId(project: Project, globalId: StringIdGCValue) = SimpleMongoAction { database =>
     val outer = project.models.map { model =>
-      database.getCollection(model.dbName).find(Filters.eq("_id", globalId.value)).collect().toFuture.map { results: Seq[Document] =>
+      database.getCollection(model.dbName).find(Filters.eq("_id", GCToBson(globalId))).collect().toFuture.map { results: Seq[Document] =>
         if (results.nonEmpty) Vector(model) else Vector.empty
       }
     }
@@ -112,7 +113,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
   }
 
   def generateFilterForFieldAndId(relationField: RelationField, id: IdGCValue) = relationField.isList match {
-    case true  => ScalarFilter(relationField.model.dummyField(name = relationField.dbName, true), Contains(id))
+    case true  => ScalarListFilter(relationField.model.dummyField(name = relationField.dbName, true), ListContains(id))
     case false => ScalarFilter(relationField.model.dummyField(name = relationField.dbName, false), Equals(id))
   }
 

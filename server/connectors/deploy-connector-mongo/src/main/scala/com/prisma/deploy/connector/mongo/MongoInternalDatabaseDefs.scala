@@ -19,8 +19,6 @@ case class MongoInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   if (dbConfig.ssl) System.setProperty("org.mongodb.async.type", "netty")
 
-  println(s"mongoUri: $uri")
-
   val client = MongoClient(uri)
 
 //  import com.mongodb.MongoCredential._
