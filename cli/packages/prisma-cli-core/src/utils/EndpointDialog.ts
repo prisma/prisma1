@@ -5,6 +5,7 @@ import { Cluster, Environment, PrismaDefinitionClass } from 'prisma-yml'
 import {
   concatName,
   defaultDataModel,
+  defaultMongoDataModel,
   defaultDockerCompose,
   prettyTime,
 } from '../util'
@@ -398,6 +399,10 @@ export class EndpointDialog {
       : undefined
 
     workspace = workspace || cluster.workspaceSlug
+
+    if (credentials && credentials.type === 'mongo') {
+      datamodel = defaultMongoDataModel
+    }
 
     return {
       endpoint: cluster.getApiEndpoint(service, stage, workspace),
