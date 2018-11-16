@@ -197,8 +197,8 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   "full scalar list" should "return full list for GraphQLIds" in {
 
     val fieldName   = "graphqlids"
-    val inputValue  = """"someID123""""
-    val outputValue = """"someID123""""
+    val inputValue  = """"5beea4aa6183dd734b2dbd9b""""
+    val outputValue = """"5beea4aa6183dd734b2dbd9b""""
 
     val project = SchemaDsl.fromString() {
       s"""type Model{

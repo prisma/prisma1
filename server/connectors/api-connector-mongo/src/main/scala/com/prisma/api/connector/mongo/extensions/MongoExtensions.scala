@@ -3,6 +3,7 @@ package com.prisma.api.connector.mongo.extensions
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
+import com.prisma.api.schema.APIErrors.MongoInvalidObjectId
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -25,13 +26,19 @@ object GCBisonTransformer {
       case FloatGCValue(v)    => BsonDouble(v)
       case JsonGCValue(v)     => BsonString(v.toString())
       case EnumGCValue(v)     => BsonString(v)
-      case StringIdGCValue(v) => BsonObjectId(v)
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
       case BooleanGCValue(v)  => BsonBoolean(v)
       case ListGCValue(list)  => BsonArray(list.map(x => GCToBson(x)))
       case NullGCValue        => null
-      case _: RootGCValue     => sys.error("not implemented")
+      case StringIdGCValue(v) =>
+        try {
+          BsonObjectId(v)
+        } catch {
+          case e: java.lang.IllegalArgumentException => throw MongoInvalidObjectId(v)
+        }
+
+      case _: RootGCValue => sys.error("not implemented")
     }
   }
 }
