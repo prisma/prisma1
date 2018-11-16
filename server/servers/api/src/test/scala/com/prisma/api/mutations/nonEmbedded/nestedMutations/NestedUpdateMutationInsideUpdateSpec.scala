@@ -425,7 +425,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |      text: "Some Changed Text"
          |      todoes: {
          |        update: {
-         |          where: {id: "DOES NOT EXIST"},
+         |          where: {id: "5beea4aa6183dd734b2dbd9b"},
          |          data:{title: "updated title"}
          |        }
          |      }
@@ -437,7 +437,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """.stripMargin,
       project,
       errorCode = 3039,
-      errorContains = "No Node for the model Todo with value DOES NOT EXIST for id found."
+      errorContains = "No Node for the model Todo with value 5beea4aa6183dd734b2dbd9b for id found."
     )
   }
 

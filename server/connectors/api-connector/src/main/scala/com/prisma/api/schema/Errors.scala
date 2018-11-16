@@ -118,6 +118,12 @@ object APIErrors {
         3043
       )
 
+  case class MongoInvalidObjectId(id: String)
+      extends ClientApiError(
+        s"You provided an ID that was not a valid MongoObjectId: $id",
+        3044
+      )
+
   case class ExecuteRawError(e: SQLException) extends ClientApiError(e.getMessage, e.getErrorCode)
 
   def pathErrorMessage(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector]) = {

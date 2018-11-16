@@ -22,7 +22,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val result = server.query(
       s"""{
-         |  node(id: "non-existent-id"){
+         |  node(id: "5bedb10fe11dc97034b2390c"){
          |    id
          |    ... on Todo {
          |      title

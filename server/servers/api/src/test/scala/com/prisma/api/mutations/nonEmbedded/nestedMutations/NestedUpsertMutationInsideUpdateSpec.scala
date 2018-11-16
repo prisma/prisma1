@@ -372,7 +372,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |      comments: {
          |        upsert: [
          |          {where: {id: "$comment1Id"}, update: {text: "update comment1"}, create: {text: "irrelevant"}},
-         |          {where: {id: "non-existent-id"}, update: {text: "irrelevant"}, create: {text: "new comment3"}},
+         |          {where: {id: "5beea4aa6183dd734b2dbd9b"}, update: {text: "irrelevant"}, create: {text: "new comment3"}},
          |        ]
          |      }
          |    }
@@ -511,7 +511,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    data:{
          |      comments: {
          |        upsert: [
-         |          {where: {id: "NotExistant"}, update: {text: "update comment1"}, create: {text: "irrelevant", uniqueComment: "comments"}},
+         |          {where: {id: "5beea4aa6183dd734b2dbd9b"}, update: {text: "update comment1"}, create: {text: "irrelevant", uniqueComment: "comments"}},
          |        ]
          |      }
          |    }
@@ -608,7 +608,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |                    create: { name: "irrelevant" }
          |                  },
          |                  {
-         |                    where: { id: "non-existent-id" }
+         |                    where: { id: "5beea4aa6183dd734b2dbd9b" }
          |                    update: { name: "irrelevant" }
          |                    create: { name: "new tag" }
          |                  },
@@ -704,7 +704,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |      todos: {
          |        upsert: [
          |          {
-         |            where: { id: "Does not Exist" }
+         |            where: { id: "5beea4aa6183dd734b2dbd9b" }
          |            create: { title: "new todo" tags: { create: [ {name: "the tag"}]}}
          |            update: { title: "updated todo"}
          |          }

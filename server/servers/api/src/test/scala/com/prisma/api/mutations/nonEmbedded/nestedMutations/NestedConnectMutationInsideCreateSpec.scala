@@ -850,7 +850,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
          |mutation {
          |  createTodo(data:{
          |    comments: {
-         |      connect: [{id: "DoesNotExist"}]
+         |      connect: [{id: "5beea4aa6183dd734b2dbd9b"}]
          |    }
          |  }){
          |    id
@@ -863,7 +863,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3039,
-      errorContains = "No Node for the model Comment with value DoesNotExist for id found."
+      errorContains = "No Node for the model Comment with value 5beea4aa6183dd734b2dbd9b for id found."
     )
   }
 
@@ -890,7 +890,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
          |  createComment(data:{
          |    text: "bla"
          |    todo: {
-         |      connect: {id: "DoesNotExist"}
+         |      connect: {id: "5beea4aa6183dd734b2dbd9b"}
          |    }
          |  }){
          |    id
@@ -899,7 +899,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3039,
-      errorContains = "No Node for the model Todo with value DoesNotExist for id found."
+      errorContains = "No Node for the model Todo with value 5beea4aa6183dd734b2dbd9b for id found."
     )
   }
 

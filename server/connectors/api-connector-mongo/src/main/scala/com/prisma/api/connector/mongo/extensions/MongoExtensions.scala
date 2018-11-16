@@ -3,13 +3,14 @@ package com.prisma.api.connector.mongo.extensions
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
+import com.prisma.api.schema.APIErrors.MongoInvalidObjectId
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonString, BsonTransformer, BsonValue}
+import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonObjectId, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Filters.notEqual
 import play.api.libs.json.Json
@@ -25,13 +26,19 @@ object GCBisonTransformer {
       case FloatGCValue(v)    => BsonDouble(v)
       case JsonGCValue(v)     => BsonString(v.toString())
       case EnumGCValue(v)     => BsonString(v)
-      case StringIdGCValue(v) => BsonString(v)
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
       case BooleanGCValue(v)  => BsonBoolean(v)
       case ListGCValue(list)  => BsonArray(list.map(x => GCToBson(x)))
       case NullGCValue        => null
-      case _: RootGCValue     => sys.error("not implemented")
+      case StringIdGCValue(v) =>
+        try {
+          BsonObjectId(v)
+        } catch {
+          case e: java.lang.IllegalArgumentException => throw MongoInvalidObjectId(v)
+        }
+
+      case _: RootGCValue => sys.error("not implemented")
     }
   }
 }
@@ -46,7 +53,7 @@ object NodeSelectorBsonTransformer {
 }
 
 object DocumentToId {
-  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asString.getValue)
+  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asObjectId().getValue.toString)
 }
 
 object BisonToGC {
@@ -75,7 +82,7 @@ object BisonToGC {
     case (TypeIdentifier.Int, value: BsonInt32)         => IntGCValue(value.getValue)
     case (TypeIdentifier.Float, value: BsonDouble)      => FloatGCValue(value.getValue)
     case (TypeIdentifier.Enum, value: BsonString)       => EnumGCValue(value.getValue)
-    case (TypeIdentifier.Cuid, value: BsonString)       => StringIdGCValue(value.getValue)
+    case (TypeIdentifier.Cuid, value: BsonObjectId)     => StringIdGCValue(value.getValue.toString)
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
