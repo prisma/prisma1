@@ -561,6 +561,7 @@ PRISMA_CONFIG: |
       password: prisma
       authSource: admin
       database: mydb
+      protocol: mongodb
       rawAccess: false
       ssl: false
 ```
@@ -574,5 +575,7 @@ Here is an overview of the available properties:
   - When starting with a **new database**, Prisma will create this user.
   - When starting with an **existing database**, Prisma looks up the user with these credentials in the `authSource` database (see next property).
 - `authSource`: The  MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored. (Default: `admin`).
-- `database`: The MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) you want to connect to. This property is only required if you want to connect to an existing database.
+- `protocol`: Specifies whether you want to use the [standard connection format](https://docs.mongodb.com/manual/reference/connection-string/#standard-connection-string-formats)  (`mongodb`) or the [DNS Seedlist Connection Format](https://docs.mongodb.com/manual/reference/connection-string/#dns-seedlist-connection-format) (`mongodb+srv`). (Default: `mongodb`).
+- `database`: The MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) you want to connect to. This property is only required if you want to connect to an **existing database**, otherwise it can be omitted.
 - `rawAccess`: Specifies whether the `executeRaw` mutation will be enabled in the Prisma API. The MongoDB connector currently doesn't support raw access, so you need to set this to `false` or omit it.
+- `ssl`: A boolean that specifies whether the connection to the MongoDB should use [SSL](https://docs.mongodb.com/manual/reference/connection-string/#urioption.ssl). (Default: `false`) 
