@@ -5,12 +5,12 @@ import com.prisma.deploy.migration.DataSchemaAstExtensions._
 trait SharedDirectiveValidation {
   def validateStringValue(value: sangria.ast.Value): Option[String] = {
     value match {
-      case v: sangria.ast.StringValue => None
+      case _: sangria.ast.StringValue => None
       case _                          => Some("This argument must be a String.")
     }
   }
 
-  def validateEnumValue(argument: String)(validValues: Vector[String])(value: sangria.ast.Value): Option[String] = {
+  def validateEnumValue(argument: String, validValues: Vector[String])(value: sangria.ast.Value): Option[String] = {
     if (validValues.contains(value.asString)) {
       None
     } else {

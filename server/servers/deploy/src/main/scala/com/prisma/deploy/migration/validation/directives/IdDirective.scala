@@ -4,25 +4,13 @@ import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
-import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
-import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
+import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour}
+import sangria.ast._
 
 object IdDirective extends FieldDirective[IdBehaviour] {
-  val autoValue           = "AUTO"
-  val noneValue           = "NONE"
-  val validStrategyValues = Set(autoValue, noneValue)
-
   override def name                                                 = "id"
   override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(ArgumentRequirement("strategy", isStrategyValueValid))
-
-  private def isStrategyValueValid(value: sangria.ast.Value): Option[String] = {
-    if (validStrategyValues.contains(value.asString)) {
-      None
-    } else {
-      Some(s"Valid values for the strategy argument of `@$name` are: ${validStrategyValues.mkString(", ")}.")
-    }
-  }
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(IdStrategyArgument)
 
   override def validate(
       doc: Document,
@@ -42,7 +30,7 @@ object IdDirective extends FieldDirective[IdBehaviour] {
   }
 
   def validateFieldType(doc: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
-    // TODO: the valid types are connector dependenct
+    // TODO: the valid types are connector dependent
 //    val validTypes = Set(TypeIdentifier.Int, TypeIdentifier.Float, TypeIdentifier.UUID, TypeIdentifier.Cuid)
     if (fieldDef.typeIdentifier(doc).isInstanceOf[IdTypeIdentifier]) {
       None
@@ -53,11 +41,34 @@ object IdDirective extends FieldDirective[IdBehaviour] {
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
     fieldDef.directive(name).map { directive =>
-      directive.argumentValueAsString("strategy").getOrElse(autoValue) match {
-        case `autoValue` => IdBehaviour(FieldBehaviour.IdStrategy.Auto)
-        case `noneValue` => IdBehaviour(FieldBehaviour.IdStrategy.None)
-        case x           => sys.error(s"Encountered unknown strategy $x")
-      }
+      val strategy = IdStrategyArgument.value(directive).getOrElse(FieldBehaviour.IdStrategy.Auto)
+      IdBehaviour(strategy)
+    }
+  }
+}
+
+object IdStrategyArgument extends DirectiveArgument[FieldBehaviour.IdStrategy] {
+  val autoValue           = "AUTO"
+  val noneValue           = "NONE"
+  val validStrategyValues = Set(autoValue, noneValue)
+
+  override def name = "strategy"
+
+  override def validate(value: Value) = isStrategyValueValid(value)
+
+  override def value(value: Value) = {
+    value.asString match {
+      case `autoValue` => FieldBehaviour.IdStrategy.Auto
+      case `noneValue` => FieldBehaviour.IdStrategy.None
+      case x           => sys.error(s"Encountered unknown strategy $x")
+    }
+  }
+
+  private def isStrategyValueValid(value: sangria.ast.Value): Option[String] = {
+    if (validStrategyValues.contains(value.asString)) {
+      None
+    } else {
+      Some(s"Valid values for the strategy argument of `@id` are: ${validStrategyValues.mkString(", ")}.")
     }
   }
 }
