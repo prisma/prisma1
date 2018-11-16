@@ -254,13 +254,20 @@ Join the discussion or contribute to influence which we'll work on next!
 
 Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
+### Channels
+
 - [Forum](https://www.prisma.io/forum)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
 - [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Europe](https://www.graphql-europe.org/)
+- [GraphQL Conf](https://www.graphqlconf.org/)
 - [Email](mailto:hello@prisma.io)
+
+### Resources
+
+- [Chinese translation of the Prisma docs](https://prisma.1wire.com/) (Thanks to [Victor Kang](https://github.com/Victorkangsh))
+- [Awesome Prisma](https://github.com/catalinmiron/awesome-prisma) (Thanks to [Catalin Miron](https://github.com/catalinmiron))
 
 ## Contributing
 

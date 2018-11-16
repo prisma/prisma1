@@ -1,0 +1,13 @@
+type Query {
+  user: User
+}
+
+type User {
+  id: ID!
+  name: String!
+  address: Address
+}
+
+type Address {
+  location: String
+}
