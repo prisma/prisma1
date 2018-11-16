@@ -15,7 +15,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
   override def optionalArgs(capabilities: Set[ConnectorCapability]) = {
-    val validLinkModes = Vector("AUTO", "INLINE") ++ capabilities.contains(RelationLinkTableCapability).toOption("TABLE")
+    val validLinkModes = Vector("INLINE") ++ capabilities.contains(RelationLinkTableCapability).toOption("TABLE")
     Vector(
       ArgumentRequirement("name", validateStringValue),
       ArgumentRequirement("onDelete", validateEnumValue("onDelete")(Vector("CASCADE", "SET_NULL"))),
