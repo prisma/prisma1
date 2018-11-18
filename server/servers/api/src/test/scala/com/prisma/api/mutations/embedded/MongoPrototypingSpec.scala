@@ -1788,4 +1788,33 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
+  "Connecting several times" should "not error and only connect the item once" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  authors: [AUser!]!
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  posts: [Post!]! @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val createPost = server.query(s""" mutation {createPost(data: {title:"Title"}) {title}} """, project)
+    val createUser = server.query(s""" mutation {createAUser(data: {name:"Author"}) {name}} """, project)
+
+    val result1 = server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+    val result2 = server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+    val result3 = server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
+  }
+
 }
