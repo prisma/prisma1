@@ -88,7 +88,8 @@ object DataSchemaAstExtensions {
 
     def isRelationTable: Boolean = objectType.hasDirective("linkTable")
 
-    def relationFields(doc: Document): Vector[FieldDefinition] = objectType.fields.filter(_.isRelationField(doc))
+    def relationFields(doc: Document): Vector[FieldDefinition]   = objectType.fields.filter(_.isRelationField(doc))
+    def scalarListFields(doc: Document): Vector[FieldDefinition] = objectType.fields.filter(_.isList)
   }
 
   implicit class CoolField(val fieldDefinition: FieldDefinition) extends AnyVal {
@@ -125,6 +126,11 @@ object DataSchemaAstExtensions {
       case _                               => false
     }
 
+    def isValidListType: Boolean = fieldDefinition.fieldType match {
+      case ListType(NamedType(_, _), _) => true
+      case _                            => false
+    }
+
     def isValidRelationType: Boolean = fieldDefinition.fieldType match {
       case NamedType(_, _)                                              => true
       case NotNullType(NamedType(_, _), _)                              => true
@@ -139,6 +145,8 @@ object DataSchemaAstExtensions {
       case NotNullType(ListType(NotNullType(NamedType(_, _), _), _), _) => true
       case _                                                            => false
     }
+
+    def isValidScalarListTypeNew: Boolean = hasScalarType && isValidListType
 
     def isValidScalarNonListType: Boolean = fieldDefinition.fieldType match {
       case NamedType(_, _)                 => true

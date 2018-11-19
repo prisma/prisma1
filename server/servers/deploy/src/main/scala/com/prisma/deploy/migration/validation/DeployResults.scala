@@ -220,6 +220,15 @@ object DeployErrors {
     ) //todo
   }
 
+  def invalidListType(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+    val typename = fieldDef.fieldType.namedType.name
+    error(
+      typeDef,
+      fieldDef,
+      s"The field `${fieldDef.name}` has an invalid format. List fields must have the format `[$typename]`."
+    )
+  }
+
   def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
   def invalidScalarListOrNonListType(fieldAndType: FieldAndType) = invalidScalarType(fieldAndType, listTypesAllowed = true)
 

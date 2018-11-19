@@ -293,7 +293,8 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields)
+      tryValidation(validateDuplicateFields),
+      tryValidation(validateListFields)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -335,6 +336,12 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       if fieldNames.count(_.equals(field.name.toLowerCase)) > 1
     } yield {
       DeployErrors.duplicateFieldName(FieldAndType(objectType, field))
+    }
+  }
+
+  def validateListFields: Seq[DeployError] = {
+    objectType.scalarListFields(doc).collect {
+      case fieldDef if !fieldDef.isValidListType => DeployErrors.invalidListType(objectType, fieldDef)
     }
   }
 

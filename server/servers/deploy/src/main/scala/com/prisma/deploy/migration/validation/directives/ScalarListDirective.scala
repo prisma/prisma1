@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
-import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.deploy.migration.validation.{DeployError, DeployErrors}
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListStrategy}
 import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour}
@@ -19,10 +19,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    val invalidTypeError = (!fieldDef.isValidScalarListType).toOption {
-      DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`.")
-    }
-    invalidTypeError.toVector
+    Vector.empty
   }
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
@@ -39,7 +36,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
           sys.error("should not happen")
         }
     }
-    fieldDef.isValidScalarListType.toOption {
+    fieldDef.isValidScalarListTypeNew.toOption {
       behaviour
     }
   }
