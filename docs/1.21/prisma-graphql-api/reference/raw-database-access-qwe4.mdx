@@ -3,8 +3,9 @@ export const meta = {
   position: 70,
 }
 
-# Overview
-You can access the native API of the underlying database and perform complex operations.
+## Overview
+
+You can access the native API of the underlying database and perform custom operations directly against it.
 
 ### Datamodel for examples on this page
 
@@ -28,7 +29,7 @@ To enable raw database access, add `rawAccess` to your `docker-compose.yml` file
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.21
+    image: prismagraphql/prisma:1.20
     restart: always
     ports:
     - "4466:4466"

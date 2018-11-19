@@ -216,6 +216,22 @@ Once you're sure the Prisma server is running, you can deploy the Prisma service
 prisma deploy
 ```
 
+Note that with Prisma creates a new MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) for each combination of service _name_ and _stage_. Consider the following examples:
+
+- Deploy to endpoint: `http://localhost:4466/hello-mongo/dev`
+  - Service name: `hello-mongo`
+  - Stage: `dev`
+  - Result: Prisma creates a database called `hello-mongo_dev`
+- Deploy to endpoint: `http://localhost:4466/hello-mongo/prod`
+  - Service name: `hello-mongo`
+  - Stage: `prod`
+  - Result: Prisma creates a database called `hello-mongo_prod`
+- Deploy to endpoint: `http://localhost:4466` (which is equivalent to `http://localhost:4466/default/default`)
+  - Service name: `default`
+  - Stage: `default`
+  - Result: Prisma creates a database called  `default_default`
+
+
 ### 2. Use the Prisma client to read and write data
 
 You can now play around with the generated Prisma client. Run the following commands to initialize a simple Node app:
@@ -291,14 +307,14 @@ prisma generate
 
 ## Get started with an existing database
 
-MongoDB is a _schemaless_ database, which means it is _possible_ to insert data of various structures into it. MongoDB will never complain because some piece of inserted data doesn't adhere to some predefined format. This is different from relational databases where data that's inserted needs to adhere to the predefined [database schema](https://en.wikipedia.org/wiki/Database_schema).
+MongoDB is a _schemaless_ database, which means it is _possible_ to insert data of various structures into it. MongoDB never complains because a piece of inserted data doesn't adhere to some predefined format. This is different from relational databases where data that's inserted needs to adhere to the predefined [database schema](https://en.wikipedia.org/wiki/Database_schema).
 
-This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Prisma [datamodel](knul)) on top of MongoDB. 
+This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Prisma [datamodel](knul)) on top of MongoDB.
 
 Throughout your use of MongoDB with Prisma, when you're writing to the underlying MongoDB ...
 
 - ... **only through the Prisma API**, it is guaranteed that the data that's stored in the database always adheres to the schema.
-- ... **directly**, it can not be guaranteed that the data that's stored in the database always adheres to the schema. In that case, you are responsible to ensure that the data that's written adheres to the schema.
+- ... **directly** (e.g. using the [Mongo shell](https://docs.mongodb.com/manual/mongo/)), it can not be guaranteed that the data that's stored in the database always adheres to the schema. In that case, you are responsible to ensure that the data that's written adheres to the schema.
 
 **Therefore, when starting out with an existing MongoDB, it is extremely important that the legacy data is consistent and that it can be modeled accurately as a Prisma datamodel.**
 
@@ -306,12 +322,13 @@ Throughout your use of MongoDB with Prisma, when you're writing to the underlyin
 
 When starting with an existing database, ensure you have the following information handy:
 
-- The **IP of the host machine** that's running the MongoDB server `mongod`, e.g. `localhost`.
-- The **port** where `mongod` is running on the host machine.
-- The **credentials** for a MongoDB [admin user](https://docs.mongodb.com/manual/tutorial/enable-authentication/#user-administrator).
-- The name of the **MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored**. (Default: `admin`).
+- Your [MongoDB connection string](https://docs.mongodb.com/manual/reference/connection-string/) which includes:
+  - The **IP of the host machine** that's running the MongoDB server `mongod`, e.g. `localhost`.
+  - The **port** where `mongod` is running on the host machine.
+  - The **credentials** for a MongoDB [admin user](https://docs.mongodb.com/manual/tutorial/enable-authentication/#user-administrator).
+  - The name of the **MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored**. (Default: `admin`).
+  - Whether the MongoDB is configured to use **SSL** or not.
 - The name of the **MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) that you want to use with Prisma**.
-- Whether the MongoDB is configured to use **SSL** or not.
 
 Create a new directory for your Prisma service and add a Docker Compose file to it:
 
@@ -337,17 +354,11 @@ services:
         databases:
           default:
             connector: mongo
-            host: __MONGO_DB_HOST__
-            port: __MONGO_DB_PORT__
-            user: __MONGO_DB_ADMIN_USERNAME__
-            password: __MONGO_DB_ADMIN_PASSWORD__
-            authSource: __MONGO_DB_ADMIN_DATABASE_NAME__
+            uri: __MONGO_DB_CONNECTION_STRING__
             database: __MONGO_DB_DATABASE_NAME__
-            rawAccess: false
-            ssl: __USE_SSL__
 ```
 
-Replace the seven placeholders that are written in uppercase letters with the appropriate values, e.g.:
+Replace both placeholders that are written in uppercase letters with the appropriate values, e.g.:
 
 ```yml
 version: '3'
@@ -363,16 +374,11 @@ services:
         databases:
           default:
             connector: mongo
-            host: host.docker.internal
-            port: 27017
-            user: myAdminUser
-            password: abc123
-            authSource: admin
+            uri: mongodb://myAdminUser:abc123@host.docker.internal:27017/admin
             database: mydb
-            rawAccess: false
 ```
 
-> If you're running MongoDB on your local machine (without Docker but just by starting it manually using `mongod`), you need to set the `host` to `host.docker.internal` instead of `localhost`/`127.0.0.1`.
+> If you're running MongoDB on your local machine (without Docker but just by starting it manually using `mongod`), you need to set the [`host1`](https://docs.mongodb.com/manual/reference/connection-string/#standard-connection-string-format) part of the connection string to `host.docker.internal` instead of `localhost` or `127.0.0.1`.
 
 Once you're done, launch the Prisma server with the following command:
 
@@ -555,27 +561,21 @@ PRISMA_CONFIG: |
   databases:
     default:
       connector: mongo
-      host: localhost
-      port: 27017
-      user: prisma
-      password: prisma
-      authSource: admin
+      uri: mongodb://myAdminUser:abc123@host.docker.internal:27017/admin
       database: mydb
-      protocol: mongodb
-      rawAccess: false
-      ssl: false
 ```
 
 Here is an overview of the available properties:
 
 - `connector`: Specifies which database connector the Prisma server should use. Use `mongo` for MongoDB.
-- `host`: The IP of the host machine that's running the MongoDB server `mongod`, e.g. `localhost`.
-- `port`: The port where `mongod` is running on the host machine. ([Default](https://docs.mongodb.com/manual/reference/default-mongodb-port/): `27017`).
-- `user` & `password`: The credentials for a MongoDB [admin user](https://docs.mongodb.com/manual/tutorial/enable-authentication/#user-administrator).
-  - When starting with a **new database**, Prisma will create this user.
-  - When starting with an **existing database**, Prisma looks up the user with these credentials in the `authSource` database (see next property).
-- `authSource`: The  MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored. (Default: `admin`).
-- `protocol`: Specifies whether you want to use the [standard connection format](https://docs.mongodb.com/manual/reference/connection-string/#standard-connection-string-formats)  (`mongodb`) or the [DNS Seedlist Connection Format](https://docs.mongodb.com/manual/reference/connection-string/#dns-seedlist-connection-format) (`mongodb+srv`). (Default: `mongodb`).
+- `uri`: Your MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string), i.e. the URL that can connect to your MongoDB server. Here's an overview of the information it needs to contain:
+  - The IP/hostname of the host machine that's running the MongoDB server `mongod`, e.g. `localhost` (or `host.docker.internal` if you're running MongDB via Docker).
+  - The port where `mongod` is running on the host machine. ([Default](https://docs.mongodb.com/manual/reference/default-mongodb-port/): `27017`).
+  - The credentials for a MongoDB [admin user](https://docs.mongodb.com/manual/tutorial/enable-authentication/#user-administrator).
+    - When starting with a **new database**, Prisma will create this user.
+    - When starting with an **existing database**, Prisma looks up the user with these credentials in the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database (see next property).
+  - The ["authentication source"](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options), i.e.  MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) where the admin user is stored. (Default: `admin`).
+  - The connection protocol which specifies whether you want to use the [standard connection format](https://docs.mongodb.com/manual/reference/connection-string/#standard-connection-string-formats)  (`mongodb`) or the [DNS Seedlist Connection Format](https://docs.mongodb.com/manual/reference/connection-string/#dns-seedlist-connection-format) (`mongodb+srv`).
+  - A boolean that specifies whether the connection to the MongoDB should use [SSL](https://docs.mongodb.com/manual/reference/connection-string/#urioption.ssl). (Default depends on the connection protocol. Default for `mongodb+rsv`: `true`. Default for `mongodb`: `false`).
 - `database`: The MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases) you want to connect to. This property is only required if you want to connect to an **existing database**, otherwise it can be omitted.
-- `rawAccess`: Specifies whether the `executeRaw` mutation will be enabled in the Prisma API. The MongoDB connector currently doesn't support raw access, so you need to set this to `false` or omit it.
-- `ssl`: A boolean that specifies whether the connection to the MongoDB should use [SSL](https://docs.mongodb.com/manual/reference/connection-string/#urioption.ssl). (Default: `false`) 
+- `rawAccess`: Specifies whether the [`executeRaw`](qwe4) mutation will be enabled in the Prisma API. The MongoDB connector currently doesn't support raw access, so you need to set this to `false` or omit it.
