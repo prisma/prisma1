@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.impl.{MongoDataResolver, MongoDatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
-import com.prisma.shared.models.ApiConnectorCapability._
+import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}

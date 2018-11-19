@@ -4,7 +4,7 @@ import enumeratum.{EnumEntry, Enum => Enumeratum}
 
 sealed trait ConnectorCapability extends EnumEntry
 
-object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
+object ConnectorCapability extends Enumeratum[ConnectorCapability] {
   val values = findValues
 
   sealed trait ScalarListsCapability     extends ConnectorCapability

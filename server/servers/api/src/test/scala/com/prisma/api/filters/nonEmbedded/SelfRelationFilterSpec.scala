@@ -1,7 +1,7 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationLinksCapability, SupportsExistingDatabasesCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, SupportsExistingDatabasesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 

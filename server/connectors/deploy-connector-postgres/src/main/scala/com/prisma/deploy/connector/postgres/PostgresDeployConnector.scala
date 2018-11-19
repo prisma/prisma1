@@ -6,7 +6,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeplo
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.deploy.connector.postgres.database._
-import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability, _}
+import com.prisma.shared.models.ConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability, _}
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read

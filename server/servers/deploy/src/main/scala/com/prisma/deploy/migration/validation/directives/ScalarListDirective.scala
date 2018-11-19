@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListStrategy}
 import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour}
 import sangria.ast._

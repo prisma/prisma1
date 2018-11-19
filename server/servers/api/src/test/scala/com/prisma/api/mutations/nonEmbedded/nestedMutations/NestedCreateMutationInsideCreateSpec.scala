@@ -3,7 +3,7 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 import java.util.UUID
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMongo, IgnoreMySql}
 import org.scalatest.{FlatSpec, Matchers}

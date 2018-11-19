@@ -3,7 +3,7 @@ package com.prisma.api.mutations
 import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
-import com.prisma.shared.models.ApiConnectorCapability.SupportsExistingDatabasesCapability
+import com.prisma.shared.models.ConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 

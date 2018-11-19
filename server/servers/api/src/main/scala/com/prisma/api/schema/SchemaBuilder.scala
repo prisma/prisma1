@@ -7,7 +7,7 @@ import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyMod
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.StringIdGCValue
-import com.prisma.shared.models.ApiConnectorCapability.NodeQueryCapability
+import com.prisma.shared.models.ConnectorCapability.NodeQueryCapability
 import com.prisma.shared.models.{ConnectorCapability, Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._

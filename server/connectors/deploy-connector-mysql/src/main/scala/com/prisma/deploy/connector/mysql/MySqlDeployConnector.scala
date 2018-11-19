@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.shared.models.ApiConnectorCapability.{
+import com.prisma.shared.models.ConnectorCapability.{
   LegacyDataModelCapability,
   MigrationsCapability,
   NonEmbeddedScalarListCapability,

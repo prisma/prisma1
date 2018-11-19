@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.FieldTemplate
 import org.scalatest.{Matchers, WordSpecLike}
 

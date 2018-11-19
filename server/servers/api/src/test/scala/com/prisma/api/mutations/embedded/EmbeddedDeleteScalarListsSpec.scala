@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}

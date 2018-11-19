@@ -13,7 +13,7 @@ import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.sangria_server._
-import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.ProjectId
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.util.env.EnvUtils

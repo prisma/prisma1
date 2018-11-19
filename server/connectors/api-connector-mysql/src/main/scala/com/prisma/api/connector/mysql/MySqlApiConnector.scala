@@ -3,7 +3,7 @@ package com.prisma.api.connector.mysql
 import com.prisma.api.connector.jdbc.impl.{JdbcDataResolver, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector.{ApiConnector, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
-import com.prisma.shared.models.ApiConnectorCapability._
+import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
