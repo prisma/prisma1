@@ -1,5 +1,6 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.ConnectorCapability._
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
 sealed trait ConnectorCapability extends EnumEntry
@@ -34,4 +35,27 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
   sealed trait IdCapability extends ConnectorCapability
   object IntIdCapability    extends IdCapability
   object UuidIdCapability   extends IdCapability
+}
+
+object ConnectorCapabilities {
+  val mysql = Set.empty
+  def mongo = Set.empty
+
+  def postgres(isActive: Boolean) = {
+    val common: Set[ConnectorCapability] = Set(
+      LegacyDataModelCapability,
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      IntrospectionCapability,
+      RelationLinkTableCapability,
+      IntIdCapability,
+      UuidIdCapability
+    )
+    if (isActive) {
+      common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability, NodeQueryCapability, ImportExportCapability)
+    } else {
+      common ++ Set(SupportsExistingDatabasesCapability)
+    }
+  }
 }
