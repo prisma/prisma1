@@ -1,6 +1,5 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -30,7 +29,6 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
   object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
   object RelationLinkListCapability          extends ConnectorCapability // relation links can be stored inline in a node in a list
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
-  // IntrospectionCapability
   // RawAccessCapability
 
   sealed trait IdCapability extends ConnectorCapability
@@ -39,6 +37,8 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 }
 
 object ConnectorCapabilities extends BooleanUtils {
+  import com.prisma.shared.models.ConnectorCapability._
+
   def mysql = {
     Set(
       LegacyDataModelCapability,
