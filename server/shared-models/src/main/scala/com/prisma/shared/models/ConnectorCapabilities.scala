@@ -53,21 +53,6 @@ object ConnectorCapabilities extends BooleanUtils {
     )
   }
 
-  def mongo(isActive: Boolean, isTest: Boolean): Set[ConnectorCapability] = {
-    val common = Set(
-      NodeQueryCapability,
-      EmbeddedScalarListsCapability,
-      EmbeddedTypesCapability,
-      JoinRelationLinksCapability,
-      RelationLinkListCapability,
-      EmbeddedTypesCapability
-    )
-    val migrationsCapability = isActive.toOption(MigrationsCapability)
-    val dataModelCapability  = isTest.toOption(LegacyDataModelCapability)
-
-    common ++ migrationsCapability ++ dataModelCapability
-  }
-
   def postgres(isActive: Boolean): Set[ConnectorCapability] = {
     val common: Set[ConnectorCapability] = Set(
       LegacyDataModelCapability,
@@ -84,5 +69,20 @@ object ConnectorCapabilities extends BooleanUtils {
     } else {
       common ++ Set(SupportsExistingDatabasesCapability)
     }
+  }
+
+  def mongo(isActive: Boolean, isTest: Boolean): Set[ConnectorCapability] = {
+    val common = Set(
+      NodeQueryCapability,
+      EmbeddedScalarListsCapability,
+      EmbeddedTypesCapability,
+      JoinRelationLinksCapability,
+      RelationLinkListCapability,
+      EmbeddedTypesCapability
+    )
+    val migrationsCapability = isActive.toOption(MigrationsCapability)
+    val dataModelCapability  = isTest.toOption(LegacyDataModelCapability)
+
+    common ++ migrationsCapability ++ dataModelCapability
   }
 }
