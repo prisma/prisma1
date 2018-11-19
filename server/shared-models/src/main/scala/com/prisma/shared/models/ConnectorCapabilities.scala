@@ -39,7 +39,19 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 }
 
 object ConnectorCapabilities extends BooleanUtils {
-  val mysql = Set.empty
+  def mysql = {
+    Set(
+      LegacyDataModelCapability,
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      MigrationsCapability,
+      NonEmbeddedScalarListCapability,
+      NodeQueryCapability,
+      ImportExportCapability
+    )
+  }
 
   def mongo(isActive: Boolean, isTest: Boolean): Set[ConnectorCapability] = {
     val common = Set(
@@ -62,8 +74,8 @@ object ConnectorCapabilities extends BooleanUtils {
       TransactionalExecutionCapability,
       JoinRelationsFilterCapability,
       JoinRelationLinksCapability,
-      IntrospectionCapability,
       RelationLinkTableCapability,
+      IntrospectionCapability,
       IntIdCapability,
       UuidIdCapability
     )
