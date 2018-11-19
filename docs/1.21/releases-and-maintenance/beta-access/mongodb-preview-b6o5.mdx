@@ -394,7 +394,13 @@ Next, you need to create your Prisma service configuration. Run the following co
 prisma init --endpoint http://localhost:4466
 ```
 
-This creates the `prisma.yml` and `datamodel.prisma` files that make up your service configuration.
+This creates the `prisma.yml` and `datamodel.prisma` files that make up your service configuration. 
+
+Before you continue, add the following root property to your `prisma.yml`:
+
+```yml
+databaseType: document
+```
 
 ### 2. Data modeling and ensuring data consistency
 
