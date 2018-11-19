@@ -1,11 +1,10 @@
 package com.prisma.deploy.migration.validation.directives
 
-import com.prisma.deploy.migration.validation.directives.RelationDirective.validateStringValue
+import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.utils.boolean.BooleanUtils
 import sangria.ast._
-import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
 trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
   def name: String
@@ -67,7 +66,7 @@ trait DirectiveArgument[T] extends SharedDirectiveValidation with BooleanUtils {
   def value(value: sangria.ast.Value): T
 }
 
-object DirectiveArgument {
+object DirectiveArgument extends SharedDirectiveValidation {
   def apply[T](name: String, validate: sangria.ast.Value => Option[String], value: sangria.ast.Value => T) = {
     val (nameArg, validateArg, valueArg) = (name, validate, value)
     new DirectiveArgument[T] {
