@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
-import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{MigrationsCapability, ScalarListsCapability}
 import com.prisma.shared.models.{ConnectorCapability, RelationStrategy, TypeIdentifier}
 import com.prisma.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}

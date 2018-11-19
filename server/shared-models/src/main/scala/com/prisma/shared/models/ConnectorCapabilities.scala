@@ -1,10 +1,11 @@
 package com.prisma.shared.models
 
+import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
 sealed trait ConnectorCapability extends EnumEntry
 
-object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
+object ConnectorCapability extends Enumeratum[ConnectorCapability] {
   val values = findValues
 
   sealed trait ScalarListsCapability     extends ConnectorCapability
@@ -28,10 +29,60 @@ object ApiConnectorCapability extends Enumeratum[ConnectorCapability] {
   object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
   object RelationLinkListCapability          extends ConnectorCapability // relation links can be stored inline in a node in a list
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
-  // IntrospectionCapability
   // RawAccessCapability
 
   sealed trait IdCapability extends ConnectorCapability
   object IntIdCapability    extends IdCapability
   object UuidIdCapability   extends IdCapability
+}
+
+object ConnectorCapabilities extends BooleanUtils {
+  import com.prisma.shared.models.ConnectorCapability._
+
+  def mysql = {
+    Set(
+      LegacyDataModelCapability,
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      MigrationsCapability,
+      NonEmbeddedScalarListCapability,
+      NodeQueryCapability,
+      ImportExportCapability
+    )
+  }
+
+  def postgres(isActive: Boolean): Set[ConnectorCapability] = {
+    val common: Set[ConnectorCapability] = Set(
+      LegacyDataModelCapability,
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      IntrospectionCapability,
+      IntIdCapability,
+      UuidIdCapability
+    )
+    if (isActive) {
+      common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability, NodeQueryCapability, ImportExportCapability)
+    } else {
+      common ++ Set(SupportsExistingDatabasesCapability)
+    }
+  }
+
+  def mongo(isActive: Boolean, isTest: Boolean): Set[ConnectorCapability] = {
+    val common = Set(
+      NodeQueryCapability,
+      EmbeddedScalarListsCapability,
+      EmbeddedTypesCapability,
+      JoinRelationLinksCapability,
+      RelationLinkListCapability,
+      EmbeddedTypesCapability
+    )
+    val migrationsCapability = isActive.toOption(MigrationsCapability)
+    val dataModelCapability  = isTest.toOption(LegacyDataModelCapability)
+
+    common ++ migrationsCapability ++ dataModelCapability
+  }
 }

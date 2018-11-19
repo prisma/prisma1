@@ -3,7 +3,7 @@ import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models.{ConnectorCapability, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils

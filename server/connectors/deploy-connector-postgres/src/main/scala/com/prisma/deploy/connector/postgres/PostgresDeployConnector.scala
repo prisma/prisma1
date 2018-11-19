@@ -6,8 +6,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeplo
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.deploy.connector.postgres.database._
-import com.prisma.shared.models.ApiConnectorCapability.{MigrationsCapability, NonEmbeddedScalarListCapability, _}
-import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -23,18 +22,7 @@ case class PostgresDeployConnector(
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: Set[ConnectorCapability] = {
-    val common: Set[ConnectorCapability] = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      IntrospectionCapability,
-      RelationLinkTableCapability,
-      IntIdCapability,
-      UuidIdCapability
-    )
-    if (isActive) common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability) else common
-  }
+  override def capabilities: Set[ConnectorCapability]        = ConnectorCapabilities.postgres(isActive)
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
   lazy val setupDatabases      = internalDatabases.setupDatabase

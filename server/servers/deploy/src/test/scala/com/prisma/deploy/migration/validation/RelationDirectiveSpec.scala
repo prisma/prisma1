@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.{
+import com.prisma.shared.models.ConnectorCapability.{
   EmbeddedTypesCapability,
   JoinRelationLinksCapability,
   RelationLinkListCapability,

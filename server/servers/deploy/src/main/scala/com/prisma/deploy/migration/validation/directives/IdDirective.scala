@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
-import com.prisma.shared.models.ApiConnectorCapability.{IntIdCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, UuidIdCapability}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.TypeIdentifier.{IdTypeIdentifier, ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}

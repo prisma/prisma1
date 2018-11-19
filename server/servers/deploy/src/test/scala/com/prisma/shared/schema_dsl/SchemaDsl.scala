@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBack
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidatorImpl, LegacyDataModelValidator}
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
+import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation}
 import com.prisma.shared.models._

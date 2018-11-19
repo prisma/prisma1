@@ -2,7 +2,7 @@ package com.prisma.api.queries.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
