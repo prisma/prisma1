@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.gc_values.{EnumGCValue, StringGCValue}
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, RelationLinkListCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.ApiConnectorCapability._
 import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.{OnDelete, RelationStrategy, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
@@ -39,7 +39,7 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
     val dataModelString =
       """
         |type Todo  {
-        |  id: ID @id
+        |  id: ID! @id
         |  title: String
         |  owner: User @relation(name: "Test", onDelete: CASCADE)
         |}
@@ -112,14 +112,14 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
     val dataModelString =
       """
         |type Todo {
-        |  id: Float @id
+        |  id: Float! @id
         |}
       """.stripMargin
-    val errors = validateThatMustError(dataModelString)
+    val errors = validateThatMustError(dataModelString, Set(IntIdCapability, UuidIdCapability))
     val error1 = errors.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
-    error1.description should include(s"The field `id` is marked as id and therefore has to have the type `Int!`, `ID!`, or `UUID!`.")
+    error1.description should include(s"The field `id` is marked as id must have one of the following types: `ID!`,`UUID!`,`Int!`.")
   }
 
   "not fail if an id field is of type Int for a passive connector" in {
@@ -129,7 +129,7 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
         |  myId: Int! @id
         |}
       """.stripMargin
-    val dataModel = validate(dataModelString)
+    val dataModel = validate(dataModelString, Set(IntIdCapability))
     dataModel.type_!("Todo").scalarField_!("myId").behaviour should contain(IdBehaviour(IdStrategy.Auto))
   }
 

@@ -1,9 +1,10 @@
 package com.prisma.deploy.migration.validation.directives
 
+import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.utils.boolean.BooleanUtils
-import sangria.ast.{Document, FieldDefinition, ObjectTypeDefinition}
+import sangria.ast._
 
 trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
   def name: String
@@ -31,8 +32,8 @@ trait TypeDirective[T] extends DirectiveBase {
 }
 
 trait FieldDirective[T] extends DirectiveBase {
-  def requiredArgs(capabilities: Set[ConnectorCapability]): Vector[ArgumentRequirement]
-  def optionalArgs(capabilities: Set[ConnectorCapability]): Vector[ArgumentRequirement]
+  def requiredArgs(capabilities: Set[ConnectorCapability]): Vector[DirectiveArgument[_]]
+  def optionalArgs(capabilities: Set[ConnectorCapability]): Vector[DirectiveArgument[_]]
 
   // gets called if the directive was found. Can return an error message
   def validate(
@@ -57,3 +58,23 @@ object FieldDirective {
 }
 
 case class ArgumentRequirement(name: String, validate: sangria.ast.Value => Option[String])
+
+trait DirectiveArgument[T] extends SharedDirectiveValidation with BooleanUtils {
+  def name: String
+  def validate(value: sangria.ast.Value): Option[String]
+  def value(directive: Directive): Option[T] = directive.argument(name).map(arg => value(arg.value))
+  def value(value: sangria.ast.Value): T
+}
+
+object DirectiveArgument extends SharedDirectiveValidation {
+  def apply[T](name: String, validate: sangria.ast.Value => Option[String], value: sangria.ast.Value => T) = {
+    val (nameArg, validateArg, valueArg) = (name, validate, value)
+    new DirectiveArgument[T] {
+      override def name                   = nameArg
+      override def value(value: Value)    = valueArg(value)
+      override def validate(value: Value) = validateArg(value)
+    }
+  }
+
+  def string(name: String): DirectiveArgument[String] = DirectiveArgument(name, validateStringValue, _.asString)
+}

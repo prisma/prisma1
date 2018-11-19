@@ -1,11 +1,12 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, IntIdCapability, UuidIdCapability}
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
+import com.prisma.shared.models.TypeIdentifier
 import org.scalatest.{Matchers, WordSpecLike}
 
 class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
-  "@id without explicit strategy should work" in {
+  "without explicit strategy should work" in {
     val dataModelString =
       """
         |type Model {
@@ -16,7 +17,7 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     dataModel.type_!("Model").scalarField_!("id").behaviour should be(Some(IdBehaviour(IdStrategy.Auto)))
   }
 
-  "@id should work with explicit default strategy" in {
+  "should work with explicit default strategy" in {
     val dataModelString =
       """
         |type Model {
@@ -28,7 +29,7 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     dataModel.type_!("Model").scalarField_!("id").behaviour should be(Some(IdBehaviour(IdStrategy.Auto)))
   }
 
-  "@id should work with NONE strategy" in {
+  "should work with NONE strategy" in {
     val dataModelString =
       """
         |type Model {
@@ -39,7 +40,20 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     dataModel.type_!("Model").scalarField_!("id").behaviour should be(Some(IdBehaviour(IdStrategy.None)))
   }
 
-  "@id should error when an unknown strategy is used" in {
+  "should error if the field is not required" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID @id
+        |}
+      """.stripMargin
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("id"))
+    error.description should equal("Fields that are marked as id must be required.")
+  }
+
+  "should error when an unknown strategy is used" in {
     val dataModelString =
       """
         |type Model {
@@ -52,7 +66,7 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     error.description should equal("Valid values for the strategy argument of `@id` are: AUTO, NONE.")
   }
 
-  "@id should error on embedded types" in {
+  "should error on embedded types" in {
     val dataModelString =
       """
         |type Model @embedded {
@@ -76,5 +90,53 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     error.`type` should equal("Model")
     error.field should equal(None)
     error.description should equal("One field of the type `Model` must be marked as the id field with the `@id` directive.")
+  }
+
+  "should work on Int fields if this is supported" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: Int! @id
+        |}
+      """.stripMargin
+    val dataModel = validate(dataModelString, Set(IntIdCapability))
+    dataModel.type_!("Model").scalarField_!("id").typeIdentifier should be(TypeIdentifier.Int)
+  }
+
+  "should error on Int fields if this is NOT supported" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: Int! @id
+        |}
+      """.stripMargin
+    val error = validateThatMustError(dataModelString).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("id"))
+    error.description should equal("The field `id` is marked as id must have one of the following types: `ID!`.")
+  }
+
+  "should work on UUID fields if this is supported" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: UUID! @id
+        |}
+      """.stripMargin
+    val dataModel = validate(dataModelString, Set(UuidIdCapability))
+    dataModel.type_!("Model").scalarField_!("id").typeIdentifier should be(TypeIdentifier.UUID)
+  }
+
+  "should error UUID Int fields if this is NOT supported" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: UUID! @id
+        |}
+      """.stripMargin
+    val error = validateThatMustError(dataModelString, Set(IntIdCapability)).head
+    error.`type` should equal("Model")
+    error.field should equal(Some("id"))
+    error.description should equal("The field `id` is marked as id must have one of the following types: `ID!`,`Int!`.")
   }
 }
