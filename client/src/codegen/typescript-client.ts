@@ -689,7 +689,10 @@ export const prisma = new Prisma()`
       return typeString
     }
 
-    return `<T ${this.genericsDelimiter} ${typeString}>(${
+    const promiseString =
+      !isList && !isScalar && !isSubscription ? 'Promise' : ''
+
+    return `<T ${this.genericsDelimiter} ${typeString}${promiseString}>(${
       field.args && field.args.length > 0
         ? this.renderArgs(field, isMutation, false)
         : ''
