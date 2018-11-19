@@ -12,6 +12,7 @@ test('typescript definition generator', t => {
   const schema = buildSchema(typeDefs)
   const generator = new JavascriptGenerator({
     schema,
+    internalTypes: [],
   })
   const javascript = generator.renderJavascript()
   t.snapshot(javascript)
