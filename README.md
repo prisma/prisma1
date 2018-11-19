@@ -95,6 +95,20 @@ The Prisma API is deployed based on the datamodel and exposes CRUD & realtime op
 
 The Prisma client connects to the Prisma API and lets you perform read and write operations against your database. This section explains how to use the Prisma client from **JavaScript**.
 
+First, install the prisma-client from NPM or Yarn.
+
+```
+npm install prisma-client-lib
+# or
+yarn add prisma-client-lib
+```
+
+Next, to generate the Prisma client, run the following command:
+
+```
+prisma generate
+```
+
 Create a new Node script inside the `hello-world` directory:
 
 ```
@@ -104,7 +118,7 @@ touch index.js
 Now add the following code to it:
 
 ```js
-const { prisma } = require('./generated/prisma')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
