@@ -36,7 +36,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
           sys.error("should not happen")
         }
     }
-    fieldDef.isValidScalarListTypeNew.toOption {
+    fieldDef.isValidScalarListType.toOption {
       behaviour
     }
   }

@@ -346,11 +346,6 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
   }
 
   def validateRelationFields: Seq[DeployError] = {
-    val relationFields = objectType.relationFields(doc)
-    val wrongTypeDefinitions = relationFields.collect {
-      case fieldDef if !fieldDef.isValidRelationType => DeployErrors.relationFieldTypeWrong(FieldAndType(objectType, fieldDef))
-    }
-
     val ambiguousRelationFields: Vector[FieldAndType] = {
       val relationFields                                = objectType.relationFields(doc)
       val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
@@ -420,7 +415,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
           Iterable.empty
       }
 
-    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
+    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
   }
 
   def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {

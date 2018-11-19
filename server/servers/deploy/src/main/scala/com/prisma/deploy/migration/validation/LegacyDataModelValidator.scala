@@ -269,7 +269,7 @@ case class LegacyDataModelValidator(
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val relationFields = fieldAndTypes.filter(isRelationField)
     val wrongTypeDefinitions = relationFields.collect {
-      case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => DeployErrors.relationFieldTypeWrong(fieldAndType)
+      case fieldAndType if !fieldAndType.fieldDef.isValidRelationTypeLegacy => DeployErrors.relationFieldTypeWrong(fieldAndType)
     }
 
     def ambiguousRelationFieldsForType(objectType: ObjectTypeDefinition): Vector[FieldAndType] = {

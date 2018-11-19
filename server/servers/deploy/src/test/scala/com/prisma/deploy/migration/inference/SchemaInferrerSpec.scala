@@ -19,7 +19,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name:"MyNameForTodoToComments")
+          |  comments: [Comment] @relation(name:"MyNameForTodoToComments")
           |}
           |
           |type Comment {
@@ -39,13 +39,13 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type User {
           |  id: ID! @id
-          |  calls: [Call!]! @relation(name: "CallRequester")
-          |  calls_member: [Call!]! @relation(name: "CallMembers")
+          |  calls: [Call] @relation(name: "CallRequester")
+          |  calls_member: [Call] @relation(name: "CallMembers")
           |}
           |type Call {
           |  id: ID! @id
           |  created_by: User! @relation(name: "CallRequester")
-          |  members: [User!]! @relation(name: "CallMembers")
+          |  members: [User] @relation(name: "CallMembers")
           |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -63,7 +63,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]!
+          |  comments: [Comment]
           |}
           |
           |type Comment {
@@ -92,7 +92,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(link: INLINE)
+          |  comments: [Comment] @relation(link: INLINE)
           |}
           |
           |type Comment {
@@ -125,7 +125,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]!
+          |  comments: [Comment]
           |}
           |
           |type Comment {
@@ -165,7 +165,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type TodoNew {
           |  id: ID! @id
-          |  comments: [CommentNew!]!
+          |  comments: [CommentNew]
           |}
           |
           |type CommentNew {
@@ -202,7 +202,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type TodoNew {
           |  id: ID! @id
-          |  commentsNew: [CommentNew!]!
+          |  commentsNew: [CommentNew]
           |}
           |
           |type CommentNew {
@@ -273,8 +273,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """|type Technology {
            |  id: ID! @id
            |  name: String! @unique
-           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -292,8 +292,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """|type Technology {
            |  id: ID! @id
            |  name: String! @unique
-           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -308,8 +308,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """|type NewTechnology {
            |  id: ID! @id
            |  name: String! @unique
-           |  xTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
+           |  xTechnologies: [NewTechnology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [NewTechnology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
 
       val renames = SchemaMapping(
@@ -340,8 +340,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Technology {
          |  id: ID! @id
          |  name: String! @unique
-         |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-         |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+         |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -381,7 +381,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Technology {
          |  id: ID! @id
          |  name: String! @unique
-         |  childTechnologies: [Technology!]!
+         |  childTechnologies: [Technology]
          |}""".stripMargin.trim()
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -426,7 +426,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |
          |type List {
          |  id: ID! @id
-         |  todos: [Todo!]! @relation(link: TABLE)
+         |  todos: [Todo] @relation(link: TABLE)
          |}
          |""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set(RelationLinkTableCapability))
@@ -445,7 +445,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """
          |type List {
          |  id: ID! @id
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {
@@ -467,7 +467,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """
         |type List {
         |  id: ID! @id
-        |  todos: [Todo!]!
+        |  todos: [Todo]
         |}
         |
         |type Todo {
@@ -515,7 +515,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Todo {
          |  id: ID! @id
          |  name: String!
-         |  comments: [Comment!]!
+         |  comments: [Comment]
          |}
          |type Comment {
          |  id: ID! @id
@@ -533,7 +533,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Todo {
          |  id: ID! @id
          |  name: String!
-         |  comments: [Comment!]! @relation(link: INLINE)
+         |  comments: [Comment] @relation(link: INLINE)
          |}
          |type Comment {
          |  id: ID! @id
