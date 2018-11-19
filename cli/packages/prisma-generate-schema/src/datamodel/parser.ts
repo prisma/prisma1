@@ -100,7 +100,8 @@ export default abstract class Parser {
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, defaultValueDirectiveKey)
-    return directive === null ? null : directive.arguments[0].value.value
+    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
+    return args.length !== 0 ? args[0].value.value : null
   }
 
   /**
@@ -110,7 +111,8 @@ export default abstract class Parser {
    */
   protected getRelationName(field: any): string | null {
     const directive = this.getDirectiveByName(field, relationDirectiveKey)
-    return directive === null ? null : directive.arguments[0].value.value
+    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'name')
+    return args.length !== 0 ? args[0].value.value : null
   }
 
   /**
@@ -267,7 +269,7 @@ export default abstract class Parser {
 
     // Connect  obvious relations which are lacking the relatioName directive.
     // We explicitely DO NOT ignore fields with a given relationName, in accordance
-   // to the prisma implementation.
+    // to the prisma implementation.
     for (const typeA of types) {
       searchThroughAFields: for (const fieldA of typeA.fields) {
         if (typeof fieldA.type === 'string') {
@@ -279,7 +281,7 @@ export default abstract class Parser {
 
         for (const fieldA2 of typeA.fields) {
           if (fieldA2 !== fieldA && fieldA2.type === fieldA.type) {
-            // Skip, A has mode than one fields of this relation type.
+            // Skip, A has more than one fields of this relation type.
             continue searchThroughAFields
           }
         }

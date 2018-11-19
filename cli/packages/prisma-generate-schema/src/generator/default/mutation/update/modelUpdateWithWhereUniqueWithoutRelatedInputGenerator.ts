@@ -10,6 +10,10 @@ export default class ModelUpdateWithWhereUniqueWithoutRelatedInput extends Relat
     return `${input.name}UpdateWithWhereUniqueWithout${capitalize(field.name)}Input`
   }
 
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {  
+    return this.generators.modelUpdateWithoutRelatedDataInput.wouldBeEmpty(model, args)
+  }
+
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 

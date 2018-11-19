@@ -39,6 +39,7 @@ popsicle
   .then(response => {
     const schema = JSON.parse(response.body).data
     const sdl = printSchema(buildClientSchema(schema))
+    console.log(sdl)
     const parsedSdl = parse(sdl)
     const mutatedSdl = visit(parsedSdl, {
       ObjectTypeDefinition: {

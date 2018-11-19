@@ -2,7 +2,7 @@ type Parent {
   id: ID! @id
   p: String @unique
   children: [Child!]!
-  j: [Joint!]! @relation(strategy: EMBED)
+  j: [Joint!]! @relation(link: INLINE)
 }
 
 type Child @embedded {
@@ -13,7 +13,7 @@ type Child @embedded {
 
 type Friend {
   f: String @unique
-  test: Int! @id
+  test: ID! @id
 }
 
 type Joint {

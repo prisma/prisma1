@@ -12,6 +12,10 @@ export default class ModelCreateWithoutRelatedInputGenerator extends RelatedMode
     return `${input.name}CreateWithout${capitalize(field.name)}Input`
   }
 
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
+    return !this.hasFieldsExcept(this.getWriteableFields(model.fields), (args.relatedField.relatedField as IGQLField).name)
+  }
+
   protected generateScalarFieldType(model: IGQLType, args: {}, field: IGQLField) {
     return ModelCreateInputGenerator.generateScalarFieldTypeForInputType(model, field, this.generators)
   }

@@ -8,6 +8,10 @@ export default class ModelUpdateWithWhereUniqueNestedInput extends RelatedModelI
     return `${input.name}UpdateWithWhereUniqueNestedInput`
   }
 
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {  
+    return this.generators.modelUpdateDataInput.wouldBeEmpty(model, args)
+  }
+
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 
