@@ -1,11 +1,13 @@
 import Code from 'components/Markdown/Code'
 
 export const meta = {
-  title: 'Installation',
-  position: 190
+  title: 'Installing the Beta',
+  position: 191
 }
 
-## Prisma CLI
+## Beta access
+
+### Prisma CLI
 
 You can get access to the latest beta release of the Prisma CLI by appending the `@beta`-tag when installing it via NPM:
 
@@ -13,7 +15,7 @@ You can get access to the latest beta release of the Prisma CLI by appending the
 npm install -g prisma@beta
 ```
 
-## Prisma server (Docker)
+### Prisma server (Docker)
 
 You can find the latest beta Prisma Docker image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/). To use the latest version of a Prisma server, you need to configure the `image` property in your Docker Compose file accordingly by appending `-beta` to the the version number, e.g.:
 
