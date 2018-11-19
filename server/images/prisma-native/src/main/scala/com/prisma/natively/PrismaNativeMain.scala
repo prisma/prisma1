@@ -7,6 +7,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.image.{SangriaHandlerImpl, Version}
 import com.prisma.sangria_server.BlazeSangriaServer
+import org.slf4j.LoggerFactory
 
 object PrismaNativeMain {
   System.setProperty("org.jooq.no-logo", "true")
@@ -18,18 +19,13 @@ object PrismaNativeMain {
 
     DriverManager.setLogWriter(new PrintWriter(System.out))
 
+    val logger = LoggerFactory.getLogger("prisma")
+    println(s"Loaded logger ${logger.getClass.getName}")
+
     dependencies.initialize()(system.dispatcher)
     dependencies.migrator.initialize
 
     Version.check()
-
-//    ServerExecutor(
-//      port = dependencies.config.port.getOrElse(4466),
-//      ManagementServer("management"),
-//      WebsocketServer(dependencies),
-//      ApiServer(dependencies.apiSchemaBuilder),
-//      WorkerServer(dependencies)
-//    ).startBlocking()
 
     val sangriaHandler = SangriaHandlerImpl(managementApiEnabled = true)
     val executor       = BlazeSangriaServer

@@ -17,7 +17,6 @@ public class JnaJwtGrant extends Structure {
     }
 
     public static class ByReference extends JnaJwtGrant implements Structure.ByReference {}
-//    public static class ByValue extends JnaJwtGrant implements Structure.ByValue {}
 
     @Override
     protected List<String> getFieldOrder() {

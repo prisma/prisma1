@@ -4,7 +4,7 @@ import org.graalvm.nativeimage.c.function.CFunction;
 import org.graalvm.nativeimage.c.function.CLibrary;
 import org.graalvm.nativeimage.c.type.CCharPointer;
 
-@CLibrary("jdbc_native")
+@CLibrary("jdbc_native_static")
 public class RustInterfaceGraal {
     @CFunction
     static native CIntegration.RustConnection newConnection(CCharPointer url);

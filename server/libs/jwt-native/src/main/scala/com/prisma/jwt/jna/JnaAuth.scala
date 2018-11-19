@@ -16,7 +16,12 @@ object JnaAuth {
     Native.loadLibrary("jwt_native", classOf[JnaRustBridge])
   }
 
-  def apply(algorithm: Algorithm): JnaAuth = new JnaAuth(algorithm)
+  lazy val init = library.initialize()
+
+  def apply(algorithm: Algorithm): JnaAuth = {
+    init
+    new JnaAuth(algorithm)
+  }
 }
 
 case class JnaAuth(algorithm: Algorithm) extends Auth {

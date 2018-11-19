@@ -3,6 +3,8 @@ package com.prisma.cache
 import scala.concurrent.{ExecutionContext, Future}
 
 object Cache {
+  def simple[K, V](): Cache[K, V] = {}
+
   def unbounded[K, V >: Null](): Cache[K, V] = {
     CaffeineImplForCache.unbounded[K, V]
   }

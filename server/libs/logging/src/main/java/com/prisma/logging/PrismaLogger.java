@@ -47,23 +47,23 @@ public class PrismaLogger implements org.slf4j.Logger {
     @Override public boolean isTraceEnabled() { return Level.TRACE.toInt() >= logLevel.toInt(); }
 
     private void log(String prefix, String msg) {
-        System.out.println("[" + prefix + "] " + msg);
+        System.out.println("PL! [" + prefix + "] " + msg);
     }
 
     private void log(String prefix, String format, Object arg) {
-        System.out.println("[" + prefix + "] " + String.format(format, arg));
+        System.out.println("PL! [" + prefix + "] " + String.format(format, arg));
     }
 
     private void log(String prefix, String format, Object arg1, Object arg2) {
-        System.out.println("[" + prefix + "] " + String.format(format, arg1, arg2));
+        System.out.println("PL! [" + prefix + "] " + String.format(format, arg1, arg2));
     }
 
     private void log(String prefix, String format, Object... arguments) {
-        System.out.println("[" + prefix + "] " + String.format(format, arguments));
+        System.out.println("PL! [" + prefix + "] " + String.format(format, arguments));
     }
 
     private void log(String prefix, String msg, Throwable t) {
-        System.out.println("[" + prefix + "] " + msg + "\n" + t.getMessage());
+        System.out.println("PL! [" + prefix + "] " + msg + "\n" + t.getMessage());
         t.printStackTrace();
     }
 

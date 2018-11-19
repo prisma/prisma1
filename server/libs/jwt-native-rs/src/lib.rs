@@ -5,9 +5,13 @@ extern crate serde_derive;
 extern crate jsonwebtoken as jwt;
 extern crate chrono;
 
+#[macro_use]
+extern crate log;
+
 mod protocol_buffer;
 mod ffi_utils;
 mod grant;
+mod logging;
 
 use std::os::raw::c_char;
 use std::str::FromStr;
@@ -37,6 +41,10 @@ pub struct Claims {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     grants: Option<Vec<Grant>>,
+}
+
+pub extern "C" fn initialize() {
+    logging::init();
 }
 
 #[no_mangle]
@@ -83,6 +91,7 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num
             },
             Err(e) => {
                 let err = format!("{}", e);
+                debug!("[Native] JWT error: {}", err);
                 if last_error != err {
                     last_error = err;
                 }

@@ -1,5 +1,5 @@
 [lib]
-crate-type = ["dylib"]
+crate-type = ["dylib", "staticlib"]
 
 [package]
 name = "jdbc-native"
