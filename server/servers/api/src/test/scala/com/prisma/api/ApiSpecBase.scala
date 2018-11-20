@@ -28,7 +28,7 @@ trait ApiSpecBase
   val server                                 = ApiTestServer()
   val database                               = ApiTestDatabase()
   override def prismaConfig                  = testDependencies.config
-  def capabilities: Set[ConnectorCapability] = testDependencies.apiConnector.capabilities.toSet
+  def capabilities: Set[ConnectorCapability] = testDependencies.apiConnector.capabilities
 
   def connectorHasCapability(capability: ConnectorCapability): Boolean = testDependencies.apiConnector.hasCapability(capability)
 
