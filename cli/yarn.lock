@@ -2711,15 +2711,15 @@ graphcool-inquirer@^1.0.3:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-graphql-config-extension-prisma@^0.2.3:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/graphql-config-extension-prisma/-/graphql-config-extension-prisma-0.2.4.tgz#bb56d4d11a19563b84794f47f554661336e55d0c"
-  integrity sha512-mOpzL0zWfjsHxCj2AQqL+Id0L4FDwt0fs0xEaKK6H64n6KT4J/lVutPmf/hmPRTLuJP1y9AJPCkXNWWygUU2nw==
+graphql-config-extension-prisma@0.2.5:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/graphql-config-extension-prisma/-/graphql-config-extension-prisma-0.2.5.tgz#f67db5b6f882ac76096fb2e68a18ec81c7d51fd2"
+  integrity sha512-7Qh3TzZS3hwZpJbTNfTHXBM6UbzV7DMik9Mc95Rz76yTAs7Wr83xBFsH4Ap1NWlqBgANfO3cLLI4YomDJmO5SA==
   dependencies:
     graphql-config "2.2.1"
     prisma-yml "1.0.97"
 
-graphql-config@2.2.1, graphql-config@^2.2.0:
+graphql-config@2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/graphql-config/-/graphql-config-2.2.1.tgz#5fd0ec77ac7428ca5fb2026cf131be10151a0cb2"
   integrity sha512-U8+1IAhw9m6WkZRRcyj8ZarK96R6lQBQ0an4lp76Ps9FyhOXENC5YQOxOFGm5CxPrX2rD0g3Je4zG5xdNJjwzQ==
