@@ -10,6 +10,7 @@ case class CpuProfiler(metricsManager: MetricsManager) {
     case x: OperatingSystemMXBean =>
       // docs for the bean available at https://docs.oracle.com/javase/8/docs/jre/api/management/extension/com/sun/management/OperatingSystemMXBean.html#getSystemCpuLoad--
       Some(x)
+
     case _ =>
       println("com.sun.management.OperatingSystemMXBean is not available on this JVM. CPU Metrics are therefore not available.")
       None

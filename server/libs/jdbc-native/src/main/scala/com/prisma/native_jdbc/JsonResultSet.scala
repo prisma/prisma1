@@ -118,13 +118,6 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
 
       new Timestamp(dt.toInstant.getMillis)
     }
-
-//    val readValue = readColumnAs[String](columnIndex)
-//    if (readValue == null) {
-//      null
-//    } else {
-//      Timestamp.valueOf(readValue)
-//    }
   }
 
   override def getObject(columnIndex: Int): java.lang.Object = {
@@ -138,6 +131,7 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
       case "DateTime" => getTimestamp(columnIndex)
       case "Boolean"  => new lang.Boolean(getBoolean(columnIndex))
       case "Null"     => null
+      case "VOID"     => null
       case "UUID"     => ??? //readColumnAs[UUID](columnIndex)
     }
   }

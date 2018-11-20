@@ -19,7 +19,7 @@ case class RustResultSetMetaData(rs: RustResultSet) extends ResultSetMetaData {
 
   override def getColumnDisplaySize(column: Int): Int = ???
 
-  override def getColumnLabel(column: Int): String = ???
+  override def getColumnLabel(column: Int): String = rs.columns(column - 1).name
 
   override def getColumnName(column: Int): String = rs.columns(column - 1).name
 

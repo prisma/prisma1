@@ -2,15 +2,12 @@ package com.prisma.metrics
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
-
 import io.micrometer.core.instrument.{Counter, MeterRegistry, Tag, Timer}
-
 import scala.concurrent.{ExecutionContext, Future}
 
 case class CustomTag(name: String, recordingThreshold: Long = 0)
 
 trait Metric {
-
   val name: String
   val customTags: Seq[CustomTag]
 
@@ -57,7 +54,6 @@ case class CounterMetric(name: String, customTags: Seq[CustomTag], meterRegistry
   * @param predefTags A collection of unique custom tag names with values (!) that will be used for this gauge.
   */
 case class GaugeMetric(name: String, predefTags: Seq[(CustomTag, String)], meterRegistry: MeterRegistry) extends Metric {
-
   override val customTags = predefTags.map(_._1)
   private val tags        = createTags(predefTags.map(_._2))
   private val gauge       = meterRegistry.gauge(name, tags, new AtomicLong(0))

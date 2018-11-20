@@ -37,6 +37,7 @@ case class AsyncMigrator(
 
       case Failure(err) =>
         println(s"Fatal error during deployment worker initialization: $err")
+        err.printStackTrace()
         sys.exit(-1)
     }
   }

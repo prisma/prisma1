@@ -16,7 +16,7 @@ import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.image.{FunctionValidatorImpl, SingleServerProjectFetcher}
-import com.prisma.jwt.Algorithm
+import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.jwt.jna.JnaAuth
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
@@ -58,7 +58,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val managementAuth = {
     config.managementApiSecret match {
       case Some(jwtSecret) if jwtSecret.nonEmpty => JnaAuth(Algorithm.HS256)
-      case _                                     => println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server."); Auth.none()
+      case _                                     => println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server."); NoAuth
     }
   }
 

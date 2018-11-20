@@ -73,7 +73,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhookPublisher  = webhooksQueue
   override lazy val webhooksConsumer  = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient        = SimpleHttpClient()
-  override lazy val apiAuth           = JnaAuth(Algorithm.HS256)
+  override lazy val auth              = JnaAuth(Algorithm.HS256)
   override lazy val deployConnector   = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator = FunctionValidatorImpl()
 
