@@ -16,7 +16,8 @@ import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.image.{FunctionValidatorImpl, SingleServerProjectFetcher}
-import com.prisma.jwt.{Algorithm, Auth}
+import com.prisma.jwt.Algorithm
+import com.prisma.jwt.jna.JnaAuth
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
@@ -56,7 +57,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
   override lazy val managementAuth = {
     config.managementApiSecret match {
-      case Some(jwtSecret) if jwtSecret.nonEmpty => Auth.jna(Algorithm.HS256)
+      case Some(jwtSecret) if jwtSecret.nonEmpty => JnaAuth(Algorithm.HS256)
       case _                                     => println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server."); Auth.none()
     }
   }
@@ -85,7 +86,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller, system)
 
   override lazy val httpClient                           = SimpleHttpClient()
-  override lazy val apiAuth                              = Auth.jna(Algorithm.HS256)
+  override lazy val apiAuth                              = JnaAuth(Algorithm.HS256)
   override lazy val deployConnector: DeployConnector     = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator: FunctionValidator = FunctionValidatorImpl()
 

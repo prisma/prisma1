@@ -11,25 +11,26 @@ import com.prisma.api.server.{GraphQlQueryCache, GraphQlRequestHandler, GraphQlR
 import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.PrismaConfig
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
-import com.prisma.jwt.{Algorithm, Auth}
+import com.prisma.jwt.Auth
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
-
 import scala.concurrent.ExecutionContext
 
 trait ApiDependencies extends AwaitUtils {
   implicit def self: ApiDependencies
   implicit val system: ActorSystem
+
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  implicit lazy val reporter: ErrorReporter            = DummyErrorReporter
 
   val materializer: ActorMaterializer
   val cacheFactory: CacheFactory
-
-  lazy val graphQlQueryCache: GraphQlQueryCache = GraphQlQueryCache(cacheFactory)
+  val auth: Auth
+  val sssEventsPubSub: PubSub[String]
 
   def config: PrismaConfig
   def projectFetcher: ProjectFetcher
@@ -41,22 +42,18 @@ trait ApiDependencies extends AwaitUtils {
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Set[ConnectorCapability] = apiConnector.capabilities
-
-  implicit lazy val reporter: ErrorReporter             = DummyErrorReporter
-  lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
-  lazy val auth: Auth                                   = Auth.jna(Algorithm.HS256)
-  lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
-  lazy val maxImportExportSize: Int                     = 1000000
-
-  val sssEventsPubSub: PubSub[String]
-  lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub
-
-  JvmProfiler.schedule(ApiMetrics) // kick off JVM Profiler
-
+  def capabilities: Set[ConnectorCapability]             = apiConnector.capabilities
   def dataResolver(project: Project): DataResolver       = apiConnector.dataResolver(project)
   def masterDataResolver(project: Project): DataResolver = apiConnector.masterDataResolver(project)
   def deferredResolverProvider(project: Project)         = new DeferredResolverImpl[ApiUserContext](dataResolver(project))
+
+  lazy val graphQlQueryCache: GraphQlQueryCache         = GraphQlQueryCache(cacheFactory)
+  lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
+  lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
+  lazy val maxImportExportSize: Int                     = 1000000
+  lazy val sssEventsPublisher: PubSubPublisher[String]  = sssEventsPubSub
+
+  JvmProfiler.schedule(ApiMetrics) // kick off JVM Profiler
 
   def destroy = {
     apiConnector.shutdown().await()

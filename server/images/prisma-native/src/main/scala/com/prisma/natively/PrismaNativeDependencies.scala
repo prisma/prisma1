@@ -16,7 +16,7 @@ import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
-import com.prisma.jwt.{Algorithm, Auth}
+import com.prisma.jwt.NoAuth
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
@@ -57,11 +57,11 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
     config.managementApiSecret match {
       case Some(jwtSecret) if jwtSecret.nonEmpty =>
         println("[Warning] Management authentication is currently not implemented.")
-        Auth.none() //Auth.jna(Algorithm.HS256) todo
+        NoAuth //Auth.jna(Algorithm.HS256) todo
 
       case _ =>
         println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server.")
-        Auth.none()
+        NoAuth
     }
   }
 
@@ -81,9 +81,9 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-  override lazy val apiAuth = {
+  override lazy val auth = {
     println("[Warning] Project authentication is currently not implemented.")
-    Auth.none()
+    NoAuth
     // Auth.jna(Algorithm.HS256) todo
   }
 

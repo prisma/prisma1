@@ -170,7 +170,7 @@ case class SchemaBuilderImpl(
       } yield {
         project.secrets.headOption match {
           case Some(secret) =>
-            dependencies.apiAuth.createToken(secret, Some(projectTokenExpiration)) match {
+            dependencies.auth.createToken(secret, Some(projectTokenExpiration)) match {
               case Success(token) => token
               case Failure(err)   => throw AuthFailure(err.getMessage)
             }

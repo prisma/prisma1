@@ -28,7 +28,6 @@ trait DeployDependencies extends AwaitUtils {
   def migrator: Migrator
   def managementAuth: Auth
   def invalidationPublisher: PubSubPublisher[String]
-  def apiAuth: Auth
   def deployConnector: DeployConnector
   def functionValidator: FunctionValidator
   def projectIdEncoder: ProjectIdEncoder
@@ -40,6 +39,7 @@ trait DeployDependencies extends AwaitUtils {
 
   val managementSecret: String
   val cacheFactory: CacheFactory
+  val auth: Auth
 
   def initialize()(implicit ec: ExecutionContext): Unit = {
     await(deployConnector.initialize(), seconds = 30)

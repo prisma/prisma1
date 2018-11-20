@@ -10,19 +10,19 @@ public class PrismaLogger implements org.slf4j.Logger {
         return "prisma";
     }
 
-    private static Level logLevel = getLogLevel();
+    private Level logLevel = getLogLevel();
 
-    private static Level getLogLevel() {
+    private Level getLogLevel() {
         String env = System.getenv("LOG_LEVEL");
         if (env == null) {
             System.out.println("No log level set, defaulting to INFO.");
             return Level.INFO;
-
         } else {
             env = env.toUpperCase();
         }
 
         try {
+            System.out.println("LOADED: " + Level.valueOf(env));
             return Level.valueOf(env);
         } catch (IllegalArgumentException e) {
             System.out.println("Invalid log level found: " + env + ", defaulting to INFO");
@@ -40,30 +40,30 @@ public class PrismaLogger implements org.slf4j.Logger {
     @Override public boolean isWarnEnabled(Marker marker)  { return false; }
     @Override public boolean isErrorEnabled(Marker marker) { return false; }
     @Override public boolean isTraceEnabled(Marker marker) { return false; }
-    @Override public boolean isInfoEnabled()  { return Level.INFO.toInt() >= logLevel.toInt(); }
+    @Override public boolean isInfoEnabled()  { System.out.println("INFO: " + Level.INFO.toInt() + " CONFIGURED: " + logLevel.toInt()); return Level.INFO.toInt() >= logLevel.toInt(); }
     @Override public boolean isDebugEnabled() { return Level.DEBUG.toInt() >= logLevel.toInt(); }
     @Override public boolean isWarnEnabled()  { return Level.WARN.toInt() >= logLevel.toInt(); }
     @Override public boolean isErrorEnabled() { return Level.ERROR.toInt() >= logLevel.toInt(); }
     @Override public boolean isTraceEnabled() { return Level.TRACE.toInt() >= logLevel.toInt(); }
 
     private void log(String prefix, String msg) {
-        System.out.println("PL! [" + prefix + "] " + msg);
+        System.out.println("[" + prefix + "] " + msg);
     }
 
     private void log(String prefix, String format, Object arg) {
-        System.out.println("PL! [" + prefix + "] " + String.format(format, arg));
+        System.out.println("[" + prefix + "] " + String.format(format, arg));
     }
 
     private void log(String prefix, String format, Object arg1, Object arg2) {
-        System.out.println("PL! [" + prefix + "] " + String.format(format, arg1, arg2));
+        System.out.println("[" + prefix + "] " + String.format(format, arg1, arg2));
     }
 
     private void log(String prefix, String format, Object... arguments) {
-        System.out.println("PL! [" + prefix + "] " + String.format(format, arguments));
+        System.out.println("[" + prefix + "] " + String.format(format, arguments));
     }
 
     private void log(String prefix, String msg, Throwable t) {
-        System.out.println("PL! [" + prefix + "] " + msg + "\n" + t.getMessage());
+        System.out.println("[" + prefix + "] " + msg + "\n" + t.getMessage());
         t.printStackTrace();
     }
 
