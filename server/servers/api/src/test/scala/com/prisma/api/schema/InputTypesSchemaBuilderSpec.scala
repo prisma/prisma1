@@ -399,7 +399,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val project = SchemaDsl.fromString() {
       """type Parent{
         |   name: String! @unique
-        |   child: [Child!]!
+        |   child: [Child]
         |}
         |
         |type Child{

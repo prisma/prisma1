@@ -13,7 +13,7 @@ class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matcher
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
-                                                      |  related: [Post!]! @relation(name: "RelatedPosts")
+                                                      |  related: [Post] @relation(name: "RelatedPosts")
                                                       |}""" }
 
     database.setup(project)

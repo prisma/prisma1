@@ -16,13 +16,13 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -80,7 +80,7 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
@@ -164,7 +164,7 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
@@ -274,7 +274,7 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded{

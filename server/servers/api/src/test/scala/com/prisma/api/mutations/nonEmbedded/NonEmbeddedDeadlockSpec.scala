@@ -27,7 +27,7 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -87,8 +87,8 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -150,8 +150,8 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -215,8 +215,8 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -257,7 +257,7 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment {

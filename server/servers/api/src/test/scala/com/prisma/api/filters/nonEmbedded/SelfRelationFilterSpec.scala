@@ -16,14 +16,14 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     |   name: String
     |   wife: Human @relation(name: "Marriage")
     |   husband: Human @relation(name: "Marriage")
-    |   daughters: [Human!]! @relation(name:"Offspring")
+    |   daughters: [Human] @relation(name:"Offspring")
     |   father: Human @relation(name:"Offspring")
-    |   stepdaughters: [Human!]! @relation(name:"Cuckoo")
+    |   stepdaughters: [Human] @relation(name:"Cuckoo")
     |   mother: Human @relation(name:"Cuckoo")
-    |   fans: [Human!]! @relation(name:"Admirers")
-    |   rockstars: [Human!]! @relation(name:"Admirers")
+    |   fans: [Human] @relation(name:"Admirers")
+    |   rockstars: [Human] @relation(name:"Admirers")
     |   singer: Human @relation(name:"Team")
-    |   bandmembers: [Human!]! @relation(name:"Team")
+    |   bandmembers: [Human] @relation(name:"Team")
     |   title: Song
     |}
     |type Song{

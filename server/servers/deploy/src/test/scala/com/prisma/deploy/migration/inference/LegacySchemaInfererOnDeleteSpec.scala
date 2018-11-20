@@ -18,7 +18,7 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName" onDelete: CASCADE)
+          |  comments: [Comment] @relation(name:"MyRelationName" onDelete: CASCADE)
           |}
           |
           |type Comment {
@@ -39,7 +39,7 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName" onDelete: CASCADE)
+          |  comments: [Comment] @relation(name:"MyRelationName" onDelete: CASCADE)
           |}
           |
           |type Comment {
@@ -60,7 +60,7 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName")
+          |  comments: [Comment] @relation(name:"MyRelationName")
           |}
           |
           |type Comment {
@@ -81,8 +81,8 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName")
-          |  comments2: [Comment!] @relation(name:"MyRelationName2" onDelete: CASCADE)
+          |  comments: [Comment] @relation(name:"MyRelationName")
+          |  comments2: [Comment] @relation(name:"MyRelationName2" onDelete: CASCADE)
           |}
           |
           |type Comment {
@@ -110,8 +110,8 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName", onDelete: CASCADE)
-          |  comments2: [Comment!] @relation(name:"MyRelationName2", onDelete: CASCADE)
+          |  comments: [Comment] @relation(name:"MyRelationName", onDelete: CASCADE)
+          |  comments2: [Comment] @relation(name:"MyRelationName2", onDelete: CASCADE)
           |}
           |
           |type Comment {

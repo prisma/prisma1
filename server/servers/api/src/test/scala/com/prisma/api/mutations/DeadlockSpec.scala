@@ -55,7 +55,7 @@ class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase 
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
+        |   tags: [String]
         |}"""
     }
     database.setup(project)

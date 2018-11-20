@@ -15,7 +15,7 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Blog {
       |   id: ID! @unique
       |   name: String!
-      |   posts: [Post!]!
+      |   posts: [Post]
       |}
       |
       |type Post {
@@ -23,7 +23,7 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       |   title: String!
       |   popularity: Int!
       |   blog: Blog
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |}
       |
       |type Comment {

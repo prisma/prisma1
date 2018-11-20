@@ -14,13 +14,13 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       |type Blog {
       |   id: ID! @unique
       |   name: String!
-      |   posts: [Post!]!
+      |   posts: [Post]
       |}
       |
       |type Post @embedded {
       |   title: String!
       |   popularity: Int!
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |   author: Author
       |}
       |

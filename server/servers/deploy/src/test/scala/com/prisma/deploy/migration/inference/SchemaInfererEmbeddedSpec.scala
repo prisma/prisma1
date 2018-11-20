@@ -18,7 +18,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName")
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
@@ -44,7 +44,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName")
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
@@ -82,7 +82,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName")
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
@@ -120,7 +120,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]!
+          |  comments: [Comment]
           |}
           |
           |type Comment @embedded {

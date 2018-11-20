@@ -15,7 +15,7 @@ class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type List {
       |  id: ID! @unique
       |  name: String! @unique
-      |  todos: [Todo!]!
+      |  todos: [Todo]
       |}
       |
       |type Todo @embedded{

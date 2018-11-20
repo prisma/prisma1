@@ -265,7 +265,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment{
@@ -340,13 +340,13 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       """type Todo{
         |   id: ID! @unique
         |   title: String!
-        |   tags: [Tag!]!
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}"""
     }
 
@@ -512,7 +512,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       """type List{
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
@@ -736,7 +736,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       s"""
          |type List {
          |  id: ID! @unique
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {

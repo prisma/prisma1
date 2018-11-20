@@ -91,7 +91,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
       """
         |type Todo{
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -190,7 +190,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
         |type List{
         | id: ID! @unique
         | name: String!
-        | todos: [Todo!]!
+        | todos: [Todo]
         |}
         |
         |type Todo @embedded {

@@ -58,7 +58,7 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat @embedded{
@@ -106,7 +106,7 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat @embedded{

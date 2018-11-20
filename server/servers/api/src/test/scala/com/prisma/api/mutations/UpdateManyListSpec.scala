@@ -13,13 +13,13 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
                                                   |type MyObject {
                                                   |  id: ID! @unique
                                                   |  name: String! @unique
-                                                  |  strings: [String!]!
-                                                  |  ints: [Int!]!
-                                                  |  floats: [Float!]!
-                                                  |  booleans: [Boolean!]!
-                                                  |  datetimes: [DateTime!]!
-                                                  |  jsons: [Json!]!
-                                                  |  enums: [Tag!]!
+                                                  |  strings: [String]
+                                                  |  ints: [Int]
+                                                  |  floats: [Float]
+                                                  |  booleans: [Boolean]
+                                                  |  datetimes: [DateTime]
+                                                  |  jsons: [Json]
+                                                  |  enums: [Tag]
                                                   |}
                                                   |
                                                   |enum Tag{

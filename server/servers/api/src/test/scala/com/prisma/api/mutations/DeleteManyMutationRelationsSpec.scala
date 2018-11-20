@@ -732,14 +732,14 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
     val schema = """    type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                             stepChildOpt: StepChild
                         }
 
                         type Child{
                             id: ID! @unique
                             c: String! @unique
-                            parentsOpt: [Parent!]!
+                            parentsOpt: [Parent]
                         }
                  
                         type StepChild{

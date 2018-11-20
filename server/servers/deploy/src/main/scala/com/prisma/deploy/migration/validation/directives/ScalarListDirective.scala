@@ -19,8 +19,8 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
       directive: Directive,
       capabilities: Set[ConnectorCapability]
   ) = {
-    val invalidTypeError = (!fieldDef.isValidScalarListType).toOption {
-      DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be either of type `[String!]` or `[String!]!`.")
+    val invalidTypeError = (!fieldDef.isList).toOption {
+      DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be lists, e.g. `[${fieldDef.typeName}]`.")
     }
     invalidTypeError.toVector
   }
@@ -39,7 +39,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
           sys.error("should not happen")
         }
     }
-    fieldDef.isValidScalarListType.toOption {
+    fieldDef.isList.toOption {
       behaviour
     }
   }

@@ -30,7 +30,7 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
       |   id: ID! @unique
       |   title: String
       |   status: TodoStatus
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |}
       |
       |type Comment @embedded{

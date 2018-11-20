@@ -13,7 +13,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Top {
         |  top: String @unique
-        |  otherTops: [OtherTop!]! @mongoRelation(field: "otherTops")
+        |  otherTops: [OtherTop] @mongoRelation(field: "otherTops")
         |}
         |
         |
@@ -73,7 +73,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Top {
         |  top: String @unique
-        |  otherTops: [OtherTop!]! @mongoRelation(field: "otherTops")
+        |  otherTops: [OtherTop] @mongoRelation(field: "otherTops")
         |}
         |
         |
@@ -121,7 +121,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Top {
         |  top: String @unique
-        |  otherTops: [OtherTop!]! @mongoRelation(field: "otherTops")
+        |  otherTops: [OtherTop] @mongoRelation(field: "otherTops")
         |}
         |
         |
@@ -171,7 +171,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
 
     val project = SchemaDsl.fromString() {
       """type Item {
-        |  subItems: [SubItem!]!
+        |  subItems: [SubItem]
         |}
         |
         |type SubItem @embedded {
@@ -245,7 +245,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
 
     val project = SchemaDsl.fromString() {
       """type Item {
-        |  subItems: [SubItem!]! @mongoRelation(field: "subItems")
+        |  subItems: [SubItem] @mongoRelation(field: "subItems")
         |}
         |
         |type SubItem {

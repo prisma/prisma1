@@ -18,7 +18,7 @@ class EmbeddedWhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   outerString: String!
         |   outerJson: Json! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo @embedded{

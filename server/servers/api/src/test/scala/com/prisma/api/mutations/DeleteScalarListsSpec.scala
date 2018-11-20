@@ -15,7 +15,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type TestModel {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         |}"""
     }
 
@@ -45,7 +45,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type Top {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         |}"""
     }
 

@@ -15,7 +15,7 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Foo {
       |    id: ID! @unique
       |    test: String
-      |    bars: [Bar!]!
+      |    bars: [Bar]
       |}
       |
       |type Bar {

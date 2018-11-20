@@ -15,13 +15,13 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Top {
       |  id: ID! @unique
       |  t: String! @unique
-      |  middles: [Middle!]!
+      |  middles: [Middle]
       |}
       |
       |type Middle {
       |  id: ID! @unique
       |  m: String! @unique
-      |  bottoms: [Bottom!]!
+      |  bottoms: [Bottom]
       |}
       |
       |type Bottom {

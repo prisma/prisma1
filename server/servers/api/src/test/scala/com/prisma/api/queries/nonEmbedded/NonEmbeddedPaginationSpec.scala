@@ -14,7 +14,7 @@ class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
       |  id: ID! @unique
       |  createdAt: DateTime!
       |  name: String! @unique
-      |  todos: [Todo!]!
+      |  todos: [Todo]
       |}
       |
       |type Todo {
@@ -37,7 +37,7 @@ class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
       |  id: UUID! @unique
       |  createdAt: DateTime!
       |  name: String! @unique
-      |  todos: [Todo!]!
+      |  todos: [Todo]
       |}
       |
       |type Todo {

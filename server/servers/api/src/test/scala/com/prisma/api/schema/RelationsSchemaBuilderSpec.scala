@@ -112,7 +112,7 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
          |type List {
          |  id: ID! @unique
          |  title: String!
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |type Todo {
          |  id: ID! @unique
