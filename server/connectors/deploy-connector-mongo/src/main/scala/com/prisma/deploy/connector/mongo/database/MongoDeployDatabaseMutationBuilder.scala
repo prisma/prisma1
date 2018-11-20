@@ -55,6 +55,14 @@ object MongoDeployDatabaseMutationBuilder {
     } yield ()
   }
 
+  def nonDestructiveTruncateProjectTables(project: Project) = DeployMongoAction { database =>
+    val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
+
+    for {
+      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).deleteMany(Document().toBsonDocument).toFuture()))
+    } yield ()
+  }
+
   def deleteProjectDatabase = DeployMongoAction { database =>
     Future.successful(())
 //    database.drop().toFuture().map(_ -> Unit)
