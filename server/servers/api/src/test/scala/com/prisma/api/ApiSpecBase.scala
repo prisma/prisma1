@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
+import com.prisma.config.PrismaConfig
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -27,8 +28,8 @@ trait ApiSpecBase
   implicit lazy val deployConnector          = testDependencies.deployConnector
   val server                                 = ApiTestServer()
   val database                               = ApiTestDatabase()
-  override def prismaConfig                  = testDependencies.config
   def capabilities: Set[ConnectorCapability] = testDependencies.apiConnector.capabilities
+  override def prismaConfig: PrismaConfig    = testDependencies.config
 
   def connectorHasCapability(capability: ConnectorCapability): Boolean = testDependencies.apiConnector.hasCapability(capability)
 
