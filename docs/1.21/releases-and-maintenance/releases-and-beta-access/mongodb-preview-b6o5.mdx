@@ -47,7 +47,21 @@ With MongoDB, relations can be expressed either by _embedding_ data directly in 
 
 When updating the Prisma datamodel, Prisma will only ever make _additive_ structural changes to your MongoDB database(s).
 
-This means Prisma will never delete _or_ rename an existing collection from a database, nor will it drop an entire database. Be aware that this approach leads to "dangling collections", i.e. collections that still exist in the underlying MongoDB database but that can't be accessed through the Prisma API.
+During a migration, Prisma will never:
+
+- delete an existing collection
+- rename an existing collection
+- drop an existing database
+- delete or change any field names on existing documents
+
+Be aware that this approach leads to "dangling collections", i.e. collections that still exist in the underlying MongoDB database but that can't be accessed through the Prisma API.
+
+During a migration, Prisma might:
+
+- create new collections
+- create new documents
+- create new fields on existing documents
+
 
 ## Data modeling
 
@@ -189,6 +203,10 @@ type Post @db(name: "post") {
 #### `@embedded`
 
 The `@embedded` directive is used for _embedded types_. Find more info [above](#embedded-types).
+
+### Notes
+
+- `@rename` doesn't work
 
 ## Get started with a new database
 
