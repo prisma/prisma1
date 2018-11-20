@@ -267,11 +267,6 @@ case class LegacyDataModelValidator(
   }
 
   def validateRelationFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
-    val relationFields = fieldAndTypes.filter(isRelationField)
-    val wrongTypeDefinitions = relationFields.collect {
-      case fieldAndType if !fieldAndType.fieldDef.isValidRelationType => DeployErrors.relationFieldTypeWrong(fieldAndType)
-    }
-
     def ambiguousRelationFieldsForType(objectType: ObjectTypeDefinition): Vector[FieldAndType] = {
       val relationFields                                = objectType.fields.filter(isRelationField)
       val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
@@ -343,14 +338,14 @@ case class LegacyDataModelValidator(
           Iterable.empty
       }
 
-    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambigous
+    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambigous
   }
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
     if (capabilities.exists(_.isInstanceOf[ScalarListsCapability])) {
       scalarFields.collect {
-        case fieldAndType if !fieldAndType.fieldDef.isValidScalarListOrNonListType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
+        case fieldAndType if !fieldAndType.fieldDef.isValidScalarType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
       }
     } else {
       scalarFields.collect {
