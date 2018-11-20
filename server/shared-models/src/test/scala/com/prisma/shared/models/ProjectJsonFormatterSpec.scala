@@ -1,7 +1,7 @@
 package com.prisma.shared.models
 
 import com.prisma.gc_values.StringGCValue
-import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy, ScalarListBehaviour, ScalarListStrategy}
+import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.utils.json.JsonUtils
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.Json
@@ -125,7 +125,7 @@ class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
       relationName = Some("RelationName"),
       relationSide = Some(RelationSide.A),
       manifestation = None,
-      behaviour = Some(IdBehaviour(IdStrategy.None))
+      behaviour = Some(IdBehaviour(IdStrategy.Sequence, Some(Sequence("MY_SEQUENCE", initialValue = 11, allocationSize = 123))))
     )
     val json = Json.toJson(field).prettyPrint
     json should equal(
@@ -148,7 +148,12 @@ class ProjectJsonFormatterSpec extends FlatSpec with Matchers with JsonUtils {
         |    "relationSide": "${field.relationSide.get.toString}",
         |    "behaviour": {
         |       "type": "id",
-        |       "strategy": "None"
+        |       "strategy": "Sequence",
+        |       "sequence": {
+        |         "name": "MY_SEQUENCE",
+        |         "initialValue": 11,
+        |         "allocationSize": 123
+        |       }
         |    }
         |}
       """.stripMargin.parseJson.prettyPrint

@@ -13,6 +13,7 @@ import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
 import { Introspector, PostgresConnector } from 'prisma-db-introspection'
+import { MongoClient } from 'mongodb'
 import * as yaml from 'js-yaml'
 import { Client as PGClient } from 'pg'
 
@@ -24,14 +25,15 @@ export type DatabaseType = 'postgres' | 'mysql' | 'mongo'
 
 export interface DatabaseCredentials {
   type: DatabaseType
-  host: string
-  port: number
-  user: string
-  password: string
+  host?: string
+  port?: number
+  user?: string
+  password?: string
   database?: string
   alreadyData?: boolean
   schema?: string
   ssl?: boolean
+  uri?: string
 }
 
 export interface GetEndpointResult {
@@ -186,25 +188,27 @@ export class EndpointDialog {
   }
 
   printDatabaseConfig(credentials: DatabaseCredentials) {
-    const defaultDB = JSON.parse(
-      JSON.stringify({
-        connector: credentials.type,
-        host: credentials.host,
-        port: credentials.port || defaultPorts[credentials.type],
-        database:
-          credentials.database && credentials.database.length > 0
-            ? credentials.database
-            : undefined,
-        schema:
-          credentials.schema && credentials.schema.length > 0
-            ? credentials.schema
-            : undefined,
-        user: credentials.user,
-        password: credentials.password,
-        migrations: !credentials.alreadyData || credentials.type === 'mongo',
-        rawAccess: credentials.type !== 'mongo',
-      }),
-    )
+    const data: any = {
+      connector: credentials.type,
+      host: credentials.host,
+      port: credentials.port || defaultPorts[credentials.type],
+      database:
+        credentials.database && credentials.database.length > 0
+          ? credentials.database
+          : undefined,
+      schema:
+        credentials.schema && credentials.schema.length > 0
+          ? credentials.schema
+          : undefined,
+      user: credentials.user,
+      password: credentials.password,
+      rawAccess: credentials.type !== 'mongo',
+      uri: credentials.uri,
+    }
+    if (credentials.type !== 'mongo') {
+      data.migrations = !credentials.alreadyData
+    }
+    const defaultDB = JSON.parse(JSON.stringify(data))
     return yaml
       .safeDump({
         databases: {
@@ -296,6 +300,12 @@ export class EndpointDialog {
         break
       case 'Use existing database':
         credentials = await this.getDatabase()
+        if (credentials.type === 'mongo') {
+          const before = Date.now()
+          this.out.action.start(`Connecting to database`)
+          await this.connectToMongo(credentials)
+          this.out.action.stop(prettyTime(Date.now() - before))
+        }
         if (credentials.type !== 'mongo') {
           this.out.log('')
           const before = Date.now()
@@ -421,84 +431,114 @@ export class EndpointDialog {
     }
   }
 
+  connectToMongo(credentials: DatabaseCredentials) {
+    return new Promise((resolve, reject) => {
+      if (!credentials.uri) {
+        throw new Error(`Please provide the MongoDB connection string`)
+      }
+
+      MongoClient.connect(
+        credentials.uri,
+        { useNewUrlParser: true },
+        (err, client) => {
+          if (err) {
+            reject(err)
+          } else {
+            if (credentials.database) {
+              client.db(credentials.database)
+            }
+            client.close()
+            resolve()
+          }
+        },
+      )
+    })
+  }
+
   replaceLocalDockerHost(credentials: DatabaseCredentials) {
-    const replaceMap = {
-      'host.docker.internal': 'localhost',
-      'docker.for.mac.localhost': 'localhost',
+    if (credentials.host) {
+      const replaceMap = {
+        'host.docker.internal': 'localhost',
+        'docker.for.mac.localhost': 'localhost',
+      }
+      return {
+        ...credentials,
+        host: replaceMap[credentials.host] || credentials.host,
+      }
     }
-    return {
-      ...credentials,
-      host: replaceMap[credentials.host] || credentials.host,
-    }
+    return credentials
   }
 
   async getDatabase(
     introspection: boolean = false,
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
-    const alreadyData =
-      type === 'mongo'
-        ? false
-        : introspection || (await this.askForExistingData())
+    const alreadyData = introspection || (await this.askForExistingData())
     const askForSchema = introspection ? true : alreadyData ? true : false
     if (type === 'mysql' && alreadyData) {
       throw new Error(
         `Existing MySQL databases with data are not yet supported.`,
       )
     }
-    const host = await this.ask({
-      message: 'Enter database host',
-      key: 'host',
-      defaultValue: 'localhost',
-    })
-    const port = await this.ask({
-      message: 'Enter database port',
-      key: 'port',
-      defaultValue: String(defaultPorts[type]),
-    })
-    const user = await this.ask({
-      message: 'Enter database user',
-      key: 'user',
-    })
-    const password = await this.ask({
-      message: 'Enter database password',
-      key: 'password',
-    })
-    const database =
-      type === 'postgres' || type === 'mongo'
+    const credentials: any = {
+      type,
+    }
+    if (type === 'mysql' || type === 'postgres') {
+      credentials.host = await this.ask({
+        message: 'Enter database host',
+        key: 'host',
+        defaultValue: 'localhost',
+      })
+      credentials.port = await this.ask({
+        message: 'Enter database port',
+        key: 'port',
+        defaultValue: String(defaultPorts[type]),
+      })
+      credentials.user = await this.ask({
+        message: 'Enter database user',
+        key: 'user',
+      })
+      credentials.password = await this.ask({
+        message: 'Enter database password',
+        key: 'password',
+      })
+      credentials.database =
+        type === 'postgres'
+          ? await this.ask({
+              message: alreadyData
+                ? `Enter name of existing database`
+                : `Enter database name`,
+              key: 'database',
+            })
+          : null
+      credentials.ssl =
+        type === 'postgres'
+          ? await this.ask({
+              message: 'Use SSL?',
+              inputType: 'confirm',
+              key: 'ssl',
+            })
+          : undefined
+      credentials.schema = askForSchema
         ? await this.ask({
-            message: alreadyData
-              ? `Enter name of existing database`
-              : `Enter database name`,
-            key: 'database',
-          })
-        : null
-    const ssl =
-      type === 'postgres'
-        ? await this.ask({
-            message: 'Use SSL?',
-            inputType: 'confirm',
-            key: 'ssl',
+            message: `Enter name of existing schema`,
+            key: 'schema',
           })
         : undefined
-    const schema = askForSchema
-      ? await this.ask({
-          message: `Enter name of existing schema`,
-          key: 'schema',
+    } else if (type === 'mongo') {
+      credentials.uri = await this.ask({
+        message: 'Enter MongoDB connection string',
+        key: 'uri',
+      })
+      if (alreadyData) {
+        credentials.database = await this.ask({
+          message: `Enter name of existing database`,
+          key: 'database',
         })
-      : undefined
-
-    return {
-      type,
-      host,
-      port,
-      user,
-      password,
-      database,
-      alreadyData,
-      schema,
-      ssl,
+      }
     }
+
+    return credentials
   }
 
   public async selectSchema(schemas: string[]): Promise<string> {

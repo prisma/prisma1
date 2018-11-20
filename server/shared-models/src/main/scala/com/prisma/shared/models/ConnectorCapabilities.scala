@@ -31,9 +31,10 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
   // RawAccessCapability
 
-  sealed trait IdCapability extends ConnectorCapability
-  object IntIdCapability    extends IdCapability
-  object UuidIdCapability   extends IdCapability
+  sealed trait IdCapability   extends ConnectorCapability
+  object IntIdCapability      extends IdCapability
+  object UuidIdCapability     extends IdCapability
+  object IdSequenceCapability extends IdCapability
 }
 
 object ConnectorCapabilities extends BooleanUtils {

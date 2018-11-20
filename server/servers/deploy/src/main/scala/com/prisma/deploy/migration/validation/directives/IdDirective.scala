@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability.{IdSequenceCapability, IntIdCapability, UuidIdCapability}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.TypeIdentifier.{IdTypeIdentifier, ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
@@ -11,7 +11,7 @@ import sangria.ast._
 object IdDirective extends FieldDirective[IdBehaviour] {
   override def name                                                 = "id"
   override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(IdStrategyArgument)
+  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(IdStrategyArgument(capabilities))
 
   override def validate(
       doc: Document,
@@ -53,16 +53,23 @@ object IdDirective extends FieldDirective[IdBehaviour] {
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
     fieldDef.directive(name).map { directive =>
-      val strategy = IdStrategyArgument.value(directive).getOrElse(FieldBehaviour.IdStrategy.Auto)
-      IdBehaviour(strategy)
+      val strategy = IdStrategyArgument(capabilities).value(directive).getOrElse(FieldBehaviour.IdStrategy.Auto)
+      val sequence = SequenceDirective.value(document, typeDef, fieldDef, capabilities)
+      IdBehaviour(strategy, sequence)
     }
   }
 }
 
-object IdStrategyArgument extends DirectiveArgument[FieldBehaviour.IdStrategy] {
-  val autoValue           = "AUTO"
-  val noneValue           = "NONE"
-  val validStrategyValues = Set(autoValue, noneValue)
+object IdStrategyArgument {
+  val name          = "strategy"
+  val autoValue     = "AUTO"
+  val noneValue     = "NONE"
+  val sequenceValue = "SEQUENCE"
+}
+case class IdStrategyArgument(capabilities: Set[ConnectorCapability]) extends DirectiveArgument[FieldBehaviour.IdStrategy] {
+  import IdStrategyArgument._
+
+  val validStrategyValues = Set(autoValue, noneValue) ++ capabilities.contains(IdSequenceCapability).toOption(sequenceValue)
 
   override def name = "strategy"
 
@@ -70,9 +77,10 @@ object IdStrategyArgument extends DirectiveArgument[FieldBehaviour.IdStrategy] {
 
   override def value(value: Value) = {
     value.asString match {
-      case `autoValue` => FieldBehaviour.IdStrategy.Auto
-      case `noneValue` => FieldBehaviour.IdStrategy.None
-      case x           => sys.error(s"Encountered unknown strategy $x")
+      case `autoValue`     => FieldBehaviour.IdStrategy.Auto
+      case `noneValue`     => FieldBehaviour.IdStrategy.None
+      case `sequenceValue` => FieldBehaviour.IdStrategy.Sequence
+      case x               => sys.error(s"Encountered unknown strategy $x")
     }
   }
 

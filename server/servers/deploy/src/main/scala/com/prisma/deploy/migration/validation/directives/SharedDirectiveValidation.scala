@@ -10,6 +10,14 @@ trait SharedDirectiveValidation {
     }
   }
 
+  def validateIntValue(value: sangria.ast.Value): Option[String] = {
+    value match {
+      case _: sangria.ast.IntValue    => None
+      case _: sangria.ast.BigIntValue => None
+      case _                          => Some("This argument must be an Int.")
+    }
+  }
+
   def validateEnumValue(argument: String, validValues: Vector[String])(value: sangria.ast.Value): Option[String] = {
     if (validValues.contains(value.asString)) {
       None

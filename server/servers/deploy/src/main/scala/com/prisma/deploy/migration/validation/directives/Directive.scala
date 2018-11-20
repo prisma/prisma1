@@ -13,7 +13,7 @@ trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
 }
 
 object TypeDirective {
-  val all = Vector(TypeDbDirective, EmbeddedDirective)
+  val all = Vector(TypeDbDirective, EmbeddedDirective, LinkTableDirective)
 }
 
 trait TypeDirective[T] extends DirectiveBase {
@@ -54,7 +54,7 @@ trait FieldDirective[T] extends DirectiveBase {
 
 object FieldDirective {
   val behaviour = Vector(IdDirective, CreatedAtDirective, UpdatedAtDirective, ScalarListDirective)
-  val all       = Vector(DefaultDirective, RelationDirective, UniqueDirective, FieldDbDirective) ++ behaviour
+  val all       = Vector(DefaultDirective, RelationDirective, UniqueDirective, FieldDbDirective, SequenceDirective) ++ behaviour
 }
 
 case class ArgumentRequirement(name: String, validate: sangria.ast.Value => Option[String])
