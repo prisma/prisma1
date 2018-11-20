@@ -17,7 +17,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyNameForTodoToComments")
+          |  comments: [Comment] @relation(name:"MyNameForTodoToComments")
           |}
           |
           |type Comment {
@@ -35,12 +35,12 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """
           |type User {
-          |  calls: [Call!]! @relation(name: "CallRequester")
-          |  calls_member: [Call!]! @relation(name: "CallMembers")
+          |  calls: [Call] @relation(name: "CallRequester")
+          |  calls_member: [Call] @relation(name: "CallMembers")
           |}
           |type Call {
           |  created_by: User! @relation(name: "CallRequester")
-          |  members: [User!]! @relation(name: "CallMembers")
+          |  members: [User] @relation(name: "CallMembers")
           |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -57,7 +57,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """
           |type Todo {
-          |  comments: [Comment!] @relation(name:"MyRelationName")
+          |  comments: [Comment] @relation(name:"MyRelationName")
           |}
           |
           |type Comment {
@@ -76,7 +76,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """
           |type Todo {
-          |  comments: [Comment!]
+          |  comments: [Comment]
           |}
           |
           |type Comment {
@@ -110,7 +110,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """
           |type TodoNew {
-          |  comments: [CommentNew!]
+          |  comments: [CommentNew]
           |}
           |
           |type CommentNew {
@@ -145,7 +145,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """
           |type TodoNew {
-          |  commentsNew: [CommentNew!]
+          |  commentsNew: [CommentNew]
           |}
           |
           |type CommentNew {
@@ -213,8 +213,8 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """|type Technology {
            |  name: String! @unique
-           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -231,8 +231,8 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val types =
         """|type Technology {
            |  name: String! @unique
-           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -246,8 +246,8 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
       val newTypes =
         """|type NewTechnology {
            |  name: String! @unique
-           |  xTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
+           |  xTechnologies: [NewTechnology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [NewTechnology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
 
       val renames = SchemaMapping(
@@ -277,8 +277,8 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     val types =
       """|type Technology {
          |  name: String! @unique
-         |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-         |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+         |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -317,7 +317,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     val types =
       """|type Technology {
          |  name: String! @unique
-         |  childTechnologies: [Technology!]!
+         |  childTechnologies: [Technology]
          |}""".stripMargin.trim()
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -438,7 +438,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     val types =
       """|type Todo {
          |  name: String!
-         |  comments: [Comment!]!
+         |  comments: [Comment]
          |}
          |type Comment {
          |  text: String

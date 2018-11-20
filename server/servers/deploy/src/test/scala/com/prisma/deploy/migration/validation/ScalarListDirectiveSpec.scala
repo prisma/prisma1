@@ -4,13 +4,13 @@ import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapabili
 import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
-class eScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
+class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
   "@scalarList should be optional" in {
     val dataModelString =
       """
         |type Model {
         |  id: ID! @id
-        |  tags: [String!]
+        |  tags: [String]
         |}
       """.stripMargin
     val dataModel = validate(dataModelString, Set(NonEmbeddedScalarListCapability))
@@ -25,7 +25,7 @@ class eScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModel
       """
         |type Model {
         |  id: ID! @id
-        |  tags: [String!] @scalarList(strategy: FOOBAR)
+        |  tags: [String] @scalarList(strategy: FOOBAR)
         |}
       """.stripMargin
 

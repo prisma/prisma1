@@ -57,7 +57,7 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
       """.stripMargin
 
