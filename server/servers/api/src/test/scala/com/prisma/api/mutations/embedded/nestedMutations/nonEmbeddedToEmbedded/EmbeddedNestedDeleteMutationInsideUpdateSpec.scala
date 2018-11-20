@@ -236,7 +236,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       """
         |type Todo{
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment @embedded{
@@ -468,12 +468,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
@@ -545,12 +545,12 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
@@ -622,7 +622,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
@@ -705,7 +705,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below @embedded{
@@ -926,8 +926,8 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique
-                                             |  follower: [User!]! @relation(name: "UserFollow")
-                                             |  following: [User!]! @relation(name: "UserFollow")
+                                             |  follower: [User] @relation(name: "UserFollow")
+                                             |  following: [User] @relation(name: "UserFollow")
                                              |}""" }
     database.setup(project)
 

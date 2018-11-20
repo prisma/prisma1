@@ -30,7 +30,7 @@ class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with 
       |   id: ID! @unique
       |   title: String
       |   status: TodoStatus
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |}
       |
       |type Comment{

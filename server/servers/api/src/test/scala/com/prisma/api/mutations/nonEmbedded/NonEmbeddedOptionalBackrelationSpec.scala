@@ -58,7 +58,7 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat {
@@ -107,7 +107,7 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat {

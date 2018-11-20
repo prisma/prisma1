@@ -14,7 +14,7 @@ class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBa
                                                       |  id: ID! @unique
                                                       |  name: String! @unique
                                                       |  parent: User @relation(name: "Users")
-                                                      |  children: [User!]! @relation(name: "Users")
+                                                      |  children: [User] @relation(name: "Users")
                                                       |}""" }
 
     database.setup(project)

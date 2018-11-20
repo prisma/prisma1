@@ -19,7 +19,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String!
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -50,7 +50,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String!
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -82,7 +82,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String! @unique
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -114,7 +114,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String! @unique
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }

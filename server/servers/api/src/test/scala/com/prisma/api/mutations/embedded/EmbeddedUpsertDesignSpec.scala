@@ -16,13 +16,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo @embedded{
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -52,13 +52,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo @embedded{
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -88,13 +88,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo @embedded{
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -121,14 +121,14 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -172,14 +172,14 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -216,13 +216,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo @embedded {
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -254,13 +254,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo @embedded {
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -292,13 +292,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo @embedded{
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -330,13 +330,13 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo @embedded {
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |}"""
     }
 
@@ -368,12 +368,12 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}
         |
         |type Todo @embedded{
         |   uTodo: String @unique
-        |   tags: [Tag!]!
+        |   tags: [Tag]
         |}
         |
         |type Tag @embedded{
@@ -410,12 +410,12 @@ class EmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}
         |
         |type Todo @embedded{
         |   uTodo: String @unique
-        |   tags: [Tag!]!
+        |   tags: [Tag]
         |}
         |
         |type Tag @embedded{

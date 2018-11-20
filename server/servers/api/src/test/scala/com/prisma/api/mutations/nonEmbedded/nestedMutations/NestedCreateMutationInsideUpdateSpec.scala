@@ -516,7 +516,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |
         |type Todo{
         |   id: ID! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 
@@ -568,7 +568,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |type Todo{
         |   id: ID! @unique
         |   title: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 
@@ -621,7 +621,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |type Todo{
         |   id: ID! @unique
         |   title: String! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 

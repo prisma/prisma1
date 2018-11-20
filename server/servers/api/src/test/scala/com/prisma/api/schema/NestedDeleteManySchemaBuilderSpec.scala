@@ -17,7 +17,7 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
       """
         |type Top {
         |   name: String @unique
-        |   other: [Other!]!
+        |   other: [Other]
         |}
         |
         |type Other{
@@ -40,7 +40,7 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
       """
         |type Top {
         |   name: String @unique
-        |   other: [Other!]!
+        |   other: [Other]
         |}
         |
         |type Other{

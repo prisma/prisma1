@@ -15,13 +15,13 @@ class EmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecB
       """type Top {
         | id: ID! @unique
         | name: String! @unique
-        | topList: [Int!]!
+        | topList: [Int]
         | bottom: Bottom
         |}
         |
         |type Bottom @embedded{
         | name: String! @unique
-        | bottomList: [Int!]!
+        | bottomList: [Int]
         |}"""
     }
 

@@ -145,7 +145,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
 
       """type Top{
         |   id: ID! @unique
-        |   em: [Embedded!]!
+        |   em: [Embedded]
         |}
         |
         |type Embedded @embedded {

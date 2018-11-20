@@ -20,7 +20,7 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Top {
       |   id: ID! @unique
       |   int: Int!
-      |   middles:[Middle!]!
+      |   middles:[Middle]
       |}
       |
       |type Middle {
@@ -100,14 +100,14 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top {
         |   id: ID! @unique
         |   int: Int @unique
-        |   middles:[Middle!]!   @relation(name: "TopToMiddle", onDelete: CASCADE)
+        |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
         |}
         |
         |type Middle {
         |   id: ID! @unique
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom!]! @relation(name: "MiddleToBottom", onDelete: CASCADE)
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
         |}
         |
         |type Bottom {
@@ -170,25 +170,25 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top{
         |   id: ID! @unique
         |   int: Int @unique
-        |   as: [A!]! @relation(name: "Top" onDelete: CASCADE)
+        |   as: [A] @relation(name: "Top" onDelete: CASCADE)
         |}
         |
         |type A {
         |   id: ID! @unique
         |   int: Int @unique
-        |   bs:[B!]!  @relation(name: "A" onDelete: CASCADE)
+        |   bs:[B]  @relation(name: "A" onDelete: CASCADE)
         |}
         |
         |type B {
         |   id: ID! @unique
         |   int: Int
-        |   cs: [C!]! @relation(name: "B" onDelete: CASCADE)
+        |   cs: [C] @relation(name: "B" onDelete: CASCADE)
         |}
         |
         |type C {
         |   id: ID! @unique
         |   int: Int
-        |   ds: [D!]! @relation(name: "C" onDelete: CASCADE)
+        |   ds: [D] @relation(name: "C" onDelete: CASCADE)
         |}
         |
         |type D {

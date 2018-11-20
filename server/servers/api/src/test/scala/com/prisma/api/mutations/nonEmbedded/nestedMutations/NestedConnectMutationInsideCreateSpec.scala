@@ -748,7 +748,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |type User {
         | id: ID! @unique
         | u: String! @unique
-        | roles: [Role!]!
+        | roles: [Role]
         |}
       """.stripMargin
     }
@@ -796,7 +796,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -839,7 +839,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -878,7 +878,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |type Todo {
         | id: ID! @unique
         | text: String
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -913,7 +913,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -969,7 +969,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -1017,7 +1017,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         | id: ID! @unique
         | title: String!
         | alias: String! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }

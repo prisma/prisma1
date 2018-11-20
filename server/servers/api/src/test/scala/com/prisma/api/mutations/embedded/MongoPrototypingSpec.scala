@@ -70,13 +70,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -130,7 +130,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
@@ -200,7 +200,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   ints: [Int!]!
+        |   ints: [Int]
         |}"""
     }
 
@@ -229,7 +229,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
@@ -441,7 +441,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
@@ -510,7 +510,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -591,7 +591,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -667,13 +667,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -887,7 +887,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String @unique
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Friend{
@@ -953,7 +953,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Friend{
@@ -1000,7 +1000,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Friend{
@@ -1009,7 +1009,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |
         |type Child @embedded {
         |    name: String
-        |    friends: [Friend!]! @mongoRelation(field: "friends")
+        |    friends: [Friend] @mongoRelation(field: "friends")
         |}"""
     }
 
@@ -1290,7 +1290,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Child @embedded{
@@ -1388,7 +1388,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [ZChild!]!
+        |    children: [ZChild]
         |}"""
     }
 
@@ -1448,7 +1448,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [ZChild!]!
+        |    children: [ZChild]
         |}"""
     }
 
@@ -1508,7 +1508,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [ZChild!]!
+        |    children: [ZChild]
         |}"""
     }
 
@@ -1557,7 +1557,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type User {
         |  id: ID! @unique
         |  nick: String! @unique
-        |  memberships: [ListMembership!]!
+        |  memberships: [ListMembership]
         |}
         |
         |type List {
@@ -1565,7 +1565,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  createdAt: DateTime! @createdAt
         |  updatedAt: DateTime! @updatedAt
         |  name: String!
-        |  memberships: [ListMembership!]!
+        |  memberships: [ListMembership]
         |}
         |
         |type ListMembership {
@@ -1626,7 +1626,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type User {
         |  id: ID! @unique
         |  name: String!
-        |  pets: [Dog!]!
+        |  pets: [Dog]
         |}
         |
         |type Post {
@@ -1708,7 +1708,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Todo {
         |  id: ID! @unique
         |  title: String! @unique
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -1794,14 +1794,14 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Post {
         |  id: ID! @unique
-        |  authors: [AUser!]!
+        |  authors: [AUser]
         |  title: String! @unique
         |}
         |
         |type AUser {
         |  id: ID! @unique
         |  name: String! @unique
-        |  posts: [Post!]! @mongoRelation(field: "posts")
+        |  posts: [Post] @mongoRelation(field: "posts")
         |}"""
     }
 

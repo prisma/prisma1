@@ -18,14 +18,14 @@ class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   outerString: String!
         |   outerJson: Json! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   innerString: String!
         |   innerJson: Json! @unique
-        |   notes: [Note!]!
+        |   notes: [Note]
         |}"""
     }
 

@@ -22,7 +22,7 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
         |type Bottom {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         |}"""
     }
 
@@ -58,7 +58,7 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
         |type Bottom {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         | top: Top! @relation(name: "Test")
         |}"""
     }

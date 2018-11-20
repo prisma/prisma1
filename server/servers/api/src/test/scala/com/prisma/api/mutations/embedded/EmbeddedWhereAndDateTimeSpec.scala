@@ -18,7 +18,7 @@ class EmbeddedWhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBa
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo @embedded{
@@ -86,7 +86,7 @@ class EmbeddedWhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBa
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo @embedded{

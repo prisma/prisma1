@@ -18,14 +18,14 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
-        |   notes: [Note!]!
+        |   notes: [Note]
         |}"""
     }
 
@@ -91,14 +91,14 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
-        |   notes: [Note!]!
+        |   notes: [Note]
         |}"""
 
     }

@@ -16,14 +16,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -52,14 +52,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -103,14 +103,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -147,15 +147,15 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
-        |   lists: [List!]!
+        |   todoInts: [Int]
+        |   lists: [List]
         |}"""
     }
 
@@ -188,15 +188,15 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
-        |   lists: [List!]!
+        |   todoInts: [Int]
+        |   lists: [List]
         |}"""
     }
 
@@ -229,14 +229,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -270,14 +270,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }

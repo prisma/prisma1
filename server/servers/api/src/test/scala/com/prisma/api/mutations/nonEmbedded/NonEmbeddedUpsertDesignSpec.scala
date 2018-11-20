@@ -211,20 +211,20 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   lists: [List!]!
-        |   tags: [Tag!]!
+        |   lists: [List]
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   uTag: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}"""
     }
 
@@ -261,20 +261,20 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   lists: [List!]!
-        |   tags: [Tag!]!
+        |   lists: [List]
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   uTag: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}"""
     }
 
