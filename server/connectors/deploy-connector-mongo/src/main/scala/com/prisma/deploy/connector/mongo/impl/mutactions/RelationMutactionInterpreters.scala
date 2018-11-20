@@ -15,7 +15,7 @@ object CreateRelationInterpreter extends MongoMutactionInterpreter[CreateRelatio
 
 object DeleteRelationInterpreter extends MongoMutactionInterpreter[DeleteRelationTable] {
   override def execute(mutaction: DeleteRelationTable)  = NoAction.unit //gets dropped with collection
-  override def rollback(mutaction: DeleteRelationTable) = Indexhelper.add(mutaction.relation)
+  override def rollback(mutaction: DeleteRelationTable) = NoAction.unit //Indexhelper.add(mutaction.relation)
 }
 
 //Fixme add relationindexes for ids on embedded types

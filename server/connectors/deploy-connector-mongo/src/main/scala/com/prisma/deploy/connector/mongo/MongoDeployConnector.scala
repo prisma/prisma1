@@ -46,11 +46,11 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   }
 
   override def createProjectDatabase(id: String): Future[Unit] = { // This is a hack
-    mongoClient.getDatabase(config.database.getOrElse(id)).listCollectionNames().toFuture().map(_ -> Unit)
+    mongoClient.getDatabase(config.database.getOrElse(id)).listCollectionNames().toFuture().map(_ => ())
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    mongoClient.getDatabase(config.database.getOrElse(id)).drop().toFuture().map(_ -> Unit)
+    mongoClient.getDatabase(config.database.getOrElse(id)).drop().toFuture().map(_ => ())
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = Future.successful(Vector.empty)
