@@ -7,7 +7,7 @@ object MongoDatabasesFactory {
 
   def initialize(config: DatabaseConfig) = {
     val uri: String = config.uri
-//    if (new ConnectionString(uri).getSslEnabled) System.setProperty("org.mongodb.async.type", "netty")
+    if (new ConnectionString(uri).getSslEnabled) System.setProperty("org.mongodb.async.type", "netty")
     MongoClient(uri)
   }
 }

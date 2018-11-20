@@ -6,6 +6,6 @@ import org.mongodb.scala.MongoClient
 
 case class MongoInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   val uri: String = dbConfig.uri
-//  if (new ConnectionString(uri).getSslEnabled) System.setProperty("org.mongodb.async.type", "netty")
+  if (new ConnectionString(uri).getSslEnabled) System.setProperty("org.mongodb.async.type", "netty")
   val client = MongoClient(uri)
 }

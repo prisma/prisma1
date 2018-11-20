@@ -1,4 +1,4 @@
-import sbt.Keys.name
+import sbt.Keys.{name, scalacOptions}
 import sbt._
 import SbtUtils._
 import Dependencies._
@@ -153,8 +153,11 @@ lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient)
-  )
+    libraryDependencies ++= Seq(mongoClient),
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
@@ -184,7 +187,12 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .dependsOn(apiConnector)
-  .settings(libraryDependencies ++= Seq(mongoClient))
+  .settings(libraryDependencies ++= Seq(mongoClient),
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
+
 
 
 // ####################
@@ -233,7 +241,11 @@ lazy val akkaUtils = libProject("akka-utils")
     specs2,
     caffeine
   ))
-  .settings(scalacOptions := Seq("-deprecation", "-feature"))
+  .settings(
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
 
 lazy val metrics = libProject("metrics")
   .dependsOn(errorReporting)
