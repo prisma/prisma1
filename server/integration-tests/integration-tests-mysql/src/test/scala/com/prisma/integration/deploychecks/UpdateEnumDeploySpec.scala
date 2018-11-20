@@ -11,7 +11,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -25,7 +25,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -41,7 +41,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -57,7 +57,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -73,7 +73,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -89,7 +89,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -106,7 +106,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -122,7 +122,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB{
@@ -139,7 +139,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: ABCD
-         | enums: [ABCD!]!
+         | enums: [ABCD]
          |}
          |
          |enum ABCD{
@@ -157,7 +157,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: ABCD
-         | enums: [ABCD!]!
+         | enums: [ABCD]
          |}
          |
          |enum ABCD{
@@ -174,7 +174,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: ABCD
-         | enums: [ABCD!]!
+         | enums: [ABCD]
          |}
          |
          |enum ABCD{
@@ -192,7 +192,7 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """|type A {
          | name: String! @unique
          | enum: AB
-         | enums: [AB!]!
+         | enums: [AB]
          |}
          |
          |enum AB @rename(oldName: "ABCD"){
