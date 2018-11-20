@@ -55,8 +55,12 @@ case class SchemaInferrerImpl(
     prismaSdl.types.map { prismaType =>
       val fieldNames = prismaType.fields.map(_.name)
       val hiddenReservedFields = if (capabilities.contains(MigrationsCapability) && isLegacy) {
-        val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-        missingReservedFields.map(ReservedFields.reservedFieldFor)
+        if (!prismaType.isEmbedded) {
+          val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+          missingReservedFields.map(ReservedFields.reservedFieldFor)
+        } else {
+          Vector(ReservedFields.embeddedIdField)
+        }
       } else {
         Vector.empty
       }
