@@ -32,7 +32,8 @@ object SequenceDirective extends FieldDirective[Sequence] {
   ): Vector[DeployError] = {
     val hasIdDirective           = fieldDef.hasDirective(IdDirective.name)
     val hasRightStrategyArgument = fieldDef.directiveArgumentAsString(IdDirective.name, IdStrategyArgument.name).contains(IdStrategyArgument.sequenceValue)
-    val invalidPlacement = (!hasIdDirective || !hasRightStrategyArgument).toOption {
+    val hasIntType               = fieldDef.typeName == "Int"
+    val invalidPlacement = (!hasIdDirective || !hasRightStrategyArgument || !hasIntType).toOption {
       DeployErrors.sequenceDirectiveMisplaced(typeDef, fieldDef)
     }
 

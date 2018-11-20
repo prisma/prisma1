@@ -269,7 +269,11 @@ object DeployErrors {
   }
 
   def sequenceDirectiveMisplaced(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
-    DeployError(typeDef, fieldDef, s"The directive `@sequence` must only be specified for fields that are marked with `@id(strategy: SEQUENCE)`.")
+    DeployError(
+      typeDef,
+      fieldDef,
+      s"The directive `@sequence` must only be specified for fields that are marked as id, are of type `Int` and use the sequence strategy. E.g. `id: Int! @id(strategy: SEQUENCE)`."
+    )
   }
 
   def error(fieldAndType: FieldAndType, description: String): DeployError = {
