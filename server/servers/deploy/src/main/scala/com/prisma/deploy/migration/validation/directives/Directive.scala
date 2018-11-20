@@ -13,7 +13,7 @@ trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
 }
 
 object TypeDirective {
-  val all = Vector(TypeDbDirective, EmbeddedDirective)
+  val all = Vector(TypeDbDirective, EmbeddedDirective, LinkTableDirective)
 }
 
 trait TypeDirective[T] extends DirectiveBase {

@@ -37,8 +37,9 @@ case class DataModelValidatorImpl(
   def validate: PrismaSdl Or Vector[DeployError] = {
     val syntaxErrors = validateSyntax
     if (syntaxErrors.isEmpty) {
-      val dataModel      = generateSDL
-      val semanticErrors = FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
+      val dataModel = generateSDL
+      val semanticErrors = FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct ++
+        TypeDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
       if (semanticErrors.isEmpty) {
         Good(dataModel)
       } else {
