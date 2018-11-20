@@ -23,9 +23,9 @@ object SchemaDsl extends AwaitUtils {
     val project = schemaBuilder.build(id = projectId(suite))
 
     if (!deployConnector.isActive) {
-      addIdFields(addManifestations(project, deployConnector), cuidField)
+      addIdFields(addManifestations(project, deployConnector))
     } else {
-      addIdFields(project, cuidField)
+      addIdFields(project)
     }
   }
 
@@ -110,13 +110,13 @@ object SchemaDsl extends AwaitUtils {
     project.copy(schema = schema.copy(relationTemplates = newRelations, modelTemplates = newModels))
   }
 
-  private def addIdFields(project: Project, idField: FieldTemplate): Project = {
+  private def addIdFields(project: Project): Project = {
     val newModels = project.models.map { model =>
       val modelContainsAlreadyAnIdField = model.idField.isDefined
       if (modelContainsAlreadyAnIdField) {
         model.copy()
       } else {
-        val newFields = model.fields.map(_.template) :+ idField
+        val newFields = model.fields.map(_.template) :+ cuidField
         model.copy(fieldTemplates = newFields)
       }
     }

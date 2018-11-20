@@ -98,7 +98,7 @@ case class DataModelValidatorImpl(
       // FIXME: it should not be needed that embedded types have a hidden id field
       val extraField = typeDef.isEmbedded.toOption {
         ScalarPrismaField(
-          name = ReservedFields.internalIdFieldName,
+          name = ReservedFields.embeddedIdFieldName,
           columnName = None,
           isList = false,
           isRequired = false,
