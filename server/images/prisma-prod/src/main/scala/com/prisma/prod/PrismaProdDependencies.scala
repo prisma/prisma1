@@ -7,6 +7,7 @@ import com.prisma.api.ApiDependencies
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
+import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
 import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.DeployDependencies
@@ -36,8 +37,9 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override implicit lazy val executionContext: ExecutionContext = system.dispatcher
 
-  val config: PrismaConfig = ConfigLoader.load()
-  val managementSecret     = config.managementApiSecret.getOrElse("")
+  val config: PrismaConfig       = ConfigLoader.load()
+  val managementSecret           = config.managementApiSecret.getOrElse("")
+  val cacheFactory: CacheFactory = new CaffeineCacheFactory()
 
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
 
@@ -45,10 +47,10 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override implicit def self: PrismaProdDependencies = this
 
-  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
+  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
   override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
-    CachedProjectFetcherImpl(fetcher, invalidationPubSub)
+    CachedProjectFetcherImpl(fetcher, invalidationPubSub, cacheFactory)
   }
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)

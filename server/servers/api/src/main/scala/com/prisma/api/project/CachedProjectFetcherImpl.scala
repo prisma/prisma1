@@ -1,7 +1,7 @@
 package com.prisma.api.project
 
 import com.prisma.api.ApiMetrics
-import com.prisma.cache.Cache
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.{Everything, Message}
 import com.prisma.shared.models.Project
@@ -10,11 +10,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class CachedProjectFetcherImpl(
     projectFetcher: RefreshableProjectFetcher,
-    projectSchemaInvalidationSubscriber: PubSubSubscriber[String]
+    projectSchemaInvalidationSubscriber: PubSubSubscriber[String],
+    cacheFactory: CacheFactory
 )(implicit ec: ExecutionContext)
     extends RefreshableProjectFetcher {
 
-  private val cache = Cache.lfuAsync[String, Project](initialCapacity = 16, maxCapacity = 100)
+  private val cache = cacheFactory.lfuAsync[String, Project](initialCapacity = 16, maxCapacity = 100)
 
   projectSchemaInvalidationSubscriber.subscribe(
     Everything,

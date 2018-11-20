@@ -8,6 +8,8 @@ import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
+import com.prisma.cache.SimpleCacheFactory
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.{ConfigLoader, PrismaConfig}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
@@ -38,14 +40,16 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override implicit lazy val executionContext: ExecutionContext = system.dispatcher
 
   val config: PrismaConfig = ConfigLoader.load()
-  val managementSecret     = config.managementApiSecret.getOrElse("")
+
+  override val managementSecret           = config.managementApiSecret.getOrElse("")
+  override val cacheFactory: CacheFactory = new SimpleCacheFactory()
 
 //  MetricsRegistry.init(deployConnector.cloudSecretPersistence) todo
 
-  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
+  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
   override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
-    CachedProjectFetcherImpl(fetcher, invalidationPubSub)(system.dispatcher)
+    CachedProjectFetcherImpl(fetcher, invalidationPubSub, cacheFactory)(system.dispatcher)
   }
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)

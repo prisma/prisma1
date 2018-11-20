@@ -189,7 +189,8 @@ case class ApiServer(
                   id = requestId,
                   json = requestJson,
                   ip = clientIp.toString,
-                  authorizationHeader = authorizationHeader
+                  authorizationHeader = authorizationHeader,
+                  apiDependencies.graphQlQueryCache
                 )
               )
             }

@@ -28,10 +28,10 @@ case class GraphQlRequestHandlerImpl(
     log: String => Unit
 )(implicit apiDependencies: ApiDependencies)
     extends GraphQlRequestHandler {
-
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
-  val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
+
+  val queryValidationCache = apiDependencies.cacheFactory.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
 
   apiDependencies.invalidationSubscriber.subscribe(Everything, (msg: Message[SchemaInvalidatedMessage]) => {
     queryValidationCache.removeAll(key => key._1 == msg.topic)

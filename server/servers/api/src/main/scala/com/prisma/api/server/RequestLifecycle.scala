@@ -3,7 +3,7 @@ package com.prisma.api.server
 import com.prisma.api.schema.APIErrors.VariablesParsingError
 import com.prisma.api.schema.ApiUserContext
 import com.prisma.api.schema.CommonErrors.InputCompletelyMalformed
-import com.prisma.cache.Cache
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.shared.models.Project
 import com.prisma.utils.`try`.TryUtil
 import play.api.libs.json._
@@ -23,7 +23,8 @@ case class RawRequest(
     id: String,
     json: JsValue,
     ip: String,
-    authorizationHeader: Option[String]
+    authorizationHeader: Option[String],
+    queryCache: GraphQlQueryCache
 ) extends RawRequestAttributes {
 
   def toGraphQlRequest(
@@ -32,8 +33,8 @@ case class RawRequest(
   ): Try[GraphQlRequest] = {
     val queries: Try[Vector[GraphQlQuery]] = TryUtil.sequence {
       json match {
-        case JsArray(requests) => requests.map(GraphQlQuery.tryFromJson).toVector
-        case request: JsObject => Vector(GraphQlQuery.tryFromJson(request))
+        case JsArray(requests) => requests.map(queryCache.tryFromJson).toVector
+        case request: JsObject => Vector(queryCache.tryFromJson(request))
         case malformed         => Vector(Failure(InputCompletelyMalformed(malformed.toString)))
       }
     }
@@ -58,7 +59,9 @@ case class RawRequest(
       }
   }
 }
+
 case class InvalidGraphQlRequest(underlying: Throwable) extends Exception
+
 // To support Apollos transport-level query batching we treat input and output as a list
 // If multiple queries are supplied they are all executed individually and in parallel
 // See
@@ -82,9 +85,8 @@ case class GraphQlQuery(
     queryString: String
 )
 
-object GraphQlQuery {
-
-  val queryParsingCache = Cache.lfu[String, Try[Document]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
+case class GraphQlQueryCache(cacheFactory: CacheFactory) {
+  val queryParsingCache = cacheFactory.lfu[String, Try[Document]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
 
   def tryFromJson(requestJson: JsValue): Try[GraphQlQuery] = {
     val JsObject(fields) = requestJson

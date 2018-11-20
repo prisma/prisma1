@@ -2,6 +2,7 @@ package com.prisma.deploy
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.Migrator
@@ -38,6 +39,7 @@ trait DeployDependencies extends AwaitUtils {
   lazy val managementSchemaBuilder = SchemaBuilder()
 
   val managementSecret: String
+  val cacheFactory: CacheFactory
 
   def initialize()(implicit ec: ExecutionContext): Unit = {
     await(deployConnector.initialize(), seconds = 30)

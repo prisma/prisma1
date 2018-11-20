@@ -7,7 +7,8 @@ import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutaction
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
+import com.prisma.api.server.{GraphQlQueryCache, GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.PrismaConfig
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
 import com.prisma.jwt.{Algorithm, Auth}
@@ -26,6 +27,10 @@ trait ApiDependencies extends AwaitUtils {
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
 
   val materializer: ActorMaterializer
+  val cacheFactory: CacheFactory
+
+  lazy val graphQlQueryCache: GraphQlQueryCache = GraphQlQueryCache(cacheFactory)
+
   def config: PrismaConfig
   def projectFetcher: ProjectFetcher
   def apiSchemaBuilder: SchemaBuilder

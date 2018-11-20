@@ -101,7 +101,7 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
 //      "--report-unsupported-elements-at-runtime",
       s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
       s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
-      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.jwt.jna.JnaAuth$,com.github.benmanes.caffeine.cache.LocalAsyncLoadingCache",
+      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.jwt.jna.JnaAuth$", //,com.github.benmanes.caffeine.cache.LocalAsyncLoadingCache
       "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
       s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
       "-H:+JNI",
@@ -140,6 +140,7 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(graphQlClient)
   .dependsOn(sangriaUtils)
   .dependsOn(jwtNative)
+  .dependsOn(cache)
 
 lazy val api = serverProject("api")
   .dependsOn(serversShared % "compile->compile;test->test")
