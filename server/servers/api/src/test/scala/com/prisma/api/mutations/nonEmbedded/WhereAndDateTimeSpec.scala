@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -18,14 +18,14 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
-        |   notes: [Note!]!
+        |   notes: [Note]
         |}"""
     }
 
@@ -91,14 +91,14 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
-        |   notes: [Note!]!
+        |   notes: [Note]
         |}"""
 
     }

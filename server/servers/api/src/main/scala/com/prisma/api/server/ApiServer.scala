@@ -15,7 +15,7 @@ import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
-import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.ProjectId
 import com.prisma.util.env.EnvUtils
 import com.typesafe.scalalogging.LazyLogging

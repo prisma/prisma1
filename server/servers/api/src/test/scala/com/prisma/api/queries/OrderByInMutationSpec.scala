@@ -1,7 +1,7 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -15,7 +15,7 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Foo {
       |    id: ID! @unique
       |    test: String
-      |    bars: [Bar!]!
+      |    bars: [Bar]
       |}
       |
       |type Bar {

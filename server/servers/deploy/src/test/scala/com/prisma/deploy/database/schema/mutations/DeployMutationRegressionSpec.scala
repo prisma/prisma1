@@ -15,13 +15,13 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
     val (project, migration) = setupProject("""
                                               |type Post {
                                               |  id: ID! @unique
-                                              |  version: [PostVersion!]! @relation(name: "PostVersion")
+                                              |  version: [PostVersion] @relation(name: "PostVersion")
                                               |}
                                               |
                                               |type PostVersion {
                                               |  id: ID! @unique
                                               |  post: Post! @relation(name: "PostVersion")
-                                              |  postContent: [PostContents!]! @relation(name: "PostOnPostContents")
+                                              |  postContent: [PostContents] @relation(name: "PostOnPostContents")
                                               |}
                                               |
                                               |type PostContents {
@@ -59,7 +59,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
                                                      |  createdAt: DateTime!
                                                      |  updatedAt: DateTime!
                                                      |
-                                                     |  repositories: [Repository!]! @relation(name: "UserRepository")
+                                                     |  repositories: [Repository] @relation(name: "UserRepository")
                                                      |}
                                                      |
                                                      |type Repository {
@@ -128,7 +128,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
                                                      |  email: String! @unique
                                                      |  password: String!
                                                      |  name: String!
-                                                     |  posts: [Post!]! @relation(name: "UserPosts")
+                                                     |  posts: [Post] @relation(name: "UserPosts")
                                                      |}
                                                    """.stripMargin)
 
@@ -154,7 +154,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
         |  profilePicture: String!
         |  providerId: String!
         |  provider: Provider!
-        |  updates: [Update!]! @relation(name: "UserUpdates")
+        |  updates: [Update] @relation(name: "UserUpdates")
         |}
         |
         |enum Provider {
@@ -200,7 +200,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
                                                      |  email: String! @unique
                                                      |  password: String!
                                                      |  name: String!
-                                                     |  posts: [Post!]! @relation(name: "UserPosts")
+                                                     |  posts: [Post] @relation(name: "UserPosts")
                                                      |}
                                                    """.stripMargin)
 
@@ -225,7 +225,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
         |  email: String! @unique
         |  password: String!
         |  name: String!
-        |  posts: [Post!]! @relation(name: "UserPosts")
+        |  posts: [Post] @relation(name: "UserPosts")
         |  customString: String
         |}
       """.stripMargin
@@ -267,7 +267,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
                                                      |  email: String! @unique
                                                      |  password: String!
                                                      |  name: String!
-                                                     |  posts: [Post!]! @relation(name: "UserPosts")
+                                                     |  posts: [Post] @relation(name: "UserPosts")
                                                      |}
                                                    """.stripMargin)
 
@@ -332,7 +332,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
         |type Post {
         |  id: ID! @unique
         |  title: String
-        |  users: [User!]!
+        |  users: [User]
         |}
       """.stripMargin
 

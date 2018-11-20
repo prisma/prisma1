@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -14,7 +14,7 @@ class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBa
                                                       |  id: ID! @unique
                                                       |  name: String! @unique
                                                       |  parent: User @relation(name: "Users")
-                                                      |  children: [User!]! @relation(name: "Users")
+                                                      |  children: [User] @relation(name: "Users")
                                                       |}""" }
 
     database.setup(project)

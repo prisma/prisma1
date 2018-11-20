@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.{
+import com.prisma.shared.models.ConnectorCapability.{
   EmbeddedTypesCapability,
   JoinRelationLinksCapability,
   RelationLinkListCapability,
@@ -16,7 +16,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
         |
         |type Comment {
@@ -33,8 +33,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
 //      """
 //        |type Model {
 //        |  id: ID! @id
-//        |  others: [Other!]!
-//        |  others2: [Other2!]!
+//        |  others: [Other]
+//        |  others2: [Other2]
 //        |}
 //        |type Other {
 //        |  id: ID! @id
@@ -242,8 +242,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
       """
         |type Model {
         |  id: ID! @id
-        |  other: [Other!]!
-        |  other2: [Other2!]!
+        |  other: [Other]
+        |  other2: [Other2]
         |}
         |
         |type Other {
@@ -252,7 +252,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |}
         |type Other2 {
         |  id: ID! @id
-        |  models: [Model!]!
+        |  models: [Model]
         |}
       """.stripMargin
     val dataModel = validate(dataModelString)
@@ -295,8 +295,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]!
-        |  comments2: [Comment!]!
+        |  comments: [Comment]
+        |  comments2: [Comment]
         |}
         |
         |type Comment {
@@ -322,8 +322,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
-        |  comments2: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
+        |  comments2: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -345,8 +345,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments1")
-        |  comments2: [Comment!]! @relation(name: "TodoToComments2")
+        |  comments: [Comment] @relation(name: "TodoToComments1")
+        |  comments2: [Comment] @relation(name: "TodoToComments2")
         |}
         |
         |type Comment {
@@ -389,7 +389,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -407,9 +407,9 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments1: [Comment1!]! @relation(name: "TodoToComments1", onDelete: CASCADE)
-        |  comments2: [Comment2!]! @relation(name: "TodoToComments2", onDelete: SET_NULL)
-        |  comments3: [Comment3!]! @relation(name: "TodoToComments3")
+        |  comments1: [Comment1] @relation(name: "TodoToComments1", onDelete: CASCADE)
+        |  comments2: [Comment2] @relation(name: "TodoToComments2", onDelete: SET_NULL)
+        |  comments3: [Comment3] @relation(name: "TodoToComments3")
         |}
         |
         |type Comment1 {
@@ -438,7 +438,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments", onDelete: INVALID)
+        |  comments: [Comment] @relation(name: "TodoToComments", onDelete: INVALID)
         |}
         |
         |type Comment {
@@ -459,7 +459,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |  id: ID! @id
         |  title: String
         |  todo: Todo @relation(name: "OneFieldSelfRelation")
-        |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
+        |  todos: [Todo] @relation(name: "OneFieldManySelfRelation")
         |}
       """.stripMargin
 
@@ -472,7 +472,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -500,7 +500,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -527,7 +527,8 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     second.description should include("But the other directive for this relation appeared on the type")
   }
 
-  "not accept that a many relation field is not marked as required" in {
+  // TODO: we are in the process of changing the valid list field syntax and allow all notations for now.
+  "not accept that a many relation field is not marked as required" ignore {
     val dataModelString =
       """
         |type Todo {
@@ -547,7 +548,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     errors.head.`type` should equal("Todo")
     errors.head.field should equal(Some("comments"))
     errors.head.description should equal(
-      "The relation field `comments` has the wrong format: `[Comment!]` Possible Formats: `Comment`, `Comment!`, `[Comment!]!`")
+      "The relation field `comments` has the wrong format: `[Comment!]` Possible Formats: `Comment`, `Comment!`, `[Comment]`")
   }
 
   "succeed if a one relation field is marked as required" in {
@@ -556,7 +557,7 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
         |type Todo {
         |  id: ID! @id
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {

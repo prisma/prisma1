@@ -2,10 +2,10 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType, PrismaSdl}
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability, RelationLinkTableCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.OnDelete.OnDelete
-import com.prisma.shared.models.{ConnectorCapability, RelationStrategy}
-import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
+import com.prisma.shared.models.{ConnectorCapability, OnDelete, RelationStrategy}
+import sangria.ast._
 
 case class RelationDirectiveData(name: Option[String], onDelete: OnDelete, strategy: Option[RelationStrategy])
 
@@ -14,12 +14,13 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
 
   override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
+  val nameArgument = DirectiveArgument("name", validateStringValue, _.asString)
+
   override def optionalArgs(capabilities: Set[ConnectorCapability]) = {
-    val validLinkModes = Vector("INLINE") ++ capabilities.contains(RelationLinkTableCapability).toOption("TABLE")
     Vector(
-      ArgumentRequirement("name", validateStringValue),
-      ArgumentRequirement("onDelete", validateEnumValue("onDelete")(Vector("CASCADE", "SET_NULL"))),
-      ArgumentRequirement("link", validateEnumValue("link")(validLinkModes))
+      nameArgument,
+      OnDeleteArgument,
+      RelationLinkArgument(capabilities)
     )
   }
 
@@ -86,14 +87,46 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
 
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
     if (fieldDef.isRelationField(document)) {
-      val strategy = fieldDef.directiveArgumentAsString(name, "link") match {
-        case Some("INLINE") => Some(RelationStrategy.Inline)
-        case Some("TABLE")  => Some(RelationStrategy.Table)
-        case _              => None
-      }
-      Some(RelationDirectiveData(fieldDef.relationName, fieldDef.onDelete, strategy))
+      val relationName = fieldDef.directive(name).flatMap(nameArgument.value)
+      val onDelete     = fieldDef.directive(name).flatMap(OnDeleteArgument.value).getOrElse(OnDelete.SetNull)
+      val linkMode     = fieldDef.directive(name).flatMap(RelationLinkArgument(capabilities).value)
+
+      Some(RelationDirectiveData(relationName, onDelete, linkMode))
     } else {
       None
+    }
+  }
+}
+
+case class RelationLinkArgument(capabilities: Set[ConnectorCapability]) extends DirectiveArgument[RelationStrategy] {
+  val (inlineMode, tableMode) = ("INLINE", "TABLE")
+
+  override def name = "link"
+
+  override def value(value: Value) = value.asString match {
+    case `inlineMode` => RelationStrategy.Inline
+    case `tableMode`  => RelationStrategy.Table
+    case x            => sys.error(s"cannot happen: $x")
+  }
+
+  override def validate(value: Value) = {
+    val validLinkModes = Vector(inlineMode) ++ capabilities.contains(RelationLinkTableCapability).toOption(tableMode)
+    validateEnumValue(name, validLinkModes)(value)
+  }
+}
+
+object OnDeleteArgument extends DirectiveArgument[OnDelete.Value] {
+  val (cascade, setNull) = ("CASCADE", "SET_NULL")
+
+  override def name = "onDelete"
+
+  override def validate(value: Value) = validateEnumValue(name, Vector(cascade, setNull))(value)
+
+  override def value(value: Value) = {
+    value.asString match {
+      case `setNull` => OnDelete.SetNull
+      case `cascade` => OnDelete.Cascade
+      case x         => sys.error(s"The SchemaSyntaxvalidator should catch this already: $x")
     }
   }
 }

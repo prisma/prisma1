@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -516,7 +516,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |
         |type Todo{
         |   id: ID! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 
@@ -568,7 +568,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |type Todo{
         |   id: ID! @unique
         |   title: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 
@@ -621,7 +621,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |type Todo{
         |   id: ID! @unique
         |   title: String! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 

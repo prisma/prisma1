@@ -1,7 +1,7 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -15,13 +15,13 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Top {
       |  id: ID! @unique
       |  t: String! @unique
-      |  middles: [Middle!]!
+      |  middles: [Middle]
       |}
       |
       |type Middle {
       |  id: ID! @unique
       |  m: String! @unique
-      |  bottoms: [Bottom!]!
+      |  bottoms: [Bottom]
       |}
       |
       |type Bottom {

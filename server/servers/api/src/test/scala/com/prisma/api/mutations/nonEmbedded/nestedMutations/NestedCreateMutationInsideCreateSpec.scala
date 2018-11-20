@@ -3,7 +3,7 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 import java.util.UUID
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMongo, IgnoreMySql}
 import org.scalatest.{FlatSpec, Matchers}
@@ -265,7 +265,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment{
@@ -340,13 +340,13 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       """type Todo{
         |   id: ID! @unique
         |   title: String!
-        |   tags: [Tag!]!
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}"""
     }
 
@@ -512,7 +512,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       """type List{
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
@@ -736,7 +736,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       s"""
          |type List {
          |  id: ID! @unique
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {

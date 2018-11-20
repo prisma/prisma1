@@ -3,7 +3,7 @@ import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models.{ConnectorCapability, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
@@ -98,7 +98,7 @@ case class DataModelValidatorImpl(
       // FIXME: it should not be needed that embedded types have a hidden id field
       val extraField = typeDef.isEmbedded.toOption {
         ScalarPrismaField(
-          name = ReservedFields.internalIdFieldName,
+          name = ReservedFields.embeddedIdFieldName,
           columnName = None,
           isList = false,
           isRequired = false,
@@ -339,11 +339,6 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
   }
 
   def validateRelationFields: Seq[DeployError] = {
-    val relationFields = objectType.relationFields(doc)
-    val wrongTypeDefinitions = relationFields.collect {
-      case fieldDef if !fieldDef.isValidRelationType => DeployErrors.relationFieldTypeWrong(FieldAndType(objectType, fieldDef))
-    }
-
     val ambiguousRelationFields: Vector[FieldAndType] = {
       val relationFields                                = objectType.relationFields(doc)
       val grouped: Map[String, Vector[FieldDefinition]] = relationFields.groupBy(_.typeName)
@@ -413,7 +408,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
           Iterable.empty
       }
 
-    wrongTypeDefinitions ++ schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
+    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
   }
 
   def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {

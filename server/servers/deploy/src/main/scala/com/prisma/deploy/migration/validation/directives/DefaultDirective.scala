@@ -9,10 +9,10 @@ import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
 import sangria.ast._
 
 object DefaultDirective extends FieldDirective[GCValue] {
-  val valueArg = "value"
+  val valueArg = DirectiveArgument("value", _ => None, _.asString)
 
   override def name                                                 = "default"
-  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector(ArgumentRequirement("value", _ => None))
+  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector(valueArg)
   override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
 
   override def validate(
@@ -27,7 +27,7 @@ object DefaultDirective extends FieldDirective[GCValue] {
       DeployError(typeDef, fieldDef, "The `@default` directive must only be placed on scalar fields that are not lists.")
     }
 
-    val value          = directive.argument_!(valueArg).value
+    val value          = directive.argument_!(valueArg.name).value
     val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType).asInstanceOf[ScalarTypeIdentifier]
     val typeError = (typeIdentifier, value) match {
       case (TypeIdentifier.String, _: StringValue)   => None
@@ -56,7 +56,7 @@ object DefaultDirective extends FieldDirective[GCValue] {
       capabilities: Set[ConnectorCapability]
   ): Option[GCValue] = {
     fieldDef.directive(name).map { directive =>
-      val value          = directive.argument_!(valueArg).valueAsString
+      val value          = valueArg.value(directive).get
       val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType)
       GCStringConverter(typeIdentifier, fieldDef.isList).toGCValue(value).get
     }

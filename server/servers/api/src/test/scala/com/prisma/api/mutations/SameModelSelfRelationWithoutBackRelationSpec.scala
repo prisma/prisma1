@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -13,7 +13,7 @@ class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matcher
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
-                                                      |  related: [Post!]! @relation(name: "RelatedPosts")
+                                                      |  related: [Post] @relation(name: "RelatedPosts")
                                                       |}""" }
 
     database.setup(project)

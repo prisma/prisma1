@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
 import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models.{ConnectorCapability, Schema}
 import com.prisma.shared.schema_dsl.TestProject
@@ -18,7 +18,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName")
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
@@ -44,7 +44,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName")
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
@@ -82,7 +82,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name: "MyRelationName")
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
@@ -120,7 +120,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]!
+          |  comments: [Comment]
           |}
           |
           |type Comment @embedded {

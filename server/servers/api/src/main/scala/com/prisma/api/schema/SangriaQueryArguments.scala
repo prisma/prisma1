@@ -2,7 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.api.connector.{OrderBy, SortOrder}
 import com.prisma.shared.models
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsFilterCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationsFilterCapability
 import com.prisma.shared.models.{ConnectorCapability, Model}
 import sangria.schema.{EnumType, EnumValue, _}
 

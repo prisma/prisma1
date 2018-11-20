@@ -3,7 +3,7 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
+import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -13,8 +13,8 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val schema =
       """
         |type Todo {
-        |  comments1: [Comment!]! @relation(name: "TodoToComments1")
-        |  comments2: [Comment!]! @relation(name: "TodoToComments2")
+        |  comments1: [Comment] @relation(name: "TodoToComments1")
+        |  comments2: [Comment] @relation(name: "TodoToComments2")
         |}
         |type Comment {
         |  text: String
@@ -32,7 +32,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val previousSchema =
       """
         |type Todo {
-        |  comments: [Comment!]! @relation(name: "ManualRelationName")
+        |  comments: [Comment] @relation(name: "ManualRelationName")
         |}
         |type Comment {
         |  text: String
@@ -44,7 +44,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val nextSchema =
       """
         |type Todo {
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
         |type Comment {
         |  text: String
@@ -99,7 +99,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val previousSchema =
       """
         |type Todo {
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
         |type Comment {
         |  text: String
@@ -111,7 +111,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val nextSchema =
       """
         |type Todo {
-        |  comments: [Comment!]! @relation(name: "ManualRelationName")
+        |  comments: [Comment] @relation(name: "ManualRelationName")
         |}
         |type Comment {
         |  text: String
@@ -165,7 +165,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val previousSchema =
       """
         |type Todo {
-        |  comments: [Comment!]! @relation(name: "ManualRelationName1")
+        |  comments: [Comment] @relation(name: "ManualRelationName1")
         |}
         |type Comment {
         |  text: String
@@ -177,7 +177,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     val nextSchema =
       """
         |type Todo {
-        |  comments: [Comment!]! @relation(name: "ManualRelationName2")
+        |  comments: [Comment] @relation(name: "ManualRelationName2")
         |}
         |type Comment {
         |  text: String
@@ -315,7 +315,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """
         |type Course {
         |  id: ID! @unique
-        |	sections: [CourseSection!]! @relation(name: "CourseSections" onDelete: CASCADE)
+        |	sections: [CourseSection] @relation(name: "CourseSections" onDelete: CASCADE)
         |}
         |
         |type CourseSection {
@@ -329,7 +329,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """
         |type Course {
         |  id: ID! @unique
-        |	sections: [CourseSection!]! @relation(name: "CourseSections")
+        |	sections: [CourseSection] @relation(name: "CourseSections")
         |}
         |
         |type CourseSection {

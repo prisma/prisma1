@@ -3,7 +3,7 @@ import com.prisma.shared.models.ConnectorCapability
 import sangria.ast.{Directive, Document, ObjectTypeDefinition}
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployErrors
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 
 object EmbeddedDirective extends TypeDirective[Boolean] {
   override def name = "embedded"

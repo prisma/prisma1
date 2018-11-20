@@ -1,7 +1,7 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMySql, IgnorePostgres}
 import org.scalatest._
@@ -15,7 +15,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
                                          |  id: ID! @unique
                                          |  ArtistId: Int! @unique
                                          |  Name: String!
-                                         |  Albums: [Album!]!
+                                         |  Albums: [Album]
                                          |}
                                          |
                                          |type Album {
@@ -23,21 +23,21 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
                                          |  AlbumId: Int! @unique
                                          |  Title: String!
                                          |  Artist: Artist!
-                                         |  Tracks: [Track!]!
+                                         |  Tracks: [Track]
                                          |}
                                          |
                                          |type Genre {
                                          |  id: ID! @unique
                                          |  GenreId: Int! @unique
                                          |  Name: String!
-                                         |  Tracks: [Track!]!
+                                         |  Tracks: [Track]
                                          |}
                                          |
                                          |type MediaType {
                                          |  id: ID! @unique
                                          |  MediaTypeId: Int! @unique
                                          |  Name: String!
-                                         |  Tracks: [Track!]!
+                                         |  Tracks: [Track]
                                          |}
                                          |
                                          |type Track {

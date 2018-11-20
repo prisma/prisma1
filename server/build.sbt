@@ -194,6 +194,7 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues)
   .dependsOn(jsonUtils)
+  .dependsOn(scalaUtils)
   .settings(
   libraryDependencies ++= Seq(
     cuid

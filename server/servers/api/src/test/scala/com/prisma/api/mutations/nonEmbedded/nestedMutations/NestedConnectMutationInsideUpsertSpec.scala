@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -19,7 +19,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String!
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -50,7 +50,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String!
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -82,7 +82,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String! @unique
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -114,7 +114,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String! @unique
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }

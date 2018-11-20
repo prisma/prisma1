@@ -212,14 +212,6 @@ object DeployErrors {
     error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
   }
 
-  def relationFieldTypeWrong(fieldAndType: FieldAndType): DeployError = {
-    val oppositeType = fieldAndType.fieldDef.fieldType.namedType.name
-    error(
-      fieldAndType,
-      s"""The relation field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$oppositeType`, `$oppositeType!`, `[$oppositeType!]!`"""
-    ) //todo
-  }
-
   def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
   def invalidScalarListOrNonListType(fieldAndType: FieldAndType) = invalidScalarType(fieldAndType, listTypesAllowed = true)
 

@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBack
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidatorImpl, LegacyDataModelValidator}
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
+import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation}
 import com.prisma.shared.models._
@@ -23,9 +23,9 @@ object SchemaDsl extends AwaitUtils {
     val project = schemaBuilder.build(id = projectId(suite))
 
     if (!deployConnector.isActive) {
-      addIdFields(addManifestations(project, deployConnector), cuidField)
+      addIdFields(addManifestations(project, deployConnector))
     } else {
-      addIdFields(project, cuidField)
+      addIdFields(project)
     }
   }
 
@@ -110,13 +110,13 @@ object SchemaDsl extends AwaitUtils {
     project.copy(schema = schema.copy(relationTemplates = newRelations, modelTemplates = newModels))
   }
 
-  private def addIdFields(project: Project, idField: FieldTemplate): Project = {
+  private def addIdFields(project: Project): Project = {
     val newModels = project.models.map { model =>
       val modelContainsAlreadyAnIdField = model.idField.isDefined
       if (modelContainsAlreadyAnIdField) {
         model.copy()
       } else {
-        val newFields = model.fields.map(_.template) :+ idField
+        val newFields = model.fields.map(_.template) :+ cuidField
         model.copy(fieldTemplates = newFields)
       }
     }

@@ -1,7 +1,7 @@
 package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -13,13 +13,13 @@ class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
       |type List {
       |  id: ID! @unique
       |  name: String! @unique
-      |  todos: [Todo!]!
+      |  todos: [Todo]
       |}
       |
       |type Todo {
       |  id: ID! @unique
       |  title: String! @unique
-      |  lists: [List!]!
+      |  lists: [List]
       |}
     """
   }

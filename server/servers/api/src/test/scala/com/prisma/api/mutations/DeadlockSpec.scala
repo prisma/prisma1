@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.time.{Seconds, Span}
@@ -55,7 +55,7 @@ class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase 
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
+        |   tags: [String]
         |}"""
     }
     database.setup(project)
