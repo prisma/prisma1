@@ -268,6 +268,10 @@ object DeployErrors {
     DeployError(typeDef, fieldDef, s"The field `${fieldDef.name}` specifies the `@db` directive. Relation fields must not specify this directive.")
   }
 
+  def sequenceDirectiveMisplaced(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+    DeployError(typeDef, fieldDef, s"The directive `@sequence` must only be specified for fields that are marked with `@id(strategy: SEQUENCE)`.")
+  }
+
   def error(fieldAndType: FieldAndType, description: String): DeployError = {
     error(fieldAndType.objectType, fieldAndType.fieldDef, description)
   }

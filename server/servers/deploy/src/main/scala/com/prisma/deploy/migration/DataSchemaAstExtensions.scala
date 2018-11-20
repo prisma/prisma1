@@ -234,6 +234,14 @@ object DataSchemaAstExtensions {
         case _                      => sys.error("This clause is unreachable because of the instance checks above, but i did not know how to prove it to the compiler.")
       }
     }
+
+    def asInt = {
+      value match {
+        case value: IntValue    => value.value
+        case value: BigIntValue => value.value.toInt
+        case _                  => sys.error(s"$value is not an Int")
+      }
+    }
   }
 
   implicit class CoolType(val `type`: Type) extends AnyVal {
