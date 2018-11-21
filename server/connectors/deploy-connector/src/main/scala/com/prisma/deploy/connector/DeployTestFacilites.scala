@@ -14,9 +14,15 @@ object DatabaseInspector {
   }
 }
 
-case class Tables(tables: Vector[Table])
+case class Tables(tables: Vector[Table]) {
+  def table_!(name: String): Table       = table(name).getOrElse(sys.error(s"Table $name was not found."))
+  def table(name: String): Option[Table] = tables.find(_.name == name)
+}
 
-case class Table(columns: Vector[Column], indexes: Vector[Index])
+case class Table(name: String, columns: Vector[Column], indexes: Vector[Index]) {
+  def column_!(name: String): Column       = column(name).getOrElse(sys.error(s"Column $name was not found."))
+  def column(name: String): Option[Column] = columns.find(_.name == name)
+}
 
 case class Index(name: String)
 case class Column(name: String, tpe: String, foreignKey: Option[ForeignKey])
