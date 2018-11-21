@@ -125,42 +125,64 @@ object ConfigLoader {
   private def readDbWithConnectionString(dbName: String, dbJavaMap: Any): Try[DatabaseConfig] = Try {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
-    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
-    val uriString   = extractString("uri", db)
-    val connLimit   = extractIntOpt("connectionLimit", db)
-    val pooled      = extractBooleanOpt("pooled", db)
-    val schema      = extractStringOpt("schema", db)
-    val mgmtSchema  = extractStringOpt("managementSchema", db)
-    val uri         = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
-    val dbHost      = uri.hostOption.get.value
-    val dbUser      = uri.user.get
-    val dbPass      = uri.password
-    val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
-    val database = dbConnector match {
-      case "mongo" => extractStringOpt("database", db)
-      case _       => uri.path.toAbsolute.parts.headOption
+
+    if (dbConnector == "mongo") {
+      val uri      = extractString("uri", db)
+      val database = extractStringOpt("database", db)
+
+      databaseConfig(
+        name = dbName,
+        connector = dbConnector,
+        active = None,
+        host = "",
+        port = 0,
+        user = "",
+        password = None,
+        connectionLimit = None,
+        pooled = None,
+        database = database,
+        schema = None,
+        managementSchema = None,
+        ssl = None,
+        rawAccess = None,
+        uri = uri
+      )
+
+    } else {
+
+      val dbActive   = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+      val uriString  = extractString("uri", db)
+      val connLimit  = extractIntOpt("connectionLimit", db)
+      val pooled     = extractBooleanOpt("pooled", db)
+      val schema     = extractStringOpt("schema", db)
+      val mgmtSchema = extractStringOpt("managementSchema", db)
+      val uri        = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
+      val dbHost     = uri.hostOption.get.value
+      val dbUser     = uri.user.get
+      val dbPass     = uri.password
+      val dbPort     = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
+      val database   = uri.path.toAbsolute.parts.headOption
+      val ssl        = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
+      val rawAccess  = extractBooleanOpt("rawAccess", db)
+
+      databaseConfig(
+        name = dbName,
+        connector = dbConnector,
+        active = dbActive,
+        host = dbHost,
+        port = dbPort,
+        user = dbUser,
+        password = dbPass,
+        connectionLimit = connLimit,
+        pooled = pooled,
+        database = database,
+        schema = schema,
+        managementSchema = mgmtSchema,
+        ssl = ssl,
+        rawAccess = rawAccess,
+        uri = uriString
+      )
     }
-
-    val ssl       = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
-    val rawAccess = extractBooleanOpt("rawAccess", db)
-
-    databaseConfig(
-      name = dbName,
-      connector = dbConnector,
-      active = dbActive,
-      host = dbHost,
-      port = dbPort,
-      user = dbUser,
-      password = dbPass,
-      connectionLimit = connLimit,
-      pooled = pooled,
-      database = database,
-      schema = schema,
-      managementSchema = mgmtSchema,
-      ssl = ssl,
-      rawAccess = rawAccess,
-      uri = uriString
-    )
   }
 
   private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
