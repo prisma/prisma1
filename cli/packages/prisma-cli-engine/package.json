@@ -109,7 +109,6 @@
     "scuid": "^1.0.2",
     "serialize-error": "^3.0.0",
     "source-map-support": "^0.4.18",
-    "string": "3.x",
     "string-similarity": "^1.2.0",
     "strip-ansi": "^4.0.0",
     "supports-color": "^4.4.0",

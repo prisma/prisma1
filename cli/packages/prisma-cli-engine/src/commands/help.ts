@@ -4,7 +4,7 @@ import { compare, linewrap } from '../util'
 import { Command } from '../Command'
 import Plugins from '../Plugin/Plugins'
 import chalk from 'chalk'
-import { groupBy, flatten } from 'lodash'
+import { groupBy, flatten, padStart } from 'lodash'
 const debug = require('debug')('help command')
 
 function trimToMaxLeft(n: number): number {
@@ -17,8 +17,6 @@ function maxLength(items: string[]) {
 }
 
 function renderList(items: string[][], globalMaxLeftLength?: number): string {
-  const S = require('string')
-
   const maxLeftLength =
     globalMaxLeftLength || maxLength(items.map(i => i[0])) + 2
   return items
@@ -28,7 +26,7 @@ function renderList(items: string[][], globalMaxLeftLength?: number): string {
       if (!right) {
         return left
       }
-      left = `${S(left).padRight(maxLeftLength)}`
+      left = `${padStart(left, maxLeftLength)}`
       right = linewrap(maxLeftLength + 2, right)
       return `${left}  ${right}`
     })
@@ -127,14 +125,16 @@ ${chalk.bold('Usage:')} ${chalk.bold('prisma')} COMMAND`)
           // if (t.id === 'cluster') {
           //   debugger
           // }
-          return cmds.filter(cmd => !cmd.hidden).map(cmd => {
-            const cmdName = cmd.command ? ` ${cmd.command}` : ''
-            const deprecation = cmd.deprecated ? ' (deprecated)' : ''
-            return [
-              t.id + cmdName,
-              chalk.dim((cmd.description || t.description) + deprecation),
-            ]
-          })
+          return cmds
+            .filter(cmd => !cmd.hidden)
+            .map(cmd => {
+              const cmdName = cmd.command ? ` ${cmd.command}` : ''
+              const deprecation = cmd.deprecated ? ' (deprecated)' : ''
+              return [
+                t.id + cmdName,
+                chalk.dim((cmd.description || t.description) + deprecation),
+              ]
+            })
         }),
       )) as any
       const name = group.deprecated ? `${group.name} (deprecated)` : group.name
