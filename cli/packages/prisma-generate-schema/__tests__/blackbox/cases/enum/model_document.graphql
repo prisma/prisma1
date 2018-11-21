@@ -16,7 +16,7 @@ type A {
     fieldA: UsedEnum
     fieldB: UsedEnum!
     fieldC: [UsedEnum!]!
-    b: B! @relation(strategy: EMBED)
+    b: B! @relation(link: INLINE)
 }
 
 type AWithId {
@@ -24,7 +24,7 @@ type AWithId {
     fieldA: UsedEnum
     fieldB: UsedEnum!
     fieldC: [UsedEnum!]!
-    c: C @relation(strategy: EMBED)
+    c: C @relation(link: INLINE)
 }
 
 type B {
@@ -42,11 +42,11 @@ type C {
 type D {
     field: [DateTime!]!
     id: ID! @id
-    a: AWithId! @relation(strategy: EMBED)
+    a: AWithId! @relation(link: INLINE)
 }
 
 type E {
     field: Json
     id: ID! @id
-    a: [A!]! @relation(strategy: EMBED)
+    a: [A!]! @relation(link: INLINE)
 }

@@ -30,11 +30,6 @@ type BatchPayload {
 }
 
 """
-Raw JSON value
-"""
-scalar Json
-
-"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -147,14 +142,10 @@ type Query {
   ): Node
 }
 
-type SelfReferencingA implements Node {
+type SelfReferencingA {
   removeThisId: ID!
   a: SelfReferencingAWithId!
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -196,8 +187,6 @@ enum SelfReferencingAOrderByInput {
   removeThisId_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type SelfReferencingAPreviousValues {
@@ -577,14 +566,10 @@ input SelfReferencingAWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingB implements Node {
+type SelfReferencingB {
   removeThisId: ID!
   a: SelfReferencingB
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -631,8 +616,6 @@ enum SelfReferencingBOrderByInput {
   removeThisId_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type SelfReferencingBPreviousValues {
@@ -1166,14 +1149,10 @@ input SelfReferencingBWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingC implements Node {
+type SelfReferencingC {
   removeThisId: ID!
   a(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC!]
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -1220,8 +1199,6 @@ enum SelfReferencingCOrderByInput {
   removeThisId_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type SelfReferencingCPreviousValues {

@@ -96,7 +96,8 @@ export default abstract class Parser {
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, defaultValueDirectiveKey)
-    return directive === null ? null : directive.arguments[0].value.value
+    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
+    return args.length !== 0 ? args[0].value.value : null
   }
 
   /**
@@ -284,7 +285,7 @@ export default abstract class Parser {
 
         for (const fieldA2 of typeA.fields) {
           if (fieldA2 !== fieldA && fieldA2.type === fieldA.type) {
-            // Skip, A has mode than one fields of this relation type.
+            // Skip, A has more than one fields of this relation type.
             continue searchThroughAFields
           }
         }

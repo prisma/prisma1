@@ -6,7 +6,7 @@ describe(`Document parser specific tests`, () => {
   test('Mark an ID field correctly.', () => {
     const model = `
       type User {
-        email: String! @id
+        id: ID! @id
         anotherInt: Int! @default(value: 10)
       }
     `
@@ -15,14 +15,14 @@ describe(`Document parser specific tests`, () => {
 
     const userType = expectType(types, 'User')
 
-    expectField(userType, 'email', true, false, 'String', true, true, null)
+    expectField(userType, 'id', true, false, 'ID', true, true, null)
   })
 
 
   test('Mark an read only fields correctly.', () => {
     const model = `
       type User {
-        email: String! @id
+        id: ID! @id
         anotherInt: Int! @default(value: 10)
         wasCreatedAt: Date! @createdAt
         wasUpdatedAt: Date! @updatedAt
@@ -33,7 +33,7 @@ describe(`Document parser specific tests`, () => {
 
     const userType = expectType(types, 'User')
 
-    expectField(userType, 'email', true, false, 'String', true, true, null)
+    expectField(userType, 'id', true, false, 'ID', true, true, null)
     expectField(userType, 'wasCreatedAt', true, false, 'Date', false, true, null)
     expectField(userType, 'wasUpdatedAt', true, false, 'Date', false, true, null)
   })
@@ -41,7 +41,7 @@ describe(`Document parser specific tests`, () => {
   test('Mark an embedded types correctly.', () => {
     const model = `
       type User @embedded {
-        email: String! @id
+        email: ID! @id
       }
     `
 

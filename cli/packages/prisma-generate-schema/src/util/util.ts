@@ -11,8 +11,12 @@ export function camelCase(name: string) : string {
 
 export function plural(name: string) : string {
     const pluralWord = English.plural(name)
-    if(pluralWord === null) {
-        return name 
+    if(pluralWord === null || pluralWord === name) {
+        if(name.endsWith('s')) {
+            return name + 'es'
+        } else {
+            return name + 's'
+        }
     } else {
         return pluralWord
     }

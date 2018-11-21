@@ -13,12 +13,7 @@ services:
         databases:
           default:
             connector: mongo
-            host: mongo
-            port: 27017
-            user: prisma
-            password: prisma
-            migrations: false
-            rawAccess: true
+            uri: mongodb://prisma:prisma@mongo:27017
   mongo:
     image: mongo:3.6
     restart: always
