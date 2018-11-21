@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBack
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidatorImpl, LegacyDataModelValidator}
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MongoRelationsCapability}
+import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation}
 import com.prisma.shared.models._
@@ -23,16 +23,16 @@ object SchemaDsl extends AwaitUtils {
     val project = schemaBuilder.build(id = projectId(suite))
 
     if (!deployConnector.isActive) {
-      addIdFields(addManifestations(project, deployConnector), cuidField)
+      addIdFields(addManifestations(project, deployConnector))
     } else {
-      addIdFields(project, cuidField)
+      addIdFields(project)
     }
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
 
-    if (!deployConnector.isActive || deployConnector.hasCapability(MongoRelationsCapability)) {
+    if (!deployConnector.isActive || deployConnector.hasCapability(RelationLinkListCapability)) {
       addManifestations(project, deployConnector)
     } else {
       project
@@ -82,7 +82,7 @@ object SchemaDsl extends AwaitUtils {
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if ((relation.isManyToMany && !deployConnector.hasCapability(MongoRelationsCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
+      if ((relation.isManyToMany && !deployConnector.hasCapability(RelationLinkListCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)
@@ -110,13 +110,13 @@ object SchemaDsl extends AwaitUtils {
     project.copy(schema = schema.copy(relationTemplates = newRelations, modelTemplates = newModels))
   }
 
-  private def addIdFields(project: Project, idField: FieldTemplate): Project = {
+  private def addIdFields(project: Project): Project = {
     val newModels = project.models.map { model =>
       val modelContainsAlreadyAnIdField = model.idField.isDefined
       if (modelContainsAlreadyAnIdField) {
         model.copy()
       } else {
-        val newFields = model.fields.map(_.template) :+ idField
+        val newFields = model.fields.map(_.template) :+ cuidField
         model.copy(fieldTemplates = newFields)
       }
     }

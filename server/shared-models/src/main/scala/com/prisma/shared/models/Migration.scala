@@ -131,7 +131,9 @@ case class UpdateRelation(
 ) extends RelationMigrationStep
 
 case class DeleteRelation(
-    name: String
+    name: String,
+    modelAName: String,
+    modelBName: String
 ) extends MigrationStep
 
 case class UpdateSecrets(secrets: Vector[String]) extends MigrationStep

@@ -21,32 +21,32 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |  id: ID! @unique
         |  stringField: String @default(value: "MuchDefaultWow")
         |  requiredStringField: String!
-        |  stringListField: [String!]
-        |  requiredStringListField: [String!]!
+        |  stringListField: [String]
+        |  requiredStringListField: [String]
         |  boolField: Boolean
         |  requiredBoolField: Boolean!
-        |  boolListField: [Boolean!]
-        |  requiredBoolListField: [Boolean!]!
+        |  boolListField: [Boolean]
+        |  requiredBoolListField: [Boolean]
         |  dateTimeField: DateTime
         |  requiredDateTimeField: DateTime!
-        |  dateTimeListField: [DateTime!]
-        |  requiredDateTimeListField: [DateTime!]!
+        |  dateTimeListField: [DateTime]
+        |  requiredDateTimeListField: [DateTime]
         |  intField: Int
         |  requiredIntField: Int!
-        |  intListField: [Int!]
-        |  requiredIntListField: [Int!]!
+        |  intListField: [Int]
+        |  requiredIntListField: [Int]
         |  floatField: Float
         |  requiredFloatField: Float!
-        |  floatListField: [Float!]
-        |  requiredFloatListField: [Float!]!
+        |  floatListField: [Float]
+        |  requiredFloatListField: [Float]
         |  oneRelation: TestModel3 @relation(name: "Test2OnTest3")
         |  requiredOneRelation: TestModel4! @relation(name: "Test2OnTest4")
-        |  multiRelation: [TestModel5!]! @relation(name: "Test2OnTest5")
-        |  requiredMultiRelation: [TestModel6!]! @relation(name: "Test2OnTest6")
+        |  multiRelation: [TestModel5] @relation(name: "Test2OnTest5")
+        |  requiredMultiRelation: [TestModel6] @relation(name: "Test2OnTest6")
         |  enumField: Testnum
         |  requiredEnumField: Testnum!
-        |  enumListField: [Testnum!]
-        |  requiredEnumListField: [Testnum!]!
+        |  enumListField: [Testnum]
+        |  requiredEnumListField: [Testnum]
         |}
         |
         |type TestModel3 {
@@ -90,7 +90,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
       """
         |type TestModel {
         |  id: ID! @unique
-        |  stringListField: [String!]
+        |  stringListField: [String]
         |}
       """
 
@@ -98,7 +98,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
       """
         |type TestModel {
         |  id: ID! @unique
-        |  stringListField: [Int!]
+        |  stringListField: [Int]
         |}
       """
 
@@ -106,7 +106,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
       """
         |type TestModel {
         |  id: ID! @unique
-        |  intListField: [Int!]
+        |  intListField: [Int]
         |}
       """
 
@@ -389,7 +389,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
       """
         |type TestModel {
         |  id: ID! @unique
-        |  requiredIntList: [Int!]! @default(value: "[1,2]") 
+        |  requiredIntList: [Int] @default(value: "[1,2]") 
         |}
       """.stripMargin
 
@@ -443,7 +443,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |type Comment{
         |  id: ID! @unique
         |  title: String
-        |  comments: [Comment!]! @relation(name: "RelatedComments")
+        |  comments: [Comment] @relation(name: "RelatedComments")
         |  parent: Comment @relation(name: "RelatedComments")
         |}
       """.stripMargin
@@ -463,7 +463,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |type Author{
         |  id: ID! @unique
         |  name: String!
-        |  comments: [Comment!]! @relation(name: "AuthorComments" onDelete: CASCADE)
+        |  comments: [Comment] @relation(name: "AuthorComments" onDelete: CASCADE)
         |}
         |
         |type Comment{
@@ -573,7 +573,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |type Note {
         | name: String! @unique
         | # creator: User!
-        | members: [User!]!
+        | members: [User]
         |}
         |
         |type User {
@@ -593,13 +593,13 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |type Note {
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
-        | members: [User!]! @relation(name: "MemberOf")
+        | members: [User] @relation(name: "MemberOf")
         |}
         |
         |type User {
         | name: String! @unique
-        | Notes: [Note!]! @relation(name: "Creator")
-        | memberOf: [Note!]! @relation(name: "MemberOf")
+        | Notes: [Note] @relation(name: "Creator")
+        | memberOf: [Note] @relation(name: "MemberOf")
         |}
       """.stripMargin
 
@@ -630,13 +630,13 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |type Note {
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
-        | members: [User!]! @relation(name: "MemberOf")
+        | members: [User] @relation(name: "MemberOf")
         |}
         |
         |type User {
         | name: String! @unique
-        | Notes: [Note!]! @relation(name: "Creator")
-        | memberOf: [Note!]! @relation(name: "MemberOf")
+        | Notes: [Note] @relation(name: "Creator")
+        | memberOf: [Note] @relation(name: "MemberOf")
         |}
       """.stripMargin
 
@@ -652,7 +652,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
         |type Note {
         | name: String! @unique
         | # creator: User!
-        | members: [User!]!
+        | members: [User]
         |}
         |
         |type User {
@@ -699,7 +699,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
       """
         |type A {
         | name: String! @unique
-        | value: [Int!]!
+        | value: [Int]
         |}
       """.stripMargin
 

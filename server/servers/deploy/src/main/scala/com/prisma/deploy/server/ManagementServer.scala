@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.Server
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.ProjectPersistence
+import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.schema.{DeployApiError, InvalidProjectId, SchemaBuilder, SystemUserContext}
 import com.prisma.errors.RequestMetadata
 import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
@@ -94,8 +94,17 @@ case class ManagementServer(prefix: String = "")(
                       Future.successful(BadRequest -> Json.obj("error" -> error.getMessage))
 
                     case Success(queryAst) =>
-                      val userContext  = SystemUserContext(authorizationHeader = authorizationHeader)
-                      val errorHandler = ErrorHandler(requestId, req, query, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
+                      val userContext = SystemUserContext(authorizationHeader = authorizationHeader)
+                      val errorHandler = ErrorHandler(
+                        requestId,
+                        req.method.value,
+                        req.uri.toString(),
+                        req.headers.map(h => h.name() -> h.value()),
+                        query,
+                        variables,
+                        dependencies.reporter,
+                        errorCodeExtractor = errorExtractor
+                      )
                       val result: Future[(StatusCode, JsValue)] =
                         Executor
                           .execute(

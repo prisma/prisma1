@@ -1,13 +1,13 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation with the child already in a relation" should "error when connecting by id since old required parent relation would be broken" in {
     val project = SchemaDsl.fromString() { schemaP1reqToC1req }
@@ -748,7 +748,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |type User {
         | id: ID! @unique
         | u: String! @unique
-        | roles: [Role!]!
+        | roles: [Role]
         |}
       """.stripMargin
     }
@@ -796,7 +796,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -839,7 +839,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -850,7 +850,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
          |mutation {
          |  createTodo(data:{
          |    comments: {
-         |      connect: [{id: "DoesNotExist"}]
+         |      connect: [{id: "5beea4aa6183dd734b2dbd9b"}]
          |    }
          |  }){
          |    id
@@ -863,7 +863,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3039,
-      errorContains = "No Node for the model Comment with value DoesNotExist for id found."
+      errorContains = "No Node for the model Comment with value 5beea4aa6183dd734b2dbd9b for id found."
     )
   }
 
@@ -878,7 +878,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |type Todo {
         | id: ID! @unique
         | text: String
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -890,7 +890,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
          |  createComment(data:{
          |    text: "bla"
          |    todo: {
-         |      connect: {id: "DoesNotExist"}
+         |      connect: {id: "5beea4aa6183dd734b2dbd9b"}
          |    }
          |  }){
          |    id
@@ -899,7 +899,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       """.stripMargin,
       project,
       errorCode = 3039,
-      errorContains = "No Node for the model Todo with value DoesNotExist for id found."
+      errorContains = "No Node for the model Todo with value 5beea4aa6183dd734b2dbd9b for id found."
     )
   }
 
@@ -913,7 +913,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -969,7 +969,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |
         |type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -1017,7 +1017,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         | id: ID! @unique
         | title: String!
         | alias: String! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
       """.stripMargin
     }

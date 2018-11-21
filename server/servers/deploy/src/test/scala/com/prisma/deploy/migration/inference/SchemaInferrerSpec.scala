@@ -3,14 +3,13 @@ package com.prisma.deploy.migration.inference
 import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, MongoRelationsCapability}
-import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation, RelationTable}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation, RelationTable}
 import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(MongoRelationsCapability)
 
   val emptyProject = TestProject.empty
 
@@ -20,7 +19,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(name:"MyNameForTodoToComments")
+          |  comments: [Comment] @relation(name:"MyNameForTodoToComments")
           |}
           |
           |type Comment {
@@ -40,13 +39,13 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type User {
           |  id: ID! @id
-          |  calls: [Call!]! @relation(name: "CallRequester")
-          |  calls_member: [Call!]! @relation(name: "CallMembers")
+          |  calls: [Call] @relation(name: "CallRequester")
+          |  calls_member: [Call] @relation(name: "CallMembers")
           |}
           |type Call {
           |  id: ID! @id
           |  created_by: User! @relation(name: "CallRequester")
-          |  members: [User!]! @relation(name: "CallMembers")
+          |  members: [User] @relation(name: "CallMembers")
           |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -64,7 +63,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]!
+          |  comments: [Comment]
           |}
           |
           |type Comment {
@@ -93,7 +92,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]! @relation(strategy: EMBED)
+          |  comments: [Comment] @relation(link: INLINE)
           |}
           |
           |type Comment {
@@ -102,12 +101,13 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |}
         """.stripMargin.trim()
 
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Todo")
+      relation.manifestation should be(Some(EmbeddedRelationLink("Todo", "comments")))
 
       val field1 = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
       field1.isList should be(true)
@@ -125,16 +125,16 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type Todo {
           |  id: ID! @id
-          |  comments: [Comment!]!
+          |  comments: [Comment]
           |}
           |
           |type Comment {
           |  id: ID! @id
-          |  todo: Todo! @relation(strategy: EMBED)
+          |  todo: Todo! @relation(link: INLINE)
           |}
         """.stripMargin.trim()
 
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, MongoRelationsCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
@@ -165,7 +165,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type TodoNew {
           |  id: ID! @id
-          |  comments: [CommentNew!]!
+          |  comments: [CommentNew]
           |}
           |
           |type CommentNew {
@@ -202,7 +202,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """
           |type TodoNew {
           |  id: ID! @id
-          |  commentsNew: [CommentNew!]!
+          |  commentsNew: [CommentNew]
           |}
           |
           |type CommentNew {
@@ -273,8 +273,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """|type Technology {
            |  id: ID! @id
            |  name: String! @unique
-           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -292,8 +292,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """|type Technology {
            |  id: ID! @id
            |  name: String! @unique
-           |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+           |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
       val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -308,8 +308,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         """|type NewTechnology {
            |  id: ID! @id
            |  name: String! @unique
-           |  xTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
-           |  parentTechnologies: [NewTechnology!]! @relation(name: "ChildTechnologies")
+           |  xTechnologies: [NewTechnology] @relation(name: "ChildTechnologies")
+           |  parentTechnologies: [NewTechnology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
 
       val renames = SchemaMapping(
@@ -340,8 +340,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Technology {
          |  id: ID! @id
          |  name: String! @unique
-         |  childTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
-         |  parentTechnologies: [Technology!]! @relation(name: "ChildTechnologies")
+         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+         |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -381,7 +381,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Technology {
          |  id: ID! @id
          |  name: String! @unique
-         |  childTechnologies: [Technology!]!
+         |  childTechnologies: [Technology]
          |}""".stripMargin.trim()
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
 
@@ -421,18 +421,15 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Todo {
          |  id: ID! @id
          |  name: String!
+         |  list: List!
          |}
          |
          |type List {
          |  id: ID! @id
-         |  todos: [Todo!]! @relation(strategy: RELATION_TABLE)
+         |  todos: [Todo] @relation(link: TABLE)
          |}
-         |
-         |type TodoToList @relationTable {
-         |   name: String!
-         |   todos: [Todo!]!
-         |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+         |""".stripMargin
+    val schema = infer(emptyProject.schema, types, capabilities = Set(RelationLinkTableCapability))
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
@@ -448,16 +445,16 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """
          |type List {
          |  id: ID! @id
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {
          |  id: ID! @id
          |  name: String!
-         |  list: List @relation(strategy: EMBED)
+         |  list: List @relation(link: INLINE)
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set(MongoRelationsCapability))
+    val schema = infer(emptyProject.schema, types, capabilities = Set(RelationLinkListCapability))
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
@@ -470,13 +467,13 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """
         |type List {
         |  id: ID! @id
-        |  todos: [Todo!]!
+        |  todos: [Todo]
         |}
         |
         |type Todo {
         |  id: ID! @id
         |  name: String!
-        |  list: List @relation(strategy: EMBED)
+        |  list: List @relation(link: INLINE)
         |}
         |""".stripMargin
     val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
@@ -518,7 +515,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Todo {
          |  id: ID! @id
          |  name: String!
-         |  comments: [Comment!]!
+         |  comments: [Comment]
          |}
          |type Comment {
          |  id: ID! @id
@@ -536,14 +533,14 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       """|type Todo {
          |  id: ID! @id
          |  name: String!
-         |  comments: [Comment!]! @relation(strategy: EMBED)
+         |  comments: [Comment] @relation(link: INLINE)
          |}
          |type Comment {
          |  id: ID! @id
          |  text: String
          |}
          |""".stripMargin
-    val schema                = infer(emptyProject.schema, types, capabilities = Set(MongoRelationsCapability))
+    val schema                = infer(emptyProject.schema, types, capabilities = Set(RelationLinkListCapability))
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
     val expectedManifestation = EmbeddedRelationLink("Todo", "comments")
     relationField.relation.manifestation should be(Some(expectedManifestation))

@@ -234,9 +234,16 @@ object ProjectJsonFormatter {
   implicit val fieldManifestationReads: Reads[FieldManifestation]   = (JsPath \ "dbName").read[String].map(FieldManifestation)
   implicit lazy val enum                                            = Json.format[Enum]
 
+  implicit val sequenceFormat = (
+    (JsPath \ "name").format[String] and
+      (JsPath \ "initialValue").format[Int] and
+      (JsPath \ "allocationSize").format[Int]
+  )(Sequence.apply, unlift(Sequence.unapply))
+
   implicit val fieldBehaviourFormat = new OFormat[FieldBehaviour] {
     val discriminatorField = "type"
     val strategyField      = "strategy"
+    val sequenceField      = "sequence"
     val createdAtType      = "createdAt"
     val updatedAtType      = "updatedAt"
     val idType             = "id"
@@ -246,8 +253,13 @@ object ProjectJsonFormatter {
       behaviour match {
         case CreatedAtBehaviour            => Json.obj(discriminatorField -> createdAtType)
         case UpdatedAtBehaviour            => Json.obj(discriminatorField -> updatedAtType)
-        case IdBehaviour(strategy)         => Json.obj(discriminatorField -> idType, strategyField -> strategy.entryName)
         case ScalarListBehaviour(strategy) => Json.obj(discriminatorField -> scalarListType, strategyField -> strategy.entryName)
+        case IdBehaviour(strategy, sequence) =>
+          Json.obj(
+            discriminatorField -> idType,
+            strategyField      -> strategy.entryName,
+            sequenceField      -> Json.toJson(sequence)
+          )
       }
     }
 
@@ -256,8 +268,11 @@ object ProjectJsonFormatter {
         case `createdAtType` => JsSuccess(CreatedAtBehaviour)
         case `updatedAtType` => JsSuccess(UpdatedAtBehaviour)
         case `idType` =>
-          (json \ strategyField).validate[String].map { strategy =>
-            IdBehaviour(IdStrategy.withName(strategy))
+          for {
+            strategy <- (json \ strategyField).validate[String]
+            sequence <- (json \ sequenceField).validateOpt[Sequence]
+          } yield {
+            IdBehaviour(IdStrategy.withName(strategy), sequence)
           }
         case `scalarListType` =>
           (json \ strategyField).validate[String].map { strategy =>

@@ -24,7 +24,7 @@ object MongoDeployDatabaseMutationBuilder {
     database.listCollectionNames().toFuture().map(_ => ())
   }
 
-  //needs to add relation indexes as well
+  //Fixme Should this be allowed to delete collections? probably not, should just drop contents
   def truncateProjectTables(project: Project) = DeployMongoAction { database =>
     val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
 
@@ -55,21 +55,39 @@ object MongoDeployDatabaseMutationBuilder {
     } yield ()
   }
 
+  def nonDestructiveTruncateProjectTables(project: Project) = DeployMongoAction { database =>
+    val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
+
+    for {
+      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).deleteMany(Document().toBsonDocument).toFuture()))
+    } yield ()
+  }
+
   def deleteProjectDatabase = DeployMongoAction { database =>
-    database.drop().toFuture().map(_ -> Unit)
+    Future.successful(())
+//    database.drop().toFuture().map(_ -> Unit)
   }
 
   //Collection
   def createCollection(collectionName: String) = DeployMongoAction { database =>
-    database.createCollection(collectionName).toFuture().map(_ -> Unit)
+    database.listCollectionNames().toFuture().map { names =>
+      if (names.contains(collectionName)) {
+        Future.successful(())
+      } else {
+        database.createCollection(collectionName).toFuture().map(_ -> Unit)
+      }
+    }
   }
 
   def dropCollection(collectionName: String) = DeployMongoAction { database =>
-    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
+    Future.successful(())
+//    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
   def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
-    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
+    Future.successful(())
+
+//    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
   }
 
   //Fields

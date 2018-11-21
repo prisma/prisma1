@@ -225,6 +225,7 @@ case class ScalarField(
     model: Model
 ) extends Field {
   import template._
+  import ReservedFields._
 
   override def isRelation      = false
   override def isScalar        = true
@@ -235,7 +236,7 @@ case class ScalarField(
 
   override def schema = model.schema
 
-  val isId: Boolean        = if (model.isLegacy) name == ReservedFields.idFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
+  val isId: Boolean        = if (model.isLegacy) name == idFieldName || name == embeddedIdFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
   val isCreatedAt: Boolean = if (model.isLegacy) name == ReservedFields.createdAtFieldName else behaviour.contains(CreatedAtBehaviour)
   val isUpdatedAt: Boolean = if (model.isLegacy) name == ReservedFields.updatedAtFieldName else behaviour.contains(UpdatedAtBehaviour)
 }

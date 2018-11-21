@@ -1,7 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.ApiConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import play.api.libs.json.JsValue
 

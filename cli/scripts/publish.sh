@@ -157,6 +157,10 @@ if [ -z "$CIRCLE_TAG" ]; then
     nextLastNumber=$((betaLastNumber + step + 1))
   fi
 
+  if [ $CIRCLE_BRANCH == "alpha" ]; then
+    nextLastNumber=$((nextLastNumber + 1))
+  fi
+
   export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
   echo "new version: $newVersion"
 else

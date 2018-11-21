@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
-import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
 import com.prisma.shared.models.{ConnectorCapability, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -21,12 +21,12 @@ trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with Before
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
   implicit lazy val deployConnector                          = testDependencies.deployConnector
-  override def prismaConfig                                  = testDependencies.config
-  val server                                                 = DeployTestServer()
-  val internalDB                                             = testDependencies.deployConnector
-  val projectsToCleanUp                                      = new ArrayBuffer[String]
-  def capabilities                                           = deployConnector.capabilities
 
+  val server            = DeployTestServer()
+  val projectsToCleanUp = new ArrayBuffer[String]
+
+  override def prismaConfig                                   = testDependencies.config
+  def capabilities                                            = deployConnector.capabilities
   def connectorHasCapability(capability: ConnectorCapability) = deployConnector.hasCapability(capability)
 
   val basicTypesGql =
@@ -58,7 +58,7 @@ trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with Before
   )(implicit suite: Suite): (Project, Migration) = {
     val name      = suite.getClass.getSimpleName
     val idAsStrig = testDependencies.projectIdEncoder.toEncodedString(name, stage)
-    internalDB.deleteProjectDatabase(idAsStrig).await()
+    deployConnector.deleteProjectDatabase(idAsStrig).await()
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }

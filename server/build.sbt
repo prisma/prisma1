@@ -1,4 +1,4 @@
-import sbt.Keys.name
+import sbt.Keys.{name, scalacOptions}
 import sbt._
 import SbtUtils._
 import Dependencies._
@@ -50,6 +50,8 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   }
 )
 
+javaOptions in Universal ++= Seq("-Dorg.jooq.no-logo=true")
+
 def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing)
@@ -72,6 +74,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
+  .dependsOn(sangriaServer)
 
 // ####################
 //       SERVERS
@@ -121,29 +124,40 @@ lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtil
 // ####################
 
 lazy val connectorUtils = connectorProject("utils").dependsOn(deployConnectorProjects).dependsOn(apiConnectorProjects)
+lazy val connectorShared = connectorProject("shared")
+  .settings(
+    libraryDependencies ++= slick ++ jooq ++ joda
+  )
 
 lazy val deployConnector = connectorProject("deploy-connector")
   .dependsOn(sharedModels)
   .dependsOn(metrics)
 
-lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+lazy val deployConnectorJdbc = connectorProject("deploy-connector-jdbc")
   .dependsOn(deployConnector)
+  .dependsOn(connectorShared)
+
+lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
+  .dependsOn(deployConnectorJdbc)
   .settings(
-    libraryDependencies ++= slick ++ Seq(mariaDbClient)
+    libraryDependencies ++= Seq(mariaDbClient)
   )
 
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
-  .dependsOn(deployConnector)
+  .dependsOn(deployConnectorJdbc)
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= Seq(postgresClient)
   )
 
 lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient)
-  )
+    libraryDependencies ++= Seq(mongoClient),
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
@@ -156,8 +170,9 @@ lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
   .dependsOn(apiConnector)
   .dependsOn(metrics)
   .dependsOn(slickUtils)
+  .dependsOn(connectorShared)
   .settings(
-    libraryDependencies ++= slick ++ jooq ++ Seq(postgresClient)
+    libraryDependencies ++= Seq(postgresClient)
   )
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
@@ -172,7 +187,12 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .dependsOn(apiConnector)
-  .settings(libraryDependencies ++= Seq(mongoClient))
+  .settings(libraryDependencies ++= Seq(mongoClient),
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
+
 
 
 // ####################
@@ -182,6 +202,7 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues)
   .dependsOn(jsonUtils)
+  .dependsOn(scalaUtils)
   .settings(
   libraryDependencies ++= Seq(
     cuid
@@ -220,7 +241,11 @@ lazy val akkaUtils = libProject("akka-utils")
     specs2,
     caffeine
   ))
-  .settings(scalacOptions := Seq("-deprecation", "-feature"))
+  .settings(
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
 
 lazy val metrics = libProject("metrics")
   .dependsOn(errorReporting)
@@ -313,6 +338,15 @@ lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies
 
 lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
 
+lazy val sangriaServer = libProject("sangria-server")
+  .dependsOn(sangriaUtils)
+  .dependsOn(scalaUtils)
+  .settings(libraryDependencies ++= Seq(
+    akkaHttpPlayJson,
+    cuid,
+    scalajHttp % Test
+  ) ++ http4s ++ ujson)
+
 val allDockerImageProjects = List(
   prismaLocal,
   prismaProd
@@ -329,6 +363,7 @@ val allServerProjects = List(
 
 lazy val deployConnectorProjects = List(
   deployConnector,
+  deployConnectorJdbc,
   deployConnectorMySql,
   deployConnectorPostgres,
   deployConnectorMongo
@@ -342,7 +377,7 @@ lazy val apiConnectorProjects = List(
   apiConnectorMongo
 )
 
-lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils)
+lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
 
 val allLibProjects = List(
   akkaUtils,

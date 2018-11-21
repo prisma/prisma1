@@ -8,7 +8,7 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
@@ -89,7 +89,8 @@ class ObjectTypeBuilder(
           .map(mapClientField(model))
       },
       interfaces = {
-        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid)
+        val idFieldHasRightType = model.idField.exists(f =>
+          f.name == ReservedFields.idFieldName && (f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid))
         if (model.hasVisibleIdField && idFieldHasRightType) nodeInterface.toList else List.empty
       },
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
@@ -304,7 +305,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(f.name) match {
-          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.idField, v.asRoot))
+          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.embeddedIdField, v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
@@ -324,7 +325,7 @@ class ObjectTypeBuilder(
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case NullGCValue => None
-          case value       => Some(PrismaNode(value.asRoot.idField, value.asRoot))
+          case value       => Some(PrismaNode(value.asRoot.embeddedIdField, value.asRoot))
         }
 
       case f: RelationField if f.isList =>

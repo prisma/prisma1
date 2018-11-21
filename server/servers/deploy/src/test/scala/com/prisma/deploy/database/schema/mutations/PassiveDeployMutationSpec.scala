@@ -52,7 +52,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
-        |   scalarList: [String!]!
+        |   scalarList: [String]
         | }
       """.stripMargin
 
@@ -60,7 +60,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
 
     val result = server.deploySchemaThatMustError(projectId, schema)
     result.pathAsString("data.deploy.errors.[0].description") should be(
-      "The scalar field `scalarList` has the wrong format: `[String!]!` Possible Formats: `String`, `String!`")
+      "The scalar field `scalarList` has the wrong format: `[String]` Possible Formats: `String`, `String!`")
   }
 
   "a schema with an explicit inline relation" should "work" in {
@@ -82,7 +82,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         | }
         |
         | type Todo @pgTable(name: "todo"){
@@ -123,7 +123,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         | }
         |
         | type Todo @pgTable(name: "todo"){
@@ -168,13 +168,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]! @pgRelationTable(table: "todotolist")
+        |   todos: [Todo] @pgRelationTable(table: "todotolist")
         | }
         |
         | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
-        |   list: [List!]!
+        |   list: [List]
         | }
       """.stripMargin
 
@@ -213,13 +213,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         | }
         |
         | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
-        |   list: [List!]!
+        |   list: [List]
         | }
       """.stripMargin
 
@@ -258,13 +258,13 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         | }
         |
         | type Todo @pgTable(name: "todo"){
         |   id: ID! @unique
         |   title: String!
-        |   list: [List!]!
+        |   list: [List]
         | }
       """.stripMargin
 

@@ -8,7 +8,7 @@ trait DataModelValidationSpecBase {
   def validateThatMustError(dataModel: String, capabilities: Set[ConnectorCapability] = Set.empty): Vector[DeployError] = {
     val result = validateInternal(dataModel, capabilities)
     result match {
-      case Good(dm)    => sys.error("The validation did not produce an error, which was expected.")
+      case Good(dm)    => sys.error("The validation did not produce an error, which it should have.")
       case Bad(errors) => errors
     }
   }

@@ -62,12 +62,15 @@ Either try using a new directory name, or remove the files listed above.
     /**
      * If there is a predefined endpoint provided as a cli arg
      */
+
     if (endpoint) {
+      const datamodelBoilerplatePath =
+        this.definition.definition!.databaseType === 'document'
+          ? path.join(__dirname, 'boilerplate', 'datamodel-mongo.prisma')
+          : path.join(__dirname, 'boilerplate', 'datamodel.prisma')
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'datamodel.prisma'),
-        fs.readFileSync(
-          path.join(__dirname, 'boilerplate', 'datamodel.prisma'),
-        ),
+        fs.readFileSync(datamodelBoilerplatePath),
       )
 
       /**
@@ -143,7 +146,7 @@ datamodel: datamodel.prisma${databaseTypeString}`
       prismaYmlString,
     )
     fs.writeFileSync(
-      path.join(this.config.definitionDir, 'datamodel.prisma'),
+      path.join(this.config.definitionDir, `datamodel.prisma`),
       results.datamodel,
     )
     if (results.cluster!.local && results.writeDockerComposeYml) {

@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.time.{Seconds, Span}
@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability, ScalarListsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, ScalarListsCapability)
 
   import testDependencies.system.dispatcher
 
@@ -27,7 +27,7 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -87,8 +87,8 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -150,8 +150,8 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -215,8 +215,8 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -257,7 +257,7 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment {
