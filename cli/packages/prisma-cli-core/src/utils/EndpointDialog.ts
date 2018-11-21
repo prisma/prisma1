@@ -188,10 +188,9 @@ export class EndpointDialog {
   }
 
   printDatabaseConfig(credentials: DatabaseCredentials) {
-    const data: any = {
+    let data: any = {
       connector: credentials.type,
       host: credentials.host,
-      port: credentials.port || defaultPorts[credentials.type],
       database:
         credentials.database && credentials.database.length > 0
           ? credentials.database
@@ -202,11 +201,15 @@ export class EndpointDialog {
           : undefined,
       user: credentials.user,
       password: credentials.password,
-      rawAccess: credentials.type !== 'mongo',
       uri: credentials.uri,
     }
     if (credentials.type !== 'mongo') {
-      data.migrations = !credentials.alreadyData
+      data = {
+        ...data,
+        rawAccess: true,
+        port: credentials.port || defaultPorts[credentials.type],
+        migrations: !credentials.alreadyData,
+      }
     }
     const defaultDB = JSON.parse(JSON.stringify(data))
     return yaml
@@ -304,6 +307,7 @@ export class EndpointDialog {
           const before = Date.now()
           this.out.action.start(`Connecting to database`)
           await this.connectToMongo(credentials)
+          credentials.uri = this.replaceMongoHost(credentials.uri!)
           this.out.action.stop(prettyTime(Date.now() - before))
         }
         if (credentials.type !== 'mongo') {
@@ -469,21 +473,25 @@ export class EndpointDialog {
     return credentials
   }
 
+  replaceMongoHost(connectionString: string) {
+    return connectionString.replace('localhost', 'host.docker.internal')
+  }
+
   async getDatabase(
     introspection: boolean = false,
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
-    const alreadyData = introspection || (await this.askForExistingData())
-    const askForSchema = introspection ? true : alreadyData ? true : false
-    if (type === 'mysql' && alreadyData) {
-      throw new Error(
-        `Existing MySQL databases with data are not yet supported.`,
-      )
-    }
     const credentials: any = {
       type,
     }
     if (type === 'mysql' || type === 'postgres') {
+      const alreadyData = introspection || (await this.askForExistingData())
+      const askForSchema = introspection ? true : alreadyData ? true : false
+      if (type === 'mysql' && alreadyData) {
+        throw new Error(
+          `Existing MySQL databases with data are not yet supported.`,
+        )
+      }
       credentials.host = await this.ask({
         message: 'Enter database host',
         key: 'host',
@@ -530,6 +538,7 @@ export class EndpointDialog {
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
+      const alreadyData = await this.askForExistingDataMongo()
       if (alreadyData) {
         credentials.database = await this.ask({
           message: `Enter name of existing database`,
@@ -871,6 +880,29 @@ export class EndpointDialog {
     const { endpoint } = await this.out.prompt(question)
 
     return endpoint
+  }
+
+  private async askForExistingDataMongo(): Promise<boolean> {
+    const question = {
+      name: 'existingData',
+      type: 'list',
+      message: `Does your database contain existing data?`,
+      choices: [
+        {
+          value: 'yes',
+          name: 'Yes: Use existing data',
+          short: 'Yes',
+        },
+        {
+          value: 'no',
+          name: 'No: Set up without existing data',
+        },
+      ],
+      pageSize: 5,
+    }
+
+    const { existingData } = await this.out.prompt(question)
+    return existingData === 'yes'
   }
 
   private async askForExistingData(): Promise<boolean> {
