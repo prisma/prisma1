@@ -12,7 +12,7 @@ services:
         databases:
           default:
             connector: mongo
-            uri: mongodb://prisma:prisma@127.0.0.1:27017
+            uri: mongodb://prisma:prisma@test-db:27017/?authSource=admin&ssl=false
 
     volumes:
       - ../../../..:/root
