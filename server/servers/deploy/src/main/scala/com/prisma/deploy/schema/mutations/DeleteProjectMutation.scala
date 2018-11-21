@@ -6,6 +6,7 @@ import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.schema.InvalidProjectId
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,10 +29,8 @@ case class DeleteProjectMutation(
       projectOpt <- projectPersistence.load(projectId)
       project    = validate(projectOpt)
       _          <- projectPersistence.delete(projectId)
-//      stmt       <- DeleteClientDatabaseForProject(projectId).execute
-//      _          <- clientDb.run(stmt.sqlAction)
-      _ <- deployConnector.deleteProjectDatabase(projectId)
-      _ = invalidationPubSub.publish(Only(projectId), projectId)
+      _          <- if (deployConnector.isActive && !deployConnector.capabilities.contains(EmbeddedTypesCapability)) deployConnector.deleteProjectDatabase(projectId)
+      _          = invalidationPubSub.publish(Only(projectId), projectId)
     } yield MutationSuccess(DeleteProjectMutationPayload(args.clientMutationId, project))
   }
 
