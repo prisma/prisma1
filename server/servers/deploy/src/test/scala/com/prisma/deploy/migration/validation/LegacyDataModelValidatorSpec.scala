@@ -623,10 +623,11 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       dataModel: String,
       isActive: Boolean,
       capabilities: Set[ConnectorCapability],
-      directiveRequirement: Seq[DirectiveRequirement] = Vector.empty
+      directiveRequirements: Seq[DirectiveRequirement] = Vector.empty
   ): Seq[DeployError] = {
     LegacyDataModelValidator(
       dataModel,
+      directiveRequirements,
       FieldRequirementImpl(isActive = isActive),
       ConnectorCapabilities(MigrationsCapability)
     ).validate
