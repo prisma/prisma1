@@ -142,14 +142,10 @@ type Query {
   ): Node
 }
 
-type SelfReferencingA implements Node {
+type SelfReferencingA {
   removeThisId: ID!
   a: SelfReferencingAWithId!
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -570,14 +566,10 @@ input SelfReferencingAWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingB implements Node {
+type SelfReferencingB {
   removeThisId: ID!
   a: SelfReferencingB
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -1157,14 +1149,10 @@ input SelfReferencingBWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingC implements Node {
+type SelfReferencingC {
   removeThisId: ID!
   a(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC!]
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """

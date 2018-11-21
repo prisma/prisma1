@@ -1,11 +1,7 @@
-type A implements Node {
+type A {
   c: String!
   removeThisIdd: ID!
   d: String
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """

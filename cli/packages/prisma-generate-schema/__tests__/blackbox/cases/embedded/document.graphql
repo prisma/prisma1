@@ -227,13 +227,9 @@ input ChildWhereInput {
   c_not_ends_with: String
 }
 
-type Friend implements Node {
+type Friend {
   f: String
   test: ID!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """

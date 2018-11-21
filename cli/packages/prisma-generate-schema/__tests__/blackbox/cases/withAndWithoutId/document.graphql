@@ -317,13 +317,9 @@ input TypeWithIdWhereUniqueInput {
   id: ID
 }
 
-type TypeWithoutId implements Node {
+type TypeWithoutId {
   removeThisIdd: ID!
   field: String!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """

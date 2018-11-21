@@ -106,14 +106,10 @@ type AggregateCWithoutIdWithC {
   count: Int!
 }
 
-type AWithA implements Node {
+type AWithA {
   removeThisId: ID!
   x: AWithIdWithA!
   y: AWithoutIdWithA!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -325,14 +321,10 @@ input AWithAWhereUniqueInput {
   removeThisId: ID
 }
 
-type AWithB implements Node {
+type AWithB {
   removeThisId: ID!
   x: BWithIdWithA!
   y: BWithoutIdWithA!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -548,14 +540,10 @@ input AWithBWhereUniqueInput {
   removeThisId: ID
 }
 
-type AWithC implements Node {
+type AWithC {
   removeThisId: ID!
   x: CWithIdWithA!
   y: CWithoutIdWithA!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -1745,14 +1733,10 @@ input AWithIdWithCWhereUniqueInput {
   id: ID
 }
 
-type AWithoutIdWithA implements Node {
+type AWithoutIdWithA {
   removeThisId: ID!
   field: String!
   x: AWithA!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -1999,14 +1983,10 @@ input AWithoutIdWithAWhereUniqueInput {
   removeThisId: ID
 }
 
-type AWithoutIdWithB implements Node {
+type AWithoutIdWithB {
   removeThisId: ID!
   field: String!
   x: BWithA!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -2255,14 +2235,10 @@ input AWithoutIdWithBWhereUniqueInput {
   removeThisId: ID
 }
 
-type AWithoutIdWithC implements Node {
+type AWithoutIdWithC {
   removeThisId: ID!
   field: String!
   x: CWithA!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -2656,14 +2632,10 @@ type BatchPayload {
   count: Long!
 }
 
-type BWithA implements Node {
+type BWithA {
   removeThisId: ID!
   x: AWithIdWithB
   y: AWithoutIdWithB
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -2875,14 +2847,10 @@ input BWithAWhereUniqueInput {
   removeThisId: ID
 }
 
-type BWithB implements Node {
+type BWithB {
   removeThisId: ID!
   x: BWithIdWithB
   y: BWithoutIdWithB
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -3098,14 +3066,10 @@ input BWithBWhereUniqueInput {
   removeThisId: ID
 }
 
-type BWithC implements Node {
+type BWithC {
   removeThisId: ID!
   x: CWithIdWithB
   y: CWithoutIdWithB
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -4295,14 +4259,10 @@ input BWithIdWithCWhereUniqueInput {
   id: ID
 }
 
-type BWithoutIdWithA implements Node {
+type BWithoutIdWithA {
   removeThisId: ID!
   field: String!
   x: AWithB
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -4549,14 +4509,10 @@ input BWithoutIdWithAWhereUniqueInput {
   removeThisId: ID
 }
 
-type BWithoutIdWithB implements Node {
+type BWithoutIdWithB {
   removeThisId: ID!
   field: String!
   x: BWithB
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -4805,14 +4761,10 @@ input BWithoutIdWithBWhereUniqueInput {
   removeThisId: ID
 }
 
-type BWithoutIdWithC implements Node {
+type BWithoutIdWithC {
   removeThisId: ID!
   field: String!
   x: CWithB
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -5199,14 +5151,10 @@ input BWithoutIdWithCWhereUniqueInput {
   removeThisId: ID
 }
 
-type CWithA implements Node {
+type CWithA {
   removeThisId: ID!
   x(where: AWithIdWithCWhereInput, orderBy: AWithIdWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithIdWithC!]
   y(where: AWithoutIdWithCWhereInput, orderBy: AWithoutIdWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithoutIdWithC!]
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -5418,14 +5366,10 @@ input CWithAWhereUniqueInput {
   removeThisId: ID
 }
 
-type CWithB implements Node {
+type CWithB {
   removeThisId: ID!
   x(where: BWithIdWithCWhereInput, orderBy: BWithIdWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BWithIdWithC!]
   y(where: BWithoutIdWithCWhereInput, orderBy: BWithoutIdWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BWithoutIdWithC!]
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -5641,14 +5585,10 @@ input CWithBWhereUniqueInput {
   removeThisId: ID
 }
 
-type CWithC implements Node {
+type CWithC {
   removeThisId: ID!
   x(where: CWithIdWithCWhereInput, orderBy: CWithIdWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CWithIdWithC!]
   y(where: CWithoutIdWithCWhereInput, orderBy: CWithoutIdWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CWithoutIdWithC!]
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -6838,14 +6778,10 @@ input CWithIdWithCWhereUniqueInput {
   id: ID
 }
 
-type CWithoutIdWithA implements Node {
+type CWithoutIdWithA {
   removeThisId: ID!
   field: String!
   x(where: AWithCWhereInput, orderBy: AWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithC!]
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -7092,14 +7028,10 @@ input CWithoutIdWithAWhereUniqueInput {
   removeThisId: ID
 }
 
-type CWithoutIdWithB implements Node {
+type CWithoutIdWithB {
   removeThisId: ID!
   field: String!
   x(where: BWithCWhereInput, orderBy: BWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BWithC!]
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -7348,14 +7280,10 @@ input CWithoutIdWithBWhereUniqueInput {
   removeThisId: ID
 }
 
-type CWithoutIdWithC implements Node {
+type CWithoutIdWithC {
   removeThisId: ID!
   field: String!
   x(where: CWithCWhereInput, orderBy: CWithCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CWithC!]
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
