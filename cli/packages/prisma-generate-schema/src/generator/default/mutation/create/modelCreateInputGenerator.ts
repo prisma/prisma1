@@ -4,8 +4,6 @@ import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLLi
 
 
 export default class ModelCreateInputGenerator extends ModelInputObjectTypeGenerator {
-
-
   /**
    * Generates an create model input field for a relational type, handling the four cases many/one and with/without related type. 
    * @param model 

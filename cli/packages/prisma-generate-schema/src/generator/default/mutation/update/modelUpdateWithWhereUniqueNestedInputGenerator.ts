@@ -9,7 +9,8 @@ export default class ModelUpdateWithWhereUniqueNestedInput extends RelatedModelI
   }
 
   public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {  
-    return this.generators.modelUpdateDataInput.wouldBeEmpty(model, args)
+    return this.generators.modelUpdateDataInput.wouldBeEmpty(model, args) ||
+           this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)
   }
 
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {

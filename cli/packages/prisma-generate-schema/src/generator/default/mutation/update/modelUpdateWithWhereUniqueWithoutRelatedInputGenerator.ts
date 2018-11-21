@@ -11,7 +11,8 @@ export default class ModelUpdateWithWhereUniqueWithoutRelatedInput extends Relat
   }
 
   public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {  
-    return this.generators.modelUpdateWithoutRelatedDataInput.wouldBeEmpty(model, args)
+    return this.generators.modelUpdateWithoutRelatedDataInput.wouldBeEmpty(model, args) ||
+           this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)
   }
 
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
