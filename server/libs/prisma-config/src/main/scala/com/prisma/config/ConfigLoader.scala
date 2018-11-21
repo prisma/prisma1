@@ -177,7 +177,8 @@ object ConfigLoader {
     val rawAccess   = extractBooleanOpt("rawAccess", db)
     val dbActive = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)) match {
       case Some(x) if dbConnector == "mongo" =>
-        println("The mongo connector does not support the concept of migrations, the migrations: true | false / isActive: true | false setting is ignored. ")
+        println(
+          "[WARNING] The mongo connector does not support the concept of migrations, the migrations: true | false / isActive: true | false setting is ignored. ")
         Some(x)
       case x => x
     }
