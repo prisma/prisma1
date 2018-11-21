@@ -22,7 +22,7 @@ case class PostgresDeployConnector(
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: Set[ConnectorCapability]        = ConnectorCapabilities.postgres(isActive)
+  override def capabilities: ConnectorCapabilities           = ConnectorCapabilities.postgres(isActive)
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
   lazy val setupDatabases      = internalDatabases.setupDatabase

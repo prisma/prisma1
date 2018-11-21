@@ -4,21 +4,21 @@ import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.shared.models.ConnectorCapability.{IdSequenceCapability, IntIdCapability, UuidIdCapability}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
-import com.prisma.shared.models.TypeIdentifier.{IdTypeIdentifier, ScalarTypeIdentifier, TypeIdentifier}
-import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{ConnectorCapabilities, FieldBehaviour, TypeIdentifier}
 import sangria.ast._
 
 object IdDirective extends FieldDirective[IdBehaviour] {
-  override def name                                                 = "id"
-  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(IdStrategyArgument(capabilities))
+  override def name                                              = "id"
+  override def requiredArgs(capabilities: ConnectorCapabilities) = Vector.empty
+  override def optionalArgs(capabilities: ConnectorCapabilities) = Vector(IdStrategyArgument(capabilities))
 
   override def validate(
       doc: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
       directive: Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
     val errors = validatePlacement(typeDef, fieldDef) ++ validateFieldType(doc, typeDef, fieldDef, capabilities)
     errors.toVector
@@ -30,9 +30,9 @@ object IdDirective extends FieldDirective[IdBehaviour] {
     }
   }
 
-  def validateFieldType(doc: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
-    val supportsUuid   = capabilities.contains(UuidIdCapability)
-    val supportsInt    = capabilities.contains(IntIdCapability)
+  def validateFieldType(doc: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: ConnectorCapabilities) = {
+    val supportsUuid   = capabilities.has(UuidIdCapability)
+    val supportsInt    = capabilities.has(IntIdCapability)
     val validTypes     = Set[TypeIdentifier](TypeIdentifier.Cuid) ++ supportsUuid.toOption(TypeIdentifier.UUID) ++ supportsInt.toOption(TypeIdentifier.Int)
     val hasInvalidType = !validTypes.contains(fieldDef.typeIdentifier(doc))
     val isNotRequired  = !fieldDef.isRequired
@@ -51,7 +51,7 @@ object IdDirective extends FieldDirective[IdBehaviour] {
     requiredError ++ typeError
   }
 
-  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: ConnectorCapabilities) = {
     fieldDef.directive(name).map { directive =>
       val strategy = IdStrategyArgument(capabilities).value(directive).getOrElse(FieldBehaviour.IdStrategy.Auto)
       val sequence = SequenceDirective.value(document, typeDef, fieldDef, capabilities)
@@ -66,10 +66,10 @@ object IdStrategyArgument {
   val noneValue     = "NONE"
   val sequenceValue = "SEQUENCE"
 }
-case class IdStrategyArgument(capabilities: Set[ConnectorCapability]) extends DirectiveArgument[FieldBehaviour.IdStrategy] {
+case class IdStrategyArgument(capabilities: ConnectorCapabilities) extends DirectiveArgument[FieldBehaviour.IdStrategy] {
   import IdStrategyArgument._
 
-  val validStrategyValues = Set(autoValue, noneValue) ++ capabilities.contains(IdSequenceCapability).toOption(sequenceValue)
+  val validStrategyValues = Set(autoValue, noneValue) ++ capabilities.has(IdSequenceCapability).toOption(sequenceValue)
 
   override def name = "strategy"
 

@@ -3,21 +3,21 @@ package com.prisma.deploy.migration.validation.directives
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.{ConnectorCapabilities, FieldBehaviour}
 import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListStrategy}
-import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour}
 import sangria.ast._
 
 object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
-  override def name                                                 = "scalarList"
-  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector(ScalarListStrategyArgument(capabilities))
+  override def name                                              = "scalarList"
+  override def requiredArgs(capabilities: ConnectorCapabilities) = Vector.empty
+  override def optionalArgs(capabilities: ConnectorCapabilities) = Vector(ScalarListStrategyArgument(capabilities))
 
   override def validate(
       document: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
       directive: Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
     val invalidTypeError = (!fieldDef.isList).toOption {
       DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be lists, e.g. `[${fieldDef.typeName}]`.")
@@ -25,15 +25,15 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
     invalidTypeError.toVector
   }
 
-  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: ConnectorCapabilities) = {
     lazy val behaviour = fieldDef.directive(name) match {
       case Some(directive) =>
         val strategy = ScalarListStrategyArgument(capabilities).value(directive).get
         ScalarListBehaviour(strategy)
       case None =>
-        if (capabilities.contains(EmbeddedScalarListsCapability)) {
+        if (capabilities.has(EmbeddedScalarListsCapability)) {
           ScalarListBehaviour(ScalarListStrategy.Embedded)
-        } else if (capabilities.contains(NonEmbeddedScalarListCapability)) {
+        } else if (capabilities.has(NonEmbeddedScalarListCapability)) {
           ScalarListBehaviour(ScalarListStrategy.Relation)
         } else {
           sys.error("should not happen")
@@ -45,7 +45,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
   }
 }
 
-case class ScalarListStrategyArgument(capabilities: Set[ConnectorCapability]) extends DirectiveArgument[ScalarListStrategy] {
+case class ScalarListStrategyArgument(capabilities: ConnectorCapabilities) extends DirectiveArgument[ScalarListStrategy] {
   val embeddedValue = "EMBEDDED"
   val relationValue = "RELATION"
 
@@ -61,10 +61,10 @@ case class ScalarListStrategyArgument(capabilities: Set[ConnectorCapability]) ex
     }
   }
 
-  private def isValidStrategyArgument(capabilities: Set[ConnectorCapability], value: sangria.ast.Value): Option[String] = {
+  private def isValidStrategyArgument(capabilities: ConnectorCapabilities, value: sangria.ast.Value): Option[String] = {
     val validStrategyValues = (
-      capabilities.contains(EmbeddedScalarListsCapability).toOption(embeddedValue) ++
-        capabilities.contains(NonEmbeddedScalarListCapability).toOption(relationValue)
+      capabilities.has(EmbeddedScalarListsCapability).toOption(embeddedValue) ++
+        capabilities.has(NonEmbeddedScalarListCapability).toOption(relationValue)
     ).toVector
 
     if (validStrategyValues.contains(value.asString)) {

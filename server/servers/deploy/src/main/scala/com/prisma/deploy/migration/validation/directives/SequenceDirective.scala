@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration.validation.directives
 
-import com.prisma.shared.models.ConnectorCapability
-import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, DeployErrors}
+import com.prisma.shared.models.ConnectorCapabilities
 import com.prisma.shared.models.FieldBehaviour.Sequence
+import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 
 object SequenceDirective extends FieldDirective[Sequence] {
   override def name = "sequence"
@@ -13,7 +13,7 @@ object SequenceDirective extends FieldDirective[Sequence] {
   val initialValue   = DirectiveArgument("initialValue", validateIntValue, _.asInt)
   val allocationSize = DirectiveArgument("allocationSize", validateIntValue, _.asInt)
 
-  override def requiredArgs(capabilities: Set[ConnectorCapability]) = {
+  override def requiredArgs(capabilities: ConnectorCapabilities) = {
     Vector(
       nameArg,
       initialValue,
@@ -21,14 +21,14 @@ object SequenceDirective extends FieldDirective[Sequence] {
     )
   }
 
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def optionalArgs(capabilities: ConnectorCapabilities) = Vector.empty
 
   override def validate(
       document: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
       directive: Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): Vector[DeployError] = {
     val hasIdDirective           = fieldDef.hasDirective(IdDirective.name)
     val hasRightStrategyArgument = fieldDef.directiveArgumentAsString(IdDirective.name, IdStrategyArgument.name).contains(IdStrategyArgument.sequenceValue)
@@ -44,7 +44,7 @@ object SequenceDirective extends FieldDirective[Sequence] {
       document: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
     for {
       directive      <- fieldDef.directive(name)

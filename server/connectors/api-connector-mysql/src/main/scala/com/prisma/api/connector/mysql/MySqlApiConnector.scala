@@ -28,6 +28,6 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 
-  override val capabilities: Set[ConnectorCapability] = ConnectorCapabilities.mysql
+  override val capabilities = ConnectorCapabilities.mysql
 
 }

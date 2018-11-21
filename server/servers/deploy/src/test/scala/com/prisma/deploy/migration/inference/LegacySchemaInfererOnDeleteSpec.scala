@@ -4,13 +4,13 @@ import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
-import com.prisma.shared.models.{OnDelete, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, OnDelete, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
 class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
 
-  val inferer      = SchemaInferrer(Set(MigrationsCapability, LegacyDataModelCapability))
+  val inferer      = SchemaInferrer(ConnectorCapabilities(MigrationsCapability, LegacyDataModelCapability))
   val emptyProject = TestProject.empty
 
   "Inferring onDelete relationDirectives" should {
@@ -169,7 +169,7 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Schema = {
-    val actualCapabilities = capabilities ++ Set(LegacyDataModelCapability)
+    val actualCapabilities = ConnectorCapabilities(capabilities.capabilities ++ Set(LegacyDataModelCapability))
 
     val validator = LegacyDataModelValidator(
       types,

@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ConnectorCapabilities
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
@@ -21,7 +22,7 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should not(include("type Mutation {"))
@@ -41,7 +42,7 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should include(

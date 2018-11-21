@@ -20,9 +20,7 @@ trait DeployConnector {
   def clientDBQueries(project: Project): ClientDbQueries
   def projectIdEncoder: ProjectIdEncoder
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
-
-  def capabilities: Set[ConnectorCapability]
-  def hasCapability(capability: ConnectorCapability): Boolean = capabilities.contains(capability)
+  def capabilities: ConnectorCapabilities
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]

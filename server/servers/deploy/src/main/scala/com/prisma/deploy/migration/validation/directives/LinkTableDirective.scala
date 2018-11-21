@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration.validation.directives
 
+import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl}
-import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapabilities
 import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
 import sangria.ast.{Directive, Document, ObjectTypeDefinition}
-import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
 object LinkTableDirective extends TypeDirective[Boolean] {
   override def name = "linkTable"
@@ -13,9 +13,9 @@ object LinkTableDirective extends TypeDirective[Boolean] {
       document: Document,
       typeDef: ObjectTypeDefinition,
       directive: Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
-    val doesNotSupportLinkTables = !capabilities.contains(RelationLinkTableCapability)
+    val doesNotSupportLinkTables = capabilities.hasNot(RelationLinkTableCapability)
     val notSupportedError = doesNotSupportLinkTables.toOption {
       DeployError(typeDef.name, s"The directive `@$name` is not supported by this connector.")
     }
@@ -26,12 +26,12 @@ object LinkTableDirective extends TypeDirective[Boolean] {
   override def value(
       document: Document,
       typeDef: ObjectTypeDefinition,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
     Some(typeDef.hasDirective(name))
   }
 
-  override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]) = {
+  override def postValidate(dataModel: PrismaSdl, capabilities: ConnectorCapabilities) = {
     // if this error occurs automatically the others occur as well. We therefore only return this one.
     val isReferencedError = ensureLinkTableIsReferenced(dataModel, capabilities)
     if (isReferencedError.nonEmpty) {
@@ -41,7 +41,7 @@ object LinkTableDirective extends TypeDirective[Boolean] {
     }
   }
 
-  def ensureLinkTableIsReferenced(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]) = {
+  def ensureLinkTableIsReferenced(dataModel: PrismaSdl, capabilities: ConnectorCapabilities) = {
     for {
       relationTable  <- dataModel.relationTables
       relationFields = dataModel.modelTypes.flatMap(_.relationFields)
@@ -51,7 +51,7 @@ object LinkTableDirective extends TypeDirective[Boolean] {
     } yield DeployError(relationTable.name, s"The link table `${relationTable.name}` is not referenced in any relation field.")
   }
 
-  def ensureTheRightTypesAreLinked(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]) = {
+  def ensureTheRightTypesAreLinked(dataModel: PrismaSdl, capabilities: ConnectorCapabilities) = {
     for {
       relationTable           <- dataModel.relationTables
       relationFields          = dataModel.modelTypes.flatMap(_.relationFields)

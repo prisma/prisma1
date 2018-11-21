@@ -2,14 +2,14 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl}
-import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapabilities
 import com.prisma.utils.boolean.BooleanUtils
 import sangria.ast._
 
 trait DirectiveBase extends BooleanUtils with SharedDirectiveValidation {
   def name: String
 
-  def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = Vector.empty
+  def postValidate(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = Vector.empty
 }
 
 object TypeDirective {
@@ -21,19 +21,19 @@ trait TypeDirective[T] extends DirectiveBase {
       document: Document,
       typeDef: ObjectTypeDefinition,
       directive: sangria.ast.Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): Vector[DeployError]
 
   def value(
       document: Document,
       typeDef: ObjectTypeDefinition,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): Option[T]
 }
 
 trait FieldDirective[T] extends DirectiveBase {
-  def requiredArgs(capabilities: Set[ConnectorCapability]): Vector[DirectiveArgument[_]]
-  def optionalArgs(capabilities: Set[ConnectorCapability]): Vector[DirectiveArgument[_]]
+  def requiredArgs(capabilities: ConnectorCapabilities): Vector[DirectiveArgument[_]]
+  def optionalArgs(capabilities: ConnectorCapabilities): Vector[DirectiveArgument[_]]
 
   // gets called if the directive was found. Can return an error message
   def validate(
@@ -41,14 +41,14 @@ trait FieldDirective[T] extends DirectiveBase {
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
       directive: sangria.ast.Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): Vector[DeployError]
 
   def value(
       document: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): Option[T]
 }
 

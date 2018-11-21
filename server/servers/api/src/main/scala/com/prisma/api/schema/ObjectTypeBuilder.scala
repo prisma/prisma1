@@ -20,7 +20,7 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false,
-    capabilities: Set[ConnectorCapability]
+    capabilities: ConnectorCapabilities
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -279,7 +279,7 @@ class ObjectTypeBuilder(
 
     field match {
       case f: ScalarField if f.isList => //Fixme have the way to resolve the field on the field itself
-        if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
+        if (capabilities.has(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value

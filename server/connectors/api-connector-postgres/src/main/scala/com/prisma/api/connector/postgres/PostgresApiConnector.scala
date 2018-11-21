@@ -26,5 +26,5 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
   override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
   override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
-  override val capabilities: Set[ConnectorCapability]                   = ConnectorCapabilities.postgres(isActive)
+  override val capabilities                                             = ConnectorCapabilities.postgres(isActive)
 }
