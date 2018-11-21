@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.schema.queries
+package com.prisma.deploy.schema.queries
 
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models.{CreateField, CreateModel, Migration, ProjectId}
