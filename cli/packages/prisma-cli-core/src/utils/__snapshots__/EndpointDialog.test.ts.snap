@@ -46,8 +46,8 @@ services:
           default:
             connector: mysql
             host: mysql
-            port: 3306
             rawAccess: true
+            port: 3306
             migrations: true
   mysql:
     restart: always
@@ -117,8 +117,8 @@ services:
           default:
             connector: mysql
             host: mysql
-            port: 3306
             rawAccess: true
+            port: 3306
             migrations: true
   mysql:
     restart: always
@@ -164,8 +164,8 @@ services:
           default:
             connector: mysql
             host: mysql
-            port: 3306
             rawAccess: true
+            port: 3306
             migrations: true
   mysql:
     restart: always
@@ -222,8 +222,8 @@ services:
           default:
             connector: postgres
             host: localhost
-            port: 5432
             rawAccess: true
+            port: 5432
             migrations: true",
   "prisma.yml": "endpoint: http://localhost:4466
 datamodel: datamodel.prisma",
