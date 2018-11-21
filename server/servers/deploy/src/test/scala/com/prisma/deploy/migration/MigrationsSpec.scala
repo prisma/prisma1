@@ -23,7 +23,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val (project, _) = setupProject(initialDataModel)
   }
 
-  "adding a scalar field should work" in {
+  "adding a scalar field should work" ignore {
     val dataModel =
       """
         |type A {
