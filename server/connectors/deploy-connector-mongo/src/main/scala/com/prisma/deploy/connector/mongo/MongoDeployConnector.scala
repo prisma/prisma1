@@ -59,4 +59,6 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
 
   override def managementLock(): Future[Unit] = Future.successful(())
+
+  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

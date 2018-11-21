@@ -121,4 +121,6 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
+
+  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }
