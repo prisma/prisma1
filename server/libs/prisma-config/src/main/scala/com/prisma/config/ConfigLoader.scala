@@ -136,10 +136,11 @@ object ConfigLoader {
     val dbUser      = uri.user.get
     val dbPass      = uri.password
     val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
-    val database = uri.path.toAbsolute.parts.headOption match {
-      case Some("") => None
-      case x        => x
+    val database = dbConnector match {
+      case "mongo" => extractStringOpt("database", db)
+      case _       => uri.path.toAbsolute.parts.headOption
     }
+
     val ssl       = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
     val rawAccess = extractBooleanOpt("rawAccess", db)
 
