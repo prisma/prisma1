@@ -5,7 +5,7 @@ import com.prisma.shared.models.{Project, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class GenerateProjectTokenSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
-  val auth = testDependencies.apiAuth
+  val auth = testDependencies.auth
 
   "the GenerateProjectToken query" should "return a proper token for the requested project" in {
     val (project: Project, _)  = setupProject(schema = basicTypesGql, secrets = Vector("super-duper-secret"))

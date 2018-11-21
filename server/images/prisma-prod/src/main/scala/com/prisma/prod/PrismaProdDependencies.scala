@@ -86,7 +86,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     RabbitQueue.consumer[WorkerWebhook](rabbitUri, "webhooks")(reporter, JsonConversions.webhookUnmarshaller, system)
 
   override lazy val httpClient                           = SimpleHttpClient()
-  override lazy val apiAuth                              = JnaAuth(Algorithm.HS256)
+  override lazy val auth                                 = JnaAuth(Algorithm.HS256)
   override lazy val deployConnector: DeployConnector     = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator: FunctionValidator = FunctionValidatorImpl()
 

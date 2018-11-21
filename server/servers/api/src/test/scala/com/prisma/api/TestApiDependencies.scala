@@ -6,9 +6,12 @@ import com.prisma.api.connector.DatabaseMutactionExecutor
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
+import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.jwt.{Algorithm, Auth}
+import com.prisma.jwt.jna.JnaAuth
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
@@ -28,6 +31,9 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override implicit def self: ApiDependencies = this
 
   val config = ConfigLoader.load()
+
+  override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
+  override val auth: Auth                 = JnaAuth(Algorithm.HS256)
 
   lazy val apiSchemaBuilder                  = SchemaBuilder()(this)
   lazy val projectFetcher: ProjectFetcher    = ???

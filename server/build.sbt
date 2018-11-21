@@ -102,8 +102,8 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
       "--enable-all-security-services",
       s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
       s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
-      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.jwt.jna.JnaAuth$,com.prisma.logging.PrismaLogger$LogLevel",
-      "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf", // todo application.conf inclusion / loading doesn't work
+      "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.logging.PrismaLogger$LogLevel",
+      "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*\\|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf",
       s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
       "--verbose"
     ),

@@ -3,13 +3,15 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
+import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
-import com.prisma.jwt.{Algorithm, Auth}
+import com.prisma.jwt.jna.JnaAuth
+import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.shared.models.{ProjectIdEncoder, Schema}
 import org.scalactic.{Bad, Good}
@@ -21,10 +23,10 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   implicit val reporter: ErrorReporter    = DummyErrorReporter
   override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)
-  override lazy val managementAuth        = Auth.none()
+  override lazy val managementAuth        = NoAuth
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
-  override def apiAuth = Auth.jna(Algorithm.HS256)
+  override val auth = JnaAuth(Algorithm.HS256)
 
   def deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))), isTest = true)
 
@@ -40,6 +42,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
     }
   }
 
-  lazy val telemetryActor               = TestProbe().ref
-  override val managementSecret: String = ""
+  lazy val telemetryActor                 = TestProbe().ref
+  override val managementSecret: String   = ""
+  override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
 }

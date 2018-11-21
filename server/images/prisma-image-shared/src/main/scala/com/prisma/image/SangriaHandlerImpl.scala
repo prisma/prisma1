@@ -249,7 +249,7 @@ case class SangriaHandlerImpl(
 
   implicit class RawRequestExtensions(rawRequest: RawRequest) {
     def toLegacy: LegacyRawRequest = {
-      LegacyRawRequest(rawRequest.id, rawRequest.json, rawRequest.ip, rawRequest.headers.get("Authorization"))
+      LegacyRawRequest(rawRequest.id, rawRequest.json, rawRequest.ip, rawRequest.headers.get("Authorization"), apiDependencies.graphQlQueryCache)
     }
   }
 }
