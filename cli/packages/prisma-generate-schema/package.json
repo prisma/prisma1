@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "graphql": "^14.0.2",
-    "node-fetch": "^2.2.1",
     "pluralize": "^7.0.0",
     "popsicle": "10"
   },
