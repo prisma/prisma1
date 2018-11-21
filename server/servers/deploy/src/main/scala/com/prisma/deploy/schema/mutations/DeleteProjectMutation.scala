@@ -29,8 +29,9 @@ case class DeleteProjectMutation(
       projectOpt <- projectPersistence.load(projectId)
       project    = validate(projectOpt)
       _          <- projectPersistence.delete(projectId)
-      _          <- if (deployConnector.isActive && !deployConnector.capabilities.contains(EmbeddedTypesCapability)) deployConnector.deleteProjectDatabase(projectId)
-      _          = invalidationPubSub.publish(Only(projectId), projectId)
+      _ <- if (deployConnector.isActive && !deployConnector.capabilities.contains(EmbeddedTypesCapability)) deployConnector.deleteProjectDatabase(projectId)
+          else Future.successful(())
+      _ = invalidationPubSub.publish(Only(projectId), projectId)
     } yield MutationSuccess(DeleteProjectMutationPayload(args.clientMutationId, project))
   }
 
