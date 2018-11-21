@@ -220,7 +220,12 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  bla: String
         |}
       """.stripMargin
-    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
+    val result = validate(
+      dataModelString,
+      isActive = true,
+      capabilities = Set(MigrationsCapability),
+      directiveRequirements = LegacyDataModelValidator.directiveRequirements
+    )
     result should have(size(1))
     result.head.description should include("not a valid value for onDelete")
   }
