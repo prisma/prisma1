@@ -66,7 +66,6 @@ case class QueryExecutor()(implicit apiDependencies: ApiDependencies) {
 
     result.recover {
       case e: QueryAnalysisError => e.resolveError
-      case e: UserFacingError    => JsonErrorHelper.errorJson(requestId, e.getMessage, e.code)
     }
   }
 

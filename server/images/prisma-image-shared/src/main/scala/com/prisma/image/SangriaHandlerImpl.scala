@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.schema.APIErrors.InvalidToken
-import com.prisma.api.schema.PrivateSchemaBuilder
+import com.prisma.api.schema.{PrivateSchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SystemUserContext}
@@ -52,7 +52,7 @@ case class SangriaHandlerImpl(
     val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
     val projectId                          = projectIdEncoder.fromSegments(projectSegments)
     val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
-    reservedSegment match {
+    val result = reservedSegment match {
       case Some("import") =>
         verifyAuth(projectIdAsString, rawRequest) { project =>
           if (apiDependencies.apiConnector.capabilities.has(ImportExportCapability)) {
@@ -79,6 +79,10 @@ case class SangriaHandlerImpl(
       case _ =>
         super.handleRawRequest(rawRequest)
 
+    }
+
+    result.recover {
+      case e: UserFacingError => JsonErrorHelper.errorJson(rawRequest.id, e.getMessage, e.code)
     }
   }
 
