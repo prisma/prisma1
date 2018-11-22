@@ -1,6 +1,6 @@
 import { GraphQLInputFieldConfigMap, GraphQLNonNull } from 'graphql/type'
-import { IGQLField, IGQLType } from '../../../../datamodel/model'
-import { capitalize } from '../../../../util/util'
+import { IGQLField, IGQLType, capitalize } from 'prisma-datamodel'
+
 import {
   RelatedGeneratorArgs,
   RelatedModelInputObjectTypeGenerator,

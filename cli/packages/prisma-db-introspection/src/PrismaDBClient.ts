@@ -1,12 +1,13 @@
 import { Cluster, PrismaDefinitionClass } from 'prisma-yml'
 import { GraphQLClient } from 'graphql-request'
-import { DBClient } from './types/common'
 
 const SERVICE_NAME = 'prisma-temporary-introspection-service'
 const SERVICE_STAGE = 'prisma-temporary-test-stage'
 const SERVICE_SECRET = 'prisma-instrospection-secret'
 
-export class PrismaDBClient implements DBClient {
+
+// Removed DB Client interface. This is not polymorphic to other db clients.
+export class PrismaDBClient {
   cluster: Cluster
   client: GraphQLClient
   definition: PrismaDefinitionClass

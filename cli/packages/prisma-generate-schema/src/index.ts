@@ -1,8 +1,6 @@
 import { printSchema } from 'graphql/utilities'
 import { GraphQLSchema } from 'graphql/type'
-import { IGQLType } from './datamodel/model'
-import Parser from './datamodel'
-import { DatabaseType } from './databaseType'
+import { IGQLType, Parser, DatabaseType } from 'prisma-datamodel'
 import Generator from './generator'
 
 /**
@@ -44,5 +42,3 @@ export default function generateCRUDSchemaString(
 ): string {
   return printSchema(generateCRUDSchema(model, databaseType))
 }
-
-export { DatabaseType }

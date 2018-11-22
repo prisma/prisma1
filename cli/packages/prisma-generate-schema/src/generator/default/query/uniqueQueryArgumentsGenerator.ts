@@ -1,5 +1,5 @@
 import { ArgumentsGenerator } from "../../generator"
-import { IGQLType } from "../../../datamodel/model"
+import { IGQLType } from 'prisma-datamodel'
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull } from 'graphql/type'
 
 export default class UniqueQueryArgumentsGenerator extends ArgumentsGenerator {

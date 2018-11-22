@@ -1,5 +1,5 @@
 import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, ModelEnumTypeGeneratorBase, ScalarTypeGeneratorBase } from '../../generator'
-import { IGQLType, IGQLField } from '../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import GQLAssert from '../../../util/gqlAssert'
 import { GraphQLList, GraphQLEnumType, GraphQLType, GraphQLEnumValueConfigMap, GraphQLScalarType, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID, GraphQLNonNull } from "graphql/type"
 import { GraphQLObjectType } from 'graphql/type/definition';

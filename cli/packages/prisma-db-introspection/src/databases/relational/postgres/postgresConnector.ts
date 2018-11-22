@@ -8,18 +8,19 @@ import {
   DBClient,
 } from '../types/common'
 import * as _ from 'lodash'
+import { Client } from 'pg';
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class PostgresConnector implements Connector {
-  client: DBClient
+  client: Client
   connectionPromise: Promise<any>
 
-  constructor(client: DBClient) {
+  constructor(client: Client) {
     this.client = client
     this.connectionPromise = this.client.connect()
   }
 
-  async listSchemas(): Promise<string[]> {
+  async listModels(): Promise<string[]> {
     await this.connectionPromise
     return await this.querySchemas()
   }

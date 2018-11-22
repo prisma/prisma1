@@ -20,7 +20,7 @@ import {
  */
 export interface IGQLField {
   /**
-   * The name of thi sfield.
+   * The name of this sfield.
    */
   name: string
   /**

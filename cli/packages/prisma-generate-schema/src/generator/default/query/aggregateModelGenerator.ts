@@ -1,5 +1,5 @@
 import { GraphQLInt, GraphQLNonNull, GraphQLObjectType } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelObjectTypeGenerator } from '../../generator'
 
 export default class AggregateModelGenerator extends ModelObjectTypeGenerator {

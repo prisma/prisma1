@@ -1,4 +1,4 @@
-import { DatabaseType } from '../databaseType'
+import { DatabaseType } from 'prisma-datamodel'
 import RelationalGenerator  from './default'
 import DocumentGenerator  from './document'
 import { IGenerators } from './generator'

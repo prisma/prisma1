@@ -1,12 +1,10 @@
 import * as util from 'util'
 import { parse } from 'graphql'
 import { printSchema, buildSchema } from 'graphql/utilities'
-import AstTools from '../../src/util/astTools'
+import { AstTools, DatabaseType, Parser } from 'prisma-datamodel'
+import Generator from '../../src/generator'
 import * as fs from 'fs'
 import * as path from 'path'
-import { DatabaseType } from '../../src/databaseType'
-import Generator from '../../src/generator'
-import Parser from '../../src/datamodel'
 
 export default function blackBoxTest(name: string, databaseType: DatabaseType) {
   const generator = Generator.create(databaseType)
