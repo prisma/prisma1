@@ -14,13 +14,6 @@ trait ApiConnector {
   def projectIdEncoder: ProjectIdEncoder
   def capabilities: ConnectorCapabilities
 
-  def hasCapability(capability: ConnectorCapability): Boolean = {
-    capability match {
-      case ScalarListsCapability => capabilities.capabilities.exists(_.isInstanceOf[ScalarListsCapability])
-      case c                     => capabilities.capabilities.contains(c)
-    }
-  }
-
   def initialize(): Future[Unit]
   def shutdown(): Future[Unit]
 }
