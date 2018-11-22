@@ -21,10 +21,12 @@ object SangriaQueryArguments {
 
   def whereArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities): Argument[Option[Any]] = {
     val utils = FilterObjectTypeBuilder(model, project)
-    val filterObject = capabilities.has(JoinRelationsFilterCapability) match {
-      case true  => utils.filterObjectType
-      case false => utils.filterObjectTypeWithOutJoinRelationFilters
-    }
+//    val filterObject = capabilities.has(JoinRelationsFilterCapability) match {
+//      case true  => utils.filterObjectType
+//      case false => utils.filterObjectTypeWithOutJoinRelationFilters
+//    }
+
+    val filterObject = utils.filterObjectType
 
     val inputType = OptionInputType(filterObject)
     Argument(name, inputType, description = "")

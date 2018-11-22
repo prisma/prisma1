@@ -49,7 +49,6 @@ class ObjectTypeBuilder(
       name = model.name,
       nodeType = modelObjectTypes(model.name),
       connectionFields = {
-
         List(
           SangriaField(
             "aggregate",
