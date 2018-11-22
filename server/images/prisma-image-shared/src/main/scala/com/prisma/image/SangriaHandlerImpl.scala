@@ -4,11 +4,8 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import com.prisma.akkautil.throttler.Throttler
-import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.schema.APIErrors.InvalidToken
-import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
 import com.prisma.api.schema.PrivateSchemaBuilder
 import com.prisma.api.server.{RawRequest => LegacyRawRequest}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
@@ -38,37 +35,14 @@ case class SangriaHandlerImpl(
     subscriptionDependencies: SubscriptionDependencies,
     workerDependencies: WorkerDependencies
 ) extends SangriaHandler {
-  import com.prisma.utils.future.FutureUtils._
   import system.dispatcher
-
-  import scala.concurrent.duration._
 
   val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
   val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
   val projectIdEncoder      = apiDependencies.projectIdEncoder
   val websocketServer       = WebsocketServer(subscriptionDependencies)
   val workerServer          = WorkerServer(workerDependencies)
-
-  lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
-    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector
-    case None           => Vector.empty
-  }
-
-  lazy val throttler: Option[Throttler[String]] = {
-    for {
-      throttlingRate    <- EnvUtils.asInt("THROTTLING_RATE")
-      maxCallsInFlights <- EnvUtils.asInt("THROTTLING_MAX_CALLS_IN_FLIGHT")
-    } yield {
-      val per = EnvUtils.asInt("THROTTLING_RATE_PER_SECONDS").getOrElse(1)
-      Throttler[String](
-        groupBy = identity,
-        amount = throttlingRate,
-        per = per.seconds,
-        timeout = 25.seconds,
-        maxCallsInFlight = maxCallsInFlights.toInt
-      )
-    }
-  }
+  val requestThrottler      = RequestThrottler()
 
   override def onStart() = {
     if (managementApiEnabled) {
@@ -190,7 +164,9 @@ case class SangriaHandlerImpl(
     verifyAuth(projectIdAsString, rawRequest) { project =>
       reservedSegment match {
         case None =>
-          throttleApiCallIfNeeded(project, rawRequest, query)
+          requestThrottler.throttleCallIfNeeded(project) {
+            handleRequestForPublicApi(project, rawRequest, query)
+          }
 
         case Some("private") =>
           val result = handleRequestForPrivateApi(project, rawRequest, query)
@@ -209,33 +185,6 @@ case class SangriaHandlerImpl(
       (elements.dropRight(1), elements.lastOption)
     } else {
       (elements, None)
-    }
-  }
-
-  def throttleApiCallIfNeeded(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
-    throttler match {
-      case Some(throttler) if !unthrottledProjectIds.contains(project.id) => throttledCall(project, rawRequest, query, throttler)
-      case _                                                              => handleRequestForPublicApi(project, rawRequest, query)
-    }
-  }
-
-  def throttledCall(project: Project, rawRequest: RawRequest, query: GraphQlQuery, throttler: Throttler[String]) = {
-    val result = throttler.throttled(project.id) { () =>
-      handleRequestForPublicApi(project, rawRequest, query)
-    }
-    result.toFutureTry.map {
-      case scala.util.Success(result) =>
-        // TODO: do we really need this?
-//        respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
-//          complete(result.result)
-//        }
-        result.result
-
-      case scala.util.Failure(_: ThrottleBufferFullException) =>
-        throw ThrottlerBufferFull()
-
-      case scala.util.Failure(exception) =>
-        throw exception
     }
   }
 
