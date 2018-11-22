@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
 import com.prisma.shared.models.ConnectorCapability.{MigrationsCapability, ScalarListsCapability}
-import com.prisma.shared.models.{ConnectorCapability, RelationStrategy, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, RelationStrategy, TypeIdentifier}
 import com.prisma.utils.or.OrExtensions
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -75,7 +75,7 @@ object LegacyDataModelValidator extends DataModelValidator {
     DirectiveRequirement("embedded", requiredArguments = Seq.empty, optionalArguments = Seq.empty)
   )
 
-  def apply(schema: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[ConnectorCapability]): LegacyDataModelValidator = {
+  def apply(schema: String, fieldRequirements: FieldRequirementsInterface, capabilities: ConnectorCapabilities): LegacyDataModelValidator = {
     LegacyDataModelValidator(
       schema = schema,
       directiveRequirements = directiveRequirements,
@@ -84,7 +84,7 @@ object LegacyDataModelValidator extends DataModelValidator {
     )
   }
 
-  override def validate(dataModel: String, fieldRequirements: FieldRequirementsInterface, capabilities: Set[ConnectorCapability]) = {
+  override def validate(dataModel: String, fieldRequirements: FieldRequirementsInterface, capabilities: ConnectorCapabilities) = {
     apply(dataModel, fieldRequirements, capabilities).validateSyntax
   }
 }
@@ -93,7 +93,7 @@ case class LegacyDataModelValidator(
     schema: String,
     directiveRequirements: Seq[DirectiveRequirement],
     fieldRequirements: FieldRequirementsInterface,
-    capabilities: Set[ConnectorCapability]
+    capabilities: ConnectorCapabilities
 ) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
@@ -343,7 +343,7 @@ case class LegacyDataModelValidator(
 
   def validateScalarFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
     val scalarFields = fieldAndTypes.filter(isScalarField)
-    if (capabilities.exists(_.isInstanceOf[ScalarListsCapability])) {
+    if (capabilities.supportsScalarLists) {
       scalarFields.collect {
         case fieldAndType if !fieldAndType.fieldDef.isValidScalarType => DeployErrors.invalidScalarListOrNonListType(fieldAndType)
       }

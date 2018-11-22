@@ -356,16 +356,17 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
   }
 
   def inferSchema(previous: Schema, schema: String): Schema = {
+    val capabilities = ConnectorCapabilities(MigrationsCapability, LegacyDataModelCapability)
     val validator = LegacyDataModelValidator(
       schema,
       LegacyDataModelValidator.directiveRequirements,
       deployConnector.fieldRequirements,
-      capabilities = Set(MigrationsCapability, LegacyDataModelCapability)
+      capabilities = capabilities
     )
 
     val prismaSdl = validator.generateSDL
 
-    val nextSchema = SchemaInferrer(Set(MigrationsCapability, LegacyDataModelCapability)).infer(previous, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    val nextSchema = SchemaInferrer(capabilities).infer(previous, SchemaMapping.empty, prismaSdl, InferredTables.empty)
 
 //    println(s"Relations of infered schema:\n  " + nextSchema.relations)
     nextSchema

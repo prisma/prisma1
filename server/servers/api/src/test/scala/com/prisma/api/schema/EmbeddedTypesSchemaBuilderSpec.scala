@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ConnectorCapabilities
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
@@ -32,7 +33,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
     val build         = schemaBuilder.build()
     val schema        = SchemaRenderer.renderSchema(build)
 
@@ -154,7 +155,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
     val build         = schemaBuilder.build()
     val schema        = SchemaRenderer.renderSchema(build)
 
@@ -185,7 +186,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
     val build         = schemaBuilder.build()
     val schema        = SchemaRenderer.renderSchema(build)
 

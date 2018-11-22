@@ -2,6 +2,7 @@ package com.prisma
 
 import com.prisma.ConnectorTag.{MongoConnectorTag, MySqlConnectorTag, PostgresConnectorTag}
 import com.prisma.config.{DatabaseConfig, PrismaConfig}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
 import enumeratum.{Enum, EnumEntry}
 import org.scalatest.{Suite, SuiteMixin, Tag}
 
@@ -25,7 +26,7 @@ object ConnectorTag extends Enum[ConnectorTag] {
   object MongoConnectorTag            extends DocumentConnectorTag
 }
 
-trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
+trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   import IgnoreSet._
   def prismaConfig: PrismaConfig
 
@@ -37,12 +38,12 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   }
   private lazy val isPrototype: Boolean = connectorTag == MongoConnectorTag
 
-  def capabilities: Set[CapabilityType] // capabilities of the current connector
-  def runOnlyForConnectors: Set[ConnectorTag]      = ConnectorTag.values.toSet
-  def runOnlyForCapabilities: Set[CapabilityType]  = Set.empty
-  def doNotRunForCapabilities: Set[CapabilityType] = Set.empty
-  def doNotRunForPrototypes: Boolean               = false
-  def doNotRun: Boolean                            = false
+  def capabilities: ConnectorCapabilities
+  def runOnlyForConnectors: Set[ConnectorTag]           = ConnectorTag.values.toSet
+  def runOnlyForCapabilities: Set[ConnectorCapability]  = Set.empty
+  def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
+  def doNotRunForPrototypes: Boolean                    = false
+  def doNotRun: Boolean                                 = false
 
   abstract override def tags: Map[String, Set[String]] = { // this must NOT be a val. Otherwise ScalaTest does not behave correctly.
     if (shouldSuiteBeIgnored || doNotRun) {
@@ -53,8 +54,8 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
   }
 
   private lazy val shouldSuiteBeIgnored: Boolean = { // this must be a val. Otherwise printing would happen many times.
-    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(connectorHasCapability) || runOnlyForCapabilities.isEmpty
-    val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(connectorHasCapability)
+    val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(capabilities.has) || runOnlyForCapabilities.isEmpty
+    val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(capabilities.has)
     val isNotTheRightConnector           = !runOnlyForConnectors.contains(connectorTag)
 
     if (isNotTheRightConnector) {
@@ -76,7 +77,7 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it does not have the right capabilities
            | required capabilities: ${runOnlyForCapabilities.mkString(",")}
-           | connector capabilities: ${capabilities.mkString(",")}
+           | connector capabilities: ${capabilities.capabilities.mkString(",")}
          """.stripMargin
       )
       true
@@ -84,7 +85,7 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it has a wrong capability
            | wrong capabilities: ${doNotRunForCapabilities.mkString(",")}
-           | connector capabilities: ${capabilities.mkString(",")}
+           | connector capabilities: ${capabilities.capabilities.mkString(",")}
          """.stripMargin
       )
       true
@@ -92,8 +93,6 @@ trait ConnectorAwareTest[CapabilityType] extends SuiteMixin { self: Suite =>
       false
     }
   }
-
-  def connectorHasCapability(capability: CapabilityType): Boolean
 
   def ifConnectorIsNotMongo[T](assertion: => T): Unit = {
     if (connectorTag != MongoConnectorTag) {

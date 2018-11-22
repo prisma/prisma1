@@ -25,7 +25,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient, config.database)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
 
-  override def capabilities: Set[ConnectorCapability] = ConnectorCapabilities.mongo(isActive = isActive, isTest = isTest)
+  override def capabilities: ConnectorCapabilities = ConnectorCapabilities.mongo(isActive = isActive, isTest = isTest)
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
@@ -59,4 +59,6 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
 
   override def managementLock(): Future[Unit] = Future.successful(())
+
+  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

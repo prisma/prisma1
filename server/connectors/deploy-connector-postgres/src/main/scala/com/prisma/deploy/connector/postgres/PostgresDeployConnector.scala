@@ -22,7 +22,7 @@ case class PostgresDeployConnector(
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: Set[ConnectorCapability]        = ConnectorCapabilities.postgres(isActive)
+  override def capabilities: ConnectorCapabilities           = ConnectorCapabilities.postgres(isActive)
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
   lazy val setupDatabases      = internalDatabases.setupDatabase
@@ -121,4 +121,6 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
+
+  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

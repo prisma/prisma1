@@ -5,22 +5,22 @@ import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{ConnectorCapability, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, TypeIdentifier}
 import sangria.ast._
 
 object DefaultDirective extends FieldDirective[GCValue] {
   val valueArg = DirectiveArgument("value", _ => None, _.asString)
 
-  override def name                                                 = "default"
-  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector(valueArg)
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def name                                              = "default"
+  override def requiredArgs(capabilities: ConnectorCapabilities) = Vector(valueArg)
+  override def optionalArgs(capabilities: ConnectorCapabilities) = Vector.empty
 
   override def validate(
       document: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
       directive: Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
     val placementIsInvalid = !document.isEnumType(fieldDef.typeName) && !fieldDef.isValidScalarNonListType
     val placementError = placementIsInvalid.toOption {
@@ -53,7 +53,7 @@ object DefaultDirective extends FieldDirective[GCValue] {
       document: Document,
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): Option[GCValue] = {
     fieldDef.directive(name).map { directive =>
       val value          = valueArg.value(directive).get

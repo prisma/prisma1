@@ -2,7 +2,7 @@ package com.prisma.api.connector
 
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
-import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
 import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
@@ -12,11 +12,13 @@ trait ApiConnector {
   def dataResolver(project: Project): DataResolver
   def masterDataResolver(project: Project): DataResolver
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Set[ConnectorCapability]
+  def capabilities: ConnectorCapabilities
 
-  def hasCapability(capability: ConnectorCapability): Boolean = capability match {
-    case ScalarListsCapability => capabilities.exists(_.isInstanceOf[ScalarListsCapability])
-    case c                     => capabilities.contains(c)
+  def hasCapability(capability: ConnectorCapability): Boolean = {
+    capability match {
+      case ScalarListsCapability => capabilities.capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+      case c                     => capabilities.capabilities.contains(c)
+    }
   }
 
   def initialize(): Future[Unit]

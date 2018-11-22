@@ -1,4 +1,4 @@
-package com.prisma.deploy.database.schema.mutations
+package com.prisma.deploy.schema.mutations
 
 import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.deploy.specutils.PassiveDeploySpecBase

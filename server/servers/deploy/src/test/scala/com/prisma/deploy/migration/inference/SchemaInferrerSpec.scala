@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation, RelationTable}
-import com.prisma.shared.models.{ConnectorCapability, RelationSide, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
@@ -27,7 +27,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |  todo: Todo! @relation(name:"MyNameForTodoToComments")
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
       val relation = schema.getRelationByName_!("MyNameForTodoToComments")
       relation.modelAName should equal("Comment")
@@ -47,7 +47,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |  created_by: User! @relation(name: "CallRequester")
           |  members: [User] @relation(name: "CallMembers")
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
       val relation = schema.getRelationByName_!("CallRequester")
       relation.modelAName should equal("Call")
@@ -71,7 +71,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |  todo: Todo!
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
@@ -101,7 +101,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |}
         """.stripMargin.trim()
 
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
@@ -134,7 +134,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |}
         """.stripMargin.trim()
 
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
       schema.relations.foreach(println(_))
 
       val relation = schema.getRelationByName_!("CommentToTodo")
@@ -181,7 +181,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         )
       )
 
-      val newSchema = infer(project.schema, types, renames, capabilities = Set.empty)
+      val newSchema = infer(project.schema, types, renames, capabilities = ConnectorCapabilities.empty)
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
@@ -222,7 +222,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         )
       )
 
-      val newSchema = infer(project.schema, types, renames, capabilities = Set.empty)
+      val newSchema = infer(project.schema, types, renames, capabilities = ConnectorCapabilities.empty)
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
@@ -258,7 +258,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         )
       )
 
-      val newSchema = infer(project.schema, types, renames, capabilities = Set.empty)
+      val newSchema = infer(project.schema, types, renames, capabilities = ConnectorCapabilities.empty)
 
       val previousModel = project.schema.getModelByName_!("Todo")
       val nextModel     = newSchema.getModelByName_!("TodoNew")
@@ -276,7 +276,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
            |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -295,7 +295,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
            |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -318,7 +318,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           Vector(FieldMapping(previousModel = "Technology", previousField = "childTechnologies", nextModel = "NewTechnology", nextField = "xTechnologies"))
       )
 
-      val newSchema = infer(schema, newTypes, renames, capabilities = Set.empty)
+      val newSchema = infer(schema, newTypes, renames, capabilities = ConnectorCapabilities.empty)
       newSchema.relations.foreach(println(_))
 
       val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
@@ -343,7 +343,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
     schema.relations should have(size(1))
     val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -360,7 +360,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     )
     val invalidSchema = schema.copy(modelTemplates = List(updatedModel))
 
-    val newSchema = infer(invalidSchema, types, capabilities = Set.empty)
+    val newSchema = infer(invalidSchema, types, capabilities = ConnectorCapabilities.empty)
     newSchema.relations.foreach(println(_))
 
     val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
@@ -383,7 +383,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  name: String! @unique
          |  childTechnologies: [Technology]
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
     schema.relations should have(size(1))
     val relation = schema.relations.head
@@ -398,7 +398,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  id: ID! @id
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
     val model = schema.getModelByName_!("Todo")
     model.manifestation should equal(Some(ModelManifestation("todo_table")))
@@ -410,7 +410,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  id: ID! @id
          |  name: String! @db(name: "my_name_column")
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
     val field = schema.getModelByName_!("Todo").getScalarFieldByName_!("name")
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
@@ -429,7 +429,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  todos: [Todo] @relation(link: TABLE)
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set(RelationLinkTableCapability))
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
     // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
@@ -454,7 +454,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  list: List @relation(link: INLINE)
          |}
          |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set(RelationLinkListCapability))
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkListCapability))
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
@@ -476,7 +476,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  list: List @relation(link: INLINE)
         |}
         |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
@@ -490,7 +490,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  id: ID! @id
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set(MigrationsCapability))
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(MigrationsCapability))
 
     val model = schema.getModelByName_!("Todo")
     model.fields should have(size(2))
@@ -503,7 +503,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  id: ID! @id
          |  name: String!
          |}""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
 
     val model = schema.getModelByName_!("Todo")
     model.fields should have(size(2))
@@ -522,7 +522,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  text: String
          |}
          |""".stripMargin
-    val schema                = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
     val expectedManifestation = RelationTable(table = "CommentToTodo", modelAColumn = "A", modelBColumn = "B")
     relationField.relation.manifestation should be(Some(expectedManifestation))
@@ -540,7 +540,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  text: String
          |}
          |""".stripMargin
-    val schema                = infer(emptyProject.schema, types, capabilities = Set(RelationLinkListCapability))
+    val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkListCapability))
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
     val expectedManifestation = EmbeddedRelationLink("Todo", "comments")
     relationField.relation.manifestation should be(Some(expectedManifestation))
@@ -552,12 +552,12 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  id: ID! @id
          |}""".stripMargin
 
-    val schema  = infer(emptyProject.schema, types, capabilities = Set.empty)
+    val schema  = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
     val idField = schema.getModelByName_!("Todo").getFieldByName_!("id")
     idField.isUnique should be(true)
   }
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
     val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get
     SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
   }

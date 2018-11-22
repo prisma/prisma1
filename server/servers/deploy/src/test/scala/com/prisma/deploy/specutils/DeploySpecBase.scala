@@ -13,7 +13,7 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions {
+trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions {
   self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
@@ -25,9 +25,8 @@ trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with Before
   val server            = DeployTestServer()
   val projectsToCleanUp = new ArrayBuffer[String]
 
-  override def prismaConfig                                   = testDependencies.config
-  def capabilities                                            = deployConnector.capabilities
-  def connectorHasCapability(capability: ConnectorCapability) = deployConnector.hasCapability(capability)
+  override def prismaConfig = testDependencies.config
+  def capabilities          = deployConnector.capabilities
 
   val basicTypesGql =
     """
@@ -56,9 +55,9 @@ trait DeploySpecBase extends ConnectorAwareTest[ConnectorCapability] with Before
       stage: String = "default",
       secrets: Vector[String] = Vector.empty
   )(implicit suite: Suite): (Project, Migration) = {
-    val name      = suite.getClass.getSimpleName
-    val idAsStrig = testDependencies.projectIdEncoder.toEncodedString(name, stage)
-    deployConnector.deleteProjectDatabase(idAsStrig).await()
+    val name       = suite.getClass.getSimpleName
+    val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
+    deployConnector.deleteProjectDatabase(idAsString).await()
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }

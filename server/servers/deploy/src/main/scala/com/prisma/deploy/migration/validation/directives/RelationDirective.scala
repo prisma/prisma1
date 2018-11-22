@@ -4,7 +4,7 @@ import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, DeployErrors, FieldAndType, PrismaSdl}
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.OnDelete.OnDelete
-import com.prisma.shared.models.{ConnectorCapability, OnDelete, RelationStrategy}
+import com.prisma.shared.models.{ConnectorCapabilities, OnDelete, RelationStrategy}
 import sangria.ast._
 
 case class RelationDirectiveData(name: Option[String], onDelete: OnDelete, strategy: Option[RelationStrategy])
@@ -12,11 +12,11 @@ case class RelationDirectiveData(name: Option[String], onDelete: OnDelete, strat
 object RelationDirective extends FieldDirective[RelationDirectiveData] {
   override def name = "relation"
 
-  override def requiredArgs(capabilities: Set[ConnectorCapability]) = Vector.empty
+  override def requiredArgs(capabilities: ConnectorCapabilities) = Vector.empty
 
   val nameArgument = DirectiveArgument("name", validateStringValue, _.asString)
 
-  override def optionalArgs(capabilities: Set[ConnectorCapability]) = {
+  override def optionalArgs(capabilities: ConnectorCapabilities) = {
     Vector(
       nameArgument,
       OnDeleteArgument,
@@ -29,7 +29,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       typeDef: ObjectTypeDefinition,
       fieldDef: FieldDefinition,
       directive: Directive,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ) = {
     val placementError = fieldDef.hasScalarType.toOption {
       DeployErrors.relationDirectiveNotAllowedOnScalarFields(FieldAndType(typeDef, fieldDef))
@@ -37,13 +37,13 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
     placementError.toVector
   }
 
-  override def postValidate(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+  override def postValidate(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
     validateIfRequiredStrategyIsProvided(dataModel, capabilities) ++
       validateBackRelationFields(dataModel, capabilities) ++
       validateStrategyIsProvidedExactlyOnce(dataModel, capabilities)
   }
 
-  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+  private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
     for {
       modelType     <- dataModel.modelTypes
       relationField <- modelType.relationFields
@@ -54,7 +54,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
     }
   }
 
-  private def validateStrategyIsProvidedExactlyOnce(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
+  private def validateStrategyIsProvidedExactlyOnce(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
     for {
       modelType     <- dataModel.modelTypes
       relationField <- modelType.relationFields
@@ -66,8 +66,8 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
     }
   }
 
-  private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: Set[ConnectorCapability]): Vector[DeployError] = {
-    val isMongo = capabilities.contains(RelationLinkListCapability)
+  private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
+    val isMongo = capabilities.has(RelationLinkListCapability)
     for {
       modelType     <- dataModel.modelTypes
       relationField <- modelType.relationFields
@@ -78,14 +78,14 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       if isMongo || relationField.hasOneToOneRelation
       if modelType.isNotEmbedded && relatedType.isNotEmbedded
     } yield {
-      val inlineMode = capabilities.contains(JoinRelationLinksCapability).toOption("`@relation(link: INLINE)`")
-      val tableMode  = capabilities.contains(RelationLinkTableCapability).toOption("`@relation(link: TABLE)`")
+      val inlineMode = capabilities.has(JoinRelationLinksCapability).toOption("`@relation(link: INLINE)`")
+      val tableMode  = capabilities.has(RelationLinkTableCapability).toOption("`@relation(link: TABLE)`")
       val validModes = (tableMode ++ inlineMode).toVector
       DeployErrors.missingRelationStrategy(relationField, validModes)
     }
   }
 
-  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: Set[ConnectorCapability]) = {
+  override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: ConnectorCapabilities) = {
     if (fieldDef.isRelationField(document)) {
       val relationName = fieldDef.directive(name).flatMap(nameArgument.value)
       val onDelete     = fieldDef.directive(name).flatMap(OnDeleteArgument.value).getOrElse(OnDelete.SetNull)
@@ -98,7 +98,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   }
 }
 
-case class RelationLinkArgument(capabilities: Set[ConnectorCapability]) extends DirectiveArgument[RelationStrategy] {
+case class RelationLinkArgument(capabilities: ConnectorCapabilities) extends DirectiveArgument[RelationStrategy] {
   val (inlineMode, tableMode) = ("INLINE", "TABLE")
 
   override def name = "link"
@@ -110,7 +110,7 @@ case class RelationLinkArgument(capabilities: Set[ConnectorCapability]) extends 
   }
 
   override def validate(value: Value) = {
-    val validLinkModes = Vector(inlineMode) ++ capabilities.contains(RelationLinkTableCapability).toOption(tableMode)
+    val validLinkModes = Vector(inlineMode) ++ capabilities.has(RelationLinkTableCapability).toOption(tableMode)
     validateEnumValue(name, validLinkModes)(value)
   }
 }

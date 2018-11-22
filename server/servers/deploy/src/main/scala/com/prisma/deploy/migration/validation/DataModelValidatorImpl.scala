@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
-import com.prisma.shared.models.{ConnectorCapability, ReservedFields, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -17,7 +17,7 @@ object DataModelValidatorImpl extends DataModelValidator {
   override def validate(
       dataModel: String,
       fieldRequirements: FieldRequirementsInterface,
-      capabilities: Set[ConnectorCapability]
+      capabilities: ConnectorCapabilities
   ): PrismaSdl Or Vector[DeployError] = {
     DataModelValidatorImpl(dataModel, fieldRequirements, capabilities).validate
   }
@@ -26,7 +26,7 @@ object DataModelValidatorImpl extends DataModelValidator {
 case class DataModelValidatorImpl(
     dataModel: String,
     fieldRequirements: FieldRequirementsInterface,
-    capabilities: Set[ConnectorCapability]
+    capabilities: ConnectorCapabilities
 ) {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
   import BooleanUtils._
@@ -288,7 +288,7 @@ case class EnumValidator(doc: Document) {
   }
 }
 
-case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capabilities: Set[ConnectorCapability]) {
+case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capabilities: ConnectorCapabilities) {
   def validate(): Vector[DeployError] = {
     val allValidations = Vector(
       tryValidation(validateMissingTypes),

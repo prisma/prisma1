@@ -15,7 +15,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import scala.concurrent.ExecutionContextExecutor
 
 trait SubscriptionSpecBase
-    extends ConnectorAwareTest[ConnectorCapability]
+    extends ConnectorAwareTest
     with AwaitUtils
     with TestFrameworkInterface
     with BeforeAndAfterEach
@@ -34,8 +34,7 @@ trait SubscriptionSpecBase
   val invalidationTestKit                   = dependencies.invalidationTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
 
-  override def capabilities                                            = dependencies.apiConnector.capabilities
-  override def connectorHasCapability(capability: ConnectorCapability) = dependencies.apiConnector.hasCapability(capability)
+  override def capabilities = dependencies.apiConnector.capabilities
 
   override def prismaConfig = dependencies.config
 

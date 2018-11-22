@@ -32,7 +32,7 @@ object SchemaDsl extends AwaitUtils {
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
 
-    if (!deployConnector.isActive || deployConnector.hasCapability(RelationLinkListCapability)) {
+    if (!deployConnector.isActive || deployConnector.capabilities.has(RelationLinkListCapability)) {
       addManifestations(project, deployConnector)
     } else {
       project
@@ -82,7 +82,7 @@ object SchemaDsl extends AwaitUtils {
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if ((relation.isManyToMany && !deployConnector.hasCapability(RelationLinkListCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
+      if ((relation.isManyToMany && deployConnector.capabilities.hasNot(RelationLinkListCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)

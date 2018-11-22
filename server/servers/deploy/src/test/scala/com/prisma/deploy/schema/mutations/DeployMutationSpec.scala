@@ -1,7 +1,6 @@
-package com.prisma.deploy.database.schema.mutations
+package com.prisma.deploy.schema.mutations
 
 import com.prisma.IgnoreMongo
-import com.prisma.deploy.schema.mutations.{FunctionInput, HeaderInput}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}

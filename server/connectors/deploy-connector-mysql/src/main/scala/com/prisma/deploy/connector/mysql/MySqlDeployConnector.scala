@@ -105,4 +105,6 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
         List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
     )
   }
+
+  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

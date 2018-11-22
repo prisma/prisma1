@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
 import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
-import com.prisma.shared.models.{ConnectorCapability, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
@@ -25,7 +25,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
           |  test: String
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
@@ -55,7 +55,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
           |type Other {
           |  id: ID! @id
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("MyRelationName")
@@ -93,7 +93,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
           |type Other @embedded{
           |  test: String
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(2))
       val relation = schema.getRelationByName_!("MyRelationName")
@@ -131,7 +131,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
           |type Other @embedded{
           |  test: String
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = Set(EmbeddedTypesCapability, RelationLinkListCapability))
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(2))
       val relation = schema.relations.head
@@ -163,7 +163,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
 //  self relations between embedded types
 //  embedded types on connector without embedded types capability
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
     val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get
     SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
   }
