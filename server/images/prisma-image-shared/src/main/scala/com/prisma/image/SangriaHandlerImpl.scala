@@ -6,15 +6,16 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
+import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
-import com.prisma.api.server.{RawRequest => LegacyRawRequest}
+import com.prisma.api.server.{QueryExecutor, RawRequest => LegacyRawRequest}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.sangria_server._
 import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
-import com.prisma.shared.models.ProjectId
+import com.prisma.shared.models.{Project, ProjectId}
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.util.env.EnvUtils
 import com.prisma.websocket.WebsocketServer
@@ -47,18 +48,18 @@ case class SangriaHandlerImpl(
   val workerServer          = WorkerServer(workerDependencies)
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
-    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector.map(projectIdEncoder.fromEncodedString)
+    case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector
     case None           => Vector.empty
   }
 
-  lazy val throttler: Option[Throttler[ProjectId]] = {
+  lazy val throttler: Option[Throttler[String]] = {
     for {
       throttlingRate    <- EnvUtils.asInt("THROTTLING_RATE")
       maxCallsInFlights <- EnvUtils.asInt("THROTTLING_MAX_CALLS_IN_FLIGHT")
     } yield {
       val per = EnvUtils.asInt("THROTTLING_RATE_PER_SECONDS").getOrElse(1)
-      Throttler[ProjectId](
-        groupBy = pid => pid.name + "~" + pid.stage,
+      Throttler[String](
+        groupBy = identity,
         amount = throttlingRate,
         per = per.seconds,
         timeout = 25.seconds,
@@ -74,32 +75,45 @@ case class SangriaHandlerImpl(
     workerServer.onStart.map(_ => ())
   }
 
-  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext) = {
+  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext): Future[JsValue] = {
     val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
     val projectId                          = projectIdEncoder.fromSegments(projectSegments)
     val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
     reservedSegment match {
       case Some("import") =>
-        if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
-          val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-          result.map(_._2)
-        } else {
-          sys.error(s"The connector is missing the import / export capability.")
+        verifyAuth(projectIdAsString, rawRequest) {
+          if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
+            val result = apiDependencies.requestHandler.handleRawRequestForImport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
+            result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
+            result.map(_._2)
+          } else {
+            sys.error(s"The connector is missing the import / export capability.")
+          }
         }
 
       case Some("export") =>
-        if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
-          val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-          result.map(_._2)
-        } else {
-          sys.error(s"The connector is missing the import / export capability.")
+        verifyAuth(projectIdAsString, rawRequest) {
+          if (apiDependencies.apiConnector.hasCapability(ImportExportCapability)) {
+            val result = apiDependencies.requestHandler.handleRawRequestForExport(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
+            result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
+            result.map(_._2)
+          } else {
+            sys.error(s"The connector is missing the import / export capability.")
+          }
         }
 
       case _ =>
         super.handleRawRequest(rawRequest)
+
     }
+  }
+
+  private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: => Future[T]): Future[T] = {
+    for {
+      project    <- apiDependencies.projectFetcher.fetch_!(projectId)
+      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("Authorization"))
+      result     <- if (authResult.isSuccess) fn else Future.failed(InvalidToken())
+    } yield result
   }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
@@ -168,17 +182,22 @@ case class SangriaHandlerImpl(
     val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
     val projectId                          = projectIdEncoder.fromSegments(projectSegments)
     val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
-    reservedSegment match {
-      case None =>
-        throttleApiCallIfNeeded(projectId, rawRequest)
+    verifyAuth(projectIdAsString, rawRequest) {
+      reservedSegment match {
+        case None =>
+          for {
+            project <- apiDependencies.projectFetcher.fetch_!(projectIdAsString)
+            result  <- throttleApiCallIfNeeded(project, rawRequest, query)
+          } yield result
 
-      case Some("private") =>
-        val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
-        result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-        result.map(_._2)
+        case Some("private") =>
+          val result = apiDependencies.requestHandler.handleRawRequestForPrivateApi(projectId = projectIdAsString, rawRequest = rawRequest.toLegacy)
+          result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
+          result.map(_._2)
 
-      case Some(x) =>
-        sys.error(s"cannot happen: $x")
+        case Some(x) =>
+          sys.error(s"cannot happen: $x")
+      }
     }
   }
 
@@ -191,16 +210,16 @@ case class SangriaHandlerImpl(
     }
   }
 
-  def throttleApiCallIfNeeded(projectId: ProjectId, rawRequest: RawRequest) = {
+  def throttleApiCallIfNeeded(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
     throttler match {
-      case Some(throttler) if !unthrottledProjectIds.contains(projectId) => throttledCall(projectId, rawRequest, throttler)
-      case _                                                             => handleRequestForPublicApi(projectId, rawRequest)
+      case Some(throttler) if !unthrottledProjectIds.contains(project.id) => throttledCall(project, rawRequest, query, throttler)
+      case _                                                              => handleRequestForPublicApi(project, rawRequest, query)
     }
   }
 
-  def throttledCall(projectId: ProjectId, rawRequest: RawRequest, throttler: Throttler[ProjectId]) = {
-    val result = throttler.throttled(projectId) { () =>
-      handleRequestForPublicApi(projectId, rawRequest)
+  def throttledCall(project: Project, rawRequest: RawRequest, query: GraphQlQuery, throttler: Throttler[String]) = {
+    val result = throttler.throttled(project.id) { () =>
+      handleRequestForPublicApi(project, rawRequest, query)
     }
     result.toFutureTry.map {
       case scala.util.Success(result) =>
@@ -218,12 +237,21 @@ case class SangriaHandlerImpl(
     }
   }
 
-  def handleRequestForPublicApi(projectId: ProjectId, rawRequest: RawRequest) = {
-    val result = apiDependencies.requestHandler.handleRawRequestForPublicApi(projectIdEncoder.toEncodedString(projectId), rawRequest.toLegacy)
+  def handleRequestForPublicApi(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
+    val queryExecutor = QueryExecutor()
+    val result = queryExecutor.execute(
+      requestId = rawRequest.id,
+      queryString = query.queryString,
+      queryAst = query.query,
+      variables = query.variables,
+      operationName = query.operationName,
+      project = project,
+      schema = apiDependencies.apiSchemaBuilder(project)
+    )
     result.onComplete { _ =>
-      logRequestEndAndQueryIfEnabled(rawRequest, projectIdEncoder.toEncodedString(projectId), rawRequest.json)
+      logRequestEndAndQueryIfEnabled(rawRequest, project.id, rawRequest.json)
     }
-    result.map(_._2)
+    result
   }
 
   def logRequestEndAndQueryIfEnabled(rawRequest: RawRequest, projectId: String, json: JsValue, throttledBy: Long = 0) = {
