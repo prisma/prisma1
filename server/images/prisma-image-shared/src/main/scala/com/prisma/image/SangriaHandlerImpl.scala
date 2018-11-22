@@ -108,20 +108,20 @@ case class SangriaHandlerImpl(
     }
   }
 
-  private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: => Future[T]): Future[T] = {
-    for {
-      project    <- apiDependencies.projectFetcher.fetch_!(projectId)
-      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("Authorization"))
-      result     <- if (authResult.isSuccess) fn else Future.failed(InvalidToken())
-    } yield result
-  }
-
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
     if (request.path == Vector("management") && managementApiEnabled) {
       handleQueryForManagementApi(request, query)
     } else {
       handleQueryForServiceApi(request, query)
     }
+  }
+
+  private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: => Future[T]): Future[T] = {
+    for {
+      project    <- apiDependencies.projectFetcher.fetch_!(projectId)
+      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("Authorization"))
+      result     <- if (authResult.isSuccess) fn else Future.failed(InvalidToken())
+    } yield result
   }
 
   override def supportedWebsocketProtocols = websocketServer.supportedProtocols
