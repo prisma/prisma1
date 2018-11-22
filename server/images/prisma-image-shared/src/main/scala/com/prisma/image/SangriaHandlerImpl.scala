@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.PrivateSchemaBuilder
-import com.prisma.api.server.{RawRequest => LegacyRawRequest}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SystemUserContext}
@@ -160,7 +159,7 @@ case class SangriaHandlerImpl(
     }
   }
 
-  def splitReservedSegment(elements: List[String]): (List[String], Option[String]) = {
+  private def splitReservedSegment(elements: List[String]): (List[String], Option[String]) = {
     val reservedSegments = Set("private", "import", "export")
     if (elements.nonEmpty && reservedSegments.contains(elements.last)) {
       (elements.dropRight(1), elements.lastOption)
@@ -169,7 +168,7 @@ case class SangriaHandlerImpl(
     }
   }
 
-  def handleRequestForPublicApi(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
+  private def handleRequestForPublicApi(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
     val result = apiDependencies.queryExecutor.execute(
       requestId = rawRequest.id,
       queryString = query.queryString,
@@ -185,7 +184,7 @@ case class SangriaHandlerImpl(
     result
   }
 
-  def handleRequestForPrivateApi(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
+  private def handleRequestForPrivateApi(project: Project, rawRequest: RawRequest, query: GraphQlQuery) = {
     val result = apiDependencies.queryExecutor.execute(
       requestId = rawRequest.id,
       queryString = query.queryString,
@@ -201,7 +200,7 @@ case class SangriaHandlerImpl(
     result
   }
 
-  def logRequestEndAndQueryIfEnabled(rawRequest: RawRequest, projectId: String, json: JsValue, throttledBy: Long = 0) = {
+  private def logRequestEndAndQueryIfEnabled(rawRequest: RawRequest, projectId: String, json: JsValue, throttledBy: Long = 0) = {
     val actualDuration = logRequestEnd(rawRequest, projectId, throttledBy)
 
     if (logSlowQueries && actualDuration > slowQueryLogThreshold) {
@@ -210,7 +209,7 @@ case class SangriaHandlerImpl(
     }
   }
 
-  def logRequestEnd(rawRequest: RawRequest, projectId: String, throttledBy: Long = 0) = {
+  private def logRequestEnd(rawRequest: RawRequest, projectId: String, throttledBy: Long = 0) = {
     val end            = System.currentTimeMillis()
     val actualDuration = end - rawRequest.timestampInMillis - throttledBy
     val metricKey      = metricKeyFor(projectId)
@@ -220,11 +219,6 @@ case class SangriaHandlerImpl(
     actualDuration
   }
 
-  def metricKeyFor(projectId: String): String = projectId.replace(projectIdEncoder.stageSeparator, '-').replace(projectIdEncoder.workspaceSeparator, '-')
-
-  implicit class RawRequestExtensions(rawRequest: RawRequest) {
-    def toLegacy: LegacyRawRequest = {
-      LegacyRawRequest(rawRequest.id, rawRequest.json, rawRequest.ip, rawRequest.headers.get("Authorization"))
-    }
-  }
+  private def metricKeyFor(projectId: String): String =
+    projectId.replace(projectIdEncoder.stageSeparator, '-').replace(projectIdEncoder.workspaceSeparator, '-')
 }
