@@ -1,8 +1,8 @@
 package com.prisma.subscriptions.metrics
 
-import com.prisma.metrics.{CustomTag, MetricsManager}
+import com.prisma.metrics.{CustomTag, MetricsFacade}
 
-object SubscriptionMetrics extends MetricsManager {
+object SubscriptionMetrics extends MetricsFacade {
   // Actor Counts
   val activeSubcriptionSessions            = defineGauge("subscriptions.sessions")
   val activeSubscriptionsManagerForProject = defineGauge("subscriptions.manager.project")

@@ -16,12 +16,11 @@ import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.image.{FunctionValidatorImpl, SingleServerProjectFetcher}
-import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.jwt.jna.JnaAuth
+import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
-import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
@@ -43,8 +42,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   val cacheFactory: CacheFactory = new CaffeineCacheFactory()
 
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
-
-  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   override implicit def self: PrismaProdDependencies = this
 
@@ -98,8 +95,9 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
-  override def initialize()(implicit ec: ExecutionContext): Unit = {
-    super.initialize()(ec)
-    MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+  def initialize()(implicit system: ActorSystem): Unit = {
+    initializeDeployDependencies()
+    initializeApiDependencies(deployConnector.cloudSecretPersistence)
+    initializeSubscriptionDependencies(deployConnector.cloudSecretPersistence)
   }
 }

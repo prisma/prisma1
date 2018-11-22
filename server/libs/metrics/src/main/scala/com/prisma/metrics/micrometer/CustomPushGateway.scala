@@ -1,4 +1,4 @@
-package com.prisma.metrics.prometheus
+package com.prisma.metrics.micrometer
 
 import java.io.StringWriter
 import java.net.URI

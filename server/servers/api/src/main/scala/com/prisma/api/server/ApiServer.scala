@@ -10,11 +10,9 @@ import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.Server
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
-import com.prisma.api.schema.APIErrors.ProjectNotFound
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
 import com.prisma.api.schema.{SchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.ProjectId
 import com.prisma.util.env.EnvUtils
@@ -180,20 +178,18 @@ case class ApiServer(
 
   def extractRawRequest(requestId: String)(fn: RawRequest => Route): Route = {
     optionalHeaderValueByName("Authorization") { authorizationHeader =>
-      TimeResponseDirectiveImpl.timeResponse {
-        entity(as[JsValue]) { requestJson =>
-          extractClientIP { clientIp =>
-            respondWithHeader(RawHeader("Request-Id", requestId)) {
-              fn(
-                RawRequest(
-                  id = requestId,
-                  json = requestJson,
-                  ip = clientIp.toString,
-                  authorizationHeader = authorizationHeader,
-                  apiDependencies.graphQlQueryCache
-                )
+      entity(as[JsValue]) { requestJson =>
+        extractClientIP { clientIp =>
+          respondWithHeader(RawHeader("Request-Id", requestId)) {
+            fn(
+              RawRequest(
+                id = requestId,
+                json = requestJson,
+                ip = clientIp.toString,
+                authorizationHeader = authorizationHeader,
+                apiDependencies.graphQlQueryCache
               )
-            }
+            )
           }
         }
       }

@@ -14,12 +14,11 @@ import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
-import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.jwt.jna.JnaAuth
+import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
-import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
@@ -40,8 +39,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   val config: PrismaConfig       = ConfigLoader.load()
   val managementSecret           = config.managementApiSecret.getOrElse("")
   val cacheFactory: CacheFactory = new CaffeineCacheFactory()
-
-  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
   override lazy val projectFetcher: ProjectFetcher = {
@@ -84,8 +81,9 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
-  override def initialize()(implicit ec: ExecutionContext): Unit = {
-    super.initialize()(ec)
-    MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+  def initialize()(implicit system: ActorSystem): Unit = {
+    initializeDeployDependencies()
+    initializeApiDependencies(deployConnector.cloudSecretPersistence)
+    initializeSubscriptionDependencies(deployConnector.cloudSecretPersistence)
   }
 }

@@ -1,4 +1,4 @@
-package com.prisma.natively;
+package com.prisma.native_image;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

@@ -1,20 +1,20 @@
-package com.prisma.profiling
+package com.prisma.metrics.jvm
 
 import akka.actor.{ActorSystem, Cancellable}
-import com.prisma.metrics.MetricsManager
+import com.prisma.metrics.MetricsRegistry
 
 import scala.concurrent.duration.{FiniteDuration, _}
 
 object JvmProfiler {
   def schedule(
-      metricsManager: MetricsManager,
+      metricsRegistry: MetricsRegistry,
       initialDelay: FiniteDuration = 0.seconds,
       interval: FiniteDuration = 5.seconds
   )(implicit as: ActorSystem): Cancellable = {
     import as.dispatcher
 
-    val memoryProfiler = MemoryProfiler(metricsManager)
-    val cpuProfiler    = CpuProfiler(metricsManager)
+    val memoryProfiler = MemoryProfiler(metricsRegistry)
+    val cpuProfiler    = CpuProfiler(metricsRegistry)
 
     as.scheduler.schedule(initialDelay, interval) {
       memoryProfiler.profile()

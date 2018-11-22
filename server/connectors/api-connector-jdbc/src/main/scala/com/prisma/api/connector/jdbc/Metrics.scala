@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc
 
-import com.prisma.metrics.{CustomTag, MetricsManager}
+import com.prisma.metrics.{CustomTag, MetricsFacade}
 
-object Metrics extends MetricsManager {
+object Metrics extends MetricsFacade {
   val sqlQueryTimer = defineTimer("sql.query.time", CustomTag("projectId", recordingThreshold = 1000), CustomTag("queryName", recordingThreshold = 1000))
 }

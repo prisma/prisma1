@@ -1,19 +1,19 @@
-package com.prisma.profiling
+package com.prisma.metrics.jvm
 
 import java.lang.management.{GarbageCollectorMXBean, ManagementFactory, MemoryUsage}
 
-import com.prisma.metrics.MetricsManager
+import com.prisma.metrics.MetricsRegistry
 import com.sun.management.ThreadMXBean
 
 import scala.util.{Failure, Success, Try}
 
-case class MemoryProfiler(metricsManager: MetricsManager) {
+case class MemoryProfiler(metricsRegistry: MetricsRegistry) {
   import scala.collection.JavaConverters._
 
-  val garbageCollectionMetrics = asScalaBuffer(ManagementFactory.getGarbageCollectorMXBeans).map(gcBean => GarbageCollectionMetrics(metricsManager, gcBean))
+  val garbageCollectionMetrics = asScalaBuffer(ManagementFactory.getGarbageCollectorMXBeans).map(gcBean => GarbageCollectionMetrics(metricsRegistry, gcBean))
   val memoryMxBean             = ManagementFactory.getMemoryMXBean
-  val heapMemoryMetrics        = MemoryMetrics(metricsManager, initialMemoryUsage = memoryMxBean.getHeapMemoryUsage, prefix = "heap")
-  val offHeapMemoryMetrics     = MemoryMetrics(metricsManager, initialMemoryUsage = memoryMxBean.getNonHeapMemoryUsage, prefix = "off-heap")
+  val heapMemoryMetrics        = MemoryMetrics(metricsRegistry, initialMemoryUsage = memoryMxBean.getHeapMemoryUsage, prefix = "heap")
+  val offHeapMemoryMetrics     = MemoryMetrics(metricsRegistry, initialMemoryUsage = memoryMxBean.getNonHeapMemoryUsage, prefix = "off-heap")
   val allocationMetrics = {
     val threadMxBean = ManagementFactory.getThreadMXBean match {
       case x: ThreadMXBean =>
@@ -22,7 +22,7 @@ case class MemoryProfiler(metricsManager: MetricsManager) {
         println("com.sun.management.ThreadMXBean is not available on this JVM. Memory Allocation Metrics are therefore not available.")
         None
     }
-    AllocationMetrics(metricsManager, threadMxBean)
+    AllocationMetrics(metricsRegistry, threadMxBean)
   }
 
   def profile(): Unit = {
@@ -33,10 +33,10 @@ case class MemoryProfiler(metricsManager: MetricsManager) {
   }
 }
 
-case class AllocationMetrics(metricsManager: MetricsManager, mxBean: Option[ThreadMXBean]) {
+case class AllocationMetrics(metricsRegistry: MetricsRegistry, mxBean: Option[ThreadMXBean]) {
   // docs for the bean: https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/ThreadMXBean.html#getThreadAllocatedBytes(long)
 
-  val allocationRate = metricsManager.defineCounter("memoryAllocationRateInKb")
+  val allocationRate = metricsRegistry.defineCounter("memoryAllocationRateInKb")
 
   val isThreadAllocatedMemoryEnabled = Try {
     mxBean match {
@@ -71,16 +71,16 @@ case class AllocationMetrics(metricsManager: MetricsManager, mxBean: Option[Thre
         val delta           = bytes - lastBytes
         allocationRate.incBy(delta)
     }
-    lastAllocatedBytes = newLastAllocatedBytes
 
+    lastAllocatedBytes = newLastAllocatedBytes
   }
 }
 
-case class MemoryMetrics(metricsManager: MetricsManager, initialMemoryUsage: MemoryUsage, prefix: String) {
-  val initialMemory   = metricsManager.defineGauge(s"$prefix.initial")
-  val usedMemory      = metricsManager.defineGauge(s"$prefix.used")
-  val committedMemory = metricsManager.defineGauge(s"$prefix.committed")
-  val maxMemory       = metricsManager.defineGauge(s"$prefix.max")
+case class MemoryMetrics(metricsRegistry: MetricsRegistry, initialMemoryUsage: MemoryUsage, prefix: String) {
+  val initialMemory   = metricsRegistry.defineGauge(s"$prefix.initial")
+  val usedMemory      = metricsRegistry.defineGauge(s"$prefix.used")
+  val committedMemory = metricsRegistry.defineGauge(s"$prefix.committed")
+  val maxMemory       = metricsRegistry.defineGauge(s"$prefix.max")
 
   // those don't change over time and we don't want to report them again and again
   initialMemory.set(Math.max(initialMemoryUsage.getInit, 0))
@@ -92,12 +92,12 @@ case class MemoryMetrics(metricsManager: MetricsManager, initialMemoryUsage: Mem
   }
 }
 
-case class GarbageCollectionMetrics(metricsManager: MetricsManager, gcBean: GarbageCollectorMXBean) {
+case class GarbageCollectionMetrics(metricsRegistry: MetricsRegistry, gcBean: GarbageCollectorMXBean) {
   var lastCount: Long = 0
   var lastTime: Long  = 0
 
-  val countMetric = metricsManager.defineCounter("gc." + gcBean.getName + ".collectionCount")
-  val timeMetric  = metricsManager.defineTimer("gc." + gcBean.getName + ".collectionTime")
+  val countMetric = metricsRegistry.defineCounter("gc." + gcBean.getName + ".collectionCount")
+  val timeMetric  = metricsRegistry.defineTimer("gc." + gcBean.getName + ".collectionTime")
 
   def record(): Unit = {
     recordGcCount

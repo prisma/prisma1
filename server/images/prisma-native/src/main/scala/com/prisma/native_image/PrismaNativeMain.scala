@@ -1,4 +1,4 @@
-package com.prisma.natively
+package com.prisma.native_image
 
 import java.io.PrintWriter
 import java.sql.DriverManager
@@ -17,8 +17,7 @@ object PrismaNativeMain {
     implicit val dependencies = PrismaNativeDependencies()
 
     DriverManager.setLogWriter(new PrintWriter(System.out))
-    dependencies.initialize()(system.dispatcher)
-    dependencies.migrator.initialize
+    dependencies.initialize()
     Version.check()
 
     val sangriaHandler = SangriaHandlerImpl(managementApiEnabled = true)

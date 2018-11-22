@@ -1,11 +1,11 @@
-package com.prisma.profiling
+package com.prisma.metrics.jvm
 
 import java.lang.management.ManagementFactory
 
-import com.prisma.metrics.MetricsManager
+import com.prisma.metrics.MetricsRegistry
 import com.sun.management.OperatingSystemMXBean
 
-case class CpuProfiler(metricsManager: MetricsManager) {
+case class CpuProfiler(metricsRegistry: MetricsRegistry) {
   val mxBean = ManagementFactory.getOperatingSystemMXBean match {
     case x: OperatingSystemMXBean =>
       // docs for the bean available at https://docs.oracle.com/javase/8/docs/jre/api/management/extension/com/sun/management/OperatingSystemMXBean.html#getSystemCpuLoad--
@@ -17,7 +17,7 @@ case class CpuProfiler(metricsManager: MetricsManager) {
   }
 
   //  val processCpuLoad = metricsManager.defineGauge("processCpuLoadPercentage")
-  val systemCpuLoad = metricsManager.defineGauge("systemCpuLoadPercentage")
+  val systemCpuLoad = metricsRegistry.defineGauge("systemCpuLoadPercentage")
 
   def profile(): Unit = {
     mxBean.foreach { mxBean =>

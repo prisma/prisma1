@@ -13,11 +13,12 @@ import com.prisma.config.PrismaConfig
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
 import com.prisma.jwt.Auth
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
-import com.prisma.profiling.JvmProfiler
+import com.prisma.metrics.PrismaCloudSecretLoader
 import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
+
 import scala.concurrent.ExecutionContext
 
 trait ApiDependencies extends AwaitUtils {
@@ -53,7 +54,9 @@ trait ApiDependencies extends AwaitUtils {
   lazy val maxImportExportSize: Int                     = 1000000
   lazy val sssEventsPublisher: PubSubPublisher[String]  = sssEventsPubSub
 
-  JvmProfiler.schedule(ApiMetrics) // kick off JVM Profiler
+  def initializeApiDependencies(secretLoader: PrismaCloudSecretLoader) = {
+    ApiMetrics.initialize(secretLoader, system)
+  }
 
   def destroy = {
     apiConnector.shutdown().await()

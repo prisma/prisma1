@@ -12,7 +12,6 @@ import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContext}
 import com.prisma.errors.RequestMetadata
-import com.prisma.metrics.extensions.TimeResponseDirectiveImpl
 import com.prisma.sangria.utils.ErrorHandler
 import cool.graph.cuid.Cuid.createCuid
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
@@ -66,72 +65,70 @@ case class ManagementServer(prefix: String = "")(
 //    logger.info(Json.toJson(LogData(LogKey.RequestNew, requestId)).toString())
 
     handleExceptions(toplevelExceptionHandler(requestId)) {
-      TimeResponseDirectiveImpl.timeResponse {
-        post {
-          optionalHeaderValueByName("Authorization") { authorizationHeader =>
-            respondWithHeader(RawHeader("Request-Id", requestId)) {
-              entity(as[JsValue]) { requestJson =>
-                complete {
-                  val JsObject(fields) = requestJson
-                  val JsString(query)  = fields("query")
+      post {
+        optionalHeaderValueByName("Authorization") { authorizationHeader =>
+          respondWithHeader(RawHeader("Request-Id", requestId)) {
+            entity(as[JsValue]) { requestJson =>
+              complete {
+                val JsObject(fields) = requestJson
+                val JsString(query)  = fields("query")
 
-                  val operationName =
-                    fields.get("operationName") collect {
-                      case JsString(op) if !op.isEmpty => op
-                    }
-
-                  val variables = fields.get("variables") match {
-                    case Some(obj: JsObject)                  => obj
-                    case Some(JsString(s)) if s.trim.nonEmpty => Json.parse(s)
-                    case _                                    => JsObject.empty
+                val operationName =
+                  fields.get("operationName") collect {
+                    case JsString(op) if !op.isEmpty => op
                   }
 
-                  QueryParser.parse(query) match {
-                    case Failure(error) =>
-                      Future.successful(BadRequest -> Json.obj("error" -> error.getMessage))
+                val variables = fields.get("variables") match {
+                  case Some(obj: JsObject)                  => obj
+                  case Some(JsString(s)) if s.trim.nonEmpty => Json.parse(s)
+                  case _                                    => JsObject.empty
+                }
 
-                    case Success(queryAst) =>
-                      val userContext = SystemUserContext(authorizationHeader = authorizationHeader)
-                      val errorHandler = ErrorHandler(
-                        requestId,
-                        req.method.value,
-                        req.uri.toString(),
-                        req.headers.map(h => h.name() -> h.value()),
-                        query,
-                        variables,
-                        dependencies.reporter,
-                        errorCodeExtractor = errorExtractor
-                      )
-                      val result: Future[(StatusCode, JsValue)] =
-                        Executor
-                          .execute(
-                            schema = schemaBuilder(userContext),
-                            queryAst = queryAst,
-                            userContext = userContext,
-                            variables = variables,
-                            operationName = operationName,
-                            middleware = List.empty,
-                            exceptionHandler = errorHandler.sangriaExceptionHandler
-                          )
-                          .recover {
-                            case e: QueryAnalysisError => e.resolveError
-                          }
-                          .map(node => OK -> node)
+                QueryParser.parse(query) match {
+                  case Failure(error) =>
+                    Future.successful(BadRequest -> Json.obj("error" -> error.getMessage))
 
-                      result.onComplete(_ => logRequestEnd(None, None))
-                      result
-                  }
+                  case Success(queryAst) =>
+                    val userContext = SystemUserContext(authorizationHeader = authorizationHeader)
+                    val errorHandler = ErrorHandler(
+                      requestId,
+                      req.method.value,
+                      req.uri.toString(),
+                      req.headers.map(h => h.name() -> h.value()),
+                      query,
+                      variables,
+                      dependencies.reporter,
+                      errorCodeExtractor = errorExtractor
+                    )
+                    val result: Future[(StatusCode, JsValue)] =
+                      Executor
+                        .execute(
+                          schema = schemaBuilder(userContext),
+                          queryAst = queryAst,
+                          userContext = userContext,
+                          variables = variables,
+                          operationName = operationName,
+                          middleware = List.empty,
+                          exceptionHandler = errorHandler.sangriaExceptionHandler
+                        )
+                        .recover {
+                          case e: QueryAnalysisError => e.resolveError
+                        }
+                        .map(node => OK -> node)
+
+                    result.onComplete(_ => logRequestEnd(None, None))
+                    result
                 }
               }
             }
           }
-        } ~
-          get {
-            pathEnd {
-              getFromResource("graphiql.html")
-            }
+        }
+      } ~
+        get {
+          pathEnd {
+            getFromResource("graphiql.html")
           }
-      }
+        }
     }
   }
 

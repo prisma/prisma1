@@ -1,4 +1,4 @@
-package com.prisma.natively
+package com.prisma.native_image
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
@@ -43,8 +43,6 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
 
   override val managementSecret           = config.managementApiSecret.getOrElse("")
   override val cacheFactory: CacheFactory = new SimpleCacheFactory()
-
-//  MetricsRegistry.init(deployConnector.cloudSecretPersistence) todo
 
   override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
   override lazy val projectFetcher: ProjectFetcher = {
@@ -99,4 +97,10 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
+
+  def initialize()(implicit system: ActorSystem): Unit = {
+    initializeDeployDependencies()
+    initializeApiDependencies(deployConnector.cloudSecretPersistence)
+    initializeSubscriptionDependencies(deployConnector.cloudSecretPersistence)
+  }
 }

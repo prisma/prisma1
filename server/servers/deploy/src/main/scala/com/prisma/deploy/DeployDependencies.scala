@@ -41,8 +41,8 @@ trait DeployDependencies extends AwaitUtils {
   val cacheFactory: CacheFactory
   val auth: Auth
 
-  def initialize()(implicit ec: ExecutionContext): Unit = {
+  def initializeDeployDependencies()(implicit ec: ExecutionContext): Unit = {
     await(deployConnector.initialize(), seconds = 30)
-    system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployConnector)))
+    DeployMetrics.initialize(projectPersistence, deployConnector, system)
   }
 }

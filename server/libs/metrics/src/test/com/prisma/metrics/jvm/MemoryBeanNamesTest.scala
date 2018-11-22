@@ -1,4 +1,4 @@
-package com.prisma
+package com.prisma.metrics.jvm
 
 import java.lang.management.ManagementFactory
 

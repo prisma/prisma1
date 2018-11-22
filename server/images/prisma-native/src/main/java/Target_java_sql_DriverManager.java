@@ -7,7 +7,6 @@ import java.sql.DriverManager;
 final class Target_java_sql_DriverManager {
     @Substitute
     private static boolean isDriverAllowed(Driver driver, Class<?> caller) {
-        System.out.println("ALLOWED: " + driver.getClass().getName());
         return true;
     }
 }

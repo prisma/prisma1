@@ -5,7 +5,7 @@ import org.scalatest.{Matchers, WordSpec}
 
 class JnaAuthSpec extends WordSpec with Matchers {
   "HS256 JWT auth" should {
-    val auth    = Auth.jna(algorithm = Algorithm.HS256)
+    val auth    = JnaAuth(algorithm = Algorithm.HS256)
     val secrets = Vector("secret", "1234567890", "\uD83D\uDE02\uD83D\uDE02\uD83D\uDE02")
 
     "sign and validate a simple token" in {

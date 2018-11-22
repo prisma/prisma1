@@ -108,11 +108,11 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
       "--verbose"
     ),
     unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar"),
-    mappings in Universal := (mappings in Universal).value.filter { case(jar, path) => {
-      val check = path.contains("mariadb") || path.contains("org.postgresql")
+    mappings in Universal := (mappings in Universal).value.filter { case(jar, path) =>
+      val check = path.contains("mariadb") || path.contains("org.postgresql") || path.contains("micrometer") || path.contains("LatencyUtils") || path.contains("io.prometheus")
       println(s"$path -> $check")
       !check
-    }}
+    }
   )
 
 def absolute(relativePathToProjectRoot: String) = {
@@ -135,7 +135,6 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(deployConnector)
   .dependsOn(akkaUtils)
   .dependsOn(metrics)
-  .dependsOn(jvmProfiler)
   .dependsOn(messageBus)
   .dependsOn(graphQlClient)
   .dependsOn(sangriaUtils)
@@ -149,7 +148,6 @@ lazy val api = serverProject("api")
   .dependsOn(messageBus)
   .dependsOn(akkaUtils)
   .dependsOn(metrics)
-  .dependsOn(jvmProfiler)
   .dependsOn(cache)
   .dependsOn(jwtNative)
   .dependsOn(sangriaUtils)
@@ -168,7 +166,8 @@ lazy val workers = serverProject("workers")
   .dependsOn(messageBus)
   .dependsOn(scalaUtils)
 
-lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtils % "test->test")
+lazy val serversShared = serverProject("servers-shared")
+  .dependsOn(connectorUtils % "test->test")
 
 // ####################
 //       CONNECTORS
@@ -329,10 +328,6 @@ lazy val messageBus = libProject("message-bus")
     playJson
   ))
 
-lazy val jvmProfiler = libProject("jvm-profiler")
-  .settings(commonSettings: _*)
-  .dependsOn(metrics)
-
 lazy val graphQlClient = libProject("graphql-client")
   .settings(commonSettings: _*)
   .settings(libraryDependencies ++= Seq(
@@ -430,7 +425,6 @@ val allLibProjects = List(
   metrics,
   rabbitProcessor,
   messageBus,
-  jvmProfiler,
   graphQlClient,
   stubServer,
   scalaUtils,
