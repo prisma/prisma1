@@ -117,7 +117,7 @@ lazy val workers = serverProject("workers")
   .dependsOn(messageBus)
   .dependsOn(scalaUtils)
 
-lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtils % "test->test")
+lazy val serversShared = serverProject("servers-shared").dependsOn(sangriaServer).dependsOn(connectorUtils % "test->test")
 
 // ####################
 //       CONNECTORS

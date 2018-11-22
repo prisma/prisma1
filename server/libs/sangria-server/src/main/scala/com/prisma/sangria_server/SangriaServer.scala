@@ -25,7 +25,7 @@ trait SangriaServer {
   protected def createRequestId(): String = requestPrefix + ":" + createCuid()
 }
 
-trait SangriaHandler {
+trait SangriaHandler extends SangriaWebSocketHandler {
   import com.prisma.utils.`try`.TryExtensions._
 
   def onStart(): Future[Unit]
@@ -52,9 +52,6 @@ trait SangriaHandler {
 
   def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue]
 
-  def supportedWebsocketProtocols: Vector[String]                                                          = Vector.empty
-  def newWebsocketSession(request: RawWebsocketRequest): Flow[WebSocketMessage, WebSocketMessage, NotUsed] = Flow[WebSocketMessage]
-
   private def parseAsGraphqlQuery(json: JsValue): Try[GraphQlQuery] = Try {
     val result = json match {
       case obj: JsObject =>
@@ -77,6 +74,11 @@ trait SangriaHandler {
 
     result.get
   }
+}
+
+trait SangriaWebSocketHandler {
+  def supportedWebsocketProtocols: Vector[String]                                                          = Vector.empty
+  def newWebsocketSession(request: RawWebsocketRequest): Flow[WebSocketMessage, WebSocketMessage, NotUsed] = Flow[WebSocketMessage]
 }
 
 sealed trait HttpMethod { def name: String }

@@ -1,9 +1,7 @@
 package com.prisma.image
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Flow
 import com.prisma.api.import_export.{BulkExport, BulkImport}
 import com.prisma.api.schema.APIErrors.InvalidToken
 import com.prisma.api.schema.PrivateSchemaBuilder
@@ -17,7 +15,7 @@ import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.util.env.EnvUtils
-import com.prisma.websocket.WebsocketServer
+import com.prisma.websocket.WebSocketHandler
 import com.prisma.workers.WorkerServer
 import com.prisma.workers.dependencies.WorkerDependencies
 import play.api.libs.json.{JsValue, Json}
@@ -40,7 +38,7 @@ case class SangriaHandlerImpl(
   val logSlowQueries        = EnvUtils.asBoolean("SLOW_QUERIES_LOGGING").getOrElse(false)
   val slowQueryLogThreshold = EnvUtils.asInt("SLOW_QUERIES_LOGGING_THRESHOLD").getOrElse(1000)
   val projectIdEncoder      = apiDependencies.projectIdEncoder
-  val websocketServer       = WebsocketServer(subscriptionDependencies)
+  val websocketHandler      = WebSocketHandler(subscriptionDependencies)
   val workerServer          = WorkerServer(workerDependencies)
   val requestThrottler      = RequestThrottler()
 
@@ -101,23 +99,8 @@ case class SangriaHandlerImpl(
     } yield result
   }
 
-  override def supportedWebsocketProtocols = websocketServer.supportedProtocols
-
-  override def newWebsocketSession(request: RawWebsocketRequest) = {
-    val projectId          = projectIdEncoder.toEncodedString(projectIdEncoder.fromSegments(request.path.toList))
-    val isV7               = request.protocol == websocketServer.v7ProtocolName
-    val originalFlow       = websocketServer.newSession(projectId, isV7)
-    val sangriaHandlerFlow = Flow[WebSocketMessage].map(modelToAkkaWebsocketMessage).via(originalFlow).map(akkaWebSocketMessageToModel)
-    sangriaHandlerFlow
-  }
-
-  private def modelToAkkaWebsocketMessage(message: WebSocketMessage): Message = TextMessage(message.body)
-  private def akkaWebSocketMessageToModel(message: Message) = {
-    message match {
-      case TextMessage.Strict(body) => WebSocketMessage(body)
-      case x                        => sys.error(s"Not supported: $x")
-    }
-  }
+  override def supportedWebsocketProtocols                       = websocketHandler.supportedProtocols
+  override def newWebsocketSession(request: RawWebsocketRequest) = websocketHandler.newWebsocketSession(request)
 
   private def handleQueryForManagementApi(request: RawRequest, query: GraphQlQuery): Future[JsValue] = {
     import com.prisma.deploy.server.JsonMarshalling._

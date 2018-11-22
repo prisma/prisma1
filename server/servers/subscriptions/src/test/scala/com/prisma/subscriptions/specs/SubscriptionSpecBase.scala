@@ -8,7 +8,7 @@ import com.prisma.api.ApiTestDatabase
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
-import com.prisma.websocket.WebsocketServer
+import com.prisma.websocket.WebSocketHandler
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
@@ -38,7 +38,7 @@ trait SubscriptionSpecBase
 
   override def prismaConfig = dependencies.config
 
-  val wsServer = WebsocketServer(dependencies)
+  val wsServer = WebSocketHandler(dependencies)
 
   var caseNumber = 1
 

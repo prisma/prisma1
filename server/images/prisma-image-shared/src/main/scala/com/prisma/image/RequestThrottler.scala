@@ -1,5 +1,6 @@
 package com.prisma.image
 
+import akka.actor.ActorSystem
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
@@ -9,10 +10,10 @@ import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
 
-case class RequestThrottler() {
+case class RequestThrottler()(implicit system: ActorSystem) {
   import com.prisma.utils.future.FutureUtils._
-
   import scala.concurrent.duration._
+  import system.dispatcher
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
     case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector
