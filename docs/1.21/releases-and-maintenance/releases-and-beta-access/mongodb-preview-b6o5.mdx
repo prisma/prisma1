@@ -93,6 +93,10 @@ type Coordinates @embedded {
 }
 ```
 
+Here is an example of the data that's stored in the underlying MongoDB database based on this datamodel:
+
+![](https://imgur.com/MX4jsQQ.png)
+
 With this setup, it is _not_ possible to query any instances of `Coordinates` directly because `Coordinates` is an embedded type. `Coordinates` can only be queried via the `City` type. Similarly, you can not create, update or delete coordinates directly, instead you need to create, update or delete a `City` in order to perform such operation on an instance of `Coordinates`. 
 
 > You can learn more about embedded types in the [specification](https://github.com/prisma/prisma/issues/2836).
@@ -125,6 +129,10 @@ type Post {
   author: User!
 }
 ```
+
+Here is an example of the data that's stored in the underlying MongoDB database based on this datamodel:
+
+![](https://imgur.com/qNOjzQv.png)
 
 While this approach enables querying for `Post` documents directly in the Prisma API (as opposed to embedded types which can only be queried through nested operations via their parent types), there are performance considerations when modeling relations this way.
 
