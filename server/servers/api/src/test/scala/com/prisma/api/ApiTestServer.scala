@@ -1,7 +1,7 @@
 package com.prisma.api
 
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
-import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
+import com.prisma.api.server.{GraphQlQuery, GraphQlRequest, QueryExecutor}
 import com.prisma.shared.models.Project
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json._
@@ -110,18 +110,15 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
 
-    val graphqlQuery = GraphQlQuery(query = queryAst, operationName = None, variables = variables, queryString = query)
-    val graphQlRequest = GraphQlRequest(
-      id = requestId,
-      ip = "test.ip",
-      json = JsObject.empty,
+    val result = dependencies.queryExecutor.execute(
+      requestId = requestId,
+      queryString = query,
+      queryAst = queryAst,
+      variables = variables,
+      operationName = None,
       project = project,
-      schema = schema,
-      queries = Vector(graphqlQuery),
-      isBatch = false
+      schema = schema
     )
-
-    val result = dependencies.graphQlRequestHandler.handle(graphQlRequest).map(_._2)
 
     result.foreach(x => println(s"""Request Result:
         |$x
