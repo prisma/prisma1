@@ -43,6 +43,8 @@ While relational databases use [database normalization](https://en.wikipedia.org
 
 With MongoDB, relations can be expressed either by _embedding_ data directly in a parent document or by using _references_. A good overview on the differences can be found in the MongoDB [documentation](https://www.mongodb.com/blog/post/thinking-documents-part-2#modeling-relationships-with-embedding-and-referencing). Prisma adopts the idea of _embedded_ types when modeling data for an underlying MongoDB.
 
+Read [below](#data-modeling) to learn how relations in MongoDB can be modeled with Prisma.
+
 ### Migrations
 
 When updating the Prisma datamodel, Prisma will only ever make _additive_ structural changes to your MongoDB database(s).
