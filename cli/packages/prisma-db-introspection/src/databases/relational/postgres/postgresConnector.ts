@@ -3,13 +3,15 @@ import { RelationalConnector } from '../relationalConnector'
 import { Table, Column, TableRelation, PrimaryKey } from '../relationalConnector'
 import * as _ from 'lodash'
 import { Client } from 'pg';
+import { TypeIdentifier } from 'prisma-datamodel';
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
-export class PostgresConnector implements RelationalConnector {
+export class PostgresConnector extends RelationalConnector {
   client: Client
   connectionPromise: Promise<any>
 
   constructor(client: Client) {
+    super()
     this.client = client
     this.connectionPromise = this.client.connect()
   }

@@ -13,7 +13,12 @@ export class PostgresInferrer extends RelationalInferrer {
     // Assemble basic types
     const types = typeCandidates.map(tc => {
       const name = capitalize(tc.name)
-      const directives = [`@pgTable(name: "${tc.name}")`]
+      const directives: IDirectiveInfo[] = [{
+        name: 'pgTable',
+        arguments: {
+          name: `"${tc.name}"`
+        }
+      }]
 
       const fields: IGQLField[] = tc.columns.map(column => {
         
@@ -23,7 +28,7 @@ export class PostgresInferrer extends RelationalInferrer {
           directives.push({
             name: "pgColumn",
             arguments: {
-              name: column.name
+              name: `"${column.name}"`
             }
           })
         }
@@ -71,7 +76,7 @@ export class PostgresInferrer extends RelationalInferrer {
         const directives: IDirectiveInfo[] = [{
           name: "pgRelation",
           arguments: {
-            column: relation.source_column
+            column: `"${relation.source_column}"`
           }
         }]
 
@@ -135,8 +140,8 @@ export class PostgresInferrer extends RelationalInferrer {
         const directives: IDirectiveInfo[] = [{
           name: "pgRelationTable",
           arguments: {
-            table: relation.source_table,
-            name: relation.source_table
+            table: `"${relation.source_table}`,
+            name: `"${relation.source_table}`
           }
         }]
   
@@ -160,7 +165,7 @@ export class PostgresInferrer extends RelationalInferrer {
           return this.removeIdSuffix(a.name) === this.removeIdSuffix(b.name)
         })),
         ...inlineRelationFields,
-        // ????
+        // TODO: Figure out this line. 
         //...(_.differenceWith(relationFields, relationTableFields, (a, b) => {
         //  // TODO: Manage this ugly hack if finding relation field in 
         //  // directive of relation table field 
@@ -175,7 +180,8 @@ export class PostgresInferrer extends RelationalInferrer {
         name: name,
         fields: allFields,
         isEmbedded: false,
-        isEnum: false
+        isEnum: false,
+        directives: directives
       } as IGQLType
     })
 

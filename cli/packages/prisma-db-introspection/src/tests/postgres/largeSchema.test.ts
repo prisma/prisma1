@@ -1,12 +1,12 @@
-import { Introspector } from '../../Introspector'
+import { Introspector } from '../../introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../connectors/PostgresConnector'
+import { PostgresConnector } from '../../databases/relational/postgres/postgresConnector'
+import { DatabaseType } from 'prisma-datamodel'
 
-function introspect(): Promise<{ numTables: number; sdl: string }> {
+function introspect() {
   const client = new Client(connectionDetails)
-  const pgConnector = new PostgresConnector(client)
-  return new Introspector(pgConnector).introspect('DatabaseIntrospector')
+  return Introspector.create(DatabaseType.relational, client).introspect('DatabaseIntrospector')
 }
 
 async function testSchema(sql: string) {

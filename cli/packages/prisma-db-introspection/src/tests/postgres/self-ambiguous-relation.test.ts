@@ -1,21 +1,21 @@
-import { Introspector } from '../../Introspector'
+import { Introspector } from '../../introspector'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../connectors/PostgresConnector'
+import { PostgresConnector } from '../../databases/relational/postgres/postgresConnector'
+import { DatabaseType } from 'prisma-datamodel'
 
-function introspect(): Promise<{ numTables: number; sdl: string }> {
+function introspect() {
   const client = new Client(connectionDetails)
-  const pgConnector = new PostgresConnector(client)
-  return new Introspector(pgConnector).introspect('public')
+  return Introspector.create(DatabaseType.relational, client).introspect('DatabaseIntrospector')
 }
 
 async function testSchema(sql: string) {
   const client = new Client(connectionDetails)
 
   await client.connect()
-  await client.query('DROP SCHEMA IF EXISTS public cascade;')
-  await client.query('CREATE SCHEMA public;')
-  await client.query('SET search_path TO public;')
+  await client.query('DROP SCHEMA IF EXISTS DatabaseIntrospector cascade;')
+  await client.query('CREATE SCHEMA DatabaseIntrospector;')
+  await client.query('SET search_path TO DatabaseIntrospector;')
   await client.query(sql)
 
   expect(await introspect()).toMatchSnapshot()
