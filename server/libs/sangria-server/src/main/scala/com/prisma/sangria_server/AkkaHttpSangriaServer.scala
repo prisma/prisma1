@@ -14,6 +14,8 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsObject, JsValue, Json}
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 
 import scala.concurrent.{Await, Future}
 
@@ -32,30 +34,34 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
   import system.dispatcher
 
   val routes = {
-    extractRequest { request =>
-      val requestId = createRequestId()
-      respondWithHeader(RawHeader("Request-Id", requestId)) {
-        handleExceptions(toplevelExceptionHandler(requestId)) {
-          extractClientIP { clientIp =>
-            post {
-              entity(as[JsValue]) { requestJson =>
-                val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
-                complete(OK -> handler.handleRawRequest(rawRequest))
-              }
-            } ~ (get & path("status")) {
-              complete("OK")
-            } ~ get {
-              extractUpgradeToWebSocket { upgrade =>
-                upgrade.requestedProtocols.headOption match {
-                  case Some(protocol) if handler.supportedWebsocketProtocols.contains(protocol) =>
-                    val originalFlow = handler.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
-                    val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
-                    handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
-                  case _ =>
-                    reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
+    handleRejections(CorsDirectives.corsRejectionHandler) {
+      cors() {
+        extractRequest { request =>
+          val requestId = createRequestId()
+          respondWithHeader(RawHeader("Request-Id", requestId)) {
+            handleExceptions(toplevelExceptionHandler(requestId)) {
+              extractClientIP { clientIp =>
+                post {
+                  entity(as[JsValue]) { requestJson =>
+                    val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
+                    complete(OK -> handler.handleRawRequest(rawRequest))
+                  }
+                } ~ (get & path("status")) {
+                  complete("OK")
+                } ~ get {
+                  extractUpgradeToWebSocket { upgrade =>
+                    upgrade.requestedProtocols.headOption match {
+                      case Some(protocol) if handler.supportedWebsocketProtocols.contains(protocol) =>
+                        val originalFlow = handler.newWebsocketSession(akkaRequestToRawWebsocketRequest(request, clientIp, protocol, requestId))
+                        val akkaHttpFlow = Flow[Message].map(akkaWebSocketMessageToModel).via(originalFlow).map(modelToAkkaWebsocketMessage)
+                        handleWebSocketMessagesForProtocol(akkaHttpFlow, protocol)
+                      case _ =>
+                        reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
+                    }
+                  } ~
+                    getFromResource("playground.html", ContentTypes.`text/html(UTF-8)`)
                 }
-              } ~
-                getFromResource("playground.html", ContentTypes.`text/html(UTF-8)`)
+              }
             }
           }
         }
