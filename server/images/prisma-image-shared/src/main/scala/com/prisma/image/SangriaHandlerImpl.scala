@@ -59,8 +59,7 @@ case class SangriaHandlerImpl(
       case Some("import") =>
         verifyAuth(projectIdAsString, rawRequest) { project =>
           if (apiDependencies.apiConnector.capabilities.has(ImportExportCapability)) {
-            val importer = new BulkImport(project)
-            val result   = importer.executeImport(rawRequest.json)
+            val result = new BulkImport(project).executeImport(rawRequest.json)
             result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
             result
           } else {
@@ -72,8 +71,7 @@ case class SangriaHandlerImpl(
         verifyAuth(projectIdAsString, rawRequest) { project =>
           if (apiDependencies.apiConnector.capabilities.has(ImportExportCapability)) {
             val resolver = apiDependencies.dataResolver(project)
-            val exporter = new BulkExport(project)
-            val result   = exporter.executeExport(resolver, rawRequest.json)
+            val result   = new BulkExport(project).executeExport(resolver, rawRequest.json)
             result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
             result
           } else {
