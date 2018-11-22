@@ -1,4 +1,4 @@
-import { DatabaseType } from '../databaseType'
+import { DatabaseType } from '../../databaseType'
 import DocumentParser from './documentParser';
 import RelationalParser from './relationalParser';
 import Parser from './parser';

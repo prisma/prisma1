@@ -1,6 +1,6 @@
 import { IGQLType } from '../../src/datamodel/model'
 import { expectField, expectType } from './helpers' 
-import RelationalParser from '../../src/datamodel/relationalParser'
+import RelationalParser from '../../src/datamodel/parser/relationalParser'
 
 describe(`Relational parser specific tests`, () => {
   test('Find an ID field correctly.', () => {
@@ -11,7 +11,7 @@ describe(`Relational parser specific tests`, () => {
       }
     `
 
-    const types = new RelationalParser().parseFromSchemaString(model)
+    const { types } = new RelationalParser().parseFromSchemaString(model)
 
     const userType = expectType(types, 'User')
 
@@ -29,7 +29,7 @@ describe(`Relational parser specific tests`, () => {
       }
     `
 
-    const types = new RelationalParser().parseFromSchemaString(model)
+    const { types } = new RelationalParser().parseFromSchemaString(model)
 
     const userType = expectType(types, 'User')
     expectField(userType, 'id', true, false, 'ID', true, true, null)

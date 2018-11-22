@@ -1,8 +1,9 @@
 import { IIntrospector } from "../../common/connector"
+import { TypeIdentifier } from "prisma-datamodel"
 
-export interface IRelationalConnector extends IIntrospector<Table> {
-  listSchemas(): Promise<string[]>
-  listModels(schemaName: string): Promise<Table[]>
+export abstract class RelationalConnector implements IIntrospector<Table[]> {
+  abstract listSchemas(): Promise<string[]>
+  abstract listModels(schemaName: string): Promise<Table[]>
 }
 
 export class Table {

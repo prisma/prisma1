@@ -1,4 +1,4 @@
-import DocumentParser from '../../src/datamodel/documentParser'
+import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
 import { expectField, expectType } from './helpers' 
 
@@ -11,7 +11,7 @@ describe(`Document parser specific tests`, () => {
       }
     `
 
-    const types = new DocumentParser().parseFromSchemaString(model)
+    const { types } = new DocumentParser().parseFromSchemaString(model)
 
     const userType = expectType(types, 'User')
 
@@ -29,7 +29,7 @@ describe(`Document parser specific tests`, () => {
       }
     `
 
-    const types = new DocumentParser().parseFromSchemaString(model)
+    const { types } = new DocumentParser().parseFromSchemaString(model)
 
     const userType = expectType(types, 'User')
 
@@ -45,7 +45,7 @@ describe(`Document parser specific tests`, () => {
       }
     `
 
-    const types = new DocumentParser().parseFromSchemaString(model)
+    const { types } = new DocumentParser().parseFromSchemaString(model)
 
     const userType = expectType(types, 'User', false, true)
   })

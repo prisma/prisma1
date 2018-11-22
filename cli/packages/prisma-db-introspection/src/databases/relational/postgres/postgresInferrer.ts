@@ -1,36 +1,51 @@
-import { Table } from "../relationalConnector"
+import { Table, TableRelation } from "../relationalConnector"
 import { RelationalInferrer } from "../relationalInferrer"
+import { ISDL, IGQLField, IGQLType, IDirectiveInfo, plural, camelCase, capitalize } from 'prisma-datamodel'
+import * as _ from 'lodash'
 
 // TODO: This class holds too much logic.
+// TODO: This class duplicates too much logic and has too many assumptions about how types may look. 
 export class PostgresInferrer extends RelationalInferrer {
-  async infer(dbTables: Table[]): Promise<SDL> {
+  async infer(dbTables: Table[]): Promise<ISDL> {
     const typeCandidates = dbTables.filter(t => !t.isJoinTable())
     const joinTables = dbTables.filter(t => t.isJoinTable())
 
     // Assemble basic types
     const types = typeCandidates.map(tc => {
-      const name = this.capitalizeFirstLetter(tc.name)
+      const name = capitalize(tc.name)
       const directives = [`@pgTable(name: "${tc.name}")`]
 
-      const fields: GQLField[] = tc.columns.map(column => {
-        const directives = [
-          ...(column.isUnique ? ["@unique"] : []),
-          ...(column.isPrimaryKey && column.name !== 'id' ? [`@pgColumn(name: "${column.name}")`] : []),
-          ...(column.defaultValue && column.defaultValue.trim() !== '[AUTO INCREMENT]' 
-            ? [...(this.isStringableValue(column) 
-              ? [`@default(value: "${column.defaultValue}")`]
-              : [`@default(value: ${column.defaultValue})`])]
-            : [])
-        ]
-        return new GQLField(
-          column.isPrimaryKey ? 'id' : column.name,
-          column.typeIdentifier,
-          !column.nullable,
-          directives,
-          column.isPrimaryKey,
-          column.comment ? column.comment : "",
-          column.typeIdentifier ? false : true
-        )
+      const fields: IGQLField[] = tc.columns.map(column => {
+        
+        const directives: IDirectiveInfo[] = []
+
+        if(column.isPrimaryKey && column.name !== 'id') {
+          directives.push({
+            name: "pgColumn",
+            arguments: {
+              name: column.name
+            }
+          })
+        }
+
+        // TODO: Remove magic AUTO INCREMENT constant. 
+        const defaultValue = column.defaultValue && column.defaultValue.trim() !== '[AUTO INCREMENT]' ? column.defaultValue : null
+        const isUnique = column.isUnique
+
+        return {
+          name: column.isPrimaryKey ? 'id' : column.name,
+          type: column.typeIdentifier,
+          defaultValue, 
+          isId: column.isPrimaryKey, 
+          isList: false,
+          isReadOnly: false,
+          // TODO: We should turn of isRequired in case of auto-increment. 
+          isRequired: !column.nullable,
+          isUnique: column.isUnique,
+          relatedField: null,
+          relationName: null,
+          directives
+        } as IGQLField
       })
 
       const inlineRelations = tc.relations.filter(relation => {
@@ -51,22 +66,31 @@ export class PostgresInferrer extends RelationalInferrer {
           (a, b) => a.name === b.source_column
         )
 
-        const relationName = pluralize(relation.source_table) + '_' + pluralize(this.removeIdSuffix(relation.source_column))
-        const directives = [
-          `@pgRelation(column: "${relation.source_column}")`,
-          ...(ambiguousRelations.length > 1 && remoteColumns && remoteColumns.length > 0 ? [`@relation(name: "${upperCamelCase(relationName)}")`] : []),
-          ...(selfAmbiguousRelations.length > 0 && selfRemoteColumns && selfRemoteColumns.length > 0 ? [`@relation(name: "${upperCamelCase(relationName)}")`] : [])
-        ]
+        const relationName = plural(relation.source_table) + '_' + plural(this.removeIdSuffix(relation.source_column))
 
-        return new GQLField(
-          this.removeIdSuffix(relation.source_column),
-          `${this.capitalizeFirstLetter(relation.target_table)}`,
-          false,
-          directives,
-          false,
-          "", // TODO: Figure out comment thing for this
-          false
-        )
+        const directives: IDirectiveInfo[] = [{
+          name: "pgRelation",
+          arguments: {
+            column: relation.source_column
+          }
+        }]
+
+        const isAmbigous = ambiguousRelations.length > 1 && remoteColumns && remoteColumns.length > 0 ||
+                         selfAmbiguousRelations.length > 0 && selfRemoteColumns && selfRemoteColumns.length > 0  
+
+        return {
+          name: this.removeIdSuffix(relation.source_column),
+          type: capitalize(relation.target_table),
+          isReadOnly: false,
+          isRequired: false,
+          isId: false,
+          isUnique: false,
+          defaultValue: null,
+          isList: false,
+          relatedField: null, // TODO: Find and link related field, if possible.
+          relationName: isAmbigous ? camelCase(relationName) : null,
+          directives
+        } as IGQLField
       })
 
       const relations = tc.relations.filter(relation => {
@@ -75,26 +99,27 @@ export class PostgresInferrer extends RelationalInferrer {
       const relationFields = relations.map(relation => {
         const ambiguousRelations = tc.relations.filter(innerRelation => innerRelation.source_table === relation.source_table && innerRelation.target_table === relation.target_table)
         const fieldName = ambiguousRelations.length > 1 
-                ? pluralize(relation.source_table) + '_' + pluralize(
+                ? plural(relation.source_table) + '_' + plural(
                   this.removeIdSuffix(relation.source_column)
                 )
-                : pluralize(relation.source_table)
+                : plural(relation.source_table)
 
         const selfAmbiguousRelations = ambiguousRelations.filter(relation => relation.source_table === relation.target_table)
 
-        const directives = [
-          ...(ambiguousRelations.length > 1 ? [`@relation(name: "${upperCamelCase(fieldName)}")`] : []),
-          ...(selfAmbiguousRelations.length > 0 ? [`@relation(name: "${upperCamelCase(fieldName)}")`] : []) 
-        ]
-        return new GQLField(
-          fieldName,
-          `[${this.capitalizeFirstLetter(relation.source_table)}!]`,
-          true,
-          directives,
-          false,
-          "", // TODO: Figure out comment thing for this
-          false
-        )
+        const isAmbigous = ambiguousRelations.length > 1  || selfAmbiguousRelations.length > 0
+
+        return {
+          name: fieldName, 
+          type: capitalize(relation.source_table), 
+          isRequired: true,
+          isReadOnly: false,
+          isId: false,
+          isList: true, 
+          isUnique: false,
+          defaultValue: null,
+          relatedField: null, // TODO
+          relationName: isAmbigous ? camelCase(fieldName) : null
+        } as IGQLField
       })
 
       const relationTables = joinTables.reduce((relations, joinTable) => {
@@ -106,18 +131,28 @@ export class PostgresInferrer extends RelationalInferrer {
       }, [] as TableRelation[])
 
       const relationTableFields = relationTables.map(relation => {
-        const directives = [
-          `@pgRelationTable(table: "${relation.source_table}" name: "${relation.source_table}")`
-        ]
-        return new GQLField(
-          pluralize(relation.target_table),
-          `[${this.capitalizeFirstLetter(relation.target_table)}!]`,
-          true,
-          directives,
-          false,
-          "", // TODO: Figure out comment thing for this
-          false
-        )
+
+        const directives: IDirectiveInfo[] = [{
+          name: "pgRelationTable",
+          arguments: {
+            table: relation.source_table,
+            name: relation.source_table
+          }
+        }]
+  
+        // TODO Include directives
+        return {
+          name: plural(relation.target_table), 
+          isList: true, 
+          isRequired: true,
+          isId: false, 
+          isUnique: false,
+          defaultValue: null,
+          relatedField: null, // Is this correct? 
+          relationName: null,
+          isReadOnly: false,
+          type: capitalize(relation.target_table)
+        } as IGQLField
       })
       
       const allFields = [
@@ -125,28 +160,28 @@ export class PostgresInferrer extends RelationalInferrer {
           return this.removeIdSuffix(a.name) === this.removeIdSuffix(b.name)
         })),
         ...inlineRelationFields,
-        ...(_.differenceWith(relationFields, relationTableFields, (a, b) => {
-          // TODO: Manage this ugly hack if finding relation field in 
-          // directive of relation table field 
-          // there is also plural to singular hack in this
-          return b.directives.join('').indexOf(pluralize.singular(a.name)) > -1
-        })),
+        // ????
+        //...(_.differenceWith(relationFields, relationTableFields, (a, b) => {
+        //  // TODO: Manage this ugly hack if finding relation field in 
+        //  // directive of relation table field 
+        //  // there is also plural to singular hack in this
+        //  return b.directives.join('').indexOf(pluralize.singular(a.name)) > -1
+        //})),
         ...relationTableFields
       ]
 
-      const someValidFields = fields.some(field => field.isValid())
-      return new GQLType(name, allFields, directives, !someValidFields)
+      // TODO: If has zero valid fields, don't render. 
+      return {
+        name: name,
+        fields: allFields,
+        isEmbedded: false,
+        isEnum: false
+      } as IGQLType
     })
 
-    return new SDL(types)
-  }
-
-  capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1)
-  }
-
-  lowerCaseFirstLetter(string) {
-    return string.charAt(0).toLowerCase() + string.slice(1)
+    return {
+      types
+    }
   }
 
   removeIdSuffix(string) {
@@ -159,17 +194,5 @@ export class PostgresInferrer extends RelationalInferrer {
     }
 
     return removeSuffix('_ID', removeSuffix('_id', removeSuffix('Id', string)))
-  }
-
-  isStringableValue(column) {
-    if (
-      column.typeIdentifier == 'String' ||
-      column.typeIdentifier == 'DateTime' ||
-      column.typeIdentifier == 'Json'
-    ) {
-      return true
-    } else {
-      return false
-    }
   }
 }

@@ -18,7 +18,7 @@ export default function blackBoxTest(name: string, databaseType: DatabaseType) {
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const prisma = fs.readFileSync(prismaPath, { encoding: 'UTF-8' })
 
-  const types = Parser.create(databaseType).parseFromSchemaString(model)
+  const { types } = Parser.create(databaseType).parseFromSchemaString(model)
   const ourSchema = generator.schema.generate(types, {})
 
   const ourPrintedSchema = printSchema(ourSchema)

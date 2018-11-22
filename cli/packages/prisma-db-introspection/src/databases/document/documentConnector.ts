@@ -1,6 +1,9 @@
-import { IIntrospector } from "../../common/connector"
+import { IIntrospector } from '../../common/connector'
+import { ISDL } from 'prisma-datamodel'
 
-export interface IDocumentConnector extends IIntrospector<TODO> {
+
+// Maybe we need a new type here in the future. 
+export interface IDocumentConnector extends IIntrospector<ISDL> {
   listSchemas(): Promise<string[]>
-  listModels(schemaName: string): Promise<TODO>
+  listModels(schemaName: string): Promise<ISDL>
 }

@@ -1,5 +1,5 @@
-import RelationalParser from '../../src/datamodel/relationalParser'
-import DocumentParser from '../../src/datamodel/documentParser'
+import RelationalParser from '../../src/datamodel/parser/relationalParser'
+import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
 import { expectField, expectType } from './helpers' 
 
@@ -17,7 +17,7 @@ for(const parser of parsersToTest) {
         }
       `
 
-      const types = parser.instance.parseFromSchemaString(model)
+      const { types } = parser.instance.parseFromSchemaString(model)
 
       const userType = expectType(types, 'User')
 
@@ -40,7 +40,7 @@ for(const parser of parsersToTest) {
         }
       `
 
-      const types = parser.instance.parseFromSchemaString(model)
+      const { types } = parser.instance.parseFromSchemaString(model)
 
       const userType = expectType(types, 'User')
       const userRoleEnum = expectType(types, 'UserRole', true)
@@ -69,7 +69,7 @@ for(const parser of parsersToTest) {
         }
       `
 
-      const types = parser.instance.parseFromSchemaString(model)
+      const { types } = parser.instance.parseFromSchemaString(model)
 
       const A = expectType(types, 'A')
       const B = expectType(types, 'B')

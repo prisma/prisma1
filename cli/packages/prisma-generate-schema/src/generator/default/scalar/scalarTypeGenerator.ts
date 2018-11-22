@@ -1,5 +1,5 @@
 import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, ModelEnumTypeGeneratorBase, ScalarTypeGeneratorBase } from '../../generator'
-import { IGQLType, IGQLField } from 'prisma-datamodel'
+import { IGQLType, IGQLField, TypeIdentifiers } from 'prisma-datamodel'
 import GQLAssert from '../../../util/gqlAssert'
 import { GraphQLList, GraphQLEnumType, GraphQLType, GraphQLEnumValueConfigMap, GraphQLScalarType, GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID, GraphQLNonNull } from "graphql/type"
 import { GraphQLObjectType } from 'graphql/type/definition';
@@ -13,17 +13,6 @@ function createGraphQLScalarType(typeName: string) {
 // NOMINAL, ORDINAL, INTERVAL, RATIO and a special type for STRING
 // And then generate all filter objects based on that, regardless of the
 // actual type. 
-export abstract class TypeIdentifiers {
-  public static string = 'String'
-  public static integer = 'Int'
-  public static float = 'Float'
-  public static boolean = 'Boolean'
-  public static long = 'Long'
-  public static dateTime = 'DateTime'
-  public static id = 'ID'
-  public static uuid = 'UUID'
-  public static json = 'Json'
-}
 
 const scalarTypes = {}
 scalarTypes[TypeIdentifiers.string] = GraphQLString

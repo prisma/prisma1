@@ -1,17 +1,11 @@
-import {
-  Connector,
-  Table,
-  Column,
-  TypeIdentifier,
-  TableRelation,
-  PrimaryKey,
-  DBClient,
-} from '../types/common'
+
+import { RelationalConnector } from '../relationalConnector'
+import { Table, Column, TableRelation, PrimaryKey } from '../relationalConnector'
 import * as _ from 'lodash'
 import { Client } from 'pg';
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
-export class PostgresConnector implements Connector {
+export class PostgresConnector implements RelationalConnector {
   client: Client
   connectionPromise: Promise<any>
 
@@ -20,12 +14,12 @@ export class PostgresConnector implements Connector {
     this.connectionPromise = this.client.connect()
   }
 
-  async listModels(): Promise<string[]> {
+  async listSchemas(): Promise<string[]> {
     await this.connectionPromise
     return await this.querySchemas()
   }
 
-  async listTables(schemaName: string): Promise<Table[]> {
+  async listModels(schemaName: string): Promise<Table[]> {
     await this.connectionPromise
 
     const [relations, tableColumns, primaryKeys] = await Promise.all([
