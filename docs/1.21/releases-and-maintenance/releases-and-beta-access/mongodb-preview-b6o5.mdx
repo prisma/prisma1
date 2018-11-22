@@ -214,9 +214,10 @@ type Post @db(name: "post") {
 
 The `@embedded` directive is used for _embedded types_. Find more info [above](#embedded-types).
 
-### Notes
+### Limitations & Notes
 
-- `@rename` doesn't work
+- The `@rename` directive doesn't work with MongoDB
+- Any field that's annotated with the `@id` directive is mapped to the [`_id`](https://docs.mongodb.com/manual/core/document/#the-id-field) field in MongoDB.
 
 ## Get started with a new database
 
