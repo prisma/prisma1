@@ -16,11 +16,37 @@ import {
 // tslint:disable:max-classes-per-file
 
 /**
+ * Represents a list of name, value pairs
+ * to represent arguments.
+ */
+export interface IArguments {
+  [name: string]: string
+}
+
+/**
+ * Represents a directive
+ */
+export interface IDirectiveInfo {
+  name: string
+  arguments: IArguments
+}
+
+/**
+ * Represents a comment.
+ * If the error flag is set, the comment indicates an error
+ * and should be trated accordingly.
+ */
+export interface IComment {
+  text: string
+  isError: boolean
+}
+
+/**
  * Represents a field in the datamodel.
  */
 export interface IGQLField {
   /**
-   * The name of thi sfield.
+   * The name of this sfield.
    */
   name: string
   /**
@@ -66,6 +92,18 @@ export interface IGQLField {
    * Indicates if this field is read-only. 
    */
   isReadOnly: boolean
+
+  /**
+   * Indicates this fields extra directives, 
+   * which can not expressed using this 
+   * interface's other members.
+   */
+  directives?: IDirectiveInfo[]
+
+  /**
+   * Comments for this field.
+   */
+  comments?: IComment[]
 }
 
 /**
@@ -91,6 +129,30 @@ export interface IGQLType {
    * field are relevant.
    */
   fields: IGQLField[]
+
+  /**
+   * Indicates this types extra directives, 
+   * which can not expressed using this 
+   * interface's other members.
+   */
+  directives?: IDirectiveInfo[]
+
+  /**
+   * Comments for this type.
+   */
+  comments?: IComment[]
+}
+
+export interface ISDL {
+  /**
+   * All types in this datamodel.
+   */
+  types: IGQLType[] 
+
+  /**
+   * Comments for this datamodel.
+   */
+  comments?: IComment[]
 }
 
 /**
@@ -104,9 +166,11 @@ export class GQLFieldBase implements IGQLField {
   public relatedField: IGQLField | null
   public relationName: string | null
   public isUnique: boolean
-  public defaultValue: null
+  public defaultValue: any
   public isId: boolean
   public isReadOnly: boolean
+  public directives?: IDirectiveInfo[]
+  public comments?: IComment[]
 
   constructor(name: string, type: IGQLType | string, isRequired?: boolean) {
     this.name = name
@@ -119,6 +183,9 @@ export class GQLFieldBase implements IGQLField {
     this.defaultValue = null
     this.isId = false
     this.isReadOnly = false
+
+    this.directives = []
+    this.comments = []
   }
 }
 

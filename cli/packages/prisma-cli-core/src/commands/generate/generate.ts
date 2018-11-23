@@ -17,7 +17,7 @@ import generateCRUDSchemaString, {
   DatabaseType,
 } from 'prisma-generate-schema'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
-import { IGQLType } from 'prisma-generate-schema/dist/src/datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'

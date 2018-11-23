@@ -5396,10 +5396,10 @@ pretty-format@^23.6.0:
     ansi-regex "^3.0.0"
     ansi-styles "^3.2.0"
 
-prisma-client-lib@1.21.0-test.8:
-  version "1.21.0-test.8"
-  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-1.21.0-test.8.tgz#967f4f3828901e128f403a266f314d671a6c4fd0"
-  integrity sha512-OYzLQ9NpcEQbX+o5lg0Z8Ip2IVqTx1/G3OALOKzlAizgg/9KNNrFVr4mZuGbmqT1RC0jX3uVvLHfdnS1GAVpgA==
+prisma-client-lib@1.23.0-test.2:
+  version "1.23.0-test.2"
+  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-1.23.0-test.2.tgz#2a64733617bf88c16bce8df5780f1864e0238c1f"
+  integrity sha512-2syPZKLyxkiFOX87iNncWehKToO5iZk2TD9CTj5bbNIFSvcjFb3yxUYVgPVl3/k4jopP47qOIDnS/Iw21hMzQQ==
   dependencies:
     "@types/node" "^10.12.0"
     "@types/prettier" "^1.13.2"
@@ -5409,6 +5409,7 @@ prisma-client-lib@1.21.0-test.8:
     jsonwebtoken "^8.3.0"
     lodash.flatten "^4.4.0"
     prettier "^1.14.3"
+    prisma-datamodel "1.23.0-alpha.1"
     prisma-generate-schema "1.20.4"
     subscriptions-transport-ws "^0.9.15"
     uppercamelcase "^3.0.0"

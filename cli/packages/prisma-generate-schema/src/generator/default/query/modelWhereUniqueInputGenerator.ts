@@ -1,5 +1,5 @@
 import { ModelInputObjectTypeGenerator, TypeFromModelGenerator } from '../../generator'
-import { IGQLType, IGQLField } from '../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 
 export default class ModelWhereUniqueInputGenerator extends ModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: {}) {

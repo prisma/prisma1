@@ -1,9 +1,8 @@
-import { IGQLType, IGQLField, GQLScalarField } from './model'
+import { IGQLType, IGQLField, GQLScalarField, ISDL } from '../model'
 import { parse } from 'graphql'
+import { DirectiveKeys } from '../directives';
 
-export const isUniqueDirectiveKey = 'unique'
-export const defaultValueDirectiveKey = 'default'
-export const relationDirectiveKey = 'relation'
+// TODO(ejoebstl): It would be good to have this Parser fill the directive field for types and models as well.
 
 /**
  * Parses a datamodel given as DSL
@@ -26,7 +25,7 @@ export default abstract class Parser {
    * @param schema The graphql-js schema, representing the datamodel.
    * @returns A list of types found in the datamodel.
    */
-  public parseFromSchema(schema: any): IGQLType[] {
+  public parseFromSchema(schema: any): ISDL {
     const types = [
       ...this.parseObjectTypes(schema),
       ...this.parseEnumTypes(schema),
@@ -44,7 +43,9 @@ export default abstract class Parser {
     // * Check if all double-sided relations are connected correctly
     // * Check for duplicate type names
     // * Check for conflicting relations
-    return types
+    return {
+      types
+    }
   }
 
   /**
@@ -86,7 +87,7 @@ export default abstract class Parser {
    * @param field
    */
   protected isUniqe(field: any): boolean {
-    return this.hasDirective(field, isUniqueDirectiveKey)
+    return this.hasDirective(field, DirectiveKeys.isUnique)
   }
 
   /**
@@ -95,7 +96,7 @@ export default abstract class Parser {
    * @param field
    */
   protected getDefaultValue(field: any): any {
-    const directive = this.getDirectiveByName(field, defaultValueDirectiveKey)
+    const directive = this.getDirectiveByName(field, DirectiveKeys.default)
     const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
     return args.length !== 0 ? args[0].value.value : null
   }
@@ -106,7 +107,7 @@ export default abstract class Parser {
    * @param field
    */
   protected getRelationName(field: any): string | null {
-    const directive = this.getDirectiveByName(field, relationDirectiveKey)
+    const directive = this.getDirectiveByName(field, DirectiveKeys.relation)
     if (directive && directive.arguments) {
       const nameArgument = directive.arguments.find(
         a => a.name.value === 'name',

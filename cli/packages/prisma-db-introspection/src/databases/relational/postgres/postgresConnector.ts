@@ -1,30 +1,32 @@
-import {
-  Connector,
-  Table,
-  Column,
-  TypeIdentifier,
-  TableRelation,
-  PrimaryKey,
-  DBClient,
-} from '../types/common'
+
+import { RelationalConnector } from '../relationalConnector'
+import { Table, Column, TableRelation, PrimaryKey } from '../relationalConnector'
 import * as _ from 'lodash'
+import { Client } from 'pg';
+import { TypeIdentifier } from 'prisma-datamodel';
+import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
-export class PostgresConnector implements Connector {
-  client: DBClient
+export class PostgresConnector extends RelationalConnector {
+  client: Client
   connectionPromise: Promise<any>
 
-  constructor(client: DBClient) {
+  constructor(client: Client) {
+    super()
     this.client = client
     this.connectionPromise = this.client.connect()
   }
 
-  async listSchemas(): Promise<string[]> {
+  public async listSchemas(): Promise<string[]> {
     await this.connectionPromise
     return await this.querySchemas()
   }
 
-  async listTables(schemaName: string): Promise<Table[]> {
+  public async introspect(schema: string): Promise<PostgresIntrospectionResult> {
+    return new PostgresIntrospectionResult(await this.listModels(schema), this.getDatabaseType())
+  }
+
+  public async listModels(schemaName: string): Promise<Table[]> {
     await this.connectionPromise
 
     const [relations, tableColumns, primaryKeys] = await Promise.all([

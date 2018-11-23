@@ -1,7 +1,8 @@
 import * as os from 'os'
 import * as _ from 'lodash'
 
-export class GQLType {
+// This class is deprecated and only there for reference. 
+class GQLType {
   name: string
   fields: GQLField[]
   directives: string[]
@@ -48,7 +49,7 @@ ${this.renderCommented ? "# " : ""}}`
   }
 }
 
-export class GQLField {
+class GQLField {
   name: string
   type: string
   isRequired: boolean

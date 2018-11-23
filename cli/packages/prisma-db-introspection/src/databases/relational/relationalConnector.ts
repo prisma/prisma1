@@ -1,18 +1,14 @@
-import { ClientConfig } from 'pg'
+import { IConnector } from "../../common/connector"
+import { TypeIdentifier, DatabaseType } from "prisma-datamodel"
+import { RelationalIntrospectionResult } from "./relationalIntrospectionResult";
 
-export type TypeIdentifier =
-  | 'String'
-  | 'Int'
-  | 'Float'
-  | 'Boolean'
-  | 'DateTime'
-  | 'ID'
-  | 'UUID'
-  | 'Json' // | 'Enum' | 'Relation'
-
-export interface Connector {
-  listSchemas(): Promise<string[]>
-  listTables(schemaName: string): Promise<Table[]>
+export abstract class RelationalConnector implements IConnector {
+  getDatabaseType(): DatabaseType {
+    return DatabaseType.postgres
+  }
+  abstract introspect(schema: string): Promise<RelationalIntrospectionResult>
+  abstract listSchemas(): Promise<string[]>
+  abstract listModels(schema: string): Promise<Table[]>
 }
 
 export class Table {
@@ -72,16 +68,4 @@ export interface TableRelation {
 export interface PrimaryKey {
   tableName: string
   fields: string[]
-}
-
-export type PostgresConnectionDetails = string | ClientConfig
-
-export interface DBClient {
-  query(queryText: string, values?: any[]): Promise<QueryResult>
-  connect(): Promise<void>
-  end(): Promise<void>
-}
-
-export interface QueryResult {
-  rows: any[]
 }

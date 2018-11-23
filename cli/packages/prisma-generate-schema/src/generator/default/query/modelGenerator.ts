@@ -1,5 +1,5 @@
 import { ModelObjectTypeGenerator } from '../../generator'
-import { IGQLType, IGQLField } from '../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { GraphQLFieldConfigArgumentMap } from 'graphql'
 
 export default class ModelGenerator extends ModelObjectTypeGenerator {
