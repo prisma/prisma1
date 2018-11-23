@@ -18,6 +18,35 @@ trait NodeManyQueries extends FilterConditionBuilder {
 
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
+
+    val mongoFilter = FilterConditionBuilder2.buildConditionForFilter2(queryArguments.filter)
+
+    val combinedFilter = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
+      case None         => mongoFilter
+      case Some(filter) => Filters.and(mongoFilter, filter)
+    }
+
+    val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
+    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
+    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+
+    val queryWithLimit = skipAndLimit.limit match {
+      case Some(limit) => queryWithSkip.limit(limit)
+      case None        => queryWithSkip
+    }
+
+    val nodes = queryWithLimit.collect().toFuture.map { results: Seq[Document] =>
+      results.map { result =>
+        val root = DocumentToRoot(model, result)
+        PrismaNode(root.idField, root, Some(model.name))
+      }
+    }
+
+    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
+  }
+
+  def getNodes2(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)

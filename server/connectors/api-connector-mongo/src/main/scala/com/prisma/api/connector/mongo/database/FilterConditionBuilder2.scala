@@ -4,7 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
-import com.prisma.gc_values.{GCValue, NullGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.ScalarField
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
@@ -16,13 +16,13 @@ import org.mongodb.scala.model.Filters._
 //field_some:   $elemMatch (nested)
 //field_none:   $not $elemMatch (nested)
 
-trait FilterConditionBuilder {
-  def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
+trait FilterConditionBuilder2 {
+  def buildConditionForFilter2(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter("", filter)
     case None         => hackForTrue
   }
 
-  def buildConditionForScalarFilter(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
+  def buildConditionForScalarFilter2(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter(operator, filter)
     case None         => hackForTrue
   }
