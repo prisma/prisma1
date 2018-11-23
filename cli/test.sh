@@ -14,9 +14,9 @@ yarn test
 cd ../prisma-datamodel
 yarn build
 yarn test
-cd ../prisma-db-introspection
-yarn build
-yarn test
+# cd ../prisma-db-introspection
+# yarn build
+# yarn test
 cd ../prisma-generate-schema
 yarn build
 yarn test

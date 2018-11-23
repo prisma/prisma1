@@ -26,7 +26,7 @@
     "graphql": "^14.0.2",
     "pluralize": "^7.0.0",
     "popsicle": "10",
-    "prisma-datamodel": "1.20.4"
+    "prisma-datamodel": "1.23.0-alpha.1"
   },
   "jest": {
     "transform": {
