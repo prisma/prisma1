@@ -84,7 +84,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIOAction[Any, NoStream, Effect.All] = {
-    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, model.idField_!.typeIdentifier)
+    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
 
     sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)} ADD COLUMN #$colSql
            REFERENCES #${qualify(projectId, references.dbName)} (#${qualify(references.dbNameOfIdField_!)}) ON DELETE SET NULL;"""
