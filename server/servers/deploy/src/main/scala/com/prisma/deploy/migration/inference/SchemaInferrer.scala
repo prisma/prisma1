@@ -319,11 +319,11 @@ case class SchemaInferrerImpl(
         if (relationField.relatedType.isEmbedded) {
           None
         } else if (capabilities.has(RelationLinkListCapability)) {
-          Some(EmbeddedRelationLink(inTableOfModelName = prismaType.name, referencingColumn = relationField.name))
+          Some(EmbeddedRelationLink(inTableOfModelName = prismaType.name, referencingColumn = relationField.finalDbName))
         } else {
           // this can be only one to many in SQL
           val oneRelationField = relationField.oneRelationField.get
-          Some(EmbeddedRelationLink(inTableOfModelName = oneRelationField.tpe.name, referencingColumn = oneRelationField.name))
+          Some(EmbeddedRelationLink(inTableOfModelName = oneRelationField.tpe.name, referencingColumn = oneRelationField.finalDbName))
         }
 
       case RelationStrategy.Table =>

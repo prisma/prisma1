@@ -133,6 +133,24 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.typeIdentifier should be(TI.String)
   }
 
+  "changing the db name of an inline relation field must work" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE) @db(name: "b_column")
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val result  = deploy(dataModel)
+    val bColumn = result.table_!("A").column_!("b_column")
+    bColumn.foreignKey should equal(Some(ForeignKey("B", "id")))
+  }
+
   "adding an inline relation to an model that has as id field of a non normal type" in {
     val dataModel =
       """
@@ -160,6 +178,23 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val cColumn = result.table_!("A").column_!("c")
     cColumn.foreignKey should equal(Some(ForeignKey("C", "id")))
     cColumn.typeIdentifier should be(TI.UUID)
+  }
+
+  "adding an inline self relation should add the relation link in the right column" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  a1: A @relation(name: "Selfie")
+        |  a2: A @relation(name: "Selfie", link: INLINE)
+        |  b1: A @relation(name: "Selfie2", link: INLINE)
+        |  b2: A @relation(name: "Selfie2")
+        |}
+      """.stripMargin
+    // testing with 2 self relations to make sure choosing the column for the foreign key is not due to lexicographic order
+    val result = deploy(dataModel)
+    result.table_!("A").column_!("a2").foreignKey should equal(Some(ForeignKey("A", "id")))
+    result.table_!("A").column_!("b1").foreignKey should equal(Some(ForeignKey("A", "id")))
   }
 
   def setup() = {

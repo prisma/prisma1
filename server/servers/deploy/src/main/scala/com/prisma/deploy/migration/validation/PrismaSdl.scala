@@ -80,6 +80,7 @@ case class EnumPrismaField(
 
 case class RelationalPrismaField(
     name: String,
+    columnName: Option[String],
     relationDbDirective: Option[RelationDBDirective],
     strategy: Option[RelationStrategy],
     isList: Boolean,
@@ -89,6 +90,8 @@ case class RelationalPrismaField(
     cascade: OnDelete
 )(val tpe: PrismaType)
     extends PrismaField {
+  def finalDbName = columnName.getOrElse(name)
+
   override def typeIdentifier: TypeIdentifier = TypeIdentifier.Relation
 
   def relatedField: Option[RelationalPrismaField] = {
