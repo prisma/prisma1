@@ -5,11 +5,26 @@ import { GraphQLDirective } from "graphql/type/directives"
 import { DirectiveKeys } from "../directives";
 import { TypeIdentifiers } from "../scalar";
 
-const indent = '    '
+const indent = '  '
+const comment = '#'
 
 export default class Renderer {
   public render(input: ISDL): string {
-    return input.types.map(t => {
+
+    // Sort alphabetically. Enums last. 
+    const sortedTypes = [...input.types].sort(
+      (a, b) => {
+        if(a.isEnum === b.isEnum) {
+          return a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1
+        } else if(b.isEnum) {
+          return -1
+        } else {
+          return 1
+        }
+      }
+    )
+
+    return sortedTypes.map(t => {
       if(t.isEnum) {
         return this.renderEnum(t)
       } else {
@@ -25,23 +40,28 @@ export default class Renderer {
     if(type.isEnum) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
 
     const renderedDirectives = this.renderDirectives(typedirectives)
-    const renderedFields = type.fields.map(x => this.renderField(x))
+    const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1)
+    const renderedFields = sortedFields.map(x => this.renderField(x))
 
     const renderedTypeName = renderedDirectives.length > 0 ?
     `type ${type.name} ${renderedDirectives}` :
     `type ${type.name}`
 
     const { renderedComments, hasError } = this.renderComments(type, '')
+    const allFieldsHaveError = type.fields.every(x => x.comments !== undefined && x.comments.some(c => c.isError))
+
+    const commentPrefix = allFieldsHaveError ? `${comment} ` : ''
+
 
     if(renderedComments.length > 0) {
-      return `${renderedComments}\n${renderedTypeName} {\n${renderedFields.join('\n')}\n}`
+      return `${renderedComments}\n${commentPrefix}${renderedTypeName} {\n${renderedFields.join('\n')}\n${commentPrefix}}`
     } else {
-      return `${renderedTypeName} {\n${renderedFields.join('\n')}\n}`
+      return `${commentPrefix}${renderedTypeName} {\n${renderedFields.join('\n')}\n${commentPrefix}}`
     }
   }
 
   protected renderComments(type: IGQLType | IGQLField, spacing: string) {
-    const renderedComments = type.comments !== undefined ? type.comments.map(x => `${spacing}// ${x.text}`).join('\n') : []
+    const renderedComments = type.comments !== undefined ? type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n') : []
     const hasError =  type.comments !== undefined ? type.comments.some(x => x.isError) : false
 
     return { renderedComments, hasError }
@@ -74,7 +94,7 @@ export default class Renderer {
 
     if(renderedComments.length > 0) {
       if(hasError) {
-        return `${renderedComments}\n${indent}// ${renderedField}`
+        return `${renderedComments}\n${indent}${comment} ${renderedField}`
       } else {
         return `${renderedComments}\n${indent}${renderedField}`
       }
@@ -98,7 +118,8 @@ export default class Renderer {
   }
 
   protected renderDirectives(directives: IDirectiveInfo[]) : string {
-    return this.mergeDirectives(directives).map(x => this.renderDirective(x)).join(` `)
+    const sortedDirectives = [...directives].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1)
+    return this.mergeDirectives(sortedDirectives).map(x => this.renderDirective(x)).join(` `)
   }
 
   protected renderDirective(directive: IDirectiveInfo): string {

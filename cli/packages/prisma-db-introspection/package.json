@@ -39,24 +39,22 @@
     "prepublishOnly": "yarn lint && yarn test && yarn build"
   },
   "jest": {
+    "transform": {
+      "^.+\\.(ts|tsx)$": "../../node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "helpers.ts",
+      "connectionDetails.ts"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",
       "js",
       "jsx",
-      "json"
-    ],
-    "rootDir": "./src",
-    "transform": {
-      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
-    },
-    "testMatch": [
-      "**/*.test.(ts|js)"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsConfigFile": "./tsconfig.json"
-      }
-    }
+      "json",
+      "node"
+    ]
   }
 }

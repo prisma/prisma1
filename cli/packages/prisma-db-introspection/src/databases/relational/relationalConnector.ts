@@ -45,6 +45,11 @@ export class Table {
   isRelationColumn(column: Column): boolean {
     return this.relations.some(rel => rel.source_column == column.name)
   }
+
+  getRelationTargetTableName(column: Column): string {
+    const [{ target_table }] = this.relations.filter(rel => rel.source_column == column.name)
+    return target_table
+  }
 }
 
 export interface Column {
