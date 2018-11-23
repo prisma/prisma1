@@ -1,4 +1,4 @@
-import { DocumentConnector } from "../documentConnector"
+import { DocumentConnector, SamplingStrategy } from "../documentConnector"
 import { DatabaseType, ISDL } from "prisma-datamodel"
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
 import { MongoClient, Collection } from 'mongodb'
@@ -8,8 +8,8 @@ const reservedSchemas = ['admin', 'local']
 export class MongoConnector extends DocumentConnector <Collection<Data>>{
   private client: MongoClient
   
-  constructor(client: MongoClient) {
-    super();
+  constructor(client: MongoClient, samplingStrategy: SamplingStrategy = SamplingStrategy.One) {
+    super(samplingStrategy)
     if(!client.isConnected()) {
       throw new Error('Please connect the mongo client first.')
     } 
@@ -27,39 +27,25 @@ export class MongoConnector extends DocumentConnector <Collection<Data>>{
     return databases.map(x => x.name).filter(x => reservedSchemas.indexOf(x) < 0)
   }
   
-  protected async getInternalCollections(schemaName: string): Promise<Collection<Data>[]> {
+  protected async getInternalCollections(schemaName: string) {
     const db = this.client.db(schemaName)
 
     const collections = (await db.collections()) as Collection<Data>[]
-    return collections
+    return collections.map(collection => { return { name: collection.collectionName, collection }})
   }
   
-  async listModels(schemaName: string): Promise<ISDL> {
-    const db = this.client.db(schemaName)
-
-    const collections = await db.collections()
-
-    for(const collection of  collections) {
-      const samples = await this.sampleOne(collection)
-      console.log(samples)
-    }
-
-    throw new Error('Not Implemented')
-  }
-
   // TODO: Lift to strategy
-  async *sampleOne(collection: Collection) : AsyncIterableIterator<Data> {
+  async *sampleOne(collection: Collection) : AsyncIterable<Data> {
     const data = await collection.findOne<Data>({})
-
     if(data !== null) {
-      yield data
+      return data
     }
   }
 
-  async *sampleMany(collection: Collection, limit: number) : AsyncIterableIterator<Data> {
+  async *sampleMany(collection: Collection, limit: number) : AsyncIterable<Data> {
     const count = await collection.count({})
     if(count < limit) {
-      return this.sampleAll(collection)
+      return await this.sampleAll(collection)
     } else {
       let cursor = collection.find<Data>({})
       // TODO: This sampling is biased, but should do the job. 
@@ -83,7 +69,7 @@ export class MongoConnector extends DocumentConnector <Collection<Data>>{
     }
   }
 
-  async *sampleAll(collection: Collection) : AsyncIterableIterator<Data> {
+  async *sampleAll(collection: Collection) : AsyncIterable<Data> {
     const cursor = await collection.find({})
     while(cursor.hasNext()) {
       const data = (await cursor.next())

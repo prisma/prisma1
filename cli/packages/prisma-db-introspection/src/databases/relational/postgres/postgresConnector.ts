@@ -6,6 +6,8 @@ import { Client } from 'pg';
 import { TypeIdentifier, DatabaseType } from 'prisma-datamodel';
 import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 
+// Documentation: https://www.prisma.io/docs/data-model-and-migrations/introspection-mapping-to-existing-db-soi1/
+
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class PostgresConnector extends RelationalConnector {
   client: Client

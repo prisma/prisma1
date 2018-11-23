@@ -1,6 +1,5 @@
-import { IGQLField, IGQLType, IComment } from 'prisma-datamodel'
-import { Data } from './data'
-import { TypeIdentifier, TypeIdentifiers } from '../../../../prisma-datamodel/dist/src/datamodel/scalar'
+import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers } from 'prisma-datamodel'
+import { Data } from './datat'
 import { isArray, isRegExp } from 'util'
 
 const ObjectTypeIdentifier = 'Object'
@@ -51,6 +50,7 @@ export class ModelMerger {
     this.name = name
     this.isEmbedded = isEmbedded
     this.fields = {}
+    this.embeddedTypes = {}
   }
 
   public analyze(data: Data) {
@@ -109,6 +109,7 @@ export class ModelMerger {
       })
     }
 
+    // https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/#directives
     // TODO: we might want to include directives, as soon as we start changing names. 
     return {
       name: info.name,
@@ -144,13 +145,13 @@ export class ModelMerger {
         this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(name, true)
         this.embeddedTypes[name].analyze(value)
       } else {
-        if(!this.fields[name]) {
-          this.fields[name] = this.mergeField(this.fields[name], typeInfo)
-        }
+        this.fields[name] = this.mergeField(this.fields[name], typeInfo)
       }
     } catch(err) {
       if(err.name === UnsupportedTypeErrorKey) {
         this.fields[name].invalidTypes.push(err.invalidType)
+      } else {
+        throw err
       }
     }
   }
