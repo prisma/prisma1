@@ -1,6 +1,17 @@
-import { IInferrer } from "../../common/inferrer"
-import { ISDL } from 'prisma-datamodel'
+import { ISDL, DatabaseType, Renderer } from 'prisma-datamodel'
+import { ModelInferrer } from '../../common/inferrer'
 
-export abstract class DocumentInferrer implements IInferrer<ISDL> {
-  abstract infer(model: ISDL): Promise<ISDL> 
+export abstract class DocumentInferrer extends ModelInferrer {
+
+  protected model: ISDL
+
+  constructor(model: ISDL, databaseType: DatabaseType, renderer?: Renderer) {
+    super(databaseType, renderer)
+
+    this.model = model
+  }
+
+  public async getSDL(): Promise<ISDL> {
+    return this.model
+  }
 }

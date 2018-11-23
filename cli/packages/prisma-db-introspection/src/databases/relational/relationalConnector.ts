@@ -1,12 +1,14 @@
 import { IConnector } from "../../common/connector"
 import { TypeIdentifier, DatabaseType } from "prisma-datamodel"
+import { RelationalInferrer } from "./relationalInferrer";
 
-export abstract class RelationalConnector implements IConnector<Table[]> {
+export abstract class RelationalConnector implements IConnector {
   getDatabaseType(): DatabaseType {
     return DatabaseType.relational
   }
+  abstract inferrer(schema: string): Promise<RelationalInferrer>
   abstract listSchemas(): Promise<string[]>
-  abstract listModels(schemaName: string): Promise<Table[]>
+  abstract listModels(schema: string): Promise<Table[]>
 }
 
 export class Table {

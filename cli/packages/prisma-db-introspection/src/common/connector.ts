@@ -1,8 +1,9 @@
 import { DatabaseType } from "prisma-datamodel";
+import { ModelInferrer } from "./inferrer";
 
 
-export interface IConnector<IntrospectionType> {
+export interface IConnector {
   listSchemas(): Promise<string[]>
-  listModels(schemaName: string): Promise<IntrospectionType>
+  inferrer(schema: string): Promise<ModelInferrer>
   getDatabaseType(): DatabaseType
 }

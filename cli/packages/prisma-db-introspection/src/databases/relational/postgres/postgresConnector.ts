@@ -4,6 +4,8 @@ import { Table, Column, TableRelation, PrimaryKey } from '../relationalConnector
 import * as _ from 'lodash'
 import { Client } from 'pg';
 import { TypeIdentifier } from 'prisma-datamodel';
+import { PostgresInferrer } from './postgresInferrer';
+import { RelationalInferrer } from '../relationalInferrer';
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class PostgresConnector extends RelationalConnector {
@@ -16,12 +18,16 @@ export class PostgresConnector extends RelationalConnector {
     this.connectionPromise = this.client.connect()
   }
 
-  async listSchemas(): Promise<string[]> {
+  public async listSchemas(): Promise<string[]> {
     await this.connectionPromise
     return await this.querySchemas()
   }
 
-  async listModels(schemaName: string): Promise<Table[]> {
+  public async inferrer(schema: string): Promise<RelationalInferrer> {
+    return new PostgresInferrer(await this.listModels(schema), this.getDatabaseType())
+  }
+
+  public async listModels(schemaName: string): Promise<Table[]> {
     await this.connectionPromise
 
     const [relations, tableColumns, primaryKeys] = await Promise.all([

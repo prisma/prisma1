@@ -1,6 +1,5 @@
-export { Introspector } from './introspector'
+export { default as Connectors } from './connectors'
 
-// Let's see if we really need to expose those. 
-// export { PostgresConnector } from './connectors/PostgresConnector'
-//
-// export { PrismaDBClient } from './PrismaDBClient'
+export { PostgresConnector } from './databases/relational/postgres/postgresConnector'
+
+export { PrismaDBClient } from './databases/prisma/prismaDBClient'
