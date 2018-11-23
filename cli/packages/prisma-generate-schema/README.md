@@ -34,4 +34,3 @@ All default generators, i.e. generators for a **relational model**, one for each
 
 All special document generators, i.e. generators for a **document model**, can ge found in the [`DocumentGenerators`](src/generator/document/index.ts) class.
 
-
