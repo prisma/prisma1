@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, Tables}
+import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, Tables}
 import com.prisma.deploy.connector.postgres.database.DatabaseIntrospectionInferrerImpl
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
@@ -30,20 +30,86 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     setup()
   }
 
+  val TI = com.prisma.shared.models.TypeIdentifier
+
   "adding a scalar field should work" in {
     val dataModel =
       """
         |type A {
         |  id: ID! @id
-        |  field: String
+        |  string: String
+        |  float: Float
+        |  boolean: Boolean
+        |  enum: MyEnum
+        |  json: Json
+        |  dateTime: DateTime
+        |  cuid: ID
+        |  int: Int
+        |}
+        |enum MyEnum {
+        |  A,
+        |  B
         |}
       """.stripMargin
 
-    deploy(dataModel, ConnectorCapabilities.empty)
+    val result = deploy(dataModel, ConnectorCapabilities.empty)
+    val table  = result.table_!("A")
 
-    val result = inspect
+    table.columns.filter(_.name != "id").foreach { column =>
+      column.isRequired should be(false)
+    }
+
+    table.column_!("string").typeIdentifier should be(TI.String)
+    table.column_!("float").typeIdentifier should be(TI.Float)
+    table.column_!("boolean").typeIdentifier should be(TI.Boolean)
+    table.column_!("enum").typeIdentifier should be(TI.String)
+    table.column_!("json").typeIdentifier should be(TI.String)
+    table.column_!("dateTime").typeIdentifier should be(TI.DateTime)
+    table.column_!("cuid").typeIdentifier should be(TI.String)
+    table.column_!("int").typeIdentifier should be(TI.Int)
+
+//    column.tpe should be("text") // TODO: make specific type assertions vendor specific
+  }
+
+  "adding a required scalar field should work" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String!
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities.empty)
+
     val column = result.table_!("A").column_!("field")
-    column.tpe should be("text")
+    column.isRequired should be(true)
+  }
+
+  "adding a plain many to many relation should result in our plain relation table" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B]
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |  as: [A]
+        |}
+      """.stripMargin
+
+    val result        = deploy(dataModel, ConnectorCapabilities.empty)
+    val relationTable = result.table_!("AToB")
+    relationTable.columns should have(size(3))
+    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val aColumn = relationTable.column_!("A")
+    aColumn.typeIdentifier should be(TI.String)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("B")
+    bColumn.typeIdentifier should be(TI.String)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
   def setup() = {
@@ -54,7 +120,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     project = testDependencies.projectPersistence.load(serviceId).await.get
   }
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities): Unit = {
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities): Tables = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = name,
@@ -88,6 +154,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       case MutationSuccess(result) =>
         if (result.errors.nonEmpty) {
           sys.error(s"Deploy returned unexpected errors: ${result.errors}")
+        } else {
+          inspect
         }
       case MutationError =>
         sys.error("Deploy returned an unexpected error")

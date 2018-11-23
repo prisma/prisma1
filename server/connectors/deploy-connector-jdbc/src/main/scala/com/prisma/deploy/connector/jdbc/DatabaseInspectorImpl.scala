@@ -1,9 +1,12 @@
 package com.prisma.deploy.connector.jdbc
 
+import java.sql.Types
+
 import com.prisma.deploy.connector._
+import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
 import slick.jdbc.JdbcProfile
-import slick.jdbc.meta.MTable
+import slick.jdbc.meta.{MColumn, MForeignKey, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,12 +28,35 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
 
   def mTableToModel(mTable: MTable): DBIO[Table] = {
     for {
-      mColumns <- mTable.getColumns
-//      importedKeys <- mTable.getImportedKeys
+      mColumns     <- mTable.getColumns
+      importedKeys <- mTable.getImportedKeys
     } yield {
-      val columns = mColumns.map(mc => Column(mc.name, mc.typeName, foreignKey = None))
+      val columns = mColumns.map { mColumn =>
+        val importedKeyForColumn = importedKeys.find(_.fkColumn == mColumn.name)
+        mColumnToModel(mColumn, importedKeyForColumn)
+      }
       val indexes = Vector.empty[Index]
       Table(mTable.name.name, columns, indexes)
     }
+  }
+
+  def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey]): Column = {
+    val isRequired = !mColumn.nullable.getOrElse(true) // sometimes the metadata can't definitely say if something is nullable. We treat those as not required.
+    // this needs to be extended further in the future if we support arbitrary SQL types
+    val typeIdentifier = mColumn.sqlType match {
+      case Types.VARCHAR | Types.CHAR  => TypeIdentifier.String
+      case Types.FLOAT | Types.NUMERIC => TypeIdentifier.Float
+      case Types.BOOLEAN | Types.BIT   => TypeIdentifier.Boolean
+      case Types.TIMESTAMP             => TypeIdentifier.DateTime
+      case Types.INTEGER               => TypeIdentifier.Int
+      case x                           => sys.error(s"Encountered unknown SQL type $x with column ${mColumn.name}")
+    }
+    Column(
+      name = mColumn.name,
+      tpe = mColumn.typeName,
+      typeIdentifier = typeIdentifier,
+      foreignKey = mForeignKey.map(mfk => ForeignKey(mfk.pkTable.name, mfk.pkColumn)),
+      isRequired = isRequired
+    )
   }
 }
