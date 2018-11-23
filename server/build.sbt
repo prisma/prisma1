@@ -5,7 +5,6 @@ import Dependencies._
 
 name := "server"
 
-
 lazy val commonSettings = Seq(
   organization := "com.prisma",
   organizationName := "graphcool",
