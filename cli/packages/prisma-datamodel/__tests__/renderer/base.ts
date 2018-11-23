@@ -4,8 +4,8 @@ import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType';
 
-const renderer = Renderer.create(DatabaseType.relational)
-const parser = Parser.create(DatabaseType.relational)
+const renderer = Renderer.create(DatabaseType.postgres)
+const parser = Parser.create(DatabaseType.postgres)
 
 const simpleModel = 
 `type User {

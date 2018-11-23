@@ -38,7 +38,7 @@ export function generateCRUDSchema(
  */
 export default function generateCRUDSchemaString(
   model: string,
-  databaseType: DatabaseType = DatabaseType.relational,
+  databaseType: DatabaseType = DatabaseType.postgres,
 ): string {
   return printSchema(generateCRUDSchema(model, databaseType))
 }

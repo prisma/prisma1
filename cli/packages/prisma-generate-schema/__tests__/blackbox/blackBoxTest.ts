@@ -6,11 +6,11 @@ import Generator from '../../src/generator'
 import * as fs from 'fs'
 import * as path from 'path'
 
-export default function blackBoxTest(name: string, databaseType: DatabaseType) {
+export default function blackBoxTest(name: string, databaseType: DatabaseType, filePrefix: string) {
   const generator = Generator.create(databaseType)
 
-  const modelPath = path.join(__dirname, `cases/${name}/model_${databaseType}.graphql`)
-  const prismaPath = path.join(__dirname, `cases/${name}/${databaseType}.graphql`)
+  const modelPath = path.join(__dirname, `cases/${name}/model_${filePrefix}.graphql`)
+  const prismaPath = path.join(__dirname, `cases/${name}/${filePrefix}.graphql`)
 
   expect(fs.existsSync(modelPath))
   expect(fs.existsSync(prismaPath))
@@ -42,9 +42,9 @@ const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
 
 for (const testName of testNames) {
   test(`Generates schema for ${testName}/relational correctly`, () => {
-    blackBoxTest(testName, DatabaseType.relational)
+    blackBoxTest(testName, DatabaseType.postgres, 'relational')
   })
   test(`Generates schema for ${testName}/document correctly`, () => {
-    blackBoxTest(testName, DatabaseType.document)
+    blackBoxTest(testName, DatabaseType.mongo, 'document')
   })
 }
