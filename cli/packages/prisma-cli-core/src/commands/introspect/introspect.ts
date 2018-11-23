@@ -1,7 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import {
-  Introspector,
   PostgresConnector,
   PrismaDBClient,
 } from 'prisma-db-introspection'
@@ -49,11 +48,10 @@ export default class IntrospectCommand extends Command {
     }
 
     const connector = new PostgresConnector(client)
-    const introspector = new Introspector(connector)
     let schemas
     const before = Date.now()
     try {
-      schemas = await introspector.listSchemas()
+      schemas = await connector.listSchemas()
     } catch (e) {
       throw new Error(`Could not connect to database. ${e.message}`)
     }
@@ -84,7 +82,12 @@ export default class IntrospectCommand extends Command {
       }
 
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
-      const { sdl, numTables } = await introspector.introspect(schema)
+      
+      const inferrer = await connector.inferrer(schema)
+      const sdl = await inferrer.getSDL()
+      const numTables = sdl.types.length
+      const renderedSdl = inferrer.renderer.render(sdl)
+
       await client.end()
       if (numTables === 0) {
         this.out.log(
@@ -98,7 +101,7 @@ export default class IntrospectCommand extends Command {
       }
       const fileName = `datamodel-${new Date().getTime()}.prisma`
       const fullFileName = path.join(this.config.definitionDir, fileName)
-      fs.writeFileSync(fullFileName, sdl)
+      fs.writeFileSync(fullFileName, renderedSdl)
       this.out.action.stop(prettyTime(Date.now() - before))
       this.out.log(
         `Created datamodel definition based on ${numTables} database tables.`,

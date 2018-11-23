@@ -1,8 +1,8 @@
 import { Renderer, DatabaseType, ISDL, DefaultRenderer } from 'prisma-datamodel'
 
 export abstract class ModelInferrer {
-  protected renderer: Renderer
-  protected databaseType: DatabaseType
+  public renderer: Renderer
+  public databaseType: DatabaseType
   
   constructor(databaseType: DatabaseType, renderer?: Renderer) {
     this.renderer = renderer || DefaultRenderer.create(databaseType)
@@ -10,7 +10,7 @@ export abstract class ModelInferrer {
   }
 
   public abstract getSDL() : Promise<ISDL>
-
+  
   public async renderToDatamodelString() : Promise<string> {
     return this.renderer.render(await this.getSDL())
   }
