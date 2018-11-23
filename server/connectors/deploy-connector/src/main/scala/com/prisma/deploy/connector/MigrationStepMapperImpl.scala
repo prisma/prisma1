@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector
 
+import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models._
 
 case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
@@ -68,7 +70,17 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
 
     case x: CreateRelation =>
       val relation = nextSchema.getRelationByName_!(x.name)
-      Vector(CreateRelationTable(projectId, nextSchema, relation))
+      val mutaction = relation.manifestation match {
+        case Some(m: EmbeddedRelationLink) =>
+          val modelA              = relation.modelA
+          val modelB              = relation.modelB
+          val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
+
+          CreateInlineRelationForTests(projectId, model, references, m.referencingColumn)
+        case _ =>
+          CreateRelationTable(projectId, nextSchema, relation = relation)
+      }
+      Vector(mutaction)
 
     case x: DeleteRelation =>
       val relation = previousSchema.getRelationByName_!(x.name)
