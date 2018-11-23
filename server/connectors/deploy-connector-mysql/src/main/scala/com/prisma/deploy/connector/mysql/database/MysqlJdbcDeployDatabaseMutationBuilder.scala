@@ -85,8 +85,11 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DatabaseAction[Any, NoStream, Effect.All] = {
-    // Intentionally not implemented for Mysql, required for passive capabilities down the line
-    ???
+    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
+    sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)}
+          ADD COLUMN #$colSql,
+          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(projectId, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
+        """
   }
 
   override def createColumn(projectId: String,
