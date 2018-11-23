@@ -3,7 +3,7 @@ import { RelationalConnector } from '../relationalConnector'
 import { Table, Column, TableRelation, PrimaryKey } from '../relationalConnector'
 import * as _ from 'lodash'
 import { Client } from 'pg';
-import { TypeIdentifier } from 'prisma-datamodel';
+import { TypeIdentifier, DatabaseType } from 'prisma-datamodel';
 import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
@@ -14,7 +14,12 @@ export class PostgresConnector extends RelationalConnector {
   constructor(client: Client) {
     super()
     this.client = client
+    // TODO: This should not happen here.
     this.connectionPromise = this.client.connect()
+  }
+
+  public getDatabaseType(): DatabaseType {
+    return DatabaseType.postgres
   }
 
   public async listSchemas(): Promise<string[]> {

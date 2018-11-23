@@ -3,9 +3,7 @@ import { TypeIdentifier, DatabaseType } from "prisma-datamodel"
 import { RelationalIntrospectionResult } from "./relationalIntrospectionResult";
 
 export abstract class RelationalConnector implements IConnector {
-  getDatabaseType(): DatabaseType {
-    return DatabaseType.postgres
-  }
+  abstract getDatabaseType(): DatabaseType
   abstract introspect(schema: string): Promise<RelationalIntrospectionResult>
   abstract listSchemas(): Promise<string[]>
   abstract listModels(schema: string): Promise<Table[]>

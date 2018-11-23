@@ -22,14 +22,16 @@
     "typescript": "^2.6.2"
   },
   "dependencies": {
+    "@types/mongodb": "^3.1.14",
     "graphql-request": "^1.5.0",
     "lodash": "^4.17.4",
+    "mongodb": "^3.1.10",
     "pg": "^7.4.1",
     "pluralize": "^7.0.0",
+    "prisma-datamodel": "1.23.0-alpha.1",
     "prisma-yml": "^1.0.88",
     "scuid": "^1.0.2",
-    "uppercamelcase": "^3.0.0",
-    "prisma-datamodel": "1.23.0-alpha.1"
+    "uppercamelcase": "^3.0.0"
   },
   "scripts": {
     "test": "jest --runInBand --forceExit",
@@ -46,7 +48,8 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "helpers.ts",
-      "connectionDetails.ts"
+      "connectionDetails.ts",
+      "/postgres/"
     ],
     "moduleFileExtensions": [
       "ts",
