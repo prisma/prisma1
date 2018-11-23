@@ -5,6 +5,7 @@ import com.prisma.deploy.connector.postgres.database.DatabaseIntrospectionInferr
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, UuidIdCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{Matchers, WordSpecLike}
@@ -52,7 +53,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result = deploy(dataModel, ConnectorCapabilities.empty)
+    val result = deploy(dataModel)
     val table  = result.table_!("A")
 
     table.columns.filter(_.name != "id").foreach { column =>
@@ -80,7 +81,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result = deploy(dataModel, ConnectorCapabilities.empty)
+    val result = deploy(dataModel)
 
     val column = result.table_!("A").column_!("field")
     column.isRequired should be(true)
@@ -100,7 +101,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel, ConnectorCapabilities.empty)
+    val result        = deploy(dataModel)
     val relationTable = result.table_!("AToB")
     relationTable.columns should have(size(3))
     relationTable.column_!("id").typeIdentifier should be(TI.String)
@@ -112,6 +113,55 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
+  "adding an inline relation should result in a foreign key in the model table" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel)
+
+    val bColumn = result.table_!("A").column_!("b")
+    bColumn.foreignKey should equal(Some(ForeignKey("B", "id")))
+    bColumn.typeIdentifier should be(TI.String)
+  }
+
+  "adding an inline relation to an model that has as id field of a non normal type" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |  c: C @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |}
+        |
+        |type C {
+        |  id: UUID! @id
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
+
+    val bColumn = result.table_!("A").column_!("b")
+    bColumn.foreignKey should equal(Some(ForeignKey("B", "id")))
+    bColumn.typeIdentifier should be(TI.Int)
+
+    val cColumn = result.table_!("A").column_!("c")
+    cColumn.foreignKey should equal(Some(ForeignKey("C", "id")))
+    cColumn.typeIdentifier should be(TI.UUID)
+  }
+
   def setup() = {
     val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
     deployConnector.deleteProjectDatabase(idAsString).await()
@@ -120,7 +170,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     project = testDependencies.projectPersistence.load(serviceId).await.get
   }
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities): Tables = {
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = name,
