@@ -82,11 +82,11 @@ export default class IntrospectCommand extends Command {
       }
 
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
-      
-      const inferrer = await connector.inferrer(schema)
-      const sdl = await inferrer.getSDL()
+
+      const introspection = await connector.introspect(schema)
+      const sdl = await introspection.getDatamodel()
       const numTables = sdl.types.length
-      const renderedSdl = inferrer.renderer.render(sdl)
+      const renderedSdl = introspection.renderer.render(sdl)
 
       await client.end()
       if (numTables === 0) {
