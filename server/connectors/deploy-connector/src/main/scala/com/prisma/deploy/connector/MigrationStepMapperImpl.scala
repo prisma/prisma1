@@ -76,7 +76,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
           val modelB              = relation.modelB
           val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
 
-          CreateInlineRelationForTests(projectId, model, references, m.referencingColumn)
+          CreateInlineRelation(projectId, model, references, m.referencingColumn)
         case _ =>
           CreateRelationTable(projectId, nextSchema, relation = relation)
       }

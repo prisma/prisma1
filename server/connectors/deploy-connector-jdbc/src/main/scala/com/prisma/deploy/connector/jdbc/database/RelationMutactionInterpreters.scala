@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.deploy.connector.{CreateInlineRelationForTests, CreateRelationTable, DeleteRelationTable, RenameRelationTable}
+import com.prisma.deploy.connector.{CreateInlineRelation, CreateRelationTable, DeleteRelationTable, RenameRelationTable}
 
 case class CreateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
@@ -42,10 +42,10 @@ case class RenameRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder)
   }
 }
 
-case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelationForTests] {
-  override def execute(mutaction: CreateInlineRelationForTests) = {
+case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelation] {
+  override def execute(mutaction: CreateInlineRelation) = {
     builder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
   }
 
-  override def rollback(mutaction: CreateInlineRelationForTests) = ???
+  override def rollback(mutaction: CreateInlineRelation) = ???
 }

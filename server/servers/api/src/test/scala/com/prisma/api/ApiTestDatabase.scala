@@ -36,7 +36,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
 
-        CreateInlineRelationForTests(project.id, model, references, m.referencingColumn)
+        CreateInlineRelation(project.id, model, references, m.referencingColumn)
       case _ =>
         CreateRelationTable(project.id, project.schema, relation = relation)
     }
