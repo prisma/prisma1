@@ -5,7 +5,7 @@ import { DocumentIntrospectionResult } from './documentIntrospectionResult'
 // Maybe we need a new type here in the future. 
 export abstract class DocumentConnector implements IConnector {
   getDatabaseType(): DatabaseType {
-    return DatabaseType.document
+    return DatabaseType.mongo
   }
   abstract listSchemas(): Promise<string[]>
   abstract listModels(schemaName: string): Promise<ISDL>

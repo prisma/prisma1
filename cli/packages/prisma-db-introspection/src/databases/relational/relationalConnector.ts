@@ -4,7 +4,7 @@ import { RelationalIntrospectionResult } from "./relationalIntrospectionResult";
 
 export abstract class RelationalConnector implements IConnector {
   getDatabaseType(): DatabaseType {
-    return DatabaseType.relational
+    return DatabaseType.postgres
   }
   abstract introspect(schema: string): Promise<RelationalIntrospectionResult>
   abstract listSchemas(): Promise<string[]>

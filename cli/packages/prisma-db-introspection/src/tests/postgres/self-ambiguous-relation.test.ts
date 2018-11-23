@@ -7,7 +7,7 @@ import { connect } from 'tls';
 
 async function introspect() {
   const client = new Client(connectionDetails)
-  return (await Connectors.create(DatabaseType.relational, client).introspect('DatabaseIntrospector')).renderToDatamodelString()
+  return (await Connectors.create(DatabaseType.postgres, client).introspect('DatabaseIntrospector')).renderToDatamodelString()
 }
 
 async function testSchema(sql: string) {
