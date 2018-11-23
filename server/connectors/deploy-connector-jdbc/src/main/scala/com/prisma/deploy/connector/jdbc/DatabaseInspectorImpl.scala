@@ -43,14 +43,15 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
   def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey]): Column = {
     val isRequired = !mColumn.nullable.getOrElse(true) // sometimes the metadata can't definitely say if something is nullable. We treat those as not required.
     // this needs to be extended further in the future if we support arbitrary SQL types
+    import java.sql.Types._
     val typeIdentifier = mColumn.sqlType match {
-      case Types.VARCHAR | Types.CHAR                => TypeIdentifier.String
-      case Types.FLOAT | Types.NUMERIC               => TypeIdentifier.Float
-      case Types.BOOLEAN | Types.BIT                 => TypeIdentifier.Boolean
-      case Types.TIMESTAMP                           => TypeIdentifier.DateTime
-      case Types.INTEGER                             => TypeIdentifier.Int
-      case Types.OTHER if mColumn.typeName == "uuid" => TypeIdentifier.UUID
-      case x                                         => sys.error(s"Encountered unknown SQL type $x with column ${mColumn.name}. $mColumn")
+      case VARCHAR | CHAR | LONGVARCHAR        => TypeIdentifier.String
+      case FLOAT | NUMERIC | DECIMAL           => TypeIdentifier.Float
+      case BOOLEAN | BIT                       => TypeIdentifier.Boolean
+      case TIMESTAMP                           => TypeIdentifier.DateTime
+      case INTEGER                             => TypeIdentifier.Int
+      case OTHER if mColumn.typeName == "uuid" => TypeIdentifier.UUID
+      case x                                   => sys.error(s"Encountered unknown SQL type $x with column ${mColumn.name}. $mColumn")
     }
     Column(
       name = mColumn.name,
