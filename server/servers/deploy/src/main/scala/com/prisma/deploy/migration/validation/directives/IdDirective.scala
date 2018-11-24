@@ -20,15 +20,16 @@ object IdDirective extends FieldDirective[IdBehaviour] {
       directive: Directive,
       capabilities: ConnectorCapabilities
   ) = {
-    val errors = validatePlacement(typeDef, fieldDef) ++ validateFieldType(doc, typeDef, fieldDef, capabilities)
+//    val errors = validatePlacement(typeDef, fieldDef) ++ validateFieldType(doc, typeDef, fieldDef, capabilities)
+    val errors = validateFieldType(doc, typeDef, fieldDef, capabilities)
     errors.toVector
   }
 
-  def validatePlacement(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
-    typeDef.isEmbedded.toOption {
-      DeployError(typeDef, fieldDef, s"The `@$name` directive is not allowed on embedded types.")
-    }
-  }
+//  def validatePlacement(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+//    typeDef.isEmbedded.toOption {
+//      DeployError(typeDef, fieldDef, s"The `@$name` directive is not allowed on embedded types.")
+//    }
+//  }
 
   def validateFieldType(doc: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: ConnectorCapabilities) = {
     val supportsUuid   = capabilities.has(UuidIdCapability)
