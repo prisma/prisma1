@@ -1,10 +1,14 @@
 package com.prisma.websocket.metrics
 
-import com.prisma.metrics.MetricsFacade
+import com.prisma.metrics.{MetricsFacade, MetricsRegistry}
 
 object SubscriptionWebsocketMetrics extends MetricsFacade {
-  val activeWsConnections               = defineGauge("websocket.connections.gauge")
-  val incomingWebsocketMessageCount     = defineCounter("websocket.messages.incoming.count")
-  val outgoingWebsocketMessageCount     = defineCounter("websocket.messages.outgoing.count")
-  val incomingResponseQueueMessageCount = defineCounter("websocket.responseQueue.count")
+  override var registry: MetricsRegistry = null
+
+  def init(metricsRegistry: MetricsRegistry): Unit = registry = metricsRegistry
+
+  lazy val activeWsConnections               = defineGauge("websocket.connections.gauge")
+  lazy val incomingWebsocketMessageCount     = defineCounter("websocket.messages.incoming.count")
+  lazy val outgoingWebsocketMessageCount     = defineCounter("websocket.messages.outgoing.count")
+  lazy val incomingResponseQueueMessageCount = defineCounter("websocket.responseQueue.count")
 }

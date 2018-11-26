@@ -43,6 +43,7 @@ pub struct Claims {
     grants: Option<Vec<Grant>>,
 }
 
+#[no_mangle]
 pub extern "C" fn initialize() {
     logging::init();
 }

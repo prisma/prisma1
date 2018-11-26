@@ -4,6 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.jdbc.JdbcApiMetrics
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
@@ -21,6 +22,8 @@ import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus._
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
+import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.micrometer.MicrometerMetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
@@ -96,8 +99,11 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
   def initialize()(implicit system: ActorSystem): Unit = {
+    JdbcApiMetrics.init(metricsRegistry) // Todo lacking a better init structure for now
     initializeDeployDependencies()
-    initializeApiDependencies(deployConnector.cloudSecretPersistence)
-    initializeSubscriptionDependencies(deployConnector.cloudSecretPersistence)
+    initializeApiDependencies()
+    initializeSubscriptionDependencies()
   }
+
+  override val metricsRegistry: MetricsRegistry = MicrometerMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 }

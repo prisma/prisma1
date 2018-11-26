@@ -1,6 +1,6 @@
 package com.prisma.deploy
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.ActorMaterializer
 import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.PrismaConfig
@@ -11,6 +11,7 @@ import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.errors.ErrorReporter
 import com.prisma.jwt.Auth
 import com.prisma.messagebus.PubSubPublisher
+import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.utils.await.AwaitUtils
 
@@ -40,9 +41,10 @@ trait DeployDependencies extends AwaitUtils {
   val managementSecret: String
   val cacheFactory: CacheFactory
   val auth: Auth
+  val metricsRegistry: MetricsRegistry
 
   def initializeDeployDependencies()(implicit ec: ExecutionContext): Unit = {
     await(deployConnector.initialize(), seconds = 30)
-    DeployMetrics.initialize(projectPersistence, deployConnector, system)
+    DeployMetrics.init(metricsRegistry, projectPersistence, deployConnector, system)
   }
 }

@@ -14,6 +14,8 @@ import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.jwt.jna.JnaAuth
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.testkits.{InMemoryPubSubTestKit, InMemoryQueueTestKit}
+import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.dummy.DummyMetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.Webhook
@@ -56,4 +58,6 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   )
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
+
+  override val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 }

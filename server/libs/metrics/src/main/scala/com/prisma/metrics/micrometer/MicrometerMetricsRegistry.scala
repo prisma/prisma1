@@ -15,10 +15,10 @@ object MicrometerMetricsRegistry extends MetricsRegistry {
   private val job                      = "prisma-connect"
   private var initialized              = false
 
-  def initialize(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit = {
+  def initialize(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): MetricsRegistry = {
     import as.dispatcher
     synchronized {
-      if (initialized) return
+      if (initialized) return this
 
       JvmProfiler.schedule(this)
 
@@ -38,6 +38,7 @@ object MicrometerMetricsRegistry extends MetricsRegistry {
       }
 
       initialized = true
+      this
     }
   }
 

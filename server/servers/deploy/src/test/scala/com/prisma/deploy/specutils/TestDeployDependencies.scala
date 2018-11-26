@@ -13,6 +13,8 @@ import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
 import com.prisma.jwt.jna.JnaAuth
 import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
+import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.dummy.DummyMetricsRegistry
 import com.prisma.shared.models.{ProjectIdEncoder, Schema}
 import org.scalactic.{Bad, Good}
 
@@ -42,7 +44,8 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
     }
   }
 
-  lazy val telemetryActor                 = TestProbe().ref
-  override val managementSecret: String   = ""
-  override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
+  lazy val telemetryActor                       = TestProbe().ref
+  override val managementSecret: String         = ""
+  override val cacheFactory: CacheFactory       = new CaffeineCacheFactory()
+  override val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 }

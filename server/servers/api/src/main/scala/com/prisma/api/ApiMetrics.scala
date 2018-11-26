@@ -1,18 +1,22 @@
 package com.prisma.api
 
-import com.prisma.metrics.{CustomTag, MetricsFacade, TimerMetric}
+import com.prisma.metrics.{CustomTag, MetricsFacade, MetricsRegistry, TimerMetric}
 
 object ApiMetrics extends MetricsFacade {
-  val projectCacheGetCount      = defineCounter("projectCache.get.count")
-  val projectCacheMissCount     = defineCounter("projectCache.miss.count")
-  val schemaBuilderTimer        = defineTimer("schemaBuilder.time", CustomTag("projectId", recordingThreshold = 600))
-  val mutactionTimer            = defineTimer("mutaction.time", CustomTag("projectId", recordingThreshold = 1000))
-  val mutactionCount            = defineCounter("mutaction.count", CustomTag("projectId", recordingThreshold = 100))
-  val requestTimer: TimerMetric = defineTimer("responseTime", CustomTag("status"))
+  override var registry: MetricsRegistry = null
+
+  def init(metricsRegistry: MetricsRegistry): Unit = registry = metricsRegistry
+
+  lazy val projectCacheGetCount      = defineCounter("projectCache.get.count")
+  lazy val projectCacheMissCount     = defineCounter("projectCache.miss.count")
+  lazy val schemaBuilderTimer        = defineTimer("schemaBuilder.time", CustomTag("projectId", recordingThreshold = 600))
+  lazy val mutactionTimer            = defineTimer("mutaction.time", CustomTag("projectId", recordingThreshold = 1000))
+  lazy val mutactionCount            = defineCounter("mutaction.count", CustomTag("projectId", recordingThreshold = 100))
+  lazy val requestTimer: TimerMetric = defineTimer("responseTime", CustomTag("status"))
 
   // these Metrics are consumed by the console to power the cloud dashboard. Only change them with extreme caution!
-  val projectIdTag             = CustomTag("projectId")
-  val requestDuration          = defineTimer("request.time", projectIdTag)
-  val requestCounter           = defineCounter("request.count", projectIdTag)
-  val subscriptionEventCounter = defineCounter("subscription.event.count", projectIdTag)
+  lazy val projectIdTag             = CustomTag("projectId")
+  lazy val requestDuration          = defineTimer("request.time", projectIdTag)
+  lazy val requestCounter           = defineCounter("request.count", projectIdTag)
+  lazy val subscriptionEventCounter = defineCounter("subscription.event.count", projectIdTag)
 }

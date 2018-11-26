@@ -6,7 +6,7 @@ import com.prisma.metrics._
 import scala.concurrent.{ExecutionContext, Future}
 
 object DummyMetricsRegistry extends MetricsRegistry {
-  override def initialize(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit = {}
+  def initialize(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): MetricsRegistry = this
 
   override def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = DummyGaugeMetric
   override def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = DummyCounterMetric

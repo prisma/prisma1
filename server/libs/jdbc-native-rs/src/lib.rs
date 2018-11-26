@@ -232,6 +232,7 @@ fn errorToCallResult(e: driver::DriverError) -> CallResult {
 
 #[no_mangle]
 pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c_char  {
+    println!("[Rust] Closing connection, pointer is: {:?}", conn);
     let connection = unsafe { Box::from_raw(conn) };
     connection.close();
 
@@ -247,6 +248,7 @@ pub extern "C" fn destroy(pointerAndError: *mut PointerAndError) {
 
 #[no_mangle]
 pub extern "C" fn destroy_string(s: *mut c_char) {
+    println!("[Rust] Dropping string, pointer is: {:?}", s);
     unsafe {
         String::from_utf8(CString::from_raw(s).into_bytes()).unwrap()
     };

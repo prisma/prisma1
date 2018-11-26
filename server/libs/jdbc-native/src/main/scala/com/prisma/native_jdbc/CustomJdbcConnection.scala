@@ -103,14 +103,15 @@ class CustomJdbcConnection(url: String, outerBinding: RustBinding) extends Conne
   override def setSavepoint(name: String) = ???
 
   override def close() = {
-    if (!closed) {
-      this.synchronized {
+    println(s"[JDBC] Closing connection ${this.hashCode()}")
+    this.synchronized {
+      if (!closed) {
         binding.closeConnection(connection)
         closed = true
+      } else {
+        println(s"[JDBC Connection] Calling close on already closed connection ${this.hashCode()}")
+        Thread.dumpStack()
       }
-    } else {
-      println("[JDBC Connection] Calling close on already closed connection")
-      Thread.dumpStack()
     }
   }
 
@@ -118,6 +119,7 @@ class CustomJdbcConnection(url: String, outerBinding: RustBinding) extends Conne
 
   override def rollback() = {
     binding.rollbackTransaction(connection)
+
   }
 
   override def rollback(savepoint: Savepoint) = ???

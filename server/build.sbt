@@ -117,8 +117,8 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
       }
 
       !exclude
-    }}//,
-//    excludeJars := Seq(/*"org/latencyutils", */"io/prometheus", "io/micrometer", "org\\latencyutils", "io\\prometheus", "io\\micrometer")
+    }},
+    excludeJars := Seq("org/latencyutils", "io/prometheus", /*"io/micrometer",*/ "org\\latencyutils", "io\\prometheus"/*, "io\\micrometer"*/)
 //    dependencyClasspath in Compile ~= { _.filter {
 //////        case (_, path) =>
 //////          val check = path.contains("mariadb") || path.contains("org.postgresql") || path.contains("micrometer") || path.contains("org.LatencyUtils") || path.contains("io.prometheus")

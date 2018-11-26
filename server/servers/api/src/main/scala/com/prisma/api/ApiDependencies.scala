@@ -55,8 +55,8 @@ trait ApiDependencies extends AwaitUtils {
   lazy val maxImportExportSize: Int                     = 1000000
   lazy val sssEventsPublisher: PubSubPublisher[String]  = sssEventsPubSub
 
-  def initializeApiDependencies(secretLoader: PrismaCloudSecretLoader) = {
-    ApiMetrics.initialize(metricsRegistry, secretLoader, system)
+  def initializeApiDependencies(): Unit = {
+    ApiMetrics.init(metricsRegistry)
   }
 
   def destroy = {

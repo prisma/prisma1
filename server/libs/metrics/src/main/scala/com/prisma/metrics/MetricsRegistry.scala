@@ -1,11 +1,18 @@
 package com.prisma.metrics
 
-import akka.actor.ActorSystem
 import scala.annotation.varargs
 import scala.concurrent.Future
 
+trait MetricsFacade {
+  var registry: MetricsRegistry
+
+  def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = registry.defineGauge(name, predefTags: _*)
+  def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = registry.defineCounter(name, customTags: _*)
+  def defineTimer(name: String, customTags: CustomTag*): TimerMetric           = registry.defineTimer(name, customTags: _*)
+}
+
 trait MetricsRegistry {
-  def initialize(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit
+  //  def initialize(secretLoader: PrismaCloudSecretLoader)(implicit as: ActorSystem): Unit
 
   // Gauges DO NOT support custom metric tags per occurrence, only hardcoded custom tags during definition!
   @varargs def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric

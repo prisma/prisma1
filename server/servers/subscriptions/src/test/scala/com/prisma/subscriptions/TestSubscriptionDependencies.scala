@@ -12,6 +12,8 @@ import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.jwt.jna.JnaAuth
 import com.prisma.messagebus.testkits.InMemoryPubSubTestKit
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
+import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.dummy.DummyMetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
@@ -52,6 +54,7 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
+  override val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 }
 
 case class TestProjectFetcher(cacheFactory: CacheFactory) extends ProjectFetcher {

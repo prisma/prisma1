@@ -1,16 +1,22 @@
 package com.prisma.subscriptions.metrics
 
-import com.prisma.metrics.{CustomTag, MetricsFacade}
+import com.prisma.metrics.{CustomTag, MetricsFacade, MetricsRegistry}
 
 object SubscriptionMetrics extends MetricsFacade {
-  // Actor Counts
-  val activeSubcriptionSessions            = defineGauge("subscriptions.sessions")
-  val activeSubscriptionsManagerForProject = defineGauge("subscriptions.manager.project")
-  val activeSubscriptionsManagerForModel   = defineGauge("subscriptions.manager.model")
-  val activeSubscriptions                  = defineGauge("subscriptions.active")
+  override var registry: MetricsRegistry = null
 
-  val projectIdTag             = CustomTag("projectId")
-  val databaseEventRate        = defineCounter("subscriptions.databaseEvent.count", projectIdTag)
-  val handleDatabaseEventRate  = defineCounter("subscriptions.handleDatabaseEvent.count", projectIdTag)
-  val handleDatabaseEventTimer = defineTimer("subscriptions.databaseEvent.time", projectIdTag)
+  def init(metricsRegistry: MetricsRegistry): Unit = {
+    registry = metricsRegistry
+  }
+
+  // Actor Counts
+  lazy val activeSubcriptionSessions            = defineGauge("subscriptions.sessions")
+  lazy val activeSubscriptionsManagerForProject = defineGauge("subscriptions.manager.project")
+  lazy val activeSubscriptionsManagerForModel   = defineGauge("subscriptions.manager.model")
+  lazy val activeSubscriptions                  = defineGauge("subscriptions.active")
+
+  lazy val projectIdTag             = CustomTag("projectId")
+  lazy val databaseEventRate        = defineCounter("subscriptions.databaseEvent.count", projectIdTag)
+  lazy val handleDatabaseEventRate  = defineCounter("subscriptions.handleDatabaseEvent.count", projectIdTag)
+  lazy val handleDatabaseEventTimer = defineTimer("subscriptions.databaseEvent.time", projectIdTag)
 }

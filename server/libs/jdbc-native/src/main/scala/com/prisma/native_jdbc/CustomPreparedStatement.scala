@@ -40,6 +40,7 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   var currentParams                  = new Params
   val paramList                      = mutable.ArrayBuffer.empty[Params]
   var lastCallResult: RustCallResult = null
+  var closed                         = false
 
   val returnsRows = rawSqlString.toLowerCase().startsWith("with ") || rawSqlString.toLowerCase().startsWith("select ") || rawSqlString
     .toLowerCase()
@@ -160,7 +161,16 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
     currentParams = new Params
   }
 
-  override def close() = binding.closeStatement(stmt)
+  override def close() = {
+    this.synchronized {
+      if (!closed) {
+        binding.closeStatement(stmt)
+      } else {
+        println(s"[JDBC Prepared Statement] Calling close on already closed statement ${this.hashCode()}")
+        Thread.dumpStack()
+      }
+    }
+  }
 
   override def getGeneratedKeys: ResultSet = lastCallResult.toResultSet
 

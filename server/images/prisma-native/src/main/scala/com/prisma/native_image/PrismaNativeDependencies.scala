@@ -4,6 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.jdbc.JdbcApiMetrics
 import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
@@ -20,7 +21,8 @@ import com.prisma.jwt.NoAuth
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
-//import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.dummy.DummyMetricsRegistry
 import com.prisma.native_jdbc.CustomJdbcDriver
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
@@ -92,15 +94,17 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
   override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, driver, isActive = databaseConfig.active)
 
-  override lazy val functionValidator           = FunctionValidatorImpl()
-  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
-  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
+  override lazy val functionValidator                = FunctionValidatorImpl()
+  override lazy val sideEffectMutactionExecutor      = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier                = DatabaseMutactionVerifierImpl
+  override lazy val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
   def initialize()(implicit system: ActorSystem): Unit = {
+    JdbcApiMetrics.init(metricsRegistry) // Todo lacking a better init structure for now
     initializeDeployDependencies()
-    initializeApiDependencies(deployConnector.cloudSecretPersistence)
-    initializeSubscriptionDependencies(deployConnector.cloudSecretPersistence)
+    initializeApiDependencies()
+    initializeSubscriptionDependencies()
   }
 }

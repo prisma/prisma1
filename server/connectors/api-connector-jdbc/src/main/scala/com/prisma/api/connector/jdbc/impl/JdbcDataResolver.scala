@@ -1,7 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.Metrics
+import com.prisma.api.connector.jdbc.JdbcApiMetrics
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values._
@@ -75,6 +75,6 @@ case class JdbcDataResolver(
     performWithTiming("countByModel", slickDatabase.database.run(query))
   }
 
-  protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = Metrics.sqlQueryTimer.timeFuture(project.id, name) { f }
+  protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = JdbcApiMetrics.sqlQueryTimer.timeFuture(project.id, name) { f }
 
 }
