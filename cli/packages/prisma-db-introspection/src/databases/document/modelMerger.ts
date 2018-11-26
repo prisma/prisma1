@@ -1,11 +1,11 @@
 import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers } from 'prisma-datamodel'
-import { Data } from './datat'
+import { Data } from './data'
 import { isArray, isRegExp } from 'util'
+import { ObjectID } from 'bson';
 
 const ObjectTypeIdentifier = 'Object'
-const InvalidTypeIdentifier = 'Object'
 
-const MongoIdType = '_id'
+const MongoIdName = '_id'
 
 const UnsupportedTypeErrorKey = 'UnsupportedType'
 
@@ -36,6 +36,7 @@ interface FieldInfo {
   isArray: boolean[]
   invalidTypes: string[]
 }
+
 /**
  * Infers structure of a datatype from a set of data samples. 
  */
@@ -114,7 +115,7 @@ export class ModelMerger {
     return {
       name: info.name,
       type: type,
-      isId: name === MongoIdType,
+      isId: info.name === MongoIdName,
       isList: isArray,
       isReadOnly: false,
       isRequired: isRequired,
@@ -130,13 +131,17 @@ export class ModelMerger {
     return Object.keys(this.embeddedTypes).map(key => this.embeddedTypes[key].getType())
   }
 
-  private analyzeField(name: string, value: any) {
-    this.fields[name] = {
+  private initField(name: string) {
+    this.fields[name] = this.fields[name] || {
       invalidTypes: [],
       isArray: [],
       name: name,
       types: []
     }
+  }
+
+  private analyzeField(name: string, value: any) {
+   
     try {
       const typeInfo = this.inferType(value)
 
@@ -145,10 +150,12 @@ export class ModelMerger {
         this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(name, true)
         this.embeddedTypes[name].analyze(value)
       } else {
+        this.initField(name)
         this.fields[name] = this.mergeField(this.fields[name], typeInfo)
       }
     } catch(err) {
       if(err.name === UnsupportedTypeErrorKey) {
+        this.initField(name)
         this.fields[name].invalidTypes.push(err.invalidType)
       } else {
         throw err
@@ -182,17 +189,9 @@ export class ModelMerger {
     return target
   }
 
+  // TODO: There are more BSON types exported by the mongo client lib we could add here.
   private inferType(value: any): TypeInfo  {
-    // Base types
-    switch(typeof(value)) {
-      case "number": return { type: value % 1 === 0 ? TypeIdentifiers.integer : TypeIdentifiers.float, isArray: false }
-      case "boolean": return { type: TypeIdentifiers.boolean, isArray: false }
-      case "string": return { type: TypeIdentifiers.boolean, isArray: false }
-      case "object": return { type: ObjectTypeIdentifier, isArray: false }
-      default: break
-    }
-
-    // Maybe an array?
+    // Maybe an array, which would otherwise be identified as object.
     if (Array.isArray(value)) {
       let arrayType: TypeInfo = { type: null, isArray: false }
       if(value.length > 0) {
@@ -204,6 +203,20 @@ export class ModelMerger {
       return { type: arrayType.type, isArray: true }
     }
 
-    throw new UnsupportedTypeError('Received a nested array while analyzing data. This is not supported yet.', typeof value)
+    // Base types
+    switch(typeof(value)) {
+      case "number": return { type: value % 1 === 0 ? TypeIdentifiers.integer : TypeIdentifiers.float, isArray: false }
+      case "boolean": return { type: TypeIdentifiers.boolean, isArray: false }
+      case "string": return { type: TypeIdentifiers.string, isArray: false }
+      case "object": 
+        if(value instanceof ObjectID) {
+          return { type: TypeIdentifiers.string, isArray: false }
+        } else {
+          return { type: ObjectTypeIdentifier, isArray: false }
+        }
+      default: break
+    }
+
+    throw new UnsupportedTypeError('Received an unsupported type:', typeof value)
   }
 }

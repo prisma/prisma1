@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@babel/code-frame@^7.0.0-beta.35":
+"@babel/code-frame@^7.0.0", "@babel/code-frame@^7.0.0-beta.35":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.0.0.tgz#06e2ab19bdb535385559aabb5ba59729482800f8"
   dependencies:
@@ -75,7 +75,7 @@
   version "21.1.10"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-21.1.10.tgz#dcacb5217ddf997a090cc822bba219b4b2fd7984"
 
-"@types/jest@^23.3.1":
+"@types/jest@^23.3.1", "@types/jest@^23.3.9":
   version "23.3.9"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-23.3.9.tgz#c16b55186ee73ae65e001fbee69d392c51337ad1"
 
@@ -1187,6 +1187,13 @@ create-error-class@^3.0.0:
   resolved "https://registry.yarnpkg.com/create-error-class/-/create-error-class-3.0.2.tgz#06be7abef947a3f14a30fd610671d401bca8b7b6"
   dependencies:
     capture-stack-trace "^1.0.0"
+
+create-jest-runner@^0.4.0:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/create-jest-runner/-/create-jest-runner-0.4.1.tgz#eeda15bc0f9dc622ef2de5a7fd9a0f1a2c2eb62d"
+  dependencies:
+    jest-worker "^23.2.0"
+    throat "^4.1.0"
 
 cross-fetch@2.2.2:
   version "2.2.2"
@@ -3128,6 +3135,13 @@ jest-resolve@^23.6.0:
     chalk "^2.0.1"
     realpath-native "^1.0.0"
 
+jest-runner-tsc@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/jest-runner-tsc/-/jest-runner-tsc-1.3.2.tgz#63ec4ee79de05b27df3cc7d480002498e677b505"
+  dependencies:
+    "@babel/code-frame" "^7.0.0"
+    create-jest-runner "^0.4.0"
+
 jest-runner@^21.2.1:
   version "21.2.1"
   resolved "https://registry.yarnpkg.com/jest-runner/-/jest-runner-21.2.1.tgz#194732e3e518bfb3d7cbfc0fd5871246c7e1a467"
@@ -3296,18 +3310,18 @@ jest-worker@^23.2.0:
   dependencies:
     merge-stream "^1.0.1"
 
-jest@^21.0.2, jest@^21.2.1:
-  version "21.2.1"
-  resolved "https://registry.yarnpkg.com/jest/-/jest-21.2.1.tgz#c964e0b47383768a1438e3ccf3c3d470327604e1"
-  dependencies:
-    jest-cli "^21.2.1"
-
-jest@^23.5.0:
+jest@23.6.0, jest@^23.5.0:
   version "23.6.0"
   resolved "https://registry.yarnpkg.com/jest/-/jest-23.6.0.tgz#ad5835e923ebf6e19e7a1d7529a432edfee7813d"
   dependencies:
     import-local "^1.0.0"
     jest-cli "^23.6.0"
+
+jest@^21.0.2, jest@^21.2.1:
+  version "21.2.1"
+  resolved "https://registry.yarnpkg.com/jest/-/jest-21.2.1.tgz#c964e0b47383768a1438e3ccf3c3d470327604e1"
+  dependencies:
+    jest-cli "^21.2.1"
 
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"
@@ -5068,7 +5082,7 @@ resolve@1.6.0:
   dependencies:
     path-parse "^1.0.5"
 
-resolve@^1.1.7, resolve@^1.3.2:
+resolve@1.x, resolve@^1.1.7, resolve@^1.3.2:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.8.1.tgz#82f1ec19a423ac1fbd080b0bab06ba36e84a7a26"
   dependencies:
@@ -5665,7 +5679,7 @@ test-exclude@^4.2.1:
     read-pkg-up "^1.0.1"
     require-main-filename "^1.0.1"
 
-throat@^4.0.0:
+throat@^4.0.0, throat@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/throat/-/throat-4.1.0.tgz#89037cbc92c56ab18926e6ba4cbb200e15672a6a"
 
@@ -5784,6 +5798,20 @@ ts-jest@^23.1.4:
     json5 "2.x"
     make-error "1.x"
     mkdirp "0.x"
+    semver "^5.5"
+    yargs-parser "10.x"
+
+ts-jest@^23.10.5:
+  version "23.10.5"
+  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-23.10.5.tgz#cdb550df4466a30489bf70ba867615799f388dd5"
+  dependencies:
+    bs-logger "0.x"
+    buffer-from "1.x"
+    fast-json-stable-stringify "2.x"
+    json5 "2.x"
+    make-error "1.x"
+    mkdirp "0.x"
+    resolve "1.x"
     semver "^5.5"
     yargs-parser "10.x"
 

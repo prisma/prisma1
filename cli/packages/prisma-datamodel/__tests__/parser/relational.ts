@@ -1,5 +1,5 @@
 import { IGQLType } from '../../src/datamodel/model'
-import { expectField, expectType } from './helpers' 
+import { SdlExpect } from '../../src/test-helpers' 
 import RelationalParser from '../../src/datamodel/parser/relationalParser'
 
 describe(`Relational parser specific tests`, () => {
@@ -13,9 +13,9 @@ describe(`Relational parser specific tests`, () => {
 
     const { types } = new RelationalParser().parseFromSchemaString(model)
 
-    const userType = expectType(types, 'User')
+    const userType = SdlExpect.type(types, 'User')
 
-    expectField(userType, 'id', true, false, 'ID', true, true, null)
+    SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
   })
 
 
@@ -31,9 +31,9 @@ describe(`Relational parser specific tests`, () => {
 
     const { types } = new RelationalParser().parseFromSchemaString(model)
 
-    const userType = expectType(types, 'User')
-    expectField(userType, 'id', true, false, 'ID', true, true, null)
-    expectField(userType, 'createdAt', true, false, 'Date', false, true, null)
-    expectField(userType, 'updatedAt', true, false, 'Date', false, true, null)
+    const userType = SdlExpect.type(types, 'User')
+    SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
+    SdlExpect.field(userType, 'createdAt', true, false, 'Date', false, true, null)
+    SdlExpect.field(userType, 'updatedAt', true, false, 'Date', false, true, null)
   })
 })

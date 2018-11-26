@@ -15,7 +15,7 @@ export default class Renderer {
     const sortedTypes = [...input.types].sort(
       (a, b) => {
         if(a.isEnum === b.isEnum) {
-          return a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1
+          return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
         } else if(b.isEnum) {
           return -1
         } else {
@@ -40,7 +40,7 @@ export default class Renderer {
     if(type.isEnum) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
 
     const renderedDirectives = this.renderDirectives(typedirectives)
-    const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1)
+    const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
     const renderedFields = sortedFields.map(x => this.renderField(x))
 
     const renderedTypeName = renderedDirectives.length > 0 ?
@@ -118,7 +118,7 @@ export default class Renderer {
   }
 
   protected renderDirectives(directives: IDirectiveInfo[]) : string {
-    const sortedDirectives = [...directives].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? -1 : 1)
+    const sortedDirectives = [...directives].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
     return this.mergeDirectives(sortedDirectives).map(x => this.renderDirective(x)).join(` `)
   }
 
