@@ -5,7 +5,6 @@ import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.ListGCValue
-import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.MongoWriteException
 
