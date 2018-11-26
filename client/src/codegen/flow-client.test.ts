@@ -13,6 +13,7 @@ test('flow generator', t => {
     const schema = buildSchema(typeDefs)
     const generator = new FlowGenerator({
       schema,
+      internalTypes: [],
     })
     const result = generator.render()
     t.snapshot(result)

@@ -27,6 +27,7 @@ class Model(
     val schema: Schema
 ) {
   import template._
+  val isLegacy = schema.isLegacy
 
   val dbName: String                                     = manifestation.map(_.dbName).getOrElse(name)
   lazy val fields: List[Field]                           = fieldTemplates.map(_.build(this))
@@ -39,19 +40,23 @@ class Model(
   lazy val relationNonListFields: List[RelationField]    = relationFields.filter(!_.isList)
   lazy val visibleRelationFields: List[RelationField]    = relationFields.filter(_.isVisible)
   lazy val nonListFields                                 = fields.filter(!_.isList)
-  lazy val idField                                       = getScalarFieldByName("id")
-  lazy val idField_!                                     = getScalarFieldByName_!("id")
+  lazy val idField                                       = scalarFields.find(_.isId)
+  lazy val createdAtField                                = scalarFields.find(_.isCreatedAt)
+  lazy val updatedAtField                                = scalarFields.find(_.isUpdatedAt)
+  lazy val idField_!                                     = idField.get
   lazy val dbNameOfIdField_!                             = idField_!.dbName
-  lazy val hasUpdatedAtField                             = getFieldByName("updatedAt").isDefined
-  lazy val hasCreatedAtField                             = getFieldByName("createdAt").isDefined
+  lazy val hasUpdatedAtField                             = scalarFields.exists(_.isUpdatedAt)
+  lazy val hasCreatedAtField                             = scalarFields.exists(_.isCreatedAt)
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
+  def dummyField(name: String, isList: Boolean)          = idField_!.copy(name = name, isList = isList, template = idField_!.template.copy(behaviour = None))
+
   lazy val cascadingRelationFields: List[RelationField] = relationFields.collect {
     case field if field.relationSide == RelationSide.A && field.relation.template.modelAOnDelete == OnDelete.Cascade => field
     case field if field.relationSide == RelationSide.B && field.relation.template.modelBOnDelete == OnDelete.Cascade => field
   }
 
   lazy val inlineFields = relationFields.collect {
-    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelId == this.name => rf
+    case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelName == this.name => rf
   }
 
   def filterScalarFields(fn: ScalarField => Boolean): Model = {

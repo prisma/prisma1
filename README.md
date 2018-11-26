@@ -95,6 +95,18 @@ The Prisma API is deployed based on the datamodel and exposes CRUD & realtime op
 
 The Prisma client connects to the Prisma API and lets you perform read and write operations against your database. This section explains how to use the Prisma client from **JavaScript**.
 
+First, inside the `hello-world` directory, install the `prisma-client-lib` dependency:
+
+```
+npm install --save prisma-client-lib
+```
+
+Next, to generate the Prisma client, run the following command:
+
+```
+prisma generate
+```
+
 Create a new Node script inside the `hello-world` directory:
 
 ```
@@ -104,7 +116,7 @@ touch index.js
 Now add the following code to it:
 
 ```js
-const { prisma } = require('./generated/prisma')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {
@@ -254,13 +266,20 @@ Join the discussion or contribute to influence which we'll work on next!
 
 Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
+### Channels
+
 - [Forum](https://www.prisma.io/forum)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
 - [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Europe](https://www.graphql-europe.org/)
+- [GraphQL Conf](https://www.graphqlconf.org/)
 - [Email](mailto:hello@prisma.io)
+
+### Resources
+
+- [Chinese translation of the Prisma docs](https://prisma.1wire.com/) (Thanks to [Victor Kang](https://github.com/Victorkangsh))
+- [Awesome Prisma](https://github.com/catalinmiron/awesome-prisma) (Thanks to [Catalin Miron](https://github.com/catalinmiron))
 
 ## Contributing
 

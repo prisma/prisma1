@@ -25,10 +25,16 @@ object RootGCValue {
     RootGCValue(empty)
   }
 }
+
 case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
     case Some(id) => id.asInstanceOf[IdGCValue]
     case None     => sys.error("There was no field with name 'id'.")
+  }
+
+  def embeddedIdField = map.get("_id") match {
+    case Some(id) => id.asInstanceOf[IdGCValue]
+    case None     => sys.error("There was no field with name '_id'.")
   }
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))

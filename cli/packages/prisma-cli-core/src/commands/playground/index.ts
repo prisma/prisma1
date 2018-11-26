@@ -43,13 +43,21 @@ export default class Playground extends Command {
     }),
     port: flags.number({
       char: 'p',
-      defaultValue: 3000,
       description: 'Port to serve the Playground web version on. Assumes --web.',
     }),
   }
   async run() {
-    const port = this.flags.port
-    const web = !!(this.flags.web || port)
+    let { web, port } = this.flags
+
+    // port assumes web. using default value of flags will break this!
+    if (port) {
+      web = true
+    }
+
+    // set default value, don't overwrite
+    if (!port) {
+      port = 3000
+    }
 
     const envFile = this.flags['env-file']
     const serverOnly = this.flags['server-only']

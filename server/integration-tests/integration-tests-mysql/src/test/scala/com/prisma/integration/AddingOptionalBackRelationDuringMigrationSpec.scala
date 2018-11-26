@@ -92,7 +92,7 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
     val schema1 =
       """type Team {
         |  name: String! @unique
-        |  wins: [Match!]! @relation(name: "TeamMatchWinner")
+        |  wins: [Match] @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
@@ -156,7 +156,7 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
     val schema1 =
       """type Team {
         |  name: String! @unique
-        |  wins: [Match!]! @relation(name: "TeamMatchWinner")
+        |  wins: [Match] @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
@@ -321,8 +321,8 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
     val schema1 =
       """type Team {
         |  name: String! @unique
-        |  wins: [Match!]! @relation(name: "TeamMatchWinner")
-        |  lefts: [Match!]! @relation(name: "TeamMatchLeft")
+        |  wins: [Match] @relation(name: "TeamMatchWinner")
+        |  lefts: [Match] @relation(name: "TeamMatchLeft")
         |}
         |
         |type Match {

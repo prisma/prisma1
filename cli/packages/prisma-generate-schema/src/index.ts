@@ -11,7 +11,10 @@ import Generator from './generator'
  * @param databaseType: The database type implementation to use.
  * @returns An array of all types present in the model.
  */
-export function parseInternalTypes(model: string, databaseType: DatabaseType): IGQLType[] {
+export function parseInternalTypes(
+  model: string,
+  databaseType: DatabaseType,
+): IGQLType[] {
   return Parser.create(databaseType).parseFromSchemaString(model)
 }
 
@@ -21,7 +24,10 @@ export function parseInternalTypes(model: string, databaseType: DatabaseType): I
  * @param databaseType: The database type implementation to use.
  * @returns The OpenCRUD schema as graphql-js schema object for the given model.
  */
-export function generateCRUDSchema(model: string, databaseType: DatabaseType): GraphQLSchema {
+export function generateCRUDSchema(
+  model: string,
+  databaseType: DatabaseType,
+): GraphQLSchema {
   const types = parseInternalTypes(model, databaseType)
   return Generator.create(databaseType).schema.generate(types, {})
 }
@@ -32,6 +38,11 @@ export function generateCRUDSchema(model: string, databaseType: DatabaseType): G
  * @param databaseType: The database type implementation to use.
  * @returns The OpenCRUD schema as prettified string for the given model.
  */
-export default function generateCRUDSchemaString(model: string, databaseType: DatabaseType = DatabaseType.relational): string {
+export default function generateCRUDSchemaString(
+  model: string,
+  databaseType: DatabaseType = DatabaseType.relational,
+): string {
   return printSchema(generateCRUDSchema(model, databaseType))
 }
+
+export { DatabaseType }

@@ -8,11 +8,10 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
-import sangria.ast.{Directive => AstDirective}
 
 import scala.concurrent.ExecutionContext
 
@@ -21,7 +20,7 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false,
-    capabilities: Set[ConnectorCapability]
+    capabilities: ConnectorCapabilities
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -90,7 +89,8 @@ class ObjectTypeBuilder(
           .map(mapClientField(model))
       },
       interfaces = {
-        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid)
+        val idFieldHasRightType = model.idField.exists(f =>
+          f.name == ReservedFields.idFieldName && (f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid))
         if (model.hasVisibleIdField && idFieldHasRightType) nodeInterface.toList else List.empty
       },
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
@@ -143,10 +143,11 @@ class ObjectTypeBuilder(
   }
 
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = field match {
-    case f if f.isHidden               => List.empty
-    case _: ScalarField                => List.empty
-    case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
-    case f: RelationField if !f.isList => List.empty
+    case f if f.isHidden                                              => List.empty
+    case _: ScalarField                                               => List.empty
+    case f: RelationField if f.isList && !f.relatedModel_!.isEmbedded => mapToListConnectionArguments(f.relatedModel_!)
+    case f: RelationField if f.isList && f.relatedModel_!.isEmbedded  => List.empty
+    case f: RelationField if !f.isList                                => List.empty
   }
 
   def mapToListConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
@@ -279,7 +280,7 @@ class ObjectTypeBuilder(
 
     field match {
       case f: ScalarField if f.isList => //Fixme have the way to resolve the field on the field itself
-        if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
+        if (capabilities.has(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
         item.data.map(field.name).value
@@ -304,7 +305,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(f.name) match {
-          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.idField, v.asRoot))
+          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.embeddedIdField, v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
@@ -324,7 +325,7 @@ class ObjectTypeBuilder(
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case NullGCValue => None
-          case value       => Some(PrismaNode(value.asRoot.idField, value.asRoot))
+          case value       => Some(PrismaNode(value.asRoot.embeddedIdField, value.asRoot))
         }
 
       case f: RelationField if f.isList =>

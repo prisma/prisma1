@@ -54,4 +54,10 @@ export interface BaseClientOptions {
 
 export interface ClientOptions extends BaseClientOptions {
   typeDefs: string
+  models: Model[]
+}
+
+export interface Model {
+  name: string
+  embedded: boolean
 }

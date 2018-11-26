@@ -1,19 +1,19 @@
-import { IGQLType, IGQLField, GQLScalarField } from "./model"
-import { parse } from "graphql"
+import { IGQLType, IGQLField, GQLScalarField } from './model'
+import { parse } from 'graphql'
 
 export const isUniqueDirectiveKey = 'unique'
 export const defaultValueDirectiveKey = 'default'
 export const relationDirectiveKey = 'relation'
 
 /**
- * Parses a datamodel given as DSL 
+ * Parses a datamodel given as DSL
  * to an internal representation, convenient for
- * working with. 
+ * working with.
  */
 export default abstract class Parser {
   /**
-   * Shorthand to parse the datamodel, given an SDL string. 
-   * @param schemaString The datamodel as SDL string.  
+   * Shorthand to parse the datamodel, given an SDL string.
+   * @param schemaString The datamodel as SDL string.
    * @returns A list of types found in the datamodel.
    */
   public parseFromSchemaString(schemaString: string) {
@@ -21,22 +21,21 @@ export default abstract class Parser {
     return this.parseFromSchema(schema)
   }
 
-
   /**
-   * Parses the datamodel from a graphql-js schema. 
-   * @param schema The graphql-js schema, representing the datamodel. 
+   * Parses the datamodel from a graphql-js schema.
+   * @param schema The graphql-js schema, representing the datamodel.
    * @returns A list of types found in the datamodel.
    */
-
   public parseFromSchema(schema: any): IGQLType[] {
-    const types = [...this.parseObjectTypes(schema), ...this.parseEnumTypes(schema)]
-    
+    const types = [
+      ...this.parseObjectTypes(schema),
+      ...this.parseEnumTypes(schema),
+    ]
+
     this.resolveRelations(types)
-    
+
     // Sort types alphabetically
-    types.sort(({ name: a }, { name: b }) =>
-      a > b ? 1 : -1,
-    )
+    types.sort(({ name: a }, { name: b }) => (a > b ? 1 : -1))
 
     // That's it.
     // We could check our model here, if we wanted to.
@@ -50,37 +49,33 @@ export default abstract class Parser {
 
   /**
    * Checks if the given field is an ID field
-   * @param field 
+   * @param field
    */
   protected abstract isIdField(field: any): boolean
 
   /**
    * Checks if the given field is read-only.
    * If the field is an ID field, this method is not called and
-   * read-only is assumed. 
-   * @param field 
+   * read-only is assumed.
+   * @param field
    */
   protected abstract isReadOnly(field: any): boolean
 
   /**
    * Finds a directive on a field or type by name.
-   * @param fieldOrType 
-   * @param name 
+   * @param fieldOrType
+   * @param name
    */
   protected getDirectiveByName(fieldOrType: any, name: string): any {
-    const directive = fieldOrType.directives.filter(
-      x => x.name.value === name,
-    )
+    const directive = fieldOrType.directives.filter(x => x.name.value === name)
 
-    return directive.length > 0
-      ? directive[0]
-      : null
+    return directive.length > 0 ? directive[0] : null
   }
 
   /**
    * Checks if a directive on a given field or type ecists
-   * @param fieldOrType 
-   * @param name 
+   * @param fieldOrType
+   * @param name
    */
   protected hasDirective(fieldOrType: any, name: string): boolean {
     return this.getDirectiveByName(fieldOrType, name) != null
@@ -88,7 +83,7 @@ export default abstract class Parser {
 
   /**
    * Checks if the given field is unique.
-   * @param field 
+   * @param field
    */
   protected isUniqe(field: any): boolean {
     return this.hasDirective(field, isUniqueDirectiveKey)
@@ -97,26 +92,34 @@ export default abstract class Parser {
   /**
    * Gets a fields default value. If no default
    * value is given, returns null.
-   * @param field 
+   * @param field
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, defaultValueDirectiveKey)
-    return directive === null ? null : directive.arguments[0].value.value
+    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
+    return args.length !== 0 ? args[0].value.value : null
   }
 
   /**
    * Gets a fields relation name. If no relation
    * exists, returns null.
-   * @param field 
+   * @param field
    */
   protected getRelationName(field: any): string | null {
     const directive = this.getDirectiveByName(field, relationDirectiveKey)
-    return directive === null ? null : directive.arguments[0].value.value
+    if (directive && directive.arguments) {
+      const nameArgument = directive.arguments.find(
+        a => a.name.value === 'name',
+      )
+      return nameArgument ? nameArgument.value.value : null
+    }
+
+    return null
   }
 
   /**
-   * Parses a model field, respects all 
-   * known directives. 
+   * Parses a model field, respects all
+   * known directives.
    * @param field
    */
   protected parseField(field: any): IGQLField {
@@ -140,23 +143,23 @@ export default abstract class Parser {
       isRequired: kind === 'NonNullType',
       relatedField: null,
       isId,
-      isReadOnly
+      isReadOnly,
     }
   }
 
   /**
    * Checks if the given type is an embedded type.
-   * @param type 
+   * @param type
    */
-  protected abstract isEmbedded(type: any): boolean 
-//  public isEmbedded(type: any): boolean {
-//    return type.directives &&
-//      type.directives.length > 0 &&
-//      type.directives.some(d => d.name.value === 'embedded')
-//  }
+  protected abstract isEmbedded(type: any): boolean
+  //  public isEmbedded(type: any): boolean {
+  //    return type.directives &&
+  //      type.directives.length > 0 &&
+  //      type.directives.some(d => d.name.value === 'embedded')
+  //  }
 
   /**
-   * Parases an object type. 
+   * Parases an object type.
    * @param type
    */
   protected parseObjectType(type: any): IGQLType {
@@ -187,7 +190,7 @@ export default abstract class Parser {
 
     for (const type of schema.definitions) {
       if (type.kind === 'ObjectTypeDefinition') {
-        objectTypes.push(this.parseObjectType(type))   
+        objectTypes.push(this.parseObjectType(type))
       }
     }
 
@@ -196,19 +199,18 @@ export default abstract class Parser {
 
   /**
    * Parses all enum types in the schema.
-   * @param schema 
+   * @param schema
    */
   protected parseEnumTypes(schema: any): IGQLType[] {
     const enumTypes: IGQLType[] = []
     for (const type of schema.definitions) {
       if (type.kind === 'EnumTypeDefinition') {
         const values: IGQLField[] = []
-        for(const value of type.values) {
-          if(value.kind === 'EnumValueDefinition') {
-
+        for (const value of type.values) {
+          if (value.kind === 'EnumValueDefinition') {
             const name = value.name.value
 
-            // All props except name are ignored for enum defs. 
+            // All props except name are ignored for enum defs.
             values.push(new GQLScalarField(name, 'String', false))
           }
         }
@@ -228,7 +230,7 @@ export default abstract class Parser {
   /**
    * Resolves and connects all realtion fields found
    * in the given type list.
-   * @param types 
+   * @param types
    */
   protected resolveRelations(types: IGQLType[]) {
     // Find all types that we know,
@@ -238,7 +240,7 @@ export default abstract class Parser {
       for (const fieldA of typeA.fields) {
         for (const typeB of types) {
           // At this stage, every type is a string
-          if(fieldA.type as string === typeB.name) {
+          if ((fieldA.type as string) === typeB.name) {
             fieldA.type = typeB
           }
         }
@@ -252,11 +254,13 @@ export default abstract class Parser {
           continue // Assume scalar
         }
 
-        if(fieldA.relationName !== null && fieldA.relatedField === null) {
-          for(const fieldB of fieldA.type.fields) {
-            if(fieldB.relationName === fieldA.relationName) {
-              if(fieldB.type !== typeA) {
-                throw new Error('Relation type mismatch.')
+        if (fieldA.relationName !== null && fieldA.relatedField === null) {
+          for (const fieldB of fieldA.type.fields) {
+            if (fieldB.relationName === fieldA.relationName) {
+              if (fieldB.type !== typeA) {
+                throw new Error(
+                  `Relation type mismatch for relation ${fieldA.relationName}`,
+                )
               }
               fieldA.relatedField = fieldB
               fieldB.relatedField = fieldA
@@ -267,39 +271,39 @@ export default abstract class Parser {
       }
     }
 
-    // Connect  obvious relations which are lacking the relatioName directive. 
+    // Connect  obvious relations which are lacking the relatioName directive.
     // We explicitely DO NOT ignore fields with a given relationName, in accordance
-
     // to the prisma implementation.
     for (const typeA of types) {
       searchThroughAFields: for (const fieldA of typeA.fields) {
         if (typeof fieldA.type === 'string') {
           continue // Assume scalar.
         }
-        if(fieldA.relatedField !== null) {
-          continue // Nothing to do, already connected 
+        if (fieldA.relatedField !== null) {
+          continue // Nothing to do, already connected
         }
 
-        for(const fieldA2 of typeA.fields) {
-          if(fieldA2 !== fieldA && fieldA2.type === fieldA.type) {
-            // Skip, A has mode than one fields of this relation type. 
-            continue searchThroughAFields 
+        for (const fieldA2 of typeA.fields) {
+          if (fieldA2 !== fieldA && fieldA2.type === fieldA.type) {
+            // Skip, A has more than one fields of this relation type.
+            continue searchThroughAFields
           }
         }
 
-        const relationPairs: Array<{ a: IGQLField, b: IGQLField}> = []
+        const relationPairs: Array<{ a: IGQLField; b: IGQLField }> = []
 
-        // Look for the opposite field by type. 
-        for(const fieldB of fieldA.type.fields) {
-          if(fieldB.type === typeA) {
-            if(fieldB !== fieldA) { // Don't connect self-referencing fields
+        // Look for the opposite field by type.
+        for (const fieldB of fieldA.type.fields) {
+          if (fieldB.type === typeA) {
+            if (fieldB !== fieldA) {
+              // Don't connect self-referencing fields
               relationPairs.push({ a: fieldA, b: fieldB })
             }
-          } 
+          }
         }
 
         // Create relation iff we have found a single pair
-        if(relationPairs.length === 1) {
+        if (relationPairs.length === 1) {
           const [{ a, b }] = relationPairs
           a.relatedField = b
           b.relatedField = a
@@ -309,9 +313,9 @@ export default abstract class Parser {
   }
 
   /**
-   * Traverses an AST branch and finds the next type. 
-   * This will skip modifiers like NonNullType or ListType. 
-   * @param type 
+   * Traverses an AST branch and finds the next type.
+   * This will skip modifiers like NonNullType or ListType.
+   * @param type
    */
   protected parseType(type: any) {
     if (type.type) {
@@ -319,18 +323,14 @@ export default abstract class Parser {
     } else if (type.kind !== 'NamedType') {
       throw new Error()
     }
-    else 
-      if(type.kind !== 'NamedType') {
-        throw new Error()
-      }
-      return type.name.value
+    return type.name.value
   }
 
   /**
    * Traverses an AST branch and returns the modifier
-   * of the type: Either ListType or NonNullType. 
-   * @param type 
-   * @param acc 
+   * of the type: Either ListType or NonNullType.
+   * @param type
+   * @param acc
    */
   protected parseKind(type: any, acc: any) {
     if (!acc) {
@@ -338,17 +338,16 @@ export default abstract class Parser {
     }
 
     // If we find list, we always take list
-    if(type.kind === 'ListType') { 
+    if (type.kind === 'ListType') {
       return type.kind
     }
 
     // Non-null has higher prio than nullable
-    if(type.kind === 'NonNullType') {
+    if (type.kind === 'NonNullType') {
       acc = type.kind
     }
 
     // When we reach the end, return whatever we have stored.
-
     if (type.type) {
       return this.parseKind(type.type, acc)
     } else {

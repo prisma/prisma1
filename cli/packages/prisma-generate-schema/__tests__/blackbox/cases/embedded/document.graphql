@@ -229,7 +229,7 @@ input ChildWhereInput {
 
 type Friend {
   f: String
-  test: Int!
+  test: ID!
 }
 
 """
@@ -275,13 +275,11 @@ enum FriendOrderByInput {
   f_DESC
   test_ASC
   test_DESC
-  id_ASC
-  id_DESC
 }
 
 type FriendPreviousValues {
   f: String
-  test: Int!
+  test: ID!
 }
 
 type FriendSubscriptionPayload {
@@ -397,40 +395,64 @@ input FriendWhereInput {
   All values not ending with the given string.
   """
   f_not_ends_with: String
-  test: Int
+  test: ID
   """
   All values that are not equal to given value.
   """
-  test_not: Int
+  test_not: ID
   """
   All values that are contained in given list.
   """
-  test_in: [Int!]
+  test_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  test_not_in: [Int!]
+  test_not_in: [ID!]
   """
   All values less than the given value.
   """
-  test_lt: Int
+  test_lt: ID
   """
   All values less than or equal the given value.
   """
-  test_lte: Int
+  test_lte: ID
   """
   All values greater than the given value.
   """
-  test_gt: Int
+  test_gt: ID
   """
   All values greater than or equal the given value.
   """
-  test_gte: Int
+  test_gte: ID
+  """
+  All values containing the given string.
+  """
+  test_contains: ID
+  """
+  All values not containing the given string.
+  """
+  test_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  test_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  test_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  test_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  test_not_ends_with: ID
 }
 
 input FriendWhereUniqueInput {
   f: String
-  test: Int
+  test: ID
 }
 
 type Joint implements Node {
@@ -820,11 +842,6 @@ input JointWhereInput {
 input JointWhereUniqueInput {
   id: ID
 }
-
-"""
-Raw JSON value
-"""
-scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.

@@ -1,13 +1,13 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   override def doNotRunForPrototypes: Boolean = true
 
@@ -562,7 +562,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
                                              |  id: ID! @unique
                                              |  name: String! @unique
                                              |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
-                                             |  children: [Folder!]! @relation(name: "FolderOnFolder", onDelete: CASCADE)
+                                             |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
                                              |}""" }
     database.setup(project)
 
@@ -594,7 +594,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() { """type Folder  {
                                              |  id: ID! @unique
                                              |  name: String! @unique
-                                             |  children: [Folder!]! @relation(name: "FolderOnFolder", onDelete: CASCADE)
+                                             |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
                                              |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
                                              |}""" }
     database.setup(project)
@@ -628,7 +628,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
                                              |  id: ID! @unique
                                              |  name: String! @unique
                                              |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
-                                             |  children: [Folder!]! @relation(name: "FolderOnFolder", onDelete: CASCADE)
+                                             |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
                                              |}""" }
     database.setup(project)
 
@@ -658,8 +658,8 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique
-                                             |  a: [A!]! @relation(name: "A", onDelete: CASCADE)
-                                             |  b: [B!]! @relation(name: "B", onDelete: CASCADE)
+                                             |  a: [A] @relation(name: "A", onDelete: CASCADE)
+                                             |  b: [B] @relation(name: "B", onDelete: CASCADE)
                                              |}
                                              |
                                              |type A{

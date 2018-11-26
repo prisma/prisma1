@@ -4,7 +4,7 @@ import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, Grap
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 
 
-export default class ModelUpdateOneRequiredInputTypeGenerator extends ModelUpdateInputGenerator {
+export default class ModelUpdateOneRequiredInputTypeGenerator extends RelatedModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
     return `${input.name}UpdateOneRequiredInput`
   }

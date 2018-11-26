@@ -3939,11 +3939,6 @@ input HouseRulesWhereUniqueInput {
   id: ID
 }
 
-"""
-Raw JSON value
-"""
-scalar Json
-
 type Location implements Node {
   id: ID!
   lat: Float!

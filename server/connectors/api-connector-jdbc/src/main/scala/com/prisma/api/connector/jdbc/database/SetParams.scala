@@ -5,6 +5,7 @@ import java.sql.PreparedStatement
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.api.helpers.LimitClauseHelper
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
 
@@ -78,4 +79,7 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
       case x                                           => sys.error(s"Not supported: $x")
     }
   }
+
+  // todo find solution / factor out of shared trait
+  override lazy val slickDatabase: SlickDatabase = null
 }
