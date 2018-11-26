@@ -7,7 +7,7 @@ import com.prisma.deploy.server.DatabaseSizeReporter
 import com.prisma.metrics.MetricsFacade
 
 object DeployMetrics extends MetricsFacade {
-  def initialize(projectPersistence: ProjectPersistence, deployConnector: DeployConnector, system: ActorSystem): Unit = {
+  def init(projectPersistence: ProjectPersistence, deployConnector: DeployConnector, system: ActorSystem): Unit = {
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployConnector, this)))
   }
 }

@@ -13,7 +13,7 @@ import com.prisma.config.PrismaConfig
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
 import com.prisma.jwt.Auth
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
-import com.prisma.metrics.PrismaCloudSecretLoader
+import com.prisma.metrics.{MetricsRegistry, PrismaCloudSecretLoader}
 import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.{ConnectorCapability, Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
@@ -32,6 +32,7 @@ trait ApiDependencies extends AwaitUtils {
   val cacheFactory: CacheFactory
   val auth: Auth
   val sssEventsPubSub: PubSub[String]
+  val metricsRegistry: MetricsRegistry
 
   def config: PrismaConfig
   def projectFetcher: ProjectFetcher
@@ -55,7 +56,7 @@ trait ApiDependencies extends AwaitUtils {
   lazy val sssEventsPublisher: PubSubPublisher[String]  = sssEventsPubSub
 
   def initializeApiDependencies(secretLoader: PrismaCloudSecretLoader) = {
-    ApiMetrics.initialize(secretLoader, system)
+    ApiMetrics.initialize(metricsRegistry, secretLoader, system)
   }
 
   def destroy = {

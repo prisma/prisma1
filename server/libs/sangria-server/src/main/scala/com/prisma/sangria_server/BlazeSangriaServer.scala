@@ -42,6 +42,18 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
   }
 
   val service = HttpService[IO] {
+    case request if request.pathInfo == "/debug" =>
+      Thread.getAllStackTraces.forEach((k, v) => {
+        println(s"""
+                 |---------------------
+                 |${k.toString}
+                 |${v.mkString("\n")}
+                 |---------------------
+                 |""".stripMargin)
+      })
+
+      Ok("Threads dumped to STDOUT")
+
     case request if request.method == GET && request.pathInfo == "/status" =>
       Ok("\"OK\"")
 
