@@ -10,6 +10,7 @@ case class Path(segments: List[PathSegment]) {
   def append(rF: RelationField, where: NodeSelector): Path                    = this.copy(segments = this.segments :+ ToManySegment(rF, where))
   def append(rF: RelationField, whereFilter: Option[Filter]): Path            = this.copy(segments = this.segments :+ ToManyFilterSegment(rF, whereFilter))
   def append(rF: RelationField): Path                                         = this.copy(segments = this.segments :+ ToOneSegment(rF))
+  def stringForField(f: String, model: Model): String                         = stringForField(model.getFieldByName_!(f).dbName)
   def stringForField(field: String): String                                   = stringGen(field, segments).mkString(".")
   def operatorName(field: RelationField, where: NodeSelector): String         = sanitize(s"${field.name}X${where.fieldName}X${where.hashCode().toString}")
   def operatorName(field: RelationField, whereFilter: Option[Filter]): String = sanitize(s"${field.name}X${whereFilter.hashCode().toString}")

@@ -45,7 +45,7 @@ object GCBisonTransformer {
 
 object NodeSelectorBsonTransformer {
   implicit def whereToBson(where: NodeSelector): Bson = {
-    val fieldName = if (where.field.isId) "_id" else where.fieldName
+    val fieldName = if (where.field.isId) "_id" else where.field.dbName
     val value     = GCToBson(where.fieldGCValue)
 
     Filters.eq(fieldName, value)
@@ -97,13 +97,13 @@ object DocumentToRoot {
     val nonReservedFields = model.scalarNonListFields.filter(_ != model.idField_!)
 
     val scalarNonList: List[(String, GCValue)] =
-      nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+      nonReservedFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 
     val id: (String, GCValue) =
       document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
-      model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
+      model.scalarListFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
     val relationFields: List[(String, GCValue)] = model.relationFields.collect {
       case f if !f.relation.isInlineRelation => f.name -> document.get(f.dbName).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
@@ -163,6 +163,6 @@ object ArrayFilter extends FilterConditionBuilder {
 
   def fieldName(where: NodeSelector): String = where.field.isId match {
     case true  => "_id"
-    case false => where.field.name
+    case false => where.field.dbName
   }
 }
