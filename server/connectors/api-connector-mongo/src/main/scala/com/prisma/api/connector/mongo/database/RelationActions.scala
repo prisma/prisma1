@@ -42,7 +42,7 @@ trait RelationActions extends FilterConditionBuilder {
     assert(!relationField.relatedField.isList)
     relationField.relationIsInlinedInParent match {
       case true =>
-        val filter      = ScalarFilter(relationField.model.dummyField(name = relationField.dbName, relationField.isList), Equals(childId))
+        val filter      = ScalarFilter(relationField.model.dummyField(relationField), Equals(childId))
         val mongoFilter = buildConditionForFilter(Some(filter))
         val update      = unset(relationField.dbName)
 
@@ -99,15 +99,13 @@ trait RelationActions extends FilterConditionBuilder {
         case false =>
           relatedField.isList match {
             case false =>
-              val mongoFilter =
-                buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField.dbName, isList = false), Equals(parent.idValue))))
-              val update = unset(relatedField.dbName)
+              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField), Equals(parent.idValue))))
+              val update      = unset(relatedField.dbName)
               database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture
 
             case true =>
-              val mongoFilter =
-                buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField.dbName, isList = true), Contains(parent.idValue))))
-              val update = pull(relatedField.dbName, GCToBson(parent.idValue))
+              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField), Contains(parent.idValue))))
+              val update      = pull(relatedField.dbName, GCToBson(parent.idValue))
               database.getCollection(childModel.dbName).updateMany(mongoFilter, update).collect().toFuture
           }
       }
