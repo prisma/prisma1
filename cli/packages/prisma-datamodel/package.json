@@ -10,7 +10,7 @@
   "files": [
     "dist"
   ],
-  "typings": "dist/src/index.d.ts",
+  "typings": "dist/index.d.ts",
   "author": "Emanuel Jöbstl",
   "license": "Apache-2.0",
   "devDependencies": {

@@ -55,7 +55,8 @@ export abstract class DocumentConnector<InternalCollectionType> implements IConn
         const item = await iterator.next()
         merger.analyze(item)
       }
-      types.push(merger.getType())
+      const mergeResult = merger.getType()
+      types.push(mergeResult.type, ...mergeResult.embedded)
     }
     return {
       types

@@ -1,16 +1,20 @@
-import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers } from 'prisma-datamodel'
+import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers, capitalize } from 'prisma-datamodel'
 import { Data } from './data'
 import { isArray, isRegExp } from 'util'
 import { ObjectID } from 'bson';
 
-const ObjectTypeIdentifier = 'Object'
+const ObjectTypeIdentifier = 'EmbeddedObject'
 
 const MongoIdName = '_id'
 
 const UnsupportedTypeErrorKey = 'UnsupportedType'
+const UnsupportedArrayTypeErrorKey = 'UnsupportedArrayType'
+
+type InternalType = TypeIdentifier | 'EmbeddedObject'
+
 
 interface TypeInfo {
-  type: TypeIdentifier | null | 'Object',
+  type: InternalType | null,
   isArray: boolean
 }
 
@@ -20,7 +24,6 @@ interface Embedding {
 }
 
 class UnsupportedTypeError extends Error {
-
   public invalidType: string
 
   constructor(public message: string, invalidType: string) {
@@ -30,9 +33,19 @@ class UnsupportedTypeError extends Error {
   }
 }
 
+class UnsupportedArrayTypeError extends Error {
+  public invalidType: string
+
+  constructor(public message: string, invalidType: string) {
+    super(message);
+    this.name = UnsupportedArrayTypeErrorKey
+    this.invalidType = invalidType
+  }
+}
+
 interface FieldInfo {
   name: string,
-  types: TypeIdentifier[]
+  types: InternalType[]
   isArray: boolean[]
   invalidTypes: string[]
 }
@@ -47,6 +60,8 @@ export class ModelMerger {
   public name: string
   public isEmbedded: boolean
 
+  public static ErrorType = '<Unknown>'
+
   constructor(name: string, isEmbedded: boolean = false) {
     this.name = name
     this.isEmbedded = isEmbedded
@@ -60,7 +75,10 @@ export class ModelMerger {
     }
   }
 
-  public getType() : IGQLType {
+  /**
+   * Gets the top level type only.
+   */
+  public getTopLevelType() : IGQLType {
     const fields = Object.keys(this.fields).map(key => this.toIGQLField(this.fields[key]))
 
     return {
@@ -71,8 +89,42 @@ export class ModelMerger {
     }
   }
 
+  /**
+   * Gets the type with embedded types attached recursivley.
+   */
+  public getType() : { type: IGQLType, embedded: IGQLType[]} {
+
+    const type = this.getTopLevelType()
+    const allEmbedded: IGQLType[] = []
+
+    for(const embeddedFieldName of Object.keys(this.embeddedTypes)) {
+      const embedded = this.embeddedTypes[embeddedFieldName].getType()
+      allEmbedded.push(embedded.type, ...embedded.embedded)
+
+      for(const field of type.fields) {
+        if(field.name === embeddedFieldName) {
+          field.type = embedded.type
+        }
+      }
+    }
+
+    return { type: type, embedded: allEmbedded }
+  }
+
+  // TODO: If we get more types to summarize, we should have all summarization code (e.g. for arrays) 
+  // in one place.
+  private summarizeTypeList(typeCandidates: InternalType[]) {
+    // Our float/int decision is based soley on the data itself.
+    // If we have at least one float, integer is always a misguess.
+    if(typeCandidates.indexOf(TypeIdentifiers.float) >= 0) {
+      typeCandidates = typeCandidates.filter(x => x !== TypeIdentifiers.integer)
+    }
+
+    return typeCandidates
+  }
+
   private toIGQLField(info: FieldInfo) {
-    let type = '<Unknown>'
+    let type = ModelMerger.ErrorType
     let isArray = false
     let isRequired = false
     const comments: IComment[] = []
@@ -86,13 +138,7 @@ export class ModelMerger {
       isArray = info.isArray[0]
     }
 
-    let typeCandidates = [...info.types]
-
-    // Our float/int decision is based soley on the data itself.
-    // If we have at least one float, integer is always a misguess.
-    if(typeCandidates.indexOf(TypeIdentifiers.float) >= 0) {
-      typeCandidates = typeCandidates.filter(x => x !== TypeIdentifiers.integer)
-    }
+    let typeCandidates = this.summarizeTypeList([...info.types])
 
     if(typeCandidates.length > 1) {
       comments.push({
@@ -127,10 +173,6 @@ export class ModelMerger {
     } as IGQLField
   }
 
-  public getEmbeddedTypes() : IGQLType[] {
-    return Object.keys(this.embeddedTypes).map(key => this.embeddedTypes[key].getType())
-  }
-
   private initField(name: string) {
     this.fields[name] = this.fields[name] || {
       invalidTypes: [],
@@ -147,15 +189,23 @@ export class ModelMerger {
 
       // Recursive embedding case. 
       if(typeInfo.type === ObjectTypeIdentifier) {
-        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(name, true)
+        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(capitalize(name), true)
         this.embeddedTypes[name].analyze(value)
-      } else {
-        this.initField(name)
-        this.fields[name] = this.mergeField(this.fields[name], typeInfo)
-      }
+      } 
+
+      this.initField(name)
+      this.fields[name] = this.mergeField(this.fields[name], typeInfo)
+  
     } catch(err) {
       if(err.name === UnsupportedTypeErrorKey) {
         this.initField(name)
+        this.fields[name].invalidTypes.push(err.invalidType)
+      } else if(err.name == UnsupportedArrayTypeErrorKey) {
+        this.initField(name)
+        this.fields[name] = this.mergeField(this.fields[name], {
+          isArray: true,
+          type: null
+        })
         this.fields[name].invalidTypes.push(err.invalidType)
       } else {
         throw err
@@ -165,10 +215,6 @@ export class ModelMerger {
 
   private mergeField(field: FieldInfo, info: TypeInfo): FieldInfo {
     let types = field.types
-
-    if(info.type === ObjectTypeIdentifier) {
-      throw new Error('Cannot merge embedded document into field list: ' + field.name)
-    }
 
     if(info.type !== null) {
       types = this.merge(field.types, info.type)
@@ -189,17 +235,35 @@ export class ModelMerger {
     return target
   }
 
+  private inferArrayType(array: any[]) {
+    var type: InternalType | null = null
+    
+    for(const item of array) {
+      const itemType = this.inferType(item)
+
+      if(itemType.isArray) {
+        throw new UnsupportedArrayTypeError('Received a nested array while analyzing data. This is not supported yet.', 'ArrayArray')
+      }
+
+      if(type === null) {
+        type = itemType.type
+      } else if(type === TypeIdentifiers.integer && itemType.type === TypeIdentifiers.float ||
+                type === TypeIdentifiers.float && itemType.type === TypeIdentifiers.integer) {
+        // Special case: We treat int as a case of float, if needed.
+        type = TypeIdentifiers.float
+      } else if(type !== itemType.type) {
+        throw new UnsupportedArrayTypeError('Mixed arrays are not supported.', `Array of ${type} and ${itemType.type}`)
+      }
+    }
+
+    return type
+  }
+
   // TODO: There are more BSON types exported by the mongo client lib we could add here.
   private inferType(value: any): TypeInfo  {
     // Maybe an array, which would otherwise be identified as object.
     if (Array.isArray(value)) {
-      let arrayType: TypeInfo = { type: null, isArray: false }
-      if(value.length > 0) {
-        arrayType = this.inferType(value[0])
-        if(arrayType.isArray) {
-          throw new UnsupportedTypeError('Received a nested array while analyzing data. This is not supported yet.', 'ArrayArray')
-        }
-      }
+      let arrayType: TypeInfo = { type: this.inferArrayType(value), isArray: false }
       return { type: arrayType.type, isArray: true }
     }
 

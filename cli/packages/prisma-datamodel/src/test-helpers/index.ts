@@ -1,4 +1,4 @@
-import { IGQLType } from '../../src/datamodel/model'
+import { IGQLType, IGQLField } from '../../src/datamodel/model'
 
 
 export abstract class SdlExpect {
@@ -14,7 +14,7 @@ export abstract class SdlExpect {
     isId: boolean = false,
     isReadOnly: boolean = false,
     defaultValue: any = null
-  ) {
+  ) : IGQLField {
     const [fieldObj] = candidate.fields.filter(f => f.name === name)
 
     expect(fieldObj).toBeDefined()
@@ -31,9 +31,19 @@ export abstract class SdlExpect {
   }
 
   /**
+   * Assertion helper for errors.
+   */
+  static error(object: IGQLType | IGQLField) {
+    expect(object.comments).toBeDefined()
+    if(object.comments !== undefined) {
+      expect(object.comments.some(x => x.isError))
+    }
+  }
+
+  /**
    * Assertion helper for types
    */
-  static type(types: IGQLType[], name: string, isEnum: boolean = false, isEmbedded: boolean = false) {
+  static type(types: IGQLType[], name: string, isEnum: boolean = false, isEmbedded: boolean = false) : IGQLType {
     const [type] = types.filter(t => t.name === name)
 
     expect(type).toBeDefined()
