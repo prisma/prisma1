@@ -132,46 +132,49 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 # Get new version
 #
 
+# If CIRCLE_TAG doesnt exist, generate the version with our node script
 if [ -z "$CIRCLE_TAG" ]; then
-  latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
-  latestVersionElements=(${latestVersion//./ })
-  latestBetaVersionElements=(${latestBetaVersion//./ })
+  # latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
+  # latestVersionElements=(${latestVersion//./ })
+  # latestBetaVersionElements=(${latestBetaVersion//./ })
 
-  betaMinor=${latestBetaVersionElements[1]}
-  latestMinor=${latestVersionElements[1]}
-  latestMajor=${latestVersionElements[0]}
+  # betaMinor=${latestBetaVersionElements[1]}
+  # latestMinor=${latestVersionElements[1]}
+  # latestMajor=${latestVersionElements[0]}
 
-  betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
+  # betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
 
-  echo "betaLastNumber $betaLastNumber"
+  # echo "betaLastNumber $betaLastNumber"
 
-  # calc next minor
-  step=1
-  if [ $CIRCLE_BRANCH == "alpha" ]; then
-    step=2
-  fi
-  nextMinor=$((latestMinor + step))
+  # # calc next minor
+  # step=1
+  # if [ $CIRCLE_BRANCH == "alpha" ]; then
+  #   step=2
+  # fi
+  # nextMinor=$((latestMinor + step))
 
-  nextLastNumber=0
+  # nextLastNumber=0
 
-  echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
+  # echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
 
-  # calc next last number
-  if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
-    echo "$betaMinor is greater than $latestMinor"
-    nextLastNumber=$((betaLastNumber + step + 1))
-  fi
+  # # calc next last number
+  # if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
+  #   echo "$betaMinor is greater than $latestMinor"
+  #   nextLastNumber=$((betaLastNumber + step + 1))
+  # fi
 
-  if [ $CIRCLE_BRANCH == "alpha" ]; then
-    nextLastNumber=$((nextLastNumber + 1))
-  fi
+  # if [ $CIRCLE_BRANCH == "alpha" ]; then
+  #   nextLastNumber=$((nextLastNumber + 1))
+  # fi
 
-  export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
-  echo "new version: $newVersion"
+  # export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
+  export newVersion=$(eval node ./cli/scripts/get-version.js $CIRCLE_BRANCH)
+  echo "New version: $newVersion"
+  echo "Waiting 10 seconds so you can stop the script if this is not correct"
+  sleep 10
 else
   export newVersion=$CIRCLE_TAG
 fi
-
 
 
 
