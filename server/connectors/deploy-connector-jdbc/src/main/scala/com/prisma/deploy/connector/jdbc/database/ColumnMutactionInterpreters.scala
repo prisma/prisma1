@@ -12,7 +12,8 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       isRequired = mutaction.field.isRequired,
       isUnique = mutaction.field.isUnique,
       isList = mutaction.field.isList,
-      typeIdentifier = mutaction.field.typeIdentifier
+      typeIdentifier = mutaction.field.typeIdentifier,
+      defaultValue = mutaction.field.defaultValue
     )
   }
 
@@ -42,7 +43,8 @@ case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       isRequired = mutaction.field.isRequired,
       isUnique = mutaction.field.isUnique,
       isList = mutaction.field.isList,
-      typeIdentifier = mutaction.field.typeIdentifier
+      typeIdentifier = mutaction.field.typeIdentifier,
+      defaultValue = mutaction.field.defaultValue
     )
   }
 }
@@ -91,7 +93,8 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       newColumnName = after.dbName,
       newIsRequired = after.isRequired,
       newIsList = after.isList,
-      newTypeIdentifier = after.typeIdentifier
+      newTypeIdentifier = after.typeIdentifier,
+      defaultValue = after.defaultValue
     )
 
     val removeUniqueConstraint = builder.removeUniqueConstraint(

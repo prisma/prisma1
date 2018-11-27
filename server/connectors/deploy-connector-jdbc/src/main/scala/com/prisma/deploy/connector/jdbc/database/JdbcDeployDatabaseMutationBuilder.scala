@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.JdbcBase
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import org.jooq.impl.DSL._
@@ -36,7 +37,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       isRequired: Boolean,
       isUnique: Boolean,
       isList: Boolean,
-      typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
+      typeIdentifier: TypeIdentifier.ScalarTypeIdentifier,
+      defaultValue: Option[GCValue]
   ): DBIOAction[Any, NoStream, Effect.All]
 
   def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
@@ -47,7 +49,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       newColumnName: String,
       newIsRequired: Boolean,
       newIsList: Boolean,
-      newTypeIdentifier: ScalarTypeIdentifier
+      newTypeIdentifier: ScalarTypeIdentifier,
+      defaultValue: Option[GCValue]
   ): DBIOAction[Any, NoStream, Effect.All]
 
   /*

@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Model, Project, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import org.jooq.impl.DSL
@@ -9,7 +10,7 @@ import slick.dbio.{DBIOAction => DatabaseAction}
 
 import scala.concurrent.ExecutionContext
 
-case class MysqlJdbcDeployDatabaseMutationBuilder(
+case class MySqlJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)
@@ -95,7 +96,8 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
                             isRequired: Boolean,
                             isUnique: Boolean,
                             isList: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+                            typeIdentifier: ScalarTypeIdentifier,
+                            defaultValue: Option[GCValue]): DatabaseAction[Any, NoStream, Effect.All] = {
     val newColSql = typeMapper.rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
     val uniqueString =
       if (isUnique) {
@@ -124,7 +126,8 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
-                            newTypeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+                            newTypeIdentifier: ScalarTypeIdentifier,
+                            defaultValue: Option[GCValue]): DatabaseAction[Any, NoStream, Effect.All] = {
     val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }

@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.postgres.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import org.jooq.impl.DSL
@@ -96,7 +97,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             isRequired: Boolean,
                             isUnique: Boolean,
                             isList: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All] = {
+                            typeIdentifier: ScalarTypeIdentifier,
+                            defaultValue: Option[GCValue]): DBIOAction[Any, NoStream, Effect.All] = {
     val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, isList, typeIdentifier)
     val uniqueAction = isUnique match {
       case true  => addUniqueConstraint(projectId, tableName, columnName, typeIdentifier)
@@ -118,7 +120,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
-                            newTypeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All] = {
+                            newTypeIdentifier: ScalarTypeIdentifier,
+                            defaultValue: Option[GCValue]): DBIOAction[Any, NoStream, Effect.All] = {
     val nulls   = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
     val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
     val renameIfNecessary = if (oldColumnName != newColumnName) {
