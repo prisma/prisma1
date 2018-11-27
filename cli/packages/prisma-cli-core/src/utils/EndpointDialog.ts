@@ -297,6 +297,12 @@ export class EndpointDialog {
           host: defaultHosts[type],
           port: defaultPorts[type],
         }
+        if (type === 'mongo') {
+          credentials = {
+            type,
+            uri: 'mongodb://prisma:prisma@mongo',
+          }
+        }
         dockerComposeYml += this.printDatabaseConfig(credentials)
         dockerComposeYml += this.printDatabaseService(type)
         newDatabase = true

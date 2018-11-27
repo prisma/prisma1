@@ -343,7 +343,8 @@ lazy val sangriaServer = libProject("sangria-server")
   .settings(libraryDependencies ++= Seq(
     akkaHttpPlayJson,
     cuid,
-    scalajHttp % Test
+    scalajHttp % Test,
+    akkaHttpCors
   ) ++ http4s ++ ujson)
 
 val allDockerImageProjects = List(

@@ -32,9 +32,9 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
     case None     => sys.error("There was no field with name 'id'.")
   }
 
-  def embeddedIdField = map.get("_id") match {
+  def idFieldByName(name: String) = map.get(name) match {
     case Some(id) => id.asInstanceOf[IdGCValue]
-    case None     => sys.error("There was no field with name '_id'.")
+    case None     => sys.error(s"There was no id field with name '$name'.")
   }
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
