@@ -1,5 +1,5 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
-import { ModelMerger } from '../../src/databases/document/modelMerger'
+import { ModelMerger } from '../../databases/document/modelMerger'
 
 describe('Basic document model inferring', () => {
   it('Should create the sdl description for a simple model correctly.', () => {

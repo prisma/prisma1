@@ -7,7 +7,8 @@ export interface IRelationInfo {
   sourceKey: string
   targetKey: string
 }
-
+/*
 export interface IRelationResolver {
   resolve(resolver: DocumentConnector, samples: any[]) : IRelationInfo
 }
+*/
