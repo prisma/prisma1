@@ -3826,10 +3826,6 @@ node-fetch@^1.0.1:
     encoding "^0.1.11"
     is-stream "^1.0.1"
 
-node-fetch@^2.2.1:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.3.0.tgz#1a1d940bbfb916a1d3e0219f037e89e71f8c5fa5"
-
 node-forge@^0.7.1:
   version "0.7.6"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.6.tgz#fdf3b418aee1f94f0ef642cd63486c77ca9724ac"
@@ -4406,14 +4402,24 @@ prisma-client-lib@1.23.0-test.2:
     ws "^6.1.0"
     zen-observable "^0.8.10"
 
-prisma-generate-schema@^1.20.6:
-  version "1.21.1"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.21.1.tgz#12a99f7df3919bb78396b7a0638f5de14569c420"
+prisma-datamodel@1.23.0-alpha.178:
+  version "1.23.0-alpha.178"
+  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.178.tgz#d5f2db4a1d163af60762eeb87d982eeeae80cf30"
+  integrity sha512-W4NoDq6oUodFE9GKFY7VbmkWY+bei6g5lCvctuodAnKgMH1luKyZCHLi7BZ6NiXkufAYv/cNh4ZGiwuIUaoTTA==
   dependencies:
     graphql "^14.0.2"
-    node-fetch "^2.2.1"
     pluralize "^7.0.0"
     popsicle "10"
+
+prisma-generate-schema@^1.23.0-alpha.178:
+  version "1.23.0-alpha.178"
+  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.23.0-alpha.178.tgz#d2ae8026d443617ff7fd80a0e022750f982feace"
+  integrity sha512-jcqvBr2TQXUp72J8stLfDCVqHCMezX56jkwURfjZ42YPRMXheLPeOGlJhWifjv4naAN9az2X6INPzeF1dudy3w==
+  dependencies:
+    graphql "^14.0.2"
+    pluralize "^7.0.0"
+    popsicle "10"
+    prisma-datamodel "1.23.0-alpha.178"
 
 prisma-json-schema@0.1.3:
   version "0.1.3"
