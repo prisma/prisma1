@@ -30,11 +30,15 @@ object DefaultDirective extends FieldDirective[GCValue] {
     val value          = directive.argument_!(valueArg.name).value
     val typeIdentifier = document.typeIdentifierForTypename(fieldDef.fieldType).asInstanceOf[ScalarTypeIdentifier]
     val typeError = (typeIdentifier, value) match {
-      case (TypeIdentifier.String, _: StringValue)   => None
-      case (TypeIdentifier.Float, _: FloatValue)     => None
-      case (TypeIdentifier.Boolean, _: BooleanValue) => None
-      case (TypeIdentifier.Json, _: StringValue)     => None
-      case (TypeIdentifier.DateTime, _: StringValue) => None
+      case (TypeIdentifier.String, _: StringValue)    => None
+      case (TypeIdentifier.Float, _: FloatValue)      => None
+      case (TypeIdentifier.Float, _: BigIntValue)     => None
+      case (TypeIdentifier.Float, _: BigDecimalValue) => None
+      case (TypeIdentifier.Int, _: IntValue)          => None
+      case (TypeIdentifier.Int, _: BigIntValue)       => None
+      case (TypeIdentifier.Boolean, _: BooleanValue)  => None
+      case (TypeIdentifier.Json, _: StringValue)      => None
+      case (TypeIdentifier.DateTime, _: StringValue)  => None
       case (TypeIdentifier.Enum, v: EnumValue) => {
         val enumValues = document.enumType(fieldDef.typeName).get.values.map(_.name)
         if (enumValues.contains(v.asString)) {
