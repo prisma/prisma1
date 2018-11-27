@@ -201,29 +201,54 @@ Here is what you can do next:
 
 Collection of Prisma example projects 💡
 
-| Demo | Language | Description |
-|:------|:----------:|:-------------|
-| [`flow-graphql`](https://github.com/prisma/prisma-examples/tree/master/flow/graphql) | [Flow](https://flow.org/) | Simple GraphQL server |
-| [`flow-script`](https://github.com/prisma/prisma-examples/tree/master/flow/script) | [Flow](https://flow.org/) | Simple usage of Prisma client in script |
-| [`go-cli-app`](https://github.com/prisma/prisma-examples/tree/master/go/cli-app) | [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)) | Simple CLI TODO list app |
-| [`go-graphql`](https://github.com/prisma/prisma-examples/tree/master/go/graphql) | [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)) | Simple GraphQL server |
-| [`go-http-mux`](https://github.com/prisma/prisma-examples/tree/master/go/http-mux) | [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)) | Simple REST API with [gorilla/mux](https://github.com/gorilla/mux) |
-| [`go-rest-gin`](https://github.com/prisma/prisma-examples/tree/master/go/rest-gin) | [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)) | Simple REST API with [Gin](https://github.com/gin-gonic/gin) |
-| [`go-script`](https://github.com/prisma/prisma-examples/tree/master/go/script) | [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)) | Simple usage of Prisma client in script |
-| [`node-cli-app`](https://github.com/prisma/prisma-examples/tree/master/node/cli-app) | [Node.JS](https://nodejs.org/en/) | Simple CLI TODO list app |
-| [`node-graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-auth) |  [Node.JS](https://nodejs.org/en/) | GraphQL server with email-password authentication & permissions |
-| [`node-graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-schema-delegation) | [Node.JS](https://nodejs.org/en/) | [Schema delegation](https://www.prisma.io/docs/prisma-graphql-api/usage/prisma-bindings-prb1/#building-graphql-servers-with-prisma-bindings) with Prisma binding |
-| [`node-graphql`](https://github.com/prisma/prisma-examples/tree/master/node/graphql) |  [Node.JS](https://nodejs.org/en/) | Simple GraphQL server |
-| [`node-graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-subscriptions) |  [Node.JS](https://nodejs.org/en/) | GraphQL server with realtime subscriptions |
-| [`node-rest-express`](https://github.com/prisma/prisma-examples/tree/master/node/rest-express) | [Node.JS](https://nodejs.org/en/) | Simple REST API with Express.JS |
-| [`node-script`](https://github.com/prisma/prisma-examples/tree/master/node/script) | [Node.JS](https://nodejs.org/en/) | Simple usage of Prisma client in script |
-| [`typescript-cli-app`](https://github.com/prisma/prisma-examples/tree/master/typescript/cli-app) | [TypeScript](https://www.typescriptlang.org/) | Simple CLI TODO list app |
-| [`typescript-graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-auth) | [TypeScript](https://www.typescriptlang.org/) | GraphQL server with email-password authentication & permissions |
-| [`typescript-graphql`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql) | [TypeScript](https://www.typescriptlang.org/) | Simple GraphQL server |
-| [`typescript-graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-subscriptions) | [TypeScript](https://www.typescriptlang.org/) | GraphQL server with realtime subscriptions |
-| [`typescript-script`](https://github.com/prisma/prisma-examples/tree/master/typescript/script) | [TypeScript](https://www.typescriptlang.org/) | Simple usage of Prisma client in script |
+#### Go
+
+Examples based on [Golang](https://en.wikipedia.org/wiki/Go_(programming_language)):
+
+| Demo | Description |
+|:------|:----------|
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/go/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/go/graphql) | Simple GraphQL server |
+| [`http-mux`](https://github.com/prisma/prisma-examples/tree/master/go/http-mux) | Simple REST API with [gorilla/mux](https://github.com/gorilla/mux) |
+| [`rest-gin`](https://github.com/prisma/prisma-examples/tree/master/go/rest-gin) | Simple REST API with [Gin](https://github.com/gin-gonic/gin) |
+| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/go/cli-app) | Simple CLI TODO list app |
+
+#### Node.JS
+
+Examples based on [Node.JS](https://nodejs.org/en/):
+
+| Demo | Description |
+|:------|:----------|
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/node/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/node/graphql) | Simple GraphQL server |
+| [`graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-auth) | GraphQL server with email-password authentication & permissions |
+| [`graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-subscriptions) | GraphQL server with realtime subscriptions |
+| [`graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-schema-delegation) | [Schema delegation](https://www.prisma.io/docs/prisma-graphql-api/usage/prisma-bindings-prb1/#building-graphql-servers-with-prisma-bindings) with Prisma binding |
+| [`rest-express`](https://github.com/prisma/prisma-examples/tree/master/node/rest-express) | Simple REST API with Express.JS |
+| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/node/cli-app) | Simple CLI TODO list app |
+
+#### TypeScript
+
+Examples based on [TypeScript](https://www.typescriptlang.org/):
+
+| Demo | Description |
+|:------|:----------|
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/typescript/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql) | Simple GraphQL server |
+| [`graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-auth) | GraphQL server with email-password authentication & permissions |
+| [`graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-subscriptions) | GraphQL server with realtime subscriptions |
+| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/typescript/cli-app) | Simple CLI TODO list app |
 
 You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
+
+#### Flow
+
+Examples based on [Flow](https://flow.org/):
+
+| Demo | Description |
+|:------|:----------|
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/flow/script) | Simple usage of Prisma client in script |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/flow/graphql) | Simple GraphQL server |
 
 ## Architecture
 
@@ -243,7 +268,7 @@ You can connect the following databases to Prisma already:
 
 - MySQL
 - PostgreSQL
-- MongoDB ([alpha](https://github.com/prisma/prisma/issues/1643))
+- MongoDB ([beta](https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/))
 
 ### Upcoming Connectors
 
