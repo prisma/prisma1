@@ -18,10 +18,102 @@ describe('Document model inferring, conflict resolution', () => {
 
     const { type } = merger.getType()
 
-//    expect(type.fields).toHaveLength(3)
+    expect(type.fields).toHaveLength(2)
 
-//    SdlExpect.field(type, '_id', false, false, TypeIdentifiers.string, true)
-//    SdlExpect.field(type, 'lastName', false, false, TypeIdentifiers.string)
-//    SdlExpect.field(type, 'firstName', false, false, TypeIdentifiers.string)
+    SdlExpect.field(type, 'lastName', false, false, TypeIdentifiers.string)
+    SdlExpect.field(type, 'firstName', false, false, TypeIdentifiers.string)
+  })
+
+  it('Should merge conflicting models additively and recursively.', () => {
+    const user1 = {
+      lastName: 'Test-1',
+      shippingAddress: {
+        country: 'Germany'
+      }
+    }
+
+    const user2 = {
+      lastName: 'Test-3',
+      firstName: 'Test-2',
+      shippingAddress: {
+        country: 'Germany',
+        street: 'Teststreet'
+      }
+    }
+
+    const user3 = {
+      firstName: 'Test-2',
+      shippingAddress: {
+        street: 'Teststreet',
+        houseNumber: 4
+      }
+    }
+
+
+    const merger = new ModelMerger('User')
+
+    merger.analyze(user1)
+    merger.analyze(user2)
+    merger.analyze(user3)
+
+    const { type, embedded } = merger.getType()
+
+    const embeddedType = SdlExpect.type(embedded, 'ShippingAddress', false, true)
+
+    expect(type.fields).toHaveLength(3)
+
+    SdlExpect.field(embeddedType, 'country', false, false, TypeIdentifiers.string)
+    SdlExpect.field(embeddedType, 'street', false, false, TypeIdentifiers.string)
+    SdlExpect.field(embeddedType, 'houseNumber', false, false, TypeIdentifiers.integer)
+
+    SdlExpect.field(type, 'lastName', false, false, TypeIdentifiers.string)
+    SdlExpect.field(type, 'firstName', false, false, TypeIdentifiers.string)
+
+    SdlExpect.field(type, 'shippingAddress', false, false, embeddedType)
+  })
+
+
+  it('Should bail on type conflict.', () => {
+    const user1 = {
+      lastName: 'Test-1',
+      shippingAddress: {
+        country: 'Germany'
+      }
+    }
+
+    const user2 = {
+      lastName: [false],
+      firstName: 'Test-2',
+      shippingAddress: {
+        country: 'Germany',
+        street: 8
+      }
+    }
+
+    const user3 = {
+      firstName: 'Test-2',
+      shippingAddress: {
+        street: 'Teststreet',
+        houseNumber: 4
+      }
+    }
+
+
+    const merger = new ModelMerger('User')
+
+    merger.analyze(user1)
+    merger.analyze(user2)
+    merger.analyze(user3)
+
+    const { type, embedded } = merger.getType()
+
+    const embeddedType = SdlExpect.type(embedded, 'ShippingAddress', false, true)
+
+    expect(type.fields).toHaveLength(3)
+    
+    const conflictingEmbeddedField = SdlExpect.field(embeddedType, 'street', false, false, ModelMerger.ErrorType)
+    SdlExpect.error(conflictingEmbeddedField)
+    const conflictingField = SdlExpect.field(type, 'lastName', false, false, ModelMerger.ErrorType)
+    SdlExpect.error(conflictingField)
   })
 })
