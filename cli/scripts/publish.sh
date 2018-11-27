@@ -66,6 +66,7 @@ coreChanged=false
 engineChanged=false
 clientChanged=false
 generateSchemaChanged=false
+datamodelChanged=false
 
 if [[ "$changedFiles" = *"cli/packages/prisma-yml"* ]]; then
   ymlChanged=true
@@ -91,9 +92,13 @@ if [[ "$changedFiles" = *"cli/packages/prisma-generate-schema"* ]]; then
   generateSchemaChanged=true
 fi
 
+if [[ "$changedFiles" = *"cli/packages/prisma-datamodel"* ]]; then
+  datamodelChanged=true
+fi
+
 echo "introspection changed: $introspectionChanged yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
+if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ] && [ $datamodelChanged == false ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
@@ -175,6 +180,24 @@ fi
 ######################
 
 cd cli/packages/
+#
+# Build prisma-datamodel
+#
+
+if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $datamodelChanged ]; then
+  cd prisma-datamodel
+  sleep 3.0
+  ../../scripts/doubleInstall.sh
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
 
 #
 # Build prisma-generate-schema
@@ -184,6 +207,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   cd prisma-generate-schema
   sleep 3.0
   ../../scripts/doubleInstall.sh
+  yarn add prisma-datamodel@$newVersion
   yarn build
   npm version $newVersion
 
@@ -207,7 +231,7 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn install
   yarn build
   npm version $newVersion
-  yarn add prisma-generate-schema@$newVersion
+  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
@@ -280,7 +304,7 @@ export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | j
 if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
   cd prisma-db-introspection
   sleep 0.5
-  yarn add prisma-yml@$ymlVersion
+  yarn add prisma-datamodel@$ymlVersion prisma-yml@$ymlVersion
   sleep 0.2
   ../../scripts/doubleInstall.sh
   yarn build
@@ -303,6 +327,8 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
+  yarn add prisma-datamodel@$newVersion
+  sleep 0.2
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
   yarn add prisma-db-introspection@$introspectionVersion
