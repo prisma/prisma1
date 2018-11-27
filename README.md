@@ -199,7 +199,7 @@ Here is what you can do next:
 
 ## Examples
 
-[**Golang**](https://en.wikipedia.org/wiki/Go_(programming_language))
+#### Golang
 
 | Demo | Description |
 |:------|:----------|
@@ -209,7 +209,7 @@ Here is what you can do next:
 | [`rest-gin`](https://github.com/prisma/prisma-examples/tree/master/go/rest-gin) | Simple REST API with [Gin](https://github.com/gin-gonic/gin) |
 | [`script`](https://github.com/prisma/prisma-examples/tree/master/go/script) | Simple usage of Prisma client in script |
 
-[**Node.JS**](https://nodejs.org/en/)
+#### Node.JS
 
 | Demo | Description |
 |:------|:----------|
@@ -221,7 +221,7 @@ Here is what you can do next:
 | [`rest-express`](https://github.com/prisma/prisma-examples/tree/master/node/rest-express) | Simple REST API with Express.JS |
 | [`script`](https://github.com/prisma/prisma-examples/tree/master/node/script) | Simple usage of Prisma client in script |
 
-[**TypeScript**](https://www.typescriptlang.org/)
+#### TypeScript
 
 | Demo | Description |
 |:------|:----------|
@@ -233,7 +233,7 @@ Here is what you can do next:
 
 > You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
 
-[**Flow**](https://flow.org/)
+#### Flow
 
 | Demo | Description |
 |:------|:----------|
