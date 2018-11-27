@@ -68,7 +68,7 @@ trait FilterConditionBuilder {
     }
   }
 
-  private def renameId(field: ScalarField): String = if (field.isId) "_id" else field.name
+  def renameId(field: ScalarField): String = if (field.isId) "_id" else field.dbName
 
   private def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
     case x if x.isEmpty && path == "" => Vector(hackForTrue)
@@ -77,13 +77,13 @@ trait FilterConditionBuilder {
   }
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
-    val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
+    val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.dbName), relationFilter.nestedFilter)
     val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
 
     relationFilter.condition match {
-      case AtLeastOneRelatedNode => elemMatch(relationFilter.field.name, toManyNested)
-      case EveryRelatedNode      => not(elemMatch(relationFilter.field.name, not(toManyNested)))
-      case NoRelatedNode         => not(elemMatch(relationFilter.field.name, toManyNested))
+      case AtLeastOneRelatedNode => elemMatch(relationFilter.field.dbName, toManyNested)
+      case EveryRelatedNode      => not(elemMatch(relationFilter.field.dbName, not(toManyNested)))
+      case NoRelatedNode         => not(elemMatch(relationFilter.field.dbName, toManyNested))
       case ToOneRelatedNode      => toOneNested
     }
   }

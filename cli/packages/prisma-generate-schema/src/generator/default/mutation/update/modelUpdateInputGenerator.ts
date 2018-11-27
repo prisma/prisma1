@@ -1,5 +1,5 @@
 import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, TypeFromModelGenerator } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 
 export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTypeGenerator {
   public static generateScalarFieldTypeForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {

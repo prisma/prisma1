@@ -1,5 +1,5 @@
-export { Introspector } from './Introspector'
+export { default as Connectors } from './connectors'
 
-export { PostgresConnector } from './connectors/PostgresConnector'
+export { PostgresConnector } from './databases/relational/postgres/postgresConnector'
 
-export { PrismaDBClient } from './PrismaDBClient'
+export { PrismaDBClient } from './databases/prisma/prismaDBClient'

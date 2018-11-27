@@ -50,7 +50,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
     val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
-        PrismaNode(root.idField, root, Some(model.name))
+        PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
       }
     }
 
@@ -93,7 +93,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
       val relatedField = fromField.relatedField
       val model        = fromField.relatedModel_!
 
-      val inFilter: Filter = ScalarListFilter(model.dummyField(name = relatedField.dbName, isList = true), ListContainsSome(fromNodeIds))
+      val inFilter: Filter = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
       helper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
         val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
           case true =>
@@ -111,8 +111,9 @@ trait NodeManyQueries extends FilterConditionBuilder {
         fromNodeIds.map { id =>
           groups.get(id.asInstanceOf[StringIdGCValue]) match {
             case Some(group) =>
-              val roots                                     = group.map(DocumentToRoot(model, _))
-              val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idField, r, Some(model.name)))).toVector
+              val roots = group.map(DocumentToRoot(model, _))
+              val prismaNodes: Vector[PrismaNodeWithParent] =
+                roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idFieldByName(model.idField_!.name), r, Some(model.name)))).toVector
               ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
 
             case None =>

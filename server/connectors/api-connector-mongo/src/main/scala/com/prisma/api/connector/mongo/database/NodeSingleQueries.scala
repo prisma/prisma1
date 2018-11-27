@@ -32,7 +32,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
     database.getCollection(where.model.dbName).find(where).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
-        PrismaNode(root.idField, root, Some(where.model.name))
+        PrismaNode(root.idFieldByName(where.model.idField_!.name), root, Some(where.model.name))
       }
     }
   }
@@ -113,8 +113,8 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
   }
 
   def generateFilterForFieldAndId(relationField: RelationField, id: IdGCValue) = relationField.isList match {
-    case true  => ScalarListFilter(relationField.model.dummyField(name = relationField.dbName, true), ListContains(id))
-    case false => ScalarFilter(relationField.model.dummyField(name = relationField.dbName, false), Equals(id))
+    case true  => ScalarListFilter(relationField.model.dummyField(relationField), ListContains(id))
+    case false => ScalarFilter(relationField.model.dummyField(relationField), Equals(id))
   }
 
 }

@@ -2,7 +2,7 @@ import { GraphQLSchema } from 'graphql'
 import flatten from './utils/flatten'
 import { interleave } from './utils/interleave'
 import { Interpolation } from './types'
-import { IGQLType } from 'prisma-generate-schema/dist/src/datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 
 export interface GeneratorInput {
   schema: GraphQLSchema

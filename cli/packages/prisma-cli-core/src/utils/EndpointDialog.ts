@@ -12,7 +12,7 @@ import {
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
-import { Introspector, PostgresConnector } from 'prisma-db-introspection'
+import { PostgresConnector } from 'prisma-db-introspection'
 import { MongoClient } from 'mongodb'
 import * as yaml from 'js-yaml'
 import { Client as PGClient } from 'pg'
@@ -297,6 +297,12 @@ export class EndpointDialog {
           host: defaultHosts[type],
           port: defaultPorts[type],
         }
+        if (type === 'mongo') {
+          credentials = {
+            type,
+            uri: 'mongodb://prisma:prisma@mongo',
+          }
+        }
         dockerComposeYml += this.printDatabaseConfig(credentials)
         dockerComposeYml += this.printDatabaseService(type)
         newDatabase = true
@@ -320,10 +326,9 @@ export class EndpointDialog {
           )
           const client = new PGClient(this.replaceLocalDockerHost(credentials))
           const connector = new PostgresConnector(client)
-          const introspector = new Introspector(connector)
           let schemas
           try {
-            schemas = await introspector.listSchemas()
+            schemas = await connector.listSchemas()
           } catch (e) {
             throw new Error(`Could not connect to database. ${e.message}`)
           }
@@ -336,7 +341,11 @@ export class EndpointDialog {
           ) {
             const schema = credentials.schema || schemas[0]
 
-            const { numTables, sdl } = await introspector.introspect(schema)
+            const introspection = await connector.introspect(schema)
+            const sdl = await introspection.getDatamodel()
+            const numTables = sdl.types.length
+            const renderedSdl = introspection.renderer.render(sdl)
+
             await client.end()
             if (numTables === 0) {
               this.out.log(
@@ -353,7 +362,7 @@ export class EndpointDialog {
             this.out.log(
               `Created datamodel definition based on ${numTables} database tables.`,
             )
-            datamodel = sdl
+            datamodel = renderedSdl
           } else {
             this.out.action.stop(prettyTime(Date.now() - before))
           }

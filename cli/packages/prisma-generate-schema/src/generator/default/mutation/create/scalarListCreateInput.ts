@@ -1,5 +1,5 @@
 import { ModelInputObjectTypeGeneratorBase } from "../../../generator"
-import { IGQLType, IGQLField } from "../../../../datamodel/model"
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { GraphQLInputObjectType } from 'graphql/type'
 
 export default class ScalarListCreateInput extends ModelInputObjectTypeGeneratorBase<IGQLField> {

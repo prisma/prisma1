@@ -304,7 +304,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(f.name) match {
-          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.embeddedIdField, v.asRoot))
+          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.idFieldByName(f.relatedModel_!.idField_!.name), v.asRoot))
           case NullGCValue         => Vector.empty[PrismaNode]
           case x                   => sys.error("not handled yet" + x)
         }
@@ -324,7 +324,7 @@ class ObjectTypeBuilder(
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
         item.data.map(field.name) match {
           case NullGCValue => None
-          case value       => Some(PrismaNode(value.asRoot.embeddedIdField, value.asRoot))
+          case value       => Some(PrismaNode(value.asRoot.idFieldByName(f.relatedModel_!.idField_!.name), value.asRoot))
         }
 
       case f: RelationField if f.isList =>

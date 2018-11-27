@@ -7,7 +7,8 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
   def getToOneChild(relationField: RelationField): Option[PrismaNode] = data.map.get(relationField.name) match {
     case None              => None
     case Some(NullGCValue) => None
-    case Some(value)       => Some(PrismaNode(value.asRoot.embeddedIdField, value.asRoot, Some(relationField.relatedModel_!.name)))
+    case Some(value) =>
+      Some(PrismaNode(value.asRoot.idFieldByName(relationField.relatedModel_!.idField_!.name), value.asRoot, Some(relationField.relatedModel_!.name)))
   }
 
   def getToManyChild(relationField: RelationField, where: NodeSelector): Option[PrismaNode] = data.map.get(relationField.name) match {
@@ -18,9 +19,10 @@ case class PrismaNode(id: IdGCValue, data: RootGCValue, typeName: Option[String]
   }
 
   private def evaluateListGCValue(relationField: RelationField, values: Vector[GCValue], where: NodeSelector) = {
-    values.find(value => value.asRoot.map(where.fieldName) == where.fieldGCValue) match {
-      case Some(gc) => Some(PrismaNode(gc.asRoot.embeddedIdField, gc.asRoot, Some(relationField.relatedModel_!.name)))
-      case None     => None
+    values.find(value => value.asRoot.map(where.field.name) == where.fieldGCValue) match {
+      case Some(gc) =>
+        Some(PrismaNode(gc.asRoot.idFieldByName(relationField.relatedModel_!.idField_!.name), gc.asRoot, Some(relationField.relatedModel_!.name)))
+      case None => None
     }
   }
 

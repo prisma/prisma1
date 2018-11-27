@@ -5,7 +5,6 @@ import Dependencies._
 
 name := "server"
 
-
 lazy val commonSettings = Seq(
   organization := "com.prisma",
   organizationName := "graphcool",
@@ -117,7 +116,7 @@ lazy val workers = serverProject("workers")
   .dependsOn(messageBus)
   .dependsOn(scalaUtils)
 
-lazy val serversShared = serverProject("servers-shared").dependsOn(connectorUtils % "test->test")
+lazy val serversShared = serverProject("servers-shared").dependsOn(sangriaServer).dependsOn(connectorUtils % "test->test")
 
 // ####################
 //       CONNECTORS
@@ -344,7 +343,8 @@ lazy val sangriaServer = libProject("sangria-server")
   .settings(libraryDependencies ++= Seq(
     akkaHttpPlayJson,
     cuid,
-    scalajHttp % Test
+    scalajHttp % Test,
+    akkaHttpCors
   ) ++ http4s ++ ujson)
 
 val allDockerImageProjects = List(

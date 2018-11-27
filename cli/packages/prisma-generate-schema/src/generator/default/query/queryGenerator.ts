@@ -1,6 +1,5 @@
 import { RootGenerator, FieldConfigUtils } from "../../generator"
-import { IGQLType } from "../../../datamodel/model"
-import { plural, camelCase } from '../../../util/util'
+import { IGQLType, plural, camelCase } from 'prisma-datamodel'
 import { GraphQLObjectType, GraphQLNonNull, GraphQLFieldConfigMap, GraphQLList, GraphQLID } from "graphql"
 
 export default class QueryGenerator extends RootGenerator {
