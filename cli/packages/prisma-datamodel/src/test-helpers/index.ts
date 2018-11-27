@@ -1,4 +1,4 @@
-import { IGQLType, IGQLField } from '../../src/datamodel/model'
+import { IGQLType, IGQLField } from '../datamodel/model'
 
 
 export abstract class SdlExpect {

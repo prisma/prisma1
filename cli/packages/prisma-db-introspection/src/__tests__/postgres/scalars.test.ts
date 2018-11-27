@@ -1,7 +1,7 @@
-import Connectors from '../../src/connectors'
+import Connectors from '../../connectors'
 import { Client } from 'pg'
 import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../src/databases/relational/postgres/postgresConnector'
+import { PostgresConnector } from '../../databases/relational/postgres/postgresConnector'
 import { DatabaseType } from 'prisma-datamodel'
 import { connect } from 'tls'
 
