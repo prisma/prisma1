@@ -4172,7 +4172,7 @@ node-fetch@2.1.2:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.1.2.tgz#ab884e8e7e57e38a944753cec706f788d1768bb5"
   integrity sha1-q4hOjn5X44qUR1POxwb3iNF2i7U=
 
-node-fetch@^2.1.1, node-fetch@^2.2.1:
+node-fetch@^2.1.1:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.3.0.tgz#1a1d940bbfb916a1d3e0219f037e89e71f8c5fa5"
   integrity sha512-MOd8pV3fxENbryESLgVIeaGKrdl+uaYhCSSVkjeOb/31/njTpcis5aWfdqgNlHIrKOLRbMnfPINPOML2CIFeXA==
@@ -5014,15 +5014,24 @@ prisma-datamodel@1.23.0-alpha.1:
     pluralize "^7.0.0"
     popsicle "10"
 
-prisma-generate-schema@1.20.4:
-  version "1.20.4"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.20.4.tgz#d13f2bd0475e59a95a89b67a83358fe24f0471c5"
-  integrity sha512-o7JPEcv2zu2uAIj0hgUdQ+oWR2tKU49nDu6rO0BUR5RYAMbcR+BqS1mchAoWpNGX8nhZqDqHQ524WyWZu7pr3A==
+prisma-datamodel@1.23.0-alpha.173:
+  version "1.23.0-alpha.173"
+  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.173.tgz#1c8ba6b9d35b86f4eeb2e6f90113141b7391445c"
+  integrity sha512-GM0qy/j0lNqAzkz9rA163T4/Qu15KQ6MaG8wSvoS5crUZPoRCN9L+I7VF7JXwfoycU5/eHSBAHpmhYQeyz4G6A==
   dependencies:
     graphql "^14.0.2"
-    node-fetch "^2.2.1"
     pluralize "^7.0.0"
     popsicle "10"
+
+prisma-generate-schema@1.23.0-alpha.173:
+  version "1.23.0-alpha.173"
+  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.23.0-alpha.173.tgz#73117d75e2c908c4fa3188bd816697e2a4cb55ec"
+  integrity sha512-bJQfFnkJJvBwGM2MrS/pn75ovWMYlXcxekLDf/nyb+9tRq+4xrUngM6ld0e3ituJLscsUAp1lV0zHr1np24ceQ==
+  dependencies:
+    graphql "^14.0.2"
+    pluralize "^7.0.0"
+    popsicle "10"
+    prisma-datamodel "1.23.0-alpha.173"
 
 private@^0.1.8:
   version "0.1.8"
