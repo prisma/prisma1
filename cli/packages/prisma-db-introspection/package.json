@@ -12,18 +12,20 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/fs-extra": "^5.0.0",
-    "@types/jest": "^21.1.8",
+    "@types/jest": "^23.3.9",
     "@types/node": "^8.0.57",
     "@types/pg": "^7.4.6",
-    "jest": "^23.6.0",
+    "jest": "23.6.0",
     "prettier": "^1.10.2",
     "ts-jest": "^23.10.5",
     "tslint": "^5.6.0",
     "typescript": "^3.1.6"
   },
   "dependencies": {
+    "@types/mongodb": "^3.1.14",
     "graphql-request": "^1.5.0",
     "lodash": "^4.17.4",
+    "mongodb": "^3.1.10",
     "pg": "^7.4.1",
     "pluralize": "^7.0.0",
     "prisma-datamodel": "1.23.0-alpha.1",
@@ -32,31 +34,30 @@
     "uppercamelcase": "^3.0.0"
   },
   "scripts": {
-    "test": "jest --runInBand --forceExit",
+    "test": "jest --runInBand --verbose=false",
     "build": "tsc -d",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prepublishOnly": "yarn lint && yarn test && yarn build"
   },
   "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "helpers.ts",
+      "connectionDetails.ts",
+      "/postgres/"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",
       "js",
       "jsx",
-      "json"
-    ],
-    "rootDir": "./src",
-    "transform": {
-      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
-    },
-    "testMatch": [
-      "**/*.test.(ts|js)"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsConfigFile": "./tsconfig.json"
-      }
-    }
+      "json",
+      "node"
+    ]
   }
 }

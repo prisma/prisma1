@@ -1,7 +1,7 @@
 import { ISDL, DatabaseType, Renderer } from 'prisma-datamodel'
 import { IntrospectionResult } from '../../common/introspectionResult'
 
-export abstract class DocumentIntrospectionResult extends IntrospectionResult {
+export class DocumentIntrospectionResult extends IntrospectionResult {
 
   protected model: ISDL
 
