@@ -8,10 +8,10 @@ import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.{Model, ScalarField}
-import org.mongodb.scala.{Document, FindObservable, MongoDatabase}
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.{FindObservable, MongoDatabase}
 
 //relationfilters depend on relationtype
 // embedded -> use dot notation to go deeper in tree
@@ -21,46 +21,50 @@ import org.mongodb.scala.model.Filters._
 //field_none:   $not $elemMatch (nested)
 
 trait FilterConditionBuilder2 {
+  import org.mongodb.scala.bson.collection.immutable.Document
+  import org.mongodb.scala.bson.conversions.Bson
+  import org.mongodb.scala.model.Aggregates._
+  import org.mongodb.scala.model.Projections._
   import scala.concurrent.ExecutionContext.Implicits.global
+
   def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = {
-    import org.mongodb.scala.bson.collection.immutable.Document
-    import org.mongodb.scala.bson.conversions.Bson
-    import org.mongodb.scala.model.Accumulators._
-    import org.mongodb.scala.model.Aggregates._
-    import org.mongodb.scala.model.Projections._
-    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
+    //--------------------------- Assemble Pipeline -----------------------------------------------------
+
+    //-------------------------------- Match on Cursor Condition ----------------------------------------
+    val cursorMatch: Option[Bson] = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
+      case None         => None
+      case Some(filter) => Some(filter)
+    }
+
+    //-------------------------------- QueryArg Filter --------------------------------------------------
+
+    //------------------------------------- First Pass - Join Relations ---------------------------------
+    val joins = buildJoinStagesForFilter(queryArguments.filter)
+
+    //------------------------------------- Second Pass - Generate Filter -------------------------------
     val mongoFilter = buildConditionForFilter2(queryArguments.filter)
+    val filterStage = Seq(`match`(mongoFilter))
 
-    val combinedFilter = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
-      case None         => mongoFilter
-      case Some(filter) => Filters.and(mongoFilter, filter)
-    }
+    //-------------------------------- Order ------------------------------------------------------------
+    val sort = Seq(OrderByClauseBuilder.sortStage(queryArguments))
 
-    val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
-    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
-    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+    //-------------------------------- Skip & Limit -----------------------------------------------------
+    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
+    val skipStage    = Seq(skip(skipAndLimit.skip))
 
-    val queryWithLimit = skipAndLimit.limit match {
-      case Some(limit) => queryWithSkip.limit(limit)
-      case None        => queryWithSkip
-    }
+    val limitStage = skipAndLimit.limit.map(limit)
 
-    //--------------------------------------------------------------------------------------------------
-    val rf = model.relationFields.head
-    val f  = rf.relatedModel_!.getScalarFieldByName_!("name")
+    //-------------------------------- Project Result ---------------------------------------------------
 
-    val mongoLookup: Bson = lookup(localField = rf.dbName, from = rf.relatedModel_!.dbName, foreignField = renameId(rf.relatedModel_!.idField_!), as = "test")
-    val mongoUnwind: Bson = unwind("$test")
-//    val mongoMatch: Bson      = `match`(elemMatch("test", equal("name_column", "blog 1")))
-    val mongoMatch: Bson      = `match`(equal("test.name_column", "blog 1"))
-    val mongoProjection: Bson = project(Document("test" -> 0))
+    //--------------------------- Setup Query -----------------------------------------------------------
+    val pipeline3 = cursorMatch ++ joins ++ filterStage ++ sort ++ skipStage ++ limitStage
+//    val pipeline3 = cursorMatch ++ joins
+    val query3 = database.getCollection(model.dbName).aggregate(pipeline3.toSeq)
 
-    val pipeline: Seq[conversions.Bson] = Seq(mongoLookup, mongoUnwind, mongoMatch, mongoProjection)
+    //--------------------------- Parse Result ----------------------------------------------------------
 
-    val query2 = database.getCollection(model.dbName).aggregate(pipeline)
-
-    val nodes = query2.collect().toFuture.map { results: Seq[Document] =>
+    val nodes = query3.collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))
@@ -70,14 +74,61 @@ trait FilterConditionBuilder2 {
     nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
+  //-------------------------------------- Join Stage ----------------------------------------------------------------------------------------------------------
+
+  def buildJoinStagesForFilter(filter: Option[Filter]): Seq[conversions.Bson] = filter match {
+    case Some(filter) => buildJoinStagesForFilter2("", filter)
+    case None         => Seq.empty
+  }
+
+  private def buildJoinStagesForFilter2(path: String, filter: Filter): Seq[conversions.Bson] = {
+    filter match {
+      //-------------------------------RECURSION------------------------------------
+      case NodeSubscriptionFilter => Seq.empty
+      case AndFilter(filters)     => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
+      case OrFilter(filters)      => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
+      case NotFilter(filters)     => filters.flatMap(f => buildJoinStagesForFilter2(path, f)) //not can only negate equality comparisons not filters
+      case NodeFilter(filters)    => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
+      case x: RelationFilter      => relationFilterJoinStage(path, x)
+
+      //--------------------------------ANCHORS------------------------------------
+      case TrueFilter                     => Seq.empty
+      case FalseFilter                    => Seq.empty
+      case ScalarFilter(_, _)             => Seq.empty
+      case OneRelationIsNullFilter(field) => Seq.empty // FIXME: Think about this
+      case x                              => sys.error(s"Not supported: $x")
+    }
+  }
+
+  private def relationFilterJoinStage(path: String, relationFilter: RelationFilter): Seq[conversions.Bson] = {
+    val rf = relationFilter.field
+
+    val current = rf.relatedModel_!.isEmbedded match {
+      case true => Seq.empty
+      case false =>
+        val mongoLookup = lookup(localField = rf.dbName, from = rf.relatedModel_!.dbName, foreignField = renameId(rf.relatedModel_!.idField_!), as = rf.name)
+
+        rf.isList match {
+          case true  => Seq(mongoLookup)
+          case false => Seq(mongoLookup, unwind(s"$$${rf.name}")) //add unwind here
+        }
+    }
+
+    val next = buildJoinStagesForFilter2(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
+
+    current ++ next
+  }
+
+  //----------------------------------------- Normal Filters ---------------------------------------------------------------------------------------------------
+
   def buildConditionForFilter2(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter2("", filter)
-    case None         => hackForTrue
+    case None         => Document()
   }
 
   def buildConditionForScalarFilter2(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter2(operator, filter)
-    case None         => hackForTrue
+    case None         => Document()
   }
 
   private def buildConditionForFilter2(path: String, filter: Filter): conversions.Bson = {
@@ -130,8 +181,8 @@ trait FilterConditionBuilder2 {
   }
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
-    val toOneNested  = buildConditionForFilter2(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
-    val toManyNested = buildConditionForFilter2("", relationFilter.nestedFilter)
+    lazy val toOneNested  = buildConditionForFilter2(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
+    lazy val toManyNested = buildConditionForFilter2("", relationFilter.nestedFilter)
 
     relationFilter.condition match {
       case AtLeastOneRelatedNode => elemMatch(relationFilter.field.name, toManyNested)

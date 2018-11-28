@@ -76,7 +76,7 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query(query = """{posts(where:{blog:{name: "blog 1"}}){title}}""", project = project).toString should be(
       """{"data":{"posts":[{"title":"post 1"}]}}""")
-//
+
 //    server.query(query = """{blogs(where:{post:{popularity_gte: 100}}){name}}""", project = project).toString should be(
 //      """{"data":{"blogs":[{"name":"blog 2"},{"name":"blog 3"}]}}""")
 //
