@@ -4,25 +4,9 @@ import { DocumentIntrospectionResult } from './documentIntrospectionResult'
 import { ModelSampler } from './modelSampler'
 import { RelationResolver } from './relationResolver'
 import { Data } from './data'
-import { IDocumentConnector } from './documentConnector';
-
-export enum SamplingStrategy {
-  One = 'One', 
-  All = 'All',
-  Random = 'Random'
-}
+import { IDocumentConnector, ICollectionDescription, SamplingStrategy, DataIterator } from './documentConnector'
 
 const randomSamplingLimit = 50
-
-export interface DataIterator {
-  hasNext(): Promise<boolean>
-  next(): Promise<Data>
-}
-
-export interface ICollectionDescription<Type> {
-  name: string, 
-  collection: Type
-}
 
 // Maybe we need a new type here in the future. 
 export abstract class DocumentConnector<InternalCollectionType> implements IDocumentConnector<InternalCollectionType> {

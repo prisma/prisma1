@@ -73,6 +73,7 @@ export class ModelSampler<InternalCollectionType> implements ModelSampler<Intern
         const item = await iterator.next()
         merger.analyze(item)
       }
+      await iterator.close()
       const mergeResult = merger.getType()
       types.push(mergeResult.type, ...mergeResult.embedded)
     }

@@ -9,7 +9,7 @@ const reservedSchemas = ['admin', 'local']
 
 
 class MongoCursorIterator implements DataIterator {
-  private cursor: Cursor<Data>
+  protected cursor: Cursor<Data>
 
   public constructor(cursor: Cursor<Data>) {
     this.cursor = cursor
@@ -22,7 +22,32 @@ class MongoCursorIterator implements DataIterator {
   async next() {
     return (await this.cursor.next()) || {}
   }
+
+  async close() {
+    await this.cursor.close()
+  }
 }
+
+class RandomizedMongoCursorIterator extends MongoCursorIterator {
+  private steps: number[]
+
+  public constructor(cursor: Cursor<Data>, steps: number[]) {
+    super(cursor)
+    this.steps = steps
+  }
+
+  async hasNext() {
+    return this.cursor.hasNext() && this.steps.length > 0
+  }
+
+  async next() {
+    const val = await this.cursor.next()
+    this.cursor.skip(this.steps[0])
+    this.steps.shift()
+    return val || {}
+  }
+}
+
 
 
 export class MongoConnector extends DocumentConnector<Collection<Data>>{
@@ -69,31 +94,26 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
   }
 
   async sampleMany(collection: Collection, limit: number) : Promise<MongoCursorIterator> {
-    throw new Error("Not implemented")/*
     const count = await collection.count({})
     if(count < limit) {
       return await this.sampleAll(collection)
     } else {
-      let cursor = collection.find<Data>({})
-      // TODO: This sampling is biased, but should do the job. 
-      for(const skip of this.generateSamples(limit, count)) {
-        cursor.skip(skip)
-        const data = (await cursor.next())
-        if(data === null) {
-          throw new Error('Sample many error, cursor returned null for collection: ' + collection.collectionName)
-        }
-        yield data
-      }
-    }*/
+      const cursor = collection.find<Data>({})
+      const steps = this.generateRandomSteps(limit, count)
+      
+      return new RandomizedMongoCursorIterator(cursor, steps)
+    }
   }
 
   /** 
   * Gets n random numbers chich sum up to sum.
   */
-  private *generateSamples(n: number, sum: number) {
+  private generateRandomSteps(n: number, sum: number) {
+    const steps: number[] = []
     for(let i = 0; i < n; i++) {
-      yield Math.floor(Math.random() * sum / n)
+      steps.push(Math.floor(Math.random() * sum / n))
     }
+    return steps
   }
 
   async sampleAll(collection: Collection) : Promise<MongoCursorIterator> {

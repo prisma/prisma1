@@ -14,6 +14,7 @@ const randomSamplingLimit = 50
 export interface DataIterator {
   hasNext(): Promise<boolean>
   next(): Promise<Data>
+  close(): Promise<void>
 }
 
 export interface ICollectionDescription<Type> {

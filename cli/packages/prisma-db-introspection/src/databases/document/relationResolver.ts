@@ -12,6 +12,39 @@ interface IRelationScore {
   misses: number
 }
 
+export class RelationResolver<InternalCollectionType> implements IRelationResolver<InternalCollectionType> {
+  private samplingStrategy: SamplingStrategy
+  private ratioThreshold: number
+
+  constructor(samplingStrategy: SamplingStrategy = SamplingStrategy.Random, threshold: number = 0.5) {
+    this.samplingStrategy = samplingStrategy
+    this.ratioThreshold = threshold
+  }
+
+  public async resolve(types: IGQLType[], connector: IDocumentConnector<InternalCollectionType>, schemaName: string) {
+    const allCollections = await connector.getInternalCollections(schemaName)
+    for(const type of types) {
+      if(!type.isEmbedded) {
+        const [collection] = allCollections.filter(x => x.name === type.name)
+
+        if(collection === undefined) {
+          throw new Error(`Missmatch between collections and given types: Collection ${type.name} does not exist.`)
+        }
+
+        const iterator = await connector.sample(collection.collection, this.samplingStrategy)
+        const context = new RelationResolveContext<InternalCollectionType>(type, allCollections, connector)
+        while(await iterator.hasNext()) {
+          const data = await iterator.next()
+          await context.attemptResolve(data)
+        }
+        await iterator.close()
+
+        context.connectRelationsIfResolved(types, this.ratioThreshold)
+      }
+    }
+  }
+}
+
 class RelationResolveContext<Type> {
   private type: IGQLType
   // First dimension: Field name, second: Remote Collection
@@ -108,37 +141,5 @@ class RelationResolveContext<Type> {
     }
 
     return this.type
-  }
-}
-
-export class RelationResolver<InternalCollectionType> implements IRelationResolver<InternalCollectionType> {
-  private samplingStrategy: SamplingStrategy
-  private ratioThreshold: number
-
-  constructor(samplingStrategy: SamplingStrategy = SamplingStrategy.Random, threshold: number = 0.5) {
-    this.samplingStrategy = samplingStrategy
-    this.ratioThreshold = threshold
-  }
-
-  public async resolve(types: IGQLType[], connector: IDocumentConnector<InternalCollectionType>, schemaName: string) {
-    const allCollections = await connector.getInternalCollections(schemaName)
-    for(const type of types) {
-      if(!type.isEmbedded) {
-        const [collection] = allCollections.filter(x => x.name === type.name)
-
-        if(collection === undefined) {
-          throw new Error(`Missmatch between collections and given types: Collection ${type.name} does not exist.`)
-        }
-
-        const iterator = await connector.sample(collection.collection, this.samplingStrategy)
-        const context = new RelationResolveContext<InternalCollectionType>(type, allCollections, connector)
-        while(await iterator.hasNext()) {
-          const data = await iterator.next()
-          await context.attemptResolve(data)
-        }
-
-        context.connectRelationsIfResolved(types, this.ratioThreshold)
-      }
-    }
   }
 }
