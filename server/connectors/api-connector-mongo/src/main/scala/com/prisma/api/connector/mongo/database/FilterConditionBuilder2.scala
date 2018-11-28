@@ -104,12 +104,22 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case true => Seq.empty
       case false =>
         val mongoLookup = rf.relationIsInlinedInParent match {
-          case true  => lookup(localField = rf.dbName, from = rf.relatedModel_!.dbName, foreignField = renameId(rf.relatedModel_!.idField_!), as = rf.name)
-          case false => lookup(localField = renameId(rf.model.idField_!), from = rf.relatedModel_!.dbName, foreignField = rf.relatedField.dbName, as = rf.name)
+          case true =>
+            lookup(localField = combineTwo(path, rf.dbName),
+                   from = rf.relatedModel_!.dbName,
+                   foreignField = renameId(rf.relatedModel_!.idField_!),
+                   as = combineTwo(path, rf.name))
+          case false =>
+            lookup(
+              localField = combineTwo(path, renameId(rf.model.idField_!)),
+              from = rf.relatedModel_!.dbName,
+              foreignField = rf.relatedField.dbName,
+              as = combineTwo(path, rf.name)
+            )
         }
         rf.isList match {
           case true  => Seq(mongoLookup)
-          case false => Seq(mongoLookup, unwind(s"$$${rf.name}"))
+          case false => Seq(mongoLookup, unwind(s"$$${combineTwo(path, rf.name)}"))
         }
     }
 
