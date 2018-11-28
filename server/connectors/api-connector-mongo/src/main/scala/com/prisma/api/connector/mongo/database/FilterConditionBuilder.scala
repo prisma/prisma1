@@ -79,13 +79,15 @@ trait FilterConditionBuilder {
 
   //Fixme: Check whether this is correct: path is not being passed down for toManyNested
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
-    val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.dbName), relationFilter.nestedFilter)
+    val fieldName = if (relationFilter.field.relatedModel_!.isEmbedded) relationFilter.field.dbName else relationFilter.field.name
+
+    val toOneNested  = buildConditionForFilter(combineTwo(path, fieldName), relationFilter.nestedFilter)
     val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
 
     relationFilter.condition match {
-      case AtLeastOneRelatedNode => elemMatch(relationFilter.field.dbName, toManyNested)
-      case EveryRelatedNode      => not(elemMatch(relationFilter.field.dbName, not(toManyNested)))
-      case NoRelatedNode         => not(elemMatch(relationFilter.field.dbName, toManyNested))
+      case AtLeastOneRelatedNode => elemMatch(fieldName, toManyNested)
+      case EveryRelatedNode      => not(elemMatch(fieldName, not(toManyNested)))
+      case NoRelatedNode         => not(elemMatch(fieldName, toManyNested))
       case ToOneRelatedNode      => toOneNested
     }
   }
