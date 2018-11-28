@@ -4,8 +4,9 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
-import com.prisma.gc_values.{GCValue, NullGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.ScalarField
+import org.mongodb.scala.bson.collection.mutable.Document
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
@@ -19,12 +20,12 @@ import org.mongodb.scala.model.Filters._
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter("", filter)
-    case None         => hackForTrue
+    case None         => Document()
   }
 
   def buildConditionForScalarFilter(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter(operator, filter)
-    case None         => hackForTrue
+    case None         => Document()
   }
 
   private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
@@ -76,6 +77,7 @@ trait FilterConditionBuilder {
     case x                            => x
   }
 
+  //Fixme: Check whether this is correct: path is not being passed down for toManyNested
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
     val toOneNested  = buildConditionForFilter(combineTwo(path, relationFilter.field.dbName), relationFilter.nestedFilter)
     val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
