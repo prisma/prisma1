@@ -2,15 +2,17 @@ import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers, capital
 import { Data } from './data'
 import { isArray, isRegExp } from 'util'
 import { ObjectID } from 'bson';
+import { SamplingStrategy, IDocumentConnector } from './documentConnector'
 
 const ObjectTypeIdentifier = 'EmbeddedObject'
+const ObjectIdTypeIdentifyer = 'ObjectId'
 
 const MongoIdName = '_id'
 
 const UnsupportedTypeErrorKey = 'UnsupportedType'
 const UnsupportedArrayTypeErrorKey = 'UnsupportedArrayType'
 
-type InternalType = TypeIdentifier | 'EmbeddedObject'
+type InternalType = TypeIdentifier | 'EmbeddedObject' | 'ObjectId'
 
 
 interface TypeInfo {
@@ -50,6 +52,34 @@ interface FieldInfo {
   invalidTypes: string[]
 }
 
+
+export class ModelSampler<InternalCollectionType> implements ModelSampler<InternalCollectionType> {
+  private samplingStrategy: SamplingStrategy
+
+  public static ErrorType = '<Unknown>'
+
+  constructor(samplingStrategy: SamplingStrategy = SamplingStrategy.One) {
+    this.samplingStrategy = samplingStrategy
+  }
+
+  public async sample(connector: IDocumentConnector<InternalCollectionType>, schemaName: string) {
+    let types: IGQLType[] = []
+
+    const allCollections = await connector.getInternalCollections(schemaName)
+    for (const { name, collection } of allCollections) {
+      const merger = new ModelMerger(name, false)
+      const iterator = await connector.sample(collection, this.samplingStrategy)
+      while(await iterator.hasNext()) {
+        const item = await iterator.next()
+        merger.analyze(item)
+      }
+      const mergeResult = merger.getType()
+      types.push(mergeResult.type, ...mergeResult.embedded)
+    }
+    return types
+  }
+}
+
 /**
  * Infers structure of a datatype from a set of data samples. 
  */
@@ -59,8 +89,6 @@ export class ModelMerger {
 
   public name: string
   public isEmbedded: boolean
-
-  public static ErrorType = '<Unknown>'
 
   constructor(name: string, isEmbedded: boolean = false) {
     this.name = name
@@ -124,7 +152,7 @@ export class ModelMerger {
   }
 
   private toIGQLField(info: FieldInfo) {
-    let type = ModelMerger.ErrorType
+    let type = ModelSampler.ErrorType
     let isArray = false
     let isRequired = false
     const comments: IComment[] = []
@@ -160,13 +188,14 @@ export class ModelMerger {
     // TODO: we might want to include directives, as soon as we start changing names. 
     return {
       name: info.name,
-      type: type,
+      // For prisma, we map ObjectId to string. If we need more foreign ID types, we should clean this up. 
+      type: type === ObjectIdTypeIdentifyer ? TypeIdentifiers.string : type,
       isId: info.name === MongoIdName,
       isList: isArray,
       isReadOnly: false,
       isRequired: isRequired,
       isUnique: false, // Never unique in Mongo. 
-      relationName: null,
+      relationName: type === ObjectIdTypeIdentifyer ? ModelSampler.ErrorType : null,
       relatedField: null,
       defaultValue: null,
       comments: comments
@@ -274,7 +303,7 @@ export class ModelMerger {
       case "string": return { type: TypeIdentifiers.string, isArray: false }
       case "object": 
         if(value instanceof ObjectID) {
-          return { type: TypeIdentifiers.string, isArray: false }
+          return { type: ObjectIdTypeIdentifyer, isArray: false }
         } else {
           return { type: ObjectTypeIdentifier, isArray: false }
         }

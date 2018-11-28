@@ -1,5 +1,5 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
-import { ModelMerger } from '../../databases/document/modelMerger'
+import { ModelMerger, ModelSampler } from '../../databases/document/modelSampler'
 
 describe('Document model inferring, conflict resolution', () => {
   it('Should merge conflicting models additively.', () => {
@@ -111,9 +111,9 @@ describe('Document model inferring, conflict resolution', () => {
 
     expect(type.fields).toHaveLength(3)
     
-    const conflictingEmbeddedField = SdlExpect.field(embeddedType, 'street', false, false, ModelMerger.ErrorType)
+    const conflictingEmbeddedField = SdlExpect.field(embeddedType, 'street', false, false, ModelSampler.ErrorType)
     SdlExpect.error(conflictingEmbeddedField)
-    const conflictingField = SdlExpect.field(type, 'lastName', false, false, ModelMerger.ErrorType)
+    const conflictingField = SdlExpect.field(type, 'lastName', false, false, ModelSampler.ErrorType)
     SdlExpect.error(conflictingField)
   })
 })

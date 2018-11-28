@@ -1,5 +1,5 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
-import { ModelMerger } from '../../databases/document/modelMerger'
+import { ModelMerger, ModelSampler } from '../../databases/document/modelSampler'
 
 describe('Basic document model inferring', () => {
   it('Should create the sdl description for a simple model correctly.', () => {
@@ -52,9 +52,9 @@ describe('Basic document model inferring', () => {
     SdlExpect.field(type, '_id', false, false, TypeIdentifiers.string, true)
     SdlExpect.field(type, 'stringArray', false, true, TypeIdentifiers.string)
     SdlExpect.field(type, 'floatArray', false, true, TypeIdentifiers.float)
-    const mixedField = SdlExpect.field(type, 'mixedArray', false, true, ModelMerger.ErrorType)
+    const mixedField = SdlExpect.field(type, 'mixedArray', false, true, ModelSampler.ErrorType)
     SdlExpect.error(mixedField)
-    const nestedField = SdlExpect.field(type, 'nestedArray', false, true, ModelMerger.ErrorType)
+    const nestedField = SdlExpect.field(type, 'nestedArray', false, true, ModelSampler.ErrorType)
     SdlExpect.error(nestedField)
   })
 

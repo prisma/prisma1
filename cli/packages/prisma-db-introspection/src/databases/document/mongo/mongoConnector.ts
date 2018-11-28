@@ -1,4 +1,5 @@
-import { DocumentConnector, DataIterator, SamplingStrategy } from "../documentConnector"
+import { DataIterator, SamplingStrategy } from '../documentConnector'
+import { DocumentConnector } from '../documentConnectorBase'
 import { DatabaseType, ISDL } from "prisma-datamodel"
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
 import { MongoClient, Collection, Cursor } from 'mongodb'
@@ -24,14 +25,15 @@ class MongoCursorIterator implements DataIterator {
 }
 
 
-export class MongoConnector extends DocumentConnector <Collection<Data>>{
+export class MongoConnector extends DocumentConnector<Collection<Data>>{
   private client: MongoClient
   
-  constructor(client: MongoClient, samplingStrategy: SamplingStrategy = SamplingStrategy.One) {
-    super(samplingStrategy)
+  constructor(client: MongoClient) {
+    super()
+
     if(!client.isConnected()) {
       throw new Error('Please connect the mongo client first.')
-    } 
+    }
 
     this.client = client
   }
@@ -46,11 +48,18 @@ export class MongoConnector extends DocumentConnector <Collection<Data>>{
     return databases.map(x => x.name).filter(x => reservedSchemas.indexOf(x) < 0)
   }
   
-  protected async getInternalCollections(schemaName: string) {
+  public async getInternalCollections(schemaName: string) {
     const db = this.client.db(schemaName)
 
     const collections = (await db.collections()) as Collection<Data>[]
     return collections.map(collection => { return { name: collection.collectionName, collection }})
+  }
+
+  
+  public async getInternalCollection(schemaName: string, collectionName: string) {
+    const db = this.client.db(schemaName)
+
+    return await db.collection<Data>(collectionName)
   }
   
   // TODO: Lift to strategy
@@ -92,11 +101,6 @@ export class MongoConnector extends DocumentConnector <Collection<Data>>{
 
     return new MongoCursorIterator(cursor);
   }
-  
-  async introspect(schema: string): Promise<DocumentIntrospectionResult> {
-    return new DocumentIntrospectionResult(await this.listModels(schema), this.getDatabaseType())
-  }
-
 
   async exists(collection: Collection, id: any): Promise<boolean> {
     return collection.find({ '_id': id }).hasNext()
