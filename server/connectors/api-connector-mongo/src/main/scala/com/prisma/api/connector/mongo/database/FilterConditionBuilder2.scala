@@ -56,8 +56,6 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     val nodes = query.collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
-//        println(result.toJson())
-
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))
       }
@@ -118,13 +116,15 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
         }
 
         val mongoUnwind = unwind(s"$$${combineTwo(path, rf.name)}")
+
+        //group needs to render all fields in here (at least all the ones referred to by the filters)
         val mongoGroup = Document(
           "$group" -> Document("_id" -> "$_id", "name_column" -> Document("$first" -> "$name_column"), "posts" -> Document("$push" -> "$posts")))
 
         (path, rf.isList) match {
           case ("", true)  => Seq(mongoLookup)
           case ("", false) => Seq(mongoLookup, mongoUnwind)
-          case (_, false)  => Seq(mongoLookup, mongoGroup)
+          case (_, true)   => Seq(mongoLookup, mongoGroup)
           case (_, false)  => Seq(mongoLookup, mongoUnwind)
         }
     }

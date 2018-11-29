@@ -3,7 +3,7 @@ package com.prisma.api.filters.nonEmbedded
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
-import com.prisma.{IgnoreMySql, IgnorePostgres}
+import com.prisma.{IgnoreMongo, IgnoreMySql, IgnorePostgres}
 import org.scalatest._
 
 class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
@@ -219,7 +219,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   // MySql is case insensitive and Postgres case sensitive
 
-  "MySql 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnorePostgres) in {
+  "MySql 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnorePostgres, IgnoreMongo) in {
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
