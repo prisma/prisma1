@@ -8,8 +8,6 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scala.util.Try
 
 object JnaAuth {
-  type GrantType = JnaJwtGrant
-
   val library: JnaRustBridge = {
     System.setProperty("jna.debug_load.jna", "true")
     System.setProperty("jna.debug_load", "true")
@@ -29,12 +27,6 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
 
   // expirationOffset is the offset in seconds to the current timestamp. None is no expiration at all (todo: edge case: -1).
   def createToken(secret: String, expirationOffset: Option[Long], grant: Option[JwtGrant]): Try[String] = Try {
-    val jnaGrant = grant.map { g =>
-      val jGrant = new JnaJwtGrant.ByReference()
-      jGrant.setFrom(g)
-      jGrant
-    }
-
     val buffer = library.create_token(
       algorithm.toString,
       secret,
@@ -43,7 +35,8 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
           DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000
         }
         .getOrElse(NO_EXP),
-      jnaGrant.orNull
+      grant.map(_.target).orNull,
+      grant.map(_.action).orNull
     )
 
     debug(buffer)
@@ -56,18 +49,13 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
   }
 
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
-    val jnaGrant = expectedGrant.map { g =>
-      val jGrant = new JnaJwtGrant.ByReference()
-      jGrant.setFrom(g)
-      jGrant
-    }
-
     val nativeArray = JnaUtils.copyToNativeStringArray(secrets)
     val buffer = library.verify_token(
       token,
       nativeArray,
       secrets.length,
-      jnaGrant.orNull
+      expectedGrant.map(_.target).orNull,
+      expectedGrant.map(_.action).orNull
     )
 
     debug(buffer)

@@ -1,14 +1,17 @@
 package com.prisma.jwt.graal;
 
+import org.graalvm.nativeimage.Platform;
+import org.graalvm.nativeimage.Platforms;
 import org.graalvm.nativeimage.c.CContext;
+import org.graalvm.nativeimage.c.function.CLibrary;
 import org.graalvm.nativeimage.c.struct.CField;
 import org.graalvm.nativeimage.c.struct.CStruct;
 import org.graalvm.nativeimage.c.type.CCharPointer;
+import org.graalvm.word.Pointer;
 import org.graalvm.word.PointerBase;
 
 import java.util.Collections;
 import java.util.List;
-
 
 @CContext(CIntegration.CIntegrationDirectives.class)
 public class CIntegration {
@@ -23,21 +26,21 @@ public class CIntegration {
     @CStruct(value = "ProtocolBuffer")
     public interface ProtocolBuffer extends PointerBase {
         @CField("error")
-        CCharPointer error();
+        CCharPointer getError();
+
+        @CField("error")
+        void setError(CCharPointer error);
 
         @CField("data")
-        CCharPointer data();
+        Pointer getData();
+
+        @CField("data")
+        void setData(Pointer pointer);
 
         @CField("data_len")
-        CCharPointer data_len();
-    }
+        long getDataLen();
 
-    @CStruct(value = "ExtGrant")
-    public interface ExtGrant extends PointerBase {
-        @CField("target")
-        CCharPointer target();
-
-        @CField("action")
-        CCharPointer action();
+        @CField("data_len")
+        void setDataLen(long len);
     }
 }

@@ -7,6 +7,7 @@ object JnaUtils {
   val charset = Charset.forName("UTF-8")
 
   // todo This impl is inefficient, as it uses getBytes to get the actual byte sizes, which copies the data.
+  // todo We then copy the data AGAIN after determining the size.
   def copyToNativeStringArray(elements: Vector[String]): Pointer = {
     var offset        = 0
     val memorySizes   = elements.map(e => e.getBytes(charset).length)

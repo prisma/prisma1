@@ -103,8 +103,7 @@ class JnaAuthSpec extends WordSpec with Matchers {
     "Why would anyone sign a JWT with emojis?" in {
       val secret = Vector("\uD83D\uDE80\uD83D\uDE31\uD83E\uDD26\uD83D\uDD1C\uD83D\uDD25")
       // Signed with an external lib to make sure the Rust impl is cross compatible.
-      val token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjamQ0cWl1emJsNXVrMDE1NG0wY3cxcWJ2IiwiaWF0IjoxNTM3MzY2NTIzLCJleHAiOjE1Mzk5NTg1MjN9.kWVlxIJwcBi3mzJNgnsT4H8dryLdEIz1jPY9HjCLtS4"
+      val token      = auth.createToken(secret.head, Some(3600)).get
       val validation = auth.verifyToken(token, secret)
 
       validation.failed.map(x => println(x.getMessage))

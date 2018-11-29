@@ -20,7 +20,7 @@ use jwt::{decode, encode, Header, Validation, Algorithm};
 use chrono::prelude::*;
 use ffi_utils::{to_str, to_string, to_str_vector};
 use protocol_buffer::ProtocolBuffer;
-use grant::{Grant, ExtGrant};
+use grant::Grant;
 
 pub type Result<T> = std::result::Result<T, ProtocolError>;
 
@@ -43,13 +43,21 @@ pub struct Claims {
     grants: Option<Vec<Grant>>,
 }
 
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+pub mod wurst {
+    #[no_mangle]
+    pub extern "C" fn wuuuurst() {
+        println!("WURST");
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn initialize() {
     logging::init();
 }
 
 #[no_mangle]
-pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, expiration_in_seconds: i64, grant: *const ExtGrant) -> *mut ProtocolBuffer {
+pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, expiration_in_seconds: i64, allowed_target: *const c_char, allowed_action: *const c_char) -> *mut ProtocolBuffer {
     let alg_string = to_str(algorithm);
     let use_algorithm = match Algorithm::from_str(alg_string) {
         Ok(a) => a,
@@ -63,7 +71,7 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
         Some(expiration_in_seconds)
     };
 
-    let grant_to_encode = Grant::from_ext(grant).map(|g| vec!(g));
+    let grant_to_encode = Grant::from(allowed_target, allowed_action).map(|g| vec!(g));
     let now = Utc::now().timestamp();
     let claims = Claims {
         iat: Some(now),
@@ -79,7 +87,7 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
 }
 
 #[no_mangle]
-pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num_secrets: i64, grant: *const ExtGrant) -> *mut ProtocolBuffer {
+pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num_secrets: i64, expect_target: *const c_char, expect_action: *const c_char) -> *mut ProtocolBuffer {
     let parsed_token = to_str(token);
     let parsed_secrets = to_str_vector(secrets, num_secrets);
     let mut last_error: String = String::from("");
@@ -88,7 +96,7 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num
         let t = decode::<Claims>(parsed_token, secret.as_ref(), &Validation { validate_exp: false, ..Validation::default()});
         match t {
             Ok(x) => {
-                return validate_claims(x.claims, Grant::from_ext(grant)).into_boxed_ptr();
+                return validate_claims(x.claims, Grant::from(expect_target, expect_action)).into_boxed_ptr();
             },
             Err(e) => {
                 let err = format!("{}", e);
