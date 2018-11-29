@@ -1,6 +1,6 @@
-import { MongoConnector } from '../../databases/document/mongo/mongoConnector'
+import { MongoConnector } from '../../../databases/document/mongo/mongoConnector'
 import { MongoClient } from 'mongodb'
-import { MongoTestEnvironment } from '../../test-helpers/mongoTestEnvironment'
+import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 
 const env = new MongoTestEnvironment()

@@ -1,23 +1,23 @@
 import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers, capitalize } from 'prisma-datamodel'
 import { Data } from './data'
 import { isArray, isRegExp } from 'util'
-import { ObjectID } from 'bson';
+import { ObjectID } from 'bson' // TODO - remove dependency to mongo's BSON and subclass to abstract primitive type inferrer. 
 import { SamplingStrategy, IDocumentConnector } from './documentConnector'
 
 const ObjectTypeIdentifier = 'EmbeddedObject'
-const ObjectIdTypeIdentifyer = 'ObjectId'
 
 const MongoIdName = '_id'
 
 const UnsupportedTypeErrorKey = 'UnsupportedType'
 const UnsupportedArrayTypeErrorKey = 'UnsupportedArrayType'
 
-type InternalType = TypeIdentifier | 'EmbeddedObject' | 'ObjectId'
+type InternalType = TypeIdentifier | 'EmbeddedObject'
 
 
 interface TypeInfo {
   type: InternalType | null,
-  isArray: boolean
+  isArray: boolean,
+  isRelationCandidate: boolean
 }
 
 interface Embedding {
@@ -49,6 +49,7 @@ interface FieldInfo {
   name: string,
   types: InternalType[]
   isArray: boolean[]
+  isRelationCandidate: boolean
   invalidTypes: string[]
 }
 
@@ -185,18 +186,20 @@ export class ModelMerger {
       })
     }
 
+    // TODO: Abstract away
+    const isId = info.name === MongoIdName
+
     // https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/#directives
     // TODO: we might want to include directives, as soon as we start changing names. 
     return {
       name: info.name,
-      // For prisma, we map ObjectId to string. If we need more foreign ID types, we should clean this up. 
-      type: type === ObjectIdTypeIdentifyer ? TypeIdentifiers.string : type,
-      isId: info.name === MongoIdName,
+      type: type,
+      isId: isId,
       isList: isArray,
       isReadOnly: false,
       isRequired: isRequired,
       isUnique: false, // Never unique in Mongo. 
-      relationName: type === ObjectIdTypeIdentifyer ? ModelSampler.ErrorType : null,
+      relationName: info.isRelationCandidate && !isId ? ModelSampler.ErrorType : null,
       relatedField: null,
       defaultValue: null,
       comments: comments
@@ -234,7 +237,8 @@ export class ModelMerger {
         this.initField(name)
         this.fields[name] = this.mergeField(this.fields[name], {
           isArray: true,
-          type: null
+          type: null,
+          isRelationCandidate: false
         })
         this.fields[name].invalidTypes.push(err.invalidType)
       } else {
@@ -254,7 +258,8 @@ export class ModelMerger {
       invalidTypes: field.invalidTypes,
       isArray: this.merge(field.isArray, info.isArray),
       name: field.name,
-      types: types
+      types: types,
+      isRelationCandidate: field.isRelationCandidate || info.isRelationCandidate
     }
   }
 
@@ -289,24 +294,40 @@ export class ModelMerger {
     return type
   }
 
+  // Use ObjectID or String as relation
+  private isRelationCandidate(value: any): boolean {
+    return typeof(value) === 'string' || value instanceof ObjectID
+  }
+
+  private arrayIsRelationCandidate(array: any[]): boolean {
+    var isRelationCandidate = false
+
+    for(const item of array) {
+      isRelationCandidate = isRelationCandidate || this.isRelationCandidate(item)
+    }
+
+    return isRelationCandidate
+  }
+
   // TODO: There are more BSON types exported by the mongo client lib we could add here.
   private inferType(value: any): TypeInfo  {
     // Maybe an array, which would otherwise be identified as object.
     if (Array.isArray(value)) {
-      let arrayType: TypeInfo = { type: this.inferArrayType(value), isArray: false }
-      return { type: arrayType.type, isArray: true }
+      return { type: this.inferArrayType(value), isArray: true, isRelationCandidate: this.arrayIsRelationCandidate(value) }
     }
+
+    const isRelationCandidate = this.isRelationCandidate(value)
 
     // Base types
     switch(typeof(value)) {
-      case "number": return { type: value % 1 === 0 ? TypeIdentifiers.integer : TypeIdentifiers.float, isArray: false }
-      case "boolean": return { type: TypeIdentifiers.boolean, isArray: false }
-      case "string": return { type: TypeIdentifiers.string, isArray: false }
+      case "number": return { type: value % 1 === 0 ? TypeIdentifiers.integer : TypeIdentifiers.float, isArray: false, isRelationCandidate }
+      case "boolean": return { type: TypeIdentifiers.boolean, isArray: false, isRelationCandidate }
+      case "string": return { type: TypeIdentifiers.string, isArray: false, isRelationCandidate }
       case "object": 
         if(value instanceof ObjectID) {
-          return { type: ObjectIdTypeIdentifyer, isArray: false }
+          return { type: TypeIdentifiers.string, isArray: false, isRelationCandidate }
         } else {
-          return { type: ObjectTypeIdentifier, isArray: false }
+          return { type: ObjectTypeIdentifier, isArray: false, isRelationCandidate }
         }
       default: break
     }

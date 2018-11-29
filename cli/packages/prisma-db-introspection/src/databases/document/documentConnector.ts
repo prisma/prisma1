@@ -22,7 +22,11 @@ export interface ICollectionDescription<Type> {
   collection: Type
 }
 
-export interface IDocumentConnector<InternalCollectionType> extends IConnector {
+export interface IDataExists<InternalCollectionType> {
+  exists(collection: InternalCollectionType, id: any): Promise<boolean>
+}
+
+export interface IDocumentConnector<InternalCollectionType> extends IConnector, IDataExists<InternalCollectionType> {
   getDatabaseType(): DatabaseType
   listSchemas(): Promise<string[]>
   getInternalCollections(schema: string): Promise<ICollectionDescription<InternalCollectionType>[]>

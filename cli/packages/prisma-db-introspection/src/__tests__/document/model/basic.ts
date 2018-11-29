@@ -1,6 +1,9 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 import { ModelMerger, ModelSampler } from '../../databases/document/modelSampler'
 
+/**
+ * Checks if model sampling and inferring module resolves fields an embedded types correctly.
+ */
 describe('Basic document model inferring', () => {
   it('Should create the sdl description for a simple model correctly.', () => {
     const document = {

@@ -1,10 +1,10 @@
-import { SamplingStrategy, ICollectionDescription, IDocumentConnector } from './documentConnector'
+import { SamplingStrategy, ICollectionDescription, IDocumentConnector, IDataExists } from './documentConnector'
 import { IGQLType, IGQLField } from 'prisma-datamodel'
-import { Data } from './data';
+import { Data } from './data'
 import { ModelSampler } from './modelSampler'
 
 export interface IRelationResolver<InternalCollectionType> {
-  resolve(types: IGQLType[], resolver: IDocumentConnector<InternalCollectionType>, schemaName: string) : Promise<void>
+  resolve(types: IGQLType[], resolver: IDataExists<InternalCollectionType>, schemaName: string) : Promise<void>
 }
 
 interface IRelationScore {
@@ -51,9 +51,9 @@ class RelationResolveContext<Type> {
   private fieldScores : { [key: string] : { [key: string] : IRelationScore } }
   private embeddedTypes : { [key: string] : RelationResolveContext<Type> }
   private collections: ICollectionDescription<Type>[]
-  private connector: IDocumentConnector<Type>
+  private connector: IDataExists<Type>
 
-  constructor(type: IGQLType, collections: ICollectionDescription<Type>[], connector: IDocumentConnector<Type>) {
+  constructor(type: IGQLType, collections: ICollectionDescription<Type>[], connector: IDataExists<Type>) {
     this.type = type
     this.collections = collections
     this.connector = connector

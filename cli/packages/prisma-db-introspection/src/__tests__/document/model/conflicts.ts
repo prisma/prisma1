@@ -1,6 +1,9 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
-import { ModelMerger, ModelSampler } from '../../databases/document/modelSampler'
+import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
 
+/**
+ * Checks if model sampling and inferring module resolves conflicts in field definitions correctly.
+ */
 describe('Document model inferring, conflict resolution', () => {
   it('Should merge conflicting models additively.', () => {
     const user1 = {
