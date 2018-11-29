@@ -7,8 +7,7 @@ import org.scalatest._
 
 class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
-  override def runOnlyForCapabilities         = Set(JoinRelationLinksCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() {
     """

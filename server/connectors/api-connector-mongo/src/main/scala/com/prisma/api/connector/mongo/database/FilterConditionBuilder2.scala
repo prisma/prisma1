@@ -3,20 +3,15 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
-import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
-import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.NullGCValue
-import com.prisma.shared.models.{Model, ScalarField}
+import com.prisma.shared.models.Model
+import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
-import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.{FindObservable, MongoDatabase}
 trait FilterConditionBuilder2 extends FilterConditionBuilder {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
   import org.mongodb.scala.model.Aggregates._
-  import org.mongodb.scala.model.Projections._
+
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = {
@@ -61,6 +56,8 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     val nodes = query.collect().toFuture.map { results: Seq[Document] =>
       results.map { result =>
+//        println(result.toJson())
+
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idField, root, Some(model.name))
       }
@@ -101,7 +98,9 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     val rf = relationFilter.field
 
     val current = rf.relatedModel_!.isEmbedded match {
-      case true => Seq.empty
+      case true =>
+        Seq.empty
+
       case false =>
         val mongoLookup = rf.relationIsInlinedInParent match {
           case true =>
@@ -117,9 +116,16 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
               as = combineTwo(path, rf.name)
             )
         }
-        rf.isList match {
-          case true  => Seq(mongoLookup)
-          case false => Seq(mongoLookup, unwind(s"$$${combineTwo(path, rf.name)}"))
+
+        val mongoUnwind = unwind(s"$$${combineTwo(path, rf.name)}")
+        val mongoGroup = Document(
+          "$group" -> Document("_id" -> "$_id", "name_column" -> Document("$first" -> "$name_column"), "posts" -> Document("$push" -> "$posts")))
+
+        (path, rf.isList) match {
+          case ("", true)  => Seq(mongoLookup)
+          case ("", false) => Seq(mongoLookup, mongoUnwind)
+          case (_, false)  => Seq(mongoLookup, mongoGroup)
+          case (_, false)  => Seq(mongoLookup, mongoUnwind)
         }
     }
 
