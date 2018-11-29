@@ -1,12 +1,17 @@
 package com.prisma.api.connector.mongo.database
 
+import java.io
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.shared.models.Model
+import org.bson
 import org.mongodb.scala.MongoDatabase
-import org.mongodb.scala.bson.conversions
+import org.mongodb.scala.bson.{BsonString, conversions}
+
+import scala.collection.immutable
 trait FilterConditionBuilder2 extends FilterConditionBuilder {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
@@ -66,12 +71,14 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
   //-------------------------------------- Join Stage ----------------------------------------------------------------------------------------------------------
 
+  //replace string path with  seq of models
+
   def buildJoinStagesForFilter(filter: Option[Filter]): Seq[conversions.Bson] = filter match {
-    case Some(filter) => buildJoinStagesForFilter("", filter)
+    case Some(filter) => buildJoinStagesForFilter(Path.empty, filter)
     case None         => Seq.empty
   }
 
-  private def buildJoinStagesForFilter(path: String, filter: Filter): Seq[conversions.Bson] = {
+  private def buildJoinStagesForFilter(path: Path, filter: Filter): Seq[conversions.Bson] = {
     filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter => Seq.empty
@@ -90,10 +97,12 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     }
   }
 
-  private def relationFilterJoinStage(path: String, relationFilter: RelationFilter): Seq[conversions.Bson] = {
+  private def relationFilterJoinStage(path: Path, relationFilter: RelationFilter): Seq[conversions.Bson] = {
     //FIXME: this could also return the projections to clean the result
 
-    val rf = relationFilter.field
+    val rf          = relationFilter.field
+    val updatedPath = path.append(rf)
+    val next        = buildJoinStagesForFilter(updatedPath, relationFilter.nestedFilter)
 
     val current = rf.relatedModel_!.isEmbedded match {
       case true =>
@@ -102,34 +111,44 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case false =>
         val mongoLookup = rf.relationIsInlinedInParent match {
           case true =>
-            lookup(localField = combineTwo(path, rf.dbName),
-                   from = rf.relatedModel_!.dbName,
-                   foreignField = renameId(rf.relatedModel_!.idField_!),
-                   as = combineTwo(path, rf.name))
+            lookup(
+              localField = combineTwo(path.combinedNames, rf.dbName),
+              from = rf.relatedModel_!.dbName,
+              foreignField = renameId(rf.relatedModel_!.idField_!),
+              as = updatedPath.combinedNames
+            )
           case false =>
             lookup(
-              localField = combineTwo(path, renameId(rf.model.idField_!)),
+              localField = combineTwo(path.combinedNames, renameId(rf.model.idField_!)),
               from = rf.relatedModel_!.dbName,
               foreignField = rf.relatedField.dbName,
-              as = combineTwo(path, rf.name)
+              as = updatedPath.combinedNames
             )
         }
 
-        val mongoUnwind = unwind(s"$$${combineTwo(path, rf.name)}")
+        val mongoUnwind = unwind(s"$$${updatedPath.combinedNames}")
 
-        //group needs to render all fields in here (at least all the ones referred to by the filters)
-        val mongoGroup = Document(
-          "$group" -> Document("_id" -> "$_id", "name_column" -> Document("$first" -> "$name_column"), "posts" -> Document("$push" -> "$posts")))
+        //group needs to render all fields in here (at least all the ones referred to by the filters) needs the previous model -.-
 
-        (path, rf.isList) match {
-          case ("", true)  => Seq(mongoLookup)
-          case ("", false) => Seq(mongoLookup, mongoUnwind)
-          case (_, true)   => Seq(mongoLookup, mongoGroup)
-          case (_, false)  => Seq(mongoLookup, mongoUnwind)
+        lazy val previousModel                              = path.segments.last.rf.model
+        lazy val scalars: immutable.Seq[(String, Document)] = previousModel.scalarFields.map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
+        lazy val added: Seq[(String, Document)]             = Seq((s"${path.combinedNames}", Document("$push" -> s"$$${path.combinedNames}")))
+        lazy val doc: Document                              = Document(scalars ++ added).+("_id" -> "$_id")
+        lazy val d: Document                                = Document()
+
+        lazy val mongoGroup = Document("$group" -> doc)
+
+//        val mongoGroup2 = Document(
+//          "$group" -> Document("_id" -> "$_id", "name_column" -> Document("$first" -> "$name_column"), s"$path" -> Document("$push" -> s"$$$path")))
+
+        (path.segments.isEmpty, rf.isList) match {
+          case (true, true) if next.isEmpty  => Seq(mongoLookup)
+          case (true, true) if next.nonEmpty => Seq(mongoLookup, mongoUnwind)
+          case (true, false)                 => Seq(mongoLookup, mongoUnwind)
+          case (false, true)                 => Seq(mongoLookup, mongoGroup)
+          case (false, false)                => Seq(mongoLookup, mongoUnwind)
         }
     }
-
-    val next = buildJoinStagesForFilter(combineTwo(path, relationFilter.field.name), relationFilter.nestedFilter)
 
     current ++ next
   }
