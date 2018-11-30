@@ -26,6 +26,7 @@ object SangriaQueryArguments {
 //      case false => utils.filterObjectTypeWithOutJoinRelationFilters
 //    }
 
+//    val filterObject = utils.filterObjectTypeWithOnlyToOneJoinRelationFilters
     val filterObject = utils.filterObjectType
 
     val inputType = OptionInputType(filterObject)

@@ -34,17 +34,6 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
     nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
-  def getNodes2(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
-      results.map { result =>
-        val root = DocumentToRoot(model, result)
-        PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
-      }
-    }
-
-    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
-  }
-
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
     val bsonFilter: Bson = buildConditionForFilter(filter)
     database.getCollection(model.dbName).find(bsonFilter).projection(include("_id")).collect().toFuture.map(_.map(DocumentToId.toCUIDGCValue))

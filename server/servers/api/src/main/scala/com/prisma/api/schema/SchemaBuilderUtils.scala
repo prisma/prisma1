@@ -56,8 +56,9 @@ object SchemaBuilderUtils {
 }
 
 case class FilterObjectTypeBuilder(model: Model, project: Project) {
-  def mapToRelationFilterInputField(field: models.RelationField)                     = relationFilterInputFieldHelper(field, withJoin = true)
-  def mapToRelationFilterInputFieldWithoutJoinRelations(field: models.RelationField) = relationFilterInputFieldHelper(field, withJoin = false)
+  def mapToRelationFilterInputField(field: models.RelationField)                           = relationFilterInputFieldHelper(field, withJoin = true)
+  def mapToRelationFilterInputFieldWithoutJoinRelations(field: models.RelationField)       = relationFilterInputFieldHelper(field, withJoin = false)
+  def mapToRelationFilterInputFieldWithOnlyToOneJoinRelations(field: models.RelationField) = relationFilterInputFieldHelper2(field)
 
   def relationFilterInputFieldHelper(field: models.RelationField, withJoin: Boolean): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
@@ -70,6 +71,18 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
       case (true, _)  => List.empty
       case (_, false) => List(InputField(field.name, OptionInputType(relatedModelInputType)))
       case (_, true)  => FilterArguments.getFieldFilters(field).map(f => InputField(field.name + f.name, OptionInputType(relatedModelInputType)))
+    }
+  }
+
+  def relationFilterInputFieldHelper2(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+    assert(!field.isScalar)
+    val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeWithOnlyToOneJoinRelationFilters
+
+    (field.isHidden, field.isList, field.relatedField.isList, field.relatedField.isHidden) match {
+      case (true, _, _, _)              => List.empty
+      case (false, false, false, false) => List(InputField(field.name, OptionInputType(relatedModelInputType)))
+      case (false, false, true, true)   => List(InputField(field.name, OptionInputType(relatedModelInputType)))
+      case (_, _, _, _)                 => List.empty
     }
   }
 
@@ -116,6 +129,26 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
         ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
           .filter(_.relatedModel_!.isEmbedded)
           .flatMap(mapToRelationFilterInputFieldWithoutJoinRelations)
+      }
+    )
+
+  lazy val filterObjectTypeWithOnlyToOneJoinRelationFilters: InputObjectType[Any] =
+    InputObjectType[Any](
+      s"${model.name}WhereInput",
+      fieldsFn = () => {
+        List(
+          InputField("AND",
+                     OptionInputType(ListInputType(filterObjectTypeWithOnlyToOneJoinRelationFilters)),
+                     description = FilterArguments.ANDFilter.description),
+          InputField("OR",
+                     OptionInputType(ListInputType(filterObjectTypeWithOnlyToOneJoinRelationFilters)),
+                     description = FilterArguments.ORFilter.description),
+          InputField("NOT",
+                     OptionInputType(ListInputType(filterObjectTypeWithOnlyToOneJoinRelationFilters)),
+                     description = FilterArguments.NOTFilter.description)
+        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
+          .filter(rf => rf.relatedModel_!.isEmbedded || (!rf.isList && (!rf.relatedField.isList || rf.relatedField.isHidden)))
+          .flatMap(mapToRelationFilterInputFieldWithOnlyToOneJoinRelations)
       }
     )
 

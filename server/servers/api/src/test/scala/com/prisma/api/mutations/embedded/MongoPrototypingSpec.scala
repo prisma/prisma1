@@ -1817,13 +1817,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
   }
 
-  "Join Relation Filter on a one relation" should "work on one level" in {
+  "Join Relation Filter on many to many relation" should "work on one level" in {
 
     val project = SchemaDsl.fromString() {
       """
         |type Post {
         |  id: ID! @unique
-        |  author: AUser
+        |  authors: [AUser]
         |  title: String! @unique
         |}
         |
@@ -1841,14 +1841,16 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     val createUser  = server.query(s""" mutation {createAUser(data: {name:"Author1"}) {name}} """, project)
     val createUser2 = server.query(s""" mutation {createAUser(data: {name:"Author2"}) {name}} """, project)
 
-    val result1 = server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{posts:{connect:{title: "Title1"}}}) {name}} """, project)
-    val result2 = server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{posts:{connect:{title: "Title2"}}}) {name}} """, project)
+    val result1 =
+      server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+    val result2 =
+      server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
 
     server.query("""query{aUsers{name, posts{title}}}""", project).toString should be(
-      """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"}]},{"name":"Author2","posts":[{"title":"Title2"}]}]}}""")
+      """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"},{"title":"Title2"}]},{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
 
-    server.query("""query{posts(where:{author:{name:"Author1"}}){title}}""", project).toString should be(
-      """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"}]},{"name":"Author2","posts":[{"title":"Title2"}]}]}}""")
+    server.query("""query{posts {title, authors {name}}}""", project).toString should be(
+      """{"data":{"posts":[{"title":"Title1","authors":[{"name":"Author1"},{"name":"Author2"}]},{"title":"Title2","authors":[{"name":"Author1"},{"name":"Author2"}]}]}}""")
   }
 
 }
