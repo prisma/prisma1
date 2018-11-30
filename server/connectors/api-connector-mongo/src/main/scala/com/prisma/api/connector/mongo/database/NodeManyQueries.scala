@@ -18,7 +18,20 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
 
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    aggregationQuery(database, model, queryArguments, selectedFields)
+    val query = if (needsAggregation(queryArguments.filter)) {
+      aggregationQuery(database, model, queryArguments, selectedFields)
+    } else {
+      helper(model, queryArguments, None, database)
+    }
+
+    val nodes = query.map { results: Seq[Document] =>
+      results.map { result =>
+        val root = DocumentToRoot(model, result)
+        PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
+      }
+    }
+
+    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
   def getNodes2(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>

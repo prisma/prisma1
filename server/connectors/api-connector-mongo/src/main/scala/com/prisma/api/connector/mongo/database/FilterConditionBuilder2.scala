@@ -1,23 +1,17 @@
 package com.prisma.api.connector.mongo.database
 
-import java.io
-
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.DocumentToRoot
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.shared.models.Model
-import org.bson
 import org.mongodb.scala.MongoDatabase
-import org.mongodb.scala.bson.{BsonString, conversions}
+import org.mongodb.scala.bson.conversions
 
 import scala.collection.immutable
 trait FilterConditionBuilder2 extends FilterConditionBuilder {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
   import org.mongodb.scala.model.Aggregates._
-
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = {
 
@@ -55,21 +49,48 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     //--------------------------- Setup Query -----------------------------------------------------------
     val pipeline = cursorMatch ++ joins ++ filterStage ++ sort ++ skipStage ++ limitStage
 //    val pipeline = cursorMatch ++ joins
-    val query = database.getCollection(model.dbName).aggregate(pipeline.toSeq)
 
-    //--------------------------- Parse Result ----------------------------------------------------------
+    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture()
 
-    val nodes = query.collect().toFuture.map { results: Seq[Document] =>
-      results.map { result =>
-        val root = DocumentToRoot(model, result)
-        PrismaNode(root.idField, root, Some(model.name))
-      }
-    }
-
-    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
   }
 
+  //-------------------------------Determine if Aggregation is needed -----------------------------------
+
   //-------------------------------------- Join Stage ----------------------------------------------------------------------------------------------------------
+
+  def needsAggregation(filter: Option[Filter]): Boolean = filter match {
+    case Some(filter) => needsAggregation(filter)
+    case None         => false
+  }
+
+  private def needsAggregation(filter: Filter): Boolean = {
+    filter match {
+      //-------------------------------RECURSION------------------------------------
+      case NodeSubscriptionFilter => false
+      case AndFilter(filters)     => filters.exists(f => needsAggregation(f))
+      case OrFilter(filters)      => filters.exists(f => needsAggregation(f))
+      case NotFilter(filters)     => filters.exists(f => needsAggregation(f))
+      case NodeFilter(filters)    => filters.exists(f => needsAggregation(f))
+      case x: RelationFilter      => relationNeedsFilter(x)
+
+      //--------------------------------ANCHORS------------------------------------
+      case TrueFilter                     => false
+      case FalseFilter                    => false
+      case ScalarFilter(_, _)             => false
+      case OneRelationIsNullFilter(field) => false // FIXME: Think about this
+      case x                              => sys.error(s"Not supported: $x")
+    }
+  }
+
+  private def relationNeedsFilter(relationFilter: RelationFilter): Boolean = {
+    val rf      = relationFilter.field
+    val next    = needsAggregation(relationFilter.nestedFilter)
+    val current = if (rf.relatedModel_!.isEmbedded) false else true
+
+    current && next
+  }
+
+  //-------------------------------------- Join Stage ---------------------------------------------------
 
   //replace string path with  seq of models
 
@@ -142,10 +163,10 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 //          "$group" -> Document("_id" -> "$_id", "name_column" -> Document("$first" -> "$name_column"), s"$path" -> Document("$push" -> s"$$$path")))
 
         (path.segments.isEmpty, rf.isList) match {
-          case (true, true) if next.isEmpty  => Seq(mongoLookup)
-          case (true, true) if next.nonEmpty => Seq(mongoLookup, mongoUnwind)
+          case (true, true) if next.isEmpty  => sys.error("should not work") //Seq(mongoLookup)
+          case (true, true) if next.nonEmpty => sys.error("should not work") //Seq(mongoLookup, mongoUnwind)
           case (true, false)                 => Seq(mongoLookup, mongoUnwind)
-          case (false, true)                 => Seq(mongoLookup, mongoGroup)
+          case (false, true)                 => sys.error("should not work") //Seq(mongoLookup, mongoGroup)
           case (false, false)                => Seq(mongoLookup, mongoUnwind)
         }
     }

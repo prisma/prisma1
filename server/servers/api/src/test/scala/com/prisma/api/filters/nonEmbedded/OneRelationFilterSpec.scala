@@ -71,6 +71,10 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
+  "Scalar filter" should "work" in {
+    server.query(query = """{posts(where:{title: "post 2"}){title}}""", project = project).toString should be("""{"data":{"posts":[{"title":"post 2"}]}}""")
+  }
+
   "1 level 1-relation filter" should "work" in {
 
     server.query(query = """{posts(where:{blog:{name: "blog 1"}}){title}}""", project = project).toString should be(
