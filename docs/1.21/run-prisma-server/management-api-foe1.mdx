@@ -15,27 +15,25 @@ The Management API exposes the following operations (you can find the full Graph
 
 ```graphql
 type Query {
-  """
-  Shows the status of the next migration in line to be applied to the project.
-  If no such migration exists, it shows the last applied migration.
-  """
+
+  # Shows the status of the next migration in line to be applied to the project.
+  # If no such migration exists, it shows the last applied migration.
   migrationStatus(name: String!, stage: String!): Migration!
 
-  """Shows all projects the caller has access to."""
+  # Shows all projects the caller has access to.
   listProjects: [Project!]!
 
-  """
-  Shows all migrations for the project. Debug query, will likely be removed in the future.
-  """
+
+  # Shows all migrations for the project. Debug query, will likely be removed in the future.
   listMigrations(name: String!, stage: String!): [Migration!]!
 
-  """Gets a project by name and stage."""
+  # Gets a project by name and stage.
   project(name: String!, stage: String!): Project!
 
-  """Information about the server"""
+  # Information about the server.
   serverInfo: ServerInfo!
 
-  """generates a token for the given project"""
+  # Generates a token for the given project.
   generateProjectToken(name: String!, stage: String!): String!
 }
 
