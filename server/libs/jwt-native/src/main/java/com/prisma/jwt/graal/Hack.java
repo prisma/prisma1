@@ -6,6 +6,4 @@ import org.graalvm.nativeimage.c.function.CLibrary;
 
 @CLibrary("-framework Security")
 @Platforms(Platform.DARWIN.class)
-public class Hack {
-
-}
+public class Hack {}
