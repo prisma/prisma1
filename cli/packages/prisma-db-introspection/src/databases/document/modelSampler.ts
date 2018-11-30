@@ -19,22 +19,38 @@ interface FieldInfo {
   invalidTypes: string[]
 }
 
-
+/**
+ * Samples all collections in a database and infers all primitive fields and embedded types. 
+ * Does not infer relations. Fields which might have a relation get their `relationName` attribute
+ * set to `ModelSampler.ErrorType` for later resolving.
+ */
 export class ModelSampler<InternalCollectionType> implements ModelSampler<InternalCollectionType> {
   private samplingStrategy: SamplingStrategy
 
   public static ErrorType = '<Unknown>'
 
+  /**
+   * @param samplingStrategy The sampling strategy to use.
+   */
   constructor(samplingStrategy: SamplingStrategy = SamplingStrategy.One) {
     this.samplingStrategy = samplingStrategy
   }
 
+  /**
+   * Samples all Collections in the given schema. 
+   * @param connector The connector, delivering the data.
+   * @param schemaName The name of the schema to resolve.
+   * @param primitiveResolver The resolver used for resolving primitive types. 
+   */
   public async sample(connector: IDocumentConnector<InternalCollectionType>, schemaName: string, primitiveResolver: IDataTypeInferrer) {
     let types: IGQLType[] = []
 
     const allCollections = await connector.getInternalCollections(schemaName)
     for (const { name, collection } of allCollections) {
+      // For each collection, create a merging context.
       const merger = new ModelMerger(name, false, primitiveResolver)
+
+      // Iterate over all samples.
       const iterator = await connector.sample(collection, this.samplingStrategy)
       while(await iterator.hasNext()) {
         const item = await iterator.next()
