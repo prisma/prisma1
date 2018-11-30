@@ -1,4 +1,8 @@
 import { Row, LinkBox } from 'components/Markdown/LinkBox'
+import UnderstandPrismaIcon from 'icons/explore/UnderstandPrismaIcon'
+import DevelopServiceIcon from 'icons/explore/DevelopServiceIcon'
+import UseApiIcon from 'icons/explore/UseApiIcon'
+import RunServerIcon from 'icons/explore/RunServerIcon'
 import RowLink from 'components/blocks/WhiteBox/RowLink'
 
 export const meta = {
@@ -12,7 +16,8 @@ export const meta = {
 <Row>
   <LinkBox
     title="Understand Prisma"
-    description="Learn Prisma’s most important concepts and how everything fits together.">
+    description="Learn Prisma’s most important concepts and how everything fits together."
+    icon={<UnderstandPrismaIcon />}>
     <RowLink
       text="Prisma Intro: What, Why & How"
       href="/-j9ff/" />
@@ -26,7 +31,8 @@ export const meta = {
 
   <LinkBox
     title="Develop Prisma service"
-    description="Prisma services map your database to GraphQL. Learn how to build them.">
+    description="Prisma services map your database to GraphQL. Learn how to build them."
+    icon={<DevelopServiceIcon />}>
     <RowLink
       text="prisma.yml"
       href="/-5cy7" />
@@ -45,7 +51,8 @@ export const meta = {
 <Row>
   <LinkBox
     title="Use Prisma API"
-    description="Learn everything you need to know for consuming your services’ Prisma APIs.">
+    description="Learn everything you need to know for consuming your services’ Prisma APIs."
+    icon={<UseApiIcon />}>
     <RowLink
       text="Using the Prisma API"
       href="/-nms2" />
@@ -62,7 +69,8 @@ export const meta = {
 
   <LinkBox
     title="Run Prisma server"
-    description="Learn how to run and maintain your Prisma servers so you can host services.">
+    description="Learn how to run and maintain your Prisma servers so you can host services."
+    icon={<RunServerIcon />}>
     <RowLink
       text="Local Prisma Setup"
       href="/-je3i" />
