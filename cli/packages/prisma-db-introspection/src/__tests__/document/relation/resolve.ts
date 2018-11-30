@@ -1,23 +1,9 @@
-import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
+import { SdlExpect, TypeIdentifiers, DatabaseType } from 'prisma-datamodel'
 import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
-import { ObjectID } from 'bson'
-import { IDataExists } from '../../../databases/document/documentConnector';
-import { Data } from '../../../databases/document/data';
-import { RelationResolver } from '../../../databases/document/relationResolver';
-
-
-class MockDataSource implements IDataExists<string> {
-  private collections: { [name: string]: Data[] }
-
-  constructor(colletions: { [name: string]: Data[] }) {
-    this.collections = colletions
-  }
-
-  async exists(collection: string, id: any): Promise<boolean> {
-    return this.collections[collection].some(x => x['_id'] === id)
-  }
-
-} 
+import { Data } from '../../../databases/document/data'
+import { RelationResolver } from '../../../databases/document/relationResolver'
+import { users, items, assertUserItemModel, schemaString } from '../data'
+import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource'
 
 /**
  * Checks if model sampling and inferring marks potential relation field correctly.
@@ -25,56 +11,32 @@ class MockDataSource implements IDataExists<string> {
  * Depends on the correctness of all model tests. On multiple errors, fix model tests first. 
  */
 describe('Document relation inferring, should connect correctly', () => {
-  it('Should mark potential relation fields correctly.', () => {
-    const users = [{
-      _id: 'user1@prisma.com',
-      firstName: 'Charlotte',
-      orders: [{
-        count: 5,
-        item: 'Fridge'
-      }, {
-        count: 1,
-        item: 'Espresso'
-      }]
-    }, {
-      _id: 'user2@prisma.com',
-      firstName: 'Dolores',
-      orders: []
-    }, {
-      _id: 'user3@prisma.com',
-      firstName: 'Humbert',
-      orders: [{
-        count: 2,
-        item: 'Laptop'
-      }]
-    }]
-
-    const items = [{
-      _id: 'Fridge',
-      cost: 200
-    }, {
-      _id: 'Laptop',
-      cost: 2500
-    }, {
-      _id: 'Espresso',
-      cost: 1
-    }]
-
+  it('Should associate relation fields correctly.', async () => {
     const userMerger = new ModelMerger('User')
     users.forEach(x => userMerger.analyze(x))
     const userResult = userMerger.getType()
 
     const itemMerger = new ModelMerger('Item')
-    users.forEach(x => itemMerger.analyze(x))
+    items.forEach(x => itemMerger.analyze(x))
     const itemResult = itemMerger.getType()
     
     const allTypes = [userResult.type, ...userResult.embedded, itemResult.type, ...itemResult.embedded]
 
-    const mockDataSource = new MockDataSource({ User: users, Items: items })
+    const mockDataSource = new MockDocumentDataSource({ User: users, Item: items })
+    const resolver = new RelationResolver<string>()
 
-    const userResolver = new RelationResolver()
+    await resolver.resolve(allTypes, mockDataSource, 'default')
 
-    // TODO: Document connector iface?
-    //await userResolver.resolve(allTypes, )
+    assertUserItemModel(allTypes)
+  })
+
+
+  it('Should associate relation fields correctly, end to end', async () => {
+    const mockDataSource = new MockDocumentDataSource({ User: users, Item: items })
+    const result = await mockDataSource.introspect('default')
+    const sdl = await result.getDatamodel()
+
+    assertUserItemModel(sdl.types)
+    expect(await result.renderToDatamodelString()).toEqual(schemaString)
   })
 })

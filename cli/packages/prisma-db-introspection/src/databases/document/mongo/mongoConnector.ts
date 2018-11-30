@@ -1,17 +1,17 @@
-import { DataIterator, SamplingStrategy } from '../documentConnector'
+import { IDataIterator, SamplingStrategy } from '../documentConnector'
 import { DocumentConnector } from '../documentConnectorBase'
 import { DatabaseType, ISDL } from "prisma-datamodel"
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
-import { MongoClient, Collection, Cursor } from 'mongodb'
+import { MongoClient, Collection, Cursor, AggregationCursor } from 'mongodb'
 import { Data } from '../data'
 
 const reservedSchemas = ['admin', 'local']
 
 
-class MongoCursorIterator implements DataIterator {
-  protected cursor: Cursor<Data>
+class MongoCursorIterator implements IDataIterator {
+  protected cursor: Cursor<Data> | AggregationCursor<Data>
 
-  public constructor(cursor: Cursor<Data>) {
+  public constructor(cursor: Cursor<Data> |  AggregationCursor<Data>) {
     this.cursor = cursor
   }
 
@@ -27,28 +27,6 @@ class MongoCursorIterator implements DataIterator {
     await this.cursor.close()
   }
 }
-
-class RandomizedMongoCursorIterator extends MongoCursorIterator {
-  private steps: number[]
-
-  public constructor(cursor: Cursor<Data>, steps: number[]) {
-    super(cursor)
-    this.steps = steps
-  }
-
-  async hasNext() {
-    return this.cursor.hasNext() && this.steps.length > 0
-  }
-
-  async next() {
-    const val = await this.cursor.next()
-    this.cursor.skip(this.steps[0])
-    this.steps.shift()
-    return val || {}
-  }
-}
-
-
 
 export class MongoConnector extends DocumentConnector<Collection<Data>>{
   private client: MongoClient
@@ -98,10 +76,9 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
     if(count < limit) {
       return await this.sampleAll(collection)
     } else {
-      const cursor = collection.find<Data>({})
-      const steps = this.generateRandomSteps(limit, count)
+      const cursor = collection.aggregate<Data>([{ $sample: { size: limit } }])
       
-      return new RandomizedMongoCursorIterator(cursor, steps)
+      return new MongoCursorIterator(cursor)
     }
   }
 

@@ -57,13 +57,18 @@ class RelationResolveContext<Type> {
     this.type = type
     this.collections = collections
     this.connector = connector
+    this.fieldScores = {}
+    this.embeddedTypes = {}
 
     for(const field of type.fields) {
       if(!this.hasError(field)) {
-        if(typeof field.type  == 'string') {
-          // Primitive field
-          if(field.relationName == ModelSampler.ErrorType) {
+        if(typeof field.type === 'string') {
+          // Primitive 
+          if(field.relationName === ModelSampler.ErrorType) {
             for(const collection of this.collections) {
+              if(!this.fieldScores[field.name]) {
+                this.fieldScores[field.name] = {}
+              }
               this.fieldScores[field.name][collection.name] = { hits: 0, misses: 0 }
             }
           }
@@ -76,66 +81,82 @@ class RelationResolveContext<Type> {
   }
 
 
-  private async hasError(obj: IGQLField | IGQLType) {
+  private hasError(obj: IGQLField | IGQLType) {
     return obj.comments !== undefined &&
            obj.comments.some(x => x.isError)
   }
 
   public async attemptResolve(data: Data) {
-    // TODO: Warn on model missmatch?
-    for(const field of this.type.fields) {
-      if(!this.hasError(field)) {
-        if(typeof field.type  == 'string') {
-          // Primitive field
-          if(field.relationName == ModelSampler.ErrorType) {
-            if(data[field.name] !== undefined) {
-              const value = data[field.name]
-              for(const collection of this.collections) {
-                if(await this.connector.exists(collection.collection, value)) {
-                  this.fieldScores[field.name][collection.name].hits += 1
-                } else {
-                  this.fieldScores[field.name][collection.name].misses += 1
+    if(Array.isArray(data)) {
+      // Array resolve
+      for(const val of data) {
+        await this.attemptResolve(val)
+      }
+    } else {
+      // Flat resolve
+      // TODO: Warn on model missmatch?
+      for(const field of this.type.fields) {
+        if(!this.hasError(field)) {
+          if(typeof field.type === 'string') {
+            // Primitive field
+            if(field.relationName === ModelSampler.ErrorType) {
+              if(data[field.name] !== undefined) {
+                const value = data[field.name]
+                for(const collection of this.collections) {
+                  if(await this.connector.exists(collection.collection, value)) {
+                    this.fieldScores[field.name][collection.name].hits += 1
+                  } else {
+                    this.fieldScores[field.name][collection.name].misses += 1
+                  }
                 }
               }
             }
-          }
-        } else {
-          // Embedded field
-          if(data[field.name] !== undefined) {
-            this.embeddedTypes[field.name].attemptResolve(data[field.name])
+          } else {
+            // Embedded field
+            if(data[field.name] !== undefined) {
+              await this.embeddedTypes[field.name].attemptResolve(data[field.name])
+            }
           }
         }
       }
     }
   }
 
-  public connectRelationsIfResolved(availableTypes: IGQLType[], threshold: number = 0.5) {
+  public connectRelationsIfResolved(availableTypes: IGQLType[], threshold: number = 0.3) {
     // Recursive, as above, find maximal candidate, check if is over threshold, connect all. 
     for(const field of this.type.fields) {
       if(!this.hasError(field)) {
-        if(typeof field.type  == 'string') {
-          let bestRatio = 0
-          let bestCandidate: ICollectionDescription<Type> | null = null
-          for(const collection of this.collections) {
-            const score = this.fieldScores[field.name][collection.name]
-            const ratio = score.misses + score.hits === 0 ? 0 : score.hits / (score.misses + score.hits)
+        if(typeof field.type === 'string') {
+          if(field.relationName === ModelSampler.ErrorType) {
+            // Primitive field
+            let bestRatio = 0
+            let bestCandidate: ICollectionDescription<Type> | null = null
+            for(const collection of this.collections) {
+              const score = this.fieldScores[field.name][collection.name]
+              const ratio = score.misses + score.hits === 0 ? 0 : score.hits / (score.misses + score.hits)
 
-            if(ratio > bestRatio || bestCandidate === null) {
-              bestCandidate = collection
-            }
-          }
-
-          if(bestRatio > threshold && bestCandidate !== null) {
-            const candidateName = bestCandidate.name
-            const [foreignType] = availableTypes.filter(x => x.name == candidateName)
-
-            if(foreignType === undefined) {
-              throw new Error(`Missmatch between collections and given types: Type ${candidateName} does not exist.`)
+              if(ratio > bestRatio || bestCandidate === null) {
+                bestRatio = ratio
+                bestCandidate = collection
+              }
             }
 
-            field.type = foreignType
+            if(bestRatio > threshold && bestCandidate !== null) {
+              const candidateName = bestCandidate.name
+              const [foreignType] = availableTypes.filter(x => x.name == candidateName)
+
+              if(foreignType === undefined) {
+                throw new Error(`Missmatch between collections and given types: Type ${candidateName} does not exist.`)
+              }
+
+              field.type = foreignType
+            }
+            // We always remove the fields <unknown> relation tag. 
             field.relationName = null
           }
+        } else {
+          // Embedded field
+          this.embeddedTypes[field.name].connectRelationsIfResolved(availableTypes, threshold)
         }
       }
     }

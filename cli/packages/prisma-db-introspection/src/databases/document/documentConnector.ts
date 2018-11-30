@@ -11,7 +11,7 @@ export enum SamplingStrategy {
 
 const randomSamplingLimit = 50
 
-export interface DataIterator {
+export interface IDataIterator {
   hasNext(): Promise<boolean>
   next(): Promise<Data>
   close(): Promise<void>
@@ -31,8 +31,7 @@ export interface IDocumentConnector<InternalCollectionType> extends IConnector, 
   listSchemas(): Promise<string[]>
   getInternalCollections(schema: string): Promise<ICollectionDescription<InternalCollectionType>[]>
   getInternalCollection(schema: string, collection: string): Promise<InternalCollectionType>
-  exists(collection: InternalCollectionType, id: any): Promise<boolean>
   introspect(schema: string): Promise<DocumentIntrospectionResult>
-  sample(collection: InternalCollectionType, samplingStrategy: SamplingStrategy): Promise<DataIterator>
+  sample(collection: InternalCollectionType, samplingStrategy: SamplingStrategy): Promise<IDataIterator>
   listModels(schemaName: string, modelSamplingStrategy: SamplingStrategy, relationSamplingStrategy: SamplingStrategy): Promise<ISDL>
 }

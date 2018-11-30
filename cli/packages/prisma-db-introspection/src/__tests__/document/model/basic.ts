@@ -94,4 +94,41 @@ describe('Basic document model inferring', () => {
     SdlExpect.field(embeddedType, 'street', false, false, TypeIdentifiers.string)
     SdlExpect.field(embeddedType, 'number', false, false, TypeIdentifiers.integer)
   })
+
+  it('Should create embedded array types correctly', () => {
+    const customer = {
+      _id: 1,
+      customer: 'Hugo',
+      orders: [{
+        item: 'Laptop',
+        count: 3
+      }, {
+        item: 'Wok',
+        count: 1
+      }]
+    }
+
+    const merger = new ModelMerger('Customer', false) 
+
+    merger.analyze(customer)
+
+    const { type, embedded } = merger.getType()
+
+    expect(embedded).toHaveLength(1)
+
+    const embeddedType = SdlExpect.type(embedded, 'Orders', false, true)
+  
+    expect(type.name).toBe('Customer')
+    expect(type.isEmbedded).toBe(false)
+    expect(type.fields).toHaveLength(3)
+
+    SdlExpect.field(type, '_id', false, false, TypeIdentifiers.integer, true)
+    SdlExpect.field(type, 'customer', false, false, TypeIdentifiers.string)
+    SdlExpect.field(type, 'orders', false, true, embeddedType)
+
+    expect(embeddedType.fields).toHaveLength(2)
+
+    SdlExpect.field(embeddedType, 'item', false, false, TypeIdentifiers.string)
+    SdlExpect.field(embeddedType, 'count', false, false, TypeIdentifiers.integer)
+  })
 })
