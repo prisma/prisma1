@@ -12,15 +12,29 @@ interface IRelationScore {
   misses: number
 }
 
+/**
+ * Resolves relations on a given model by querying the database.
+ */
 export class RelationResolver<InternalCollectionType> implements IRelationResolver<InternalCollectionType> {
   private samplingStrategy: SamplingStrategy
   private ratioThreshold: number
 
+  /**
+   * @param samplingStrategy Sampling strategy for picking samples.
+   * @param threshold Ratio of hits/(misses + hits) we need to accept. 
+   */
   constructor(samplingStrategy: SamplingStrategy = SamplingStrategy.Random, threshold: number = 0.5) {
     this.samplingStrategy = samplingStrategy
     this.ratioThreshold = threshold
   }
 
+  /**
+   * Resolves relations in the given type list.
+   * @param types Types to resolve relations for. Can be a subset of all types in the database, 
+   * we still check all collections. Types are edited in-place.
+   * @param connector Database connector for sampling
+   * @param schemaName The schema to work on. 
+   */
   public async resolve(types: IGQLType[], connector: IDocumentConnector<InternalCollectionType>, schemaName: string) {
     const allCollections = await connector.getInternalCollections(schemaName)
     for(const type of types) {
@@ -32,19 +46,27 @@ export class RelationResolver<InternalCollectionType> implements IRelationResolv
         }
 
         const iterator = await connector.sample(collection.collection, this.samplingStrategy)
+
+        // Create resolver context
         const context = new RelationResolveContext<InternalCollectionType>(type, allCollections, connector)
+        // Iterate over samples
         while(await iterator.hasNext()) {
           const data = await iterator.next()
           await context.attemptResolve(data)
         }
         await iterator.close()
 
+        // Collect results
         context.connectRelationsIfResolved(types, this.ratioThreshold)
       }
     }
   }
 }
 
+/**
+ * Resolver context for resolving relations. 
+ * Follows a streaming pattern to keep the memory footprint low. 
+ */
 class RelationResolveContext<Type> {
   private type: IGQLType
   // First dimension: Field name, second: Remote Collection
@@ -53,6 +75,11 @@ class RelationResolveContext<Type> {
   private collections: ICollectionDescription<Type>[]
   private connector: IDataExists<Type>
 
+  /**
+   * @param type The type which is being resolved. 
+   * @param collections A list of all existing collections.
+   * @param connector A connector, capable of checking wether a certain item exists. 
+   */
   constructor(type: IGQLType, collections: ICollectionDescription<Type>[], connector: IDataExists<Type>) {
     this.type = type
     this.collections = collections
@@ -60,7 +87,9 @@ class RelationResolveContext<Type> {
     this.fieldScores = {}
     this.embeddedTypes = {}
 
+    // Build up hit/miss table for all combinations of field/collection
     for(const field of type.fields) {
+      // We do not resolve error'd fields
       if(!this.hasError(field)) {
         if(typeof field.type === 'string') {
           // Primitive 
@@ -73,7 +102,7 @@ class RelationResolveContext<Type> {
             }
           }
         } else {
-          // Embedded field
+          // Embedded document, handled recursively
           this.embeddedTypes[field.name] = new RelationResolveContext<Type>(field.type, this.collections, this.connector)
         }
       }
@@ -86,6 +115,14 @@ class RelationResolveContext<Type> {
            obj.comments.some(x => x.isError)
   }
 
+  /**
+   * Uses a given document, data, for analysis.
+   * 
+   * For each primitive field of the current type with a potential relation,
+   * checks if the corresponding value in data is the id of any collection. 
+   * 
+   * If so, increases the hit counter, otherwise, increases the miss counter.  
+   */
   public async attemptResolve(data: Data) {
     if(Array.isArray(data)) {
       // Array resolve
@@ -112,7 +149,7 @@ class RelationResolveContext<Type> {
               }
             }
           } else {
-            // Embedded field
+            // Embedded document, recursive
             if(data[field.name] !== undefined) {
               await this.embeddedTypes[field.name].attemptResolve(data[field.name])
             }
@@ -122,6 +159,12 @@ class RelationResolveContext<Type> {
     }
   }
 
+  /**
+   * Checks all aggregated hits and misses, and if the hit/miss ratio
+   * is high enough, adds a relation. 
+   * @param availableTypes A list of all types in the database. 
+   * @param threshold The hit/miss ratio threshold. 
+   */
   public connectRelationsIfResolved(availableTypes: IGQLType[], threshold: number = 0.3) {
     // Recursive, as above, find maximal candidate, check if is over threshold, connect all. 
     for(const field of this.type.fields) {
@@ -155,7 +198,7 @@ class RelationResolveContext<Type> {
             field.relationName = null
           }
         } else {
-          // Embedded field
+          // Embedded document, recursive
           this.embeddedTypes[field.name].connectRelationsIfResolved(availableTypes, threshold)
         }
       }

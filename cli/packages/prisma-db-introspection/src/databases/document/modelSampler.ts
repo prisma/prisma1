@@ -11,6 +11,9 @@ interface Embedding {
   isArray: boolean
 }
 
+/**
+ * Aggregates info about a field.
+ */
 interface FieldInfo {
   name: string,
   types: InternalType[]
@@ -53,10 +56,12 @@ export class ModelSampler<InternalCollectionType> implements ModelSampler<Intern
       // Iterate over all samples.
       const iterator = await connector.sample(collection, this.samplingStrategy)
       while(await iterator.hasNext()) {
+        // Merge each sample into our model.
         const item = await iterator.next()
         merger.analyze(item)
       }
       await iterator.close()
+      // Construct the actual type.
       const mergeResult = merger.getType()
       types.push(mergeResult.type, ...mergeResult.embedded)
     }
@@ -66,6 +71,8 @@ export class ModelSampler<InternalCollectionType> implements ModelSampler<Intern
 
 /**
  * Infers structure of a datatype from a set of data samples. 
+ * 
+ * Follows a streaming pattern to reduce the memory footprint 
  */
 export class ModelMerger {
   private fields: { [fieldName: string]: FieldInfo }
@@ -75,6 +82,11 @@ export class ModelMerger {
   public isEmbedded: boolean
   public primitiveResolver: IDataTypeInferrer
 
+  /**
+   * @param name Name of the type 
+   * @param isEmbedded Indicates if the type is an embedded type
+   * @param primitiveResolver Resolver or primitive types.
+   */
   constructor(name: string, isEmbedded: boolean, primitiveResolver: IDataTypeInferrer) {
     this.name = name
     this.isEmbedded = isEmbedded
@@ -83,6 +95,9 @@ export class ModelMerger {
     this.primitiveResolver = primitiveResolver
   }
 
+  /**
+   * Analyzes this data sample. 
+   */
   public analyze(data: Data) {
     for(const fieldName of Object.keys(data)) {
       this.analyzeField(fieldName, data[fieldName])
@@ -111,6 +126,7 @@ export class ModelMerger {
     const type = this.getTopLevelType()
     const allEmbedded: IGQLType[] = []
 
+    // Recurse over all embedded types. 
     for(const embeddedFieldName of Object.keys(this.embeddedTypes)) {
       const embedded = this.embeddedTypes[embeddedFieldName].getType()
       allEmbedded.push(embedded.type, ...embedded.embedded)
@@ -125,8 +141,13 @@ export class ModelMerger {
     return { type: type, embedded: allEmbedded }
   }
 
-  // TODO: If we get more types to summarize, we should have all summarization code (e.g. for arrays) 
-  // in one place.
+
+  /**
+   * Takes a list of type candidates and merges them into one single type.
+   * 
+   * TODO: If we get more types to summarize, we should have all summarization code (e.g. for arrays) 
+   * in one place.
+   */ 
   private summarizeTypeList(typeCandidates: InternalType[]) {
     // Our float/int decision is based soley on the data itself.
     // If we have at least one float, integer is always a misguess.
@@ -137,12 +158,19 @@ export class ModelMerger {
     return typeCandidates
   }
 
+  /**
+   * Merges all collected info into a field, including type info, relation info
+   * and array properties. 
+   * 
+   * Creates error comments on inconsistency.
+   */
   private toIGQLField(info: FieldInfo) {
     let type = ModelSampler.ErrorType
     let isArray = false
     let isRequired = false
     const comments: IComment[] = []
 
+    // Check for inconsistent array usage
     if(info.isArray.length > 1) {
       comments.push({
         isError: true,
@@ -152,6 +180,7 @@ export class ModelMerger {
       isArray = info.isArray[0]
     }
 
+    // Check for inconsistent data type
     let typeCandidates = this.summarizeTypeList([...info.types])
 
     if(typeCandidates.length > 1) {
@@ -161,6 +190,7 @@ export class ModelMerger {
       })
     }
 
+    // Check for missing data type
     if(typeCandidates.length === 1) {
       type = typeCandidates[0]
     } else {
@@ -174,7 +204,8 @@ export class ModelMerger {
     const isId = info.name === MongoIdName
 
     // https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/#directives
-    // TODO: we might want to include directives, as soon as we start changing names. 
+    // TODO: we might want to include directives, as soon as we start changing field names. Otherwise, we can put that into a different module.
+
     return {
       name: info.name,
       type: type,
@@ -182,7 +213,9 @@ export class ModelMerger {
       isList: isArray,
       isReadOnly: false,
       isRequired: isRequired,
-      isUnique: false, // Never unique in Mongo. 
+      // Never unique in Mongo.
+      isUnique: false,
+      // Reserved relation name for potential relations.
       relationName: info.isRelationCandidate && !isId ? ModelSampler.ErrorType : null,
       relatedField: null,
       defaultValue: null,
@@ -190,6 +223,11 @@ export class ModelMerger {
     } as IGQLField
   }
 
+  /**
+   * Initialization helper for empty field info
+   * structures
+   * @param name
+   */
   private initField(name: string) {
     this.fields[name] = this.fields[name] || {
       invalidTypes: [],
@@ -199,9 +237,13 @@ export class ModelMerger {
     }
   }
 
+  /**
+   * Analyzes a field with respect to it's value.
+   */
   private analyzeField(name: string, value: any) {
    
     try {
+      // Attempt field analysis
       const typeInfo = this.primitiveResolver.inferType(value)
 
       // Recursive embedding case. 
@@ -222,6 +264,7 @@ export class ModelMerger {
       this.fields[name] = this.mergeField(this.fields[name], typeInfo)
   
     } catch(err) {
+      // On error, register an invalid type.
       if(err.name === UnsupportedTypeErrorKey) {
         this.initField(name)
         this.fields[name].invalidTypes.push(err.invalidType)
@@ -239,6 +282,9 @@ export class ModelMerger {
     }
   }
 
+  /**
+   * Merges two field infos. 
+   */
   private mergeField(field: FieldInfo, info: TypeInfo): FieldInfo {
     let types = field.types
 
