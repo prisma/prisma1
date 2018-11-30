@@ -2,7 +2,7 @@ import { SdlExpect, TypeIdentifiers, DatabaseType } from 'prisma-datamodel'
 import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
 import { Data } from '../../../databases/document/data'
 import { RelationResolver } from '../../../databases/document/relationResolver'
-import { users, items, assertUserItemModel, schemaString } from '../data'
+import { users, items, assertUserItemModel, schemaString } from '../data/simpleRelational'
 import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource'
 
 /**

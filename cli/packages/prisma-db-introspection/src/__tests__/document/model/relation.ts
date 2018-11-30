@@ -10,6 +10,7 @@ describe('Document model inferring mark relation fields', () => {
     const user = {
       _id: 'id',
       fk1: 'Hello',
+      // TODO: BSON Dependency is mongo specific. 
       fk2: new ObjectID('000000000000000000000000'),
       field: 3
     }

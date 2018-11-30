@@ -222,7 +222,8 @@ export class ModelMerger {
 
       // Recursive embedding case. 
       if(typeInfo.type === ObjectTypeIdentifier) {
-        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(capitalize(name), true)
+        // Generate pretty embedded model name, which has no purpose outside of the schema. 
+        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true)
         if(typeInfo.isArray) {
           // Embedded array. 
           for(const item of value) {

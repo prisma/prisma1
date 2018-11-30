@@ -1,6 +1,8 @@
 import { IGQLType, SdlExpect, TypeIdentifiers } from "prisma-datamodel";
 
-
+/*
+* users and items are a small datamodel to test relations. 
+*/
 export const users = [{
   _id: 'user1@prisma.com',
   firstName: 'Charlotte',
@@ -40,20 +42,20 @@ export const schemaString = `type Item {
   cost: Int
 }
 
-type Orders {
-  count: Int
-  item: Item
-}
-
 type User {
   _id: String
   firstName: String
-  orders: [Orders!]!
+  orders: [UserOrders!]!
+}
+
+type UserOrders @embedded {
+  count: Int
+  item: Item
 }`
 
 export function assertUserItemModel(allTypes: IGQLType[]) {
   const userType = SdlExpect.type(allTypes, 'User', false, false)
-  const ordersType = SdlExpect.type(allTypes, 'Orders', false, true)
+  const ordersType = SdlExpect.type(allTypes, 'UserOrders', false, true)
   const itemType = SdlExpect.type(allTypes, 'Item', false, false)
 
   expect(userType.fields).toHaveLength(3)
@@ -69,3 +71,5 @@ export function assertUserItemModel(allTypes: IGQLType[]) {
   SdlExpect.field(itemType, '_id', false, false, TypeIdentifiers.string, true)
   SdlExpect.field(itemType, 'cost', false, false, TypeIdentifiers.integer)
 }
+
+// Start: 13:38

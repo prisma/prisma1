@@ -79,7 +79,7 @@ describe('Basic document model inferring', () => {
 
     expect(embedded).toHaveLength(1)
 
-    const embeddedType = SdlExpect.type(embedded, 'ShippingAddress', false, true)
+    const embeddedType = SdlExpect.type(embedded, 'CustomerShippingAddress', false, true)
   
     expect(type.name).toBe('Customer')
     expect(type.isEmbedded).toBe(false)
@@ -116,7 +116,7 @@ describe('Basic document model inferring', () => {
 
     expect(embedded).toHaveLength(1)
 
-    const embeddedType = SdlExpect.type(embedded, 'Orders', false, true)
+    const embeddedType = SdlExpect.type(embedded, 'CustomerOrders', false, true)
   
     expect(type.name).toBe('Customer')
     expect(type.isEmbedded).toBe(false)

@@ -37,7 +37,7 @@ export default class Renderer {
     const typedirectives: IDirectiveInfo[] = type.directives || []
 
     // TODO Move direction magic to superclass
-    if(type.isEnum) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
+    if(type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
 
     const renderedDirectives = this.renderDirectives(typedirectives)
     const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)

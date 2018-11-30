@@ -61,7 +61,7 @@ describe('Document model inferring, conflict resolution', () => {
 
     const { type, embedded } = merger.getType()
 
-    const embeddedType = SdlExpect.type(embedded, 'ShippingAddress', false, true)
+    const embeddedType = SdlExpect.type(embedded, 'UserShippingAddress', false, true)
 
     expect(type.fields).toHaveLength(3)
 
@@ -110,7 +110,7 @@ describe('Document model inferring, conflict resolution', () => {
 
     const { type, embedded } = merger.getType()
 
-    const embeddedType = SdlExpect.type(embedded, 'ShippingAddress', false, true)
+    const embeddedType = SdlExpect.type(embedded, 'UserShippingAddress', false, true)
 
     expect(type.fields).toHaveLength(3)
     
