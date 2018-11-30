@@ -1,9 +1,11 @@
-import { IDataIterator, SamplingStrategy } from '../documentConnector'
+import { IDataIterator, SamplingStrategy, ObjectTypeIdentifier, TypeInfo } from '../documentConnector'
 import { DocumentConnector } from '../documentConnectorBase'
 import { DatabaseType, ISDL } from "prisma-datamodel"
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
 import { MongoClient, Collection, Cursor, AggregationCursor } from 'mongodb'
+import { ObjectID } from 'bson'
 import { Data } from '../data'
+import { TypeIdentifiers } from '../../../../../prisma-datamodel/dist/datamodel/scalar';
 
 const reservedSchemas = ['admin', 'local']
 
@@ -34,6 +36,10 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
   constructor(client: MongoClient) {
     super()
 
+    if(!(client instanceof MongoClient)) {
+      throw new Error('MongoClient instance needed for initialization.')
+    }
+
     if(!client.isConnected()) {
       throw new Error('Please connect the mongo client first.')
     }
@@ -41,7 +47,7 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
     this.client = client
   }
 
-  getDatabaseType(): DatabaseType {
+  public getDatabaseType(): DatabaseType {
     return DatabaseType.mongo
   }
 
@@ -53,7 +59,6 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
   
   public async getInternalCollections(schemaName: string) {
     const db = this.client.db(schemaName)
-
     const collections = (await db.collections()) as Collection<Data>[]
     return collections.map(collection => { return { name: collection.collectionName, collection }})
   }
@@ -61,11 +66,9 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
   
   public async getInternalCollection(schemaName: string, collectionName: string) {
     const db = this.client.db(schemaName)
-
     return await db.collection<Data>(collectionName)
   }
   
-  // TODO: Lift to strategy
   async sampleOne(collection: Collection) : Promise<MongoCursorIterator> {
     const cursor = await collection.find<Data>({}).limit(1)
     return new MongoCursorIterator(cursor)
@@ -82,17 +85,6 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
     }
   }
 
-  /** 
-  * Gets n random numbers chich sum up to sum.
-  */
-  private generateRandomSteps(n: number, sum: number) {
-    const steps: number[] = []
-    for(let i = 0; i < n; i++) {
-      steps.push(Math.floor(Math.random() * sum / n))
-    }
-    return steps
-  }
-
   async sampleAll(collection: Collection) : Promise<MongoCursorIterator> {
     const cursor = await collection.find<Data>({})
 
@@ -103,4 +95,17 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
     return collection.find({ '_id': id }).hasNext()
   }
 
+  /**
+   * Mongo special handling of ObjectID types. 
+   */
+  public inferType(value: any): TypeInfo  {
+    const suggestion = super.inferType(value)
+
+    if(suggestion.type === ObjectTypeIdentifier && value instanceof ObjectID) {
+      suggestion.type = TypeIdentifiers.string
+      suggestion.isRelationCandidate = true
+    }
+
+    return suggestion
+  }
 }

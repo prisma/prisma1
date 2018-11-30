@@ -12,17 +12,19 @@ import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource'
  */
 describe('Document relation inferring, should connect correctly', () => {
   it('Should associate relation fields correctly.', async () => {
-    const userMerger = new ModelMerger('User')
+
+    const mockDataSource = new MockDocumentDataSource({ User: users, Item: items })
+
+    const userMerger = new ModelMerger('User', false, mockDataSource)
     users.forEach(x => userMerger.analyze(x))
     const userResult = userMerger.getType()
 
-    const itemMerger = new ModelMerger('Item')
+    const itemMerger = new ModelMerger('Item', false,  mockDataSource)
     items.forEach(x => itemMerger.analyze(x))
     const itemResult = itemMerger.getType()
     
     const allTypes = [userResult.type, ...userResult.embedded, itemResult.type, ...itemResult.embedded]
 
-    const mockDataSource = new MockDocumentDataSource({ User: users, Item: items })
     const resolver = new RelationResolver<string>()
 
     await resolver.resolve(allTypes, mockDataSource, 'default')

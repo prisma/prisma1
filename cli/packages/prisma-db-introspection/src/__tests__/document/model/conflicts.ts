@@ -1,5 +1,6 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
+import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource';
 
 /**
  * Checks if model sampling and inferring module resolves conflicts in field definitions correctly.
@@ -14,7 +15,7 @@ describe('Document model inferring, conflict resolution', () => {
       firstName: 'Test-2'
     }
 
-    const merger = new ModelMerger('User')
+    const merger = new ModelMerger('User', false, new MockDocumentDataSource({}))
 
     merger.analyze(user1)
     merger.analyze(user2)
@@ -53,7 +54,7 @@ describe('Document model inferring, conflict resolution', () => {
     }
 
 
-    const merger = new ModelMerger('User')
+    const merger = new ModelMerger('User', false, new MockDocumentDataSource({}))
 
     merger.analyze(user1)
     merger.analyze(user2)
@@ -102,7 +103,7 @@ describe('Document model inferring, conflict resolution', () => {
     }
 
 
-    const merger = new ModelMerger('User')
+    const merger = new ModelMerger('User', false, new MockDocumentDataSource({}))
 
     merger.analyze(user1)
     merger.analyze(user2)

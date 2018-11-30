@@ -1,5 +1,6 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
+import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource';
 
 /**
  * Checks if model sampling and inferring module resolves fields an embedded types correctly.
@@ -13,7 +14,7 @@ describe('Basic document model inferring', () => {
       rating: 5.7, 
     }
 
-    const merger = new ModelMerger('document', false) 
+    const merger = new ModelMerger('document', false, new MockDocumentDataSource({})) 
 
     merger.analyze(document)
 
@@ -44,7 +45,7 @@ describe('Basic document model inferring', () => {
       nestedArray: [[0, 1], [2, 3]]
     }
 
-    const merger = new ModelMerger('arrays', false) 
+    const merger = new ModelMerger('arrays', false, new MockDocumentDataSource({})) 
 
     merger.analyze(arrays)
 
@@ -71,7 +72,7 @@ describe('Basic document model inferring', () => {
       }
     }
 
-    const merger = new ModelMerger('Customer', false) 
+    const merger = new ModelMerger('Customer', false, new MockDocumentDataSource({})) 
 
     merger.analyze(customer)
 
@@ -108,7 +109,7 @@ describe('Basic document model inferring', () => {
       }]
     }
 
-    const merger = new ModelMerger('Customer', false) 
+    const merger = new ModelMerger('Customer', false, new MockDocumentDataSource({})) 
 
     merger.analyze(customer)
 

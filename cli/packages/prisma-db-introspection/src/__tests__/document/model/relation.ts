@@ -1,6 +1,6 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
-import { ObjectID } from 'bson'
+import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource';
 
 /**
  * Checks if model sampling and inferring marks potential relation field correctly.
@@ -10,12 +10,11 @@ describe('Document model inferring mark relation fields', () => {
     const user = {
       _id: 'id',
       fk1: 'Hello',
-      // TODO: BSON Dependency is mongo specific. 
-      fk2: new ObjectID('000000000000000000000000'),
+      fk2: '000000000000000000000000',
       field: 3
     }
 
-    const merger = new ModelMerger('User')
+    const merger = new ModelMerger('User', false, new MockDocumentDataSource({}))
 
     merger.analyze(user)
 

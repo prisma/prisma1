@@ -2,47 +2,13 @@ import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers, capital
 import { Data } from './data'
 import { isArray, isRegExp } from 'util'
 import { ObjectID } from 'bson' // TODO - remove dependency to mongo's BSON and subclass to abstract primitive type inferrer. 
-import { SamplingStrategy, IDocumentConnector } from './documentConnector'
-
-const ObjectTypeIdentifier = 'EmbeddedObject'
+import { SamplingStrategy, IDocumentConnector, IDataTypeInferrer, InternalType, ObjectTypeIdentifier, UnsupportedTypeErrorKey, UnsupportedArrayTypeErrorKey, TypeInfo } from './documentConnector'
 
 const MongoIdName = '_id'
-
-const UnsupportedTypeErrorKey = 'UnsupportedType'
-const UnsupportedArrayTypeErrorKey = 'UnsupportedArrayType'
-
-type InternalType = TypeIdentifier | 'EmbeddedObject'
-
-
-interface TypeInfo {
-  type: InternalType | null,
-  isArray: boolean,
-  isRelationCandidate: boolean
-}
 
 interface Embedding {
   type: ModelMerger, 
   isArray: boolean
-}
-
-class UnsupportedTypeError extends Error {
-  public invalidType: string
-
-  constructor(public message: string, invalidType: string) {
-    super(message);
-    this.name = UnsupportedTypeErrorKey
-    this.invalidType = invalidType
-  }
-}
-
-class UnsupportedArrayTypeError extends Error {
-  public invalidType: string
-
-  constructor(public message: string, invalidType: string) {
-    super(message);
-    this.name = UnsupportedArrayTypeErrorKey
-    this.invalidType = invalidType
-  }
 }
 
 interface FieldInfo {
@@ -63,12 +29,12 @@ export class ModelSampler<InternalCollectionType> implements ModelSampler<Intern
     this.samplingStrategy = samplingStrategy
   }
 
-  public async sample(connector: IDocumentConnector<InternalCollectionType>, schemaName: string) {
+  public async sample(connector: IDocumentConnector<InternalCollectionType>, schemaName: string, primitiveResolver: IDataTypeInferrer) {
     let types: IGQLType[] = []
 
     const allCollections = await connector.getInternalCollections(schemaName)
     for (const { name, collection } of allCollections) {
-      const merger = new ModelMerger(name, false)
+      const merger = new ModelMerger(name, false, primitiveResolver)
       const iterator = await connector.sample(collection, this.samplingStrategy)
       while(await iterator.hasNext()) {
         const item = await iterator.next()
@@ -91,12 +57,14 @@ export class ModelMerger {
 
   public name: string
   public isEmbedded: boolean
+  public primitiveResolver: IDataTypeInferrer
 
-  constructor(name: string, isEmbedded: boolean = false) {
+  constructor(name: string, isEmbedded: boolean, primitiveResolver: IDataTypeInferrer) {
     this.name = name
     this.isEmbedded = isEmbedded
     this.fields = {}
     this.embeddedTypes = {}
+    this.primitiveResolver = primitiveResolver
   }
 
   public analyze(data: Data) {
@@ -218,12 +186,12 @@ export class ModelMerger {
   private analyzeField(name: string, value: any) {
    
     try {
-      const typeInfo = this.inferType(value)
+      const typeInfo = this.primitiveResolver.inferType(value)
 
       // Recursive embedding case. 
       if(typeInfo.type === ObjectTypeIdentifier) {
         // Generate pretty embedded model name, which has no purpose outside of the schema. 
-        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true)
+        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true, this.primitiveResolver)
         if(typeInfo.isArray) {
           // Embedded array. 
           for(const item of value) {
@@ -276,70 +244,5 @@ export class ModelMerger {
       target.push(value)
     }
     return target
-  }
-
-  private inferArrayType(array: any[]) {
-    var type: InternalType | null = null
-    
-    for(const item of array) {
-      const itemType = this.inferType(item)
-
-      if(itemType.isArray) {
-        throw new UnsupportedArrayTypeError('Received a nested array while analyzing data. This is not supported yet.', 'ArrayArray')
-      }
-
-      if(type === null) {
-        type = itemType.type
-      } else if(type === TypeIdentifiers.integer && itemType.type === TypeIdentifiers.float ||
-                type === TypeIdentifiers.float && itemType.type === TypeIdentifiers.integer) {
-        // Special case: We treat int as a case of float, if needed.
-        type = TypeIdentifiers.float
-      } else if(type !== itemType.type) {
-        throw new UnsupportedArrayTypeError('Mixed arrays are not supported.', `Array of ${type} and ${itemType.type}`)
-      }
-    }
-
-    return type
-  }
-
-  // Use ObjectID or String as relation
-  private isRelationCandidate(value: any): boolean {
-    return typeof(value) === 'string' || value instanceof ObjectID
-  }
-
-  private arrayIsRelationCandidate(array: any[]): boolean {
-    var isRelationCandidate = false
-
-    for(const item of array) {
-      isRelationCandidate = isRelationCandidate || this.isRelationCandidate(item)
-    }
-
-    return isRelationCandidate
-  }
-
-  // TODO: There are more BSON types exported by the mongo client lib we could add here.
-  private inferType(value: any): TypeInfo  {
-    // Maybe an array, which would otherwise be identified as object.
-    if (Array.isArray(value)) {
-      return { type: this.inferArrayType(value), isArray: true, isRelationCandidate: this.arrayIsRelationCandidate(value) }
-    }
-
-    const isRelationCandidate = this.isRelationCandidate(value)
-
-    // Base types
-    switch(typeof(value)) {
-      case "number": return { type: value % 1 === 0 ? TypeIdentifiers.integer : TypeIdentifiers.float, isArray: false, isRelationCandidate }
-      case "boolean": return { type: TypeIdentifiers.boolean, isArray: false, isRelationCandidate }
-      case "string": return { type: TypeIdentifiers.string, isArray: false, isRelationCandidate }
-      case "object": 
-        if(value instanceof ObjectID) {
-          return { type: TypeIdentifiers.string, isArray: false, isRelationCandidate }
-        } else {
-          return { type: ObjectTypeIdentifier, isArray: false, isRelationCandidate }
-        }
-      default: break
-    }
-
-    throw new UnsupportedTypeError('Received an unsupported type:', typeof value)
   }
 }
