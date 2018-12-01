@@ -322,6 +322,7 @@ export class Client {
             field: instruction.field,
             fieldName: instruction.fieldName,
             isRelayConnection: this.isConnectionTypeName(rootTypeName),
+            isSubscription: instructions[0].typeName === 'Subscription',
             args,
           })
         }
@@ -358,7 +359,7 @@ export class Client {
     return typeName.endsWith('Connection') && typeName !== 'Connection'
   }
 
-  getFieldAst({ field, fieldName, isRelayConnection, args }) {
+  getFieldAst({ field, fieldName, isRelayConnection, isSubscription, args }) {
     const node: any = {
       kind: Kind.FIELD,
       name: {
@@ -408,6 +409,14 @@ export class Client {
           return false
         }
 
+        if (isSubscription) {
+          if (['previousValues', 'node'].includes(subField.name)) {
+            return true
+          }
+
+          return false
+        }
+
         const model =
           this._models && this._models.find(m => m.name === fieldType.name)
         const embedded = model && model.embedded
@@ -419,6 +428,7 @@ export class Client {
           field,
           fieldName: fieldName,
           isRelayConnection,
+          isSubscription,
           args: [],
         })
       })
