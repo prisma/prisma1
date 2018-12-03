@@ -371,6 +371,55 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
+  "removing an explicit link table must work" in {
+    // FIXME: this fails because columns in relation tables are not getting renamed
+    val capas = ConnectorCapabilities(RelationLinkTableCapability)
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |type CustomLinkTable @linkTable {
+        |  myA: A
+        |  myB: B
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel, capas)
+    initialResult.table("CustomLinkTable").isDefined should be(true)
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |  a: A
+        |}
+      """.stripMargin
+    val result = deploy(dataModel, capas)
+    result.table("CustomLinkTable").isDefined should be(false)
+    val relationTable = result.table_!("AToB")
+    relationTable.columns should have(size(3))
+    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val aColumn = relationTable.column_!("A")
+    aColumn.typeIdentifier should be(TI.String)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("B")
+    bColumn.typeIdentifier should be(TI.String)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
   "adding an inline relation should result in a foreign key in the model table" in {
     val dataModel =
       """
@@ -436,6 +485,69 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val cColumn = result.table_!("A").column_!("c")
     cColumn.foreignKey should equal(Some(ForeignKey("C", "id")))
     cColumn.typeIdentifier should be(TI.UUID)
+  }
+
+  "removing an inline relation link should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column("b").isDefined should be(true)
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel)
+    result.table_!("A").column("b").isDefined should be(false)
+  }
+
+  "moving an inline relation ljink to ther other side should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column("b").isDefined should be(true)
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |  a: A @relation(link: INLINE)
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel)
+    result.table_!("A").column("b").isDefined should be(false)
+    val aColumn = result.table_!("B").column_!("a")
+    aColumn.foreignKey should be(Some(ForeignKey("B", "a")))
   }
 
   "adding an inline self relation should add the relation link in the right column" in {
