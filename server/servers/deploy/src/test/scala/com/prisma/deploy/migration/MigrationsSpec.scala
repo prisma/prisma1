@@ -87,6 +87,118 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     column.isRequired should be(true)
   }
 
+  "removing a scalar field should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column("field").isDefined should be(true)
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel)
+    result.table_!("A").column("field").isDefined should be(false)
+  }
+
+  "updating the type of a scalar field should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column_!("field").typeIdentifier should be(TI.String)
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: Int
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel)
+    result.table_!("A").column_!("field").typeIdentifier should be(TI.Int)
+  }
+
+  "changing a relation field to a scalar field should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column_!("b").foreignKey should be(Some(ForeignKey("B", "id")))
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: String
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val result = deploy(dataModel)
+    result.table_!("A").column_!("b").typeIdentifier should be(TI.String)
+  }
+
+  "changing a scalar field to a relation field should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: String
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column_!("b").typeIdentifier should be(TI.String)
+
+    /**
+      * FIXME: this fails because:
+      * 1. Two steps  get generated CreateRelation and UpdateField
+      * 2. When the CreateRelation step gets executed the scalar column still exists. -> boom!
+      */
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel)
+    result.table_!("A").column_!("b").foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
   "adding a plain many to many relation should result in our plain relation table" in {
     val dataModel =
       """
@@ -133,7 +245,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.typeIdentifier should be(TI.String)
   }
 
-  "changing the db name of an inline relation field must work" in {
+  "specifying the db name of an inline relation field must work" in {
     val dataModel =
       """
         |type A {
@@ -151,7 +263,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should equal(Some(ForeignKey("B", "id")))
   }
 
-  "adding an inline relation to an model that has as id field of a non normal type" in {
+  "adding an inline relation to an model that has as id field of an exotic type should work" in {
     val dataModel =
       """
         |type A {
@@ -216,9 +328,10 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       secrets = Vector.empty,
       functions = Vector.empty
     )
+    val refreshedProject = testDependencies.projectPersistence.load(project.id).await.get
     val mutation = DeployMutation(
       args = input,
-      project = project,
+      project = refreshedProject,
       schemaInferrer = SchemaInferrer(capabilities),
       migrationStepsInferrer = MigrationStepsInferrer(),
       schemaMapper = SchemaMapper,
