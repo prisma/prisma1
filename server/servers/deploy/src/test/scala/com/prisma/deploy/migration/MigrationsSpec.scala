@@ -250,6 +250,33 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
+  "adding a plain many to many relation for exotic id types must also work" in {
+    // FIXME: this fails because the type of the id field is changed. This results in an ordering problem again as the relation is tried to be created when the column type has not changed yet.
+    val dataModel =
+      """
+        |type A {
+        |  id: Int! @id
+        |  bs: [B]
+        |}
+        |
+        |type B {
+        |  id: UUID! @id
+        |  as: [A]
+        |}
+      """.stripMargin
+
+    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
+    val relationTable = result.table_!("AToB")
+    relationTable.columns should have(size(3))
+    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val aColumn = relationTable.column_!("A")
+    aColumn.typeIdentifier should be(TI.Int)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("B")
+    bColumn.typeIdentifier should be(TI.UUID)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
   "adding an inline relation should result in a foreign key in the model table" in {
     val dataModel =
       """
