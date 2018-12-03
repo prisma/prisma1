@@ -75,14 +75,8 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
   }
 
   async sampleMany(collection: Collection, limit: number) : Promise<MongoCursorIterator> {
-    const count = await collection.count({})
-    if(count < limit) {
-      return await this.sampleAll(collection)
-    } else {
-      const cursor = collection.aggregate<Data>([{ $sample: { size: limit } }])
-      
-      return new MongoCursorIterator(cursor)
-    }
+    const cursor = collection.aggregate<Data>([{ $sample: { size: limit } }])
+    return new MongoCursorIterator(cursor)
   }
 
   async sampleAll(collection: Collection) : Promise<MongoCursorIterator> {

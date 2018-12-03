@@ -28,7 +28,7 @@ export const users = [{
     number: "10"
   },
 },  {
-  _id: "test2@prisma.com",
+  _id: "test3@prisma.com",
   firstName: "Test",
   lastName: "Test",
   paymentInfo: [{
@@ -100,7 +100,7 @@ export const orders = [{
   amount: 300,
   items: ["TV", "TV", "TV"]
 }, {
-  _id: 1,
+  _id: 2,
   customer: "test2@prisma.com",
   orderDate: "2018-12-22",
   amount: 3000.5,

@@ -23,7 +23,7 @@ describe("Mongo Model Introspector", () => {
 
     assertUserItemModel(sdl.types)
     expect(schema).toEqual(schemaString)
-  })
+  }, 10000)
 
   it("Should infer a relation with random sampling correctly.", async () => {
 
@@ -43,5 +43,5 @@ describe("Mongo Model Introspector", () => {
     const otherType = SdlExpect.type(sdl.types, 'Other', false, false)
 
     SdlExpect.field(itemType, 'other', false, false, otherType)
-  })
+  }, 10000)
 })

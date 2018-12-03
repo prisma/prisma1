@@ -31,9 +31,8 @@ export abstract class DocumentConnector<InternalCollectionType> implements IDocu
    */
   protected abstract sampleOne(collection: InternalCollectionType): Promise<IDataIterator>
   /**
-   * Samples a number of documents from the given collection. The documents are randomly selected and
-   * can be duplicates. If the collection contains less than `limit` documents, 
-   * all documents in the collection are returned. Else, `limit` documents are returned.
+   * Samples a number of documents from the given collection. The documents are randomly picked and
+   * can be duplicates.
    */
   protected abstract sampleMany(collection: InternalCollectionType, limit: number): Promise<IDataIterator>
   /**
