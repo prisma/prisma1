@@ -132,6 +132,41 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column_!("field").typeIdentifier should be(TI.Int)
   }
 
+  "changing the type of an id field should work" in {
+    // TODO: not sure whether this should work at all
+    val capabilities = ConnectorCapabilities(IntIdCapability)
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |}
+        |type B {
+        |  id: ID! @id
+        |  a: A @relation(link: INLINE)
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel, capabilities)
+    initialResult.table_!("A").column_!("id").typeIdentifier should be(TI.String)
+    initialResult.table_!("B").column_!("a").typeIdentifier should be(TI.String)
+    initialResult.table_!("B").column_!("a").foreignKey should be(Some(ForeignKey("A", "id")))
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: Int! @id
+        |}
+        |type B {
+        |  id: ID! @id
+        |  a: A @relation(link: INLINE)
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel, capabilities)
+    result.table_!("A").column_!("id").typeIdentifier should be(TI.Int)
+    result.table_!("B").column_!("a").typeIdentifier should be(TI.Int)
+    result.table_!("B").column_!("a").foreignKey should be(Some(ForeignKey("A", "id")))
+  }
+
   "updating db name of a scalar field should work" in {
     // FIXME: db names are not considered yet during migrations.
     val initialDataModel =
