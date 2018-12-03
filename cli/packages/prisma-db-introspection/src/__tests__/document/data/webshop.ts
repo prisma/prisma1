@@ -115,7 +115,7 @@ export const collections = {
 }
 
 export const schemaString = `type Item {
-  _id: String
+  _id: String @id
   keywords: [String!]!
   price: Float
   rating: Float
@@ -128,7 +128,7 @@ type ItemReviews @embedded {
 }
 
 type Order {
-  _id: Int
+  _id: Int @id
   amount: Int
   customer: User
   items: [String!]!
@@ -136,7 +136,7 @@ type Order {
 }
 
 type User {
-  _id: String
+  _id: String @id
   firstName: String
   lastName: String
   paymentInfo: [UserPaymentInfo!]!

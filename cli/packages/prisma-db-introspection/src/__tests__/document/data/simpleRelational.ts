@@ -38,12 +38,12 @@ export const items = [{
 }]
 
 export const schemaString = `type Item {
-  _id: String
+  _id: String @id
   cost: Int
 }
 
 type User {
-  _id: String
+  _id: String @id
   firstName: String
   orders: [UserOrders!]!
 }
