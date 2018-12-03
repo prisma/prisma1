@@ -74,6 +74,7 @@ export default class Renderer {
     if(field.defaultValue !== null) { fieldDirectives.push({ name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}) }
     if(field.isUnique) { fieldDirectives.push({ name: DirectiveKeys.isUnique, arguments: {} }) }
     if(field.relationName !== null) { fieldDirectives.push({ name: DirectiveKeys.relation, arguments: { name: field.relationName } }) }
+    if(field.isId) { fieldDirectives.push({ name: DirectiveKeys.isId, arguments: { } }) } 
 
     const renderedDirectives = this.renderDirectives(fieldDirectives)
     
