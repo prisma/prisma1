@@ -31,7 +31,22 @@ pub fn to_str<'a>(pointer: *const c_char) -> &'a str {
     }
 }
 
-pub fn to_str_vector<'a>(raw: *const c_char, num_elements: i64) -> Vec<&'a str> {
+pub fn str_vec_from_pointers<'a>(raw: *const *const c_char, num_elements: i64) -> Vec<&'a str> {
+    let mut vec: Vec<&str> = Vec::with_capacity(num_elements as usize);
+    let mut offset = 0; // Start scanning at 0
+    unsafe {
+        for i in 0..num_elements {
+            let ptr = raw.add(i as usize);
+            let s = to_str(ptr as *const c_char);
+
+            vec.push(s);
+        }
+    }
+
+    vec
+}
+
+pub fn str_vec_from_bytes<'a>(raw: *const c_char, num_elements: i64) -> Vec<&'a str> {
     let mut vec: Vec<&str> = Vec::with_capacity(num_elements as usize);
     let mut offset = 0; // Start scanning at 0
     unsafe {

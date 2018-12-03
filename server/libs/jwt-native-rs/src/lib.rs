@@ -18,7 +18,7 @@ use std::str::FromStr;
 use std::error::Error;
 use jwt::{decode, encode, Header, Validation, Algorithm};
 use chrono::prelude::*;
-use ffi_utils::{to_str, to_string, to_str_vector};
+use ffi_utils::{to_str, to_string, str_vec_from_pointers};
 use protocol_buffer::ProtocolBuffer;
 use grant::Grant;
 
@@ -87,9 +87,9 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
 }
 
 #[no_mangle]
-pub extern "C" fn verify_token(token: *const c_char, secrets: *const c_char, num_secrets: i64, expect_target: *const c_char, expect_action: *const c_char) -> *mut ProtocolBuffer {
+pub extern "C" fn verify_token(token: *const c_char, secrets: *const *const c_char, num_secrets: i64, expect_target: *const c_char, expect_action: *const c_char) -> *mut ProtocolBuffer {
     let parsed_token = to_str(token);
-    let parsed_secrets = to_str_vector(secrets, num_secrets);
+    let parsed_secrets = str_vec_from_pointers(secrets, num_secrets);
     let mut last_error: String = String::from("");
 
     for secret in parsed_secrets {

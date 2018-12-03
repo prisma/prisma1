@@ -14,7 +14,7 @@ ProtocolBuffer *create_token(const char *algorithm,
                              const char *allowed_action);
 
 ProtocolBuffer *verify_token(const char *token,
-                             const char *secrets,
+                             const char **secrets,
                              int64_t num_secrets,
                              const char *expect_target,
                              const char *expect_action);

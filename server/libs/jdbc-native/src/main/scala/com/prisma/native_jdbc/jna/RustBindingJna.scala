@@ -50,6 +50,7 @@ object RustBindingJna extends RustBinding {
   }
 
   override def closeConnection(connection: RustConnectionJna): RustCallResult = {
+    println(s"[BRIDGE] Closing connection ${connection.hashCode()}")
     val raw = library.closeConnection(connection.conn)
     processCallResult(raw)
   }
@@ -90,6 +91,7 @@ object RustBindingJna extends RustBinding {
   def processCallResult(raw: String) =
     (Try { RustCallResult.fromString(raw) } match {
       case x @ _ =>
+        Thread.dumpStack()
         library.destroy_string(raw)
         x
     }).get

@@ -49,7 +49,7 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
   }
 
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
-    val nativeArray = JnaUtils.copyToNativeStringArray(secrets)
+    val nativeArray = JnaUtils.copyToNativeStringPointerArray(secrets)
     val buffer = library.verify_token(
       token,
       nativeArray,

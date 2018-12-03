@@ -95,15 +95,9 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
   .enablePlugins(PrismaGraalPlugin)
   .settings(
     nativeImageOptions ++= Seq(
-      //    graalVMNativeImageOptions ++= Seq(
-      //      "--static",
-      //      "--delay-class-initialization-to-runtime=",
-      //      "--report-unsupported-elements-at-runtime",
-      //      "-H:+JNI",
       "--enable-all-security-services",
       s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
       s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
-//      s"-H:CLibraryPath=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Security.framework/Versions/A/Headers/",
       "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.logging.PrismaLogger$LogLevel",
       "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf",
       s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
@@ -119,18 +113,7 @@ lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native
 
       !exclude
     }},
-    excludeJars := Seq("org/latencyutils", "io/prometheus", /*"io/micrometer",*/ "org\\latencyutils", "io\\prometheus"/*, "io\\micrometer"*/)
-//    dependencyClasspath in Compile ~= { _.filter {
-//////        case (_, path) =>
-//////          val check = path.contains("mariadb") || path.contains("org.postgresql") || path.contains("micrometer") || path.contains("org.LatencyUtils") || path.contains("io.prometheus")
-//////          println(s"CP $path -> $check")
-//////          !check
-//      case (cp: Attributed[File])=>
-//          val check = cp.data.getName.contains("micrometer-") || cp.data.getName.contains("LatencyUtils-")
-//          println(s"CP ${cp.data.getName} -> $check")
-//          !check
-//      }
-//    }
+    excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
   )
 
 def absolute(relativePathToProjectRoot: String) = {

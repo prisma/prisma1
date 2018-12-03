@@ -1,10 +1,15 @@
 package com.prisma.jwt.jna
 
 import java.nio.charset.Charset
-import com.sun.jna.{Memory, Pointer}
+
+import com.sun.jna.{Memory, Pointer, StringArray}
 
 object JnaUtils {
   val charset = Charset.forName("UTF-8")
+
+  def copyToNativeStringPointerArray(elements: Vector[String]): Pointer = {
+    new StringArray(elements.toArray, charset.name())
+  }
 
   // todo This impl is inefficient, as it uses getBytes to get the actual byte sizes, which copies the data.
   // todo We then copy the data AGAIN after determining the size.
