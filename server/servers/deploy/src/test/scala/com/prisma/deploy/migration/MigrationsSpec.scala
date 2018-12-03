@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.postgres.database.DatabaseIntrospectionInferr
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, RelationLinkTableCapability, UuidIdCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{Matchers, WordSpecLike}
@@ -309,6 +309,32 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
     val bColumn = relationTable.column_!("B")
     bColumn.typeIdentifier should be(TI.UUID)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
+  "forcing a relation table for a one to many relation must be possible" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A
+        |}
+      """.stripMargin
+
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val relationTable = result.table_!("AToB")
+    relationTable.columns should have(size(3))
+    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val aColumn = relationTable.column_!("A")
+    aColumn.typeIdentifier should be(TI.String)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("B")
+    bColumn.typeIdentifier should be(TI.Int)
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
