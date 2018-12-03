@@ -1,5 +1,5 @@
 import { GraphQLEnumType, GraphQLEnumValueConfigMap, GraphQLID } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelEnumTypeGeneratorBase } from '../../generator'
 
 export default class ModelOrderByInputGenerator extends ModelEnumTypeGeneratorBase {

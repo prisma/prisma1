@@ -1,6 +1,5 @@
 import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
-import { capitalize } from '../../../../util/util';
+import { IGQLType, IGQLField, capitalize } from 'prisma-datamodel'
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
 
 

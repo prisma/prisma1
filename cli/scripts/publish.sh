@@ -66,6 +66,7 @@ coreChanged=false
 engineChanged=false
 clientChanged=false
 generateSchemaChanged=false
+datamodelChanged=false
 
 if [[ "$changedFiles" = *"cli/packages/prisma-yml"* ]]; then
   ymlChanged=true
@@ -91,9 +92,13 @@ if [[ "$changedFiles" = *"cli/packages/prisma-generate-schema"* ]]; then
   generateSchemaChanged=true
 fi
 
+if [[ "$changedFiles" = *"cli/packages/prisma-datamodel"* ]]; then
+  datamodelChanged=true
+fi
+
 echo "introspection changed: $introspectionChanged yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
+if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ] && [ $datamodelChanged == false ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
@@ -127,46 +132,49 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 # Get new version
 #
 
+# If CIRCLE_TAG doesnt exist, generate the version with our node script
 if [ -z "$CIRCLE_TAG" ]; then
-  latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
-  latestVersionElements=(${latestVersion//./ })
-  latestBetaVersionElements=(${latestBetaVersion//./ })
+  # latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
+  # latestVersionElements=(${latestVersion//./ })
+  # latestBetaVersionElements=(${latestBetaVersion//./ })
 
-  betaMinor=${latestBetaVersionElements[1]}
-  latestMinor=${latestVersionElements[1]}
-  latestMajor=${latestVersionElements[0]}
+  # betaMinor=${latestBetaVersionElements[1]}
+  # latestMinor=${latestVersionElements[1]}
+  # latestMajor=${latestVersionElements[0]}
 
-  betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
+  # betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
 
-  echo "betaLastNumber $betaLastNumber"
+  # echo "betaLastNumber $betaLastNumber"
 
-  # calc next minor
-  step=1
-  if [ $CIRCLE_BRANCH == "alpha" ]; then
-    step=2
-  fi
-  nextMinor=$((latestMinor + step))
+  # # calc next minor
+  # step=1
+  # if [ $CIRCLE_BRANCH == "alpha" ]; then
+  #   step=2
+  # fi
+  # nextMinor=$((latestMinor + step))
 
-  nextLastNumber=0
+  # nextLastNumber=0
 
-  echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
+  # echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
 
-  # calc next last number
-  if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
-    echo "$betaMinor is greater than $latestMinor"
-    nextLastNumber=$((betaLastNumber + step + 1))
-  fi
+  # # calc next last number
+  # if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
+  #   echo "$betaMinor is greater than $latestMinor"
+  #   nextLastNumber=$((betaLastNumber + step + 1))
+  # fi
 
-  if [ $CIRCLE_BRANCH == "alpha" ]; then
-    nextLastNumber=$((nextLastNumber + 1))
-  fi
+  # if [ $CIRCLE_BRANCH == "alpha" ]; then
+  #   nextLastNumber=$((nextLastNumber + 1))
+  # fi
 
-  export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
-  echo "new version: $newVersion"
+  # export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
+  export newVersion=$(eval node ./cli/scripts/get-version.js $CIRCLE_BRANCH)
+  echo "New version: $newVersion"
+  echo "Waiting 10 seconds so you can stop the script if this is not correct"
+  sleep 10
 else
   export newVersion=$CIRCLE_TAG
 fi
-
 
 
 
@@ -175,6 +183,24 @@ fi
 ######################
 
 cd cli/packages/
+#
+# Build prisma-datamodel
+#
+
+if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $datamodelChanged ]; then
+  cd prisma-datamodel
+  sleep 3.0
+  ../../scripts/doubleInstall.sh
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
 
 #
 # Build prisma-generate-schema
@@ -184,6 +210,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   cd prisma-generate-schema
   sleep 3.0
   ../../scripts/doubleInstall.sh
+  yarn add prisma-datamodel@$newVersion
   yarn build
   npm version $newVersion
 
@@ -207,7 +234,7 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn install
   yarn build
   npm version $newVersion
-  yarn add prisma-generate-schema@$newVersion
+  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
@@ -280,7 +307,7 @@ export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | j
 if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
   cd prisma-db-introspection
   sleep 0.5
-  yarn add prisma-yml@$ymlVersion
+  yarn add prisma-datamodel@$ymlVersion prisma-yml@$ymlVersion
   sleep 0.2
   ../../scripts/doubleInstall.sh
   yarn build
@@ -303,6 +330,8 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
+  yarn add prisma-datamodel@$newVersion
+  sleep 0.2
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
   yarn add prisma-db-introspection@$introspectionVersion

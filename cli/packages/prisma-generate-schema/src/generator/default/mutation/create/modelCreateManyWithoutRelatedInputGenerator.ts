@@ -1,7 +1,7 @@
 import { ModelObjectTypeGenerator, RelatedGeneratorArgs, RelatedModelInputObjectTypeGenerator, TypeFromModelGenerator } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField, camelCase, plural, capitalize } from 'prisma-datamodel'
 import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
-import { camelCase, plural, capitalize } from '../../../../util/util';
+
 
 
 export abstract class ModelCreateOneOrManyWithoutRelatedInputGenerator extends RelatedModelInputObjectTypeGenerator {

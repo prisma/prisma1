@@ -14,7 +14,7 @@ import {
   GraphQLEnumValueConfig,
   GraphQLEnumValueConfigMap,
 } from 'graphql/type'
-import { IGQLType, IGQLField } from '../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { GraphQLList, GraphQLNonNull } from 'graphql'
 
 // tslint:disable:max-classes-per-file

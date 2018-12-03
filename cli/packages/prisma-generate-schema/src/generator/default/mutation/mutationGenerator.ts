@@ -1,5 +1,5 @@
 import { RootGenerator, FieldConfigUtils } from '../../generator'
-import { IGQLType } from '../../../datamodel/model'
+import { IGQLType, plural, capitalize } from 'prisma-datamodel'
 import {
   GraphQLObjectType,
   GraphQLID,
@@ -10,7 +10,6 @@ import {
   GraphQLInputObjectType,
   GraphQLString,
 } from 'graphql/type'
-import { plural, camelCase } from '../../../util/util'
 
 export default class MutationGenerator extends RootGenerator {
   public getTypeName(input: IGQLType[], args: {}) {

@@ -16,7 +16,10 @@ function maxLength(items: string[]) {
   return items.reduce((acc, curr) => Math.max(acc, curr.length), -1)
 }
 
-function renderList(items: string[][], globalMaxLeftLength?: number): string {
+export function renderList(
+  items: string[][],
+  globalMaxLeftLength?: number,
+): string {
   const maxLeftLength =
     globalMaxLeftLength || maxLength(items.map(i => i[0])) + 2
   return items

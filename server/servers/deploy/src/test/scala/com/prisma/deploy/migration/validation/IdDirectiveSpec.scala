@@ -66,17 +66,29 @@ class IdDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     error.description should equal("Valid values for the strategy argument of `@id` are: AUTO, NONE.")
   }
 
-  "should error on embedded types" in {
+//  "should error on embedded types" in {
+//    val dataModelString =
+//      """
+//        |type Model @embedded {
+//        |  id: ID! @id(strategy: NONE)
+//        |}
+//      """.stripMargin
+//    val error = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability)).head
+//    error.`type` should equal("Model")
+//    error.field should equal(Some("id"))
+//    error.description should equal("The `@id` directive is not allowed on embedded types.")
+//  }
+
+  "should not error on embedded types" in {
     val dataModelString =
       """
         |type Model @embedded {
-        |  id: ID! @id(strategy: NONE)
+        |  id: ID! @id
         |}
       """.stripMargin
-    val error = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability)).head
-    error.`type` should equal("Model")
-    error.field should equal(Some("id"))
-    error.description should equal("The `@id` directive is not allowed on embedded types.")
+    val dataModel = validate(dataModelString, Set(EmbeddedTypesCapability))
+    dataModel.type_!("Model").isEmbedded should be(true)
+    dataModel.type_!("Model").scalarField_!("id").behaviour should be(Some(IdBehaviour(IdStrategy.Auto)))
   }
 
   "a model type without @id should error" in {
