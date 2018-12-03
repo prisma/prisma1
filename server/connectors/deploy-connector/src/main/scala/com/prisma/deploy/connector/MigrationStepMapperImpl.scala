@@ -84,7 +84,17 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
 
     case x: DeleteRelation =>
       val relation = previousSchema.getRelationByName_!(x.name)
-      Vector(DeleteRelationTable(projectId, nextSchema, relation))
+      val mutaction = relation.manifestation match {
+        case Some(m: EmbeddedRelationLink) =>
+          val modelA              = relation.modelA
+          val modelB              = relation.modelB
+          val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
+
+          DeleteInlineRelation(projectId, model, references, m.referencingColumn)
+        case _ =>
+          DeleteRelationTable(projectId, nextSchema, relation)
+      }
+      Vector(mutaction)
 
     case x: UpdateRelation =>
       x.newName.map { newName =>
