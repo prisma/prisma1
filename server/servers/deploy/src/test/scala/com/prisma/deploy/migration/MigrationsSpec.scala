@@ -132,6 +132,31 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column_!("field").typeIdentifier should be(TI.Int)
   }
 
+  "updating db name of a scalar field should work" in {
+    // FIXME: db names are not considered yet during migrations.
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String @db(name: "name1")
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel)
+    initialResult.table_!("A").column("name1").isDefined should be(true)
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String @db(name: "name2")
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel)
+    result.table_!("A").column("name1").isDefined should be(false)
+    result.table_!("A").column("name2").isDefined should be(true)
+  }
+
   "changing a relation field to a scalar field should work" in {
     val initialDataModel =
       """
