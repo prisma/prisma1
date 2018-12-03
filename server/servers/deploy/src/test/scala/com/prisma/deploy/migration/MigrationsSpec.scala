@@ -338,6 +338,39 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
+  "providing an explicit link table must work" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @linkTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(3))
+    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val aColumn = relationTable.column_!("myA")
+    aColumn.typeIdentifier should be(TI.String)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("myB")
+    bColumn.typeIdentifier should be(TI.Int)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
   "adding an inline relation should result in a foreign key in the model table" in {
     val dataModel =
       """

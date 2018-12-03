@@ -10,13 +10,17 @@ case class PrismaSdl(
     typesFn: Vector[PrismaSdl => PrismaType],
     enumsFn: Vector[PrismaSdl => PrismaEnum]
 ) {
-  val types: Vector[PrismaType]          = typesFn.map(_.apply(this))
+  private val types: Vector[PrismaType]  = typesFn.map(_.apply(this))
   val enums: Vector[PrismaEnum]          = enumsFn.map(_.apply(this))
   val relationTables: Vector[PrismaType] = types.filter(_.isRelationTable)
   val modelTypes: Vector[PrismaType]     = types.filter(!_.isRelationTable)
 
-  def type_!(name: String) = types.find(_.name == name).get
-  def enum_!(name: String) = enums.find(_.name == name).get
+  def type_!(name: String)          = types.find(_.name == name).get
+  def enum_!(name: String)          = enums.find(_.name == name).get
+  def modelType_!(name: String)     = modelType(name).get
+  def modelType(name: String)       = modelTypes.find(_.name == name)
+  def relationTable_!(name: String) = relationTable(name).get
+  def relationTable(name: String)   = relationTables.find(_.name == name)
 }
 
 case class PrismaType(
@@ -95,7 +99,7 @@ case class RelationalPrismaField(
   override def typeIdentifier: TypeIdentifier = TypeIdentifier.Relation
 
   def relatedField: Option[RelationalPrismaField] = {
-    val otherFieldsOnOppositeModel = tpe.sdl.types.find(_.name == referencesType).get match {
+    val otherFieldsOnOppositeModel = tpe.sdl.modelType_!(referencesType) match {
       case sameModel if sameModel.name == tpe.name => sameModel.relationFields.filter(_.referencesType == tpe.name).filter(_.name != name)
       case otherModel                              => otherModel.relationFields.filter(_.referencesType == tpe.name)
     }
@@ -106,7 +110,7 @@ case class RelationalPrismaField(
     }
   }
 
-  def relatedType: PrismaType = tpe.sdl.types.find(_.name == referencesType).get
+  def relatedType: PrismaType = tpe.sdl.modelType_!(referencesType)
 
   def hasManyToManyRelation: Boolean = isList && relatedField.forall(_.isList)
   def hasOneToManyRelation: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))

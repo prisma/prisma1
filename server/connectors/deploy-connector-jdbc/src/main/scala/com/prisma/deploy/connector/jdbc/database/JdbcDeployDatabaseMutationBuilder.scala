@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.jdbc.database
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import org.jooq.impl.DSL._
 import org.jooq.impl.SQLDataType
 import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
@@ -27,7 +27,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
 
   def createModelTable(projectId: String, model: Model): DBIOAction[Any, NoStream, Effect.All]
   def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
-  def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model): DBIOAction[Any, NoStream, Effect.All]
+  def createRelationTable(projectId: String, relation: Relation): DBIOAction[Any, NoStream, Effect.All]
   def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIOAction[Any, NoStream, Effect.All]
   def createColumn(
       projectId: String,

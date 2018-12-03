@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.postgres.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.shared.models.{Model, Project, Relation}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -63,22 +63,31 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       """
   }
 
-  override def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model): DBIOAction[Any, NoStream, Effect.All] = {
-    val aColSql     = typeMapper.rawSQLFromParts("A", isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql     = typeMapper.rawSQLFromParts("B", isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
-    val tableCreate = sqlu"""
+  override def createRelationTable(
+      projectId: String,
+      relation: Relation
+  ): DBIOAction[Any, NoStream, Effect.All] = {
+    val relationTableName = relation.relationTableName
+    val modelA            = relation.modelA
+    val modelB            = relation.modelB
+    val modelAColumn      = relation.modelAColumn
+    val modelBColumn      = relation.modelBColumn
+    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
+    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    val tableCreate       = sqlu"""
                         CREATE TABLE #${qualify(projectId, relationTableName)} (
                             "id" CHAR(25) NOT NULL,
                             PRIMARY KEY ("id"),
                             #$aColSql,
                             #$bColSql,
-                            FOREIGN KEY ("A") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY ("B") REFERENCES #${qualify(projectId, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(projectId, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
-    val indexCreate = sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(projectId, relationTableName)} ("A" ASC, "B" ASC)"""
-    val indexA      = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_A")} on #${qualify(projectId, relationTableName)} ("A" ASC)"""
-    val indexB      = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(projectId, relationTableName)} ("B" ASC)"""
+    val indexCreate =
+      sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
+    val indexA = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_A")} on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC)"""
+    val indexB = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(projectId, relationTableName)} ("#$modelBColumn" ASC)"""
 
     DatabaseAction.seq(tableCreate, indexCreate, indexA, indexB)
   }

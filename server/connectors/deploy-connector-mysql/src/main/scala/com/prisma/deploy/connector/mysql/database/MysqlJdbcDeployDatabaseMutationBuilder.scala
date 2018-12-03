@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
-import com.prisma.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -67,10 +67,13 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  override def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model): DatabaseAction[Any, NoStream, Effect.All] = {
-    val aColSql = typeMapper.rawSQLFromParts("A", isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql = typeMapper.rawSQLFromParts("B", isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
-    val idSql   = typeMapper.rawSQLFromParts("id", isRequired = true, isList = false, TypeIdentifier.Cuid)
+  override def createRelationTable(projectId: String, relation: Relation): DatabaseAction[Any, NoStream, Effect.All] = {
+    val modelA            = relation.modelA
+    val modelB            = relation.modelB
+    val relationTableName = relation.relationTableName
+    val aColSql           = typeMapper.rawSQLFromParts("A", isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
+    val bColSql           = typeMapper.rawSQLFromParts("B", isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    val idSql             = typeMapper.rawSQLFromParts("id", isRequired = true, isList = false, TypeIdentifier.Cuid)
 
     sqlu"""
          CREATE TABLE #${qualify(projectId, relationTableName)} (

@@ -4,15 +4,7 @@ import com.prisma.deploy.connector._
 
 case class CreateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
-    val modelA = mutaction.relation.modelA
-    val modelB = mutaction.relation.modelB
-
-    builder.createRelationTable(
-      projectId = mutaction.projectId,
-      relationTableName = mutaction.relation.relationTableName,
-      modelA = modelA,
-      modelB = modelB
-    )
+    builder.createRelationTable(mutaction.projectId, mutaction.relation)
   }
 
   override def rollback(mutaction: CreateRelationTable) = {
