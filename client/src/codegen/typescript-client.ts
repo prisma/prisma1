@@ -158,7 +158,7 @@ export type ${type.name}_Output = string`
     })
   }
   renderAtLeastOne() {
-    return `type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
+    return `export type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
   }
 
   renderModels() {
@@ -329,24 +329,21 @@ export const prisma = new Prisma()`
     return Object.keys(ast.getTypeMap())
       .filter(typeName => !typeName.startsWith('__'))
       .filter(typeName => typeName !== (ast.getQueryType() as any).name)
-      .filter(
-        typeName =>
-          ast.getMutationType()
-            ? typeName !== (ast.getMutationType()! as any).name
-            : true,
+      .filter(typeName =>
+        ast.getMutationType()
+          ? typeName !== (ast.getMutationType()! as any).name
+          : true,
       )
-      .filter(
-        typeName =>
-          ast.getSubscriptionType()
-            ? typeName !== (ast.getSubscriptionType()! as any).name
-            : true,
+      .filter(typeName =>
+        ast.getSubscriptionType()
+          ? typeName !== (ast.getSubscriptionType()! as any).name
+          : true,
       )
-      .sort(
-        (a, b) =>
-          (ast.getType(a) as any).constructor.name <
-          (ast.getType(b) as any).constructor.name
-            ? -1
-            : 1,
+      .sort((a, b) =>
+        (ast.getType(a) as any).constructor.name <
+        (ast.getType(b) as any).constructor.name
+          ? -1
+          : 1,
       )
   }
   renderTypes() {
@@ -822,8 +819,8 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
     const fields = type.getFields()
     let fieldDefinition: string[] = []
     const connectionFieldsType = {
-      pageInfo: (fieldType) => fieldType,
-      edges: (fieldType) => `${fieldType}[]`,
+      pageInfo: fieldType => fieldType,
+      edges: fieldType => `${fieldType}[]`,
     }
 
     if (type.name.endsWith('Connection')) {
@@ -833,9 +830,13 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
           const field = fields[f]
           const deepType = this.getDeepType(fields[f].type)
 
-          return `  ${this.renderFieldName(field, false)}: ${connectionFieldsType[field.name](deepType.name)}`
+          return `  ${this.renderFieldName(
+            field,
+            false,
+          )}: ${connectionFieldsType[field.name](deepType.name)}`
         })
-    } else { // else if type.name is typeEdge
+    } else {
+      // else if type.name is typeEdge
       fieldDefinition = Object.keys(fields).map(f => {
         const field = fields[f]
         const deepType = this.getDeepType(fields[f].type)
@@ -882,10 +883,10 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
     const fields = type.getFields()
 
     const fieldsType = {
-      mutation: (fieldType) => fieldType,
-      node: (fieldType) => fieldType,
-      previousValues: (fieldType) => fieldType,
-      updatedFields: (fieldType) => `${fieldType}[]`,
+      mutation: fieldType => fieldType,
+      node: fieldType => fieldType,
+      previousValues: fieldType => fieldType,
+      updatedFields: fieldType => `${fieldType}[]`,
     }
 
     const fieldDefinition = Object.keys(fields)
@@ -893,7 +894,9 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
         const field = fields[f]
         const deepType = this.getDeepType(fields[f].type)
 
-        return `  ${this.renderFieldName(field, false)}: ${fieldsType[field.name](deepType.name)}`
+        return `  ${this.renderFieldName(field, false)}: ${fieldsType[
+          field.name
+        ](deepType.name)}`
       })
       .join(`${this.lineBreakDelimiter}\n`)
 

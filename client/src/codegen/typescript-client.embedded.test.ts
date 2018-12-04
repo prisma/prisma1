@@ -27,7 +27,7 @@ test('typescript generator - embedded', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
-    internalTypes: parseInternalTypes(datamodel, DatabaseType.mysql).types,
+    internalTypes: parseInternalTypes(datamodel, DatabaseType.postgres).types,
   })
   const result = generator.render()
   t.snapshot(result)

@@ -43,7 +43,7 @@ type NodePromise = Promise<Node>`
   }
   renderAtLeastOne() {
     // TODO: as soon as flow has a clean solution for at least one, implement it here
-    return `type AtLeastOne<T> = $Shape<T>`
+    return `export type AtLeastOne<T> = $Shape<T>`
   }
   renderGraphQL() {
     return `$graphql: <T: mixed>(query: string, variables?: {[key: string]: mixed}) => Promise<T>;`
