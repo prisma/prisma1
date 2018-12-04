@@ -4,7 +4,7 @@ import { TypescriptGenerator } from '../codegen/typescript-client'
 import { buildSchema } from 'graphql'
 import { codeComment } from './codeComment'
 
-class TestTypescriptGenerator extends TypescriptGenerator {
+export class TestTypescriptGenerator extends TypescriptGenerator {
   renderImports() {
     return `\
 ${codeComment}
@@ -16,13 +16,17 @@ import { typeDefs } from './prisma-schema'`
   }
 }
 
-export async function generateTypescript(
-  schemaString: string,
-) {
+export async function generateTypescript(schemaString: string) {
   const schema = buildSchema(schemaString)
   const generator = new TestTypescriptGenerator({ schema, internalTypes: [] })
-  const output = path.join(__dirname, '..', 'artifacts', 'generated', 'prisma-client')
- 
+  const output = path.join(
+    __dirname,
+    '..',
+    'artifacts',
+    'generated',
+    'prisma-client',
+  )
+
   const code = generator.render()
   await fs.writeFileSync(path.join(output, 'index.ts'), code)
 

@@ -2,9 +2,9 @@ import * as ts from 'typescript'
 import * as path from 'path'
 import * as fs from 'fs'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from '../typescript-client'
 import { FlowGenerator } from '../flow-client'
 import { execFile } from 'child_process'
+import { TestTypescriptGenerator } from '../../utils/generateTS'
 const flow = require('flow-bin')
 
 function compile(fileNames: string[], options: ts.CompilerOptions): number {
@@ -44,7 +44,7 @@ function compile(fileNames: string[], options: ts.CompilerOptions): number {
 
 export async function testTSCompilation(typeDefs) {
   const schema = buildSchema(typeDefs)
-  const generator = new TypescriptGenerator({
+  const generator = new TestTypescriptGenerator({
     schema,
     internalTypes: [],
   })
