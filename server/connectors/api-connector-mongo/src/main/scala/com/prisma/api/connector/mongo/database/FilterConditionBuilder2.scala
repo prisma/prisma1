@@ -2,10 +2,14 @@ package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
+import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
+import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.shared.models.Model
+import com.prisma.gc_values.NullGCValue
+import com.prisma.shared.models.{Field, Model, ScalarField}
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
+import org.mongodb.scala.model.Filters._
 
 import scala.collection.immutable
 trait FilterConditionBuilder2 extends FilterConditionBuilder {
@@ -25,14 +29,14 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     //-------------------------------- QueryArg Filter --------------------------------------------------
 
-    //--------------------------------- First Draft -----------------------------------------------------
-    // this joins first and then filters afterwards
-    //------------------------------------- First Pass - Join Relations ---------------------------------
-    val joins = buildJoinStagesForFilter(queryArguments.filter)
-
-    //------------------------------------- Second Pass - Generate Filter -------------------------------
-    val mongoFilter = buildConditionForFilter(queryArguments.filter)
-    val filterStage = Seq(`match`(mongoFilter))
+//    //--------------------------------- First Draft -----------------------------------------------------
+//    // this joins first and then filters afterwards
+//    //------------------------------------- First Pass - Join Relations ---------------------------------
+//    val joins = buildJoinStagesForFilter(queryArguments.filter)
+//
+//    //------------------------------------- Second Pass - Generate Filter -------------------------------
+//    val mongoFilter = buildConditionForFilter(queryArguments.filter)
+//    val filterStage = Seq(`match`(mongoFilter))
 
     //--------------------------------- Second Draft ----------------------------------------------------
     // this will try to pull match stages before lookup stages where possible
@@ -54,14 +58,15 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     //apply selected fields
 
     //--------------------------- Setup Query -----------------------------------------------------------
-    val pipeline = cursorMatch ++ joins ++ filterStage ++ sort ++ skipStage ++ limitStage
+//    val pipeline = cursorMatch ++ joins ++ filterStage ++ sort ++ skipStage ++ limitStage
+    val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage
 //    val pipeline = cursorMatch ++ joins
 
     database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture()
-
   }
 
   //-------------------------------Determine if Aggregation is needed -----------------------------------
+
   def needsAggregation(filter: Option[Filter]): Boolean = filter match {
     case Some(filter) => needsAggregation(filter)
     case None         => false
@@ -100,8 +105,6 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     case Some(filter) => buildJoinStagesForFilter(Path.empty, filter)
     case None         => Seq.empty
   }
-
-  //reorder join filter
 
   private def buildJoinStagesForFilter(path: Path, filter: Filter): Seq[conversions.Bson] = {
     filter match {
@@ -173,7 +176,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
   }
 
   //-------------------------------------- Join Stage 2 ---------------------------------------------------
-  //this needs to output pipeline stages for every single filter element in the correct order since Mongo does not pull match before lookup
+  //this splits up the matches and pulls them before the $lookup
 
   def buildJoinStagesForFilter2(filter: Option[Filter]): Seq[conversions.Bson] = filter match {
     case Some(filter) => buildJoinStagesForFilter2(Path.empty, filter)
@@ -183,20 +186,52 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
   private def buildJoinStagesForFilter2(path: Path, filter: Filter): Seq[conversions.Bson] = {
     filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter => Seq.empty
-      case AndFilter(filters)     => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
-      case OrFilter(filters)      => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
-      case NotFilter(filters)     => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
-      case NodeFilter(filters)    => filters.flatMap(f => buildJoinStagesForFilter2(path, f))
-      case x: RelationFilter      => relationFilterJoinStage2(path, x)
+      case NodeSubscriptionFilter => Seq(`match`(hackForTrue))
+      case AndFilter(filters)     => sortFilters(filters).flatMap(f => buildJoinStagesForFilter2(path, f)) // and(nonEmptyConditions(path, filters): _*)
+      case OrFilter(filters)      => sys.error("Later") // or(nonEmptyConditions(path, filters): _*)
+      case NotFilter(filters) =>
+        sys.error("Later") // nor(filters.map(f => buildConditionForFilter(path, f)): _*) //not can only negate equality comparisons not filters
+      case NodeFilter(filters) => sys.error("Later") // buildConditionForFilter(path, OrFilter(filters))
+      case x: RelationFilter   => relationFilterJoinStage2(path, x)
 
       //--------------------------------ANCHORS------------------------------------
-      case TrueFilter                     => Seq.empty
-      case FalseFilter                    => Seq.empty
-      case ScalarFilter(_, _)             => Seq.empty
-      case OneRelationIsNullFilter(field) => Seq.empty // FIXME: Think about this
-      case x                              => sys.error(s"Not supported: $x")
+      case TrueFilter                                            => Seq(`match`(hackForTrue))
+      case FalseFilter                                           => Seq(`match`(not(hackForTrue)))
+      case ScalarFilter(scalarField, Contains(v))                => Seq(`match`(regex(helper(path, scalarField), v.value.toString)))
+      case ScalarFilter(scalarField, NotContains(v))             => Seq(`match`(not(regex(helper(path, scalarField), v.value.toString))))
+      case ScalarFilter(scalarField, StartsWith(v))              => Seq(`match`(regex(helper(path, scalarField), "^" + v.value)))
+      case ScalarFilter(scalarField, NotStartsWith(v))           => Seq(`match`(not(regex(helper(path, scalarField), "^" + v.value))))
+      case ScalarFilter(scalarField, EndsWith(value))            => Seq(`match`(regex(helper(path, scalarField), value.value + "$")))
+      case ScalarFilter(scalarField, NotEndsWith(v))             => Seq(`match`(not(regex(helper(path, scalarField), v.value + "$"))))
+      case ScalarFilter(scalarField, LessThan(v))                => Seq(`match`(lt(helper(path, scalarField), GCToBson(v))))
+      case ScalarFilter(scalarField, GreaterThan(v))             => Seq(`match`(gt(helper(path, scalarField), GCToBson(v))))
+      case ScalarFilter(scalarField, LessThanOrEquals(v))        => Seq(`match`(lte(helper(path, scalarField), GCToBson(v))))
+      case ScalarFilter(scalarField, GreaterThanOrEquals(v))     => Seq(`match`(gte(helper(path, scalarField), GCToBson(v))))
+      case ScalarFilter(scalarField, NotEquals(NullGCValue))     => Seq(`match`(notEqual(helper(path, scalarField), null)))
+      case ScalarFilter(scalarField, NotEquals(v))               => Seq(`match`(notEqual(helper(path, scalarField), GCToBson(v))))
+      case ScalarFilter(scalarField, Equals(NullGCValue))        => Seq(`match`(equal(helper(path, scalarField), null)))
+      case ScalarFilter(scalarField, Equals(v))                  => Seq(`match`(equal(helper(path, scalarField), GCToBson(v))))
+      case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => Seq(`match`(in(helper(path, scalarField), null)))
+      case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => Seq(`match`(not(in(helper(path, scalarField), null))))
+      case ScalarFilter(scalarField, In(values))                 => Seq(`match`(in(helper(path, scalarField), values.map(GCToBson(_)): _*)))
+      case ScalarFilter(scalarField, NotIn(values))              => Seq(`match`(not(in(helper(path, scalarField), values.map(GCToBson(_)): _*))))
+      case OneRelationIsNullFilter(field)                        => Seq(`match`(equal(combineTwo(path.combinedNames, field.name), null)))
+      //Fixme test this thoroughly
+      case ScalarListFilter(scalarListField, ListContains(value)) =>
+        Seq(`match`(all(helper(path, scalarListField), GCToBson(value))))
+      case ScalarListFilter(scalarListField, ListContainsEvery(values)) =>
+        Seq(`match`(all(helper(path, scalarListField), values.map(GCToBson(_)): _*)))
+      case ScalarListFilter(scalarListField, ListContainsSome(values)) =>
+        Seq(`match`(or(values.map(value => all(helper(path, scalarListField), GCToBson(value))): _*)))
+      case x => sys.error(s"Not supported: $x")
     }
+  }
+
+  def sortFilters(filters: Seq[Filter]) = {
+    val withRelationFilter    = filters.collect { case x if needsAggregation(Some(x))  => x }
+    val withoutRelationFilter = filters.collect { case x if !needsAggregation(Some(x)) => x }
+
+    withoutRelationFilter ++ withRelationFilter
   }
 
   private def relationFilterJoinStage2(path: Path, relationFilter: RelationFilter): Seq[conversions.Bson] = {
@@ -204,7 +239,9 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     val rf          = relationFilter.field
     val updatedPath = path.append(rf)
-    val next        = buildJoinStagesForFilter2(updatedPath, relationFilter.nestedFilter)
+
+    //Fixme: next needs to handle _every _none if we ever introduce them
+    val next = buildJoinStagesForFilter2(updatedPath, relationFilter.nestedFilter)
 
     val current = rf.relatedModel_!.isEmbedded match {
       case true =>
@@ -238,15 +275,18 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
         lazy val mongoGroup                                 = Document("$group" -> doc)
 
         (path.segments.isEmpty, rf.isList) match {
-          case (true, true) if next.isEmpty  => Seq(mongoLookup)
-          case (true, true) if next.nonEmpty => Seq(mongoLookup, mongoUnwind)
-          case (true, false)                 => Seq(mongoLookup, mongoUnwind)
-          case (false, true)                 => Seq(mongoLookup, mongoGroup)
-          case (false, false)                => Seq(mongoLookup, mongoUnwind)
+          case (true, true)   => Seq(mongoLookup)
+          case (true, false)  => Seq(mongoLookup, mongoUnwind)
+          case (false, true)  => Seq(mongoLookup, mongoGroup)
+          case (false, false) => Seq(mongoLookup, mongoUnwind)
         }
     }
 
     current ++ next
   }
+
+  //-------------------------------------------------- Helpers ------------------------------------------------------
+
+  def helper(path: Path, scalarField: ScalarField) = combineTwo(path.combinedNames, renameId(scalarField))
 
 }
