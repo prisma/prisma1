@@ -2,16 +2,16 @@ import Code from 'components/Markdown/Code'
 import Warning from 'components/Markdown/Warning'
 
 export const meta = {
-  title: "Database Connector (Mongo)",
-  position: 52,
-  technology: "mongo",
-  technologyOrder: 3,
+  title: "Database Connector (Postgres)",
+  position: 51,
+  technology: "postgres",
+  technologyOrder: 2,
   articleGroup: "Database Connector"
 }
 
 ## Overview
 
-A database connector is the _link_ between Prisma and the underlying database. 
+A database connector is the bridge between Prisma and the underlying database. 
 The Postgres connector is used to connect a Prisma server to a [PostgreSQL](https://www.postgresql.org/) database. 
 
 The core responsibilities of a database connector are:
@@ -22,7 +22,7 @@ The core responsibilities of a database connector are:
 
 When configuring your Prisma server with Docker, you need to specify which connector you'd like to use in order to connect to a certain database. You provide this info via the `connector` property:
 
-<Code language="yml" lines="6">
+<Code lines="6">
 
 ```yml
 PRISMA_CONFIG: |
@@ -47,7 +47,7 @@ The `migrations` property in the `PRISMA_CONFIG` environment variable specifies 
 
 For existing databases (that might already be powering production applications), it is useful to configure the Prisma server to not migrate the connected database. This ensures you're not accidentally introducing unwanted schema changes or lose data.
 
-<Code language="yml" lines="7">
+<Code lines="7">
 
 ```yml
 PRISMA_CONFIG: |
