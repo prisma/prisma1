@@ -11,7 +11,7 @@ ${codeComment}
 
 import { DocumentNode, GraphQLSchema  } from 'graphql'
 import { makePrismaClientClass } from '../../../makePrismaClientClass'
-import { BaseClientOptions } from '../../../types'
+import { BaseClientOptions, Model } from '../../../types'
 import { typeDefs } from './prisma-schema'`
   }
 }

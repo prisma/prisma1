@@ -171,7 +171,7 @@ export type ${type.name}_Output = string`
       )
       .join(',\n')
 
-    return `export const models = [${models}]`
+    return `export const models: Model[] = [${models}]`
   }
 
   render(options?: RenderOptions) {
@@ -254,7 +254,7 @@ ${this.renderExports(options)}
 ${codeComment}
 
 import { DocumentNode, GraphQLSchema } from 'graphql'
-import { makePrismaClientClass, BaseClientOptions } from 'prisma-client-lib'
+import { makePrismaClientClass, BaseClientOptions, Model } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
   }
   renderPrismaClassArgs(options?: RenderOptions) {

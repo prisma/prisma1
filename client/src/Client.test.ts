@@ -188,7 +188,7 @@ test('nested mbedded type', t => {
   t.snapshot(print(document))
 })
 
-test('top level args', t => {
+test.skip('top level args', t => {
   const typeDefs = `
     type Query {
       post(where: PostInput!): Post
@@ -212,7 +212,7 @@ test('top level args', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -229,7 +229,7 @@ test('top level args', t => {
   t.snapshot(print(document))
 })
 
-test('nested args', t => {
+test.skip('nested args', t => {
   const typeDefs = `
     type Query {
       user: User
@@ -277,11 +277,11 @@ test('nested args', t => {
     models,
   })
 
-  client.post({ 
-    author: { 
-      firstName: 'Lydia', 
-      lastName: 'Hallie' 
-    }
+  client.post({
+    author: {
+      firstName: 'Lydia',
+      lastName: 'Hallie',
+    },
   })
 
   const document = client.getDocumentForInstructions(
