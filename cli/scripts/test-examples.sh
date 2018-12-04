@@ -8,7 +8,7 @@ flow_dirs=(
   script
 )
 
-npm install -g prisma@$newVersion
+sudo yarn global add prisma@$newVersion typescript
 
 for dir in $flow_dirs
 do
