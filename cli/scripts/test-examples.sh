@@ -43,7 +43,7 @@ done
 cd ..
 git checkout client-alpha
 git add .
-git commit -m "Update dependency versions after test"
+git commit -m "Update prisma dependencies to $newVersion"
 git push origin client-alpha
 
 rm -rf ./prisma-examples
