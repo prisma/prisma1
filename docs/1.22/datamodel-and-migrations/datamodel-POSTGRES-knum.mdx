@@ -3,10 +3,10 @@ import Code from 'components/Markdown/Code'
 import Info from 'components/Markdown/Info'
 
 export const meta = {
-  title: "Datamodel (MySQL)",
+  title: "Datamodel (PostgreSQL)",
   position: 20,
-  technology: "mysql",
-  technologyOrder: 1,
+  technology: "postgres",
+  technologyOrder: 2,
   articleGroup: "Datamodel",
 }
 
@@ -435,7 +435,7 @@ type User {
 
 ### Type modifiers
 
-In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifies:
+In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifiers:
 
 - Required fields: Annotate the type with a `!`, e.g. `name: String!`
 - Lists: Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
@@ -650,7 +650,7 @@ type User {
 }
 ```
 
-Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive).
+Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive) and the `name` argument has to be provided..
 
 ### Required relations
 

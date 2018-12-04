@@ -12,6 +12,7 @@ prisma.yml is the _root configuration file_ for a  Prisma service. Every Prisma 
 prisma.yml specifies a number of properties about the Prisma service, e.g.:
 
 - the service's _endpoint_ (includes _name_ and _stage_ of the service)
+- the _database type_ (relational or document database)
 - how and where the Prisma client should be generated
 - the _service secret_ used to authenticate requests made to the service's API
 - the location of the _data model_ file(s)
@@ -32,6 +33,8 @@ To be able to specify an `endpoint`, you need to have access to a Prisma server.
 datamodel: datamodel.prisma
 ```
 
+> In this example, the `databaseType` is inferred and defaults to `relational`.
+
 ### Standard example
 
 The most commonly used properties in prisma.yml are:
@@ -41,6 +44,7 @@ The most commonly used properties in prisma.yml are:
 - `secret`
 - `hooks`
 - `generate`
+
 
 Here's what a standard prisma.yml with these properties might look like:
 
@@ -58,6 +62,7 @@ hooks:
     - prisma generate
 ```
 
+> In this example, the `databaseType` is inferred and defaults to `relational`.
 
 ### Exhaustive example
 
@@ -67,8 +72,8 @@ Here's an example where all properties of prisma.yml are being used:
 # This service is based on the type definitions in the two files
 # databasetypes.graphql` and `database/enums.graphql`
 datamodel:
-  - database/types.graphql
-  - database/enums.graphql
+  - database/types.prisma
+  - database/enums.prisma
 
 # The endpoint represents the HTTP endpoint for your Prisma API.
 # It encodes several pieces of information:
@@ -89,12 +94,16 @@ endpoint: http://localhost:4466/myservice/dev
 secret: mysecret123
 
 # Generate a Prisma client in JavaScript and store in
-# a folder called `generated/prisma`
+# a folder called `generated/prisma-client`.
+# It also downloads the Prisma GraphQL schema and stores it
+# in `generated/prisma.graphql`.
 generate:
     - generator: javascript-client
-      output: ./generated/prisma
+      output: ./generated/prisma-client
+    - generator: graphql-schema
+      output: ./generated/
 
-# A "post-deployment" hook that first regenerates
+# A "post-deployment" hook that regenerates
 # the Prisma client.
 hooks:
   post-deploy:
@@ -123,6 +132,8 @@ seed:
 custom:
   serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
 ```
+
+> In this example, the `databaseType` is inferred and defaults to `relational`.
 
 This prisma.yml expects the following file structure:
 
@@ -207,8 +218,9 @@ The service definition file prisma.yml has the following root properties:
 - `datamodel` (required): Type definitions for database models, relations, enums and other types.
 - `endpoint`: HTTP endpoint for the Prisma API. Can be omitted to prompt CLI deployment wizard.
 - `secret`: Service secret for securing the API endpoint.
+- `generate`: The list of files (Prisma client and/or Prisma GraphQL schema) to be generated.
+- `databaseType`: Specifies whether the Prisma service uses a document ro relational database.
 - `hooks`: Define CLI commands to be executed before/after specific actions of the Prisma CLI.
-- `subscriptions`: Configuration of subscription webhooks.
 - `seed`: Points to a file containing mutations for data seeding.
 - `custom`: Used to provide variables which can be referenced elsewhere in prisma.yml.
 
@@ -354,9 +366,29 @@ The `generate` property expects a **list of objects**. There are two properties 
 ```yml
 generate:
     - generator: javascript-client
-      output: ./generated/prisma
+      output: ./generated/prisma-client
     - generator: graphql-schema
       output: ./generated/prisma
+```
+
+### databaseType (optional)
+
+#### Type
+
+The `databaseType` property expects a **string**. The value of the string can either be `relational` or `document`. If the `databaseType` property is omitted, its value defaults to `relational`.
+
+#### Examples
+
+Use a document database.
+
+```yml
+databaseType: document
+```
+
+Use a document database.
+
+```yml
+databaseType: relational
 ```
 
 ### hooks (optional)
@@ -400,45 +432,6 @@ projects:
           language: typescript
           output:
             binding: src/generated/prisma.ts
-```
-
-### subscriptions (optional)
-
-The `subscriptions` property is used to define all the subscription webhooks for your Prisma service. A subscription needs (at least) two pieces of information:
-
-- a _subscription query_ that defines upon which event a function should be invoked and what the payload looks like
-- the URL of a _webhook_ which is invoked via HTTP once the event happens
-- (optionally) a number of HTTP headers to be attached to the request that's sent to the URL
-
-#### Type
-
-The `subscriptions` property expects an **object** with the following properties:
-
-- `query` (required): The file path to the _subscription query_ (stored in a `.graphql`-file).
-- `webhook` (required): Information (URL and optionally HTTP headers) about the webhook to be invoked. If there are no headers, you can provide the URL to this property directly (see first example below). Otherwise, `webhook` takes another object with properties `url` and `headers` (see second example below).
-
-#### Examples
-
-Specify one subscription without HTTP headers.
-
-```yml
-subscriptions:
-  sendWelcomeEmail:
-    query: database/subscriptions/sendWelcomeEmail.graphql
-    webhook: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev/sendWelcomeEmail
-```
-
-Specify one event subscription with two HTTP headers.
-
-```yml
-subscriptions:
-  sendWelcomeEmail:
-    query: database/subscriptions/sendWelcomeEmail.graphql
-    webhook:
-      url: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev/sendWelcomeEmail
-      headers:
-        Authorization: ${env:MY_SECRET}
-        Content-Type: application/json
 ```
 
 ### seed (optional)
