@@ -188,7 +188,7 @@ test('nested mbedded type', t => {
   t.snapshot(print(document))
 })
 
-test.skip('top level args', t => {
+test('top level args', t => {
   const typeDefs = `
     type Query {
       post(where: PostInput!): Post
@@ -229,7 +229,7 @@ test.skip('top level args', t => {
   t.snapshot(print(document))
 })
 
-test.skip('nested args', t => {
+test('nested args', t => {
   const typeDefs = `
     type Query {
       user: User
