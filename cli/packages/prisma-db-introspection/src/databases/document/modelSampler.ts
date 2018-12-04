@@ -203,6 +203,14 @@ export class ModelMerger {
     // TODO: Abstract away
     const isId = info.name === MongoIdName
 
+    // TODO: This can be changed to allow other _id types.
+    if(isId && type !== TypeIdentifiers.id) {
+      comments.push({
+        isError: false,
+        text: `Type ${type} is currently not supported for id fields.`
+      })
+    }
+
     // https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/#directives
     // TODO: we might want to include directives, as soon as we start changing field names. Otherwise, we can put that into a different module.
 

@@ -96,7 +96,7 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
     const suggestion = super.inferType(value)
 
     if(suggestion.type === ObjectTypeIdentifier && value instanceof ObjectID) {
-      suggestion.type = TypeIdentifiers.string
+      suggestion.type = TypeIdentifiers.id
       suggestion.isRelationCandidate = true
     }
 

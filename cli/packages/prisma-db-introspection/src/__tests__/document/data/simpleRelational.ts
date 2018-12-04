@@ -38,11 +38,13 @@ export const items = [{
 }]
 
 export const schemaString = `type Item {
+  # Type String is currently not supported for id fields.
   _id: String @id
   cost: Int
 }
 
 type User {
+  # Type String is currently not supported for id fields.
   _id: String @id
   firstName: String
   orders: [UserOrders!]!
