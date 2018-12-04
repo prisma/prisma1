@@ -5,7 +5,21 @@ import { buildSchema } from 'graphql'
 import { TypescriptGenerator } from '../typescript-client'
 import { FlowGenerator } from '../flow-client'
 import { execFile } from 'child_process'
+import { codeComment } from '../../utils/codeComment'
+
 const flow = require('flow-bin')
+
+class TestTypescriptGenerator extends TypescriptGenerator {
+  renderImports() {
+    return `\
+${codeComment}
+
+import { DocumentNode, GraphQLSchema  } from 'graphql'
+import { makePrismaClientClass } from '../../makePrismaClientClass'
+import { BaseClientOptions } from '../../types'
+import { typeDefs } from './prisma-schema'`
+  }
+}
 
 function compile(fileNames: string[], options: ts.CompilerOptions): number {
   const program = ts.createProgram(fileNames, options)
@@ -37,9 +51,10 @@ function compile(fileNames: string[], options: ts.CompilerOptions): number {
   return emitResult.emitSkipped ? 1 : 0
 }
 
+
 export async function testTSCompilation(typeDefs) {
   const schema = buildSchema(typeDefs)
-  const generator = new TypescriptGenerator({
+  const generator = new TestTypescriptGenerator({
     schema,
     internalTypes: [],
   })
