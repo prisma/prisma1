@@ -1,5 +1,6 @@
 package com.prisma.deploy.connector
 
+import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models._
 import org.joda.time.DateTime
@@ -9,15 +10,17 @@ import scala.concurrent.Future
 trait DeployConnector {
   def isActive: Boolean
   def fieldRequirements: FieldRequirementsInterface
+
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
+  def cloudSecretPersistence: CloudSecretPersistence
+  def telemetryPersistence: TelemetryPersistence
+
   def deployMutactionExecutor: DeployMutactionExecutor
   def clientDBQueries(project: Project): ClientDbQueries
   def projectIdEncoder: ProjectIdEncoder
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
-  def cloudSecretPersistence: CloudSecretPersistence
-  def capabilities: Set[ConnectorCapability]
-  def hasCapability(capability: ConnectorCapability): Boolean = capabilities.contains(capability)
+  def capabilities: ConnectorCapabilities
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]
@@ -30,6 +33,11 @@ trait DeployConnector {
 
   def getOrCreateTelemetryInfo(): Future[TelemetryInfo]
   def updateTelemetryInfo(lastPinged: DateTime): Future[Unit]
+
+  // Database level lock granting exclusive deploy privileges to this instance.
+  def managementLock(): Future[Unit]
+
+  def testFacilities: DeployTestFacilites
 }
 
 case class DatabaseSize(name: String, total: Double)

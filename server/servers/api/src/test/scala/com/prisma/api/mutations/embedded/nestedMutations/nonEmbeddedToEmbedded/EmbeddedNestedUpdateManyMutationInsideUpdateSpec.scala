@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -232,7 +232,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project,
       errorCode = 3043,
       errorContains =
-        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.updatedAt'"""
+        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.test_column'"""
     )
   }
 

@@ -4,8 +4,6 @@ import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLFieldConfig, GraphQLLi
 
 
 export default class ModelCreateInputGenerator extends ModelInputObjectTypeGenerator {
-
-
   /**
    * Generates an create model input field for a relational type, handling the four cases many/one and with/without related type. 
    * @param model 
@@ -15,8 +13,12 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
   public static generateRelationFieldForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
     const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
     const generator = ModelCreateInputGenerator.getGeneratorForRelation(model, field, generators)
-    const schemaField = generator.generate(field.type as IGQLType, relationInfo)
-    return generators.scalarTypeGenerator.requiredIf(field.isRequired, schemaField)
+    if(generator.wouldBeEmpty(field.type as IGQLType, relationInfo)) {
+      return null
+    } else {
+      const schemaField = generator.generate(field.type as IGQLType, relationInfo)
+      return generators.scalarTypeGenerator.requiredIf(field.isRequired, schemaField)
+    }
   }
 
   public static relationWouldBeEmpty(model: IGQLType, field: IGQLField, generators: IGenerators) {

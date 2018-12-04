@@ -5340,11 +5340,6 @@ input GroupWhereUniqueInput {
   key: String
 }
 
-"""
-Raw JSON value
-"""
-scalar Json
-
 type Location implements Node {
   id: ID!
   city: String

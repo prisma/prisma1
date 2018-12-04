@@ -5,8 +5,8 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.TopLevelDatabaseMutaction
 import com.prisma.deploy.connector._
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 
@@ -15,7 +15,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
 
   def setup(project: Project): Unit = {
-    deleteProjectDatabase(project)
+    dependencies.deployConnector.deleteProjectDatabase(project.id).await
     dependencies.invalidationTestKit.publish(Only(project.id), project.id)
     createProjectDatabase(project)
 
@@ -31,11 +31,11 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   //Fixme how does this work with self relations?
   private def createRelationTable(project: Project, relation: Relation) = {
     val mutaction = relation.manifestation match {
-      case Some(m: InlineRelationManifestation) if !dependencies.deployConnector.hasCapability(MongoRelationsCapability) =>
+      case Some(m: EmbeddedRelationLink) if dependencies.deployConnector.capabilities.hasNot(RelationLinkListCapability) =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
-        val (model, references) = if (m.inTableOfModelId == modelA.name) (modelA, modelB) else (modelB, modelA)
-        val field               = relation.getFieldOnModel(m.inTableOfModelId)
+        val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
+        val field               = relation.getFieldOnModel(m.inTableOfModelName)
 
         CreateInlineRelationForTests(project.id, model, field, references, m.referencingColumn)
       case _ =>

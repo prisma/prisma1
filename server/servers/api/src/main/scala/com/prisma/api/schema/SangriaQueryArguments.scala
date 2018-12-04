@@ -2,8 +2,8 @@ package com.prisma.api.schema
 
 import com.prisma.api.connector.{OrderBy, SortOrder}
 import com.prisma.shared.models
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsFilterCapability
-import com.prisma.shared.models.{ConnectorCapability, Model}
+import com.prisma.shared.models.ConnectorCapability.JoinRelationsFilterCapability
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model}
 import sangria.schema.{EnumType, EnumValue, _}
 
 object SangriaQueryArguments {
@@ -19,21 +19,14 @@ object SangriaQueryArguments {
     Argument(name, OptionInputType(EnumType(s"${model.name}OrderByInput", None, values)))
   }
 
-  def whereArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: Set[ConnectorCapability]): Argument[Option[Any]] = {
+  def whereArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities): Argument[Option[Any]] = {
     val utils = FilterObjectTypeBuilder(model, project)
-    val filterObject = capabilities.contains(JoinRelationsFilterCapability) match {
+    val filterObject = capabilities.has(JoinRelationsFilterCapability) match {
       case true  => utils.filterObjectType
       case false => utils.filterObjectTypeWithOutJoinRelationFilters
     }
 
     val inputType = OptionInputType(filterObject)
-    Argument(name, inputType, description = "")
-  }
-
-  def scalarWhereArgument(model: models.Model, project: models.Project, name: String = "where"): Argument[Option[Any]] = {
-    val utils                              = FilterObjectTypeBuilder(model, project)
-    val filterObject: InputObjectType[Any] = utils.scalarFilterObjectType
-    val inputType                          = OptionInputType(filterObject)
     Argument(name, inputType, description = "")
   }
 

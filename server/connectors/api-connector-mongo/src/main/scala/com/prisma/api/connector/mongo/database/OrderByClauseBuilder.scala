@@ -17,10 +17,10 @@ object OrderByClauseBuilder {
 
     //the secondary field is always ascending no matter what the primary field says. If we need to revert due to last being defined it is always descending.
     (orderByArg, defaultOrder, isReverseOrder) match {
-      case (Some(order), "asc", true) if order.field.dbName != idField   => query.sort(orderBy(descending(order.field.name), descending(idField)))
-      case (Some(order), "desc", true) if order.field.dbName != idField  => query.sort(orderBy(ascending(order.field.name), descending(idField)))
-      case (Some(order), "asc", false) if order.field.dbName != idField  => query.sort(orderBy(ascending(order.field.name), ascending(idField)))
-      case (Some(order), "desc", false) if order.field.dbName != idField => query.sort(orderBy(descending(order.field.name), ascending(idField)))
+      case (Some(order), "asc", true) if order.field.dbName != idField   => query.sort(orderBy(descending(order.field.dbName), descending(idField)))
+      case (Some(order), "desc", true) if order.field.dbName != idField  => query.sort(orderBy(ascending(order.field.dbName), descending(idField)))
+      case (Some(order), "asc", false) if order.field.dbName != idField  => query.sort(orderBy(ascending(order.field.dbName), ascending(idField)))
+      case (Some(order), "desc", false) if order.field.dbName != idField => query.sort(orderBy(descending(order.field.dbName), ascending(idField)))
       case (_, "asc", true)                                              => query.sort(descending(idField))
       case (_, "desc", true)                                             => query.sort(ascending(idField))
       case (_, "asc", false)                                             => query.sort(ascending(idField))

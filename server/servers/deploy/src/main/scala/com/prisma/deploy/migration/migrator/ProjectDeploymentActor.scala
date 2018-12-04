@@ -1,7 +1,8 @@
 package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, Stash}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, MigrationStepMapperImpl}
+import com.prisma.deploy.connector.persistence.MigrationPersistence
+import com.prisma.deploy.connector.{DeployConnector, MigrationStepMapperImpl}
 import com.prisma.deploy.schema.DeploymentInProgress
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 

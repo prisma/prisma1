@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -91,7 +91,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
       """
         |type Todo{
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -190,7 +190,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
         |type List{
         | id: ID! @unique
         | name: String!
-        | todos: [Todo!]!
+        | todos: [Todo]
         |}
         |
         |type Todo @embedded {

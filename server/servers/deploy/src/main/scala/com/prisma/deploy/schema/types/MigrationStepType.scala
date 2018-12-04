@@ -1,7 +1,7 @@
 package com.prisma.deploy.schema.types
 
 import com.prisma.deploy.schema.SystemUserContext
-import com.prisma.shared.models._
+import com.prisma.shared.models.{Field => _, _}
 import sangria.schema
 import sangria.schema.{Field, _}
 
@@ -106,7 +106,9 @@ object MigrationStepType {
   )
 
   lazy val DeleteRelationType = fieldsHelper[DeleteRelation](
-    Field("name", StringType, resolve = _.value.name)
+    Field("name", StringType, resolve = _.value.name),
+    Field("modelAId", StringType, resolve = _.value.modelAName),
+    Field("modelBId", StringType, resolve = _.value.modelBName)
   )
 
   lazy val UpdateSecretsType = fieldsHelper[UpdateSecrets](

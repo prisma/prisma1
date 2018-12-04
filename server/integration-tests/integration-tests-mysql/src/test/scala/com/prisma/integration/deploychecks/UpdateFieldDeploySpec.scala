@@ -20,7 +20,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema2 =
       """type A {
         | name: String! @unique
-        | value: [Int!]!
+        | value: [Int]
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
@@ -42,7 +42,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema2 =
       """type A {
         | name: String! @unique
-        | value: [Int!]!
+        | value: [Int]
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2, force = true).toString should be(
@@ -62,7 +62,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema2 =
       """type A {
         | name: String! @unique
-        | value: [Int!]!
+        | value: [Int]
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -73,7 +73,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema =
       """type A {
         | name: String! @unique
-        | value: [Int!]!
+        | value: [Int]
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -96,7 +96,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema =
       """type A {
         | name: String! @unique
-        | value: [Int!]!
+        | value: [Int]
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -325,7 +325,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema =
       """|type A {
          | name: String! @unique
-         | b: [B!]!
+         | b: [B]
          |}
          |
          |type B {
@@ -338,7 +338,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema2 =
       """|type A {
          | name: String! @unique
-         | b: [B!]!
+         | b: [B]
          |}
          |
          |type B {
@@ -354,7 +354,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema =
       """|type A {
          | name: String! @unique
-         | b: [B!]!
+         | b: [B]
          |}
          |
          |type B {
@@ -369,7 +369,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema2 =
       """|type A {
          | name: String! @unique
-         | b: [B!]!
+         | b: [B]
          |}
          |
          |type B {
@@ -385,7 +385,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema =
       """|type A {
          | name: String! @unique
-         | b: [B!]!
+         | b: [B]
          |}
          |
          |type B {
@@ -400,7 +400,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     val schema2 =
       """|type A {
          | name: String! @unique
-         | b: [B!]!
+         | b: [B]
          |}
          |
          |type B {

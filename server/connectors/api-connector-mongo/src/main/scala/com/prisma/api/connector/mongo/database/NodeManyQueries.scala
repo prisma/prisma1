@@ -21,7 +21,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
     val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
-        PrismaNode(root.idField, root, Some(model.name))
+        PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
       }
     }
 
@@ -61,27 +61,30 @@ trait NodeManyQueries extends FilterConditionBuilder {
   //these are only used for relations between non-embedded types
   def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: QueryArguments, selectedFields: SelectedFields) =
     SimpleMongoAction { database =>
-      val manifestation = fromField.relation.inlineManifestation.get
-      val model         = fromField.relatedModel_!
+      val relatedField = fromField.relatedField
+      val model        = fromField.relatedModel_!
 
-      val inFilter: Filter = ScalarListFilter(model.idField_!.copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
+      val inFilter: Filter = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
       helper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
-        val groups: Map[StringIdGCValue, Seq[Document]] = fromField.relatedField.isList match {
+        val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
           case true =>
             val tuples = for {
               result <- results
-              id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => StringIdGCValue(x.getValue))
+              id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
             } yield (id, result)
+
             tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-          case false => results.groupBy(x => StringIdGCValue(x(manifestation.referencingColumn).asString().getValue))
+          case false =>
+            results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
         }
 
         fromNodeIds.map { id =>
           groups.get(id.asInstanceOf[StringIdGCValue]) match {
             case Some(group) =>
-              val roots                                     = group.map(DocumentToRoot(model, _))
-              val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idField, r, Some(model.name)))).toVector
+              val roots = group.map(DocumentToRoot(model, _))
+              val prismaNodes: Vector[PrismaNodeWithParent] =
+                roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idFieldByName(model.idField_!.name), r, Some(model.name)))).toVector
               ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
 
             case None =>

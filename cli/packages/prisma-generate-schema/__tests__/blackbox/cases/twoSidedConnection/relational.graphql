@@ -1658,6 +1658,74 @@ type AWithoutIdWithCPreviousValues {
   field: String!
 }
 
+input AWithoutIdWithCScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWithoutIdWithCScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithoutIdWithCScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithoutIdWithCScalarWhereInput!]
+  field: String
+  """
+  All values that are not equal to given value.
+  """
+  field_not: String
+  """
+  All values that are contained in given list.
+  """
+  field_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  field_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: String
+  """
+  All values greater than the given value.
+  """
+  field_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: String
+  """
+  All values containing the given string.
+  """
+  field_contains: String
+  """
+  All values not containing the given string.
+  """
+  field_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  field_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  field_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  field_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  field_not_ends_with: String
+}
+
 type AWithoutIdWithCSubscriptionPayload {
   mutation: MutationType!
   node: AWithoutIdWithC
@@ -1697,12 +1765,23 @@ input AWithoutIdWithCSubscriptionWhereInput {
   node: AWithoutIdWithCWhereInput
 }
 
+input AWithoutIdWithCUpdateManyDataInput {
+  field: String
+}
+
 input AWithoutIdWithCUpdateManyMutationInput {
   field: String
 }
 
 input AWithoutIdWithCUpdateManyWithoutXInput {
   create: [AWithoutIdWithCCreateWithoutXInput!]
+  updateMany: [AWithoutIdWithCUpdateManyWithWhereNestedInput!]
+  deleteMany: [AWithoutIdWithCScalarWhereInput!]
+}
+
+input AWithoutIdWithCUpdateManyWithWhereNestedInput {
+  where: AWithoutIdWithCScalarWhereInput!
+  data: AWithoutIdWithCUpdateManyDataInput!
 }
 
 input AWithoutIdWithCWhereInput {
@@ -3333,6 +3412,74 @@ type BWithoutIdWithCPreviousValues {
   field: String!
 }
 
+input BWithoutIdWithCScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BWithoutIdWithCScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BWithoutIdWithCScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BWithoutIdWithCScalarWhereInput!]
+  field: String
+  """
+  All values that are not equal to given value.
+  """
+  field_not: String
+  """
+  All values that are contained in given list.
+  """
+  field_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  field_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: String
+  """
+  All values greater than the given value.
+  """
+  field_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: String
+  """
+  All values containing the given string.
+  """
+  field_contains: String
+  """
+  All values not containing the given string.
+  """
+  field_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  field_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  field_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  field_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  field_not_ends_with: String
+}
+
 type BWithoutIdWithCSubscriptionPayload {
   mutation: MutationType!
   node: BWithoutIdWithC
@@ -3372,12 +3519,23 @@ input BWithoutIdWithCSubscriptionWhereInput {
   node: BWithoutIdWithCWhereInput
 }
 
+input BWithoutIdWithCUpdateManyDataInput {
+  field: String
+}
+
 input BWithoutIdWithCUpdateManyMutationInput {
   field: String
 }
 
 input BWithoutIdWithCUpdateManyWithoutXInput {
   create: [BWithoutIdWithCCreateWithoutXInput!]
+  updateMany: [BWithoutIdWithCUpdateManyWithWhereNestedInput!]
+  deleteMany: [BWithoutIdWithCScalarWhereInput!]
+}
+
+input BWithoutIdWithCUpdateManyWithWhereNestedInput {
+  where: BWithoutIdWithCScalarWhereInput!
+  data: BWithoutIdWithCUpdateManyDataInput!
 }
 
 input BWithoutIdWithCWhereInput {

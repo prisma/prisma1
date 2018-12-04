@@ -1,13 +1,13 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
   //region top level upserts
 
   "An upsert on the top level" should "execute a nested connect in the create branch" in {
@@ -211,20 +211,20 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   lists: [List!]!
-        |   tags: [Tag!]!
+        |   lists: [List]
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   uTag: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}"""
     }
 
@@ -261,20 +261,20 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   lists: [List!]!
-        |   tags: [Tag!]!
+        |   lists: [List]
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   uTag: String @unique
-        |   todoes: [Todo!]!
+        |   todoes: [Todo]
         |}"""
     }
 

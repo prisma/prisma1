@@ -275,10 +275,22 @@ ${chalk.gray(
         )
 
         if (migration.errors && migration.errors.length > 0) {
-          await this.out.error(migration.errors.join('\n'))
+          this.out.action.stop(prettyTime(Date.now() - before))
+          throw new Error(
+            `The Migration failed and has not been performed. This is very likely not a transient issue.\n` +
+              migration.errors.join('\n'),
+          )
         }
 
-        if (migration.applied === migrationResult.migration.steps.length) {
+        /**
+         * Read more here about the different deployment statuses https://github.com/prisma/prisma/issues/3326
+         */
+        if (
+          migration.applied === migrationResult.migration.steps.length ||
+          ['SUCCESS', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE'].includes(
+            migration.status,
+          )
+        ) {
           done = true
         }
         this.out.action.status = this.getProgress(
@@ -378,7 +390,9 @@ ${chalk.gray(
       this.definition.definition!.seed!.run
     if (!seedSource) {
       this.out.log(
-        chalk.yellow('Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional')
+        chalk.yellow(
+          'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional',
+        ),
       )
     } else {
       this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)

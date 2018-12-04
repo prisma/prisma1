@@ -2,7 +2,8 @@ package com.prisma.deploy.schema
 
 import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.migrator.Migrator
@@ -193,8 +194,14 @@ case class SchemaBuilderImpl(
                        schemaMapper = schemaMapper,
                        migrationPersistence = migrationPersistence,
                        projectPersistence = projectPersistence,
-                       deployConnector = deployConnector,
-                       migrator = migrator
+                       migrator = migrator,
+                       functionValidator = dependencies.functionValidator,
+                       invalidationPublisher = dependencies.invalidationPublisher,
+                       capabilities = deployConnector.capabilities,
+                       clientDbQueries = deployConnector.clientDBQueries(project),
+                       databaseIntrospectionInferrer = deployConnector.databaseIntrospectionInferrer(project.id),
+                       fieldRequirements = deployConnector.fieldRequirements,
+                       isActive = deployConnector.isActive
                      ).execute
           } yield result
       }

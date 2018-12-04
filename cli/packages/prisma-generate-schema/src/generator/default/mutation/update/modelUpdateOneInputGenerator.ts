@@ -4,9 +4,14 @@ import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, Grap
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 
 
-export default class ModelUpdateOneInputTypeGenerator extends ModelUpdateInputGenerator {
+// TODO: The base type here might be unnecassary complex
+export default class ModelUpdateOneInputTypeGenerator extends RelatedModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
     return `${input.name}UpdateOneInput`
+  }
+
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {  
+    return false
   }
 
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {

@@ -4,7 +4,7 @@
   "description": "Transform prisma datamodel SDL into graphql-js SDL",
   "main": "dist/src/index.js",
   "scripts": {
-    "test": "rm -rf dist && node_modules/jest-cli/bin/jest.js",
+    "test": "rm -rf dist && jest",
     "build": "tsc -d"
   },
   "files": [
@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "graphql": "^14.0.2",
-    "node-fetch": "^2.2.1",
     "pluralize": "^7.0.0",
     "popsicle": "10"
   },
