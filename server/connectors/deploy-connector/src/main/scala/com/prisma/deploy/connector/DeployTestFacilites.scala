@@ -26,6 +26,6 @@ case class Table(name: String, columns: Vector[Column], indexes: Vector[Index]) 
   def column(name: String): Option[Column] = columns.find(_.name == name)
 }
 
-case class Index(name: String)
+case class Index(name: String, columns: Vector[String], unique: Boolean)
 case class Column(name: String, tpe: String, typeIdentifier: TypeIdentifier, isRequired: Boolean, foreignKey: Option[ForeignKey])
 case class ForeignKey(table: String, column: String)

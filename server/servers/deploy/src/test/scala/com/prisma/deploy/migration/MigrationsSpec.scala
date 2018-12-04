@@ -603,6 +603,42 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column_!("b1").foreignKey should equal(Some(ForeignKey("A", "id")))
   }
 
+  "adding a unique constraint must work" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String @unique
+        |}
+      """.stripMargin
+    val result = deploy(dataModel)
+    val index  = result.table_!("A").indexes.find(_.columns == Vector("field")).get
+    index.columns should be(Vector("field"))
+    index.unique should be(true)
+  }
+
+  "removing a unique constraint must work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String @unique
+        |}
+      """.stripMargin
+    deploy(initialDataModel)
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  field: String
+        |}
+      """.stripMargin
+    val result = deploy(dataModel)
+    val index  = result.table_!("A").indexes.find(_.columns == Vector("field"))
+    index should be(empty)
+  }
+
   def setup() = {
     val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
     deployConnector.deleteProjectDatabase(idAsString).await()

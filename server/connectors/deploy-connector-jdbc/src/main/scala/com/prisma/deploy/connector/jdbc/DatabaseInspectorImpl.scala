@@ -6,7 +6,7 @@ import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
 import slick.jdbc.JdbcProfile
-import slick.jdbc.meta.{MColumn, MForeignKey, MTable}
+import slick.jdbc.meta.{MColumn, MForeignKey, MIndexInfo, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,14 +30,29 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
     for {
       mColumns     <- mTable.getColumns
       importedKeys <- mTable.getImportedKeys
+      mIndexes     <- mTable.getIndexInfo()
     } yield {
       val columns = mColumns.map { mColumn =>
         val importedKeyForColumn = importedKeys.find(_.fkColumn == mColumn.name)
         mColumnToModel(mColumn, importedKeyForColumn)
       }
-      val indexes = Vector.empty[Index]
+      val indexes = mIndexesToModels(mIndexes)
       Table(mTable.name.name, columns, indexes)
     }
+  }
+
+  def mIndexesToModels(mIndex: Vector[MIndexInfo]): Vector[Index] = {
+    val byName = mIndex.groupBy(_.indexName)
+    byName.map {
+      case (Some(indexName), mIndexes) =>
+        Index(
+          name = indexName,
+          columns = mIndexes.flatMap(_.column),
+          unique = !mIndexes.head.nonUnique
+        )
+      case (None, _) =>
+        sys.error("There must always be an index name")
+    }.toVector
   }
 
   def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey]): Column = {
