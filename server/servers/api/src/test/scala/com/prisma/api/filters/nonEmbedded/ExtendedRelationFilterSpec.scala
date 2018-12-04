@@ -240,20 +240,24 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
   }
 
-  "PostGres 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnoreMySql) in {
+  "PostGres 1 level m-relation filter" should "work for  _some" taggedAs (IgnoreMySql) in {
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "T"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
+  }
 
+  "PostGres 1 level m-relation filter" should "work for _every" taggedAs (IgnoreMySql, IgnoreMongo) in {
     server.query(query = """{artists(where:{Albums_every:{Title_contains: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
     server.query(query = """{artists(where:{Albums_every:{Title_not_contains: "The"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+  }
 
+  "PostGres 1 level m-relation filter" should "work for _none" taggedAs (IgnoreMySql, IgnoreMongo) in {
     server.query(query = """{artists(where:{Albums_none:{Title_contains: "The"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
@@ -261,71 +265,72 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
   }
 
-  "2 level m-relation filter" should "work for _every, _some and _none" in {
+  "2 level m-relation filter" should "work for some/some" in {
 
-//    // some|some
-//    server.query(query = """{artists(where:{Albums_some:{Tracks_some: {Milliseconds_lte: 9000}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_some:{Tracks_some: {Bytes: 512}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"}]}}""")
-//
-//    // some|every
-//    server.query(query = """{artists(where:{Albums_some:{Tracks_every: {UnitPrice_gt: 2.50}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_some:{Tracks_every: {Milliseconds_gt: 9000}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtistWith2Albums"}]}}""")
-//
-//    // some|none
-//    server.query(query = """{artists(where:{Albums_some:{Tracks_none: {Milliseconds_lte: 9000}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtistWith2Albums"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_some:{Tracks_none: {UnitPrice_lt: 2.0}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+    // some|some
+    server.query(query = """{artists(where:{Albums_some:{Tracks_some: {Milliseconds_lte: 9000}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
-    // every|some FIXME related to every/none boolean logic?
+    server.query(query = """{artists(where:{Albums_some:{Tracks_some: {Bytes: 512}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"}]}}""")
+  }
+
+  "2 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnoreMongo) in {
+    // some|every
+    server.query(query = """{artists(where:{Albums_some:{Tracks_every: {UnitPrice_gt: 2.50}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_some:{Tracks_every: {Milliseconds_gt: 9000}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    // some|none
+    server.query(query = """{artists(where:{Albums_some:{Tracks_none: {Milliseconds_lte: 9000}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_some:{Tracks_none: {UnitPrice_lt: 2.0}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    // every|some
     server.query(query = """{artists(where:{Albums_every:{Tracks_some: {Bytes_lt: 1000}}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
-//    //FIXME related to every/none boolean logic?
-//    server.query(query = """{artists(where:{Albums_every:{Tracks_some: {Composer: "Composer3"}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
+    server.query(query = """{artists(where:{Albums_every:{Tracks_some: {Composer: "Composer3"}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
 
     // every|every
-//    server.query(query = """{artists(where:{Albums_every:{Tracks_every: {Bytes_lte: 10000}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_every:{Tracks_every: {TrackId_in: [4,5,6,7]}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtistWith2Albums"}]}}""")
-//
-//    // every|none
-//    server.query(query = """{artists(where:{Albums_every:{Tracks_none: {UnitPrice_lte: 1}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_every:{Tracks_none: {Composer: "Composer2"}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
+    server.query(query = """{artists(where:{Albums_every:{Tracks_every: {Bytes_lte: 10000}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"}]}}""")
 
-//    // none|some
-//    server.query(query = """{artists(where:{Albums_none:{Tracks_some: {UnitPrice_lt: 1}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_none:{Tracks_some: {Composer: "Composer2"}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
-//
-//    // none|every
-//    server.query(query = """{artists(where:{Albums_none:{Tracks_every: {UnitPrice_gte: 5}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_none:{Tracks_every: {Name_starts_with: "Track"}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
-//
-//    // none|none
-//    server.query(query = """{artists(where:{Albums_none:{Tracks_none: {Bytes_lt: 100}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"}]}}""")
-//
-//    server.query(query = """{artists(where:{Albums_none:{Tracks_none: {Bytes_gte: 100}}}){Name}}""", project = project).toString should be(
-//      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+    server.query(query = """{artists(where:{Albums_every:{Tracks_every: {TrackId_in: [4,5,6,7]}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+
+    // every|none
+    server.query(query = """{artists(where:{Albums_every:{Tracks_none: {UnitPrice_lte: 1}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_every:{Tracks_none: {Composer: "Composer2"}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
+
+    // none|some
+    server.query(query = """{artists(where:{Albums_none:{Tracks_some: {UnitPrice_lt: 1}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_none:{Tracks_some: {Composer: "Composer2"}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
+
+    // none|every
+    server.query(query = """{artists(where:{Albums_none:{Tracks_every: {UnitPrice_gte: 5}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_none:{Tracks_every: {Name_starts_with: "Track"}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
+
+    // none|none
+    server.query(query = """{artists(where:{Albums_none:{Tracks_none: {Bytes_lt: 100}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"}]}}""")
+
+    server.query(query = """{artists(where:{Albums_none:{Tracks_none: {Bytes_gte: 100}}}){Name}}""", project = project).toString should be(
+      """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
   }
 
   "2 level m-relation filters that have subfilters that are connected with an implicit AND" should "work" in {
@@ -446,7 +451,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
     result.pathAsJsValue("data") shouldBe ("""{"genres":[{"GenreId":1}]}""".parseJson)
   }
 
-  "an empty _none filter" should "return all nodes that do have an empty relation" in {
+  "an empty _none filter" should "return all nodes that do have an empty relation" taggedAs (IgnoreMongo) in {
     server.query(query = """{genres(where:{Tracks_none:{}}){Name}}""", project = project).toString should be(
       """{"data":{"genres":[{"Name":"GenreThatIsNotUsed"}]}}""")
   }
