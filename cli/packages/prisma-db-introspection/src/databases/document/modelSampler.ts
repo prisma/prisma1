@@ -220,7 +220,8 @@ export class ModelMerger {
       isId: isId,
       isList: isArray,
       isReadOnly: false,
-      isRequired: isRequired,
+      // ID fields are always required
+      isRequired: isRequired || isId,
       // Never unique in Mongo.
       isUnique: false,
       // Reserved relation name for potential relations.

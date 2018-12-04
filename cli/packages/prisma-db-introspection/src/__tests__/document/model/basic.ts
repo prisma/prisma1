@@ -30,7 +30,7 @@ describe('Basic document model inferring', () => {
 
     expect(type.fields).toHaveLength(4)
 
-    SdlExpect.field(type, '_id', false, false, TypeIdentifiers.integer, true)
+    SdlExpect.field(type, '_id', true, false, TypeIdentifiers.integer, true)
     SdlExpect.field(type, 'street', false, false, TypeIdentifiers.string)
     SdlExpect.field(type, 'houseNumber', false, false, TypeIdentifiers.integer)
     SdlExpect.field(type, 'rating', false, false, TypeIdentifiers.float)
@@ -53,7 +53,7 @@ describe('Basic document model inferring', () => {
 
     expect(type.name).toBe('arrays')
 
-    SdlExpect.field(type, '_id', false, false, TypeIdentifiers.string, true)
+    SdlExpect.field(type, '_id', true, false, TypeIdentifiers.string, true)
     SdlExpect.field(type, 'stringArray', false, true, TypeIdentifiers.string)
     SdlExpect.field(type, 'floatArray', false, true, TypeIdentifiers.float)
     const mixedField = SdlExpect.field(type, 'mixedArray', false, true, ModelSampler.ErrorType)
@@ -86,7 +86,7 @@ describe('Basic document model inferring', () => {
     expect(type.isEmbedded).toBe(false)
     expect(type.fields).toHaveLength(3)
 
-    SdlExpect.field(type, '_id', false, false, TypeIdentifiers.integer, true)
+    SdlExpect.field(type, '_id', true, false, TypeIdentifiers.integer, true)
     SdlExpect.field(type, 'customer', false, false, TypeIdentifiers.string)
     SdlExpect.field(type, 'shippingAddress', false, false, embeddedType)
 
@@ -123,7 +123,7 @@ describe('Basic document model inferring', () => {
     expect(type.isEmbedded).toBe(false)
     expect(type.fields).toHaveLength(3)
 
-    SdlExpect.field(type, '_id', false, false, TypeIdentifiers.integer, true)
+    SdlExpect.field(type, '_id', true, false, TypeIdentifiers.integer, true)
     SdlExpect.field(type, 'customer', false, false, TypeIdentifiers.string)
     SdlExpect.field(type, 'orders', false, true, embeddedType)
 

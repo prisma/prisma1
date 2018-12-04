@@ -39,13 +39,13 @@ export const items = [{
 
 export const schemaString = `type Item {
   # Type String is currently not supported for id fields.
-  _id: String @id
+  _id: String! @id
   cost: Int
 }
 
 type User {
   # Type String is currently not supported for id fields.
-  _id: String @id
+  _id: String! @id
   firstName: String
   orders: [UserOrders!]!
 }
@@ -62,7 +62,7 @@ export function assertUserItemModel(allTypes: IGQLType[]) {
 
   expect(userType.fields).toHaveLength(3)
   SdlExpect.field(userType, 'orders', false, true, ordersType)
-  SdlExpect.field(userType, '_id', false, false, TypeIdentifiers.string, true)
+  SdlExpect.field(userType, '_id', true, false, TypeIdentifiers.string, true)
   SdlExpect.field(userType, 'firstName', false, false, TypeIdentifiers.string)
 
   expect(ordersType.fields).toHaveLength(2)
@@ -70,7 +70,7 @@ export function assertUserItemModel(allTypes: IGQLType[]) {
   SdlExpect.field(ordersType, 'count', false, false, TypeIdentifiers.integer)
 
   expect(itemType.fields).toHaveLength(2)
-  SdlExpect.field(itemType, '_id', false, false, TypeIdentifiers.string, true)
+  SdlExpect.field(itemType, '_id', true, false, TypeIdentifiers.string, true)
   SdlExpect.field(itemType, 'cost', false, false, TypeIdentifiers.integer)
 }
 

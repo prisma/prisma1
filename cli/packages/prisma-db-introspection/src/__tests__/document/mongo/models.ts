@@ -32,7 +32,7 @@ describe("Mongo Model Introspector", () => {
 
     expect(movieType.fields).toHaveLength(7)
     
-    SdlExpect.field(movieType, '_id', false, false, TypeIdentifiers.id, true)
+    SdlExpect.field(movieType, '_id', true, false, TypeIdentifiers.id, true)
     SdlExpect.field(movieType, 'name', false, false, TypeIdentifiers.string)
     SdlExpect.field(movieType, 'genre', false, false, TypeIdentifiers.string)
     SdlExpect.field(movieType, 'year', false, false, TypeIdentifiers.integer)

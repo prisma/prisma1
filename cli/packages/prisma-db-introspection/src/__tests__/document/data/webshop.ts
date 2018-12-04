@@ -116,7 +116,7 @@ export const collections = {
 
 export const schemaString = `type Item {
   # Type String is currently not supported for id fields.
-  _id: String @id
+  _id: String! @id
   keywords: [String!]!
   price: Float
   rating: Float
@@ -130,7 +130,7 @@ type ItemReviews @embedded {
 
 type Order {
   # Type Int is currently not supported for id fields.
-  _id: Int @id
+  _id: Int! @id
   amount: Int
   customer: User
   items: [String!]!
@@ -139,7 +139,7 @@ type Order {
 
 type User {
   # Type String is currently not supported for id fields.
-  _id: String @id
+  _id: String! @id
   firstName: String
   lastName: String
   paymentInfo: [UserPaymentInfo!]!
