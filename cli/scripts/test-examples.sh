@@ -1,4 +1,4 @@
-git clone git@github.com:prisma/prisma-examples.git
+git clone https://$GH_TOKEN:x-oauth-basic@github.com/prisma/prisma-examples.git
 
 cd prisma-examples
 cd flow
@@ -39,5 +39,11 @@ do
   tsc -d
   cd ..
 done
+
+cd ..
+git checkout client-alpha
+git add .
+git commit -m "Update dependency versions after test"
+git push origin client-alpha
 
 rm -rf ./prisma-examples
