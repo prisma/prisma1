@@ -381,3 +381,5 @@ else
   npm version $newVersion
   npm publish --tag $CIRCLE_BRANCH
 fi
+
+./test-examples.sh $newVersion || echo ""
