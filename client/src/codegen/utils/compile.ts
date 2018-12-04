@@ -2,9 +2,9 @@ import * as ts from 'typescript'
 import * as path from 'path'
 import * as fs from 'fs'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from '../typescript-client'
 import { FlowGenerator } from '../flow-client'
 import { execFile } from 'child_process'
+import { TestTypescriptGenerator } from '../../utils/generateTS'
 const flow = require('flow-bin')
 
 function compile(fileNames: string[], options: ts.CompilerOptions): number {
@@ -18,28 +18,33 @@ function compile(fileNames: string[], options: ts.CompilerOptions): number {
   allDiagnostics.forEach(diagnostic => {
     if (diagnostic.file) {
       const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
-        diagnostic.start!
+        diagnostic.start!,
       )
       const message = ts.flattenDiagnosticMessageText(
         diagnostic.messageText,
-        "\n"
+        '\n',
       )
       console.log(
-        `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+        `${diagnostic.file.fileName} (${line + 1},${character +
+          1}): ${message}`,
       )
     } else {
       console.log(
-        `${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`
+        `${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`,
       )
     }
   })
+
+  // if (allDiagnostics.length > 0) {
+  //   console.log(allDiagnostics)
+  // }
 
   return emitResult.emitSkipped ? 1 : 0
 }
 
 export async function testTSCompilation(typeDefs) {
   const schema = buildSchema(typeDefs)
-  const generator = new TypescriptGenerator({
+  const generator = new TestTypescriptGenerator({
     schema,
     internalTypes: [],
   })
@@ -48,7 +53,7 @@ export async function testTSCompilation(typeDefs) {
   const artifactsPath = path.join(__dirname, '..', 'artifacts')
 
   if (!fs.existsSync(artifactsPath)) {
-    fs.mkdirSync(artifactsPath);
+    fs.mkdirSync(artifactsPath)
   }
 
   const filePath = path.join(__dirname, '..', 'artifacts', 'generated_ts.ts')
@@ -63,7 +68,7 @@ export async function testTSCompilation(typeDefs) {
     noImplicitAny: true,
     skipLibCheck: true,
     target: ts.ScriptTarget.ESNext,
-    module: ts.ModuleKind.CommonJS
+    module: ts.ModuleKind.CommonJS,
   })
 }
 
@@ -83,7 +88,7 @@ export async function testFlowCompilation(typeDefs) {
 
   const filePath = path.join(artifactsPath, 'generated_flow.js')
   await fs.writeFileSync(filePath, file)
-  
+
   const flowConfig = ` [ignore]\n [libs]\n [lints]\n [include] ${artifactsPath} \n [strict]`
   const configFilePath = path.join(__dirname, '..', 'artifacts', '.flowconfig')
   await fs.writeFileSync(configFilePath, flowConfig)

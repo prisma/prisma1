@@ -8,12 +8,14 @@ flow_dirs=(
   script
 )
 
+npm install -g prisma@$newVersion
+
 for dir in $flow_dirs
 do
   cd $dir
   yarn
-  yarn add --dev prisma@$newVersion
   yarn add prisma-client-lib@$newVersion
+  prisma generate
   flow check
   cd ..
 done
@@ -36,6 +38,7 @@ do
   yarn
   yarn add --dev prisma@$newVersion
   yarn add prisma-client-lib@$newVersion
+  prisma generate
   tsc -d
   cd ..
 done
