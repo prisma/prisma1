@@ -1,18 +1,15 @@
-
-
 import { MongoConnector } from '../../../databases/document/mongo/mongoConnector'
 import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
 import { collections, schemaString } from '../data/webshop'
 
 const env = new MongoTestEnvironment()
 
-describe("Mongo Model Introspector, end to end", () => {
-
+describe.skip('Mongo Model Introspector, end to end', () => {
   beforeAll(async () => await env.connect())
   afterAll(async () => await env.disconnect())
   afterEach(async () => await env.clear())
 
-  it("Webshop", async () => {
+  it('Webshop', async () => {
     await env.createCollections(collections)
 
     const connector = new MongoConnector(env.getClient())
