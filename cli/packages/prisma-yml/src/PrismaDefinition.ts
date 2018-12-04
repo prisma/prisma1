@@ -219,9 +219,11 @@ and execute ${chalk.bold.green(
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         debug('making cluster here')
-        const existingCluster = this.env.clusters.find(
-          c => c.baseUrl.toLowerCase() === clusterBaseUrl,
-        )
+        const existingCluster = !process.env.PRISMA_MANAGEMENT_API_SECRET
+          ? this.env.clusters.find(
+              c => c.baseUrl.toLowerCase() === clusterBaseUrl,
+            )
+          : null
         const cluster =
           existingCluster ||
           new Cluster(

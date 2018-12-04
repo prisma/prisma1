@@ -14,8 +14,8 @@ import {
 import { spawnSync } from 'npm-run'
 import generateCRUDSchemaString, {
   parseInternalTypes,
-  DatabaseType,
 } from 'prisma-generate-schema'
+import { DatabaseType } from 'prisma-datamodel'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
 import { IGQLType } from 'prisma-datamodel'
 
@@ -78,8 +78,8 @@ export default class GenereateCommand extends Command {
         }
         const databaseType =
           this.definition.definition!.databaseType! === 'document'
-            ? DatabaseType.document
-            : DatabaseType.relational
+            ? DatabaseType.mongo
+            : DatabaseType.postgres
         schemaString = generateCRUDSchemaString(
           this.definition.typesString!,
           databaseType,
@@ -108,8 +108,8 @@ export default class GenereateCommand extends Command {
 
         const internalTypes = parseInternalTypes(
           this.definition.typesString!,
-          DatabaseType.relational,
-        )
+          DatabaseType.postgres,
+        ).types
 
         if (generator === 'typescript-client') {
           await this.generateTypescript(
