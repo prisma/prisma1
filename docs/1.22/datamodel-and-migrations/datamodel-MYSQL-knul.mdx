@@ -3,10 +3,10 @@ import Code from 'components/Markdown/Code'
 import Info from 'components/Markdown/Info'
 
 export const meta = {
-  title: "Datamodel (MongoDB)",
+  title: "Datamodel (MySQL)",
   position: 20,
-  technology: "mongo",
-  technologyOrder: 3,
+  technology: "mysql",
+  technologyOrder: 1,
   articleGroup: "Datamodel",
 }
 
@@ -14,7 +14,7 @@ export const meta = {
 
 The datamodel of your service configuration has two major roles:
 
-- **Define the underlying database schema** (the defined models are mapped to MonogDB [collections](https://docs.mongodb.com/manual/reference/glossary/#term-collection)).
+- **Define the underlying database schema** (the defined models are mapped to database tables).
 - It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
 
 The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
@@ -32,8 +32,8 @@ datamodel: datamodel.prisma
 
 There are several available building blocks to shape your datamodel.
 
-- [**Types**](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each non-embedded type in your datamodel is mapped to a MongoDB collection and CRUD operations are added to the GraphQL schema.
-- [**Relations**](#relations) describe _relationships_ between types. With MongoDB, a relation can be modeled as an [embedded type](#embedded-types) or as [link relation](#link-relations).
+- [**Types**](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your datamodel is mapped to a database table and CRUD operations are added to the GraphQL schema.
+- [**Relations**](#relations) describe _relationships_ between types.
 - [**Directives**](#graphql-directives) covering different use cases such as type constraints or cascading delete behaviour.
 
 ### Why SDL?
@@ -53,37 +53,35 @@ A simple example `datamodel.prisma` file:
 
 ```graphql
 type Tweet {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
+  id: ID! @unique
+  createdAt: DateTime!
   text: String!
   owner: User!
   location: Location!
 }
 
 type User {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  updatedAt: DateTime! @updatedAt
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
   handle: String! @unique
   name: String
-  tweets: [Tweet!]! @relation(link: INLINE)
+  tweets: [Tweet!]!
 }
 
-type Location @embedded {
+type Location {
   latitude: Float!
   longitude: Float!
 }
 ```
 
-> This example is absed the on [datamodel v2](b6a7) format which is currently in [Preview](oje2#preview-vs-final).  
-
 This example illustrates a few important concepts when working with your datamodel:
 
-- The two types `Tweet` and `User` are each mapped to a MongoDB collection.
-- There is a _bidirectional_ relation between `User` and `Tweet` (via the `owner` and `tweets` fields). Note that in the underlying database, only `User` documents store references to `Tweet` documents (not the other way around), because the `tweets` field on `User` specifies `link` on the `@relation`-directive. However, the Prisma API still lets you query the `owner` of a `Tweet` directly.
-- There is a _unidirectional_ relation from `Tweet` to `Location` (via the `location` field). `Location` is an _embedded type_, which means there are no `Location` documents are not stored in their own `Location` collection - instead each `Location` is stored inside a `Tweet` document in the `Tweet` collection. 
+- The three types `Tweet`, `User` and `Location` are mapped to database tables (or an equivalent structure for schemaless databases).
+- There is a _bidirectional_ relation between `User` and `Tweet` (via the `owner` and `tweets` fields).
+- There is a _unidirectional_ relation from `Tweet` to `Location` (via the `location` field).
 - Except for the `name` field on `User`, all fields are _required_ in the datamodel (as indicated by the `!` following the type).
-- The fields annotated with the `@id`-, `@createdAt`- and `@updatedAt`-directives are managed by Prisma and _read-only_ in the exposed Prisma API (meaning they can not be altered via mutations).
+- The `id`, `createdAt` and `updatedAt` fields are managed by Prisma and _read-only_ in the exposed Prisma API (meaning they can not be altered via mutations).
 - The `@unique` directive expresses a _unique constraint_, meaning Prisma ensures that there never will be two nodes with the same values for the annotated field.
 
 Creating and updating your datamodel is as simple as writing and saving the datamodel file. Once you're happy with your datamodel, you can save the file and apply the changes to your Prisma service by running `prisma deploy`:
@@ -134,9 +132,6 @@ Applying changes... 0.4s
 When starting out with GraphQL and Prisma, the amount of SDL-files you're working with can be confusing. Yet, it's crucial to understand what the role of each of them is.
 
 Looking only at Prisma, there are two SDL-files that are relevant:
-
-- The **datamodel** containing the _model definitions_ for your Prisma APIs, typically called `datamodel.prisma`.
-- The **Prisma GraphQL schema** defining the actual CRUD/realtime _operations_ of the service's API, typically called `prisma.graphql`.
 
 The Prisma database database schema is generated based on the datamodel:
 
@@ -201,9 +196,9 @@ datamodel: datamodel.prisma
 
 ## Object types
 
-An _object type_ (or short _type_) defines the structure for one _model_ in your datamodel. It is used to represent entities from your application domain.
+An _object type_ (or short _type_) defines the structure for one _model_ in your datamodel. It is used to represent _entities_ from your _application domain_.
 
-Each object type is mapped to a collection in your MongoDB database. Note that Prisma enforces a schema even for schemaless databases!
+Each object type is mapped to the database. For relational databases, one _table_ is created per type. For schemaless databases, an equivalent structure is used (e.g. a _document_). Note that Prisma enforces a schema even for schemaless databases!
 
 ![](https://i.imgur.com/NFLy3AO.png)
 
@@ -219,10 +214,10 @@ A object type is defined in the datamodel with the keyword `type`:
 
 ```graphql
 type Article {
-  id: ID! @id
+  id: ID! @unique
   title: String!
   text: String
-  isPublished: Boolean! @default(value: false)
+  isPublished: Boolean! @default(value: "false")
 }
 ```
 
@@ -428,22 +423,22 @@ mutation {
 
 #### ID
 
-An `ID` value is a generated unique 25-character string based on [cuid](https://github.com/prismagraphql/cuid-java). Fields annotated with the `@id`-directive are [system fields](#system-fields).
+An `ID` value is a generated unique 25-character string based on [cuid](https://github.com/prismagraphql/cuid-java). Fields with `ID` values are [system fields](#system-fields) and just used internally, therefore it is not possible to create new fields with the `ID` type.
 
-`ID` fields can only be used once on a type and always need to be annotated with the `@id` directive:
+`ID` fields can only be used once on a type and always need to be annotated with the `@unique` directive:
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
 }
 ```
 
 ### Type modifiers
 
-In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifies:
+In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifiers:
 
-- **Required fields:** Annotate the type with a `!`, e.g. `name: String!`
-- **Lists:** Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
+- Required fields: Annotate the type with a `!`, e.g. `name: String!`
+- Lists: Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
 
 #### List
 
@@ -490,7 +485,7 @@ To mark a field as unique, simply append the `@unique` directive to its definiti
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   email: String! @unique
   name: String!
 }
@@ -522,51 +517,63 @@ To specify a default value for a field, you can use the `@default` directive:
 
 ```graphql
 type Story {
-  isPublished: Boolean @default(value: false)
-  someNumber: Int! @default(value: 42)
+  isPublished: Boolean @default(value: "false")
+  someNumber: Int! @default(value: "42")
   title: String! @default(value: "My New Post")
   publishDate: DateTime! @default(value: "2018-01-26")
 }
 ```
 
+Notice that you need to always enclose the value in double-quotes, even for non-string types such as `Boolean` or `Int`.
+
 ### System fields
 
-Fields annotated with the `@id`-, `@createdAt`- or `@updatedAt`-directives have special semantics in Prisma.
+The three fields `id`, `createdAt` and `updatedAt` have special semantics in Prisma. They are optional in your datamodel, but will always be maintained in the underlying database. This way you can always add the field to your datamodel later, and the data will still be available for existing nodes.
 
-Even when not specified on a type, the underlying database will _always_ manage fields with their behaviour. In case you decide to add these fields later, all existing documents will therefore already maintain those fields.
+The values of these fields are currently read-only in the Prisma API (except when importing data) but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
 
-#### System field: `@id`
+Notice that you cannot have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields. Here are the only supported declarations for these three fields:
 
-A node will automatically get assigned a globally unique identifier when it's created, this identifier is stored in the field annotated with the `@id`-directive. For MongoDB, the field that's annotated with the `@id`-directive is mapped to the MongoDB [object ID](https://docs.mongodb.com/manual/core/document/#the-id-field) which is stored in a field called `_id`.
+- `id: ID! @unique`
+- `createdAt: DateTime!`
+- `updatedAt: DateTime!`
 
-Values for fields annotated with the `@id`-directive have the following properties:
+All system fields need to be marked as [required](#required) and the `id` field further needs to be annotated with the `@unique` directive.
 
-* Consist of 25 alphanumeric characters (letters are always lowercase)
-* Always start with a (lowercase) letter, e.g. `c`
+#### System field: `id`
+
+A node will automatically get assigned a globally unique identifier when it's created, this identifier is stored in the `id` field.
+
+Whenever you add the `id` field to a type definition to expose it in the GraphQL API, you must annotate it with the `@unique` directive.
+
+The `id` has the following properties:
+
+* Consists of 25 alphanumeric characters (letters are always lowercase)
+* Always starts with a (lowercase) letter, e.g. `c`
 * Follows [cuid](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
 
 Notice that all model types in the Prisma GraphQL schema will implement the `Node` interface. This is what the `Node` interface looks like:
 
 ```graphql
 interface Node {
-  id: ID! @id
+  id: ID! @unique
 }
 ```
 
 #### System fields: `createdAt` and `updatedAt`
 
-The datamodel further provides two special directives which you can add to your fields:
+The datamodel further provides two special fields which you can add to your types:
 
-- `@createdAt`: Fields annotated with this directive store the exact date and time for when a node of this object type was _created_.
-- `@updatedAt`: Fields annotated with this directive store the exact date and time for when a node of this object type was _last updated_.
+- `createdAt: DateTime!`: Stores the exact date and time for when a node of this object type was _created_.
+- `updatedAt: DateTime!`: Stores the exact date and time for when a node of this object type was _last updated_.
 
 If you want your types to expose these fields, you can simply add them to the type definition, for example:
 
 ```graphql
 type User {
-  id: ID! @id
-  created_at: DateTime! @createdAt
-  updated_at: DateTime! @updatedAt
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 ```
 
@@ -614,12 +621,12 @@ Here is an example for a simple bidirectional relation:
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   articles: [Article!]!
 }
 
 type Article {
-  id: ID! @id
+  id: ID! @unique
   author: User!
 }
 ```
@@ -628,7 +635,7 @@ A relation can also connect a type with itself. It is then referred to as a _sel
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   friends: [User!]!
 }
 ```
@@ -637,13 +644,13 @@ A self-relation can also be bidirectional:
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   following: [User!]! @relation(name: "Followers")
   followers: [User!]! @relation(name: "Followers")
 }
 ```
 
-Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive).
+Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive) and the `name` argument has to be provided..
 
 ### Required relations
 
@@ -655,12 +662,12 @@ Consider again the following relation:
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   car: Car!
 }
 
 type Car {
-  id: ID! @id
+  id: ID! @unique
   owner: User!
   color: String!
 }
@@ -702,12 +709,12 @@ Here is an example of a datamodel where the `@relation` directive is used:
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   stories: [Story!]! @relation(name: "StoriesByUser" onDelete: CASCADE)
 }
 
 type Story {
-  id: ID! @id
+  id: ID! @unique
   text: String!
   author: User @relation(name: "StoriesByUser")
 }
@@ -726,12 +733,12 @@ Here we are defining a bidirectional _one-to-many_ relation between the `User` a
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   stories: [Story!]!
 }
 
 type Story {
-  id: ID! @id
+  id: ID! @unique
   text: String!
   author: User
 }
@@ -750,13 +757,13 @@ In that case, you end up with two different relations between `User` and `Story`
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   writtenStories: [Story!]! @relation(name: "WrittenStories")
   likedStories: [Story!]! @relation(name: "LikedStories")
 }
 
 type Story {
-  id: ID! @id
+  id: ID! @unique
   text: String!
   author: User! @relation(name: "WrittenStories")
   likedBy: [User!]! @relation(name: "LikedStories")
@@ -773,19 +780,19 @@ Consider the following example:
 
 ```graphql
 type User {
-  id: ID! @id
+  id: ID! @unique
   comments: [Comment!]! @relation(name: "CommentAuthor", onDelete: CASCADE)
   blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE)
 }
 
 type Blog {
-  id: ID! @id
+  id: ID! @unique
   comments: [Comment!]! @relation(name: "Comments", onDelete: CASCADE)
   owner: User! @relation(name: "BlogOwner", onDelete: SET_NULL)
 }
 
 type Comment {
-  id: ID! @id
+  id: ID! @unique
   blog: Blog! @relation(name: "Comments", onDelete: SET_NULL)
   author: User @relation(name: "CommentAuthor", onDelete: SET_NULL)
 }
