@@ -38,7 +38,6 @@ object RustBindingGraal extends RustBinding {
 
     RustInterfaceGraal.destroy_string(raw)
     result
-
   }
 
   override def startTransaction(connection: RustConnectionGraal): RustCallResult = {

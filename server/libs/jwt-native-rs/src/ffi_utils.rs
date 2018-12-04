@@ -36,8 +36,8 @@ pub fn str_vec_from_pointers<'a>(raw: *const *const c_char, num_elements: i64) -
     let mut offset = 0; // Start scanning at 0
     unsafe {
         for i in 0..num_elements {
-            let ptr = raw.add(i as usize);
-            let s = to_str(ptr as *const c_char);
+            let ptr: *const c_char = raw.offset(i as isize).read();
+            let s = to_str(ptr);
 
             vec.push(s);
         }

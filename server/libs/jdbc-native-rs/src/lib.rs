@@ -207,10 +207,8 @@ struct CallError {
 fn serializeCallResult(res: driver::Result<CallResult>) -> *const c_char {
     let result = handleResult(res);
     let serialized = serde_json::to_string(&result).unwrap();
-    let x = to_ptr(serialized);
 
-    println!("Handing out result: {:?}", x);
-    x
+    to_ptr(serialized)
 }
 
 fn handleResult(result: driver::Result<CallResult>) -> CallResult {

@@ -31,9 +31,7 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
       algorithm.toString,
       secret,
       expirationOffset
-        .map { e =>
-          DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000
-        }
+        .map(e => DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000)
         .getOrElse(NO_EXP),
       grant.map(_.target).orNull,
       grant.map(_.action).orNull
@@ -49,10 +47,9 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
   }
 
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
-    val nativeArray = JnaUtils.copyToNativeStringPointerArray(secrets)
     val buffer = library.verify_token(
       token,
-      nativeArray,
+      secrets.toArray,
       secrets.length,
       expectedGrant.map(_.target).orNull,
       expectedGrant.map(_.action).orNull
