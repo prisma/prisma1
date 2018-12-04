@@ -1,8 +1,12 @@
 import Warning from 'components/Markdown/Warning'
 
+
 export const meta = {
-  title: "Connect Existing Database (Introspection)",
+  title: "Introspection (PostgreSQL)",
   position: 210,
+  technology: "postgres",
+  technologyOrder: 2,
+  articleGroup: "Introspection"    
 }
 
 ## Overview
@@ -44,7 +48,7 @@ In both cases, you need to provide the _connection details_ for the running Post
 
 ### Using the `prisma init` wizard
 
-During the interactive `prisma init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successful connection.
+During the interactive `prisma init` flow you can choose to connect to an existing database with data. The CLI will ask for database connection details (as mentioned above) and verify that it can establish a successfully connection.
 
 If the connection details are valid, the CLI will introspect the database and show you a summary.
 
@@ -69,7 +73,7 @@ prisma playground
 
 While `prisma init` wizard generates an entire _service configuration_, `prisma introspect` only generates the datamodel file:
 
-- `datamodel-[TIMESTAMP].graghpql`: The timestamp component allows you to use the introspect command for an existing Prisma service without overriding your existing datamodel.
+- `datamodel-[TIMESTAMP].prisma`: The timestamp component allows you to use the introspect command for an existing Prisma service without overriding your existing datamodel.
 
 Before deploying your service with the generated datamodel, you should ensure that the `migrations` property (of the `PRISMA_CONFIG` environment variable) in the Docker Compose file that specifies your Prisma server configuration is set to `false`:
 
