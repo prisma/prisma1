@@ -493,7 +493,7 @@ export class Client {
                           name === 'Query' ||
                           name === 'Subscription'
                         ) {
-                          if (field.args.length === 1) {
+                          if (field.args.length === 1 && field.args[0].name.value === 'where') {
                             realArgs = { where: realArgs }
                           }
                         }
