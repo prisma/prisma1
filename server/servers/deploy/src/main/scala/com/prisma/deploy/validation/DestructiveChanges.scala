@@ -44,7 +44,8 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def deleteModelValidation(x: DeleteModel) = {
-    clientDbQueries.existsByModel(x.name).map {
+    val model = previousSchema.getModelByName_!(x.name)
+    clientDbQueries.existsByModel(model).map {
       case true  => Vector(DeployWarnings.dataLossModel(x.name))
       case false => Vector.empty
     }
@@ -53,7 +54,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   private def createFieldValidation(x: CreateField) = {
     def newRequiredScalarField(model: Model) = x.relation.isEmpty && x.isRequired match {
       case true =>
-        clientDbQueries.existsByModel(model.name).map {
+        clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
               DeployError(`type` = model.name,
@@ -66,10 +67,10 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     }
     def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
       case true =>
-        val previousRelation                   = previousSchema.relations.find(r => x.relation.contains(r.name)).get
+        val previousRelation                   = previousSchema.getRelationByName_!(x.relation.get)
         val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
 
-        clientDbQueries.existsDuplicateByRelationAndSide(s"_${x.relation.get}", relationSideThatCantHaveDuplicates).map {
+        clientDbQueries.existsDuplicateByRelationAndSide(previousRelation, relationSideThatCantHaveDuplicates).map {
           case true =>
             Vector(
               DeployError(
@@ -103,7 +104,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     val isScalar = model.fields.find(_.name == x.name).get.isScalar
 
     if (isScalar) {
-      clientDbQueries.existsByModel(model.name).map {
+      clientDbQueries.existsByModel(model).map {
         case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
         case false => Vector.empty
       }
@@ -126,7 +127,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
 
     def warnings: Future[Vector[DeployWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
       case true =>
-        clientDbQueries.existsByModel(model.name).map {
+        clientDbQueries.existsByModel(model).map {
           case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
           case false => Vector.empty
         }
@@ -147,7 +148,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
           case false => Vector.empty
         }
       } else if (newField.isRequired && typeChanges) {
-        clientDbQueries.existsByModel(model.name).map {
+        clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
               DeployError(
@@ -228,7 +229,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
 
       if (modelARequired) previousSchema.models.find(_.name == modelName) match {
         case Some(model) =>
-          clientDbQueries.existsByModel(model.name).map {
+          clientDbQueries.existsByModel(model).map {
             case true =>
               Vector(DeployError(`type` = model.name, s"You are creating a required relation, but there are already nodes that would violate that constraint."))
             case false => Vector.empty
@@ -248,7 +249,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   private def deleteRelationValidation(x: DeleteRelation) = {
     val previousRelation = previousSchema.relations.find(_.name == x.name).get
 
-    clientDbQueries.existsByRelation(previousRelation.relationTableName).map {
+    clientDbQueries.existsByRelation(previousRelation).map {
       case true  => Vector(DeployWarnings.dataLossRelation(x.name))
       case false => Vector.empty
     }
