@@ -62,9 +62,9 @@ object Migration {
 sealed trait MigrationStep
 sealed trait ModelMigrationStep extends MigrationStep
 
-case class CreateModel(name: String)                                               extends ModelMigrationStep
-case class DeleteModel(name: String)                                               extends ModelMigrationStep
-case class UpdateModel(name: String, newName: String, isEmbedded: Option[Boolean]) extends ModelMigrationStep
+case class CreateModel(name: String)                  extends ModelMigrationStep
+case class DeleteModel(name: String)                  extends ModelMigrationStep
+case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
 
 sealed trait FieldMigrationStep extends MigrationStep
 case class CreateField(
@@ -98,10 +98,10 @@ case class UpdateField(
   def finalName = newName.getOrElse(name)
 }
 
-sealed trait EnumMigrationStep                                                               extends MigrationStep
-case class CreateEnum(name: String, values: Seq[String])                                     extends EnumMigrationStep
-case class DeleteEnum(name: String)                                                          extends EnumMigrationStep
-case class UpdateEnum(name: String, newName: Option[String], values: Option[Vector[String]]) extends EnumMigrationStep
+sealed trait EnumMigrationStep                               extends MigrationStep
+case class CreateEnum(name: String)                          extends EnumMigrationStep
+case class DeleteEnum(name: String)                          extends EnumMigrationStep
+case class UpdateEnum(name: String, newName: Option[String]) extends EnumMigrationStep { def finalName = newName.getOrElse(name) }
 
 object OnDelete extends Enumeration {
   type OnDelete = Value

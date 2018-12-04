@@ -9,19 +9,17 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val createModelFormat = Json.format[CreateModel]
   implicit val deleteModelFormat = Json.format[DeleteModel]
   implicit val updateModelFormat = new OFormat[UpdateModel] {
-    val oldNameField    = "name"
-    val newNameField    = "newName"
-    val isEmbeddedField = "isEmbedded"
+    val oldNameField = "name"
+    val newNameField = "newName"
 
     override def reads(json: JsValue): JsResult[UpdateModel] = {
       for {
-        name       <- (json \ oldNameField).validate[String]
-        newName    <- (json \ newNameField).validate[String]
-        isEmbedded <- (json \ isEmbeddedField).validateOpt[Boolean]
-      } yield { UpdateModel(name, newName, isEmbedded) }
+        name    <- (json \ oldNameField).validate[String]
+        newName <- (json \ newNameField).validate[String]
+      } yield { UpdateModel(name, newName) }
     }
 
-    override def writes(o: UpdateModel): JsObject = Json.obj(oldNameField -> o.name, newNameField -> o.newName, isEmbeddedField -> o.isEmbedded)
+    override def writes(o: UpdateModel): JsObject = Json.obj(oldNameField -> o.name, newNameField -> o.newName)
   }
 
   implicit val createFieldFormat = Json.format[CreateField]

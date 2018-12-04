@@ -193,11 +193,9 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def updateEnumValidation(x: UpdateEnum) = {
-    val oldEnum = previousSchema.enums.find(_.name == x.name)
-    val deletedValues: Vector[String] = x.values match {
-      case None            => Vector.empty
-      case Some(newValues) => oldEnum.get.values.filter(value => !newValues.contains(value))
-    }
+    val oldEnum                       = previousSchema.getEnumByName_!(x.name)
+    val newEnum                       = nextSchema.getEnumByName_!(x.finalName)
+    val deletedValues: Vector[String] = oldEnum.values.filter(value => !newEnum.values.contains(value))
 
     if (deletedValues.nonEmpty) {
       val modelsWithFieldsThatUseEnum = previousSchema.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector

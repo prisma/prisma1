@@ -70,7 +70,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
       if nextModel.name != previousModel.name || nextModel.isEmbedded != previousModel.isEmbedded
-    } yield UpdateModel(name = previousModelName, newName = nextModel.name, isEmbedded = diff(previousModel.isEmbedded, nextModel.isEmbedded))
+    } yield UpdateModel(name = previousModelName, newName = nextModel.name)
   }
 
   lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(update => update.copy(newName = "__" + update.newName))
@@ -214,7 +214,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextEnum         <- nextSchema.enums.toVector
       previousEnumName = renames.getPreviousEnumName(nextEnum.name)
       if !containsEnum(previousSchema, previousEnumName)
-    } yield CreateEnum(nextEnum.name, nextEnum.values)
+    } yield CreateEnum(nextEnum.name)
   }
 
   lazy val enumsToDelete: Vector[DeleteEnum] = {
@@ -233,8 +233,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     } yield {
       UpdateEnum(
         name = previousEnum.name,
-        newName = diff(previousEnum.name, nextEnum.name),
-        values = diff(previousEnum.values, nextEnum.values)
+        newName = diff(previousEnum.name, nextEnum.name)
       )
     }
     updates.filter(isAnyOptionSet)
