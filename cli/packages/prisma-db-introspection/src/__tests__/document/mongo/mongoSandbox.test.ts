@@ -1,9 +1,6 @@
 
 describe("Mongo sandbox", () => {
   it("Should sandbox the mongo", async () => {
-
+    // TODO
   })
 })
-
-// 6XB0ErutWoGDR2z1
-// mongo

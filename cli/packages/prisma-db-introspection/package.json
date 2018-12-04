@@ -50,6 +50,7 @@
       "helpers.ts",
       "connectionDetails.ts",
       "/postgres/",
+      "/data/",
       "dist"
     ],
     "moduleFileExtensions": [

@@ -12,7 +12,7 @@ import {
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
-import { PostgresConnector } from 'prisma-db-introspection'
+import { PostgresConnector, MongoConnector } from 'prisma-db-introspection'
 import { MongoClient } from 'mongodb'
 import * as yaml from 'js-yaml'
 import { Client as PGClient } from 'pg'
@@ -310,13 +310,41 @@ export class EndpointDialog {
       case 'Use existing database':
         credentials = await this.getDatabase()
         if (credentials.type === 'mongo') {
+          datamodel = defaultMongoDataModel
+
           const before = Date.now()
           this.out.action.start(`Connecting to database`)
-          await this.connectToMongo(credentials)
-          credentials.uri = this.replaceMongoHost(credentials.uri!)
+          const client = await this.connectToMongo(credentials)
+          const connector = new MongoConnector(client)
+          const introspection = await connector.introspect(
+            credentials.database!,
+          )
+          const sdl = await introspection.getDatamodel()
+          const numCollections = sdl.types.length
+          const renderedSdl = introspection.renderer.render(sdl)
+          await client.close()
+
+          if (numCollections === 0) {
+            this.out.log(
+              chalk.red(
+                `\n${chalk.bold(
+                  'Error: ',
+                )}The provided database doesn't contain any collection. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+              ),
+            )
+            this.out.exit(1)
+          }
+
           this.out.action.stop(prettyTime(Date.now() - before))
-        }
-        if (credentials.type !== 'mongo') {
+          this.out.log(
+            `Created datamodel definition based on ${numCollections} Mongo collections.`,
+          )
+          datamodel = renderedSdl
+          credentials.uri = this.replaceMongoHost(credentials.uri!)
+          /**
+           * All non-mongo databases
+           */
+        } else {
           this.out.log('')
           const before = Date.now()
           this.out.action.start(
@@ -423,10 +451,6 @@ export class EndpointDialog {
 
     workspace = workspace || cluster.workspaceSlug
 
-    if (credentials && credentials.type === 'mongo') {
-      datamodel = defaultMongoDataModel
-    }
-
     return {
       endpoint: cluster.getApiEndpoint(service, stage, workspace),
       cluster,
@@ -444,7 +468,7 @@ export class EndpointDialog {
     }
   }
 
-  connectToMongo(credentials: DatabaseCredentials) {
+  connectToMongo(credentials: DatabaseCredentials): Promise<MongoClient> {
     return new Promise((resolve, reject) => {
       if (!credentials.uri) {
         throw new Error(`Please provide the MongoDB connection string`)
@@ -460,8 +484,7 @@ export class EndpointDialog {
             if (credentials.database) {
               client.db(credentials.database)
             }
-            client.close()
-            resolve()
+            resolve(client)
           }
         },
       )

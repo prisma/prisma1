@@ -1,6 +1,6 @@
-import { MongoConnector } from '../../databases/document/mongo/mongoConnector'
+import { MongoConnector } from '../../../databases/document/mongo/mongoConnector'
 import { MongoClient } from 'mongodb'
-import { MongoTestEnvironment } from '../../test-helpers/mongoTestEnvironment'
+import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 
 const env = new MongoTestEnvironment()
@@ -32,14 +32,12 @@ describe("Mongo Model Introspector", () => {
 
     expect(movieType.fields).toHaveLength(7)
     
-    SdlExpect.field(movieType, '_id', false, false, TypeIdentifiers.string, true)
+    SdlExpect.field(movieType, '_id', true, false, TypeIdentifiers.id, true)
     SdlExpect.field(movieType, 'name', false, false, TypeIdentifiers.string)
     SdlExpect.field(movieType, 'genre', false, false, TypeIdentifiers.string)
     SdlExpect.field(movieType, 'year', false, false, TypeIdentifiers.integer)
     SdlExpect.field(movieType, 'rating', false, false, TypeIdentifiers.float)
     SdlExpect.field(movieType, 'hasLeonardo', false, false, TypeIdentifiers.boolean)
     SdlExpect.field(movieType, 'roles', false, true, TypeIdentifiers.string)
-
-    console.log("good")
-  })
+  }, 10000)
 })
