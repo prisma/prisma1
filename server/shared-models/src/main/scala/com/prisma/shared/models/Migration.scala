@@ -68,22 +68,12 @@ case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
 
 sealed trait FieldMigrationStep                     extends MigrationStep
 case class CreateField(model: String, name: String) extends FieldMigrationStep
-
 case class DeleteField(model: String, name: String) extends FieldMigrationStep
-
 case class UpdateField(
     model: String,
     newModel: String,
     name: String,
-    newName: Option[String],
-    typeName: Option[String],
-    isRequired: Option[Boolean],
-    isList: Option[Boolean],
-    isUnique: Option[Boolean],
-    isHidden: Option[Boolean],
-    relation: Option[Option[String]],
-    defaultValue: Option[Option[String]],
-    enum: Option[Option[String]]
+    newName: Option[String]
 ) extends FieldMigrationStep {
   def finalName = newName.getOrElse(name)
 }

@@ -120,13 +120,12 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     val model                    = previousSchema.getModelByName_!(x.model)
     val oldField                 = model.getFieldByName_!(x.name)
     val newField                 = nextSchema.getModelByName_!(x.newModel).getFieldByName_!(x.finalName)
-    val cardinalityChanges       = x.isList.isDefined
-    val typeChanges              = x.typeName.isDefined
-    val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
-    val goesFromRelationToScalar = oldField.isRelation && x.relation.isDefined && x.relation.get.isEmpty
-
-    val becomesRequired = x.isRequired.contains(true)
-    val becomesUnique   = x.isUnique.contains(true)
+    val cardinalityChanges       = oldField.isList != newField.isList
+    val typeChanges              = oldField.typeIdentifier != newField.typeIdentifier
+    val goesFromScalarToRelation = oldField.isScalar && newField.isRelation
+    val goesFromRelationToScalar = oldField.isRelation && newField.isScalar
+    val becomesRequired          = !oldField.isRequired && newField.isRequired
+    val becomesUnique            = !oldField.isUnique && newField.isUnique
 
     def warnings: Future[Vector[DeployWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
       case true =>

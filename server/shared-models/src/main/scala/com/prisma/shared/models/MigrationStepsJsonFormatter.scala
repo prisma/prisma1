@@ -25,62 +25,34 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val createFieldFormat = Json.format[CreateField]
   implicit val deleteFieldFormat = Json.format[DeleteField]
   implicit val updateFieldFormat = new OFormat[UpdateField] {
-    val modelField        = "model"
-    val newModelField     = "newModel"
-    val nameField         = "name"
-    val newNameField      = "newName"
-    val typeNameField     = "typeName"
-    val isRequiredField   = "isRequired"
-    val isListField       = "isList"
-    val isUniqueField     = "unique"
-    val isHiddenField     = "isHidden"
-    val relationField     = "relation"
-    val defaultValueField = "default"
-    val enumField         = "enum"
+    val modelField    = "model"
+    val newModelField = "newModel"
+    val nameField     = "name"
+    val newNameField  = "newName"
 
     override def reads(json: JsValue): JsResult[UpdateField] = {
       for {
-        model        <- (json \ modelField).validate[String]
-        newModel     <- (json \ newModelField).validateOpt[String]
-        name         <- (json \ nameField).validate[String]
-        newName      <- (json \ newNameField).validateOpt[String]
-        typeName     <- (json \ typeNameField).validateOpt[String]
-        isRequired   <- (json \ isRequiredField).validateOpt[Boolean]
-        isList       <- (json \ isListField).validateOpt[Boolean]
-        isHidden     <- (json \ isHiddenField).validateOpt[Boolean]
-        isUnique     <- (json \ isUniqueField).validateOpt[Boolean]
-        relation     <- (json \ relationField).validateDoubleOpt[String]
-        defaultValue <- (json \ defaultValueField).validateDoubleOpt[String]
-        enum         <- (json \ enumField).validateDoubleOpt[String]
+        model    <- (json \ modelField).validate[String]
+        newModel <- (json \ newModelField).validateOpt[String]
+        name     <- (json \ nameField).validate[String]
+        newName  <- (json \ newNameField).validateOpt[String]
       } yield {
         UpdateField(
           model = model,
           newModel = newModel.getOrElse(model),
           name = name,
-          newName = newName,
-          typeName = typeName,
-          isRequired = isRequired,
-          isList = isList,
-          isUnique = isUnique,
-          isHidden = isHidden,
-          relation = relation,
-          defaultValue = defaultValue,
-          enum = enum
+          newName = newName
         )
       }
     }
 
     override def writes(x: UpdateField): JsObject = {
       Json.obj(
-        modelField      -> x.model,
-        newModelField   -> x.newModel,
-        nameField       -> x.name,
-        newNameField    -> x.newName,
-        typeNameField   -> x.typeName,
-        isRequiredField -> x.isRequired,
-        isListField     -> x.isList,
-        isUniqueField   -> x.isUnique
-      ) ++ writeDoubleOpt(relationField, x.relation) ++ writeDoubleOpt(defaultValueField, x.defaultValue) ++ writeDoubleOpt(enumField, x.enum)
+        modelField    -> x.model,
+        newModelField -> x.newModel,
+        nameField     -> x.name,
+        newNameField  -> x.newName
+      )
     }
   }
 

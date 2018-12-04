@@ -40,7 +40,7 @@ case class AddProjectMutation(
       status = MigrationStatus.Success,
       steps = Vector.empty,
       errors = Vector.empty,
-      schema = Schema(),
+      schema = Schema.empty,
       functions = Vector.empty
     )
 

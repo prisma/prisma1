@@ -93,17 +93,49 @@ object MigrationStepType {
     Field("name", StringType, resolve = _.value.step.name)
   )
 
+  // FIXME: all those options must just be populated if something actually changed
   lazy val UpdateFieldType = fieldsHelper[UpdateField](
     Field("model", StringType, resolve = _.value.step.model),
     Field("name", StringType, resolve = _.value.step.name),
     Field("newName", OptionType(StringType), resolve = _.value.step.newName),
-    Field("typeName", OptionType(StringType), resolve = _.value.step.typeName),
-    Field("isRequired", OptionType(BooleanType), resolve = _.value.step.isRequired),
-    Field("isList", OptionType(BooleanType), resolve = _.value.step.isList),
-    Field("unique", OptionType(BooleanType), resolve = _.value.step.isUnique),
-    Field("relation", OptionType(OptionType(StringType)), resolve = _.value.step.relation),
-    Field("default", OptionType(OptionType(StringType)), resolve = _.value.step.defaultValue),
-    Field("enum", OptionType(OptionType(StringType)), resolve = _.value.step.enum)
+    Field(
+      "typeName",
+      OptionType(StringType),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).typeIdentifier.code
+    ),
+    Field(
+      "isRequired",
+      OptionType(BooleanType),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).isRequired
+    ),
+    Field(
+      "isList",
+      OptionType(BooleanType),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).isList
+    ),
+    Field(
+      "unique",
+      OptionType(BooleanType),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).isUnique
+    ),
+    Field(
+      "enum",
+      OptionType(OptionType(StringType)),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).enum.map(_.name)
+    ),
+    Field(
+      "default",
+      OptionType(OptionType(StringType)),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).defaultValue.map(_.toString)
+    ),
+    Field(
+      "relation",
+      OptionType(OptionType(StringType)),
+      resolve = { ctx =>
+        val (modelName, fieldName) = (ctx.value.step.newModel, ctx.value.step.finalName)
+        ctx.value.schema.getFieldByName_!(modelName, fieldName).relationOpt.map(_.name)
+      }
+    )
   )
 
   lazy val CreateRelationType = fieldsHelper[CreateRelation](
