@@ -109,49 +109,21 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val updateEnumFormat = Json.format[UpdateEnum]
 
   implicit val createRelationFormat: OFormat[CreateRelation] = {
-    val reads = (
-      (JsPath \ "name").read[String] and
-        readOneOf[String]("leftModelName", "modelAName") and
-        readOneOf[String]("rightModelName", "modelBName") and
-        (JsPath \ "modelAOnDelete").readWithDefault(OnDelete.SetNull) and
-        (JsPath \ "modelBOnDelete").readWithDefault(OnDelete.SetNull)
-    )(CreateRelation.apply _)
-
-    val writes = (
-      (JsPath \ "name").write[String] and
-        (JsPath \ "leftModelName").write[String] and
-        (JsPath \ "rightModelName").write[String] and
-        (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
-        (JsPath \ "modelBOnDelete").write[OnDelete.Value]
-    )(unlift(CreateRelation.unapply))
-
+    val reads  = (JsPath \ "name").read[String].map(CreateRelation.apply)
+    val writes = (JsPath \ "name").write[String].contramap(unlift(CreateRelation.unapply))
     OFormat(reads, writes)
   }
 
   implicit val deleteRelationFormat: OFormat[DeleteRelation] = {
-    val reads = (
-      (JsPath \ "name").read[String] and
-        (JsPath \ "modelA").readWithDefault("") and
-        (JsPath \ "modelB").readWithDefault("")
-    )(DeleteRelation.apply _)
-
-    val writes = (
-      (JsPath \ "name").write[String] and
-        (JsPath \ "modelA").write[String] and
-        (JsPath \ "modelB").write[String]
-    )(unlift(DeleteRelation.unapply))
-
+    val reads  = (JsPath \ "name").read[String].map(DeleteRelation.apply)
+    val writes = (JsPath \ "name").write[String].contramap(unlift(DeleteRelation.unapply))
     OFormat(reads, writes)
   }
 
   implicit val updateRelationFormat: OFormat[UpdateRelation] = {
     val format: OFormat[UpdateRelation] = (
       (JsPath \ "name").format[String] and
-        (JsPath \ "newName").formatNullable[String] and
-        (JsPath \ "modelAId").formatNullable[String] and
-        (JsPath \ "modelBId").formatNullable[String] and
-        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
-        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
+        (JsPath \ "newName").formatNullable[String]
     )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
 
     format

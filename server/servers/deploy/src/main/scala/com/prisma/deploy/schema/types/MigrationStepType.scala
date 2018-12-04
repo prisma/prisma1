@@ -97,21 +97,17 @@ object MigrationStepType {
 
   lazy val CreateRelationType = fieldsHelper[CreateRelation](
     Field("name", StringType, resolve = _.value.step.name),
-    Field("leftModel", StringType, resolve = _.value.step.modelAName),
-    Field("rightModel", StringType, resolve = _.value.step.modelBName)
+    Field("leftModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelAName),
+    Field("rightModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelAName)
   )
 
   lazy val UpdateRelationType = fieldsHelper[UpdateRelation](
     Field("name", StringType, resolve = _.value.step.name),
-    Field("newName", OptionType(StringType), resolve = _.value.step.newName),
-    Field("modelAId", OptionType(StringType), resolve = _.value.step.modelAId),
-    Field("modelBId", OptionType(StringType), resolve = _.value.step.modelBId),
+    Field("newName", OptionType(StringType), resolve = _.value.step.newName)
   )
 
   lazy val DeleteRelationType = fieldsHelper[DeleteRelation](
-    Field("name", StringType, resolve = _.value.step.name),
-    Field("modelAId", StringType, resolve = _.value.step.modelAName),
-    Field("modelBId", StringType, resolve = _.value.step.modelBName)
+    Field("name", StringType, resolve = _.value.step.name)
   )
 
   lazy val UpdateSecretsType = fieldsHelper[UpdateSecrets](

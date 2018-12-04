@@ -157,13 +157,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextRelation <- nextSchema.relations.toVector
       if relationNotInPreviousSchema(previousSchema, nextSchema = nextSchema, nextRelation, renames.getPreviousModelName, renames.getPreviousRelationName)
     } yield {
-      CreateRelation(
-        name = nextRelation.name,
-        modelAName = nextRelation.modelAName,
-        modelBName = nextRelation.modelBName,
-        modelAOnDelete = nextRelation.modelAOnDelete,
-        modelBOnDelete = nextRelation.modelBOnDelete
-      )
+      CreateRelation(name = nextRelation.name)
     }
   }
 
@@ -171,7 +165,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
     for {
       previousRelation <- previousSchema.relations.toVector
       if relationNotInNextSchema(nextSchema, previousSchema = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
-    } yield DeleteRelation(previousRelation.name, modelAName = previousRelation.modelAName, modelBName = previousRelation.modelBName)
+    } yield DeleteRelation(previousRelation.name)
   }
 
   lazy val relationsToUpdate: Vector[UpdateRelation] = {
@@ -195,14 +189,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                          }
                        }
     } yield {
-      UpdateRelation(
-        name = previousRelation.name,
-        newName = diff(previousRelation.name, nextRelation.name),
-        modelAId = diff(previousRelation.modelAName, nextRelation.modelAName),
-        modelBId = diff(previousRelation.modelBName, nextRelation.modelBName),
-        modelAOnDelete = diff(previousRelation.modelAOnDelete, nextRelation.modelAOnDelete),
-        modelBOnDelete = diff(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
-      )
+      UpdateRelation(name = previousRelation.name, newName = diff(previousRelation.name, nextRelation.name))
     }
     def isContainedInDeletes(update: UpdateRelation) = relationsToDelete.map(_.name).contains(update.name)
 

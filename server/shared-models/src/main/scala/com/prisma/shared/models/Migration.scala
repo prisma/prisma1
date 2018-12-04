@@ -112,28 +112,9 @@ object OnDelete extends Enumeration {
   val default = SetNull
 }
 
-sealed trait RelationMigrationStep extends MigrationStep
-case class CreateRelation(
-    name: String,
-    modelAName: String,
-    modelBName: String,
-    modelAOnDelete: OnDelete.Value,
-    modelBOnDelete: OnDelete.Value
-) extends RelationMigrationStep
-
-case class UpdateRelation(
-    name: String,
-    newName: Option[String],
-    modelAId: Option[String],
-    modelBId: Option[String],
-    modelAOnDelete: Option[OnDelete.Value],
-    modelBOnDelete: Option[OnDelete.Value]
-) extends RelationMigrationStep
-
-case class DeleteRelation(
-    name: String,
-    modelAName: String,
-    modelBName: String
-) extends MigrationStep
+sealed trait RelationMigrationStep                               extends MigrationStep
+case class CreateRelation(name: String)                          extends RelationMigrationStep
+case class UpdateRelation(name: String, newName: Option[String]) extends RelationMigrationStep
+case class DeleteRelation(name: String)                          extends RelationMigrationStep
 
 case class UpdateSecrets(secrets: Vector[String]) extends MigrationStep

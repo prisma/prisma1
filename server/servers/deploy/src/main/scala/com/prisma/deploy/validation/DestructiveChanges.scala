@@ -239,7 +239,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       }
     }
 
-    val checks = Vector(checkRelationSide(x.modelAName), checkRelationSide(x.modelBName))
+    val checks = Vector(checkRelationSide(nextRelation.modelAName), checkRelationSide(nextRelation.modelBName))
 
     Future.sequence(checks).map(_.flatten)
   }
