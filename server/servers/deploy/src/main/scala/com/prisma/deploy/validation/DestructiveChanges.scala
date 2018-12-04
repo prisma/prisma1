@@ -52,7 +52,9 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def createFieldValidation(x: CreateField) = {
-    def newRequiredScalarField(model: Model) = x.relation.isEmpty && x.isRequired match {
+    val field = nextSchema.getFieldByName_!(x.model, x.name)
+
+    def newRequiredScalarField(model: Model) = field.isScalar && field.isRequired match {
       case true =>
         clientDbQueries.existsByModel(model).map {
           case true =>
@@ -65,25 +67,26 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       case false =>
         validationSuccessful
     }
-    def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
-      case true =>
-        val previousRelation                   = previousSchema.getRelationByName_!(x.relation.get)
-        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
+    def newToOneBackRelationField(model: Model) =
+      field.isRelation && !field.isList && previousSchema.relations.contains(field.relationOpt.get) match {
+        case true =>
+          val previousRelation                   = field.relationOpt.get
+          val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
 
-        clientDbQueries.existsDuplicateByRelationAndSide(previousRelation, relationSideThatCantHaveDuplicates).map {
-          case true =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                description =
-                  s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
-              ))
-          case false => Vector.empty
-        }
+          clientDbQueries.existsDuplicateByRelationAndSide(previousRelation, relationSideThatCantHaveDuplicates).map {
+            case true =>
+              Vector(
+                DeployError(
+                  `type` = model.name,
+                  description =
+                    s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
+                ))
+            case false => Vector.empty
+          }
 
-      case false =>
-        validationSuccessful
-    }
+        case false =>
+          validationSuccessful
+      }
 
     previousSchema.getModelByName(x.model) match {
       case Some(existingModel) =>

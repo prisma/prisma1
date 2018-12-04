@@ -99,17 +99,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       if previousModel.getFieldByName(previousFieldName).isEmpty
       if !fieldOfNextModel.isMagicalBackRelation
     } yield {
-      CreateField(
-        model = nextModel.name,
-        name = fieldOfNextModel.name,
-        typeName = fieldOfNextModel.typeIdentifier.code,
-        isRequired = fieldOfNextModel.isRequired,
-        isList = fieldOfNextModel.isList,
-        isUnique = fieldOfNextModel.isUnique,
-        defaultValue = fieldOfNextModel.defaultValue.map(_.toString),
-        relation = fieldOfNextModel.relationOpt.map(_.name),
-        enum = fieldOfNextModel.enum.map(_.name)
-      )
+      CreateField(model = nextModel.name, name = fieldOfNextModel.name)
     }
   }
 

@@ -68,13 +68,24 @@ object MigrationStepType {
   lazy val CreateFieldType = fieldsHelper[CreateField](
     Field("model", StringType, resolve = _.value.step.model),
     Field("name", StringType, resolve = _.value.step.name),
-    Field("typeName", StringType, resolve = _.value.step.typeName),
-    Field("isRequired", BooleanType, resolve = _.value.step.isRequired),
-    Field("isList", BooleanType, resolve = _.value.step.isList),
-    Field("unique", BooleanType, resolve = _.value.step.isUnique),
-    Field("relation", OptionType(StringType), resolve = _.value.step.relation),
-    Field("default", OptionType(StringType), resolve = _.value.step.defaultValue),
-    Field("enum", OptionType(StringType), resolve = _.value.step.enum)
+    Field("typeName", StringType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).typeIdentifier.code),
+    Field("isRequired", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isRequired),
+    Field("isList", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isList),
+    Field("unique", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isUnique),
+    Field("enum", OptionType(StringType), resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).enum.map(_.name)),
+    Field(
+      "default",
+      OptionType(StringType),
+      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).defaultValue.toString
+    ),
+    Field(
+      "relation",
+      OptionType(StringType),
+      resolve = { ctx =>
+        val (modelName, fieldName) = (ctx.value.step.model, ctx.value.step.name)
+        ctx.value.schema.getFieldByName_!(modelName, fieldName).relationOpt.map(_.name)
+      }
+    )
   )
 
   lazy val DeleteFieldType = fieldsHelper[DeleteField](
