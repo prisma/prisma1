@@ -508,6 +508,15 @@ export const prisma = new Prisma()`
     subscription = false,
   ): string {
     const fields = type.getFields()
+
+    if (node && this.isConnectionType(type)) {
+      return this.renderConnectionType(type as GraphQLObjectTypeRef)
+    }
+
+    if (node && this.isSubscriptionType(type)) {
+      return this.renderSubscriptionType(type as GraphQLObjectTypeRef)
+    }
+
     const fieldDefinition = Object.keys(fields)
       .filter(f => {
         const deepType = this.getDeepType(fields[f].type)
@@ -783,5 +792,118 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
 `
         : ''
     }`
+  }
+
+  isConnectionType(
+    type: GraphQLObjectTypeRef | GraphQLInputObjectType | GraphQLInterfaceType,
+  ) {
+    if (!(type instanceof GraphQLObjectTypeRef)) {
+      return false
+    }
+
+    const fields = type.getFields()
+
+    if (type.name.endsWith('Connection') && type.name !== 'Connection') {
+      return !Object.keys(fields).some(
+        f => ['pageInfo', 'aggregate', 'edges'].includes(f) === false,
+      )
+    }
+
+    if (type.name.endsWith('Edge') && type.name !== 'Edge') {
+      return !Object.keys(fields).some(
+        f => ['cursor', 'node'].includes(f) === false,
+      )
+    }
+
+    return false
+  }
+
+  renderConnectionType(type: GraphQLObjectTypeRef) {
+    const fields = type.getFields()
+    let fieldDefinition: string[] = []
+    const connectionFieldsType = {
+      pageInfo: (fieldType) => fieldType,
+      edges: (fieldType) => `${fieldType}[]`,
+    }
+
+    if (type.name.endsWith('Connection')) {
+      fieldDefinition = Object.keys(fields)
+        .filter(f => f !== 'aggregate')
+        .map(f => {
+          const field = fields[f]
+          const deepType = this.getDeepType(fields[f].type)
+
+          return `  ${this.renderFieldName(field, false)}: ${connectionFieldsType[field.name](deepType.name)}`
+        })
+    } else { // else if type.name is typeEdge
+      fieldDefinition = Object.keys(fields).map(f => {
+        const field = fields[f]
+        const deepType = this.getDeepType(fields[f].type)
+
+        return `  ${this.renderFieldName(field, false)}: ${deepType.name}`
+      })
+    }
+
+    return this.renderInterfaceWrapper(
+      `${type.name}`,
+      type.description!,
+      [],
+      fieldDefinition.join(`${this.lineBreakDelimiter}\n`),
+      false,
+      false,
+    )
+  }
+
+  isSubscriptionType(
+    type: GraphQLObjectType | GraphQLInputObjectType | GraphQLInterfaceType,
+  ) {
+    if (!(type instanceof GraphQLObjectTypeRef)) {
+      return false
+    }
+
+    const fields = type.getFields()
+
+    if (
+      type.name.endsWith('SubscriptionPayload') &&
+      type.name !== 'SubscriptionPayload'
+    ) {
+      return !Object.keys(fields).some(
+        f =>
+          ['mutation', 'node', 'updatedFields', 'previousValues'].includes(
+            f,
+          ) === false,
+      )
+    }
+
+    return false
+  }
+
+  private renderSubscriptionType(type: GraphQLObjectType) {
+    const fields = type.getFields()
+
+    const fieldsType = {
+      mutation: (fieldType) => fieldType,
+      node: (fieldType) => fieldType,
+      previousValues: (fieldType) => fieldType,
+      updatedFields: (fieldType) => `${fieldType}[]`,
+    }
+
+    const fieldDefinition = Object.keys(fields)
+      .map(f => {
+        const field = fields[f]
+        const deepType = this.getDeepType(fields[f].type)
+
+        return `  ${this.renderFieldName(field, false)}: ${fieldsType[field.name](deepType.name)}`
+      })
+      .join(`${this.lineBreakDelimiter}\n`)
+
+    return this.renderInterfaceWrapper(
+      `${type.name}`,
+      type.description!,
+      [],
+      fieldDefinition,
+      false,
+      false,
+    )
   }
 }
