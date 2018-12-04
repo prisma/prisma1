@@ -517,7 +517,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column("b").isDefined should be(false)
   }
 
-  "moving an inline relation ljink to ther other side should work" in {
+  "moving an inline relation link to the other side should work" in {
+    // FIXME: this is not handled/detected at all
     val initialDataModel =
       """
         |type A {
@@ -548,6 +549,41 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column("b").isDefined should be(false)
     val aColumn = result.table_!("B").column_!("a")
     aColumn.foreignKey should be(Some(ForeignKey("B", "a")))
+  }
+
+  "converting an inline relation to a link table should work" in {
+    // FIXME: this is not handled/detected at all
+    val capas = ConnectorCapabilities(RelationLinkTableCapability)
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val initialResult = deploy(initialDataModel, capas)
+    initialResult.table_!("A").column("b").isDefined should be(true)
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |  a: A
+        |}
+      """.stripMargin
+    val result = deploy(newDataModel, capas)
+    result.table_!("A").column("b").isDefined should be(false)
+    result.table("AToB").isDefined should be(true)
   }
 
   "adding an inline self relation should add the relation link in the right column" in {
