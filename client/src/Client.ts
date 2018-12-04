@@ -316,9 +316,12 @@ export class Client {
             selectionSet: instruction.fragment.definitions[0].selectionSet,
           }
         } else {
+          const rootTypeName = this.getDeepType(instructions[0].field.type).name
+
           node = this.getFieldAst({
             field: instruction.field,
             fieldName: instruction.fieldName,
+            isRelayConnection: this.isConnectionTypeName(rootTypeName),
             args,
           })
         }
@@ -351,7 +354,11 @@ export class Client {
     return model && model.embedded
   }
 
-  getFieldAst({ field, fieldName, args }) {
+  isConnectionTypeName(typeName: string) {
+    return typeName.endsWith('Connection') && typeName !== 'Connection'
+  }
+
+  getFieldAst({ field, fieldName, isRelayConnection, args }) {
     const node: any = {
       kind: Kind.FIELD,
       name: {
@@ -374,20 +381,46 @@ export class Client {
     const type = this.getDeepType(field.type)
 
     node.selectionSet.selections = Object.entries(type.getFields())
-      .filter(([_, subField]: any) => {
+      .filter(([, subField]: any) => {
         const isScalar = this.isScalar(subField)
         if (isScalar) {
           return true
         }
         const fieldType = this.getDeepType(subField.type)
+
+        if (isRelayConnection) {
+          if (subField.name === 'pageInfo' && fieldType.name === 'PageInfo') {
+            return true
+          }
+
+          if (subField.name === 'edges' && fieldType.name.endsWith('Edge')) {
+            return true
+          }
+
+          if (
+            subField.name === 'node' &&
+            fieldName === 'edges' &&
+            type.name.endsWith('Edge')
+          ) {
+            return true
+          }
+
+          return false
+        }
+
         const model =
           this._models && this._models.find(m => m.name === fieldType.name)
         const embedded = model && model.embedded
 
         return embedded
       })
-      .map(([fieldName, field]: [any, any]) => {
-        return this.getFieldAst({ field, fieldName, args: [] })
+      .map(([fieldName, field]: [string, any]) => {
+        return this.getFieldAst({
+          field,
+          fieldName: fieldName,
+          isRelayConnection,
+          args: [],
+        })
       })
 
     return node
