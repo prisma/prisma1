@@ -1,0 +1,256 @@
+import Collapse from 'components/Markdown/Collapse'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Authentication",
+  position: 30,
+}
+
+## Overview
+
+A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
+
+```yml
+secret: my-secret-42
+```
+
+As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a prisma.yml that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
+
+![](https://i.imgur.com/cCmp8JI.png)
+
+The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your prisma.yml is located:
+
+```bash
+$ prisma token
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1ODgzNzAsImV4cCI6MTUzMzE5MzE3MH0.Nv8coqsiwdwoSfWCBJHYfnr0WK2GRyqO5xTN6Q3IVkw
+```
+
+The generated token needs to be attached to the `Autorization` header of the HTTP requests made to the Prisma API. Note that it needs to prefixed with the token _type_ (and a separating _space_ character), which in this case `Bearer` because it's a [bearer token](https://tools.ietf.org/html/rfc6750):
+
+```bash
+curl '__YOUR_PRISMA_ENDPOINT__' \\
+-H 'Content-Type: application/json' \\
+-H 'Authorization: Bearer __YOUR_SERVICE_TOKEN__' \\
+--data-binary '{"query":"mutation { createUser(data: { name: "Sarah" }) { id } }"'
+```
+
+<Warning>
+
+The service secret and service tokens are not to be confused with the Prisma Management API secret used to protect the [Management API](foe1) of your [Prisma server](/operate-prisma-server/).
+
+</Warning>
+
+## Service secret
+
+The service secret is an alphanumeric random string specified by the developer of a Prisma service. It set as the `secret` property in your service's prisma.yml:
+
+```yml
+secret: my-secret-42
+```
+
+## Service token
+
+Service tokens follow the [JSON Web Token](https://jwt.io/) (JWT) specification ([RFC 7519](https://tools.ietf.org/html/rfc7519)):
+
+_"JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be transferred between two parties.  The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure, enabling the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted."_
+
+A JWT has the following three components:
+
+- **Header**: The header typically consists of two parts: the type of the token, which is `JWT`, and the hashing algorithm being used (which is `HS256` in the case of Prisma service tokens).
+  
+  ```json
+  {
+    "alg": "HS256",
+    "typ": "JWT"
+  }
+  ```
+
+- **Payload**: The payload contains the [claims](#claims). Claims are statements about an entity (typically, the user) and additional data. Here is what it looks like for a service called `demo` deployed to the `dev` stage:
+  
+  ```json
+  {
+    "data": {
+      "service": "demo@dev",
+      "roles": [
+        "admin"
+      ]
+    },
+    "iat": 1532530208,
+    "exp": 1533135008
+  }
+  ```
+
+- **Signature**: The signature is used to verify the message wasn't changed along the way. To create the signature part you have to take the encoded header, the encoded payload, a secret, the algorithm specified in the header, and sign that. For example if you want to use the HMAC SHA256 algorithm, the signature will be created in the following way:
+
+  ```js
+  HMACSHA256(
+    base64UrlEncode(header) + "." +
+    base64UrlEncode(payload),
+    secret)
+  ```
+
+Therefore, a JWT typically looks like this: `xxxxx.yyyyy.zzzzz`
+
+> Read more about JWTs [here](https://jwt.io/introduction/).
+
+### Claims
+
+The JWT must contain the following [claims](https://jwt.io/introduction/#payload):
+
+- **Issued at**: The `iat` field contains a Unix timestamp with the exact time when the token was generated. 
+- **Expiration date**: The `exp` field containts a Unix timestamp denoting the expiration date of the token. Service tokens are valid exactly **one week**.
+- **Service information**: The `data` field is an object with two keys
+  - The `service` field specifies the _name_ and _stage_ of the service
+  - The `roles` field contains the access permissions granted with that token. In the future there might be support for more fine grained access control by introducing a concept of roles such as `["write:Log", "read:*"]`
+
+Here is the sample Payload of a JWT:
+
+```json
+{
+  "data": {
+    "service": "myservice@prod",
+    "roles": [
+      "admin"
+    ]
+  },
+  "iat": 1532530208,
+  "exp": 1533135008
+}
+```
+
+### Sending the service token
+
+The service token is a _bearer_ token:
+
+_**Bearer Token**: A security token with the property that any party in possession of the token (a "bearer") can use the token in any way that any other party in possession of it can. Using a bearer token does not require a bearer to prove possession of cryptographic key material (proof-of-possession)._
+
+It needs to be sent to the Prisma API as specified by the [OAuth 2.0 Authorization Framework specification](http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html#authz-header).
+
+<Collapse title="More info about the OAuth 2.0 Authorization Framework specification">
+
+_When sending the access token in the Authorization request header field defined by HTTP/1.1 [RFC2617], the client uses the Bearer authentication scheme to transmit the access token._
+
+_For example:_
+
+```
+GET /resource HTTP/1.1
+Host: server.example.com
+Authorization: Bearer mF_9.B5f-4.1JqM
+```
+
+_The syntax of the `Authorization` header field for this scheme follows the usage of the Basic scheme defined in Section 2 of [RFC2617]. Note that, as with Basic, it does not conform to the generic syntax defined in Section 1.2 of [RFC2617] but is compatible with the general authentication framework being developed for HTTP 1.1 [HTTP‑AUTH], although it does not follow the preferred practice outlined therein in order to reflect existing deployments. The syntax for Bearer credentials is as follows:_
+
+```
+b64token    = 1*( ALPHA / DIGIT /
+                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
+credentials = "Bearer" 1*SP b64token
+Clients SHOULD make authenticated requests with a bearer token using the `Authorization` request header field with the `Bearer` HTTP authorization scheme. Resource servers MUST support this method.
+```
+
+</Collapse>
+
+
+## Example: Protecting your Prisma API
+
+Here is an example how you can protect your Prisma API and make authenticated requests against it.
+
+### An unprotected Prisma API
+
+Assume you're starting out with a new Prisma service being configured through the following service configuration:
+
+**`datamodel.prisma`**
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+**prisma.yml**
+
+```yml
+endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
+datamodel: datamodel.prisma
+```
+
+For this example, assume the service gets deployed to a Demo server and therefore is available on the public internet.
+
+When the service gets deployed with the above service configuration, _everyone_ who knows the service's endpoint is able to send queries and mutations to its API, meaning they effectively can perform **arbitrary reads and writes against your database**:
+
+```bash
+curl 'https://eu1.prisma.sh/jane-doe/demo/dev' \\
+-H 'Content-Type: application/json' \\
+--data-binary '{"query":"mutation { createUser(data: { name: \"Sarah\" }) { id }}"}'
+```
+
+When using a GraphQL Playground, no HTTP headers need to be set in order to talk to the Prisma API.
+
+### Protecting the Prisma API
+
+The only thing you need to do in order for your Prisma API to require authentication is setting the service secret in prisma.yml:
+
+```yml
+endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
+datamodel: datamodel.prisma
+
+secret: my-secret-42
+```
+
+To apply this change, you also need to redeploy the service:
+
+```bash
+prisma deploy
+```
+
+If you're now trying to resend the above HTTP request using `curl`:
+
+```bash
+curl 'https://eu1.prisma.sh/jane-doe/demo/dev' \\
+-H 'Content-Type: application/json' \\
+--data-binary '{"query":"mutation { createUser(data: { name: \"Sarah\" }) { id }}"}'
+```
+
+You will receive the following error:
+
+```json
+{
+  "errors" : [ {
+    "message" : "Your token is invalid. It might have expired or you might be using a token from a different project.",
+    "code" : 3015,
+    "requestId" : "eu1:api:cjk28t8e55tld0b296sr2ey6v"
+  } ]
+}⏎
+```
+
+This will happen for _all_ requests made against the Prisma API, no matter if it's a query, mutation or subscription that's requested. When no HTTP headers are set in the GraphQL Playground, requests will fail with the same error message:
+
+![](https://i.imgur.com/P8wtcSU.png)
+
+To fix this, you need to include a service token in the `Authorization` header field of the HTTP request. You can obtain a service token using the Prisma CLI:
+
+```bash
+prisma token
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1MzAyMDgsImV4cCI6MTUzMzEzNTAwOH0.FM6haUilhi89-c-2h7asV3-Ot6NQrs1qoaKL-wPjj04
+```
+
+The token that's printed by the CLI needs to be set in the `Authorization` header field and prefixed with `Bearer `:
+
+```bash
+curl 'https://eu1.prisma.sh/jane-doe/demo/dev' \\
+-H 'Content-Type: application/json' \\
+-H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1MzAyMDgsImV4cCI6MTUzMzEzNTAwOH0.FM6haUilhi89-c-2h7asV3-Ot6NQrs1qoaKL-wPjj04' \\
+--data-binary '{"query":"mutation { createUser(data: { name: \"Sarah\" }) { id }}"}'
+```
+
+Similarly, in a GraphQL Playground you need to set it (in JSON format) in the **HTTP HEADERS** pane in the bottom-left corner:
+
+```json
+{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1MzAyMDgsImV4cCI6MTUzMzEzNTAwOH0.FM6haUilhi89-c-2h7asV3-Ot6NQrs1qoaKL-wPjj04M"
+}
+```
+
+If you're opening the Playground using the `prisma playground` command, the Prisma CLI automatically injects the `Authorization` header with a valid service token.
+
+![](https://i.imgur.com/xBkBn9X.png)
