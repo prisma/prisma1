@@ -43,14 +43,6 @@ pub struct Claims {
     grants: Option<Vec<Grant>>,
 }
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub mod wurst {
-    #[no_mangle]
-    pub extern "C" fn wuuuurst() {
-        println!("WURST");
-    }
-}
-
 #[no_mangle]
 pub extern "C" fn initialize() {
     logging::init();
@@ -125,7 +117,7 @@ fn validate_claims(claims: Claims, grant: Option<Grant>) -> ProtocolBuffer {
         return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is issued in the future")));
     }
 
-    if is_used_before_validity(claims.iat) {
+    if is_used_before_validity(claims.nbf) {
         return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is not yet valid")));
     }
 

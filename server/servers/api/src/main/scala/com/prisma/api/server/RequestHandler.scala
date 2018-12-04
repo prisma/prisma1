@@ -83,8 +83,8 @@ case class RequestHandler(
     if (project.secrets.nonEmpty) {
       val token = auth.extractToken(rawRequest.authorizationHeader)
       auth.verifyToken(token, project.secrets) match {
-        case Success(_) => ()
-        case Failure(_) => throw AuthFailure()
+        case Success(_)   => ()
+        case Failure(err) => throw AuthFailure()
       }
     }
   }

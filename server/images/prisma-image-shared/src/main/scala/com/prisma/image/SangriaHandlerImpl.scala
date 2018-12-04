@@ -25,9 +25,7 @@ import sangria.execution.{Executor, QueryAnalysisError}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SangriaHandlerImpl(
-    managementApiEnabled: Boolean
-)(
+case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     deployDependencies: DeployDependencies,
@@ -134,7 +132,7 @@ case class SangriaHandlerImpl(
       case e: DeployApiError => Some(e.code)
       case _                 => None
     }
-    val userContext = SystemUserContext(authorizationHeader = request.headers.get("Authorization"))
+    val userContext = SystemUserContext(authorizationHeader = request.headers.get("authorization"))
     val errorHandler =
       ErrorHandler(
         request.id,
@@ -249,7 +247,7 @@ case class SangriaHandlerImpl(
 
   implicit class RawRequestExtensions(rawRequest: RawRequest) {
     def toLegacy: LegacyRawRequest = {
-      LegacyRawRequest(rawRequest.id, rawRequest.json, rawRequest.ip, rawRequest.headers.get("Authorization"), apiDependencies.graphQlQueryCache)
+      LegacyRawRequest(rawRequest.id, rawRequest.json, rawRequest.ip, rawRequest.headers.get("authorization"), apiDependencies.graphQlQueryCache)
     }
   }
 }
