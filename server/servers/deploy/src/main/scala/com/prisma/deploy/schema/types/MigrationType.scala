@@ -18,7 +18,11 @@ object MigrationType {
       Field("errors", ListType(StringType), resolve = _.value.errors),
       Field("startedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.startedAt),
       Field("finishedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.finishedAt),
-      Field("steps", ListType(MigrationStepType.Type), resolve = ctx => ctx.value.steps.map(MigrationStepAndSchema(_, ctx.value.schema))),
+      Field(
+        "steps",
+        ListType(MigrationStepType.Type),
+        resolve = ctx => ctx.value.steps.map(MigrationStepAndSchema(_, ctx.value.schema, ctx.value.previousSchema))
+      ),
     )
   )
 }

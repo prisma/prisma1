@@ -5,6 +5,7 @@ import com.prisma.shared.models.{Field => _, _}
 import com.prisma.shared.models
 import sangria.schema
 import sangria.schema.{Field, _}
+import com.prisma.util.Diff._
 
 import scala.reflect.ClassTag
 
@@ -26,7 +27,7 @@ object MigrationStepType {
     UpdateSecretsType
   )
 
-  case class MigrationStepAndSchema[T <: MigrationStep](step: T, schema: models.Schema)
+  case class MigrationStepAndSchema[T <: MigrationStep](step: T, schema: models.Schema, previous: models.Schema)
 
   lazy val Type: InterfaceType[SystemUserContext, MigrationStepAndSchema[_]] = InterfaceType(
     "MigrationStep",
@@ -47,7 +48,15 @@ object MigrationStepType {
   lazy val UpdateModelType = fieldsHelper[UpdateModel](
     Field("name", StringType, resolve = _.value.step.name),
     Field("newName", StringType, resolve = _.value.step.newName),
-    Field("isEmbedded", OptionType(BooleanType), resolve = ctx => ctx.value.schema.getModelByName_!(ctx.value.step.newName).isEmbedded)
+    Field(
+      "isEmbedded",
+      OptionType(BooleanType),
+      resolve = { ctx =>
+        val previous = ctx.value.previous.getModelByName_!(ctx.value.step.name).isEmbedded
+        val current  = ctx.value.schema.getModelByName_!(ctx.value.step.newName).isEmbedded
+        diff(previous, current)
+      }
+    )
   )
 
   lazy val CreateEnumType = fieldsHelper[CreateEnum](
@@ -62,7 +71,15 @@ object MigrationStepType {
   lazy val UpdateEnumType = fieldsHelper[UpdateEnum](
     Field("name", StringType, resolve = _.value.step.name),
     Field("newName", OptionType(StringType), resolve = _.value.step.newName),
-    Field("values", OptionType(ListType(StringType)), resolve = ctx => ctx.value.schema.getEnumByName_!(ctx.value.step.finalName).values)
+    Field(
+      "values",
+      OptionType(ListType(StringType)),
+      resolve = { ctx =>
+        val previous = ctx.value.previous.getEnumByName_!(ctx.value.step.name).values
+        val current  = ctx.value.schema.getEnumByName_!(ctx.value.step.finalName).values
+        diff(previous, current)
+      }
+    )
   )
 
   lazy val CreateFieldType = fieldsHelper[CreateField](
@@ -93,7 +110,12 @@ object MigrationStepType {
     Field("name", StringType, resolve = _.value.step.name)
   )
 
-  // FIXME: all those options must just be populated if something actually changed
+  def diffField[T](stepAndSchema: MigrationStepAndSchema[UpdateField], fieldFn: models.Field => T): Option[T] = {
+    val previous = fieldFn(stepAndSchema.previous.getFieldByName_!(stepAndSchema.step.model, stepAndSchema.step.name))
+    val current  = fieldFn(stepAndSchema.schema.getFieldByName_!(stepAndSchema.step.newModel, stepAndSchema.step.finalName))
+    diff(previous, current)
+  }
+
   lazy val UpdateFieldType = fieldsHelper[UpdateField](
     Field("model", StringType, resolve = _.value.step.model),
     Field("name", StringType, resolve = _.value.step.name),
@@ -101,40 +123,37 @@ object MigrationStepType {
     Field(
       "typeName",
       OptionType(StringType),
-      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).typeIdentifier.code
+      resolve = ctx => diffField(ctx.value, _.typeIdentifier.code)
     ),
     Field(
       "isRequired",
       OptionType(BooleanType),
-      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).isRequired
+      resolve = ctx => diffField(ctx.value, _.isRequired)
     ),
     Field(
       "isList",
       OptionType(BooleanType),
-      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).isList
+      resolve = ctx => diffField(ctx.value, _.isList)
     ),
     Field(
       "unique",
       OptionType(BooleanType),
-      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).isUnique
+      resolve = ctx => diffField(ctx.value, _.isUnique)
     ),
     Field(
       "enum",
       OptionType(OptionType(StringType)),
-      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).enum.map(_.name)
+      resolve = ctx => diffField(ctx.value, _.enum.map(_.name))
     ),
     Field(
       "default",
       OptionType(OptionType(StringType)),
-      resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.newModel, ctx.value.step.finalName).defaultValue.map(_.toString)
+      resolve = ctx => diffField(ctx.value, _.defaultValue.map(_.toString))
     ),
     Field(
       "relation",
       OptionType(OptionType(StringType)),
-      resolve = { ctx =>
-        val (modelName, fieldName) = (ctx.value.step.newModel, ctx.value.step.finalName)
-        ctx.value.schema.getFieldByName_!(modelName, fieldName).relationOpt.map(_.name)
-      }
+      resolve = ctx => diffField(ctx.value, _.relationOpt.map(_.name))
     )
   )
 
