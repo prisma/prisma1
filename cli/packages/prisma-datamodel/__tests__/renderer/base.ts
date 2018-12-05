@@ -9,11 +9,11 @@ const parser = Parser.create(DatabaseType.postgres)
 
 const simpleModel = 
 `type User {
-    name: String
-    age: int
-    isAdmin: Boolean @default(value: false)
-    nationality: String @default(value: "DE")
-    roles: [Int!]!
+  age: int
+  isAdmin: Boolean @default(value: false)
+  name: String
+  nationality: String @default(value: "DE")
+  roles: [Int!]!
 }`
 
 

@@ -39,7 +39,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
 
         return {
           name: column.isPrimaryKey ? 'id' : column.name,
-          type: column.typeIdentifier,
+          type: column.typeIdentifier || '<Unknown>',
           defaultValue, 
           isId: column.isPrimaryKey, 
           isList: false,
@@ -49,7 +49,11 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
           isUnique: column.isUnique,
           relatedField: null,
           relationName: null,
-          directives
+          directives,
+          comments: column.comment === null ? [] : [{
+            isError: true,
+            text: column.comment
+          }]
         } as IGQLField
       })
 
@@ -98,9 +102,20 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
         } as IGQLField
       })
 
+      const relationTables = joinTables.reduce((relations, joinTable) => {
+        if (joinTable.relations.some(relation => relation.target_table === tc.name)) {
+          return relations.concat(joinTable.relations.filter(relation => relation.target_table !== tc.name))
+        } else {
+          return relations
+        }
+      }, [] as TableRelation[])
+
       const relations = tc.relations.filter(relation => {
-        return relation.target_table === tc.name
+        return relation.target_table === tc.name &&
+              // Join tables are rendered seperately.
+              !joinTables.some(x => x.name === relation.target_table)
       })
+
       const relationFields = relations.map(relation => {
         const ambiguousRelations = tc.relations.filter(innerRelation => innerRelation.source_table === relation.source_table && innerRelation.target_table === relation.target_table)
         const fieldName = ambiguousRelations.length > 1 
@@ -126,14 +141,6 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
           relationName: isAmbigous ? camelCase(fieldName) : null
         } as IGQLField
       })
-
-      const relationTables = joinTables.reduce((relations, joinTable) => {
-        if (joinTable.relations.some(relation => relation.target_table === tc.name)) {
-          return relations.concat(joinTable.relations.filter(relation => relation.target_table !== tc.name))
-        } else {
-          return relations
-        }
-      }, [] as TableRelation[])
 
       const relationTableFields = relationTables.map(relation => {
 
@@ -165,13 +172,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
           return this.removeIdSuffix(a.name) === this.removeIdSuffix(b.name)
         })),
         ...inlineRelationFields,
-        // TODO: Figure out this line. 
-        //...(_.differenceWith(relationFields, relationTableFields, (a, b) => {
-        //  // TODO: Manage this ugly hack if finding relation field in 
-        //  // directive of relation table field 
-        //  // there is also plural to singular hack in this
-        //  return b.directives.join('').indexOf(pluralize.singular(a.name)) > -1
-        //})),
+        ...relationFields,
         ...relationTableFields
       ]
 

@@ -65,7 +65,8 @@ Either try using a new directory name, or remove the files listed above.
 
     if (endpoint) {
       const datamodelBoilerplatePath =
-        this.definition.definition!.databaseType === 'document'
+        this.definition.definition &&
+        this.definition.definition.databaseType === 'document'
           ? path.join(__dirname, 'boilerplate', 'datamodel-mongo.prisma')
           : path.join(__dirname, 'boilerplate', 'datamodel.prisma')
       fs.writeFileSync(

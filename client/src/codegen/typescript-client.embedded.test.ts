@@ -3,7 +3,8 @@ import * as path from 'path'
 import { buildSchema } from 'graphql'
 import { TypescriptGenerator } from './typescript-client'
 import { test } from 'ava'
-import { parseInternalTypes, DatabaseType } from 'prisma-generate-schema'
+import { parseInternalTypes } from 'prisma-generate-schema'
+import { DatabaseType } from 'prisma-datamodel'
 
 const typeDefs = fs.readFileSync(
   path.join(__dirname, '../../src/codegen/fixtures/embedded.graphql'),
@@ -26,7 +27,7 @@ test('typescript generator - embedded', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
-    internalTypes: parseInternalTypes(datamodel, DatabaseType.relational),
+    internalTypes: parseInternalTypes(datamodel, DatabaseType.postgres).types,
   })
   const result = generator.render()
   t.snapshot(result)

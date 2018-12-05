@@ -1,0 +1,60 @@
+export const meta = {
+  title: "prisma generate",
+  position: 130,
+}
+
+## `prisma generate`
+
+Invokes the _generators_ specified in `prisma.yml`. Available generators are:
+
+The following generators are built-into the Prisma CLI:
+
+- Prisma client in JavaScript: `javascript-client`
+- Prisma client in TypeScript: `typescript-client`
+- Prisma client in Flow: `flow-client`
+- Prisma client in Go: `go-client`
+- GraphQL schema of the Prisma API: `graphql-schema`
+
+### Usage
+
+```bash
+prisma generate [flags]
+```
+
+### Flags
+
+```
+ -e, --env-file ENV-FILE    Path to .env file to inject env vars
+```
+
+### Examples
+
+**Generate the TypeScript client and store the generated files at `./generated/prisma`**
+
+`prisma.yml`:
+
+```yml
+generate:
+    - generator: typescript-client
+      output: ./generated/prisma
+```
+
+```bash
+prisma generate
+```
+
+**Generate the Go client and the GraphQL schema store the generated files at `./generated/prisma`**
+
+`prisma.yml`:
+
+```yml
+generate:
+    - generator: go-client
+      output: ./generated/prisma
+    - generator: graphql-schema
+      output: ./generated/prisma
+```
+
+```bash
+prisma generate
+```

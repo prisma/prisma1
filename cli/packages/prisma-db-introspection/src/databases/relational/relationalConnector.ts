@@ -3,9 +3,7 @@ import { TypeIdentifier, DatabaseType } from "prisma-datamodel"
 import { RelationalIntrospectionResult } from "./relationalIntrospectionResult";
 
 export abstract class RelationalConnector implements IConnector {
-  getDatabaseType(): DatabaseType {
-    return DatabaseType.postgres
-  }
+  abstract getDatabaseType(): DatabaseType
   abstract introspect(schema: string): Promise<RelationalIntrospectionResult>
   abstract listSchemas(): Promise<string[]>
   abstract listModels(schema: string): Promise<Table[]>
@@ -44,6 +42,11 @@ export class Table {
 
   isRelationColumn(column: Column): boolean {
     return this.relations.some(rel => rel.source_column == column.name)
+  }
+
+  getRelationTargetTableName(column: Column): string {
+    const [{ target_table }] = this.relations.filter(rel => rel.source_column == column.name)
+    return target_table
   }
 }
 
