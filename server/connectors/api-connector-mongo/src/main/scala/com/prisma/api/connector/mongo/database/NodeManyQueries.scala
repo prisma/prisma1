@@ -31,7 +31,9 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
       }
     }
 
-    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
+    nodes.map { n =>
+      ResolverResult[PrismaNode](queryArguments, n.toVector)
+    }
   }
 
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>

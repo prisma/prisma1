@@ -10,6 +10,7 @@ import com.prisma.shared.models.{Field, Model, ScalarField}
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.UnwindOptions
 
 import scala.collection.immutable
 trait FilterConditionBuilder2 extends FilterConditionBuilder {
@@ -43,6 +44,16 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     val joinAndFilter = buildJoinStagesForFilter2(queryArguments.filter)
 
+    //-------------------------------- Project Result ---------------------------------------------------
+
+    //get rid of what was joined
+    //apply selected fields
+    //remove duplicates
+
+    lazy val scalars: immutable.Seq[(String, Document)] = model.scalarFields.map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
+    lazy val doc: Document                              = Document(scalars).+("_id" -> "$_id")
+    lazy val mongoGroup                                 = Seq(Document("$group" -> doc))
+
     //-------------------------------- Order ------------------------------------------------------------
     val sort = Seq(OrderByClauseBuilder.sortStage(queryArguments))
 
@@ -52,15 +63,10 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     val limitStage = skipAndLimit.limit.map(limit)
 
-    //-------------------------------- Project Result ---------------------------------------------------
-
-    //get rid of what was joined
-    //apply selected fields
-
     //--------------------------- Setup Query -----------------------------------------------------------
 //    val pipeline = cursorMatch ++ joins ++ filterStage ++ sort ++ skipStage ++ limitStage
-    val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage
 //    val pipeline = cursorMatch ++ joins
+    val pipeline = cursorMatch ++ joinAndFilter ++ mongoGroup ++ sort ++ skipStage ++ limitStage
 
     database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture()
   }
@@ -195,6 +201,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case x: RelationFilter   => relationFilterJoinStage2(path, x)
 
       //--------------------------------ANCHORS------------------------------------
+//      case _ => Seq.empty
       case TrueFilter                                            => Seq(`match`(hackForTrue))
       case FalseFilter                                           => Seq(`match`(not(hackForTrue)))
       case ScalarFilter(scalarField, Contains(v))                => Seq(`match`(regex(helper(path, scalarField), v.value.toString)))
@@ -227,7 +234,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     }
   }
 
-  def sortFilters(filters: Seq[Filter]) = {
+  private def sortFilters(filters: Seq[Filter]): Seq[Filter] = {
     val withRelationFilter    = filters.collect { case x if needsAggregation(Some(x))  => x }
     val withoutRelationFilter = filters.collect { case x if !needsAggregation(Some(x)) => x }
 
@@ -235,12 +242,10 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
   }
 
   private def relationFilterJoinStage2(path: Path, relationFilter: RelationFilter): Seq[conversions.Bson] = {
-    //FIXME: this could also return the projections to clean the result
 
     val rf          = relationFilter.field
     val updatedPath = path.append(rf)
 
-    //Fixme: next needs to handle _every _none if we ever introduce them
     val next = buildJoinStagesForFilter2(updatedPath, relationFilter.nestedFilter)
 
     val current = rf.relatedModel_!.isEmbedded match {
@@ -267,22 +272,10 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
         val mongoUnwind = unwind(s"$$${updatedPath.combinedNames}")
 
-        //group needs to render all fields in here (at least all the ones referred to by the filters)
-        lazy val previousModel                              = path.segments.last.rf.model
-        lazy val scalars: immutable.Seq[(String, Document)] = previousModel.scalarFields.map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
-        lazy val added: Seq[(String, Document)]             = Seq((s"${path.combinedNames}", Document("$push" -> s"$$${path.combinedNames}")))
-        lazy val doc: Document                              = Document(scalars ++ added).+("_id" -> "$_id")
-        lazy val mongoGroup                                 = Document("$group" -> doc)
-
-        (path.segments.isEmpty, rf.isList) match {
-          case (true, true)   => Seq(mongoLookup)
-          case (true, false)  => Seq(mongoLookup, mongoUnwind)
-          case (false, true)  => Seq(mongoLookup, mongoGroup)
-          case (false, false) => Seq(mongoLookup, mongoUnwind)
-        }
+        Seq(mongoLookup, mongoUnwind)
     }
 
-    current ++ next
+    current ++ next // ++ cleanup projections??
   }
 
   //-------------------------------------------------- Helpers ------------------------------------------------------
