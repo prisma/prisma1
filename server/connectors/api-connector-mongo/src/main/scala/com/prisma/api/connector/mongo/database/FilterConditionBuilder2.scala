@@ -6,7 +6,7 @@ import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.NullGCValue
-import com.prisma.shared.models.{Model, ScalarField}
+import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
@@ -95,7 +95,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => Seq(`match`(not(in(nameHelper(path, scalarField), null))))
       case ScalarFilter(scalarField, In(values))                 => Seq(`match`(in(nameHelper(path, scalarField), values.map(GCToBson(_)): _*)))
       case ScalarFilter(scalarField, NotIn(values))              => Seq(`match`(not(in(nameHelper(path, scalarField), values.map(GCToBson(_)): _*))))
-      case OneRelationIsNullFilter(field)                        => Seq(`match`(equal(combineTwo(path.combinedNames, field.name), null)))
+      case OneRelationIsNullFilter(field)                        => oneRelationNull(field, path)
       //Fixme test this thoroughly
       case ScalarListFilter(scalarListField, ListContains(value)) =>
         Seq(`match`(all(nameHelper(path, scalarListField), GCToBson(value))))
@@ -105,6 +105,12 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
         Seq(`match`(or(values.map(value => all(nameHelper(path, scalarListField), GCToBson(value))): _*)))
       case x => sys.error(s"Not supported: $x")
     }
+  }
+
+  private def oneRelationNull(field: RelationField, path: Path) = {
+    //this needs to use the correct fieldName and needs to look on the correct side equal: null should work here
+
+    Seq(`match`(equal(combineTwo(path.combinedNames, field.name), null)))
   }
 
   private def relationFilterJoinStage2(path: Path, relationFilter: RelationFilter): Seq[conversions.Bson] = {
@@ -166,11 +172,11 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case x: RelationFilter      => relationNeedsFilter(x)
 
       //--------------------------------ANCHORS------------------------------------
-      case TrueFilter                     => false
-      case FalseFilter                    => false
-      case ScalarFilter(_, _)             => false
-      case OneRelationIsNullFilter(field) => false // FIXME: Think about this
-      case x                              => sys.error(s"Not supported: $x")
+      case TrueFilter                 => false
+      case FalseFilter                => false
+      case ScalarFilter(_, _)         => false
+      case OneRelationIsNullFilter(_) => true
+      case x                          => sys.error(s"Not supported: $x")
     }
   }
 

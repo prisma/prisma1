@@ -79,9 +79,11 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
     val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeForMongo
 
     (field.isHidden, field.isList) match {
-      case (true, _)  => List.empty
-      case (_, false) => List(InputField(field.name, OptionInputType(relatedModelInputType)))
-      case (_, true)  => List(InputField(field.name + "_some", OptionInputType(relatedModelInputType)))
+      case (true, _)                                     => List.empty
+      case (_, false)                                    => List(InputField(field.name, OptionInputType(relatedModelInputType)))
+      case (_, true) if !field.relatedModel_!.isEmbedded => List(InputField(field.name + "_some", OptionInputType(relatedModelInputType)))
+      case (_, true) if field.relatedModel_!.isEmbedded =>
+        FilterArguments.getFieldFilters(field).map(f => InputField(field.name + f.name, OptionInputType(relatedModelInputType)))
     }
   }
 
