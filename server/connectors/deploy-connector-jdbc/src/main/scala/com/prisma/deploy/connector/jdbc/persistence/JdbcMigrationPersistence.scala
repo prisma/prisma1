@@ -86,12 +86,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
             buffer += migrationFromResultSet(rs)
           }
 
-          val withPreviousSchemas = buffer.toVector.map { migration =>
-            val previousMigration = buffer.find(mig => mig.status == MigrationStatus.Success && mig.revision < migration.revision)
-            migration.copy(previousSchema = previousMigration.map(_.schema).getOrElse(Schema.empty))
-          }
-
-          withPreviousSchemas
+          enrichWithPreviousSchemas(buffer.toVector)
         }
       ))
   }

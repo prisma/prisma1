@@ -88,13 +88,13 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
 
     val migrations = migrationPersistence.loadAll(project.id).await
     migrations should have(size(6))
-    val succesfulMigration1  = migrations.find(_.revision == 3).get
+    val successfulMigration1 = migrations.find(_.revision == 3).get
     val pendingMigration1    = migrations.find(_.revision == 4).get
     val pendingMigration2    = migrations.find(_.revision == 5).get
     val successfulMigration2 = migrations.find(_.revision == 6).get
-    pendingMigration1.previousSchema should equal(succesfulMigration1.schema)
-    pendingMigration2.previousSchema should equal(succesfulMigration1.schema)
-    successfulMigration2.previousSchema should equal(succesfulMigration1.schema)
+    pendingMigration1.previousSchema should equal(successfulMigration1.schema)
+    pendingMigration2.previousSchema should equal(successfulMigration1.schema)
+    successfulMigration2.previousSchema should equal(successfulMigration1.schema)
   }
 
   ".updateMigrationStatus()" should "update a migration status correctly" in {
