@@ -46,6 +46,11 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":scala: shared-models\"
       command: cd server && ./.buildkite/scripts/test.sh shared-models mysql
 
+    - label: \":rust: Native image\"
+      command: cd server && ./.buildkite/scripts/native-image.sh
+      artifact_paths:
+        - /server/images/prisma-native/target/prisma-native-image/prisma-native
+
 ")
 
 dynamic=""

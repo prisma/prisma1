@@ -2,15 +2,20 @@ import sbt.Keys.name
 import sbt._
 import SbtUtils._
 import Dependencies._
+import com.typesafe.sbt.packager.MappingsHelper
 
 name := "server"
 
 lazy val commonSettings = Seq(
   organization := "com.prisma",
-  organizationName := "graphcool",
+  organizationName := "Prisma",
   scalaVersion := "2.12.3",
   parallelExecution in Test := false,
-  publishArtifact in Test := true,
+  publishArtifact in (Test, packageDoc) := false,
+  publishArtifact in (Compile, packageDoc) := false,
+  publishArtifact in packageDoc := false,
+  publishArtifact in packageSrc := false,
+  sources in (Compile,doc) := Seq.empty, // todo Somehow, after all these settings, there's STILL API docs getting generated somewhere.
   // We should gradually introduce https://tpolecat.github.io/2014/04/11/scalac-flags.html
   // These needs to separately be configured in Idea
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-language:implicitConversions"),
@@ -28,23 +33,35 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   imageNames in docker := Seq(
     ImageName(s"prismagraphql/$imageName:latest")
   ),
+  sources in (Compile,doc) := Seq.empty,
   dockerfile in docker := {
     val appDir    = stage.value
     val targetDir = "/app"
+    val systemLib = "/lib"
+
+    val libraries = (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
+      MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
+      if (prev.exists(_._2 == next._2)) {
+        prev
+      } else {
+        prev :+ next
+      }
+    }
 
     new Dockerfile {
-      from("anapsix/alpine-java")
+      from("prismagraphql/runtime-base")
       copy(appDir, targetDir)
+      libraries.foreach(f => copy(f._1, systemLib))
       copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
       runShell(s"touch", s"$targetDir/start.sh")
-      runShell("echo", "#!/usr/bin/env bash", ">>", s"$targetDir/start.sh")
+      runShell("echo", "'#!/bin/bash'", ">>", s"$targetDir/start.sh")
       runShell("echo", "set -e", ">>", s"$targetDir/start.sh")
-      runShell("echo", s".$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
-      runShell("echo", s".$targetDir/bin/${executableScriptName.value}", ">>" ,s"$targetDir/start.sh")
+      runShell("echo", s"$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
+      runShell("echo", s"$targetDir/bin/${executableScriptName.value}", ">>" ,s"$targetDir/start.sh")
       runShell(s"chmod", "+x", s"$targetDir/start.sh")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
-      entryPointShell(s"$targetDir/start.sh")
+//      entryPointShell(s"$targetDir/start.sh")
     }
   }
 )
@@ -64,7 +81,16 @@ def normalProject(name: String): Project = Project(id = name, base = file(s"./$n
 // ####################
 lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= slick ++ Seq(postgresClient),
+//    mappings in Universal ++=
+//      (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
+//        MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
+//          if (prev.exists(_._2 == next._2)) {
+//            prev
+//          } else {
+//            prev :+ next
+//          }
+//      },
   )
   .dependsOn(prismaImageShared)
   .dependsOn(graphQlClient)
@@ -73,14 +99,23 @@ lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
 
 lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient)
+    libraryDependencies ++= slick ++ Seq(postgresClient),
+//    mappings in Universal ++=
+//      (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
+//        MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
+//        if (prev.exists(_._2 == next._2)) {
+//          prev
+//        } else {
+//          prev :+ next
+//        }
+//      },
   )
   .dependsOn(prismaImageShared)
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaNative = imageProject("prisma-native", imageName = "prisma-native")
+lazy val prismaNative = imageProject("prisma-native")
   .settings(libraryDependencies ++= Seq(registry, checks))
   .dependsOn(prismaImageShared)
   .dependsOn(api)
@@ -269,7 +304,7 @@ lazy val jdbcNative = libProject("jdbc-native")
     jna,
     scalaTest,
     playJson
-  ),
+  ), // todo skip compile if no native image / graal present
   unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
 
 lazy val jwtNative = libProject("jwt-native")
@@ -277,7 +312,7 @@ lazy val jwtNative = libProject("jwt-native")
     jna,
     scalaTest,
     playJson
-  ) ++ jooq,
+  ) ++ jooq, // todo skip compile if no native image / graal present
   unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
 
 lazy val gcValues = libProject("gc-values")

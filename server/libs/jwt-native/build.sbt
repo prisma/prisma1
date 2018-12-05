@@ -7,9 +7,9 @@ buildNativeLib := {
 
   val logger = ProcessLogger(println, println)
   val nativePath = new java.io.File("libs/jwt-native-rs/")
-  val build = sys.env.get("RUST_BACKTRACE").map(_ => "build").getOrElse("build-release")
+  val cargoFlags = sys.env.get("RUST_BACKTRACE").map(_ => "").getOrElse("--release")
 
-  if ((Process(s"make $build", nativePath) ! logger) != 0) {
+  if ((Process(s"make CARGO_FLAGS=$cargoFlags build", nativePath) ! logger) != 0) {
     sys.error("Rust library build failed.")
   }
 }

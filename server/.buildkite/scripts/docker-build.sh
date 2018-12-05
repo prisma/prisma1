@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 set -e
 
@@ -6,7 +6,7 @@ CHANNEL="${1:?Provide the channel this script is run on (e.g. alpha, beta, stabl
 DOCKER_TAG="${2:?Provide the docker tag that should be released}"
 ADDITIONALLY_RELEASE="${3:?Provide the secondary docker tag that should be released}"
 
-docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock graphcool/scala-sbt-docker:rust sbt docker
+docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" -v $(pwd):/root/build -w /root/build/server -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image sbt docker
 docker images
 
 for service in prisma prisma-prod;
@@ -33,4 +33,3 @@ printf "
         BUILD_TAGS: \"${DOCKER_TAG},${ADDITIONALLY_RELEASE}\"
         CHANNEL: \"${CHANNEL}\"
 " | buildkite-agent pipeline upload
-
