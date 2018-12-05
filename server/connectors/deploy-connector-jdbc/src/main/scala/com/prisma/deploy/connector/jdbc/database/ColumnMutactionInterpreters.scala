@@ -79,10 +79,9 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
   }
 
   private def updateFromBeforeStateToAfterState(mutaction: UpdateColumn): DBIOAction[Any, NoStream, Effect.All] = {
-    val before       = mutaction.oldField
-    val after        = mutaction.newField
-    val hasIndex     = before.isUnique
-    val indexIsDirty = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
+    val before               = mutaction.oldField
+    val after                = mutaction.newField
+    val indexMustBeRecreated = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
 
     val updateColumn = builder.updateColumn(
       projectId = mutaction.projectId,
@@ -107,7 +106,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       typeIdentifier = after.typeIdentifier
     )
 
-    val updateColumnActions = (hasIndex, indexIsDirty, after.isUnique) match {
+    val updateColumnActions = (before.isUnique, indexMustBeRecreated, after.isUnique) match {
       case (true, true, true)  => List(removeUniqueConstraint, updateColumn, addUniqueConstraint)
       case (true, _, false)    => List(removeUniqueConstraint, updateColumn)
       case (true, false, true) => List(updateColumn)
