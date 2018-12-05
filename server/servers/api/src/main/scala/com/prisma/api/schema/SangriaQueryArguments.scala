@@ -2,7 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.api.connector.{OrderBy, SortOrder}
 import com.prisma.shared.models
-import com.prisma.shared.models.ConnectorCapability.JoinRelationsFilterCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationsFilterCapability, MongoJoinRelationLinksCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model}
 import sangria.schema.{EnumType, EnumValue, _}
 
@@ -21,13 +21,10 @@ object SangriaQueryArguments {
 
   def whereArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities): Argument[Option[Any]] = {
     val utils = FilterObjectTypeBuilder(model, project)
-//    val filterObject = capabilities.has(JoinRelationsFilterCapability) match {
-//      case true  => utils.filterObjectType
-//      case false => utils.filterObjectTypeWithOutJoinRelationFilters
-//    }
-
-//    val filterObject = utils.filterObjectTypeWithOnlyToOneJoinRelationFilters
-    val filterObject = utils.filterObjectType
+    val filterObject = capabilities.has(MongoJoinRelationLinksCapability) match {
+      case false => utils.filterObjectType
+      case true  => utils.filterObjectTypeForMongo
+    }
 
     val inputType = OptionInputType(filterObject)
     Argument(name, inputType, description = "")

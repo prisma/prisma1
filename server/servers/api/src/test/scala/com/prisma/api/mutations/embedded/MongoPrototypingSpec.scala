@@ -1678,20 +1678,21 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     result.toString should be("""{"data":{"deleteManyUsers":{"count":0}}}""")
 
-    val result2 = server.query(
-      s""" mutation {
-         |  deleteManyUsers(where: {
-         |    pets_every: {
-         |      breed: "Test"
-         |    }
-         |  }) {
-         |    count
-         |  }
-         |} """,
-      project
-    )
-
-    result2.toString should be("""{"data":{"deleteManyUsers":{"count":1}}}""")
+    //disallowed for now
+//    val result2 = server.query(
+//      s""" mutation {
+//         |  deleteManyUsers(where: {
+//         |    pets_every: {
+//         |      breed: "Test"
+//         |    }
+//         |  }) {
+//         |    count
+//         |  }
+//         |} """,
+//      project
+//    )
+//
+//    result2.toString should be("""{"data":{"deleteManyUsers":{"count":1}}}""")
 
   }
 

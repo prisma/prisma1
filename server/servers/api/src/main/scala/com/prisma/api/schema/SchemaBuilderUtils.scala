@@ -56,9 +56,9 @@ object SchemaBuilderUtils {
 }
 
 case class FilterObjectTypeBuilder(model: Model, project: Project) {
-  def mapToRelationFilterInputField(field: models.RelationField)                           = relationFilterInputFieldHelper(field, withJoin = true)
-  def mapToRelationFilterInputFieldWithoutJoinRelations(field: models.RelationField)       = relationFilterInputFieldHelper(field, withJoin = false)
-  def mapToRelationFilterInputFieldWithOnlyToOneJoinRelations(field: models.RelationField) = relationFilterInputFieldHelper2(field)
+  def mapToRelationFilterInputField(field: models.RelationField)                     = relationFilterInputFieldHelper(field, withJoin = true)
+  def mapToRelationFilterInputFieldWithoutJoinRelations(field: models.RelationField) = relationFilterInputFieldHelper(field, withJoin = false)
+  def mapToRelationFilterInputFieldForMongo(field: models.RelationField)             = relationFilterInputFieldHelperForMongo(field)
 
   def relationFilterInputFieldHelper(field: models.RelationField, withJoin: Boolean): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
@@ -74,15 +74,14 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
     }
   }
 
-  def relationFilterInputFieldHelper2(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+  def relationFilterInputFieldHelperForMongo(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
-    val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeWithOnlyToOneJoinRelationFilters
+    val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeForMongo
 
-    (field.isHidden, field.isList, field.relatedField.isList, field.relatedField.isHidden) match {
-      case (true, _, _, _)              => List.empty
-      case (false, false, false, false) => List(InputField(field.name, OptionInputType(relatedModelInputType)))
-      case (false, false, true, true)   => List(InputField(field.name, OptionInputType(relatedModelInputType)))
-      case (_, _, _, _)                 => List.empty
+    (field.isHidden, field.isList) match {
+      case (true, _)  => List.empty
+      case (_, false) => List(InputField(field.name, OptionInputType(relatedModelInputType)))
+      case (_, true)  => List(InputField(field.name + "_some", OptionInputType(relatedModelInputType)))
     }
   }
 
@@ -131,24 +130,15 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
           .flatMap(mapToRelationFilterInputFieldWithoutJoinRelations)
       }
     )
-
-  lazy val filterObjectTypeWithOnlyToOneJoinRelationFilters: InputObjectType[Any] =
+// this does not Allow NOT/OR and also does not allow _every, _some on
+  lazy val filterObjectTypeForMongo: InputObjectType[Any] =
     InputObjectType[Any](
       s"${model.name}WhereInput",
       fieldsFn = () => {
-        List(
-          InputField("AND",
-                     OptionInputType(ListInputType(filterObjectTypeWithOnlyToOneJoinRelationFilters)),
-                     description = FilterArguments.ANDFilter.description),
-          InputField("OR",
-                     OptionInputType(ListInputType(filterObjectTypeWithOnlyToOneJoinRelationFilters)),
-                     description = FilterArguments.ORFilter.description),
-          InputField("NOT",
-                     OptionInputType(ListInputType(filterObjectTypeWithOnlyToOneJoinRelationFilters)),
-                     description = FilterArguments.NOTFilter.description)
-        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
-          .filter(rf => rf.relatedModel_!.isEmbedded || (!rf.isList && (!rf.relatedField.isList || rf.relatedField.isHidden)))
-          .flatMap(mapToRelationFilterInputFieldWithOnlyToOneJoinRelations)
+        List(InputField("AND", OptionInputType(ListInputType(filterObjectTypeForMongo)), description = FilterArguments.ANDFilter.description)) ++ model.scalarFields
+          .filterNot(_.isHidden)
+          .flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
+          .flatMap(mapToRelationFilterInputFieldForMongo)
       }
     )
 

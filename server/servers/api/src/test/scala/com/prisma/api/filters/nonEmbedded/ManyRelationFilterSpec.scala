@@ -183,7 +183,7 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" in {
+  "crazy filters" should "work" taggedAs (IgnoreMongo) in {
 
     server
       .query(

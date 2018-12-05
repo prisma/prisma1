@@ -6,7 +6,6 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Join Relation Filter on many to many relation" should "work on one level" in {
 
