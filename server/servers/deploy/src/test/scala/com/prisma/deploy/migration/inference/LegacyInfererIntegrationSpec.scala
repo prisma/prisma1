@@ -53,25 +53,14 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
 
-    steps should have(size(3))
-    steps should contain allOf (
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "comments",
-        newName = None
-      ),
-      UpdateField(
-        model = "Comment",
-        newModel = "Comment",
-        name = "todo",
-        newName = None
-      ),
-      UpdateRelation(
-        name = "ManualRelationName",
-        newName = Some("CommentToTodo")
-      )
-    )
+    steps should have(size(1))
+    steps should be(
+      Vector(
+        UpdateRelation(
+          name = "ManualRelationName",
+          newName = Some("CommentToTodo")
+        )
+      ))
 
   }
 
@@ -100,25 +89,14 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
 
-    steps should have(size(3))
-    steps should contain allOf (
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "comments",
-        newName = None
-      ),
-      UpdateField(
-        model = "Comment",
-        newModel = "Comment",
-        name = "todo",
-        newName = None
-      ),
-      UpdateRelation(
-        name = "CommentToTodo",
-        newName = Some("ManualRelationName")
-      )
-    )
+    steps should have(size(1))
+    steps should be(
+      Vector(
+        UpdateRelation(
+          name = "CommentToTodo",
+          newName = Some("ManualRelationName")
+        )
+      ))
   }
 
   "they" should "not propose an Update and Delete at the same time when renaming a relation" in {
@@ -146,22 +124,10 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
 
-    steps should have(size(4))
+    steps should have(size(2))
     steps should contain allOf (
       DeleteRelation("ManualRelationName1"),
-      CreateRelation("ManualRelationName2"),
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "comments",
-        newName = None
-      ),
-      UpdateField(
-        model = "Comment",
-        newModel = "Comment",
-        name = "todo",
-        newName = None
-      )
+      CreateRelation("ManualRelationName2")
     )
   }
 
@@ -214,43 +180,6 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       ),
       CreateRelation(
         name = "TodoToComment2"
-      )
-    )
-  }
-
-  "they" should "detect a change in the onDelete relation argument" in {
-    val previousSchema =
-      """
-        |type Course {
-        |  id: ID! @unique
-        |	sections: [CourseSection] @relation(name: "CourseSections" onDelete: CASCADE)
-        |}
-        |
-        |type CourseSection {
-        |  id: ID! @unique
-        |  course: Course! @relation(name: "CourseSections")
-        |}
-      """.stripMargin
-    val project = inferSchema(previousSchema)
-
-    val nextSchema =
-      """
-        |type Course {
-        |  id: ID! @unique
-        |	sections: [CourseSection] @relation(name: "CourseSections")
-        |}
-        |
-        |type CourseSection {
-        |  id: ID! @unique
-        |  course: Course! @relation(name: "CourseSections")
-        |}
-      """.stripMargin
-    val steps = inferSteps(previousSchema = project, next = nextSchema)
-    steps should have(size(1))
-    steps should contain(
-      UpdateRelation(
-        name = "CourseSections",
-        newName = None
       )
     )
   }

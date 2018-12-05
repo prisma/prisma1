@@ -138,30 +138,31 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
         .field("c", _.String)
         .field("d", _.String)
         .field("e", _.String)
+        .field("f", _.String)
     }
 
     val nextProject = SchemaBuilder() { schema =>
       schema
         .model("Test")
-        .field_!("id", _.Cuid, isUnique = true, isHidden = true) // Id field hidden
+        .field_!("id", _.Cuid, isUnique = true)
         .field("a2", _.String) // Rename
         .field("b", _.Int) // Type change
         .field_!("c", _.String) // Now required
         .field("d", _.String, isList = true) // Now a list
         .field("e", _.String, isUnique = true) // Now unique
+        .field("f", _.String) // no change
     }
 
     val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
-    steps.length shouldBe 6
+    steps.length shouldBe 5
     steps should contain allOf (
       UpdateField("Test", "Test", "a", Some("a2")),
       UpdateField("Test", "Test", "b", None),
       UpdateField("Test", "Test", "c", None),
       UpdateField("Test", "Test", "d", None),
-      UpdateField("Test", "Test", "e", None),
-      UpdateField("Test", "Test", "id", None)
+      UpdateField("Test", "Test", "e", None)
     )
   }
 
@@ -350,17 +351,19 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
       schema
         .model("Todo")
         .field("status", _.Enum, enum = Some(enum))
+        .field("status2", _.Enum, enum = Some(enum))
     }
 
     val nextProject = SchemaBuilder() { schema =>
-      val enum = schema.enum("TodoStatus", Vector("Active", "AbsolutelyDone"))
       schema
         .model("Todo")
-        .field("status", _.Enum, enum = Some(enum))
+        .field("status", _.Enum, enum = Some(schema.enum("TodoStatus", Vector("Active", "AbsolutelyDone")))) // one value changed
+        .field("status2", _.Enum, enum = Some(schema.enum("TodoStatus", Vector("Active", "Done")))) // no change
     }
 
     val steps = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames).evaluate()
 
+    println(steps)
     steps should have(size(1))
     steps should contain(
       UpdateEnum(

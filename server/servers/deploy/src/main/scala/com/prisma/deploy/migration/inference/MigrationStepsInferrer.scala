@@ -108,19 +108,26 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(Model.empty)
-      fieldOfNextModel  <- nextModel.fields.toVector
-      previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
+      nextField         <- nextModel.fields.toVector
+      previousFieldName = renames.getPreviousFieldName(nextModel.name, nextField.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
+      if didSomethingChange(previousField.template, nextField.template)(_.name,
+                                                                        _.typeIdentifier,
+                                                                        _.isUnique,
+                                                                        _.isRequired,
+                                                                        _.isList,
+                                                                        _.manifestation,
+                                                                        _.behaviour)
     } yield {
       UpdateField(
         model = previousModelName,
         newModel = nextModel.name,
         name = previousFieldName,
-        newName = diff(previousField.name, fieldOfNextModel.name)
+        newName = diff(previousField.name, nextField.name)
       )
     }
 
-    updates.filter(isAnyOptionSet)
+    updates
   }
 
   lazy val fieldsToDelete: Vector[DeleteField] = {
@@ -199,13 +206,14 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousEnum <- previousSchema.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
       nextEnum     <- nextSchema.getEnumByName(nextEnumName)
+      if previousEnum != nextEnum
     } yield {
       UpdateEnum(
         name = previousEnum.name,
         newName = diff(previousEnum.name, nextEnum.name)
       )
     }
-    updates.filter(isAnyOptionSet)
+    updates
   }
 
   def relationNotInPreviousSchema(previousSchema: Schema,
@@ -291,6 +299,14 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
         case Some(x) => x.isDefined
         case None    => false
       }
+    }
+  }
+
+  def didSomethingChange[T](previous: T, next: T)(fns: (T => Any)*): Boolean = {
+    fns.exists { fn =>
+      val previousValue = fn(previous)
+      val nextValue     = fn(next)
+      previousValue != nextValue
     }
   }
 }
