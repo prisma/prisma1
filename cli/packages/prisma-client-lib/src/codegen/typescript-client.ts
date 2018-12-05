@@ -280,9 +280,12 @@ import { typeDefs } from './prisma-schema'`
     }>>(${args})
 export const prisma = new Prisma()`
   }
+  renderTypedefsFirstLine() {
+    return ''
+  }
   renderTypedefs() {
     return (
-      'export const typeDefs = /* GraphQL */ `' +
+      `${this.renderTypedefsFirstLine()}export const typeDefs = /* GraphQL */ \`` +
       printSchema(this.schema).replace(/`/g, '\\`') +
       '`'
     )
