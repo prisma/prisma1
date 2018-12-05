@@ -329,19 +329,14 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
 
     val steps = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames).evaluate()
 
-    steps should have(size(2))
-    steps should contain allOf (
-      UpdateEnum(
-        name = "TodoStatus",
-        newName = Some("TodoStatusNew")
-      ),
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "status",
-        newName = None
-      )
-    )
+    steps should have(size(1))
+    steps should be(
+      Vector(
+        UpdateEnum(
+          name = "TodoStatus",
+          newName = Some("TodoStatusNew")
+        )
+      ))
   }
 
   "Updating the values of an Enum" should "create one UpdateEnum step" in {
