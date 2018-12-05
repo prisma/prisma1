@@ -132,8 +132,8 @@ type Order {
   # Type Int is currently not supported for id fields.
   _id: Int! @id
   amount: Int
-  customer: User
-  items: [String!]!
+  customer: User @relation(link: INLINE)
+  items: [Item!]! @relation(link: INLINE)
   orderDate: String
 }
 
