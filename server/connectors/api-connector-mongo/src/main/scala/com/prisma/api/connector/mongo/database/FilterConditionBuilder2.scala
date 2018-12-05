@@ -110,7 +110,20 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
   private def oneRelationNull(field: RelationField, path: Path) = {
     //this needs to use the correct fieldName and needs to look on the correct side equal: null should work here
 
-    Seq(`match`(equal(combineTwo(path.combinedNames, field.name), null)))
+    field.relatedModel_!.isEmbedded match {
+      case true =>
+        Seq(`match`(equal(combineTwo(path.combinedNames, field.dbName), null)))
+
+      case false =>
+        field.relationIsInlinedInParent match {
+          case true =>
+            Seq(`match`(equal(combineTwo(path.combinedNames, field.relation.inlineManifestation.get.referencingColumn), null)))
+          case false =>
+            //join other model
+            //keep the fields that have id as null
+            Seq(`match`(equal(combineTwo(path.combinedNames, field.dbName), null)))
+        }
+    }
   }
 
   private def relationFilterJoinStage2(path: Path, relationFilter: RelationFilter): Seq[conversions.Bson] = {
@@ -182,9 +195,8 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
   }
 
   private def relationNeedsFilter(relationFilter: RelationFilter): Boolean = {
-    val rf      = relationFilter.field
     val next    = needsAggregation(relationFilter.nestedFilter)
-    val current = if (rf.relatedModel_!.isEmbedded) false else true
+    val current = !relationFilter.field.relatedModel_!.isEmbedded
 
     current || next
   }
