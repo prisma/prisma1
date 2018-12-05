@@ -1851,7 +1851,8 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{posts {title, author {name}}}""", project).toString should be(
       """{"data":{"posts":[{"title":"Title1","author":{"name":"Author1"}},{"title":"Title2","author":{"name":"Author2"}}]}}""")
 
-    server.query("""query{aUsers(where:{ post:{title_ends_with: "1"}, name_starts_with: "Author", int: 5}){name, post{title}}}""", project)
+    val res = server.query("""query{aUsers(where:{ post:{title_ends_with: "1"}, name_starts_with: "Author", int: 5}){name, post{title}}}""", project)
+    res.toString should be("""{"data":{"aUsers":[{"name":"Author1","post":{"title":"Title1"}}]}}""")
   }
 
   "Join Relation Filter on many to many relation" should "work on one level" in {
@@ -1889,8 +1890,8 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{posts {title, authors {name}}}""", project).toString should be(
       """{"data":{"posts":[{"title":"Title1","authors":[{"name":"Author1"},{"name":"Author2"}]},{"title":"Title2","authors":[{"name":"Author1"},{"name":"Author2"}]}]}}""")
 
-    server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
-
+    val res = server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
+    res.toString should be("""{"data":{"aUsers":[{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
   }
 
 }
