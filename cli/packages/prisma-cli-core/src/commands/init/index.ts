@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 import { spawnSync } from 'npm-run'
+import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 
 export default class Init extends Command {
@@ -238,7 +239,9 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       } catch (err) {
         this.out.log(chalk.red(err))
       }
-      const child = spawnSync('prisma', ['generate'])
+      const isPackaged = fs.existsSync('/snapshot')
+      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+      const child = spawnPath('prisma', ['generate'])
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
         this.out.log(chalk.red(stderr))
