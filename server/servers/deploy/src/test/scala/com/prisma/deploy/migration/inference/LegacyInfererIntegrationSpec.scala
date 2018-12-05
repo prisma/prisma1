@@ -59,37 +59,17 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
         model = "Todo",
         newModel = "Todo",
         name = "comments",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_CommentToTodo")),
-        defaultValue = None,
-        enum = None
+        newName = None
       ),
       UpdateField(
         model = "Comment",
         newModel = "Comment",
         name = "todo",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_CommentToTodo")),
-        defaultValue = None,
-        enum = None
+        newName = None
       ),
       UpdateRelation(
         name = "ManualRelationName",
-        newName = Some("CommentToTodo"),
-        modelAId = None,
-        modelBId = None,
-        modelAOnDelete = None,
-        modelBOnDelete = None
+        newName = Some("CommentToTodo")
       )
     )
 
@@ -126,37 +106,17 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
         model = "Todo",
         newModel = "Todo",
         name = "comments",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName")),
-        defaultValue = None,
-        enum = None
+        newName = None
       ),
       UpdateField(
         model = "Comment",
         newModel = "Comment",
         name = "todo",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName")),
-        defaultValue = None,
-        enum = None
+        newName = None
       ),
       UpdateRelation(
         name = "CommentToTodo",
-        newName = Some("ManualRelationName"),
-        modelAId = None,
-        modelBId = None,
-        modelAOnDelete = None,
-        modelBOnDelete = None
+        newName = Some("ManualRelationName")
       )
     )
   }
@@ -188,35 +148,19 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
 
     steps should have(size(4))
     steps should contain allOf (
-      DeleteRelation("ManualRelationName1", "Comment", "Todo"),
-      CreateRelation("ManualRelationName2", "Comment", "Todo", OnDelete.SetNull, OnDelete.SetNull),
+      DeleteRelation("ManualRelationName1"),
+      CreateRelation("ManualRelationName2"),
       UpdateField(
         model = "Todo",
         newModel = "Todo",
         name = "comments",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName2")),
-        defaultValue = None,
-        enum = None
+        newName = None
       ),
       UpdateField(
         model = "Comment",
         newModel = "Comment",
         name = "todo",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName2")),
-        defaultValue = None,
-        enum = None
+        newName = None
       )
     )
   }
@@ -251,61 +195,25 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     steps should contain allOf (
       CreateField(
         model = "Todo",
-        name = "comment1",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment1"),
-        defaultValue = None,
-        enum = None
+        name = "comment1"
       ),
       CreateField(
         model = "Todo",
-        name = "comment2",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment2"),
-        defaultValue = None,
-        enum = None
+        name = "comment2"
       ),
       CreateField(
         model = "Comment",
-        name = "todo1",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment1"),
-        defaultValue = None,
-        enum = None
+        name = "todo1"
       ),
       CreateField(
         model = "Comment",
-        name = "todo2",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment2"),
-        defaultValue = None,
-        enum = None
+        name = "todo2"
       ),
       CreateRelation(
-        name = "TodoToComment1",
-        modelAName = "Comment",
-        modelBName = "Todo",
-        modelAOnDelete = OnDelete.SetNull,
-        modelBOnDelete = OnDelete.SetNull
+        name = "TodoToComment1"
       ),
       CreateRelation(
-        name = "TodoToComment2",
-        modelAName = "Comment",
-        modelBName = "Todo",
-        modelAOnDelete = OnDelete.SetNull,
-        modelBOnDelete = OnDelete.SetNull
+        name = "TodoToComment2"
       )
     )
   }
@@ -342,11 +250,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     steps should contain(
       UpdateRelation(
         name = "CourseSections",
-        newName = None,
-        modelAId = None,
-        modelBId = None,
-        modelAOnDelete = Some(OnDelete.SetNull),
-        modelBOnDelete = None
+        newName = None
       )
     )
   }
