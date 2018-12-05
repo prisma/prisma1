@@ -264,9 +264,9 @@ export default class GenereateCommand extends Command {
 
     const generator = new FlowGenerator({ schema, internalTypes })
 
-    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint)
+    const endpoint = this.replaceEnv(this.definition.rawJson!.endpoint, true)
     const secret = this.definition.rawJson.secret
-      ? this.replaceEnv(this.definition.rawJson!.secret)
+      ? this.replaceEnv(this.definition.rawJson!.secret, true)
       : null
     const options: any = { endpoint }
     if (secret) {
@@ -282,7 +282,7 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (Flow) at ${output}`)
   }
 
-  replaceEnv(str) {
+  replaceEnv(str, isFlow = false) {
     const regex = /\${env:(.*?)}/
     const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
@@ -291,9 +291,10 @@ export default class GenereateCommand extends Command {
         `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
           match[0].length + match.index,
         )}`,
+        isFlow
       )
     } else {
-      return `\`${str}\``
+      return isFlow ? `\`${str}\``.replace('${', '${+') : `\`${str}\``
     }
   }
 }
