@@ -378,7 +378,8 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       steps,
       errors,
       startedAt,
-      finishedAt
+      finishedAt,
+      previousSchema = Schema.empty
     )
   }
 }

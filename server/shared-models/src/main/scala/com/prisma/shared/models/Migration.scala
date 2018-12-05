@@ -16,7 +16,8 @@ case class Migration(
     steps: Vector[MigrationStep],
     errors: Vector[String],
     startedAt: Option[DateTime] = None,
-    finishedAt: Option[DateTime] = None
+    finishedAt: Option[DateTime] = None,
+    previousSchema: Schema
 ) {
   def id: MigrationId                             = MigrationId(projectId, revision)
   def isRollingBack: Boolean                      = status == MigrationStatus.RollingBack
@@ -53,10 +54,11 @@ object Migration {
     applied = 0,
     rolledBack = 0,
     steps,
-    errors = Vector.empty
+    errors = Vector.empty,
+    previousSchema = Schema.empty
   )
 
-  def empty(projectId: String) = apply(projectId, Schema(), Vector.empty, Vector.empty)
+  def empty(projectId: String) = apply(projectId, Schema.empty, Vector.empty, Vector.empty)
 }
 
 sealed trait MigrationStep

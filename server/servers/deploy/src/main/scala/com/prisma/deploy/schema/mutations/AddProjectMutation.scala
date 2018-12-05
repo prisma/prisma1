@@ -41,7 +41,8 @@ case class AddProjectMutation(
       steps = Vector.empty,
       errors = Vector.empty,
       schema = Schema.empty,
-      functions = Vector.empty
+      functions = Vector.empty,
+      previousSchema = Schema.empty
     )
 
     for {
