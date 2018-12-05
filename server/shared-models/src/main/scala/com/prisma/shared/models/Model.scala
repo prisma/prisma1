@@ -48,7 +48,11 @@ class Model(
   lazy val hasUpdatedAtField                             = scalarFields.exists(_.isUpdatedAt)
   lazy val hasCreatedAtField                             = scalarFields.exists(_.isCreatedAt)
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
-  def dummyField(rf: RelationField): ScalarField         = idField_!.copy(name = rf.name, isList = rf.isList, manifestation = Some(FieldManifestation(rf.dbName)))
+  def dummyField(rf: RelationField): ScalarField =
+    idField_!.copy(name = rf.name,
+                   isList = rf.isList,
+                   manifestation = Some(FieldManifestation(rf.dbName)),
+                   template = idField_!.template.copy(behaviour = None))
 
   lazy val cascadingRelationFields: List[RelationField] = relationFields.collect {
     case field if field.relationSide == RelationSide.A && field.relation.template.modelAOnDelete == OnDelete.Cascade => field

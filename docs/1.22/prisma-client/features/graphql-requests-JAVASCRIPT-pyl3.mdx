@@ -10,10 +10,10 @@ export const meta = {
 
 ## Overview
 
-The Prisma client lets you send GraphQL queries and mutations directly to your Prisma service using the `$request` method:
+The Prisma client lets you send GraphQL queries and mutations directly to your Prisma service using the `$graphql` method:
 
 ```ts
-$request: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
+$graphql: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
 ```
 
 ### Examples
@@ -30,12 +30,11 @@ const query = `
   }
 `
 
-prisma.request(query)
+prisma.$graphql(query)
   .then(result => console.log(result))
 // sample result:
 // {"data": { "user": { "id": "cjcdi63j80adw0146z7r59bn5", "name": "Sarah" } } }
 ```
-
 
 _Fetching a single user using variables_:
 
@@ -51,7 +50,7 @@ const query = `
 
 const variables = { userId: 'cjcdi63j80adw0146z7r59bn5' }
 
-prisma.request(query, variables)
+prisma.$graphql(query, variables)
   .then(result => console.log(result))
 // sample result:
 // {"data": { "user": { "id": "cjcdi63j80adw0146z7r59bn5", "name": "Sarah" } } }

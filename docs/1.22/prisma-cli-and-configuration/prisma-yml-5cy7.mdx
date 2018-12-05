@@ -27,7 +27,7 @@ The most minimal version of a valid prisma.yml needs to contains at least two pr
 - `datamodel`
 - `endpoint`
 
-To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a Demo server in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
+To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a [Demo server](jfr3) in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
 
 ```yml
 datamodel: datamodel.prisma
@@ -139,7 +139,7 @@ This prisma.yml expects the following file structure:
 
 ```
 .
-│ .graphqlconfig
+│ .graphqlconfig.yml
 ├── prisma.yml
 └── database
     ├── subscriptions
@@ -255,7 +255,7 @@ datamodel:
 The HTTP endpoint for your Prisma API is composed of the following components:
 
 - **Prisma server**: The server that will host your Prisma service.
-- **Workspace** (only for Demo servers in Prisma Cloud): The name of the Workspace you configured through Prisma Cloud.
+- **Workspace** (only for [Demo servers](jfr3) in Prisma Cloud): The name of the Workspace you configured through Prisma Cloud.
 - **Service name**: A descriptive name for your Prisma servic e.
 - **Service stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
 
@@ -408,8 +408,8 @@ The `hooks` property expects an **object**. The properties of that object match 
 Here is an example that performs three tasks after `prisma deploy` was executed:
 
 1. Print "Deployment finished"
-1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig`
-1. Invoke code generation as specified in `.graphqlconfig`
+1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig.yml`
+1. Invoke code generation as specified in `.graphqlconfig.yml`
 
 ```yml
 hooks:
@@ -419,7 +419,7 @@ hooks:
     - graphql codegen
 ```
 
-Note that this setup assumes the availability of a `.graphqlconfig` looking similar to this:
+Note that this setup assumes the availability of a `.graphqlconfig.yml` looking similar to this:
 
 ```yml
 projects:
