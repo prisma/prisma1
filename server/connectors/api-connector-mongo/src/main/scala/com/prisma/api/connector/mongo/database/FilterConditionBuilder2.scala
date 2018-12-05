@@ -32,8 +32,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
     val joinAndFilter = buildJoinStagesForFilter(queryArguments.filter)
 
-    //get rid of what was joined
-    //remove duplicates
+    //get rid of what was joined and remove duplicates
     val scalars: immutable.Seq[(String, Document)] = model.scalarFields.map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
     val doc: Document                              = Document(scalars).+("_id" -> "$_id")
     val mongoGroup                                 = Seq(Document("$group" -> doc))
@@ -76,7 +75,6 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case x: RelationFilter   => relationFilterJoinStage2(path, x)
 
       //--------------------------------ANCHORS------------------------------------
-//      case _ => Seq.empty
       case TrueFilter                                            => Seq(`match`(hackForTrue))
       case FalseFilter                                           => Seq(`match`(not(hackForTrue)))
       case ScalarFilter(scalarField, Contains(v))                => Seq(`match`(regex(nameHelper(path, scalarField), v.value.toString)))
@@ -107,13 +105,6 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
         Seq(`match`(or(values.map(value => all(nameHelper(path, scalarListField), GCToBson(value))): _*)))
       case x => sys.error(s"Not supported: $x")
     }
-  }
-
-  private def sortFilters(filters: Seq[Filter]): Seq[Filter] = {
-    val withRelationFilter    = filters.collect { case x if needsAggregation(Some(x))  => x }
-    val withoutRelationFilter = filters.collect { case x if !needsAggregation(Some(x)) => x }
-
-    withoutRelationFilter ++ withRelationFilter
   }
 
   private def relationFilterJoinStage2(path: Path, relationFilter: RelationFilter): Seq[conversions.Bson] = {
@@ -155,7 +146,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
 
   //-------------------------------------------------- Helpers ------------------------------------------------------
 
-  def nameHelper(path: Path, scalarField: ScalarField) = combineTwo(path.combinedNames, renameId(scalarField))
+  private def nameHelper(path: Path, scalarField: ScalarField): String = combineTwo(path.combinedNames, renameId(scalarField))
 
   //-------------------------------Determine if Aggregation is needed -----------------------------------
 
@@ -189,5 +180,13 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     val current = if (rf.relatedModel_!.isEmbedded) false else true
 
     current || next
+  }
+
+  //------------------------------Sort Filters - JoinRelationals Last --------------------------------
+  private def sortFilters(filters: Seq[Filter]): Seq[Filter] = {
+    val withRelationFilter    = filters.collect { case x if needsAggregation(Some(x))  => x }
+    val withoutRelationFilter = filters.collect { case x if !needsAggregation(Some(x)) => x }
+
+    withoutRelationFilter ++ withRelationFilter
   }
 }
