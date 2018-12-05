@@ -18,13 +18,7 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
 
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    val query = if (needsAggregation(queryArguments.filter)) {
-      aggregationQuery(database, model, queryArguments, selectedFields)
-    } else {
-      helper(model, queryArguments, None, database)
-    }
-
-    val nodes = query.map { results: Seq[Document] =>
+    val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
@@ -42,28 +36,36 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
   }
 
   def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
-    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
 
-    val mongoFilter = extraFilter match {
-      case Some(inFilter) => buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
-      case None           => buildConditionForFilter(queryArguments.filter)
+    val updatedQueryArgs = extraFilter match {
+      case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
+      case None           => queryArguments
     }
 
-    val combinedFilter = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
-      case None         => mongoFilter
-      case Some(filter) => Filters.and(mongoFilter, filter)
+    if (needsAggregation(updatedQueryArgs.filter)) {
+      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model))
+    } else {
+
+      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
+
+      val mongoFilter = buildConditionForFilter(updatedQueryArgs.filter)
+
+      val combinedFilter = CursorConditionBuilder.buildCursorCondition(updatedQueryArgs) match {
+        case None         => mongoFilter
+        case Some(filter) => Filters.and(mongoFilter, filter)
+      }
+
+      val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
+      val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, updatedQueryArgs)
+      val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+
+      val queryWithLimit = skipAndLimit.limit match {
+        case Some(limit) => queryWithSkip.limit(limit)
+        case None        => queryWithSkip
+      }
+
+      queryWithLimit.collect().toFuture
     }
-
-    val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
-    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
-    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
-
-    val queryWithLimit = skipAndLimit.limit match {
-      case Some(limit) => queryWithSkip.limit(limit)
-      case None        => queryWithSkip
-    }
-
-    queryWithLimit.collect().toFuture
   }
 
   //these are only used for relations between non-embedded types

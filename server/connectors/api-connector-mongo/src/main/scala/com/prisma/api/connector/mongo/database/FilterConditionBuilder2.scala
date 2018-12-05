@@ -175,6 +175,7 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
       case TrueFilter                 => false
       case FalseFilter                => false
       case ScalarFilter(_, _)         => false
+      case ScalarListFilter(_, _)     => false
       case OneRelationIsNullFilter(_) => true
       case x                          => sys.error(s"Not supported: $x")
     }
