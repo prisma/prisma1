@@ -4,6 +4,8 @@ import { getExistsFlowTypes } from '../utils'
 import * as prettier from 'prettier'
 import { codeComment } from '../utils/codeComment'
 
+import * as os from 'os'
+
 export interface RenderOptions {
   endpoint?: string
   secret?: string
@@ -64,5 +66,8 @@ type NodePromise = Promise<Node>`
     return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
 
 export const prisma = new Prisma()`
+  }
+  renderTypedefsFirstLine() {
+    return `// @flow${os.EOL}`
   }
 }
