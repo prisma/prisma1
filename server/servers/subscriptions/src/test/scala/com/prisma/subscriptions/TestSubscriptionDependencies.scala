@@ -7,7 +7,7 @@ import com.prisma.api.schema.SchemaBuilder
 import com.prisma.api.{ApiDependencies, TestApiDependencies}
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
-import com.prisma.connectors.utils.ConnectorLoader
+import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
 import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.jwt.jna.JnaAuth
 import com.prisma.messagebus.testkits.InMemoryPubSubTestKit
@@ -25,6 +25,10 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
   override implicit def self: ApiDependencies = this
 
   val config = ConfigLoader.load()
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+  )
 
   override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
   override val auth: Auth                 = JnaAuth(Algorithm.HS256)
@@ -39,22 +43,16 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   override lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsTestKit
   override val sssEventsSubscriber: PubSubSubscriber[String]    = sssEventsTestKit
-
-  override val keepAliveIntervalSeconds = 1000
-
-  override val projectFetcher: TestProjectFetcher = TestProjectFetcher(cacheFactory)
-
-  override lazy val apiSchemaBuilder: SchemaBuilder = ???
-  override lazy val sssEventsPubSub                 = ???
-  override lazy val webhookPublisher                = ???
-
-  override lazy val apiConnector = ConnectorLoader.loadApiConnector(config)
-
-  override def projectIdEncoder: ProjectIdEncoder = apiConnector.projectIdEncoder
-
-  override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
-  override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
-  override val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
+  override val keepAliveIntervalSeconds                         = 1000
+  override val projectFetcher: TestProjectFetcher               = TestProjectFetcher(cacheFactory)
+  override lazy val apiSchemaBuilder: SchemaBuilder             = ???
+  override lazy val sssEventsPubSub                             = ???
+  override lazy val webhookPublisher                            = ???
+  override lazy val apiConnector                                = ConnectorLoader.loadApiConnector(config)
+  override def projectIdEncoder: ProjectIdEncoder               = apiConnector.projectIdEncoder
+  override lazy val sideEffectMutactionExecutor                 = SideEffectMutactionExecutorImpl()
+  override lazy val mutactionVerifier                           = DatabaseMutactionVerifierImpl
+  override val metricsRegistry: MetricsRegistry                 = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 }
 
 case class TestProjectFetcher(cacheFactory: CacheFactory) extends ProjectFetcher {

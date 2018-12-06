@@ -6,7 +6,6 @@ import com.prisma.image.{SangriaHandlerImpl, Version}
 import com.prisma.sangria_server.AkkaHttpSangriaServer
 
 object PrismaLocalMain extends App {
-  println(s"LIB PATHS: ${System.getProperty("java.library.path")}")
   System.setProperty("org.jooq.no-logo", "true")
 
   implicit val system       = ActorSystem("single-server")

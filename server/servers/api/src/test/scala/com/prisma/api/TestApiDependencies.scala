@@ -8,7 +8,7 @@ import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.schema.SchemaBuilder
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
-import com.prisma.connectors.utils.ConnectorLoader
+import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.jwt.jna.JnaAuth
@@ -33,6 +33,10 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override implicit def self: ApiDependencies = this
 
   val config = ConfigLoader.load()
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+  )
 
   override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
   override val auth: Auth                 = JnaAuth(Algorithm.HS256)

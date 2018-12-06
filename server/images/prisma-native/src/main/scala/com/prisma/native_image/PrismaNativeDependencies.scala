@@ -12,13 +12,13 @@ import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.cache.SimpleCacheFactory
 import com.prisma.cache.factory.CacheFactory
 import com.prisma.config.{ConfigLoader, PrismaConfig}
+import com.prisma.connectors.utils.SupportedDrivers
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.jwt.graal.GraalAuth
-import com.prisma.jwt.jna.JnaAuth
 import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
@@ -40,15 +40,19 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
     with WorkerDependencies
     with SubscriptionDependencies {
 
+  val config: PrismaConfig = ConfigLoader.load()
+  val driver               = CustomJdbcDriver.jna // This is separate because of Graal bytecode substitution.
+
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.POSTGRES -> driver
+  )
+
   override implicit def self                                    = this
   override implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  override val managementSecret                                 = config.managementApiSecret.getOrElse("")
+  override val cacheFactory: CacheFactory                       = new SimpleCacheFactory()
+  override lazy val apiSchemaBuilder                            = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
 
-  val config: PrismaConfig = ConfigLoader.load()
-
-  override val managementSecret           = config.managementApiSecret.getOrElse("")
-  override val cacheFactory: CacheFactory = new SimpleCacheFactory()
-
-  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
   override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
     CachedProjectFetcherImpl(fetcher, invalidationPubSub, cacheFactory)(system.dispatcher)
@@ -58,8 +62,6 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val managementAuth = {
     config.managementApiSecret match {
       case Some(jwtSecret) if jwtSecret.nonEmpty =>
-//        println("[Warning] Management authentication is currently not implemented.")
-//        NoAuth
         GraalAuth(Algorithm.HS256)
 
       case _ =>
@@ -76,26 +78,18 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
 
   override lazy val sssEventsPubSub: InMemoryAkkaPubSub[String]   = InMemoryAkkaPubSub[String]()
   override lazy val sssEventsSubscriber: PubSubSubscriber[String] = sssEventsPubSub
-
-  override lazy val keepAliveIntervalSeconds = 10
-
-  private lazy val webhooksQueue = InMemoryAkkaQueue[Webhook]()
+  override lazy val keepAliveIntervalSeconds                      = 10
+  private lazy val webhooksQueue                                  = InMemoryAkkaQueue[Webhook]()
 
   override lazy val webhookPublisher = webhooksQueue
   override lazy val webhooksConsumer = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient       = SimpleHttpClient()
-  override lazy val auth = {
-//    println("[Warning] Project authentication is currently not implemented.")
-//    NoAuth
-    GraalAuth(Algorithm.HS256)
-  }
-
-  lazy val driver = CustomJdbcDriver.graal
+  override lazy val auth             = GraalAuth(Algorithm.HS256)
 
   lazy val databaseConfig                         = config.databases.head
-  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, driver, isActive = databaseConfig.active)
+  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, supportedDrivers(SupportedDrivers.POSTGRES), isActive = true)
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
-  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, driver, isActive = databaseConfig.active)
+  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, supportedDrivers(SupportedDrivers.POSTGRES), isActive = true)
 
   override lazy val functionValidator                = FunctionValidatorImpl()
   override lazy val sideEffectMutactionExecutor      = SideEffectMutactionExecutorImpl()

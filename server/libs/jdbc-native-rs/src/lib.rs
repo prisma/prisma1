@@ -48,7 +48,7 @@ impl<'a> Drop for PointerAndError<'a> {
 }
 
 #[no_mangle]
-pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
+    pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
     let mut connection = driver::connect(to_string(url));
     let ptr = Box::into_raw(Box::new(connection));
 

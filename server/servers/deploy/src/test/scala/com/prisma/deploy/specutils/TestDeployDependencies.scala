@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
-import com.prisma.connectors.utils.ConnectorLoader
+import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
@@ -22,6 +22,10 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
   override implicit def self: DeployDependencies = this
 
   val config = ConfigLoader.load()
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+  )
 
   implicit val reporter: ErrorReporter    = DummyErrorReporter
   override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)

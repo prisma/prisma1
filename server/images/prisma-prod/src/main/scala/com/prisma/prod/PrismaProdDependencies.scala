@@ -10,7 +10,7 @@ import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
-import com.prisma.connectors.utils.ConnectorLoader
+import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
@@ -37,6 +37,11 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with ApiDependencies
     with SubscriptionDependencies
     with WorkerDependencies {
+
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+  )
 
   override implicit lazy val executionContext: ExecutionContext = system.dispatcher
 

@@ -80,7 +80,7 @@ case class AkkaHttpSangriaServer(
       case HttpMethods.POST => HttpMethod.Post
       case _                => sys.error("not allowed")
     }
-    val headers = req.headers.map(h => h.name -> h.value).toMap
+    val headers = req.headers.map(h => h.name.toLowerCase() -> h.value).toMap
     val path    = req.uri.path.toString.split('/').filter(_.nonEmpty)
     RawRequest(
       id = requestId,

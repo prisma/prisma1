@@ -37,7 +37,7 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
   dockerfile in docker := {
     val appDir    = stage.value
     val targetDir = "/app"
-    val systemLib = "/lib"
+    val systemLibs = "/lib"
 
     val libraries = (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
       MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
@@ -51,7 +51,7 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
     new Dockerfile {
       from("prismagraphql/runtime-base")
       copy(appDir, targetDir)
-      libraries.foreach(f => copy(f._1, systemLib))
+      libraries.foreach(f => copy(f._1, systemLibs))
       copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
       runShell(s"touch", s"$targetDir/start.sh")
       runShell("echo", "'#!/bin/bash'", ">>", s"$targetDir/start.sh")
@@ -61,14 +61,14 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
       runShell(s"chmod", "+x", s"$targetDir/start.sh")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
-//      entryPointShell(s"$targetDir/start.sh")
+      entryPointShell(s"$targetDir/start.sh")
     }
   }
 )
 
 javaOptions in Universal ++= Seq("-Dorg.jooq.no-logo=true")
 
-def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*)
+def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*).dependsOn(prismaImageShared)
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing).dependsOn(logging)
 def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils).dependsOn(prismaConfig).dependsOn(tracing)
@@ -76,56 +76,37 @@ def integrationTestProject(name: String): Project =  Project(id = name, base = f
 def libProject(name: String): Project =  Project(id = name, base = file(s"./libs/$name")).settings(commonSettings: _*)
 def normalProject(name: String): Project = Project(id = name, base = file(s"./$name")).settings(commonSettings: _*)
 
-// ####################
+
+// ##################
 //       IMAGES
-// ####################
+// ##################
 lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient),
-//    mappings in Universal ++=
-//      (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
-//        MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
-//          if (prev.exists(_._2 == next._2)) {
-//            prev
-//          } else {
-//            prev :+ next
-//          }
-//      },
+    libraryDependencies ++= slick ++ Seq(postgresClient, mariaDbClient)
   )
-  .dependsOn(prismaImageShared)
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
 lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .settings(
-    libraryDependencies ++= slick ++ Seq(postgresClient),
-//    mappings in Universal ++=
-//      (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
-//        MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
-//        if (prev.exists(_._2 == next._2)) {
-//          prev
-//        } else {
-//          prev :+ next
-//        }
-//      },
+    libraryDependencies ++= slick ++ Seq(postgresClient, mariaDbClient)
   )
-  .dependsOn(prismaImageShared)
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaNative = imageProject("prisma-native")
-  .settings(libraryDependencies ++= Seq(registry, checks))
-  .dependsOn(prismaImageShared)
+lazy val prismaNative = imageProject("prisma-native", "prisma-native")
+  .settings(
+    libraryDependencies ++= Seq(registry, checks)
+  )
   .dependsOn(api)
   .dependsOn(deploy)
   .dependsOn(subscriptions)
   .dependsOn(workers)
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
-  .dependsOn(deployConnectorPostgres)
-  .dependsOn(apiConnectorPostgres)
+  .dependsOn(allConnectorProjects)
   .dependsOn(jdbcNative)
   .enablePlugins(PrismaGraalPlugin)
   .settings(
@@ -162,9 +143,9 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(subscriptions)
   .dependsOn(sangriaServer)
 
-// ####################
+// ###################
 //       SERVERS
-// ####################
+// ###################
 
 lazy val deploy = serverProject("deploy")
   .dependsOn(serversShared % "compile->compile;test->test")
@@ -176,6 +157,9 @@ lazy val deploy = serverProject("deploy")
   .dependsOn(sangriaUtils)
   .dependsOn(jwtNative)
   .dependsOn(cache)
+  .settings( // Drivers used for testing
+    libraryDependencies ++= slick ++ Seq(postgresClient % "test", mariaDbClient % "test")
+  )
 
 lazy val api = serverProject("api")
   .dependsOn(serversShared % "compile->compile;test->test")
@@ -187,6 +171,9 @@ lazy val api = serverProject("api")
   .dependsOn(cache)
   .dependsOn(jwtNative)
   .dependsOn(sangriaUtils)
+  .settings( // Drivers used for testing
+    libraryDependencies ++= slick ++ Seq(postgresClient % "test", mariaDbClient % "test")
+  )
 
 lazy val subscriptions = serverProject("subscriptions")
   .dependsOn(serversShared % "compile->compile;test->test")
@@ -205,17 +192,14 @@ lazy val workers = serverProject("workers")
 lazy val serversShared = serverProject("servers-shared")
   .dependsOn(connectorUtils % "test->test")
 
-// ####################
+// ######################
 //       CONNECTORS
-// ####################
+// ######################
 
 lazy val connectorUtils = connectorProject("utils")
   .dependsOn(deployConnectorProjects)
   .dependsOn(apiConnectorProjects)
   .dependsOn(jdbcNative)
-  .settings(
-    libraryDependencies ++= Seq(mariaDbClient, postgresClient)
-  )
 
 lazy val connectorShared = connectorProject("shared")
   .settings(
@@ -267,9 +251,9 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .settings(libraryDependencies ++= Seq(mongoClient))
 
 
-// ####################
+// ##################
 //       SHARED
-// ####################
+// ##################
 
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues)
@@ -280,17 +264,17 @@ lazy val sharedModels = normalProject("shared-models")
   ) ++ joda
 )
 
-// ####################
+// #####################
 //   INTEGRATION TESTS
-// ####################
+// #####################
 
 lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql")
   .dependsOn(deploy % "compile->compile;test->test")
   .dependsOn(api % "compile->compile;test->test")
 
-// ####################
+// ################
 //       LIBS
-// ####################
+// ################
 
 lazy val tracing = libProject("tracing")
 lazy val logging = libProject("logging").settings(libraryDependencies ++= Seq(scalaLogging))

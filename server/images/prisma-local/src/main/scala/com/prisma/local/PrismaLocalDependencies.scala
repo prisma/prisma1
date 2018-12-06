@@ -10,7 +10,7 @@ import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
-import com.prisma.connectors.utils.ConnectorLoader
+import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
@@ -35,6 +35,11 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with ApiDependencies
     with WorkerDependencies
     with SubscriptionDependencies {
+
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+  )
 
   override implicit def self                                    = this
   override implicit lazy val executionContext: ExecutionContext = system.dispatcher
