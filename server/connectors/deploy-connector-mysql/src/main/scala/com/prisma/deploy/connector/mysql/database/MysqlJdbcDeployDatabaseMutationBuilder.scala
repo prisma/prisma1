@@ -81,7 +81,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
            UNIQUE INDEX `id_UNIQUE` (`id` ASC),
            #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
            #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
-           UNIQUE INDEX `#${relationTableName}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
+           UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
            FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
