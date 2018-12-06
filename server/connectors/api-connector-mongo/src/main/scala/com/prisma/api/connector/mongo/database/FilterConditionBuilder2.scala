@@ -107,21 +107,24 @@ trait FilterConditionBuilder2 extends FilterConditionBuilder {
     }
   }
 
-  private def oneRelationNull(field: RelationField, path: Path) = {
-    //this needs to use the correct fieldName and needs to look on the correct side equal: null should work here
-
-    field.relatedModel_!.isEmbedded match {
+  private def oneRelationNull(relationField: RelationField, path: Path) = {
+    relationField.relatedModel_!.isEmbedded match {
       case true =>
-        Seq(`match`(equal(combineTwo(path.combinedNames, field.dbName), null)))
+        Seq(`match`(equal(combineTwo(path.combinedNames, relationField.dbName), null)))
 
       case false =>
-        field.relationIsInlinedInParent match {
+        relationField.relationIsInlinedInParent match {
           case true =>
-            Seq(`match`(equal(combineTwo(path.combinedNames, field.relation.inlineManifestation.get.referencingColumn), null)))
+            Seq(`match`(equal(combineTwo(path.combinedNames, relationField.relation.inlineManifestation.get.referencingColumn), null)))
           case false =>
-            //join other model
-            //keep the fields that have id as null
-            Seq(`match`(equal(combineTwo(path.combinedNames, field.dbName), null)))
+            val mongoJoin = lookup(
+              localField = combineTwo(path.combinedNames, renameId(relationField.model.idField_!)),
+              from = relationField.relatedModel_!.dbName,
+              foreignField = relationField.relatedField.dbName,
+              as = combineTwo(path.combinedNames, relationField.dbName)
+            )
+            val mongoMatch = `match`(size(combineTwo(path.combinedNames, relationField.dbName), 0))
+            Seq(mongoJoin, mongoMatch)
         }
     }
   }
