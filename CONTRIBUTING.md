@@ -96,8 +96,6 @@ git push
 
 # Labels
 
-## Overview
-
 ## Category: Kind
 
 - kind/bug
