@@ -54,7 +54,7 @@ case class SchemaInferrerImpl(
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.modelTypes.map { prismaType =>
       val fieldNames = prismaType.fields.map(_.name)
-      val hiddenReservedFields = if (capabilities.has(MigrationsCapability) && isLegacy) {
+      val hiddenReservedFields = if (isLegacy) {
         if (!prismaType.isEmbedded) {
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
           missingReservedFields.map(ReservedFields.reservedFieldFor)
