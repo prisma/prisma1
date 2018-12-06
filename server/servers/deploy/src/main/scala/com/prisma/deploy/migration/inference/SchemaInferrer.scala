@@ -59,7 +59,7 @@ case class SchemaInferrerImpl(
       val fieldNames = prismaType.fields.map(_.name)
       // TODO: this can be removed after the unification of active and passive SQL
       val hiddenReservedFields = if (isSql) {
-        if (hasMigrations) {
+        if (hasMigrations && isLegacy) {
           val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
           missingReservedFields.map(ReservedFields.reservedFieldFor)
         } else {
