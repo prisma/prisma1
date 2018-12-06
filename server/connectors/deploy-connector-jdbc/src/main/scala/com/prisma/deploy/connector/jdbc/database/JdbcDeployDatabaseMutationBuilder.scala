@@ -19,16 +19,16 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   /*
    * Connector-specific functions
    */
-  def truncateProjectTables(project: Project): DBIOAction[Any, NoStream, Effect.All]
-  def deleteProjectDatabase(projectId: String): DBIOAction[Any, NoStream, Effect.All]
-  def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All]
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
-  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIOAction[Any, NoStream, Effect.All]
+  def truncateProjectTables(project: Project): DBIO[Any]
+  def deleteProjectDatabase(projectId: String): DBIO[Any]
+  def renameTable(projectId: String, currentName: String, newName: String): DBIO[Any]
+  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[Any]
+  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[Any]
 
-  def createModelTable(projectId: String, model: Model): DBIOAction[Any, NoStream, Effect.All]
-  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
-  def createRelationTable(projectId: String, relation: Relation): DBIOAction[Any, NoStream, Effect.All]
-  def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIOAction[Any, NoStream, Effect.All]
+  def createModelTable(projectId: String, model: Model): DBIO[Any]
+  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[Any]
+  def createRelationTable(projectId: String, relation: Relation): DBIO[Any]
+  def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[Any]
   def createColumn(
       projectId: String,
       tableName: String,
@@ -37,9 +37,9 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       isUnique: Boolean,
       isList: Boolean,
       typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
-  ): DBIOAction[Any, NoStream, Effect.All]
+  ): DBIO[Any]
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[Any]
   def updateColumn(
       projectId: String,
       tableName: String,
@@ -48,7 +48,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       newIsRequired: Boolean,
       newIsList: Boolean,
       newTypeIdentifier: ScalarTypeIdentifier
-  ): DBIOAction[Any, NoStream, Effect.All]
+  ): DBIO[Any]
 
   /*
    * Connector-agnostic functions
