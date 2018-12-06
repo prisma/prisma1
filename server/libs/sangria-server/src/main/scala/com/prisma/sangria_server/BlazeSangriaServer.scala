@@ -2,6 +2,9 @@ package com.prisma.sangria_server
 
 import cats.effect._
 import cats.implicits._
+import com.oracle.svm.core.log.{Log, StringBuilderLog}
+import com.oracle.svm.core.thread.VMThreads.StatusSupport
+import com.oracle.svm.core.thread.{JavaThreads, VMThreads}
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
@@ -43,9 +46,24 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
 
   val service = HttpService[IO] {
     case request if request.pathInfo == "/debug" =>
+      println("----------------------------- Graal Threads -----------------------------")
+      var vmThread = VMThreads.firstThread()
+      val wat      = new StringBuilderLog().zhex(vmThread.rawValue())
+      while (vmThread.isNonNull) {
+        val javaThread = JavaThreads.singleton().fromVMThread(vmThread)
+        println(
+          s"VMThread: ${wat.asInstanceOf[StringBuilderLog].getResult}  ${StatusSupport.getStatusString(vmThread)}  ${javaThread.getId}  ${javaThread.getName}")
+
+        vmThread = VMThreads.nextThread(vmThread)
+      }
+
+      println("----------------------------- Java Threads -----------------------------")
+
       Thread.getAllStackTraces.forEach((k, v) => {
         println(s"""
                  |---------------------
+                 |${k.getId}
+                 |${k.getName}
                  |${k.toString}
                  |${v.mkString("\n")}
                  |---------------------
@@ -64,7 +82,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       val requestId       = createRequestId()
       val requestIdHeader = Header("Request-Id", requestId)
 
-      val response: IO[Response[IO]] = for {
+      val response = for {
         rawRequest <- http4sRequestToRawRequest(request, requestId)
         result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
         response   <- Ok.apply(result, requestIdHeader)
