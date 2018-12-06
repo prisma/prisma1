@@ -19,6 +19,9 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
 
   def executor: SangriaServerExecutor
 
+  implicit val system       = ActorSystem()
+  implicit val materializer = ActorMaterializer()
+
   val handler = new SangriaHandler {
     var startHasBeenCalled = 0
 

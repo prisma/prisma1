@@ -14,7 +14,7 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //Postgres has a limit of 32678 parameters to a query
 
-  "The delete many Mutation" should "delete the items matching the where clause" ignore {
+  "The delete many Mutation" should "delete the items matching the where clause" in {
     val project: Project = SchemaDsl.fromString() {
       """
         |type Top {

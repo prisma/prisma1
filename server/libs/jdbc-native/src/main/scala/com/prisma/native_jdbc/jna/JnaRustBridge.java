@@ -8,25 +8,25 @@ public interface JnaRustBridge extends Library {
 
     Pointer newConnection(String url);
 
-    String startTransaction(Pointer connection);
+    Pointer startTransaction(Pointer connection);
 
-    String commitTransaction(Pointer connection);
+    Pointer commitTransaction(Pointer connection);
 
-    String rollbackTransaction(Pointer connection);
+    Pointer rollbackTransaction(Pointer connection);
 
-    String closeConnection(Pointer connection);
+    Pointer closeConnection(Pointer connection);
 
-    String sqlExecute(Pointer connection, String query, String params);
+    Pointer sqlExecute(Pointer connection, String query, String params);
 
-    String sqlQuery(Pointer connection, String query, String params);
+    Pointer sqlQuery(Pointer connection, String query, String params);
 
-    String executePreparedstatement(Pointer stmt, String params);
+    Pointer executePreparedstatement(Pointer stmt, String params);
 
-    String queryPreparedstatement(Pointer stmt, String params);
+    Pointer queryPreparedstatement(Pointer stmt, String params);
 
-    String closeStatement(Pointer stmt);
+    Pointer closeStatement(Pointer stmt);
 
     void destroy(PointerAndError pointerAndError);
 
-    void destroy_string(String s);
+    void destroy_string(Pointer s);
 }

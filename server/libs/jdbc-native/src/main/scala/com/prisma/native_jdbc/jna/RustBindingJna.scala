@@ -35,62 +35,65 @@ object RustBindingJna extends RustBinding {
   }
 
   override def startTransaction(connection: RustConnectionJna): RustCallResult = {
-    val raw = library.startTransaction(connection.conn)
-    processCallResult(raw)
+    val ptr = library.startTransaction(connection.conn)
+    processCallResult(ptr)
   }
 
   override def commitTransaction(connection: RustConnectionJna): RustCallResult = {
-    val raw = library.commitTransaction(connection.conn)
-    processCallResult(raw)
+    val ptr = library.commitTransaction(connection.conn)
+    processCallResult(ptr)
   }
 
   override def rollbackTransaction(connection: RustConnectionJna): RustCallResult = {
-    val raw = library.rollbackTransaction(connection.conn)
-    processCallResult(raw)
+    val ptr = library.rollbackTransaction(connection.conn)
+    processCallResult(ptr)
   }
 
   override def closeConnection(connection: RustConnectionJna): RustCallResult = {
-    val raw = library.closeConnection(connection.conn)
-    processCallResult(raw)
+    println(s"[BRIDGE] Closing connection ${connection.hashCode()}")
+    val ptr = library.closeConnection(connection.conn)
+    processCallResult(ptr)
   }
 
   override def sqlExecute(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
     println(s"[JNA] Execute: '$query' with params: $params")
-    val raw = library.sqlExecute(connection.conn, query, params)
-    println(s"[JNA] Result: $raw")
-    processCallResult(raw)
+    val ptr = library.sqlExecute(connection.conn, query, params)
+    println(s"[JNA] Result: $ptr")
+    processCallResult(ptr)
   }
 
   override def sqlQuery(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
     println(s"[JNA] Query: '$query' with params: $params")
-    val raw = library.sqlQuery(connection.conn, query, params)
-    println(s"[JNA] Result: $raw")
-    processCallResult(raw)
+    val ptr = library.sqlQuery(connection.conn, query, params)
+    println(s"[JNA] Result: $ptr")
+    processCallResult(ptr)
   }
 
   override def executePreparedstatement(stmt: RustPreparedStatementJna, params: String): RustCallResult = {
     println(s"[JNA] PreparedStatement: Executing with params: $params")
-    val raw = library.executePreparedstatement(stmt.stmt, params)
-    println(s"[JNA] Result: $raw")
-    processCallResult(raw)
+    val ptr = library.executePreparedstatement(stmt.stmt, params)
+    println(s"[JNA] Result: $ptr")
+    processCallResult(ptr)
   }
 
   override def queryPreparedstatement(stmt: RustPreparedStatementJna, params: String): RustCallResult = {
     println(s"[JNA] PreparedStatement: Querying with params: $params")
-    val raw = library.queryPreparedstatement(stmt.stmt, params)
-    println(s"[JNA] Result: $raw")
-    processCallResult(raw)
+    val ptr = library.queryPreparedstatement(stmt.stmt, params)
+    println(s"[JNA] Result: $ptr")
+    processCallResult(ptr)
   }
 
   override def closeStatement(stmt: RustPreparedStatementJna): RustCallResult = {
-    val raw = library.closeStatement(stmt.stmt)
-    processCallResult(raw)
+    val ptr = library.closeStatement(stmt.stmt)
+    processCallResult(ptr)
   }
 
-  def processCallResult(raw: String) =
-    (Try { RustCallResult.fromString(raw) } match {
+  def processCallResult(ptr: Pointer) = {
+    val str = ptr.getString(0)
+    (Try { RustCallResult.fromString(str) } match {
       case x @ _ =>
-        library.destroy_string(raw)
+        library.destroy_string(ptr)
         x
     }).get
+  }
 }

@@ -52,6 +52,7 @@ pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConn
     let mut connection = driver::connect(to_string(url));
     let ptr = Box::into_raw(Box::new(connection));
 
+    println!("New connection: {:?}", ptr);
     return ptr;
 }
 
@@ -206,6 +207,7 @@ struct CallError {
 fn serializeCallResult(res: driver::Result<CallResult>) -> *const c_char {
     let result = handleResult(res);
     let serialized = serde_json::to_string(&result).unwrap();
+
     to_ptr(serialized)
 }
 

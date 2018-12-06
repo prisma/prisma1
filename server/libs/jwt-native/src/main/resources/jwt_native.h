@@ -7,19 +7,16 @@ typedef struct ProtocolBuffer {
   uintptr_t data_len;
 } ProtocolBuffer;
 
-typedef struct ExtGrant {
-  const char *target;
-  const char *action;
-} ExtGrant;
-
 ProtocolBuffer *create_token(const char *algorithm,
                              const char *secret,
                              int64_t expiration_in_seconds,
-                             const ExtGrant *grant);
-
-void destroy_buffer(ProtocolBuffer *buffer);
+                             const char *allowed_target,
+                             const char *allowed_action);
 
 ProtocolBuffer *verify_token(const char *token,
-                             const char *secrets,
+                             const char **secrets,
                              int64_t num_secrets,
-                             const ExtGrant *grant);
+                             const char *expect_target,
+                             const char *expect_action);
+
+void destroy_buffer(ProtocolBuffer *buffer);

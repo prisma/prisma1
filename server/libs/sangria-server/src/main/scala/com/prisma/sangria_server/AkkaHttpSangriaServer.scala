@@ -13,22 +13,26 @@ import akka.http.scaladsl.server.{ExceptionHandler, Route, UnsupportedWebSocketS
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.JsValue
 
 import scala.concurrent.{Await, Future}
 
 object AkkaHttpSangriaServer extends SangriaServerExecutor {
-  override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(handler, port, requestPrefix)
+  override def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer) = {
+    AkkaHttpSangriaServer(handler, port, requestPrefix)
+  }
 
   override def supportsWebsockets = true
 }
 
-case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
+case class AkkaHttpSangriaServer(
+    handler: SangriaHandler,
+    port: Int,
+    requestPrefix: String
+)(implicit val system: ActorSystem, val materializer: ActorMaterializer)
+    extends SangriaServer
+    with PlayJsonSupport {
   import scala.concurrent.duration._
-
-  implicit val system       = ActorSystem("sangria-server")
-  implicit val materializer = ActorMaterializer()
-
   import system.dispatcher
 
   val routes = {

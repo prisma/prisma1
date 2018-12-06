@@ -3,14 +3,6 @@ use Result;
 use std::os::raw::c_char;
 use ffi_utils::to_str;
 
-/// External Grant for passing a grant into Rust
-#[repr(C)]
-#[no_mangle]
-pub struct ExtGrant {
-    target: *const c_char,
-    action: *const c_char,
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct Grant {
     pub target: String,
@@ -42,13 +34,11 @@ impl Grant {
         }
     }
 
-    pub fn from_ext(ext_grant: *const ExtGrant) -> Option<Grant> {
-        if ext_grant.is_null() { return None; }
-        unsafe {
-            Some(Grant {
-                target: to_str((*ext_grant).target).to_owned(),
-                action: to_str((*ext_grant).action).to_owned(),
-            })
-        }
+    pub fn from(target: *const c_char, action: *const c_char) -> Option<Grant> {
+        if target.is_null() || action.is_null() { return None; }
+        Some(Grant {
+            target: to_str(target).to_owned(),
+            action: to_str(action).to_owned(),
+        })
     }
 }

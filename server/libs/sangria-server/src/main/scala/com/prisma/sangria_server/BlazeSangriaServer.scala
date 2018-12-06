@@ -1,5 +1,7 @@
 package com.prisma.sangria_server
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import cats.effect._
 import cats.implicits._
 import com.oracle.svm.core.log.{Log, StringBuilderLog}
@@ -18,7 +20,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 object BlazeSangriaServer extends SangriaServerExecutor {
-  override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = BlazeSangriaServer(handler, port, requestPrefix)
+  override def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer) = {
+    BlazeSangriaServer(handler, port, requestPrefix)
+  }
 
   override def supportsWebsockets = false
 }
@@ -100,7 +104,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
         id = requestId,
         method = HttpMethod.Post,
         path = request.uri.path.split('/').filter(_.nonEmpty).toVector,
-        headers = request.headers.map(h => h.name.value -> h.value).toMap,
+        headers = request.headers.map(h => h.name.value.toLowerCase() -> h.value).toMap,
         json = circeJsonToPlayJson(json),
         ip = "0.0.0.0"
       )
