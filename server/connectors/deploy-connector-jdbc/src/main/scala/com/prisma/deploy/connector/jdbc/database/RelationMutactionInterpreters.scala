@@ -46,7 +46,7 @@ case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBu
 
 case class DeleteInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteInlineRelation] {
   override def execute(mutaction: DeleteInlineRelation) = {
-    builder.deleteColumn(mutaction.projectId, mutaction.model.dbName, mutaction.column)
+    builder.deleteRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
   }
 
   override def rollback(mutaction: DeleteInlineRelation) = {

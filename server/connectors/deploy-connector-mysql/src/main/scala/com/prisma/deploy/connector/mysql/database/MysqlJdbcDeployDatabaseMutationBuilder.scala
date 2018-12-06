@@ -92,6 +92,29 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
         """
   }
 
+  override def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
+    for {
+      namesOfForeignKey <- getNamesOfForeignKeyConstraints(projectId, model, column)
+      _                 <- sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
+      _                 <- sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)} DROP COLUMN `#$column`;"""
+    } yield ()
+  }
+
+  private def getNamesOfForeignKeyConstraints(projectId: String, model: Model, column: String): DatabaseAction[Vector[String], NoStream, Effect] = {
+    for {
+      result <- sql"""
+            SELECT
+              CONSTRAINT_NAME
+            FROM
+              INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE
+              REFERENCED_TABLE_SCHEMA = '#$projectId' AND
+              TABLE_NAME = '#${model.dbName}' AND
+              COLUMN_NAME = '#$column';
+          """.as[String]
+    } yield result
+  }
+
   override def createColumn(projectId: String,
                             tableName: String,
                             columnName: String,

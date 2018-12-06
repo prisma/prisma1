@@ -96,6 +96,10 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
            REFERENCES #${qualify(projectId, references.dbName)} (#${qualify(references.dbNameOfIdField_!)}) ON DELETE SET NULL;"""
   }
 
+  override def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
+    deleteColumn(projectId, model.dbName, column)
+  }
+
   override def createColumn(projectId: String,
                             tableName: String,
                             columnName: String,
