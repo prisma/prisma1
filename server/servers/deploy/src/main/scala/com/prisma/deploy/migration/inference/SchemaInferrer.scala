@@ -40,6 +40,8 @@ case class SchemaInferrerImpl(
 
   val isLegacy      = capabilities.has(LegacyDataModelCapability)
   val hasMigrations = capabilities.has(MigrationsCapability)
+  val isMongo       = capabilities.has(RelationLinkListCapability)
+  val isSql         = !isMongo
 
   def infer(): Schema = {
     val schemaWithOutOptionalBackrelations = Schema(
@@ -55,21 +57,24 @@ case class SchemaInferrerImpl(
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.modelTypes.map { prismaType =>
       val fieldNames = prismaType.fields.map(_.name)
-      val hiddenReservedFields = (isLegacy, hasMigrations) match {
-        case (true, true) => // SQL active + Mongo in Tests
-          if (!prismaType.isEmbedded) {
-            val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-            missingReservedFields.map(ReservedFields.reservedFieldFor)
-          } else {
-            Vector(ReservedFields.embeddedIdField)
-          }
-        case (true, false) =>
+      // TODO: this can be removed after the unification of active and passive SQL
+      val hiddenReservedFields = if (isSql) {
+        if (hasMigrations) {
+          val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+          missingReservedFields.map(ReservedFields.reservedFieldFor)
+        } else {
           Vector.empty
-
-        case (false, _) =>
+        }
+      } else if (isMongo) { // MONGO
+        if (isLegacy) { // this is the case in tests
+          Vector(ReservedFields.embeddedIdField)
+        } else {
           Vector.empty
-
+        }
+      } else {
+        sys.error("Will not happen.")
       }
+
       val manifestation = prismaType.tableName.map(ModelManifestation)
 
       val stableIdentifier = baseSchema.getModelByName(schemaMapping.getPreviousModelName(prismaType.name)) match {
