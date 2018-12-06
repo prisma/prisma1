@@ -3,22 +3,23 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
+import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Projections.include
-import org.mongodb.scala.{Document, FindObservable, MongoCollection, MongoDatabase}
+import org.mongodb.scala.{Document, FindObservable, MongoDatabase}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder2 {
+trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder {
 
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
+    val nodes = manyQueryHelper(model, queryArguments, None, database).map { results: Seq[Document] =>
       results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
@@ -31,11 +32,14 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
   }
 
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
-    val bsonFilter: Bson = buildConditionForFilter(filter)
-    database.getCollection(model.dbName).find(bsonFilter).projection(include("_id")).collect().toFuture.map(_.map(DocumentToId.toCUIDGCValue))
+    manyQueryHelper(model, QueryArguments.withFilter(filter), None, database, true).map(_.map(DocumentToId.toCUIDGCValue))
   }
 
-  def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
+  def manyQueryHelper(model: Model,
+                      queryArguments: QueryArguments,
+                      extraFilter: Option[Filter] = None,
+                      database: MongoDatabase,
+                      idOnly: Boolean = false): Future[Seq[Document]] = {
 
     val updatedQueryArgs = extraFilter match {
       case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
@@ -43,7 +47,7 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
     }
 
     if (needsAggregation(updatedQueryArgs.filter)) {
-      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model))
+      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model), idOnly)
     } else {
 
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
@@ -64,18 +68,22 @@ trait NodeManyQueries extends FilterConditionBuilder with FilterConditionBuilder
         case None        => queryWithSkip
       }
 
-      queryWithLimit.collect().toFuture
+      idOnly match {
+        case true  => queryWithLimit.projection(include("_id")).collect().toFuture
+        case false => queryWithLimit.collect().toFuture
+
+      }
+
     }
   }
 
-  //these are only used for relations between non-embedded types
   def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: QueryArguments, selectedFields: SelectedFields) =
     SimpleMongoAction { database =>
       val relatedField = fromField.relatedField
       val model        = fromField.relatedModel_!
 
       val inFilter: Filter = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
-      helper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
+      manyQueryHelper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
         val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
           case true =>
             val tuples = for {
