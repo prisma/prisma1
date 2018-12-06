@@ -484,7 +484,12 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val cColumn = result.table_!("A").column_!("c")
     cColumn.foreignKey should equal(Some(ForeignKey("C", "id")))
-    cColumn.typeIdentifier should be(TI.UUID)
+    if (deployConnector.capabilities.has(UuidIdCapability)) {
+      cColumn.typeIdentifier should be(TI.UUID)
+    } else {
+      // on MySQL this fails but we do not allow UUID
+      cColumn.typeIdentifier should be(TI.String)
+    }
   }
 
   "removing an inline relation link should work" in {
