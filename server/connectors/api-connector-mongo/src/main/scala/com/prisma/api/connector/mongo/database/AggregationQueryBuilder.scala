@@ -78,7 +78,6 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
       case AndFilter(filters)     => sortFilters(filters).flatMap(f => buildJoinStagesForFilter(path, f)) // and(nonEmptyConditions(path, filters): _*)
       case OrFilter(filters)      => sys.error("This is not implemented for the Mongo connector") // or(nonEmptyConditions(path, filters): _*)
       case NotFilter(filters)     => sys.error("This is not implemented for the Mongo connector") // nor(filters.map(f => buildConditionForFilter(path, f)): _*)
-      case NodeFilter(filters)    => sys.error("Later") // buildConditionForFilter(path, OrFilter(filters))
       case x: RelationFilter      => relationFilterJoinStage(path, x)
 
       //--------------------------------ANCHORS------------------------------------
@@ -190,7 +189,6 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
       case AndFilter(filters)     => filters.exists(f => needsAggregation(f))
       case OrFilter(filters)      => filters.exists(f => needsAggregation(f))
       case NotFilter(filters)     => filters.exists(f => needsAggregation(f))
-      case NodeFilter(filters)    => filters.exists(f => needsAggregation(f))
       case x: RelationFilter      => relationNeedsFilter(x)
 
       //--------------------------------ANCHORS------------------------------------

@@ -314,7 +314,6 @@ object FilterHelper {
           case value: Seq[Any] if isFilterList(value, filterName = "OR")                         => OrFilter(generateSubFilters(value))
           case Seq() if filter.name == "NOT"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "NOT")                        => NotFilter(generateSubFilters(value))
-          case value: Seq[Any] if isFilterList(value, filterName = "node")                       => NodeFilter(generateSubFilters(value))
           //--------------------------ANCHORS------------------------------
           case values: Seq[Any] if isScalarListFilter(filterName = "_contains_every") => scalarListFilter(ListContainsEvery(values.map(getGCValue).toVector))
           case values: Seq[Any] if isScalarListFilter(filterName = "_contains_some")  => scalarListFilter(ListContainsSome(values.map(getGCValue).toVector))
