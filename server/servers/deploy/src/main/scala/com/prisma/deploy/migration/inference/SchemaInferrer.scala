@@ -62,7 +62,11 @@ case class SchemaInferrerImpl(
           Vector(ReservedFields.embeddedIdField)
         }
       } else {
-        Vector.empty
+        if (!prismaType.isEmbedded) {
+          Vector.empty
+        } else {
+          Vector(ReservedFields.embeddedIdField)
+        }
       }
       val manifestation = prismaType.tableName.map(ModelManifestation)
 

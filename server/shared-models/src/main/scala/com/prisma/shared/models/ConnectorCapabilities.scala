@@ -94,9 +94,8 @@ object ConnectorCapabilities extends BooleanUtils {
       RelationLinkListCapability,
       EmbeddedTypesCapability
     )
-    val migrationsCapability = isActive.toOption(MigrationsCapability)
-    val dataModelCapability  = isTest.toOption(LegacyDataModelCapability)
+    val dataModelCapability = isTest.toOption(LegacyDataModelCapability)
 
-    ConnectorCapabilities(common ++ migrationsCapability ++ dataModelCapability)
+    ConnectorCapabilities(common ++ dataModelCapability)
   }
 }
