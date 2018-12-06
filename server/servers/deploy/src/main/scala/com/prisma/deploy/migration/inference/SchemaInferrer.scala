@@ -38,7 +38,8 @@ case class SchemaInferrerImpl(
     inferredTables: InferredTables
 ) extends AwaitUtils {
 
-  val isLegacy = capabilities.has(LegacyDataModelCapability)
+  val isLegacy      = capabilities.has(LegacyDataModelCapability)
+  val hasMigrations = capabilities.has(MigrationsCapability)
 
   def infer(): Schema = {
     val schemaWithOutOptionalBackrelations = Schema(
@@ -54,19 +55,20 @@ case class SchemaInferrerImpl(
   lazy val nextModels: Vector[ModelTemplate] = {
     prismaSdl.modelTypes.map { prismaType =>
       val fieldNames = prismaType.fields.map(_.name)
-      val hiddenReservedFields = if (isLegacy) {
-        if (!prismaType.isEmbedded) {
-          val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
-          missingReservedFields.map(ReservedFields.reservedFieldFor)
-        } else {
-          Vector(ReservedFields.embeddedIdField)
-        }
-      } else {
-        if (!prismaType.isEmbedded) {
+      val hiddenReservedFields = (isLegacy, hasMigrations) match {
+        case (true, true) => // SQL active + Mongo in Tests
+          if (!prismaType.isEmbedded) {
+            val missingReservedFields = ReservedFields.reservedFieldNames.filterNot(fieldNames.contains)
+            missingReservedFields.map(ReservedFields.reservedFieldFor)
+          } else {
+            Vector(ReservedFields.embeddedIdField)
+          }
+        case (true, false) =>
           Vector.empty
-        } else {
-          Vector(ReservedFields.embeddedIdField)
-        }
+
+        case (false, _) =>
+          Vector.empty
+
       }
       val manifestation = prismaType.tableName.map(ModelManifestation)
 
