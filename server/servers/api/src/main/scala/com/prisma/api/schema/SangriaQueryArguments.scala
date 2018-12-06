@@ -30,15 +30,22 @@ object SangriaQueryArguments {
     Argument(name, inputType, description = "")
   }
 
-  def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
-    val utils                              = FilterObjectTypeBuilder(model, project)
-    val filterObject: InputObjectType[Any] = utils.subscriptionFilterObjectType
+  def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities) = {
+    val utils = FilterObjectTypeBuilder(model, project)
+    val filterObject: InputObjectType[Any] = capabilities.has(MongoJoinRelationLinksCapability) match {
+      case false => utils.subscriptionFilterObjectType
+      case true  => utils.subscriptionFilterObjectTypeForMongo
+    }
     Argument(name, OptionInputType(filterObject), description = "")
   }
 
-  def internalWhereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
-    val utils                              = FilterObjectTypeBuilder(model, project)
-    val filterObject: InputObjectType[Any] = utils.internalSubscriptionFilterObjectType
+  def internalWhereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities) = {
+    val utils = FilterObjectTypeBuilder(model, project)
+    val filterObject = capabilities.has(MongoJoinRelationLinksCapability) match {
+      case false => utils.internalSubscriptionFilterObjectType
+      case true  => utils.internalSubscriptionFilterObjectTypeForMongo
+    }
+
     Argument(name, OptionInputType(filterObject), description = "")
   }
 }

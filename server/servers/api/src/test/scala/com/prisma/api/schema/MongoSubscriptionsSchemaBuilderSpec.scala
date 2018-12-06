@@ -8,8 +8,8 @@ import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
 import sangria.renderer.SchemaRenderer
 
-class SubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
-  override def doNotRunForCapabilities: Set[ConnectorCapability] = Set(MongoJoinRelationLinksCapability)
+class MongoSubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(MongoJoinRelationLinksCapability)
 
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
@@ -52,7 +52,6 @@ class SubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with ApiSpec
         "TodoSubscriptionWhereInput",
         fields = Vector(
           "AND: [TodoSubscriptionWhereInput!]",
-          "OR: [TodoSubscriptionWhereInput!]",
           "mutation_in: [MutationType!]",
           "updatedFields_contains: String",
           "updatedFields_contains_every: [String!]",

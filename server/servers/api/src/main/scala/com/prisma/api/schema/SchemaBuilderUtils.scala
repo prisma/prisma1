@@ -164,6 +164,41 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
       }
     )
 
+  // this is just a dummy schema as it is only used by graphiql to validate the subscription input
+  lazy val subscriptionFilterObjectTypeForMongo: InputObjectType[Any] =
+    InputObjectType[Any](
+      s"${model.name}SubscriptionWhereInput",
+      () => {
+        List(
+          InputField("AND", OptionInputType(ListInputType(subscriptionFilterObjectTypeForMongo)), description = FilterArguments.ANDFilter.description),
+          InputField(
+            "mutation_in",
+            OptionInputType(ListInputType(ModelMutationType.Type)),
+            description = "The subscription event gets dispatched when it's listed in mutation_in"
+          ),
+          InputField(
+            "updatedFields_contains",
+            OptionInputType(StringType),
+            description = "The subscription event gets only dispatched when one of the updated fields names is included in this list"
+          ),
+          InputField(
+            "updatedFields_contains_every",
+            OptionInputType(ListInputType(StringType)),
+            description = "The subscription event gets only dispatched when all of the field names included in this list have been updated"
+          ),
+          InputField(
+            "updatedFields_contains_some",
+            OptionInputType(ListInputType(StringType)),
+            description = "The subscription event gets only dispatched when some of the field names included in this list have been updated"
+          ),
+          InputField(
+            "node",
+            OptionInputType(filterObjectTypeForMongo)
+          )
+        )
+      }
+    )
+
   lazy val internalSubscriptionFilterObjectType: InputObjectType[Any] =
     InputObjectType[Any](
       s"${model.name}SubscriptionWhereInput",
@@ -178,6 +213,23 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
           InputField(
             "node",
             OptionInputType(filterObjectType)
+          )
+        )
+      }
+    )
+
+  lazy val internalSubscriptionFilterObjectTypeForMongo: InputObjectType[Any] =
+    InputObjectType[Any](
+      s"${model.name}SubscriptionWhereInput",
+      () => {
+        List(
+          InputField("AND", OptionInputType(ListInputType(internalSubscriptionFilterObjectTypeForMongo)), description = FilterArguments.ANDFilter.description),
+          InputField("boolean",
+                     OptionInputType(BooleanType),
+                     description = "Placeholder boolean type that will be replaced with the according boolean in the schema"),
+          InputField(
+            "node",
+            OptionInputType(filterObjectTypeForMongo)
           )
         )
       }

@@ -44,8 +44,9 @@ case class SubscriptionSchema(
         )),
     arguments = List(
       externalSchema match {
-        case false => SangriaQueryArguments.internalWhereSubscriptionArgument(model = model, project = project)
-        case true  => SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)
+        case false =>
+          SangriaQueryArguments.internalWhereSubscriptionArgument(model = model, project = project, capabilities = dependencies.apiConnector.capabilities)
+        case true => SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project, capabilities = dependencies.apiConnector.capabilities)
       }
     ),
     resolve = (ctx) =>
