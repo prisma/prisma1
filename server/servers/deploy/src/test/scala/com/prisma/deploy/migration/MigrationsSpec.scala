@@ -5,12 +5,14 @@ import com.prisma.deploy.connector.postgres.database.DatabaseIntrospectionInferr
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, RelationLinkTableCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability, RelationLinkTableCapability, UuidIdCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
+
+  override def runOnlyForCapabilities = Set(MigrationsCapability)
 
   val name      = this.getClass.getSimpleName
   val stage     = "default"
