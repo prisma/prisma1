@@ -5,6 +5,8 @@ import java.sql.DriverManager
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.oracle.svm.core.thread.VMThreads.StatusSupport
+import com.oracle.svm.core.thread.{JavaThreads, VMThreads}
 import com.prisma.image.{SangriaHandlerImpl, Version}
 import com.prisma.sangria_server.BlazeSangriaServer
 
@@ -12,6 +14,7 @@ object PrismaNativeMain {
   System.setProperty("org.jooq.no-logo", "true")
 
   def main(args: Array[String]): Unit = {
+
     implicit val system       = ActorSystem("prisma", StaticAkkaConfig.config)
     implicit val materializer = ActorMaterializer()
     implicit val dependencies = PrismaNativeDependencies()
