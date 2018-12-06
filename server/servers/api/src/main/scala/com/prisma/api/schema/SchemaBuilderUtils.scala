@@ -56,16 +56,12 @@ object SchemaBuilderUtils {
 }
 
 case class FilterObjectTypeBuilder(model: Model, project: Project) {
-  def mapToRelationFilterInputField(field: models.RelationField)                     = relationFilterInputFieldHelper(field, withJoin = true)
-  def mapToRelationFilterInputFieldWithoutJoinRelations(field: models.RelationField) = relationFilterInputFieldHelper(field, withJoin = false)
-  def mapToRelationFilterInputFieldForMongo(field: models.RelationField)             = relationFilterInputFieldHelperForMongo(field)
+  def mapToRelationFilterInputField(field: models.RelationField)         = relationFilterInputFieldHelper(field)
+  def mapToRelationFilterInputFieldForMongo(field: models.RelationField) = relationFilterInputFieldHelperForMongo(field)
 
-  def relationFilterInputFieldHelper(field: models.RelationField, withJoin: Boolean): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+  def relationFilterInputFieldHelper(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
-    val relatedModelInputType = withJoin match {
-      case true  => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
-      case false => FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeWithOutJoinRelationFilters
-    }
+    val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectType
 
     (field.isHidden, field.isList) match {
       case (true, _)  => List.empty
@@ -119,20 +115,7 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
     }
   }
 
-  lazy val filterObjectTypeWithOutJoinRelationFilters: InputObjectType[Any] =
-    InputObjectType[Any](
-      s"${model.name}WhereInput",
-      fieldsFn = () => {
-        List(
-          InputField("AND", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.ANDFilter.description),
-          InputField("OR", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.ORFilter.description),
-          InputField("NOT", OptionInputType(ListInputType(filterObjectTypeWithOutJoinRelationFilters)), description = FilterArguments.NOTFilter.description)
-        ) ++ model.scalarFields.filterNot(_.isHidden).flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
-          .filter(_.relatedModel_!.isEmbedded)
-          .flatMap(mapToRelationFilterInputFieldWithoutJoinRelations)
-      }
-    )
-// this does not Allow NOT/OR and also does not allow _every, _some on
+// this does not Allow NOT/OR and also does not allow _every, _some on non-embedded to many relations
   lazy val filterObjectTypeForMongo: InputObjectType[Any] =
     InputObjectType[Any](
       s"${model.name}WhereInput",
