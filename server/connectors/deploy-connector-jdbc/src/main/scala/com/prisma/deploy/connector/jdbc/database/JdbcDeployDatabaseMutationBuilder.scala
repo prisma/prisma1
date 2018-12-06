@@ -1,7 +1,8 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
-import com.prisma.deploy.connector.jdbc.JdbcBase
+import com.prisma.deploy.connector.DatabaseInspector
+import com.prisma.deploy.connector.jdbc.{DatabaseInspectorImpl, JdbcBase}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import org.jooq.impl.DSL._
@@ -19,16 +20,16 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   /*
    * Connector-specific functions
    */
-  def truncateProjectTables(project: Project): DBIO[Any]
-  def deleteProjectDatabase(projectId: String): DBIO[Any]
-  def renameTable(projectId: String, currentName: String, newName: String): DBIO[Any]
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[Any]
-  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[Any]
+  def truncateProjectTables(project: Project): DBIO[_]
+  def deleteProjectDatabase(projectId: String): DBIO[_]
+  def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
+  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_]
 
-  def createModelTable(projectId: String, model: Model): DBIO[Any]
-  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[Any]
-  def createRelationTable(projectId: String, relation: Relation): DBIO[Any]
-  def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[Any]
+  def createModelTable(projectId: String, model: Model): DBIO[_]
+  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def createRelationTable(projectId: String, relation: Relation): DBIO[_]
+  def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_]
   def createColumn(
       projectId: String,
       tableName: String,
@@ -37,9 +38,9 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       isUnique: Boolean,
       isList: Boolean,
       typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
-  ): DBIO[Any]
+  ): DBIO[_]
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[Any]
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
   def updateColumn(
       projectId: String,
       tableName: String,
@@ -48,7 +49,9 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       newIsRequired: Boolean,
       newIsList: Boolean,
       newTypeIdentifier: ScalarTypeIdentifier
-  ): DBIO[Any]
+  ): DBIO[_]
+
+  def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_]
 
   /*
    * Connector-agnostic functions

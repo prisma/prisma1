@@ -17,7 +17,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
 
   import slickDatabase.profile.api._
 
-  override def truncateProjectTables(project: Project): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def truncateProjectTables(project: Project): DBIO[_] = {
     val listTableNames: List[String] = project.models.flatMap { model =>
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
     }
@@ -38,7 +38,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
     sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
   }
 
-  override def createModelTable(projectId: String, model: Model): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def createModelTable(projectId: String, model: Model): DBIO[_] = {
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
 
@@ -49,10 +49,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  override def createScalarListTable(projectId: String,
-                                     model: Model,
-                                     fieldName: String,
-                                     typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier))
     val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, isList = false, TypeIdentifier.Cuid)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, isList = false, typeIdentifier)
@@ -67,7 +64,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  override def createRelationTable(projectId: String, relation: Relation): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def createRelationTable(projectId: String, relation: Relation): DBIO[_] = {
     val modelA            = relation.modelA
     val modelB            = relation.modelB
     val relationTableName = relation.relationTableName
@@ -87,7 +84,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
   }
 
-  override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
     sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)}
           ADD COLUMN #$colSql,
@@ -101,7 +98,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
                             isRequired: Boolean,
                             isUnique: Boolean,
                             isList: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+                            typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = typeMapper.rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
     val uniqueString =
       if (isUnique) {
@@ -114,10 +111,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
   }
 
-  override def updateScalarListType(projectId: String,
-                                    modelName: String,
-                                    fieldName: String,
-                                    typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
     val indexSize = indexSizeForSQLType(sqlType)
 
@@ -130,7 +124,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
-                            newTypeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+                            newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }
@@ -140,17 +134,14 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
     case _                                                      => ""
   }
 
-  override def addUniqueConstraint(projectId: String,
-                                   tableName: String,
-                                   columnName: String,
-                                   typeIdentifier: ScalarTypeIdentifier): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
     val indexSize = indexSizeForSQLType(sqlType)
 
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
   }
 
-  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DatabaseAction[Any, NoStream, Effect.All] = {
+  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_] = {
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(s"${columnName}_UNIQUE")}"
   }
 }
