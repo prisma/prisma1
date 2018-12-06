@@ -65,22 +65,25 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationTable(projectId: String, relation: Relation): DBIO[_] = {
+    val relationTableName = relation.relationTableName
     val modelA            = relation.modelA
     val modelB            = relation.modelB
-    val relationTableName = relation.relationTableName
-    val aColSql           = typeMapper.rawSQLFromParts("A", isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql           = typeMapper.rawSQLFromParts("B", isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    val modelAColumn      = relation.modelAColumn
+    val modelBColumn      = relation.modelBColumn
+    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
+    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
     val idSql             = typeMapper.rawSQLFromParts("id", isRequired = true, isList = false, TypeIdentifier.Cuid)
 
     sqlu"""
          CREATE TABLE #${qualify(projectId, relationTableName)} (
            #$idSql,
-           PRIMARY KEY (`id`), UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-           #$aColSql, INDEX `A` (`A` ASC),
-           #$bColSql, INDEX `B` (`B` ASC),
-           UNIQUE INDEX `AB_unique` (`A` ASC, `B` ASC),
-           FOREIGN KEY (A) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-           FOREIGN KEY (B) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
+           PRIMARY KEY (`id`),
+           UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+           #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
+           #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
+           UNIQUE INDEX `#${relationTableName}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
+           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
   }
 

@@ -1,13 +1,11 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, Tables}
-import com.prisma.deploy.connector.postgres.database.DatabaseIntrospectionInferrerImpl
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability, RelationLinkTableCapability, UuidIdCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
-import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
