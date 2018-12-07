@@ -96,7 +96,7 @@ object OnDelete extends Enumeration {
 
 sealed trait RelationMigrationStep                               extends MigrationStep
 case class CreateRelation(name: String)                          extends RelationMigrationStep
-case class UpdateRelation(name: String, newName: Option[String]) extends RelationMigrationStep
+case class UpdateRelation(name: String, newName: Option[String]) extends RelationMigrationStep { def finalName = newName.getOrElse(name) }
 case class DeleteRelation(name: String)                          extends RelationMigrationStep
 
 case class UpdateSecrets(secrets: Vector[String]) extends MigrationStep

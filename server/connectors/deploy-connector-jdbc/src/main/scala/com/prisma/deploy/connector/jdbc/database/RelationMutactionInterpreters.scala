@@ -23,6 +23,16 @@ case class DeleteRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder)
   }
 }
 
+case class UpdateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateRelationTable] {
+  override def execute(mutaction: UpdateRelationTable) = {
+    builder.updateRelationTable(mutaction.projectId, previousRelation = mutaction.previousRelation, nextRelation = mutaction.nextRelation)
+  }
+
+  override def rollback(mutaction: UpdateRelationTable) = {
+    builder.updateRelationTable(mutaction.projectId, previousRelation = mutaction.nextRelation, nextRelation = mutaction.previousRelation)
+  }
+}
+
 case class RenameRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[RenameRelationTable] {
   override def execute(mutaction: RenameRelationTable) = {
     builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.previousName, newName = mutaction.nextName)

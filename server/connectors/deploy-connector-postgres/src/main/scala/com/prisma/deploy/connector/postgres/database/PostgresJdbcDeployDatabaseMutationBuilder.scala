@@ -89,6 +89,17 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     DatabaseAction.seq(tableCreate, indexCreate, indexA, indexB)
   }
 
+  override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
+    DBIO.seq(
+      sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+             RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}""",
+      sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+             RENAME COLUMN #${qualify(previousRelation.modelBColumn)} TO #${qualify(nextRelation.modelBColumn)}""",
+      sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+             RENAME TO #${qualify(nextRelation.relationTableName)}"""
+    )
+  }
+
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
 

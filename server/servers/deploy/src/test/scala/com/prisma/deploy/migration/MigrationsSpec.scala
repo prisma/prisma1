@@ -372,7 +372,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
   }
 
   "removing an explicit link table must work" in {
-    // FIXME: this fails because columns in relation tables are not getting renamed
     val capas = ConnectorCapabilities(RelationLinkTableCapability)
     val initialDataModel =
       """
@@ -556,7 +555,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
   }
 
   "converting an inline relation to a link table should work" in {
-    // FIXME: this is not handled/detected at all
     val capas = ConnectorCapabilities(RelationLinkTableCapability)
     val initialDataModel =
       """

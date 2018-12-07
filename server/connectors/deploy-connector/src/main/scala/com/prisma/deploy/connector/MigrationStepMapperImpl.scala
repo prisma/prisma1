@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector
 
 import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
-import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
 
 case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
@@ -97,11 +97,31 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       Vector(mutaction)
 
     case x: UpdateRelation =>
-      x.newName.map { newName =>
-        val previousRelation = previousSchema.getRelationByName_!(x.name)
-        val nextRelation     = nextSchema.getRelationByName_!(newName)
-        RenameRelationTable(projectId = projectId, previousName = previousRelation.relationTableName, nextName = nextRelation.relationTableName)
-      }.toVector
+      val previousRelation      = previousSchema.getRelationByName_!(x.name)
+      val nextRelation          = nextSchema.getRelationByName_!(x.finalName)
+      val previousManifestation = previousRelation.manifestation.get
+      val nextManifestation     = nextRelation.manifestation.get
+
+      val manifestationChange = (previousManifestation, nextManifestation) match {
+        case (p: EmbeddedRelationLink, _: RelationTable) =>
+          Vector(
+            DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
+            CreateRelationTable(projectId, nextSchema, nextRelation)
+          )
+        case (p: EmbeddedRelationLink, n: EmbeddedRelationLink) =>
+          Vector(
+            DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
+            CreateInlineRelation(projectId, n.inTableOfModel(nextRelation), n.referencedModel(nextRelation), n.referencingColumn)
+          )
+        case (_: RelationTable, _: RelationTable) =>
+          // FIXME: should test what happens if the relation does not only contain renames but is using different models
+          Vector(
+            UpdateRelationTable(projectId, previousRelation, nextRelation)
+          )
+        case (p, n) => sys.error(s"Combination $p, $n not supported here")
+      }
+
+      manifestationChange
 
     case x: EnumMigrationStep =>
       Vector.empty
