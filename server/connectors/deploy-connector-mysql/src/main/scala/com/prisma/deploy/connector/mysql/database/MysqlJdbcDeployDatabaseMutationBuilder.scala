@@ -87,7 +87,29 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
   }
 
-  override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = ???
+  override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
+    DBIO.seq(
+      updateColumn(
+        projectId = projectId,
+        tableName = previousRelation.relationTableName,
+        oldColumnName = previousRelation.modelAColumn,
+        newColumnName = nextRelation.modelAColumn,
+        newIsRequired = true,
+        newIsList = false,
+        newTypeIdentifier = nextRelation.modelA.idField_!.typeIdentifier
+      ),
+      updateColumn(
+        projectId = projectId,
+        tableName = previousRelation.relationTableName,
+        oldColumnName = previousRelation.modelBColumn,
+        newColumnName = nextRelation.modelBColumn,
+        newIsRequired = true,
+        newIsList = false,
+        newTypeIdentifier = nextRelation.modelB.idField_!.typeIdentifier
+      ),
+      renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
+    )
+  }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
