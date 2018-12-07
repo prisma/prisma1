@@ -1937,7 +1937,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                   |  createUser(
                   |    data: {
                   |      name: "User"
-                  |      posts: { create: [{ title: "Title 1" }, { title: "Title 2" }] }
                   |      pets: {
                   |        create: [
                   |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
@@ -1947,9 +1946,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                   |    }
                   |  ) {
                   |    name
-                  |    posts {
-                  |      title
-                  |    }
                   |    pets {
                   |      breed
                   |      walker {
@@ -1960,7 +1956,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                   |}"""
 
     server.query(query, project).toString should be(
-      """{"data":{"createUser":{"name":"User","posts":[{"title":"Title 1"},{"title":"Title 2"}],"pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+      """{"data":{"createUser":{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
   }
 
   "Fancy filter" should "work" in {
