@@ -177,12 +177,13 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                            case (false, false) => nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
                          }
                        }
+      if didSomethingChange(previousRelation, nextRelation)(_.name, _.modelAName, _.modelBName, _.manifestation)
     } yield {
       UpdateRelation(name = previousRelation.name, newName = diff(previousRelation.name, nextRelation.name))
     }
     def isContainedInDeletes(update: UpdateRelation) = relationsToDelete.map(_.name).contains(update.name)
 
-    updates.filter(isAnyOptionSet).filterNot(isContainedInDeletes)
+    updates.filterNot(isContainedInDeletes)
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
