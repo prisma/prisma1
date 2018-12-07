@@ -77,7 +77,10 @@ object BisonToGC {
         ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
 
       case (false, true) =>
-        DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, bison.asDocument())
+        bison match {
+          case _: BsonNull => NullGCValue
+          case x           => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, x.asDocument())
+        }
     }
   }
 
