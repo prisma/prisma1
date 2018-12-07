@@ -45,15 +45,15 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       fieldsToDelete ++
       modelsToDelete ++
       enumsToDelete ++
-      enumsToCreate ++
-      modelsToCreate ++
-      fieldsToCreate ++
-      relationsToCreate ++
       enumsToUpdate ++
       fieldsToUpdate ++
       modelsToUpdateFirstStep ++
       modelsToUpdateSecondStep ++
-      relationsToUpdate
+      relationsToUpdate ++
+      enumsToCreate ++
+      modelsToCreate ++
+      fieldsToCreate ++
+      relationsToCreate
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
