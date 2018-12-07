@@ -20,11 +20,7 @@ class MongoSubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with Ap
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-      println(schema)
-
       schema should containSubscription("todo(where: TodoSubscriptionWhereInput): TodoSubscriptionPayload")
-
     }
 
     "have correct payload" in {

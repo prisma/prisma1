@@ -38,8 +38,10 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
 
     //get rid of what was joined and remove duplicates
     val scalars: immutable.Seq[(String, Document)] = model.scalarFields.map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
-    val doc: Document                              = Document(scalars).+("_id" -> "$_id")
-    val mongoGroup                                 = Seq(Document("$group" -> doc))
+    val embeddeds: immutable.Seq[(String, Document)] =
+      model.relationFields.filter(f => f.relatedModel_!.isEmbedded).map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
+    val doc: Document = Document(scalars ++ embeddeds).+("_id" -> "$_id")
+    val mongoGroup    = Seq(Document("$group" -> doc))
 
     //-------------------------------- Order ------------------------------------------------------------
     val sort = Seq(OrderByClauseBuilder.sortStage(queryArguments))

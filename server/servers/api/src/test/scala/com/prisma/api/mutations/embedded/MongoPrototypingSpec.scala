@@ -1637,8 +1637,14 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  updatedAt: DateTime!
         |}
         |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
         |type Dog @embedded {
         |  breed: String!
+        |  walker: Walker
         |}"""
     }
 
@@ -1893,6 +1899,177 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val res = server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
     res.toString should be("""{"data":{"aUsers":[{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
+  }
+
+  "Deeply nested create" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |  posts: [Post]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val query = """mutation create {
+                  |  createUser(
+                  |    data: {
+                  |      name: "User"
+                  |      posts: { create: [{ title: "Title 1" }, { title: "Title 2" }] }
+                  |      pets: {
+                  |        create: [
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |        ]
+                  |      }
+                  |    }
+                  |  ) {
+                  |    name
+                  |    posts {
+                  |      title
+                  |    }
+                  |    pets {
+                  |      breed
+                  |      walker {
+                  |        name
+                  |      }
+                  |    }
+                  |  }
+                  |}"""
+
+    server.query(query, project).toString should be(
+      """{"data":{"createUser":{"name":"User","posts":[{"title":"Title 1"},{"title":"Title 2"}],"pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+  }
+
+  "Fancy filter" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |  posts: [Post]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val query = """mutation create {
+                  |  createUser(
+                  |    data: {
+                  |      name: "User"
+                  |      posts: { create: [{ title: "Title 1" }, { title: "Title 2" }] }
+                  |      pets: {
+                  |        create: [
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |        ]
+                  |      }
+                  |    }
+                  |  ) {
+                  |    name
+                  |    posts {
+                  |      title
+                  |    }
+                  |    pets {
+                  |      breed
+                  |      walker {
+                  |        name
+                  |      }
+                  |    }
+                  |  }
+                  |}"""
+
+    server.query(query, project).toString should be(
+      """{"data":{"createUser":{"name":"User","posts":[{"title":"Title 1"},{"title":"Title 2"}],"pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+
+    val query2 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      posts_some: { title_ends_with: "1" }
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 2" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    posts {
+                   |      title
+                   |    }
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query2, project).toString should be("""{"data":{"users":[]}}""")
+
+    val query3 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      posts_some: { title_ends_with: "1" }
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 1" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    posts {
+                   |      title
+                   |    }
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query3, project).toString should be("""{"data":{"users":[]}}""")
+
   }
 
 }
