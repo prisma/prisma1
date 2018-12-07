@@ -230,7 +230,7 @@ and execute ${chalk.bold.green(
             this.out!,
             clusterName,
             clusterBaseUrl,
-            shared ? this.env.cloudSessionKey : undefined,
+            shared || isPrivate ? this.env.cloudSessionKey : undefined,
             local,
             shared,
             isPrivate,

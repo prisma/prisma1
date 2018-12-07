@@ -1,16 +1,19 @@
-import { DocumentConnector, DataIterator, SamplingStrategy } from "../documentConnector"
+import { IDataIterator, SamplingStrategy, ObjectTypeIdentifier, TypeInfo } from '../documentConnector'
+import { DocumentConnector } from '../documentConnectorBase'
 import { DatabaseType, ISDL } from "prisma-datamodel"
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
-import { MongoClient, Collection, Cursor } from 'mongodb'
+import { MongoClient, Collection, Cursor, AggregationCursor } from 'mongodb'
+import { ObjectID } from 'bson'
 import { Data } from '../data'
+import { TypeIdentifiers } from '../../../../../prisma-datamodel/dist/datamodel/scalar';
 
 const reservedSchemas = ['admin', 'local']
 
 
-class MongoCursorIterator implements DataIterator {
-  private cursor: Cursor<Data>
+class MongoCursorIterator implements IDataIterator {
+  protected cursor: Cursor<Data> | AggregationCursor<Data>
 
-  public constructor(cursor: Cursor<Data>) {
+  public constructor(cursor: Cursor<Data> |  AggregationCursor<Data>) {
     this.cursor = cursor
   }
 
@@ -21,22 +24,30 @@ class MongoCursorIterator implements DataIterator {
   async next() {
     return (await this.cursor.next()) || {}
   }
+
+  async close() {
+    await this.cursor.close()
+  }
 }
 
-
-export class MongoConnector extends DocumentConnector <Collection<Data>>{
+export class MongoConnector extends DocumentConnector<Collection<Data>>{
   private client: MongoClient
   
-  constructor(client: MongoClient, samplingStrategy: SamplingStrategy = SamplingStrategy.One) {
-    super(samplingStrategy)
+  constructor(client: MongoClient) {
+    super()
+
+    if(!(client instanceof MongoClient)) {
+      throw new Error('MongoClient instance needed for initialization.')
+    }
+
     if(!client.isConnected()) {
       throw new Error('Please connect the mongo client first.')
-    } 
+    }
 
     this.client = client
   }
 
-  getDatabaseType(): DatabaseType {
+  public getDatabaseType(): DatabaseType {
     return DatabaseType.mongo
   }
 
@@ -46,45 +57,26 @@ export class MongoConnector extends DocumentConnector <Collection<Data>>{
     return databases.map(x => x.name).filter(x => reservedSchemas.indexOf(x) < 0)
   }
   
-  protected async getInternalCollections(schemaName: string) {
+  public async getInternalCollections(schemaName: string) {
     const db = this.client.db(schemaName)
-
     const collections = (await db.collections()) as Collection<Data>[]
     return collections.map(collection => { return { name: collection.collectionName, collection }})
   }
+
   
-  // TODO: Lift to strategy
+  public async getInternalCollection(schemaName: string, collectionName: string) {
+    const db = this.client.db(schemaName)
+    return await db.collection<Data>(collectionName)
+  }
+  
   async sampleOne(collection: Collection) : Promise<MongoCursorIterator> {
     const cursor = await collection.find<Data>({}).limit(1)
     return new MongoCursorIterator(cursor)
   }
 
   async sampleMany(collection: Collection, limit: number) : Promise<MongoCursorIterator> {
-    throw new Error("Not implemented")/*
-    const count = await collection.count({})
-    if(count < limit) {
-      return await this.sampleAll(collection)
-    } else {
-      let cursor = collection.find<Data>({})
-      // TODO: This sampling is biased, but should do the job. 
-      for(const skip of this.generateSamples(limit, count)) {
-        cursor.skip(skip)
-        const data = (await cursor.next())
-        if(data === null) {
-          throw new Error('Sample many error, cursor returned null for collection: ' + collection.collectionName)
-        }
-        yield data
-      }
-    }*/
-  }
-
-  /** 
-  * Gets n random numbers chich sum up to sum.
-  */
-  private *generateSamples(n: number, sum: number) {
-    for(let i = 0; i < n; i++) {
-      yield Math.floor(Math.random() * sum / n)
-    }
+    const cursor = collection.aggregate<Data>([{ $sample: { size: limit } }])
+    return new MongoCursorIterator(cursor)
   }
 
   async sampleAll(collection: Collection) : Promise<MongoCursorIterator> {
@@ -92,14 +84,22 @@ export class MongoConnector extends DocumentConnector <Collection<Data>>{
 
     return new MongoCursorIterator(cursor);
   }
-  
-  async introspect(schema: string): Promise<DocumentIntrospectionResult> {
-    return new DocumentIntrospectionResult(await this.listModels(schema), this.getDatabaseType())
-  }
-
 
   async exists(collection: Collection, id: any): Promise<boolean> {
     return collection.find({ '_id': id }).hasNext()
   }
 
+  /**
+   * Mongo special handling of ObjectID types. 
+   */
+  public inferType(value: any): TypeInfo  {
+    const suggestion = super.inferType(value)
+
+    if(suggestion.type === ObjectTypeIdentifier && value instanceof ObjectID) {
+      suggestion.type = TypeIdentifiers.id
+      suggestion.isRelationCandidate = true
+    }
+
+    return suggestion
+  }
 }

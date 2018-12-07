@@ -1,0 +1,56 @@
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: 'Check Existence (TypeScript)',
+  position: 110,
+  technology: "typescript",
+  technologyOrder: 2,
+  articleGroup: "Check Existence",
+}
+
+## Overview
+
+The Prisma client lets you check whether a certain record exists in the database using the `$exists` property. For each model type in your [datamodel](knul), the Prisma client exposes one function on this property named after the model (but lowercased). Each of these functions receives a a filter object as input argument that specifies the conditions for the record and returns a boolean value that's `true` if there's at least one database record matching the specified filter, `false` otherwise.
+
+The input object has the same type that's used for [filtering lists](rsc2#basic-filters-for-lists).
+
+### Examples
+
+_Check if a user with a certain ID exists_:
+
+```ts
+const userExists: boolean = prisma.$exists.user({
+  id: "cjli6tko8005t0a23fid7kke7"
+})
+```
+
+_Check if user called `Alice` or `Bob` exists_:
+
+```ts
+const userExists: boolean = prisma.$exists.user({
+  name_in: ['Alice', 'Bob']
+})
+```
+
+_Check if there are links that have `prisma` or `graphql` in their descriptions **and** were created in 2018_:
+
+```ts
+const linkExists: boolean = await prisma.$exists.link({
+  AND: [
+    {
+      OR: [{
+        description_contains: "graphql",
+      }, {
+        description_contains: "prisma",
+      }]
+    },
+    {
+      AND: [{
+        createdAt_gt: "2017"
+      }, {
+        createdAt_lt: "2019"
+      }]
+    }
+  ],
+})
+```

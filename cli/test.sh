@@ -2,6 +2,11 @@
 
 set -e
 
+cd ../client
+yarn
+yarn build
+yarn test
+cd ../cli
 cd packages/prisma-yml
 yarn build
 yarn test
