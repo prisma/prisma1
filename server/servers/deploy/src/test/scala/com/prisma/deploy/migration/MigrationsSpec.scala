@@ -523,7 +523,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
   }
 
   "moving an inline relation link to the other side should work" in {
-    // FIXME: this is not handled/detected at all
     val initialDataModel =
       """
         |type A {
@@ -553,7 +552,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val result = deploy(newDataModel)
     result.table_!("A").column("b").isDefined should be(false)
     val aColumn = result.table_!("B").column_!("a")
-    aColumn.foreignKey should be(Some(ForeignKey("B", "a")))
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
   }
 
   "converting an inline relation to a link table should work" in {

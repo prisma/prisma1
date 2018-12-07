@@ -67,10 +67,10 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       case false =>
         validationSuccessful
     }
-    def newToOneBackRelationField(model: Model) =
-      field.isRelation && !field.isList && previousSchema.relations.exists(rel => rel.name == field.relationOpt.get.name) match {
-        case true =>
-          val previousRelation                   = field.relationOpt.get
+    def newToOneBackRelationField(model: Model) = {
+      field match {
+        case rf: RelationField if !rf.isList && previousSchema.relations.exists(rel => rel.name == rf.relation.name) =>
+          val previousRelation                   = previousSchema.getRelationByName_!(rf.relation.name)
           val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
 
           clientDbQueries.existsDuplicateByRelationAndSide(previousRelation, relationSideThatCantHaveDuplicates).map {
@@ -83,10 +83,9 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
                 ))
             case false => Vector.empty
           }
-
-        case false =>
-          validationSuccessful
+        case _ => validationSuccessful
       }
+    }
 
     previousSchema.getModelByName(x.model) match {
       case Some(existingModel) =>
