@@ -13,6 +13,8 @@ Prisma Demo servers are Prisma servers running in [Prisma Cloud](https://www.pri
 
 Demo servers are not to be used in production as they are rate-limited and have constraints in terms of storage.
 
+Since Demo servers provide a free and shared environment for all Prisma Cloud users, they can not be protected using the [`managementApiSecret`](kke4#management-api-secret). To procect the data stored in our Prisma services that are deployed to a Demo server, you can set the [service secret](ghd4#service-secret) in your `prisma.yml`.
+
 </Warning>
 
 Prisma Demo servers are available in two _regions_:

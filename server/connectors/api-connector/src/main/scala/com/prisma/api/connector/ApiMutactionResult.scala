@@ -20,7 +20,7 @@ object CreateNodeResult {
 }
 
 case class CreateNodeResult(nodeAddress: NodeAddress, mutaction: CreateNode) extends FurtherNestedMutactionResult {
-  val id: IdGCValue = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+  val id: IdGCValue = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue] //This always returns the toplevel id, even for embedded types
 }
 
 object UpdateNodeResult {

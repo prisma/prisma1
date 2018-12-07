@@ -301,7 +301,7 @@ object FilterHelper {
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
           RelationFilter(asRelationField, generateSubFilter(value, asRelationField.relatedModel_!), condition)
 
-        value match {
+        unwrapSome(value) match {
           //-------------------------RECURSION-----------------------------
           case value: Map[_, _] if isLogicFilter(key) || (isSubscriptionFilter && key == "node") => generateSubFilter(value, model)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)

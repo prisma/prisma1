@@ -5,12 +5,13 @@ daysUntilClose: 10
 # Issues with these labels will never be considered stale
 exemptLabels:
   - kind/feature
-  - proposal/needs-spec
-  - proposal/accepted
-  - proposal/needs-review
-  - status/repro-available
-  - status/help-wanted
+  - rfc/0-proposal
+  - rfc/1-draft
+  - rfc/2-accepted
+  - bug/1-repro-available
+  - bug/2-confirmed
   - status/on-hold
+  - status/candidate
 # Label to use when marking an issue as stale
 staleLabel: status/stale
 # Comment to post when marking an issue as stale. Set to `false` to disable
