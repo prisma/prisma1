@@ -3,10 +3,11 @@ package com.prisma.api.connector
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
+import cool.graph.cuid.Cuid
 
-import scala.collection.immutable
-
-sealed trait ApiMutaction
+sealed trait ApiMutaction {
+  val id: String = Cuid.createCuid()
+}
 
 // DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
