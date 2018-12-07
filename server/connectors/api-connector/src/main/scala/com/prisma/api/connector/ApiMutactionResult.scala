@@ -20,7 +20,14 @@ object CreateNodeResult {
 }
 
 case class CreateNodeResult(nodeAddress: NodeAddress, mutaction: CreateNode) extends FurtherNestedMutactionResult {
+
   val id: IdGCValue = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+//  val id: IdGCValue = nodeAddress.path.segments.lastOption match {
+//    case None                                => nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+//    case Some(ToManyFilterSegment(_, _))     => nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+//    case Some(ToOneSegment(_))               => nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+//    case Some(ToManySegment(_, nestedWhere)) => nestedWhere.fieldGCValue.asInstanceOf[IdGCValue]
+//  }
 }
 
 object UpdateNodeResult {
