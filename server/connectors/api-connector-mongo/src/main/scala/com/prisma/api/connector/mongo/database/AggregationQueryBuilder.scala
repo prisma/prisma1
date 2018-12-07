@@ -1,31 +1,35 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.extensions.DocumentToId
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.NullGCValue
+import com.prisma.gc_values.{IdGCValue, NullGCValue}
 import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
-import scala.collection.immutable
 import scala.concurrent.Future
 trait AggregationQueryBuilder extends FilterConditionBuilder {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
   import org.mongodb.scala.model.Aggregates._
 
-  def aggregationQuery(database: MongoDatabase,
-                       model: Model,
-                       queryArguments: QueryArguments,
-                       selectedFields: SelectedFields,
-                       idOnly: Boolean): Future[Seq[Document]] = {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[Seq[Document]] = {
+    aggregationQueryForId(database, model, queryArguments).flatMap { ids =>
+      val inFilter = in("_id", ids.map(GCToBson(_)): _*)
+      database.getCollection(model.dbName).find(inFilter).toFuture
+    }
+  }
+
+  def aggregationQueryForId(database: MongoDatabase, model: Model, queryArguments: QueryArguments): Future[Seq[IdGCValue]] = {
 
     //--------------------------- Assemble Pipeline -----------------------------------------------------
-
     //-------------------------------- Match on Cursor Condition ----------------------------------------
     val cursorMatch: Option[Bson] = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
       case None         => None
@@ -33,15 +37,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     }
 
     //-------------------------------- QueryArg Filter --------------------------------------------------
-
     val joinAndFilter = buildJoinStagesForFilter(queryArguments.filter)
-
-    //get rid of what was joined and remove duplicates
-    val scalars: immutable.Seq[(String, Document)] = model.scalarFields.map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
-    val embeddeds: immutable.Seq[(String, Document)] =
-      model.relationFields.filter(f => f.relatedModel_!.isEmbedded).map(f => f.dbName -> Document("$first" -> s"$$${f.dbName}"))
-    val doc: Document = Document(scalars ++ embeddeds).+("_id" -> "$_id")
-    val mongoGroup    = Seq(Document("$group" -> doc))
 
     //-------------------------------- Order ------------------------------------------------------------
     val sort = Seq(OrderByClauseBuilder.sortStage(queryArguments))
@@ -52,17 +48,12 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     val limitStage   = skipAndLimit.limit.map(limit)
 
     //-------------------------------- Project Result ---------------------------------------------------
-
-    //apply selected fields
-    val projectStage = idOnly match {
-      case true  => Seq(project(Document("_id" -> 1)))
-      case false => Seq.empty
-    }
+    val projectStage = Seq(project(Document("_id" -> 1)))
 
     //--------------------------- Setup Query -----------------------------------------------------------
-    val pipeline = cursorMatch ++ joinAndFilter ++ mongoGroup ++ sort ++ skipStage ++ limitStage ++ projectStage
+    val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
 
-    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture()
+    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(DocumentToId.toCUIDGCValue))
   }
 
   //-------------------------------------- Join And Filter ---------------------------------------------------
@@ -77,9 +68,9 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter => Seq(`match`(hackForTrue))
-      case AndFilter(filters)     => sortFilters(filters).flatMap(f => buildJoinStagesForFilter(path, f)) // and(nonEmptyConditions(path, filters): _*)
-      case OrFilter(filters)      => sys.error("This is not implemented for the Mongo connector") // or(nonEmptyConditions(path, filters): _*)
-      case NotFilter(filters)     => sys.error("This is not implemented for the Mongo connector") // nor(filters.map(f => buildConditionForFilter(path, f)): _*)
+      case AndFilter(filters)     => sortFilters(filters).flatMap(f => buildJoinStagesForFilter(path, f))
+      case OrFilter(_)            => sys.error("This is not implemented for the Mongo connector")
+      case NotFilter(_)           => sys.error("This is not implemented for the Mongo connector")
       case x: RelationFilter      => relationFilterJoinStage(path, x)
 
       //--------------------------------ANCHORS------------------------------------
@@ -140,10 +131,25 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     val rf          = relationFilter.field
     val updatedPath = path.append(rf)
 
+//    private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
+//      val fieldName = if (relationFilter.field.relatedModel_!.isEmbedded) relationFilter.field.dbName else relationFilter.field.name
+//
+//      val toOneNested  = buildConditionForFilter(combineTwo(path, fieldName), relationFilter.nestedFilter)
+//      val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
+//
+//      relationFilter.condition match {
+//        case AtLeastOneRelatedNode => elemMatch(fieldName, toManyNested)
+//        case EveryRelatedNode      => not(elemMatch(fieldName, not(toManyNested)))
+//        case NoRelatedNode         => not(elemMatch(fieldName, toManyNested))
+//        case ToOneRelatedNode      => toOneNested
+//      }
+//    }
+
     val next = buildJoinStagesForFilter(updatedPath, relationFilter.nestedFilter)
 
     val current = rf.relatedModel_!.isEmbedded match {
       case true =>
+        //Fixme this currently always translates to a some
         Seq.empty
 
       case false =>
@@ -174,11 +180,9 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
   }
 
   //-------------------------------------------------- Helpers ------------------------------------------------------
-
   private def nameHelper(path: Path, scalarField: ScalarField): String = combineTwo(path.combinedNames, renameId(scalarField))
 
   //-------------------------------Determine if Aggregation is needed -----------------------------------
-
   def needsAggregation(filter: Option[Filter]): Boolean = filter match {
     case Some(filter) => needsAggregation(filter)
     case None         => false

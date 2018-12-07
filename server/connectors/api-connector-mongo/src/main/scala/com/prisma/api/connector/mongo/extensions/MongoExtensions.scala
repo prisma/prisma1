@@ -72,10 +72,6 @@ object BisonToGC {
         val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
         ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
 
-      case (true, true) => //Fixme: This should not happen
-        val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
-        ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
-
       case (false, true) =>
         bison match {
           case _: BsonNull => NullGCValue
@@ -93,7 +89,7 @@ object BisonToGC {
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
-    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("implement this" + value)
+    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("Not implemented: " + value)
     case (_, value: BsonNull)                           => NullGCValue
     case (x, y)                                         => sys.error("Not implemented: " + x + y)
   }
@@ -126,7 +122,7 @@ object DocumentToRoot {
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
 
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
-      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(ListGCValue.empty))
 
     RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
   }

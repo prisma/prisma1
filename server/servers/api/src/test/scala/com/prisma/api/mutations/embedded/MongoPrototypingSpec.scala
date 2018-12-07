@@ -1995,7 +1995,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                   |  createUser(
                   |    data: {
                   |      name: "User"
-                  |      posts: { create: [{ title: "Title 1" }, { title: "Title 2" }] }
                   |      pets: {
                   |        create: [
                   |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
@@ -2005,9 +2004,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                   |    }
                   |  ) {
                   |    name
-                  |    posts {
-                  |      title
-                  |    }
                   |    pets {
                   |      breed
                   |      walker {
@@ -2018,20 +2014,16 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                   |}"""
 
     server.query(query, project).toString should be(
-      """{"data":{"createUser":{"name":"User","posts":[{"title":"Title 1"},{"title":"Title 2"}],"pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+      """{"data":{"createUser":{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
 
     val query2 = """query withFilter {
                    |  users(
                    |    where: {
                    |      name: "User"
-                   |      posts_some: { title_ends_with: "1" }
                    |      pets_some: { breed: "Breed 1", walker: { name: "Walker 2" } }
                    |    }
                    |  ) {
                    |    name
-                   |    posts {
-                   |      title
-                   |    }
                    |    pets {
                    |      breed
                    |      walker {
@@ -2047,8 +2039,27 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                    |  users(
                    |    where: {
                    |      name: "User"
-                   |      posts_some: { title_ends_with: "1" }
                    |      pets_some: { breed: "Breed 1", walker: { name: "Walker 1" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query3, project).toString should be(
+      """{"data":{"users":[{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}]}}""")
+
+    val query4 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_none: { breed: "Breed 1", walker: { name: "Walker 1" }}
                    |    }
                    |  ) {
                    |    name
@@ -2064,7 +2075,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
                    |  }
                    |}"""
 
-    server.query(query3, project).toString should be("""{"data":{"users":[]}}""")
+    server.query(query4, project).toString should be("""{"data":{"users":[]}}""")
 
   }
 

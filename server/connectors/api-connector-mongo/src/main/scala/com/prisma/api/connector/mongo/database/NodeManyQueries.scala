@@ -32,7 +32,17 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
   }
 
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
-    manyQueryHelper(model, QueryArguments.withFilter(filter), None, database, true).map(_.map(DocumentToId.toCUIDGCValue))
+    if (needsAggregation(filter)) {
+      aggregationQueryForId(database, model, QueryArguments.withFilter(filter))
+    } else {
+      database
+        .getCollection(model.dbName)
+        .find(buildConditionForFilter(filter))
+        .projection(include("_id"))
+        .collect()
+        .toFuture
+        .map(res => res.map(DocumentToId.toCUIDGCValue))
+    }
   }
 
   def manyQueryHelper(model: Model,
@@ -47,7 +57,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
     }
 
     if (needsAggregation(updatedQueryArgs.filter)) {
-      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model), idOnly)
+      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model))
     } else {
 
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
