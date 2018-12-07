@@ -9,6 +9,9 @@ interface EngineConfig {
   debug?: boolean
 }
 
+/**
+ * Node.js based wrapper to run the Prisma binary
+ */
 export class Engine {
   prismaConfig: string
   port?: number

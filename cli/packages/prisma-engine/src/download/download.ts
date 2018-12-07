@@ -1,14 +1,13 @@
+// Inspired by https://github.com/zeit/now-cli/blob/canary/download/src/index.js
 // Native
 import * as fs from 'fs'
 import * as path from 'path'
-import { spawnSync } from 'child_process'
 import * as zlib from 'zlib'
 
 // Packages
 import * as onDeath from 'death'
 import fetch from 'node-fetch'
 import * as retry from 'async-retry'
-import which from 'which-promise'
 
 // Utils
 import {
@@ -42,7 +41,7 @@ async function download() {
       warn(
         'Please try installing Now CLI again with the `--unsafe-perm` option.',
       )
-      info('Example: `npm i -g --unsafe-perm now`')
+      info('Example: `npm i -g --unsafe-perm prisma`')
 
       process.exit()
     }
@@ -54,13 +53,13 @@ async function download() {
     fs.writeFileSync(
       prisma,
       '#!/usr/bin/env node\n' +
-        'console.log("The \'now\' installation did not complete successfully.")\n' +
+        'console.log("The \'prisma\' installation did not complete successfully.")\n' +
         'console.log("Please run \'npm i -g prisma\' to reinstall!")\n',
     )
     process.exit()
   })
 
-  info('For the source code, check out: https://github.com/prisma/prism')
+  info('For the source code, check out: https://github.com/prisma/prisma')
 
   // Print an empty line
   console.log('')
