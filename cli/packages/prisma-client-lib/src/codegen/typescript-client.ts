@@ -194,6 +194,8 @@ export interface Fragmentable {
 
 ${this.exportPrisma ? 'export' : ''} interface ${this.prismaInterface} {
   $exists: Exists;
+  useEmbeddedEngine(debug?: boolean): Promise<void>;
+  stopEmbeddedEngine(): void;
   $graphql: <T ${
     this.genericsDelimiter
   } any>(query: string, variables?: {[key: string]: any}) => Promise<T>;

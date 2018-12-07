@@ -1,4 +1,4 @@
-import { Engine } from '.'
+import { Engine } from './Engine'
 
 async function run() {
   const engine = new Engine()

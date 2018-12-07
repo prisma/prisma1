@@ -29,6 +29,9 @@ const prisma = path.join(__dirname, '../../prisma')
 const target = platform === 'win32' ? targetWin32 : prisma
 const partial = target + '.partial'
 
+/**
+ * TODO: Check if binary already exists and if checksum is the same!
+ */
 async function download() {
   try {
     fs.writeFileSync(

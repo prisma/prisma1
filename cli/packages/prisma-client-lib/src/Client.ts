@@ -1,4 +1,5 @@
-import { ClientOptions, Exists, Model } from './types'
+// Packages
+import { Engine } from 'prisma-engine'
 import {
   GraphQLObjectType,
   GraphQLScalarType,
@@ -10,14 +11,17 @@ import {
   buildSchema,
   GraphQLEnumType,
 } from 'graphql'
-import mapAsyncIterator from './utils/mapAsyncIterator'
-import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
-import { getTypesAndWhere } from './utils'
 const log = require('debug')('binding')
 import { sign } from 'jsonwebtoken'
+// Utils
+import { GraphQLClient } from 'graphql-request'
 import { BatchedGraphQLClient } from 'http-link-dataloader'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
+import mapAsyncIterator from './utils/mapAsyncIterator'
+import { ClientOptions, Exists, Model } from './types'
+import { mapValues } from './utils/mapValues'
+import { getTypesAndWhere } from './utils'
 import { observableToAsyncIterable } from './utils/observableToAsyncIterable'
 import * as WS from 'ws'
 // to make the TS compiler happy
@@ -51,13 +55,15 @@ export class Client {
   mutation: any
   _endpoint: string
   _secret?: string
-  _client: BatchedGraphQLClient
+  _client: any
   _subscriptionClient: SubscriptionClient
   schema: GraphQLSchema
   _token: string
   _currentInstructions: InstructionsMap = {}
   _models: Model[] = []
   _promises: InstructionPromiseMap = {}
+  _localEndpoint?: string
+  _engine?: Engine
 
   constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
     this.debug = debug
@@ -91,6 +97,25 @@ export class Client {
       },
       WS,
     )
+  }
+
+  async useEmbeddedEngine(debug = false) {
+    this._engine = new Engine({ debug })
+    await this._engine.start()
+    this._localEndpoint = `http://localhost:${this._engine.port}`
+    this._client = new GraphQLClient(this._localEndpoint, {
+      headers: this._token
+        ? {
+            Authorization: `Bearer ${this._token}`,
+          }
+        : {},
+    })
+  }
+
+  stopEmbeddedEngine() {
+    if (this._engine) {
+      this._engine.stop()
+    }
   }
 
   getOperation(instructions) {
@@ -188,6 +213,11 @@ export class Client {
   execute(operation, document, variables) {
     const query = print(document)
     if (operation === 'subscription') {
+      if (this._localEndpoint) {
+        throw new Error(
+          `Subscriptions are not yet supported with the embedded Engine`,
+        )
+      }
       const subscription = this._subscriptionClient.request({
         query,
         variables,

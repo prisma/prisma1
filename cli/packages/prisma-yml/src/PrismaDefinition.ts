@@ -35,7 +35,7 @@ export class PrismaDefinitionClass {
   out?: IOutput
   envVars: any
   rawEndpoint?: string
-  private definitionString: string
+  definitionString: string
   constructor(
     env: Environment,
     definitionPath?: string | null,

@@ -14,6 +14,7 @@ import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
+import { Engine } from 'prisma-engine'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -62,6 +63,7 @@ ${chalk.gray(
   private deploying: boolean = false
   private showedHooks: boolean = false
   private loggedIn: boolean = false
+  engine?: Engine
   async run() {
     /**
      * Get Args
@@ -95,6 +97,28 @@ ${chalk.gray(
     let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
     let dockerComposeYml = defaultDockerCompose
+
+    /**
+     * Boot local Prisma
+     */
+
+    if (
+      this.definition.endpoint &&
+      this.definition.endpoint.includes('localhost')
+    ) {
+      this.engine = new Engine({
+        prismaConfig: this.definition.definitionString,
+        // debug: true,
+      })
+      await this.engine.start()
+      this.definition.definition!.endpoint = `http://localhost:${
+        this.engine.port
+      }`
+    }
+
+    /**
+     * Either start Dialog or deploy directly
+     */
     if (!serviceName || !stage || interactive) {
       const endpointDialog = new EndpointDialog({
         out: this.out,
@@ -176,6 +200,10 @@ ${chalk.gray(
       projectNew,
       workspace!,
     )
+
+    if (this.engine) {
+      this.engine.stop()
+    }
   }
 
   private getSillyName() {
@@ -238,10 +266,13 @@ ${chalk.gray(
 
     const verb = dryRun ? 'Performing dry run for' : 'Deploying'
 
+    const serverString = this.engine
+      ? `with the embedded Prisma Engine`
+      : `to server ${b(completeClusterName)}`
     this.out.action.start(
-      `${verb} service ${b(serviceName)} to stage ${b(stageName)} to server ${b(
-        completeClusterName,
-      )}`,
+      `${verb} service ${b(serviceName)} to stage ${b(
+        stageName,
+      )} ${serverString}`,
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(

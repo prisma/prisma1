@@ -23,12 +23,19 @@ export async function readDefinition(
   args: Args,
   out: IOutput = new Output(),
   envVars?: any,
-  graceful?: boolean,
+  graceful = true,
 ): Promise<{ definition: PrismaDefinition; rawJson: any }> {
   if (!fs.pathExistsSync(filePath)) {
     throw new Error(`${filePath} could not be found.`)
   }
-  const file = fs.readFileSync(filePath, 'utf-8')
+  let file = fs.readFileSync(filePath, 'utf-8')
+  /**
+   * TODO: Remove this hack! Handle this properly
+   */
+  if (!file.split('\n').find(l => l.trim().startsWith('endpoint'))) {
+    file += '\nendpoint: http://localhost:4466'
+  }
+
   const json = yaml.safeLoad(file) as PrismaDefinition
   // we need this copy because populateJson runs inplace
   const jsonCopy = { ...json }

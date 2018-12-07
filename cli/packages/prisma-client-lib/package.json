@@ -1,6 +1,6 @@
 {
   "name": "prisma-client-lib",
-  "version": "1.23.0-test.2",
+  "version": "1.24.0-test.3",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "Apache-2.0",
   "files": [
@@ -25,13 +25,14 @@
     "@types/prettier": "^1.13.2",
     "debug": "^4.1.0",
     "flow-bin": "^0.87.0",
+    "graphql-request": "^1.8.2",
     "graphql-tag": "^2.10.0",
     "http-link-dataloader": "^0.1.6",
     "jsonwebtoken": "^8.3.0",
     "lodash.flatten": "^4.4.0",
     "prettier": "^1.14.3",
     "prisma-datamodel": "1.23.0-alpha.1",
-    "prisma-engine": "^1.22.0-alpha.4",
+    "prisma-engine": "^1.22.0-alpha.5",
     "prisma-generate-schema": "1.23.0-alpha.173",
     "subscriptions-transport-ws": "^0.9.15",
     "uppercamelcase": "^3.0.0",
