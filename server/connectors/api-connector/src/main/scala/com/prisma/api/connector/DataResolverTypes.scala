@@ -67,7 +67,7 @@ case class SelectedFields(fields: Set[Field]) {
     case rf if rf.relation.isInlineRelation && !rf.relation.isSelfRelation && rf.relation.inlineManifestation.get.inTableOfModelName == rf.model.name => rf
   }
 
-  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.asScalarField)
+  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.scalarCopy)
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 

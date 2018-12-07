@@ -42,17 +42,20 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       }
 
     case x: UpdateField =>
-      val oldModel = previousSchema.getModelByName_!(x.model)
-      val newModel = nextSchema.getModelByName_!(x.newModel)
-      val next     = nextSchema.getFieldByName_!(x.newModel, x.finalName)
-      val previous = previousSchema.getFieldByName_!(x.model, x.name)
+      val oldModel           = previousSchema.getModelByName_!(x.model)
+      val newModel           = nextSchema.getModelByName_!(x.newModel)
+      val next               = nextSchema.getFieldByName_!(x.newModel, x.finalName)
+      val previous           = previousSchema.getFieldByName_!(x.model, x.name)
+      lazy val temporaryNext = next.asScalarField_!.copy(name = next.name + "_prisma_tmp", manifestation = None)
 
-      lazy val createColumn          = CreateColumn(projectId, oldModel, next.asInstanceOf[ScalarField])
-      lazy val updateColumn          = UpdateColumn(projectId, oldModel, previous.asInstanceOf[ScalarField], next.asInstanceOf[ScalarField])
-      lazy val deleteColumn          = DeleteColumn(projectId, oldModel, previous.asInstanceOf[ScalarField])
-      lazy val createScalarListTable = CreateScalarListTable(projectId, oldModel, next.asInstanceOf[ScalarField])
-      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, oldModel, previous.asInstanceOf[ScalarField])
-      lazy val updateScalarListTable = UpdateScalarListTable(projectId, oldModel, newModel, previous.asInstanceOf[ScalarField], next.asInstanceOf[ScalarField])
+      lazy val createColumn          = CreateColumn(projectId, oldModel, next.asScalarField_!)
+      lazy val updateColumn          = UpdateColumn(projectId, oldModel, previous.asScalarField_!, next.asScalarField_!)
+      lazy val deleteColumn          = DeleteColumn(projectId, oldModel, previous.asScalarField_!)
+      lazy val createScalarListTable = CreateScalarListTable(projectId, oldModel, next.asScalarField_!)
+      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, oldModel, previous.asScalarField_!)
+      lazy val updateScalarListTable = UpdateScalarListTable(projectId, oldModel, newModel, previous.asScalarField_!, next.asScalarField_!)
+      lazy val createTemporaryColumn = createColumn.copy(field = temporaryNext)
+      lazy val renameTemporaryColumn = UpdateColumn(projectId, oldModel, temporaryNext, next.asScalarField_!)
 
       () match {
         case _ if previous.isRelation && next.isRelation                                                             => Vector.empty
@@ -64,7 +67,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
         case _ if previous.isScalarNonList && next.isRelation                                                        => Vector(deleteColumn)
         case _ if previous.isScalarNonList && next.isScalarNonList && previous.typeIdentifier == next.typeIdentifier => Vector(updateColumn)
         case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier       => Vector(updateScalarListTable)
-        case _ if previous.isScalarNonList && next.isScalarNonList                                                   => Vector(deleteColumn, createColumn)
+        case _ if previous.isScalarNonList && next.isScalarNonList                                                   => Vector(createTemporaryColumn, deleteColumn, renameTemporaryColumn)
         case _ if previous.isScalarList && next.isScalarList                                                         => Vector(deleteScalarListTable, createScalarListTable)
       }
 

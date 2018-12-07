@@ -308,7 +308,12 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     aColumn.typeIdentifier should be(TI.Int)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
     val bColumn = relationTable.column_!("B")
-    bColumn.typeIdentifier should be(TI.UUID)
+    if (deployConnector.capabilities.has(UuidIdCapability)) {
+      bColumn.typeIdentifier should be(TI.UUID)
+    } else {
+      // on MySQL UUID maps to String
+      bColumn.typeIdentifier should be(TI.String)
+    }
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
@@ -486,7 +491,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     if (deployConnector.capabilities.has(UuidIdCapability)) {
       cColumn.typeIdentifier should be(TI.UUID)
     } else {
-      // on MySQL this fails but we do not allow UUID
+      // on MySQL this maps to a String
       cColumn.typeIdentifier should be(TI.String)
     }
   }
