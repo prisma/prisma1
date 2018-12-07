@@ -1,0 +1,12 @@
+port: 4467
+databases:
+  default:
+    connector: postgres
+    host: localhost
+    user: tim
+    rawAccess: true
+    port: '5432'
+    migrations: false
+
+datamodel: datamodel.prisma
+endpoint: http://localhost:4467
