@@ -19,7 +19,7 @@ import {
 } from './log'
 import plusxSync from './chmod'
 
-let { platform } = process
+const { platform } = process
 
 const packageDir = path.join(__dirname, '../..')
 const packageJSON = require(path.join(packageDir, 'package.json'))
