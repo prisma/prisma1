@@ -1,5 +1,5 @@
 {
-  "version": "1.17.0-alpha.2",
+  "version": "1.24.0-test.4",
   "name": "prisma",
   "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
   "keywords": [
@@ -68,8 +68,8 @@
   },
   "dependencies": {
     "fs-extra": "^7.0.0",
-    "prisma-cli-core": "1.1.38-alpha.24",
-    "prisma-cli-engine": "1.1.37-alpha.2",
+    "prisma-cli-core": "^1.24.0-test.7",
+    "prisma-cli-engine": "^1.24.0-test.1",
     "semver": "^5.4.1",
     "source-map-support": "^0.4.18"
   },

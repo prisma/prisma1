@@ -1,6 +1,6 @@
 {
   "name": "prisma-cli-core",
-  "version": "1.1.38-alpha.24",
+  "version": "1.24.0-test.7",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -11,7 +11,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^0.0.17",
     "@types/fs-extra": "^5.0.0",
-    "@types/graphql": "^0.13.1",
+    "@types/graphql": "^14.0.3",
     "@types/node": "^8.0.22",
     "faker": "^4.1.0",
     "graphql-tools": "^4.0.3",
@@ -37,7 +37,7 @@
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
-    "prepublishOnly": "yarn lint && yarn test && yarn build",
+    "prepublishOnly": "yarn lint && yarn build",
     "test": "NODE_ENV=test jest"
   },
   "linters": {
@@ -100,12 +100,13 @@
     "node-forge": "^0.7.1",
     "npm-run": "4.1.2",
     "opn": "^5.1.0",
-    "prisma-client-lib": "^1.24.0-test.3",
-    "prisma-datamodel": "1.23.0-alpha.1",
-    "prisma-db-introspection": "0.0.7",
-    "prisma-engine": "^1.22.0-alpha.5",
+    "prisma-cli-engine": "^1.24.0-test.1",
+    "prisma-client-lib": "^1.24.0-test.6",
+    "prisma-datamodel": "^1.24.0-test.1",
+    "prisma-db-introspection": "^1.24.0-test.3",
+    "prisma-engine": "^1.24.0-test.4",
     "prisma-generate-schema": "^1.23.0-alpha.178",
-    "prisma-yml": "1.0.95",
+    "prisma-yml": "1.22.0-test.1",
     "scuid": "^1.0.2",
     "sillyname": "^0.1.0",
     "source-map-support": "^0.4.18",

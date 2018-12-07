@@ -91,7 +91,6 @@ export class Engine {
   async start() {
     this.port = await this.getFreePort()
     const PRISMA_CONFIG = this.generatePrismaConfig()
-    console.log(PRISMA_CONFIG)
     this.child = spawn(path.join(__dirname, '../prisma'), [], {
       env: {
         PRISMA_CONFIG,

@@ -262,14 +262,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/graphql@14.0.3":
+"@types/graphql@^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0", "@types/graphql@^14.0.3":
   version "14.0.3"
   resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-14.0.3.tgz#389e2e5b83ecdb376d9f98fae2094297bc112c1c"
   integrity sha512-TcFkpEjcQK7w8OcrQcd7iIBPjU0rdyi3ldj6d0iJ4PPSzbWqPBvXj9KSwO14hTOX2dm9RoiH7VuxksJLNYdXUQ==
-
-"@types/graphql@^0.13.1":
-  version "0.13.4"
-  resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-0.13.4.tgz#55ae9c29f0fd6b85ee536f5c72b4769d5c5e06b1"
 
 "@types/jest@^20.0.8":
   version "20.0.8"
@@ -6690,6 +6686,15 @@ pretty-ms@^3.0.0:
   integrity sha512-ZypexbfVUGTFxb0v+m1bUyy92DHe5SyYlnyY0msyms5zd3RwyvNgyxZZsXXgoyzlxjx5MiqtXUdhUfvQbe0A2Q==
   dependencies:
     parse-ms "^1.0.0"
+
+prisma-datamodel@1.23.0-alpha.1:
+  version "1.23.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.1.tgz#08489322aec05409e3fa4b820f2f4aa87e574988"
+  integrity sha512-MzwrUBI/rFQj+tqXazHtb2vhlXQxa8KOgJxYGjulE6UDR++VdoM3C3pSfqd8tQnptOddeC1nfFPjEOYidv0zCw==
+  dependencies:
+    graphql "^14.0.2"
+    pluralize "^7.0.0"
+    popsicle "10"
 
 prisma-datamodel@1.23.0-alpha.173:
   version "1.23.0-alpha.173"

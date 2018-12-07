@@ -18,6 +18,7 @@ import {
   warn,
 } from './log'
 import plusxSync from './chmod'
+import { copy } from './copy'
 
 const { platform } = process
 
@@ -27,6 +28,8 @@ const packageJSON = require(path.join(packageDir, 'package.json'))
 const targetWin32 = path.join(__dirname, 'prisma.exe')
 const prisma = path.join(__dirname, '../../prisma')
 const target = platform === 'win32' ? targetWin32 : prisma
+const tmpDir = `/tmp/prisma/`
+const tmpTarget = `/tmp/prisma/prisma-${packageJSON.version}`
 const partial = target + '.partial'
 
 /**
@@ -67,60 +70,72 @@ async function download() {
   // Print an empty line
   console.log('')
 
-  await retry(
-    async () => {
-      enableProgress('Downloading Prisma Binary ' + packageJSON.version)
-      showProgress(0)
+  if (fs.existsSync(tmpTarget)) {
+    await copy(tmpTarget, target)
+  } else {
+    await retry(
+      async () => {
+        enableProgress('Downloading Prisma Binary ' + packageJSON.version)
+        showProgress(0)
 
-      try {
-        // const name = platformToName[platform]
-        // const url = `https://github.com/zeit/now-cli/releases/download/${
-        //   packageJSON.version
-        // }/${name}.gz`
-        const url =
-          'https://s3-eu-west-1.amazonaws.com/curl-linux/prisma-native.gz'
-        const resp = await fetch(url, { compress: false })
+        try {
+          // const name = platformToName[platform]
+          // const url = `https://github.com/zeit/now-cli/releases/download/${
+          //   packageJSON.version
+          // }/${name}.gz`
+          const url =
+            'https://s3-eu-west-1.amazonaws.com/curl-linux/prisma-native.gz'
+          const resp = await fetch(url, { compress: false })
 
-        if (resp.status !== 200) {
-          throw new Error(resp.statusText + ' ' + url)
+          if (resp.status !== 200) {
+            throw new Error(resp.statusText + ' ' + url)
+          }
+
+          const size = resp.headers.get('content-length')
+          const ws = fs.createWriteStream(partial)
+
+          await new Promise((resolve, reject) => {
+            let bytesRead = 0
+
+            resp.body.on('error', reject).on('data', chunk => {
+              bytesRead += chunk.length
+
+              if (size) {
+                showProgress((100 * bytesRead) / size)
+              }
+            })
+
+            const gunzip = zlib.createGunzip()
+
+            gunzip.on('error', reject)
+
+            resp.body.pipe(gunzip).pipe(ws)
+
+            ws.on('error', reject).on('close', () => {
+              showProgress(100)
+              resolve()
+            })
+          })
+        } finally {
+          disableProgress()
         }
+      },
+      {
+        retries: 10,
+        onRetry: err => console.error(err),
+      },
+    )
 
-        const size = resp.headers.get('content-length')
-        const ws = fs.createWriteStream(partial)
-
-        await new Promise((resolve, reject) => {
-          let bytesRead = 0
-
-          resp.body.on('error', reject).on('data', chunk => {
-            bytesRead += chunk.length
-
-            if (size) {
-              showProgress((100 * bytesRead) / size)
-            }
-          })
-
-          const gunzip = zlib.createGunzip()
-
-          gunzip.on('error', reject)
-
-          resp.body.pipe(gunzip).pipe(ws)
-
-          ws.on('error', reject).on('close', () => {
-            showProgress(100)
-            resolve()
-          })
-        })
-      } finally {
-        disableProgress()
-      }
-    },
-    {
-      retries: 10,
-      onRetry: err => console.error(err),
-    },
-  )
-
-  fs.renameSync(partial, target)
+    fs.renameSync(partial, target)
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir)
+    }
+    try {
+      await copy(target, tmpTarget)
+    } catch (e) {
+      // let this fail silently - the CI system may have reached the file size limit
+    }
+  }
 }
 
 async function main() {

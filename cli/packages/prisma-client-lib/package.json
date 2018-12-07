@@ -1,6 +1,6 @@
 {
   "name": "prisma-client-lib",
-  "version": "1.24.0-test.3",
+  "version": "1.24.0-test.6",
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "Apache-2.0",
   "files": [
@@ -32,7 +32,7 @@
     "lodash.flatten": "^4.4.0",
     "prettier": "^1.14.3",
     "prisma-datamodel": "1.23.0-alpha.1",
-    "prisma-engine": "^1.22.0-alpha.5",
+    "prisma-engine": "^1.24.0-test.4",
     "prisma-generate-schema": "1.23.0-alpha.173",
     "subscriptions-transport-ws": "^0.9.15",
     "uppercamelcase": "^3.0.0",
@@ -40,7 +40,7 @@
     "zen-observable": "^0.8.10"
   },
   "devDependencies": {
-    "@types/graphql": "14.0.3",
+    "@types/graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0",
     "ava": "^0.25.0",
     "graphql": "^14.0.2",
     "semantic-release": "^15.10.4",
