@@ -21,9 +21,9 @@ trait ApiConnector {
 case class MutactionResults(results: Vector[DatabaseMutactionResult]) {
   def merge(otherResult: MutactionResults): MutactionResults          = MutactionResults(results ++ otherResult.results)
   def merge(otherResults: Vector[MutactionResults]): MutactionResults = MutactionResults(results ++ otherResults.flatMap(_.results))
-  def id(m: FurtherNestedMutaction): IdGCValue                        = results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult].id
-  def nodeAddress(m: FurtherNestedMutaction): NodeAddress             = results.find(_.mutaction == m).get.asInstanceOf[FurtherNestedMutactionResult].nodeAddress
-  def contains(m: DatabaseMutaction): Boolean                         = results.map(_.mutaction).contains(m)
+  def id(m: FurtherNestedMutaction): IdGCValue                        = results.find(_.mutaction.id == m.id).get.asInstanceOf[FurtherNestedMutactionResult].id
+  def nodeAddress(m: FurtherNestedMutaction): NodeAddress             = results.find(_.mutaction.id == m.id).get.asInstanceOf[FurtherNestedMutactionResult].nodeAddress
+  def contains(m: DatabaseMutaction): Boolean                         = results.map(_.mutaction.id).contains(m.id)
 }
 
 trait DatabaseMutactionExecutor {
