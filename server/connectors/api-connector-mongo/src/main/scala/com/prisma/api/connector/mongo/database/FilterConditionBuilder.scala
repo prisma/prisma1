@@ -28,13 +28,13 @@ trait FilterConditionBuilder {
     case None         => Document()
   }
 
-  private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
-    filter match {
+  private def buildConditionForFilter(path: String, filter: Filter, negate: Boolean = false): conversions.Bson = {
+    val convertedFilter = filter match {
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter => hackForTrue
-      case AndFilter(filters)     => and(nonEmptyConditions(path, filters): _*)
-      case OrFilter(filters)      => or(nonEmptyConditions(path, filters): _*)
-      case NotFilter(filters)     => nor(filters.map(f => buildConditionForFilter(path, f)): _*) //not can only negate equality comparisons not filters
+      case AndFilter(filters)     => and(nonEmptyConditions(path, filters, negate): _*)
+      case OrFilter(filters)      => sys.error("These should not be hit ")
+      case NotFilter(filters)     => sys.error("These should not be hit ")
       case x: RelationFilter      => relationFilterStatement(path, x)
 
       //--------------------------------ANCHORS------------------------------------
@@ -66,28 +66,32 @@ trait FilterConditionBuilder {
       case OneRelationIsNullFilter(field)                               => equal(combineTwo(path, field.name), null)
       case x                                                            => sys.error(s"Not supported: $x")
     }
+
+    (filter, negate) match {
+      case (AndFilter(_), _) => convertedFilter
+      case (_, true)         => not(convertedFilter)
+      case (_, false)        => convertedFilter
+    }
+
   }
 
   def renameId(field: ScalarField): String = if (field.isId) "_id" else field.dbName
 
-  private def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
-    case x if x.isEmpty && path == "" => Vector(hackForTrue)
-    case x if x.isEmpty               => Vector(notEqual(s"$path._id", -1))
-    case x                            => x
-  }
+  private def nonEmptyConditions(path: String, filters: Vector[Filter], negate: Boolean): Vector[conversions.Bson] =
+    filters.map(f => buildConditionForFilter(path, f, negate)) match {
+      case x if x.isEmpty && path == "" => Vector(hackForTrue)
+      case x if x.isEmpty               => Vector(notEqual(s"$path._id", -1))
+      case x                            => x
+    }
 
-  //Fixme: Check whether this is correct: path is not being passed down for toManyNested
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
     val fieldName = if (relationFilter.field.relatedModel_!.isEmbedded) relationFilter.field.dbName else relationFilter.field.name
 
-    val toOneNested  = buildConditionForFilter(combineTwo(path, fieldName), relationFilter.nestedFilter)
-    val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
-
     relationFilter.condition match {
-      case AtLeastOneRelatedNode => elemMatch(fieldName, toManyNested)
-      case EveryRelatedNode      => not(elemMatch(fieldName, not(toManyNested)))
-      case NoRelatedNode         => not(elemMatch(fieldName, toManyNested))
-      case ToOneRelatedNode      => toOneNested
+      case AtLeastOneRelatedNode => elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter))
+      case EveryRelatedNode      => not(elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter, true)))
+      case NoRelatedNode         => not(elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter)))
+      case ToOneRelatedNode      => buildConditionForFilter(combineTwo(path, fieldName), relationFilter.nestedFilter)
     }
   }
 }

@@ -61,8 +61,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
     } else {
 
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
-
-      val mongoFilter = buildConditionForFilter(updatedQueryArgs.filter)
+      val mongoFilter  = buildConditionForFilter(updatedQueryArgs.filter)
 
       val combinedFilter = CursorConditionBuilder.buildCursorCondition(updatedQueryArgs) match {
         case None         => mongoFilter
@@ -81,9 +80,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       idOnly match {
         case true  => queryWithLimit.projection(include("_id")).collect().toFuture
         case false => queryWithLimit.collect().toFuture
-
       }
-
     }
   }
 
