@@ -70,7 +70,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       }
 
       val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
-      val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, updatedQueryArgs)
+      val queryWithOrder: FindObservable[Document] = baseQuery.sort(OrderByClauseBuilder.sortBson(queryArguments))
       val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
 
       val queryWithLimit = skipAndLimit.limit match {
