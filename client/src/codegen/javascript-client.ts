@@ -22,7 +22,6 @@ var typeDefs = require("./prisma-schema").typeDefs
 ${this.renderModels()}
 exports.Prisma = prisma_lib_1.makePrismaClientClass(${args});
 exports.prisma = new exports.Prisma();
-${this.renderModels()}
 `)
   }
   renderModels() {
