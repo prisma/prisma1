@@ -48,7 +48,7 @@
   "scripts": {
     "build": "rimraf dist && tsc -d && chmod +x dist/index.js",
     "lint": "tslint src/**/*.ts",
-    "p": "dotenv -e scripts/.env ts-node ./scripts/release-brew.ts",
+    "publish-homebrew": "dotenv -e scripts/.env ts-node ./scripts/release-brew.ts",
     "make-binary": "npm run build && npm run package",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
