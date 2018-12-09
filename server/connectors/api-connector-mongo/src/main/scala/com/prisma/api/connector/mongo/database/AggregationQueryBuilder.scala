@@ -104,7 +104,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     }
   }
 
-  private def oneRelationNull(relationField: RelationField, path: Path) = {
+  private def oneRelationNull(relationField: RelationField, path: Path): Seq[Bson] = {
     relationField.relatedModel_!.isEmbedded match {
       case true =>
         Seq(`match`(equal(combineTwo(path.combinedNames, relationField.dbName), null)))
@@ -131,25 +131,10 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     val rf          = relationFilter.field
     val updatedPath = path.append(rf)
 
-//    private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
-//      val fieldName = if (relationFilter.field.relatedModel_!.isEmbedded) relationFilter.field.dbName else relationFilter.field.name
-//
-//      val toOneNested  = buildConditionForFilter(combineTwo(path, fieldName), relationFilter.nestedFilter)
-//      val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
-//
-//      relationFilter.condition match {
-//        case AtLeastOneRelatedNode => elemMatch(fieldName, toManyNested)
-//        case EveryRelatedNode      => not(elemMatch(fieldName, not(toManyNested)))
-//        case NoRelatedNode         => not(elemMatch(fieldName, toManyNested))
-//        case ToOneRelatedNode      => toOneNested
-//      }
-//    }
-
     val next = buildJoinStagesForFilter(updatedPath, relationFilter.nestedFilter)
 
     val current = rf.relatedModel_!.isEmbedded match {
-      case true =>
-        //Fixme this currently always translates to a some
+      case true => //Fixme this currently always translates to a some we might want to allow _none, _every at some point
         Seq.empty
 
       case false =>
