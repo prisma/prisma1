@@ -11,9 +11,6 @@ AWS.config.update({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
-console.log(process.env.GITHUB_TOKEN);
-process.exit(0);
-
 axios.defaults.headers.common.Authorization = `Bearer ${token}`;
 
 async function main() {
