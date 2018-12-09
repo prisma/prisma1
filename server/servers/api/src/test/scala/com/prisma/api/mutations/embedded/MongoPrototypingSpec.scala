@@ -2055,28 +2055,6 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(query3, project).toString should be(
       """{"data":{"users":[{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}]}}""")
 
-    val query4 = """query withFilter {
-                   |  users(
-                   |    where: {
-                   |      name: "User"
-                   |      pets_none: { breed: "Breed 1", walker: { name: "Walker 1" }}
-                   |    }
-                   |  ) {
-                   |    name
-                   |    posts {
-                   |      title
-                   |    }
-                   |    pets {
-                   |      breed
-                   |      walker {
-                   |        name
-                   |      }
-                   |    }
-                   |  }
-                   |}"""
-
-    server.query(query4, project).toString should be("""{"data":{"users":[]}}""")
-
   }
 
 }

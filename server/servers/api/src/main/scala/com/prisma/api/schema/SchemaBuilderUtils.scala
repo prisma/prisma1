@@ -56,8 +56,9 @@ object SchemaBuilderUtils {
 }
 
 case class FilterObjectTypeBuilder(model: Model, project: Project) {
-  def mapToRelationFilterInputField(field: models.RelationField)         = relationFilterInputFieldHelper(field)
-  def mapToRelationFilterInputFieldForMongo(field: models.RelationField) = relationFilterInputFieldHelperForMongo(field)
+  def mapToRelationFilterInputField(field: models.RelationField)                   = relationFilterInputFieldHelper(field)
+  def mapToRelationFilterInputFieldForMongo(field: models.RelationField)           = relationFilterInputFieldHelperForMongo(field)
+  def mapToRestrictedRelationFilterInputFieldForMongo(field: models.RelationField) = restrictedRelationFilterInputFieldHelperForMongo(field)
 
   def relationFilterInputFieldHelper(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
@@ -72,14 +73,33 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
 
   def relationFilterInputFieldHelperForMongo(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
     assert(!field.isScalar)
-    val relatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeForMongo
+    val relatedModelInputType           = FilterObjectTypeBuilder(field.relatedModel_!, project).filterObjectTypeForMongo
+    val restrictedRelatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).restrictedFilterObjectTypeForMongo
 
     (field.isHidden, field.isList) match {
       case (true, _)                                     => List.empty
       case (_, false)                                    => List(InputField(field.name, OptionInputType(relatedModelInputType)))
       case (_, true) if !field.relatedModel_!.isEmbedded => List(InputField(field.name + "_some", OptionInputType(relatedModelInputType)))
       case (_, true) if field.relatedModel_!.isEmbedded =>
-        FilterArguments.getFieldFilters(field).map(f => InputField(field.name + f.name, OptionInputType(relatedModelInputType)))
+        List(
+          InputField(field.name + "_some", OptionInputType(relatedModelInputType)),
+          InputField(field.name + "_every", OptionInputType(restrictedRelatedModelInputType)),
+          InputField(field.name + "_none", OptionInputType(restrictedRelatedModelInputType))
+        )
+    }
+  }
+
+  def restrictedRelationFilterInputFieldHelperForMongo(field: models.RelationField): List[InputField[_ >: Option[Seq[Any]] <: Option[Any]]] = {
+    assert(!field.isScalar)
+    val restrictedRelatedModelInputType = FilterObjectTypeBuilder(field.relatedModel_!, project).restrictedFilterObjectTypeForMongo
+
+    (field.isHidden, field.isList) match {
+      case (true, _)                                      => List.empty
+      case (_, false) if !field.relatedModel_!.isEmbedded => List.empty
+      case (_, false) if field.relatedModel_!.isEmbedded  => List(InputField(field.name, OptionInputType(restrictedRelatedModelInputType)))
+      case (_, true) if !field.relatedModel_!.isEmbedded  => List.empty
+      case (_, true) if field.relatedModel_!.isEmbedded =>
+        FilterArguments.getFieldFilters(field).map(f => InputField(field.name + f.name, OptionInputType(restrictedRelatedModelInputType)))
     }
   }
 
@@ -124,6 +144,19 @@ case class FilterObjectTypeBuilder(model: Model, project: Project) {
           .filterNot(_.isHidden)
           .flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
           .flatMap(mapToRelationFilterInputFieldForMongo)
+      }
+    )
+
+  // this does not Allow NOT/OR and also only filters on embedded types
+  lazy val restrictedFilterObjectTypeForMongo: InputObjectType[Any] =
+    InputObjectType[Any](
+      s"${model.name}RestrictedWhereInput",
+      fieldsFn = () => {
+        List(InputField("AND", OptionInputType(ListInputType(restrictedFilterObjectTypeForMongo)), description = FilterArguments.ANDFilter.description)) ++ model.scalarFields
+          .filterNot(_.isHidden)
+          .flatMap(SchemaBuilderUtils.mapToInputField) ++ model.relationFields
+          .filter(_.relatedModel_!.isEmbedded)
+          .flatMap(mapToRestrictedRelationFilterInputFieldForMongo)
       }
     )
 
