@@ -105,6 +105,12 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
             DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
             CreateRelationTable(projectId, nextRelation)
           )
+        case (Some(_: RelationTable), Some(p: EmbeddedRelationLink)) =>
+          Vector(
+            deleteRelation(previousRelation),
+            createRelation(nextRelation)
+          )
+
         case (Some(p: EmbeddedRelationLink), Some(n: EmbeddedRelationLink)) =>
           Vector(
             DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
@@ -119,7 +125,8 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
             UpdateRelationTable(projectId, previousRelation, nextRelation)
           )
 
-        case (p, n) => sys.error(s"Combination $p, $n not supported here")
+        case (p, n) =>
+          sys.error(s"Combination $p, $n not supported here") // this can only happen for None + Some combination that must not be possible
       }
 
       manifestationChange

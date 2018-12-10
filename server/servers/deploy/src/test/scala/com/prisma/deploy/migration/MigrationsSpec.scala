@@ -653,6 +653,45 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table("AToB").isDefined should be(true)
   }
 
+  "converting a link table to an inline relation should work" in {
+    val capas = ConnectorCapabilities(RelationLinkTableCapability)
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |  a: A
+        |}
+      """.stripMargin
+
+    {
+      val result = deploy(initialDataModel, capas)
+      result.table_!("A").column("b").isDefined should be(false)
+      result.table("AToB").isDefined should be(true)
+    }
+
+    val newDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    {
+      val initialResult = deploy(newDataModel, capas)
+      initialResult.table_!("A").column("b").isDefined should be(true)
+    }
+  }
+
   "adding an inline self relation should add the relation link in the right column" in {
     val dataModel =
       """
