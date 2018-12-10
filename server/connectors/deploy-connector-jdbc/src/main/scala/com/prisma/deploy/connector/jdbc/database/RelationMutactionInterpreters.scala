@@ -33,17 +33,6 @@ case class UpdateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder)
   }
 }
 
-case class RenameRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[RenameRelationTable] {
-  override def execute(mutaction: RenameRelationTable) = {
-    builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.previousName, newName = mutaction.nextName)
-  }
-
-  override def rollback(mutaction: RenameRelationTable) = {
-    builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.nextName, newName = mutaction.previousName)
-
-  }
-}
-
 case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelation] {
   override def execute(mutaction: CreateInlineRelation) = {
     builder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)

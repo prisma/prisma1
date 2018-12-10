@@ -4,6 +4,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.shared.models.{Model, Project, Relation}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
 
@@ -13,7 +14,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)
-    extends JdbcDeployDatabaseMutationBuilder {
+    extends JdbcDeployDatabaseMutationBuilder
+    with BooleanUtils {
 
   import slickDatabase.profile.api._
 
@@ -90,14 +92,20 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    DBIO.seq(
+    val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
-             RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}""",
+             RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}"""
+    )
+    val renameModelBColumn = (previousRelation.modelBColumn != nextRelation.modelBColumn).toOption(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
-             RENAME COLUMN #${qualify(previousRelation.modelBColumn)} TO #${qualify(nextRelation.modelBColumn)}""",
+             RENAME COLUMN #${qualify(previousRelation.modelBColumn)} TO #${qualify(nextRelation.modelBColumn)}"""
+    )
+    val renameTable = (previousRelation.relationTableName != nextRelation.relationTableName).toOption(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME TO #${qualify(nextRelation.relationTableName)}"""
     )
+    val all = renameModelAColumn ++ renameModelBColumn ++ renameTable
+    DBIO.sequence(all.toVector)
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
