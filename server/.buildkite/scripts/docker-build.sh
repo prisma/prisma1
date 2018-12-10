@@ -6,17 +6,12 @@ CHANNEL="${1:?Provide the channel this script is run on (e.g. alpha, beta, stabl
 DOCKER_TAG="${2:?Provide the docker tag that should be released}"
 ADDITIONALLY_RELEASE="${3:?Provide the secondary docker tag that should be released}"
 
+mkdir /.cargo
+
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
   -w /root/build/server \
   -v $(pwd):/root/build \
-  -v ~/.cargo_cache/.fingerprint:/root/build/server/libs/jwt-native-rs/target/release/.fingerprint \
-  -v ~/.cargo_cache/build:/root/build/server/libs/jwt-native-rs/target/release/build \
-  -v ~/.cargo_cache/deps:/root/build/server/libs/jwt-native-rs/target/release/deps \
-  -v ~/.cargo_cache/.cargo-lock:/root/build/server/libs/jwt-native-rs/target/release/.cargo-lock \
-  -v ~/.cargo_cache/.fingerprint:/root/build/server/libs/jdbc-native-rs/target/release/.fingerprint \
-  -v ~/.cargo_cache/build:/root/build/server/libs/jdbc-native-rs/target/release/build \
-  -v ~/.cargo_cache/deps:/root/build/server/libs/jdbc-native-rs/target/release/deps \
-  -v ~/.cargo_cache/.cargo-lock:/root/build/server/libs/jdbc-native-rs/target/release/.cargo-lock \
+  -v /.cargo/:~/root/.cargo \
   -v ~/.ivy2:/root/.ivy2 \
   -v ~/.coursier:/root/.coursier \
   -v /var/run/docker.sock:/var/run/docker.sock \
