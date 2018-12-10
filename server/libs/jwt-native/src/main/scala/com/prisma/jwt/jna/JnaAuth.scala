@@ -11,9 +11,6 @@ object JnaAuth {
   val library: JnaRustBridge = {
     System.setProperty("jna.debug_load.jna", "true")
     System.setProperty("jna.debug_load", "true")
-    System.setProperty("jna.library.path", "/lib")
-    Try { System.load("/lib/libjwt_native.so") }
-
     Native.loadLibrary("jwt_native", classOf[JnaRustBridge])
   }
 
