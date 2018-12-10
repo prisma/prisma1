@@ -3,13 +3,12 @@ package com.prisma.api.filters.nonEmbedded
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
-import com.prisma.{IgnoreMySql, IgnorePostgres}
+import com.prisma.{IgnoreMongo, IgnoreMySql, IgnorePostgres}
 import org.scalatest._
 
 class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
-  override def runOnlyForCapabilities         = Set(JoinRelationLinksCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() { """type Artist {
                                          |  id: ID! @unique
@@ -220,7 +219,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   // MySql is case insensitive and Postgres case sensitive
 
-  "MySql 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnorePostgres) in {
+  "MySql 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnorePostgres, IgnoreMongo) in {
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
@@ -241,20 +240,24 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
   }
 
-  "PostGres 1 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnoreMySql) in {
+  "PostGres 1 level m-relation filter" should "work for  _some" taggedAs (IgnoreMySql) in {
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
     server.query(query = """{artists(where:{Albums_some:{Title_starts_with: "T"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"}]}}""")
+  }
 
+  "PostGres 1 level m-relation filter" should "work for _every" taggedAs (IgnoreMySql, IgnoreMongo) in {
     server.query(query = """{artists(where:{Albums_every:{Title_contains: "Album"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
     server.query(query = """{artists(where:{Albums_every:{Title_not_contains: "The"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
+  }
 
+  "PostGres 1 level m-relation filter" should "work for _none" taggedAs (IgnoreMySql, IgnoreMongo) in {
     server.query(query = """{artists(where:{Albums_none:{Title_contains: "The"}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
 
@@ -262,7 +265,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"artists":[{"Name":"ArtistWithoutAlbums"}]}}""")
   }
 
-  "2 level m-relation filter" should "work for _every, _some and _none" in {
+  "2 level m-relation filter" should "work for some/some" in {
 
     // some|some
     server.query(query = """{artists(where:{Albums_some:{Tracks_some: {Milliseconds_lte: 9000}}}){Name}}""", project = project).toString should be(
@@ -270,7 +273,9 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
     server.query(query = """{artists(where:{Albums_some:{Tracks_some: {Bytes: 512}}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"CompleteArtist"}]}}""")
+  }
 
+  "2 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnoreMongo) in {
     // some|every
     server.query(query = """{artists(where:{Albums_some:{Tracks_every: {UnitPrice_gt: 2.50}}}){Name}}""", project = project).toString should be(
       """{"data":{"artists":[{"Name":"ArtistWithOneAlbumWithoutTracks"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
@@ -328,11 +333,15 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"artists":[{"Name":"CompleteArtist"},{"Name":"ArtistWithoutAlbums"},{"Name":"CompleteArtist2"},{"Name":"CompleteArtistWith2Albums"}]}}""")
   }
 
-  "2 level m-relation filters that have subfilters that are connected with an implicit AND" should "work" in {
+  "2 level m-relation filters that have subfilters that are connected with an implicit AND" should "work for _some" in {
 
     server
       .query(query = """{albums(where:{Tracks_some:{MediaType: {Name: "MediaType1"},Genre: {Name: "Genre1"}}}){Title}}""", project = project)
       .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+  }
+
+  "2 level m-relation filters that have subfilters that are connected with an implicit AND" should "work for _every" taggedAs (IgnoreMongo) in {
 
     server
       .query(query = """{albums(where:{Tracks_every:{MediaType: {Name: "MediaType1"},Genre: {Name: "Genre1"}}}){Title}}""", project = project)
@@ -340,27 +349,31 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   }
 
-  "2 level m-relation filters that have subfilters that are connected with an explicit AND" should "work" in {
+  "2 level m-relation filters that have subfilters that are connected with an explicit AND" should "work for _some" in {
 
     server
       .query(query = """{albums(where:{Tracks_some:{AND:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
       .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
 
     server
-      .query(query = """{albums(where:{Tracks_every:{AND:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
-      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album4"}]}}""")
-
-    server
       .query(query = """{albums(where:{Tracks_some:{AND:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
       .toString should be("""{"data":{"albums":[{"Title":"Album3"}]}}""")
 
     server
-      .query(query = """{albums(where:{Tracks_every:{AND:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
-      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
-
-    server
       .query(query = """{albums(where:{Tracks_some:{AND:[]}}){Title}}""", project = project)
       .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"Album3"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
+
+  }
+
+  "2 level m-relation filters that have subfilters that are connected with an explicit AND" should "work for _every" taggedAs (IgnoreMongo) in {
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{AND:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album4"}]}}""")
+
+    server
+      .query(query = """{albums(where:{Tracks_every:{AND:[{MediaType: {Name: "MediaType2"}}]}}){Title}}""", project = project)
+      .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
 
     server
       .query(query = """{albums(where:{Tracks_every:{AND:[]}}){Title}}""", project = project)
@@ -368,7 +381,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"albums":[{"Title":"Album1"},{"Title":"TheAlbumWithoutTracks"},{"Title":"Album3"},{"Title":"Album4"},{"Title":"Album5"}]}}""")
   }
 
-  "2 level m-relation filters that have subfilters that are connected with an explicit OR" should "work" in {
+  "2 level m-relation filters that have subfilters that are connected with an explicit OR" should "work" taggedAs (IgnoreMongo) in {
 
     server
       .query(query = """{albums(where:{Tracks_some:{OR:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre2"}}]}}){Title}}""", project = project)
@@ -395,7 +408,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       .toString should be("""{"data":{"albums":[{"Title":"TheAlbumWithoutTracks"}]}}""")
   }
 
-  "2 level m-relation filters that have subfilters that are connected with an explicit NOT" should "work" in {
+  "2 level m-relation filters that have subfilters that are connected with an explicit NOT" should "work" taggedAs (IgnoreMongo) in {
 
     server
       .query(query = """{albums(where:{Tracks_some:{NOT:[{MediaType: {Name: "MediaType1"}},{Genre: {Name: "Genre1"}}]}}){Title}}""", project = project)
@@ -446,7 +459,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
     result.pathAsJsValue("data") shouldBe ("""{"genres":[{"GenreId":1}]}""".parseJson)
   }
 
-  "an empty _none filter" should "return all nodes that do have an empty relation" in {
+  "an empty _none filter" should "return all nodes that do have an empty relation" taggedAs (IgnoreMongo) in {
     server.query(query = """{genres(where:{Tracks_none:{}}){Name}}""", project = project).toString should be(
       """{"data":{"genres":[{"Name":"GenreThatIsNotUsed"}]}}""")
   }

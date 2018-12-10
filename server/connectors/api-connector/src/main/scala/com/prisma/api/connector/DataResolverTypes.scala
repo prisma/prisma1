@@ -99,10 +99,9 @@ object Filter {
 }
 sealed trait Filter
 
-case class AndFilter(filters: Vector[Filter])  extends Filter
-case class OrFilter(filters: Vector[Filter])   extends Filter
-case class NotFilter(filters: Vector[Filter])  extends Filter
-case class NodeFilter(filters: Vector[Filter]) extends Filter
+case class AndFilter(filters: Vector[Filter]) extends Filter
+case class OrFilter(filters: Vector[Filter])  extends Filter
+case class NotFilter(filters: Vector[Filter]) extends Filter
 
 case class ScalarFilter(field: ScalarField, condition: ScalarCondition) extends Filter
 

@@ -1,5 +1,6 @@
 package com.prisma.api.filters.nonEmbedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -7,8 +8,7 @@ import org.scalatest._
 
 class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
-  override def runOnlyForCapabilities         = Set(JoinRelationLinksCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() {
     """
@@ -92,34 +92,40 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"posts":[{"title":"post 1"},{"title":"post 2"}]}}""")
   }
 
-  "1 level m-relation filter" should "work for _every, _some and _none" in {
+  "1 level m-relation filter" should "work for _some" in {
 
     server.query(query = """{blogs(where:{posts_some:{popularity_gte: 5}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
 
     server.query(query = """{blogs(where:{posts_some:{popularity_gte: 50}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+  }
 
+  "1 level m-relation filter" should "work for _every " taggedAs (IgnoreMongo) in {
     server.query(query = """{blogs(where:{posts_every:{popularity_gte: 2}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
 
     server.query(query = """{blogs(where:{posts_every:{popularity_gte: 3}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+  }
 
+  "1 level m-relation filter" should "work for _none" taggedAs (IgnoreMongo) in {
     server.query(query = """{blogs(where:{posts_none:{popularity_gte: 50}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
 
     server.query(query = """{blogs(where:{posts_none:{popularity_gte: 5}}){name}}""", project = project).toString should be("""{"data":{"blogs":[]}}""")
   }
 
-  "2 level m-relation filter" should "work for _every, _some and _none" in {
+  "2 level m-relation filter" should "work for some/some" in {
 
     // some|some
     server.query(query = """{blogs(where:{posts_some:{comments_some: {likes: 0}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
 
     server.query(query = """{blogs(where:{posts_some:{comments_some: {likes: 1}}}){name}}""", project = project).toString should be("""{"data":{"blogs":[]}}""")
+  }
 
+  "2 level m-relation filter" should "work for _every, _some and _none" taggedAs (IgnoreMongo) in {
     // some|every
     server.query(query = """{blogs(where:{posts_some:{comments_every: {likes_gte: 0}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
@@ -177,7 +183,7 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "crazy filters" should "work" in {
+  "crazy filters" should "work" taggedAs (IgnoreMongo) in {
 
     server
       .query(

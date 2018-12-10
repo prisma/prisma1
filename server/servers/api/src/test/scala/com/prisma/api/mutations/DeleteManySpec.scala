@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -104,7 +105,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     todoAndRelayCountShouldBe(0)
   }
 
-  "The delete many Mutation" should "delete items using  OR" in {
+  "The delete many Mutation" should "delete items using  OR" taggedAs (IgnoreMongo) in {
     createTodo("title1")
     createTodo("title2")
     createTodo("title3")

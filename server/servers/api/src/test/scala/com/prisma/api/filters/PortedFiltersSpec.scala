@@ -1,5 +1,6 @@
 package com.prisma.api.filters
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -85,7 +86,7 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString() should be("""{"data":{"scalarModels":[{"optBoolean":false}]}}""")
   }
 
-  "A filter query" should "support the OR filter in one recursion level" in {
+  "A filter query" should "support the OR filter in one recursion level" taggedAs (IgnoreMongo) in {
 
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -100,7 +101,7 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString() should be("""{"data":{"scalarModels":[{"optBoolean":false},{"optBoolean":false},{"optBoolean":false},{"optBoolean":false}]}}""")
   }
 
-  "A filter query" should "support the OR filter in two recursion levels" in {
+  "A filter query" should "support the OR filter in two recursion levels" taggedAs (IgnoreMongo) in {
 
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")

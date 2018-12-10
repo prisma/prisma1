@@ -28,6 +28,7 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
   object LegacyDataModelCapability           extends ConnectorCapability
   object IntrospectionCapability             extends ConnectorCapability
   object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
+  object MongoJoinRelationLinksCapability    extends ConnectorCapability // does not allow NOT/OR and only _some on manyrelations
   object RelationLinkListCapability          extends ConnectorCapability // relation links can be stored inline in a node in a list
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
   // RawAccessCapability
@@ -91,6 +92,7 @@ object ConnectorCapabilities extends BooleanUtils {
       EmbeddedScalarListsCapability,
       EmbeddedTypesCapability,
       JoinRelationLinksCapability,
+      MongoJoinRelationLinksCapability,
       RelationLinkListCapability,
       EmbeddedTypesCapability
     )
