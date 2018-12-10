@@ -4,6 +4,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
 
@@ -13,7 +14,8 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)
-    extends JdbcDeployDatabaseMutationBuilder {
+    extends JdbcDeployDatabaseMutationBuilder
+    with BooleanUtils {
 
   import slickDatabase.profile.api._
 
@@ -107,7 +109,11 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
         newIsList = false,
         newTypeIdentifier = nextRelation.modelB.idField_!.typeIdentifier
       ),
-      renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
+      if (previousRelation.relationTableName != nextRelation.relationTableName) {
+        renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
+      } else {
+        DBIO.successful(())
+      }
     )
   }
 
