@@ -6,7 +6,7 @@ import akka.testkit.TestProbe
 import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.ConfigLoader
 import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
-import com.prisma.deploy.DeployDependencies
+import com.prisma.deploy.{DeployDependencies, DeployMetrics}
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
 import com.prisma.errors.{DummyErrorReporter, ErrorReporter}
@@ -52,4 +52,6 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
   override val managementSecret: String         = ""
   override val cacheFactory: CacheFactory       = new CaffeineCacheFactory()
   override val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
+
+  DeployMetrics.init(metricsRegistry, projectPersistence, deployConnector, system)
 }

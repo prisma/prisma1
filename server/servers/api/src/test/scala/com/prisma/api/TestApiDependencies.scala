@@ -62,6 +62,7 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   )
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
+  override val metricsRegistry: MetricsRegistry   = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 
-  override val metricsRegistry: MetricsRegistry = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
+  ApiMetrics.init(metricsRegistry)
 }

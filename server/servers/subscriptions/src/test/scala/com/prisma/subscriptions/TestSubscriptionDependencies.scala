@@ -16,6 +16,8 @@ import com.prisma.metrics.MetricsRegistry
 import com.prisma.metrics.dummy.DummyMetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.subscriptions.metrics.SubscriptionMetrics
+import com.prisma.websocket.metrics.SubscriptionWebsocketMetrics
 
 import scala.concurrent.Future
 
@@ -53,6 +55,9 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
   override lazy val sideEffectMutactionExecutor                 = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier                           = DatabaseMutactionVerifierImpl
   override val metricsRegistry: MetricsRegistry                 = DummyMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
+
+  SubscriptionMetrics.init(metricsRegistry)
+  SubscriptionWebsocketMetrics.init(metricsRegistry)
 }
 
 case class TestProjectFetcher(cacheFactory: CacheFactory) extends ProjectFetcher {

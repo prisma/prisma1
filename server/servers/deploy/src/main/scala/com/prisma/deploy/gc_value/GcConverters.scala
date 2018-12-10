@@ -93,7 +93,7 @@ private case class StringSangriaValueConverter(typeIdentifier: TypeIdentifier, i
     }
   }
 
-  private def escape(str: String): String = ??? // "\"" + StringEscapeUtils.escapeJava(str) + "\""
+  private def escape(str: String): String = "\"" + StringEscapeUtils.escapeJava(str) + "\""
 
   def fromAbleToHandleJsonLists(string: String): Or[SangriaValue, InvalidValueForScalarType] = {
 
