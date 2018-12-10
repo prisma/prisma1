@@ -7,7 +7,7 @@ import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.ScalarField
 import org.mongodb.scala.bson.collection.mutable.Document
-import org.mongodb.scala.bson.conversions
+import org.mongodb.scala.bson.{BsonArray, conversions}
 import org.mongodb.scala.model.Filters._
 
 //relationfilters depend on relationtype
