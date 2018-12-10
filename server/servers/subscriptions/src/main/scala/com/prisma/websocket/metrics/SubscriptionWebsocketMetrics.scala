@@ -3,8 +3,6 @@ package com.prisma.websocket.metrics
 import com.prisma.metrics.{MetricsFacade, MetricsRegistry}
 
 object SubscriptionWebsocketMetrics extends MetricsFacade {
-  override var registry: MetricsRegistry = null
-
   def init(metricsRegistry: MetricsRegistry): Unit = registry = metricsRegistry
 
   lazy val activeWsConnections               = defineGauge("websocket.connections.gauge")

@@ -3,8 +3,6 @@ package com.prisma.api
 import com.prisma.metrics.{CustomTag, MetricsFacade, MetricsRegistry, TimerMetric}
 
 object ApiMetrics extends MetricsFacade {
-  override var registry: MetricsRegistry = null
-
   def init(metricsRegistry: MetricsRegistry): Unit = registry = metricsRegistry
 
   lazy val projectCacheGetCount      = defineCounter("projectCache.get.count")

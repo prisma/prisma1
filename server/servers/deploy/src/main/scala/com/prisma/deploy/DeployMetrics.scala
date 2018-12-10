@@ -7,8 +7,6 @@ import com.prisma.deploy.server.DatabaseSizeReporter
 import com.prisma.metrics.{MetricsFacade, MetricsRegistry}
 
 object DeployMetrics extends MetricsFacade {
-  override var registry: MetricsRegistry = null
-
   def init(
       metricsRegistry: MetricsRegistry,
       projectPersistence: ProjectPersistence,

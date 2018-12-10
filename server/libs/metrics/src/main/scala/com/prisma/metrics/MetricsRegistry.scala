@@ -1,10 +1,12 @@
 package com.prisma.metrics
 
+import com.prisma.metrics.dummy.DummyMetricsRegistry
+
 import scala.annotation.varargs
 import scala.concurrent.Future
 
 trait MetricsFacade {
-  var registry: MetricsRegistry
+  var registry: MetricsRegistry = DummyMetricsRegistry
 
   def defineGauge(name: String, predefTags: (CustomTag, String)*): GaugeMetric = registry.defineGauge(name, predefTags: _*)
   def defineCounter(name: String, customTags: CustomTag*): CounterMetric       = registry.defineCounter(name, customTags: _*)

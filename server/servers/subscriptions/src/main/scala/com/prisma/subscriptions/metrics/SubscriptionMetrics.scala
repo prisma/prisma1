@@ -3,8 +3,6 @@ package com.prisma.subscriptions.metrics
 import com.prisma.metrics.{CustomTag, MetricsFacade, MetricsRegistry}
 
 object SubscriptionMetrics extends MetricsFacade {
-  override var registry: MetricsRegistry = null
-
   def init(metricsRegistry: MetricsRegistry): Unit = {
     registry = metricsRegistry
   }
