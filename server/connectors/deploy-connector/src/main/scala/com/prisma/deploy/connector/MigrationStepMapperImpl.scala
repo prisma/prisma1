@@ -96,25 +96,28 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
     case x: UpdateRelation =>
       val previousRelation      = previousSchema.getRelationByName_!(x.name)
       val nextRelation          = nextSchema.getRelationByName_!(x.finalName)
-      val previousManifestation = previousRelation.manifestation.get
-      val nextManifestation     = nextRelation.manifestation.get
+      val previousManifestation = previousRelation.manifestation
+      val nextManifestation     = nextRelation.manifestation
 
       val manifestationChange = (previousManifestation, nextManifestation) match {
-        case (p: EmbeddedRelationLink, _: RelationTable) =>
+        case (Some(p: EmbeddedRelationLink), Some(_: RelationTable)) =>
           Vector(
             DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
             CreateRelationTable(projectId, nextRelation)
           )
-        case (p: EmbeddedRelationLink, n: EmbeddedRelationLink) =>
+        case (Some(p: EmbeddedRelationLink), Some(n: EmbeddedRelationLink)) =>
           Vector(
             DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
             CreateInlineRelation(projectId, n.inTableOfModel(nextRelation), n.referencedModel(nextRelation), n.referencingColumn)
           )
-        case (_: RelationTable, _: RelationTable) =>
+        case (Some(_: RelationTable), Some(_: RelationTable)) =>
           // FIXME: should test what happens if the relation does not only contain renames but is using different models
           Vector(
             UpdateRelationTable(projectId, previousRelation, nextRelation)
           )
+        case (None, None) =>
+          Vector.empty
+
         case (p, n) => sys.error(s"Combination $p, $n not supported here")
       }
 
