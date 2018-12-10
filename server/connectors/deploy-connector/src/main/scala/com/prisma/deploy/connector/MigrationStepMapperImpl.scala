@@ -111,7 +111,6 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
             CreateInlineRelation(projectId, n.inTableOfModel(nextRelation), n.referencedModel(nextRelation), n.referencingColumn)
           )
         case (Some(_: RelationTable), Some(_: RelationTable)) =>
-          // FIXME: should test what happens if the relation does not only contain renames but is using different models
           Vector(
             UpdateRelationTable(projectId, previousRelation, nextRelation)
           )

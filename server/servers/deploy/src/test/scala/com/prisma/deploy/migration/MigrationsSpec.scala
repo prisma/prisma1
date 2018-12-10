@@ -368,6 +368,74 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
+  "switching models in a link table must work" in {
+    val capas = ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability)
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |type C {
+        |  id: ID! @id
+        |}
+        |
+        |type CustomLinkTable @linkTable {
+        |  one: A
+        |  two: B
+        |}
+      """.stripMargin
+    val initialResult = deploy(initialDataModel, capas)
+
+    {
+      val relationTable = initialResult.table_!("CustomLinkTable")
+      val oneColumn     = relationTable.column_!("one")
+      oneColumn.typeIdentifier should be(TI.String)
+      oneColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+      val twoColumn = relationTable.column_!("two")
+      twoColumn.typeIdentifier should be(TI.Int)
+      twoColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+    }
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  cs: [C] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |}
+        |
+        |type C {
+        |  id: ID! @id
+        |}
+        |
+        |type CustomLinkTable @linkTable {
+        |  one: A
+        |  two: C
+        |}
+      """.stripMargin
+
+    {
+      val result        = deploy(dataModel, capas)
+      val relationTable = result.table_!("CustomLinkTable")
+      val oneColumn     = relationTable.column_!("one")
+      oneColumn.typeIdentifier should be(TI.String)
+      oneColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+      val twoColumn = relationTable.column_!("two")
+      twoColumn.typeIdentifier should be(TI.String)
+      twoColumn.foreignKey should be(Some(ForeignKey("C", "id")))
+    }
+  }
+
   "removing an explicit link table must work" in {
     val capas = ConnectorCapabilities(RelationLinkTableCapability)
     val initialDataModel =
