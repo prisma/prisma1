@@ -167,7 +167,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
   }
 
   "updating db name of a scalar field should work" in {
-    // FIXME: db names are not considered yet during migrations.
     val initialDataModel =
       """
         |type A {
@@ -237,11 +236,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val initialResult = deploy(initialDataModel)
     initialResult.table_!("A").column_!("b").typeIdentifier should be(TI.String)
 
-    /**
-      * FIXME: this fails because:
-      * 1. Two steps  get generated CreateRelation and UpdateField
-      * 2. When the CreateRelation step gets executed the scalar column still exists. -> boom!
-      */
     val dataModel =
       """
         |type A {
@@ -285,7 +279,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
   }
 
   "adding a plain many to many relation for exotic id types must also work" in {
-    // FIXME: this fails because the type of the id field is changed. This results in an ordering problem again as the relation is tried to be created when the column type has not changed yet.
     val dataModel =
       """
         |type A {
