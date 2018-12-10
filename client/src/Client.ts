@@ -28,6 +28,10 @@ export interface InstructionsMap {
   [key: string]: Array<Instruction>
 }
 
+export interface InstructionPromiseMap {
+  [key: string]: Promise<any>
+}
+
 export interface Instruction {
   fieldName: string
   args?: any
@@ -52,7 +56,8 @@ export class Client {
   schema: GraphQLSchema
   _token: string
   _currentInstructions: InstructionsMap = {}
-  _models: Model[]
+  _models: Model[] = []
+  _promises: InstructionPromiseMap = {}
 
   constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
     this.debug = debug
@@ -116,6 +121,14 @@ export class Client {
         },
       ],
     }
+  }
+
+  processInstructionsOnce = (id: number): Promise<any> => {
+    if (!this._promises[id]) {
+      this._promises[id] = this.processInstructions(id)
+    }
+
+    return this._promises[id]
   }
 
   processInstructions = async (id: number): Promise<any> => {
@@ -187,9 +200,7 @@ export class Client {
   then = async (id, resolve, reject) => {
     let result
     try {
-      // const before = Date.now()
-      result = await this.processInstructions(id)
-      // console.log(`then: ${Date.now() - before}`)
+      result = await this.processInstructionsOnce(id)
       this._currentInstructions[id] = []
       if (typeof resolve === 'function') {
         return resolve(result)
@@ -205,7 +216,7 @@ export class Client {
 
   catch = async (id, reject) => {
     try {
-      return await this.processInstructions(id)
+      return await this.processInstructionsOnce(id)
     } catch (e) {
       this._currentInstructions[id] = []
       return reject(e)
@@ -269,7 +280,19 @@ export class Client {
         })
       }
 
-      let node
+      let node: any = {
+        kind: Kind.FIELD,
+        name: {
+          kind: Kind.NAME,
+          value: instruction.fieldName,
+        },
+        arguments: args,
+        directives: [],
+        selectionSet: {
+          kind: Kind.SELECTION_SET,
+          selections: [] as any[],
+        },
+      }
 
       const type = this.getDeepType(instruction.field.type)
       if (
@@ -293,9 +316,13 @@ export class Client {
             selectionSet: instruction.fragment.definitions[0].selectionSet,
           }
         } else {
+          const rootTypeName = this.getDeepType(instructions[0].field.type).name
+
           node = this.getFieldAst({
             field: instruction.field,
             fieldName: instruction.fieldName,
+            isRelayConnection: this.isConnectionTypeName(rootTypeName),
+            isSubscription: instructions[0].typeName === 'Subscription',
             args,
           })
         }
@@ -328,7 +355,11 @@ export class Client {
     return model && model.embedded
   }
 
-  getFieldAst({ field, fieldName, args }) {
+  isConnectionTypeName(typeName: string) {
+    return typeName.endsWith('Connection') && typeName !== 'Connection'
+  }
+
+  getFieldAst({ field, fieldName, isRelayConnection, isSubscription, args }) {
     const node: any = {
       kind: Kind.FIELD,
       name: {
@@ -351,19 +382,55 @@ export class Client {
     const type = this.getDeepType(field.type)
 
     node.selectionSet.selections = Object.entries(type.getFields())
-      .filter(([_, subField]: any) => {
+      .filter(([, subField]: any) => {
         const isScalar = this.isScalar(subField)
         if (isScalar) {
           return true
         }
         const fieldType = this.getDeepType(subField.type)
-        const model = this._models.find(m => m.name === fieldType.name)
+
+        if (isRelayConnection) {
+          if (subField.name === 'pageInfo' && fieldType.name === 'PageInfo') {
+            return true
+          }
+
+          if (subField.name === 'edges' && fieldType.name.endsWith('Edge')) {
+            return true
+          }
+
+          if (
+            subField.name === 'node' &&
+            fieldName === 'edges' &&
+            type.name.endsWith('Edge')
+          ) {
+            return true
+          }
+
+          return false
+        }
+
+        if (isSubscription) {
+          if (['previousValues', 'node'].includes(subField.name)) {
+            return true
+          }
+
+          return false
+        }
+
+        const model =
+          this._models && this._models.find(m => m.name === fieldType.name)
         const embedded = model && model.embedded
 
         return embedded
       })
-      .map(([fieldName, field]: [any, any]) => {
-        return this.getFieldAst({ field, fieldName, args: [] })
+      .map(([fieldName, field]: [string, any]) => {
+        return this.getFieldAst({
+          field,
+          fieldName: fieldName,
+          isRelayConnection,
+          isSubscription,
+          args: [],
+        })
       })
 
     return node

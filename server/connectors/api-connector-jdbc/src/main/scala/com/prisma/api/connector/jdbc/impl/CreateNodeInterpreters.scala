@@ -7,7 +7,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
-import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
+import com.prisma.shared.models.RelationField
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
@@ -49,32 +49,32 @@ case class NestedCreateNodeInterpreter(
     with NestedRelationInterpreterBase {
 
   override def relationField = mutaction.relationField
-  val model                  = relationField.relatedModel_!
+  val relatedModel           = relationField.relatedModel_!
 
   override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
     implicit val implicitMb = mutationBuilder
     for {
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
-      id <- createNodeAndConnectToParent(mutationBuilder, parentId)
-      _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
+      id <- createNodeAndConnectToParent(relationField, mutationBuilder, parentId)
+      _  <- mutationBuilder.createScalarListValuesForNodeId(relatedModel, id, mutaction.listArgs)
+      _  <- if (includeRelayRow) mutationBuilder.createRelayId(relatedModel, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
   private def createNodeAndConnectToParent(
+      relationField: RelationField,
       mutationBuilder: JdbcActionsBuilder,
       parentId: IdGCValue
   )(implicit ec: ExecutionContext) = {
-    relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name =>
-        val inlineField  = relation.getFieldOnModel(model.name)
+    relationField.relatedField.relationIsInlinedInParent match {
+      case true =>
         val argsMap      = mutaction.nonListArgs.raw.asRoot.map
-        val modifiedArgs = argsMap.updated(inlineField.name, parentId)
-        mutationBuilder.createNode(model, PrismaArgs(RootGCValue(modifiedArgs)))
-      case _ =>
+        val modifiedArgs = argsMap.updated(relationField.relatedField.name, parentId)
+        mutationBuilder.createNode(relatedModel, PrismaArgs(RootGCValue(modifiedArgs)))
+      case false =>
         for {
-          id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
-          _  <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
+          id <- mutationBuilder.createNode(relatedModel, mutaction.nonListArgs)
+          _  <- mutationBuilder.createRelation(relationField, parentId, id)
         } yield id
 
     }
@@ -116,14 +116,14 @@ case class NestedCreateNodeInterpreter(
     }
 
   override val errorMapper = {
-    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).get)
 
     case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
   }
 }

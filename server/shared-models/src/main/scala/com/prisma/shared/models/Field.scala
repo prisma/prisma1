@@ -153,9 +153,11 @@ case class RelationField(
   override def schema         = model.schema
 
   lazy val dbName: String = relation.manifestation match {
-    case Some(m: EmbeddedRelationLink) => m.referencingColumn
-
-    case _ => this.name
+    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
+    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && relationSide == RelationSide.A                            => this.name
+    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name                                                   => m.referencingColumn
+    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == relatedModel_!.name                                          => this.name
+    case _                                                                                                                     => this.name
   }
 
   lazy val relationIsInlinedInParent = relation.manifestation match {
@@ -225,6 +227,7 @@ case class ScalarField(
     model: Model
 ) extends Field {
   import template._
+  import ReservedFields._
 
   override def isRelation      = false
   override def isScalar        = true
@@ -235,7 +238,7 @@ case class ScalarField(
 
   override def schema = model.schema
 
-  val isId: Boolean        = if (model.isLegacy) name == ReservedFields.idFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
+  val isId: Boolean        = if (model.isLegacy) name == idFieldName || name == embeddedIdFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
   val isCreatedAt: Boolean = if (model.isLegacy) name == ReservedFields.createdAtFieldName else behaviour.contains(CreatedAtBehaviour)
   val isUpdatedAt: Boolean = if (model.isLegacy) name == ReservedFields.updatedAtFieldName else behaviour.contains(UpdatedAtBehaviour)
 }

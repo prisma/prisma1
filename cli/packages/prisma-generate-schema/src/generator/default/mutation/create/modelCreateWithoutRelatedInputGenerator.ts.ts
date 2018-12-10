@@ -1,8 +1,7 @@
 import { ModelObjectTypeGenerator, RelatedGeneratorArgs, RelatedModelInputObjectTypeGenerator } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField, plural, camelCase, capitalize } from 'prisma-datamodel'
 import { GraphQLObjectType, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLList, GraphQLInputObjectType, GraphQLString } from "graphql/type"
-import ModelCreateInputGenerator from './modelCreateInputGenerator';
-import { plural, camelCase, capitalize } from '../../../../util/util';
+import ModelCreateInputGenerator from './modelCreateInputGenerator'
 
 
 export default class ModelCreateWithoutRelatedInputGenerator extends RelatedModelInputObjectTypeGenerator {
@@ -10,6 +9,10 @@ export default class ModelCreateWithoutRelatedInputGenerator extends RelatedMode
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
     const field = (args.relatedField.relatedField as IGQLField)
     return `${input.name}CreateWithout${capitalize(field.name)}Input`
+  }
+
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
+    return !this.hasFieldsExcept(this.getWriteableFields(model.fields), (args.relatedField.relatedField as IGQLField).name)
   }
 
   protected generateScalarFieldType(model: IGQLType, args: {}, field: IGQLField) {

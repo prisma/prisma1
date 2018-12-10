@@ -2,13 +2,13 @@ package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationLinksCapability)
 
   "A nested delete  mutation" should "also delete ListTable entries" in {
 
@@ -22,7 +22,7 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
         |type Bottom {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         |}"""
     }
 
@@ -58,7 +58,7 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
         |type Bottom {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         | top: Top! @relation(name: "Test")
         |}"""
     }

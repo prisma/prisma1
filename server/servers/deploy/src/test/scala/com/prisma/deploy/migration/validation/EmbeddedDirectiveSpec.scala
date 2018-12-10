@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import org.scalatest.{Matchers, WordSpecLike}
 
 class EmbeddedDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {

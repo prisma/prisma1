@@ -3,21 +3,15 @@
 This tutorial aims to get you started with testing your API queries against ApiTestServer, a utility provided to do initial API testing. For this, little knowledge of [Scala SBT](https://www.scala-sbt.org/) and [ScalaTest](http://www.scalatest.org/) would be helpful.
 
 **Setting up Prisma**
-1. To set up Prisma Development Environment make sure you have SBT installed on your system.
-1. To get the code for Prisma run the following commands.
-    ```
-       git clone https://github.com/prisma/prisma.git
-       cd prisma/server
-       sbt
-    ```
-    This will fetch all the required packages.
-1. Next thing is to setup the Prisma Configuration file location. For that, you can set environment variable `PRSISMA_CONFIG_PATH=<Path of Yaml configuration File>`. You can look [here](https://github.com/prisma/prisma/blob/master/server/docker-compose/mysql/prisma.yml) for reference. If you are an Ubuntu user, you can run the following command to setup environment variable
-    ```
-     export PRISMA_CONFIG_PATH="<Path to Prisma Config file>"
-    ```
+1. Make sure you have `sbt` installed.
+1. Clone the repo: `git clone https://github.com/prisma/prisma.git`
+1. Run `cd prisma/server`
+1. Make the environment variables from the file [.envrc](https://github.com/prisma/prisma/blob/master/server/.envrc) available. You can either do this manually by running `source .envrc` in your shell. This can also be automated with the program `direnv`, which will automatically set the environment variables from this file when you are inside the `server` folder. On a Mac with Homebrew you can get it via `brew install direnv`.
+1. Run `sbt update` to fetch all the required packages.
+1. Now you need to choose which connector your test should use. A test always runs against the currently chosen connector. Setting the connector is possible by running a make command, e.g. `make dev-mysql`. This command will start a docker container for the selected database and configure the tests to use it. This [Makefile](https://github.com/prisma/prisma/blob/master/server/Makefile) contains all possible connector configurations. 
 
 
-**Writing your First Test :-**
+**Writing your First Test**
 
 1. API test files are written at location `{Prisma_Directory}/server/servers/api/src/test/scala/com/prisma/api`. Go ahead and create your test file class and follow the naming conventions already used there. For example `JsonVariablesSpec`.
 1. The test class that you have created should extend traits `FlatSpec` and `Matchers` which are part of ScalaTest and `ApiSpecBase` which is trait provided in Prisma.
@@ -68,4 +62,3 @@ This tutorial aims to get you started with testing your API queries against ApiT
     ```
 
 1. Congratulations! You ran your first test case.
-    s

@@ -31,15 +31,15 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  responseRate: Float
         |  responseTime: Int
         |  isSuperHost: Boolean! @default(value: "false")
-        |  ownedPlaces: [Place!]!
+        |  ownedPlaces: [Place]
         |  location: Location
-        |  bookings: [Booking!]!
-        |  paymentAccount: [PaymentAccount!]!
-        | # sentMessages: [Message!]! @relation(name: "SentMessages")
-        | # receivedMessages: [Message!]! @relation(name: "ReceivedMessages")
-        | # notifications: [Notification!]!
+        |  bookings: [Booking]
+        |  paymentAccount: [PaymentAccount]
+        | # sentMessages: [Message] @relation(name: "SentMessages")
+        | # receivedMessages: [Message] @relation(name: "ReceivedMessages")
+        | # notifications: [Notification]
         |  profilePicture: Picture
-        |  hostingExperiences: [Experience!]!
+        |  hostingExperiences: [Experience]
         |}
         |
         |type Place {
@@ -53,7 +53,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  numBedrooms: Int!
         |  numBeds: Int!
         |  numBaths: Int!
-        |  # reviews: [Review!]!
+        |  # reviews: [Review]
         |  amenities: Amenities!
         |  host: User!
         |  pricing: Pricing!
@@ -62,8 +62,8 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  guestRequirements: GuestRequirements
         |  policies: Policies
         |  houseRules: HouseRules
-        |  bookings: [Booking!]!
-        |  pictures: [Picture!]!
+        |  bookings: [Booking]
+        |  pictures: [Picture]
         |  popularity: Int!
         |}
         |
@@ -135,7 +135,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |
         |type Neighbourhood {
         |  id: ID! @unique
-        |  locations: [Location!]!
+        |  locations: [Location]
         |  name: String!
         |  slug: String!
         |  homePreview: Picture
@@ -147,7 +147,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |type City {
         |  id: ID! @unique
         |  name: String!
-        |  neighbourhoods: [Neighbourhood!]!
+        |  neighbourhoods: [Neighbourhood]
         |}
         |
         |type Picture {
@@ -161,7 +161,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  host: User!
         |  location: Location!
         |  pricePerPerson: Int!
-        | # reviews: [Review!]!
+        | # reviews: [Review]
         |  preview: Picture!
         |  popularity: Int!
         |}
@@ -258,7 +258,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  createdAt: DateTime!
         |  type: PAYMENT_PROVIDER
         |  user: User!
-        |#  payments: [Payment!]!
+        |#  payments: [Payment]
         |  paypal: PaypalInformation
         |  creditcard: CreditCardInformation
         |}
@@ -307,7 +307,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  createdAt: DateTime!
         |  title: String!
         |  avgPricePerPerson: Int!
-        |  pictures: [Picture!]!
+        |  pictures: [Picture]
         |  location: Location!
         |  isCurated: Boolean! @default(value: "true")
         |  slug: String!
@@ -373,15 +373,15 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  responseRate: Float
         |  responseTime: Int
         |  isSuperHost: Boolean! @default(value: "false")
-        |  ownedPlaces: [Place!]!
+        |  ownedPlaces: [Place]
         |  location: Location
-        |  bookings: [Booking!]!
-        |  paymentAccount: [PaymentAccount!]!
-        |  sentMessages: [Message!]! @relation(name: "SentMessages")
-        |  receivedMessages: [Message!]! @relation(name: "ReceivedMessages")
-        |  notifications: [Notification!]!
+        |  bookings: [Booking]
+        |  paymentAccount: [PaymentAccount]
+        |  sentMessages: [Message] @relation(name: "SentMessages")
+        |  receivedMessages: [Message] @relation(name: "ReceivedMessages")
+        |  notifications: [Notification]
         | # profilePicture: Picture
-        |  hostingExperiences: [Experience!]!
+        |  hostingExperiences: [Experience]
         |}
         |
         |type Place {
@@ -395,7 +395,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  numBedrooms: Int!
         |  numBeds: Int!
         |  numBaths: Int!
-        |  reviews: [Review!]!
+        |  reviews: [Review]
         |  amenities: Amenities!
         |  host: User!
         |  pricing: Pricing!
@@ -404,8 +404,8 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  guestRequirements: GuestRequirements
         |  policies: Policies
         |  houseRules: HouseRules
-        |  bookings: [Booking!]!
-        | # pictures: [Picture!]!
+        |  bookings: [Booking]
+        | # pictures: [Picture]
         |  popularity: Int!
         |}
         |
@@ -477,7 +477,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |
         |#type Neighbourhood {
         |#  id: ID! @unique
-        |#  locations: [Location!]!
+        |#  locations: [Location]
         |#  name: String!
         |#  slug: String!
         |#  homePreview: Picture
@@ -489,7 +489,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |type City {
         |  id: ID! @unique
         |  name: String!
-        | # neighbourhoods: [Neighbourhood!]!
+        | # neighbourhoods: [Neighbourhood]
         |}
         |
         |#type Picture {
@@ -503,7 +503,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  host: User!
         |  location: Location!
         |  pricePerPerson: Int!
-        |  reviews: [Review!]!
+        |  reviews: [Review]
         |#  preview: Picture!
         |  popularity: Int!
         |}
@@ -600,7 +600,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  createdAt: DateTime!
         |  type: PAYMENT_PROVIDER
         |  user: User!
-        |  payments: [Payment!]!
+        |  payments: [Payment]
         |  paypal: PaypalInformation
         |  creditcard: CreditCardInformation
         |}
@@ -649,7 +649,7 @@ class AirBnBDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
         |  createdAt: DateTime!
         |  title: String!
         |  avgPricePerPerson: Int!
-        |#  pictures: [Picture!]!
+        |#  pictures: [Picture]
         |  location: Location!
         |  isCurated: Boolean! @default(value: "true")
         |  slug: String!

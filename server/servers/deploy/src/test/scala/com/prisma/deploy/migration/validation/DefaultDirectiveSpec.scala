@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.gc_values.{EnumGCValue, StringGCValue}
+import com.prisma.gc_values.{EnumGCValue, FloatGCValue, IntGCValue, StringGCValue}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DefaultDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
-  "@default should work" in {
+  "@default should work for String" in {
     val dataModelString =
       """
         |type Model {
@@ -18,7 +18,49 @@ class DefaultDirectiveSpec extends WordSpecLike with Matchers with DataModelVali
     field.defaultValue should be(Some(StringGCValue("my_value")))
   }
 
-  "@default should work for enum fields" in {
+  "@default should work for Int" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: Int! @default(value: 1)
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").scalarField_!("field")
+    field.defaultValue should be(Some(IntGCValue(1)))
+  }
+
+  "@default should work for Float" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: Float! @default(value: 1.234343)
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").scalarField_!("field")
+    field.defaultValue should be(Some(FloatGCValue(1.234343)))
+  }
+
+  "@default should work for Float 2" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  field: Float! @default(value: 1234343)
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").scalarField_!("field")
+    field.defaultValue should be(Some(FloatGCValue(1234343)))
+  }
+
+  "@default should work for ENUM" in {
     val dataModelString =
       """
         |type Model {

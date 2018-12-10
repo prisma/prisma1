@@ -1,4 +1,4 @@
-import sbt.Keys.name
+import sbt.Keys.{name, scalacOptions}
 import sbt._
 import SbtUtils._
 import Dependencies._
@@ -192,6 +192,7 @@ lazy val workers = serverProject("workers")
 
 lazy val serversShared = serverProject("servers-shared")
   .dependsOn(connectorUtils % "test->test")
+  .dependsOn(sangriaServer)
 
 
 // ######################
@@ -226,8 +227,11 @@ lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient)
-  )
+    libraryDependencies ++= Seq(mongoClient),
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
@@ -250,7 +254,12 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .dependsOn(apiConnector)
-  .settings(libraryDependencies ++= Seq(mongoClient))
+  .settings(libraryDependencies ++= Seq(mongoClient),
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
+
 
 
 // ##################
@@ -260,6 +269,7 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
 lazy val sharedModels = normalProject("shared-models")
   .dependsOn(gcValues)
   .dependsOn(jsonUtils)
+  .dependsOn(scalaUtils)
   .settings(
   libraryDependencies ++= Seq(
     cuid
@@ -322,7 +332,11 @@ lazy val akkaUtils = libProject("akka-utils")
     specs2,
     caffeine
   ))
-  .settings(scalacOptions := Seq("-deprecation", "-feature"))
+  .settings(
+    scalacOptions := {
+      val oldOptions = scalacOptions.value
+      oldOptions.filterNot(_ == "-Xfatal-warnings")
+    })
 
 lazy val metrics = libProject("metrics")
   .dependsOn(errorReporting)
@@ -408,7 +422,8 @@ lazy val sangriaServer = libProject("sangria-server")
   .settings(libraryDependencies ++= Seq(
     akkaHttpPlayJson,
     cuid,
-    scalajHttp % Test
+    scalajHttp % Test,
+    akkaHttpCors
   ) ++ http4s ++ ujson,
     unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar")) // todo remove (debug)
 

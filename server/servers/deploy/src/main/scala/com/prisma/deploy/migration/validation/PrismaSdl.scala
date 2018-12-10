@@ -81,7 +81,7 @@ case class EnumPrismaField(
 case class RelationalPrismaField(
     name: String,
     relationDbDirective: Option[RelationDBDirective],
-    strategy: RelationStrategy,
+    strategy: Option[RelationStrategy],
     isList: Boolean,
     isRequired: Boolean,
     referencesType: String,

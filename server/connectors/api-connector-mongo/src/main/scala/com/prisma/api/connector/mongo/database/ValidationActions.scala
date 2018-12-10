@@ -89,8 +89,8 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
 
                  case true =>
                    val filter = otherField.isList match {
-                     case true  => ScalarListFilter(otherModel.dummyField(name = otherField.dbName, isList = true), ListContainsSome(parentIds))
-                     case false => ScalarFilter(otherModel.dummyField(name = otherField.dbName, false), In(parentIds))
+                     case true  => ScalarListFilter(otherModel.dummyField(otherField), ListContainsSome(parentIds))
+                     case false => ScalarFilter(otherModel.dummyField(otherField), In(parentIds))
                    }
                    MongoAction.successful(filter)
                }

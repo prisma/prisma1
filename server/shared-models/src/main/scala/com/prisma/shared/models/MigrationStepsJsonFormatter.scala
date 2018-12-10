@@ -131,8 +131,18 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   }
 
   implicit val deleteRelationFormat: OFormat[DeleteRelation] = {
-    val reads  = (JsPath \ "name").read[String].map(DeleteRelation.apply)
-    val writes = OWrites[DeleteRelation](delete => Json.obj("name" -> delete.name))
+    val reads = (
+      (JsPath \ "name").read[String] and
+        (JsPath \ "modelA").readWithDefault("") and
+        (JsPath \ "modelB").readWithDefault("")
+    )(DeleteRelation.apply _)
+
+    val writes = (
+      (JsPath \ "name").write[String] and
+        (JsPath \ "modelA").write[String] and
+        (JsPath \ "modelB").write[String]
+    )(unlift(DeleteRelation.unapply))
+
     OFormat(reads, writes)
   }
 

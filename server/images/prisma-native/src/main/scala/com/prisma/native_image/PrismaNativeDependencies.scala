@@ -41,10 +41,9 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
     with SubscriptionDependencies {
 
   val config: PrismaConfig = ConfigLoader.load()
-  val driver               = CustomJdbcDriver.jna // This is separate because of Graal bytecode substitution.
 
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
-    SupportedDrivers.POSTGRES -> driver
+    SupportedDrivers.POSTGRES -> CustomJdbcDriver.graal
   )
 
   override implicit def self                                    = this

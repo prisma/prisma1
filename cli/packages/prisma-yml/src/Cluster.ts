@@ -56,6 +56,9 @@ export class Cluster {
     if (this.name === 'shared-public-demo') {
       return ''
     }
+    if (this.isPrivate && process.env.PRISMA_MANAGEMENT_API_SECRET) {
+      return this.getLocalToken()
+    }
     if (this.shared || this.isPrivate) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     } else {

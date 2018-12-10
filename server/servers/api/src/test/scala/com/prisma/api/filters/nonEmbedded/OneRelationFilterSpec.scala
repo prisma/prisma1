@@ -1,13 +1,12 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 
 class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForPrototypes: Boolean = true
-  override def runOnlyForCapabilities         = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() {
     """
@@ -72,6 +71,10 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   }
 
+  "Scalar filter" should "work" in {
+    server.query(query = """{posts(where:{title: "post 2"}){title}}""", project = project).toString should be("""{"data":{"posts":[{"title":"post 2"}]}}""")
+  }
+
   "1 level 1-relation filter" should "work" in {
 
     server.query(query = """{posts(where:{blog:{name: "blog 1"}}){title}}""", project = project).toString should be(
@@ -86,7 +89,6 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "2 level 1-relation filter" should "work" in {
 
-    // some|some
     server.query(query = """{blogs(where:{post:{comment: {likes: 10}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
 

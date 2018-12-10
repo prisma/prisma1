@@ -2,8 +2,8 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ApiConnectorCapability.MigrationsCapability
-import com.prisma.shared.models.FieldTemplate
+import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, FieldTemplate}
 import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.collection.immutable.Seq
@@ -37,7 +37,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  title: String
         |}
       """.stripMargin
-    LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate should be(empty)
+    validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability)) should be(empty)
   }
 
   "fail if the schema is syntactically incorrect" in {
@@ -48,7 +48,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  isDone
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     result.head.`type` should equal("Global")
   }
@@ -62,7 +62,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  owner: User @relation(name: "Test", onDelete: CASCADE)
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("owner"))
@@ -74,14 +74,14 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
         |
         |type Comment {
         |  text: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -90,15 +90,15 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]!
-        |  comments2: [Comment!]!
+        |  comments: [Comment]
+        |  comments2: [Comment]
         |}
         |
         |type Comment {
         |  text: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(2))
 
     result.head.`type` should equal("Todo")
@@ -115,8 +115,8 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
-        |  comments2: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
+        |  comments2: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -125,7 +125,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  text: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(4))
     result.forall(_.description.contains("A relation directive cannot appear more than twice.")) should be(true)
   }
@@ -136,8 +136,8 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments1")
-        |  comments2: [Comment!]! @relation(name: "TodoToComments2")
+        |  comments: [Comment] @relation(name: "TodoToComments1")
+        |  comments2: [Comment] @relation(name: "TodoToComments2")
         |}
         |
         |type Comment {
@@ -146,7 +146,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  text: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -161,7 +161,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  bla: String
         |}
         """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     result.head.`type` should equal("Todo")
     result.head.field should equal(Some("title"))
@@ -173,14 +173,14 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
         |  bla: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -189,9 +189,9 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments1: [Comment1!]! @relation(name: "TodoToComments1", onDelete: CASCADE)
-        |  comments2: [Comment2!]! @relation(name: "TodoToComments2", onDelete: SET_NULL)
-        |  comments3: [Comment3!]! @relation(name: "TodoToComments3")
+        |  comments1: [Comment1] @relation(name: "TodoToComments1", onDelete: CASCADE)
+        |  comments2: [Comment2] @relation(name: "TodoToComments2", onDelete: SET_NULL)
+        |  comments3: [Comment3] @relation(name: "TodoToComments3")
         |}
         |
         |type Comment1 {
@@ -204,7 +204,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  bla: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -213,14 +213,19 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments", onDelete: INVALID)
+        |  comments: [Comment] @relation(name: "TodoToComments", onDelete: INVALID)
         |}
         |
         |type Comment {
         |  bla: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(
+      dataModelString,
+      isActive = true,
+      capabilities = Set(MigrationsCapability),
+      directiveRequirements = LegacyDataModelValidator.directiveRequirements
+    )
     result should have(size(1))
     result.head.description should include("not a valid value for onDelete")
   }
@@ -231,7 +236,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToCommentsNew", oldName: "TodoToComments")
         |}
         |
         |type Comment {
@@ -240,7 +245,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -251,11 +256,11 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |type Todo {
         |  title: String
         |  todo: Todo @relation(name: "OneFieldSelfRelation")
-        |  todos: [Todo!]! @relation(name: "OneFieldManySelfRelation")
+        |  todos: [Todo] @relation(name: "OneFieldManySelfRelation")
         |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -264,7 +269,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -276,7 +281,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  todo: Todo @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val first = result.head
     first.`type` should equal("Todo")
@@ -289,7 +294,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -301,7 +306,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  whatever: Comment @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(2))
     val first = result.head
     first.`type` should equal("Todo")
@@ -314,7 +319,8 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
     second.description should include("But the other directive for this relation appeared on the type")
   }
 
-  "not accept that a many relation field is not marked as required" in {
+  // TODO: we are in the process of changing the valid list field syntax and allow all notations for now.
+  "not accept that a many relation field is not marked as required" ignore {
     val dataModelString =
       """
         |type Todo {
@@ -327,7 +333,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  todo: Todo @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
   }
 
@@ -336,7 +342,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]! @relation(name: "TodoToComments")
+        |  comments: [Comment] @relation(name: "TodoToComments")
         |}
         |
         |type Comment {
@@ -344,7 +350,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  todo: Todo! @relation(name: "TodoToComments")
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -353,11 +359,11 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
       """
         |type Todo {
         |  title: String
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val error = result.head
     error.`type` should equal("Todo")
@@ -378,12 +384,12 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(
+    val result = validate(
       dataModelString,
-      directiveRequirements,
-      FieldRequirementImpl(true),
-      capabilities = Set(MigrationsCapability)
-    ).validate
+      isActive = true,
+      Set(MigrationsCapability),
+      directiveRequirements
+    )
     result should have(size(0))
   }
 
@@ -399,12 +405,12 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(
+    val result = validate(
       dataModelString,
-      directiveRequirements,
-      FieldRequirementImpl(true),
-      capabilities = Set(MigrationsCapability)
-    ).validate
+      isActive = true,
+      Set(MigrationsCapability),
+      directiveRequirements
+    )
     result should have(size(2))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -430,7 +436,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("TodoStatus")
@@ -451,7 +457,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
          |}
       """.stripMargin
 
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("TodoStatus")
@@ -466,7 +472,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  title: String @default(value: "foo") @default(value: "bar")
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -481,7 +487,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  title: String @defaultValue(value: "foo")
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -497,14 +503,14 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  id: ID!
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
     error1.description should include(s"The field `id` is reserved and has to have the format: id: ID! @unique or id: UUID! @unique.")
     //Fixme validate based on fieldRequirements
-//        FieldRequirementImpl(true).reservedFieldRequirements.find()
+//        isActive = true.reservedFieldRequirements.find()
   }
 
   "fail if an id field does not match the valid types for a passive connector" in {
@@ -514,7 +520,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  id: Float
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(false), capabilities = Set.empty).validate
+    val result = validate(dataModelString, isActive = false, capabilities = Set.empty)
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
@@ -528,7 +534,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  id: Int! @unique
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(false), capabilities = Set.empty).validate
+    val result = validate(dataModelString, isActive = false, capabilities = Set.empty)
     result should have(size(0))
   }
 
@@ -539,7 +545,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  title: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
     result should have(size(0))
   }
 
@@ -550,7 +556,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  title: String
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(false), capabilities = Set.empty).validate
+    val result = validate(dataModelString, isActive = false, capabilities = Set.empty)
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(Some("id"))
@@ -574,7 +580,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  C
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Privacy")
@@ -591,7 +597,7 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  TITLE: String!
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, Set(MigrationsCapability))
     result should have(size(1))
     val error1 = result.head
     error1.`type` should equal("Todo")
@@ -610,12 +616,26 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
         |  id: ID! @unique
         |}
       """.stripMargin
-    val result = LegacyDataModelValidator(dataModelString, FieldRequirementImpl(true), capabilities = Set(MigrationsCapability)).validate
+    val result = validate(dataModelString, isActive = true, Set(MigrationsCapability))
     println(result)
     val error1 = result.head
     error1.`type` should equal("Todo")
     error1.field should equal(None)
     error1.description should include(s"The name of the type `Todo` occurs more than once. The detection of duplicates is performed case insensitive.")
+  }
+
+  def validate(
+      dataModel: String,
+      isActive: Boolean,
+      capabilities: Set[ConnectorCapability],
+      directiveRequirements: Seq[DirectiveRequirement] = Vector.empty
+  ): Seq[DeployError] = {
+    LegacyDataModelValidator(
+      dataModel,
+      directiveRequirements,
+      FieldRequirementImpl(isActive = isActive),
+      ConnectorCapabilities(MigrationsCapability)
+    ).validate
   }
 
   def missingDirectiveArgument(directive: String, argument: String) = {

@@ -7,8 +7,8 @@ import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyMod
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.StringIdGCValue
-import com.prisma.shared.models.ApiConnectorCapability.NodeQueryCapability
-import com.prisma.shared.models.{ConnectorCapability, Model, Project}
+import com.prisma.shared.models.ConnectorCapability.NodeQueryCapability
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
@@ -37,7 +37,7 @@ object SchemaBuilder {
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Set[ConnectorCapability] = Set.empty,
+    capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
     enableRawAccess: Boolean = false
 )(implicit apiDependencies: ApiDependencies)
     extends SangriaExtensions {
@@ -74,7 +74,7 @@ case class SchemaBuilderImpl(
     val fields = project.nonEmbeddedModels.map(getAllItemsField) ++
       project.nonEmbeddedModels.flatMap(getSingleItemField) ++
       project.nonEmbeddedModels.map(getAllItemsConnectionField) ++
-      capabilities.contains(NodeQueryCapability).toOption(nodeField)
+      capabilities.has(NodeQueryCapability).toOption(nodeField)
 
     ObjectType("Query", fields)
   }
@@ -294,7 +294,7 @@ case class SchemaBuilderImpl(
     Field(
       camelCase(model.name),
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
-      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
+      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project, capabilities = capabilities)),
       resolve = _ => None
     )
   }

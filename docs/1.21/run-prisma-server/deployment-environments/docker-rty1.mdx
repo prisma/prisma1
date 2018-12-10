@@ -1,0 +1,138 @@
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: "Docker",
+  position: 80
+}
+
+## Overview
+
+Prisma servers can be run with [Docker](https://www.docker.com/). This page contains everything you need to know around the Docker setup and relevant worfklows.
+
+## Prisma Docker image
+
+The `prisma` Docker image is [available via Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/). You can pull the latest released version of the image using the following command:
+
+```bash
+docker pull prismagraphql/prisma
+```
+
+## Common workflows
+
+The [Docker CLI](https://docs.docker.com/engine/reference/commandline/cli) and [Docker Compose CLI](https://docs.docker.com/compose/reference/) are used to manage the Prisma servers.
+
+Here's a quick rundown of the most important commands:
+
+- [`docker-compose up -d`](https://docs.docker.com/compose/reference/up/): Start a new Prisma server to which you can deploy your Prisma services.
+- [`docker-compose stop`](https://docs.docker.com/compose/reference/stop/): Stops the Prisma server.
+- [`docker-compose pull`](https://docs.docker.com/compose/reference/pull/): Downloads the [latest Prisma images](https://hub.docker.com/r/prismagraphql/prisma/tags/) from Docker Hub
+- [`docker logs`](https://docs.docker.com/compose/reference/logs/): Shows the logs of the Prisma server (helpful for debugging).
+
+Note that these commands need to be executed in the directory where the Docker Compose file for your Prisma server is available.
+
+## Docker Compose file
+
+Here is an overview of all properties you need to configure on the `prisma` Docker image inside your Docker Compose file. The all-uppercase words represent placeholders for the configuration variables you need to provide for your Prisma setup.
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:__LATEST_PRISMA_VERSION__
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+        port: __YOUR_PRISMA_SERVER_PORT__
+        databases:
+          default:
+            connector: __YOUR_DATABASE_CONNECTOR__
+            migrations: __ENABLE_DB_MIGRATIONS__
+            host: __YOUR_DATABASE_HOST__
+            port: __YOUR_DATABASE_PORT__
+            user: __YOUR_DATABASE_USER__
+            password: __YOUR_DATABASE_PASSWORD__
+            connectionLimit: __YOUR_CONNECTION_LIMIT__
+```
+
+Most notably most of your configuration takes place in the `PRISMA_CONFIG` environment variable.
+
+> Despite seemingly following the YAML key-value structure, `PRISMA_CONFIG` is actually speficied as a string. The pipe character `|` right after `PRISMA_CONFIG` denotes the beginning of a [multi-line string in YAML](http://symfony.com/doc/current/components/yaml/yaml_format.html). 
+
+### PRISMA_CONFIG reference
+
+#### Root properties
+
+These are the root properties of `PRISMA_CONFIG`:
+
+| Key | Type | Description | 
+| --- | --- | --- | 
+| `managementApiSecret` | `string` | The Management API secret is used by the Prisma CLI to generate authentication tokens and authenticate its requests against the Prisma server. Example: `mysecret42`  | 
+| `port` | `number` | The port on which the Prisma server is running. Example:  `4466` | 
+| `databases` | `object` | Specifies to which databases the Prisma server should connect to. | 
+
+#### Database properties
+
+Each _database object_ in the `databases` object needs to include the following properties:
+
+| Key | Type  | Description | 
+| --- | --- | --- | 
+| `connector` | `string` | Specifies which database connector to be used. [Learn more](jgfs).
+| `migrations` | `boolean` | Specifies if Prisma should be able to perform database migrations. [Learn more](jgfs#database-migrations).
+| `host` | `string` | The IP address or URL of the machine hosting the database. Example: `127.0.0.1` |
+| `port` | `number` | The post where the database is running. | 
+| `database` | `string` | The database name. Default: `prisma` |
+| `user` | `string` | The database user. Example: `root` | 
+| `password` | `string` | The password for the database user specified in `user`. Example: `myDBpassword42` | 
+| `ssl` | `boolean` | Enable SSL |
+| `connectionLimit` | `number` | The maximum number of database connections (must be at least **2**). [Learn more](jgfs#managing-database-connections).
+
+
+## Debugging
+
+To get insights into the internals of your Prisma server, you can check the logs of the Docker container.
+
+### Accessing Docker logs
+
+View the raw logs from the running Docker containers:
+
+```bash
+docker-compose logs
+```
+
+### Verify Docker containers
+
+Verify that the containers are running:
+
+```bash
+docker ps
+```
+
+You should see an output similar to this:
+
+```bash
+$ docker ps
+CONTAINER ID        IMAGE                               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+2b799c529e73        prismagraphql/prisma:1.21            "/bin/sh -c /app/sta…"   17 hours ago        Up 7 hours          0.0.0.0:4466->4466/tcp   myapp_prisma_1
+757dfba212f7        mysql:5.7                           "docker-entrypoint.s…"   17 hours ago        Up 7 hours          3306/tcp                 prisma-db
+```
+
+This is helpful when you're getting an error message saying `Error response from daemon: No such container`.
+
+### Hard resetting the Docker environment
+
+If your local Prisma server is in an unrecoverable state, it might be necessary to completely reset it:
+
+```bash
+docker-compose kill
+docker-compose down
+docker-compose up -d
+```
+
+<Warning>
+
+Be careful as **these commands will reset all data** in your local Prisma server (including deployed Prisma APIs).
+
+</Warning>

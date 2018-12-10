@@ -103,6 +103,16 @@ trait SangriaServerSpecBase extends WordSpecLike with Matchers with BeforeAndAft
     requestIdHeader.get should startWith(requestPrefix + ":")
   }
 
+  "it should support batching" in {
+    val singleQuery    = Json.obj("query" -> validGraphQlQuery)
+    val batchedRequest = JsArray((1 to 3).map(_ => singleQuery))
+    val response       = Http(httpUrl).header("content-type", "application/json").postData(batchedRequest.toString).asString
+    response.code should be(200)
+    val singleReponse = """{"message":"hello from the handler"}""".asJson
+    response.body.asJson should be(JsArray((1 to 3).map(_ => singleReponse)))
+    response.header("Content-Type") should be(Some("application/json"))
+  }
+
   "it should have a status endpoint" in {
     val response = Http(httpUrl + "/status").asString
     response.body should equal("\"OK\"")

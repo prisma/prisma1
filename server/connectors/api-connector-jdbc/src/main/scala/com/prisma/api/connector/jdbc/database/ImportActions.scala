@@ -157,7 +157,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
     val nodeIds = mutaction.values.keys
 
     for {
-      startPositions <- startPositions(field, nodeIds.toSeq)
+      startPositions: Map[IdGCValue, Int] <- startPositions(field, nodeIds.toSeq)
       // begin massage
 
       listValuesWithStartPosition: Iterable[(IdGCValue, ListGCValue, Int)] = {
@@ -168,7 +168,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
 
       individualValuesWithPosition: Iterable[(IdGCValue, GCValue, Int)] = listValuesWithStartPosition.flatMap {
         case (id, list, start) =>
-          list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
+          list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000) + 1000) }
       }
       // end massage
       res <- importScalarListValues(field, individualValuesWithPosition)
@@ -180,7 +180,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
     val placeholders = nodeIds.map(_ => placeHolder)
 
     val query = sql
-      .select(nodeIdField, max(scalarListColumn(field, positionFieldName)))
+      .select(nodeIdField, max(scalarListColumn(field, positionFieldName)).as("max"))
       .from(scalarListTable(field))
       .groupBy(nodeIdField)
       .having(nodeIdField.in(placeholders: _*))

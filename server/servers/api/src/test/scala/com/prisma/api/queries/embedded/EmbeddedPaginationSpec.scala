@@ -2,7 +2,7 @@ package com.prisma.api.queries.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -15,7 +15,7 @@ class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type List {
       |  id: ID! @unique
       |  name: String! @unique
-      |  todos: [Todo!]!
+      |  todos: [Todo]
       |}
       |
       |type Todo @embedded{

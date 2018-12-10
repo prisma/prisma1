@@ -125,45 +125,69 @@ object ConfigLoader {
   private def readDbWithConnectionString(dbName: String, dbJavaMap: Any): Try[DatabaseConfig] = Try {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
-    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
-    val uriString   = extractString("uri", db)
-    val connLimit   = extractIntOpt("connectionLimit", db)
-    val pooled      = extractBooleanOpt("pooled", db)
-    val schema      = extractStringOpt("schema", db)
-    val mgmtSchema  = extractStringOpt("managementSchema", db)
-    val uri         = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
-    val dbHost      = uri.hostOption.get.value
-    val dbUser      = uri.user.get
-    val dbPass      = uri.password
-    val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
-    val database    = uri.path.toAbsolute.parts.headOption
-    val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
-    val rawAccess   = extractBooleanOpt("rawAccess", db)
 
-    databaseConfig(
-      name = dbName,
-      connector = dbConnector,
-      active = dbActive,
-      host = dbHost,
-      port = dbPort,
-      user = dbUser,
-      password = dbPass,
-      connectionLimit = connLimit,
-      pooled = pooled,
-      database = database,
-      schema = schema,
-      managementSchema = mgmtSchema,
-      ssl = ssl,
-      rawAccess = rawAccess,
-      authSource = None,
-      protocol = None
-    )
+    if (dbConnector == "mongo") {
+      val uri      = extractString("uri", db)
+      val database = extractStringOpt("database", db)
+
+      databaseConfig(
+        name = dbName,
+        connector = dbConnector,
+        active = None,
+        host = "",
+        port = 0,
+        user = "",
+        password = None,
+        connectionLimit = None,
+        pooled = None,
+        database = database,
+        schema = None,
+        managementSchema = None,
+        ssl = None,
+        rawAccess = None,
+        uri = uri
+      )
+
+    } else {
+
+      val dbActive   = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+      val uriString  = extractString("uri", db)
+      val connLimit  = extractIntOpt("connectionLimit", db)
+      val pooled     = extractBooleanOpt("pooled", db)
+      val schema     = extractStringOpt("schema", db)
+      val mgmtSchema = extractStringOpt("managementSchema", db)
+      val uri        = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
+      val dbHost     = uri.hostOption.get.value
+      val dbUser     = uri.user.get
+      val dbPass     = uri.password
+      val dbPort     = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
+      val database   = uri.path.toAbsolute.parts.headOption
+      val ssl        = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
+      val rawAccess  = extractBooleanOpt("rawAccess", db)
+
+      databaseConfig(
+        name = dbName,
+        connector = dbConnector,
+        active = dbActive,
+        host = dbHost,
+        port = dbPort,
+        user = dbUser,
+        password = dbPass,
+        connectionLimit = connLimit,
+        pooled = pooled,
+        database = database,
+        schema = schema,
+        managementSchema = mgmtSchema,
+        ssl = ssl,
+        rawAccess = rawAccess,
+        uri = uriString
+      )
+    }
   }
 
   private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
-    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
     val dbHost      = extractString("host", db)
     val dbUser      = extractString("user", db)
     val dbPass      = extractStringOpt("password", db)
@@ -171,23 +195,29 @@ object ConfigLoader {
     val mgmtSchema  = extractStringOpt("managementSchema", db)
     val pooled      = extractBooleanOpt("pooled", db)
     val database    = extractStringOpt("database", db)
-    val authSource  = extractStringOpt("authSource", db)
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
     val rawAccess   = extractBooleanOpt("rawAccess", db)
-
-    val protocol = (dbConnector, extractStringOpt("protocol", db)) match {
-      case ("mongo", None)                => Some("mongodb")
-      case ("mongo", Some("mongodb"))     => Some("mongodb")
-      case ("mongo", Some("mongodb+srv")) => Some("mongodb+srv")
-      case ("mongo", Some(other))         => sys.error(s"$other is not a valid entry for protocol for the Mongo connector.")
-      case (_, Some(other))               => sys.error(s"Only MongoDB supports protocols")
-      case (_, None)                      => None
+    val dbActive = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)) match {
+      case Some(x) if dbConnector == "mongo" =>
+        println(
+          "[WARNING] The mongo connector does not support the concept of migrations, the migrations: true | false / isActive: true | false setting is ignored. ")
+        Some(x)
+      case x => x
     }
 
-    val dbPort = protocol match {
-      case Some("mongodb+srv") => 0
-      case _                   => extractInt("port", db)
+    val uri = dbConnector match {
+      case "mongo" =>
+        extractStringOpt("uri", db) match {
+          case None         => sys.error("Please provide a valid Mongo connection uri.")
+          case Some(string) => string
+        }
+      case _ => ""
+    }
+
+    val dbPort = dbConnector match {
+      case "mongo" => 0
+      case _       => extractInt("port", db)
     }
 
     databaseConfig(
@@ -205,8 +235,7 @@ object ConfigLoader {
       managementSchema = mgmtSchema,
       ssl = ssl,
       rawAccess = rawAccess,
-      authSource = authSource,
-      protocol = protocol
+      uri = uri
     )
   }
 
@@ -225,8 +254,7 @@ object ConfigLoader {
       managementSchema: Option[String],
       ssl: Option[Boolean],
       rawAccess: Option[Boolean],
-      authSource: Option[String],
-      protocol: Option[String]
+      uri: String
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -243,8 +271,7 @@ object ConfigLoader {
       managementSchema = managementSchema,
       ssl = ssl.getOrElse(false),
       rawAccess = rawAccess.getOrElse(false),
-      authSource = authSource,
-      protocol = protocol
+      uri = uri
     )
     validateDatabaseConfig(config)
   }
@@ -339,8 +366,7 @@ case class DatabaseConfig(
     schema: Option[String],
     ssl: Boolean,
     rawAccess: Boolean,
-    authSource: Option[String],
-    protocol: Option[String]
+    uri: String
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)

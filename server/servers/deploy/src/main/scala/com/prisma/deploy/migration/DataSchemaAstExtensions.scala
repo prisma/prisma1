@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration
 
 import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
 import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, OnDelete, TypeIdentifier}
@@ -86,7 +86,7 @@ object DataSchemaAstExtensions {
 
     def dbName: Option[String] = objectType.directiveArgumentAsString("db", "name")
 
-    def isRelationTable: Boolean = objectType.hasDirective("relationTable")
+    def isRelationTable: Boolean = objectType.hasDirective("linkTable")
 
     def relationFields(doc: Document): Vector[FieldDefinition] = objectType.fields.filter(_.isRelationField(doc))
   }
@@ -125,20 +125,7 @@ object DataSchemaAstExtensions {
       case _                               => false
     }
 
-    def isValidRelationType: Boolean = fieldDefinition.fieldType match {
-      case NamedType(_, _)                                              => true
-      case NotNullType(NamedType(_, _), _)                              => true
-      case NotNullType(ListType(NotNullType(NamedType(_, _), _), _), _) => true
-      case _                                                            => false
-    }
-
-    def isValidScalarListOrNonListType: Boolean = isValidScalarListType || isValidScalarNonListType
-
-    def isValidScalarListType: Boolean = fieldDefinition.fieldType match {
-      case ListType(NotNullType(NamedType(_, _), _), _)                 => true
-      case NotNullType(ListType(NotNullType(NamedType(_, _), _), _), _) => true
-      case _                                                            => false
-    }
+    def isValidScalarType: Boolean = isList || isValidScalarNonListType
 
     def isValidScalarNonListType: Boolean = fieldDefinition.fieldType match {
       case NamedType(_, _)                 => true
@@ -245,6 +232,14 @@ object DataSchemaAstExtensions {
         case value: FloatValue      => value.value.toString
         case value: BooleanValue    => value.value.toString
         case _                      => sys.error("This clause is unreachable because of the instance checks above, but i did not know how to prove it to the compiler.")
+      }
+    }
+
+    def asInt = {
+      value match {
+        case value: IntValue    => value.value
+        case value: BigIntValue => value.value.toInt
+        case _                  => sys.error(s"$value is not an Int")
       }
     }
   }

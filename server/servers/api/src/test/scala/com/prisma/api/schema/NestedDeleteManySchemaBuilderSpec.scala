@@ -1,7 +1,8 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapabilities
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -17,7 +18,7 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
       """
         |type Top {
         |   name: String @unique
-        |   other: [Other!]!
+        |   other: [Other]
         |}
         |
         |type Other{
@@ -27,7 +28,7 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should include("input TopUpdateInput {\n  name: String\n  other: OtherUpdateManyWithoutTopInput\n}")
@@ -40,7 +41,7 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
       """
         |type Top {
         |   name: String @unique
-        |   other: [Other!]!
+        |   other: [Other]
         |}
         |
         |type Other{
@@ -49,7 +50,7 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(EmbeddedTypesCapability))(testDependencies)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should include("input TopUpdateInput {\n  name: String\n}")

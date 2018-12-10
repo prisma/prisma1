@@ -49,6 +49,13 @@ type User {
 }
 `
 
+export const defaultMongoDataModel = `\
+type User {
+  id: ID! @id
+  name: String!
+}
+`
+
 export const defaultDockerCompose = `\
 version: '3'
 services:

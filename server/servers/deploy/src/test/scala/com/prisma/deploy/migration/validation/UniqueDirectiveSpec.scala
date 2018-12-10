@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 

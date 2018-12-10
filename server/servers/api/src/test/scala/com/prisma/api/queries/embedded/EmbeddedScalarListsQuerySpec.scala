@@ -2,7 +2,7 @@ package com.prisma.api.queries.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -15,12 +15,12 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
     val project = SchemaDsl.fromString() {
       s"""type List{
          |   id: ID! @unique
-         |   todos: [Todo!]!
-         |   listInts: [Int!]!
+         |   todos: [Todo]
+         |   listInts: [Int]
          |}
          |
          |type Todo @embedded{
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}"""
     }
 
@@ -42,16 +42,16 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
       s"""type List {
          |   id: ID! @unique
          |   todo: Todo
-         |   listInts: [Int!]!
+         |   listInts: [Int]
          |}
          |
          |type Todo @embedded {
          |   tag: Tag
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}
          |
          |type Tag @embedded {
-         |   tagInts: [Int!]!
+         |   tagInts: [Int]
          |}
          |"""
     }
@@ -75,18 +75,18 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
          |   id: ID! @unique
          |   todo: Todo
          |   uList: String! @unique
-         |   listInts: [Int!]!
+         |   listInts: [Int]
          |}
          |
          |type Todo @embedded {
          |   uTodo: String! @unique
          |   tag: Tag
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}
          |
          |type Tag @embedded {
          |   uTag: String! @unique
-         |   tagInts: [Int!]!
+         |   tagInts: [Int]
          |}
          |"""
     }
@@ -118,12 +118,12 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
          |   id: ID! @unique
          |   todo: Todo
          |   uList: String! @unique
-         |   listInts: [Int!]!
+         |   listInts: [Int]
          |}
          |
          |type Todo @embedded {
          |   uTodo: String! @unique
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}
          |"""
     }

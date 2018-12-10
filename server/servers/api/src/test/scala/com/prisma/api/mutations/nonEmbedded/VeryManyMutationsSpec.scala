@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -10,24 +10,24 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def doNotRun = true // we don't run this suite as it takes ages. We rather run it manually.
 
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   //Postgres has a limit of 32678 parameters to a query
 
   "The delete many Mutation" should "delete the items matching the where clause" in {
     val project: Project = SchemaDsl.fromString() {
       """
-        |type Top {
-        |   id: ID! @unique
-        |   int: Int!
-        |   middles:[Middle!]!
-        |}
-        |
-        |type Middle {
-        |   id: ID! @unique
-        |   int: Int!
-        |}
-      """
+      |type Top {
+      |   id: ID! @unique
+      |   int: Int!
+      |   middles:[Middle]
+      |}
+      |
+      |type Middle {
+      |   id: ID! @unique
+      |   int: Int!
+      |}
+    """
     }
     database.setup(project)
 
@@ -100,14 +100,14 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top {
         |   id: ID! @unique
         |   int: Int @unique
-        |   middles:[Middle!]!   @relation(name: "TopToMiddle", onDelete: CASCADE)
+        |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
         |}
         |
         |type Middle {
         |   id: ID! @unique
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom!]! @relation(name: "MiddleToBottom", onDelete: CASCADE)
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
         |}
         |
         |type Bottom {
@@ -170,25 +170,25 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top{
         |   id: ID! @unique
         |   int: Int @unique
-        |   as: [A!]! @relation(name: "Top" onDelete: CASCADE)
+        |   as: [A] @relation(name: "Top" onDelete: CASCADE)
         |}
         |
         |type A {
         |   id: ID! @unique
         |   int: Int @unique
-        |   bs:[B!]!  @relation(name: "A" onDelete: CASCADE)
+        |   bs:[B]  @relation(name: "A" onDelete: CASCADE)
         |}
         |
         |type B {
         |   id: ID! @unique
         |   int: Int
-        |   cs: [C!]! @relation(name: "B" onDelete: CASCADE)
+        |   cs: [C] @relation(name: "B" onDelete: CASCADE)
         |}
         |
         |type C {
         |   id: ID! @unique
         |   int: Int
-        |   ds: [D!]! @relation(name: "C" onDelete: CASCADE)
+        |   ds: [D] @relation(name: "C" onDelete: CASCADE)
         |}
         |
         |type D {

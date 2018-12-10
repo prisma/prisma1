@@ -1,0 +1,167 @@
+import Warning from 'components/Markdown/Warning'
+import Code from 'components/Markdown/Code'
+import Info from 'components/Markdown/Info'
+
+export const meta = {
+  title: 'Change Datamodel',
+  position: 2,
+  nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma client.',
+  technology: 'node',
+  technologyOrder: 1,
+  gettingStartedOrder: 1,
+  articleGroup: 'Change Datamodel'
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Adjust the datamodel and update your Prisma API
+- Regenerate your Prisma client
+- Create two database records in a single transaction
+- Query relational data
+
+<Warning>
+
+This page is only relevant if you started with a [new database](j002) or a [Demo server](j001). If you configured Prisma with an [existing database](j003), you need to run migrations directly against your database.
+
+</Warning>
+
+## Adjust your datamodel
+
+Update the datamodel in `datamodel.prisma` as follows:
+
+<Code languages={["SQL", "MongoDB"]}>
+
+```graphql copy
+type User {
+  id: ID! @unique
+  email: String @unique
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
+}
+```
+
+```graphql copy
+type User {
+  id: ID! @id
+  email: String @unique
+  name: String!
+  posts: [Post!]! @relation(link: INLINE)
+}
+
+type Post {
+  id: ID! @id
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User
+}
+```
+
+</Code>
+
+Here's what changed:
+
+- You added a new `email` field to the `User` type.
+- You added a new `Post` type to the datamodel.
+- You added a _relation_ between `User` and `Post` (via the `posts` and `author` fields).
+
+## Redeploy your Prisma API
+
+To apply the changes you just made to your datamodel, you need to redeploy the Prisma API:
+
+```bash copy
+prisma deploy
+```
+
+## Regenerate your Prisma client
+
+Because the Prisma client is based on your datamodel, it needs to be regenerated every time the datamodel is updated:
+
+```bash copy
+prisma generate
+```
+
+The Prisma client library in the `/generated/prisma-client` directory is now being updated and its API has been adjusted to use the new datamodel.
+
+<Info>
+
+You can ensure that your Prisma client is automatically being updated after every deploy by adding the following lines to your `prisma.yml`:
+
+```yml copy
+hooks:
+  post-deploy:
+    - prisma generate
+```
+
+</Info>
+
+## Read and write nested objects
+
+The Prisma client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
+
+Update your `index.js` to look as follows:
+
+```js copy
+const { prisma } = require('./generated/prisma-client')
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user with a new post
+  const newUser = await prisma
+    .createUser({
+      name: "Bob",
+      email: "bob@prisma.io",
+      posts: {
+        create: {
+          title: "The data layer for modern apps",
+        }
+      },
+    })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+
+  const allPosts = await prisma.posts()
+  console.log(allPosts)
+}
+
+main().catch(e => console.error(e))
+```
+
+Run the script with the following command:
+
+```bash copy
+node index.js
+```
+
+## Query relational data
+
+With the Prisma client API, you can navigate relations in your data graph using chained method calls (also called _fluent API_). Here is how you can query the `posts` written by a certain `User`:
+
+```js copy
+const { prisma } = require('./generated/prisma-client')
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Read the previously created user from the database and print their posts to the console
+  const postsByUser = await prisma
+    .user({ email: "bob@prisma.io" })
+    .posts()
+  console.log(`All posts by that user: ${JSON.stringify(postsByUser)}`)
+
+}
+
+main().catch(e => console.error(e))
+```

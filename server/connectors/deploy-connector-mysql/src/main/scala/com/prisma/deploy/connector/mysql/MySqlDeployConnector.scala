@@ -8,8 +8,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeplo
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MysqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
-import com.prisma.shared.models.ApiConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, NonEmbeddedScalarListCapability}
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -37,7 +36,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
 
-  override def capabilities = Set(MigrationsCapability, NonEmbeddedScalarListCapability, LegacyDataModelCapability)
+  override def capabilities = ConnectorCapabilities.mysql
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -108,4 +107,6 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit
         List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
     )
   }
+
+  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

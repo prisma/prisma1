@@ -1,5 +1,5 @@
 import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, TypeFromModelGenerator } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 
 export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTypeGenerator {
   public static generateScalarFieldTypeForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
@@ -22,7 +22,11 @@ export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTy
   public static generateRelationFieldForInputType(model: IGQLType, field: IGQLField, generators: IGenerators) {
     const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }
     const generator = ModelUpdateInputGenerator.getGeneratorForRelation(model, field, generators)
-    return generator.generate(field.type as IGQLType, relationInfo)
+    if(generator.wouldBeEmpty(field.type as IGQLType, relationInfo)) {
+      return null
+    } else {
+      return generator.generate(field.type as IGQLType, relationInfo)
+    }
   }
   public static relationWouldBeEmpty(model: IGQLType, field: IGQLField, generators: IGenerators) {
     const relationInfo = { relatedField: field, relatedType: model, relationName: field.relationName }

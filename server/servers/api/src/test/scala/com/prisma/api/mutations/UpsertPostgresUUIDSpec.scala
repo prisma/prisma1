@@ -4,13 +4,13 @@ import java.util.UUID
 
 import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertPostgresUUIDSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
   "Upserting an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
     val project = SchemaDsl.fromString() {

@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -70,13 +70,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -130,7 +130,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
@@ -200,7 +200,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   ints: [Int!]!
+        |   ints: [Int]
         |}"""
     }
 
@@ -229,7 +229,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
@@ -441,7 +441,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
@@ -510,7 +510,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -591,7 +591,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -667,13 +667,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @unique
         |   unique: Int! @unique
         |   name: String!
-        |   middle: [Middle!]!
+        |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
         |   unique: Int! @unique
         |   name: String!
-        |   bottom: [Bottom!]!
+        |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
@@ -887,7 +887,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String @unique
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Friend{
@@ -953,7 +953,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Friend{
@@ -1000,7 +1000,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """
         |type Parent{
         |    name: String
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Friend{
@@ -1009,7 +1009,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |
         |type Child @embedded {
         |    name: String
-        |    friends: [Friend!]! @mongoRelation(field: "friends")
+        |    friends: [Friend] @mongoRelation(field: "friends")
         |}"""
     }
 
@@ -1290,7 +1290,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [Child!]!
+        |    children: [Child]
         |}
         |
         |type Child @embedded{
@@ -1388,7 +1388,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [ZChild!]!
+        |    children: [ZChild]
         |}"""
     }
 
@@ -1448,7 +1448,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [ZChild!]!
+        |    children: [ZChild]
         |}"""
     }
 
@@ -1508,7 +1508,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Parent{
         |    id: ID! @unique
         |    name: String @unique
-        |    children: [ZChild!]!
+        |    children: [ZChild]
         |}"""
     }
 
@@ -1557,7 +1557,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type User {
         |  id: ID! @unique
         |  nick: String! @unique
-        |  memberships: [ListMembership!]!
+        |  memberships: [ListMembership]
         |}
         |
         |type List {
@@ -1565,7 +1565,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  createdAt: DateTime! @createdAt
         |  updatedAt: DateTime! @updatedAt
         |  name: String!
-        |  memberships: [ListMembership!]!
+        |  memberships: [ListMembership]
         |}
         |
         |type ListMembership {
@@ -1626,7 +1626,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type User {
         |  id: ID! @unique
         |  name: String!
-        |  pets: [Dog!]!
+        |  pets: [Dog]
         |}
         |
         |type Post {
@@ -1637,8 +1637,14 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  updatedAt: DateTime!
         |}
         |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
         |type Dog @embedded {
         |  breed: String!
+        |  walker: Walker
         |}"""
     }
 
@@ -1708,7 +1714,7 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Todo {
         |  id: ID! @unique
         |  title: String! @unique
-        |  comments: [Comment!]!
+        |  comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -1785,6 +1791,268 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     result.toString should be(
       """{"data":{"todoes":[{"title":"todoTitle","comments":[{"text":"This is very important","snarkyRemark":{"text":"This is very very imporanto!","user":{"nick":"Marcus"}}}]}]}}""")
+
+  }
+
+  "Connecting several times" should "not error and only connect the item once" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  authors: [AUser]
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  posts: [Post] @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val createPost = server.query(s""" mutation {createPost(data: {title:"Title"}) {title}} """, project)
+    val createUser = server.query(s""" mutation {createAUser(data: {name:"Author"}) {name}} """, project)
+
+    val result1 = server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+    val result2 = server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+    val result3 = server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
+  }
+
+  "Join Relation Filter on one to one relation" should "work on one level" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  author: AUser
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  int: Int
+        |  post: Post @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val createPost  = server.query(s""" mutation {createPost(data: {title:"Title1"}) {title}} """, project)
+    val createPost2 = server.query(s""" mutation {createPost(data: {title:"Title2"}) {title}} """, project)
+    val createUser  = server.query(s""" mutation {createAUser(data: {name:"Author1", int: 5}) {name}} """, project)
+    val createUser2 = server.query(s""" mutation {createAUser(data: {name:"Author2", int: 4}) {name}} """, project)
+
+    val result1 = server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{post:{connect:{title: "Title1"}}}) {name}} """, project)
+    val result2 = server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{post:{connect:{title: "Title2"}}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, post{title}}}""", project).toString should be(
+      """{"data":{"aUsers":[{"name":"Author1","post":{"title":"Title1"}},{"name":"Author2","post":{"title":"Title2"}}]}}""")
+
+    server.query("""query{posts {title, author {name}}}""", project).toString should be(
+      """{"data":{"posts":[{"title":"Title1","author":{"name":"Author1"}},{"title":"Title2","author":{"name":"Author2"}}]}}""")
+
+    val res = server.query("""query{aUsers(where:{ post:{title_ends_with: "1"}, name_starts_with: "Author", int: 5}){name, post{title}}}""", project)
+    res.toString should be("""{"data":{"aUsers":[{"name":"Author1","post":{"title":"Title1"}}]}}""")
+  }
+
+  "Join Relation Filter on many to many relation" should "work on one level" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  authors: [AUser]
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  posts: [Post] @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val createPost  = server.query(s""" mutation {createPost(data: {title:"Title1"}) {title}} """, project)
+    val createPost2 = server.query(s""" mutation {createPost(data: {title:"Title2"}) {title}} """, project)
+    val createUser  = server.query(s""" mutation {createAUser(data: {name:"Author1"}) {name}} """, project)
+    val createUser2 = server.query(s""" mutation {createAUser(data: {name:"Author2"}) {name}} """, project)
+
+    val result1 =
+      server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+    val result2 =
+      server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be(
+      """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"},{"title":"Title2"}]},{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
+
+    server.query("""query{posts {title, authors {name}}}""", project).toString should be(
+      """{"data":{"posts":[{"title":"Title1","authors":[{"name":"Author1"},{"name":"Author2"}]},{"title":"Title2","authors":[{"name":"Author1"},{"name":"Author2"}]}]}}""")
+
+    val res = server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
+    res.toString should be("""{"data":{"aUsers":[{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
+  }
+
+  "Deeply nested create" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |  posts: [Post]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val query = """mutation create {
+                  |  createUser(
+                  |    data: {
+                  |      name: "User"
+                  |      pets: {
+                  |        create: [
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |        ]
+                  |      }
+                  |    }
+                  |  ) {
+                  |    name
+                  |    pets {
+                  |      breed
+                  |      walker {
+                  |        name
+                  |      }
+                  |    }
+                  |  }
+                  |}"""
+
+    server.query(query, project).toString should be(
+      """{"data":{"createUser":{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+  }
+
+  "Fancy filter" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |  posts: [Post]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val query = """mutation create {
+                  |  createUser(
+                  |    data: {
+                  |      name: "User"
+                  |      pets: {
+                  |        create: [
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |        ]
+                  |      }
+                  |    }
+                  |  ) {
+                  |    name
+                  |    pets {
+                  |      breed
+                  |      walker {
+                  |        name
+                  |      }
+                  |    }
+                  |  }
+                  |}"""
+
+    server.query(query, project).toString should be(
+      """{"data":{"createUser":{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+
+    val query2 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 2" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query2, project).toString should be("""{"data":{"users":[]}}""")
+
+    val query3 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 1" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query3, project).toString should be(
+      """{"data":{"users":[{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}]}}""")
 
   }
 

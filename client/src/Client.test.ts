@@ -41,7 +41,51 @@ test('related type', t => {
   client.user()
 
   const document = client.getDocumentForInstructions(
-    Object.keys(client.currentInstructions)[0],
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('deep related type', t => {
+  const typeDefs = `
+    type Query {
+      user: User
+    }
+
+    type User {
+      id: ID!
+      posts: [Post!]!
+    }
+
+    type Post {
+      content: String!
+    }
+  `
+
+  const models: Model[] = [
+    {
+      embedded: false,
+      name: 'User',
+    },
+    {
+      embedded: false,
+      name: 'Post',
+    },
+  ]
+
+  const endpoint = 'http://localhost;4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().posts()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
   )
 
   t.snapshot(print(document))
@@ -85,7 +129,7 @@ test('embedded type', t => {
   client.user()
 
   const document = client.getDocumentForInstructions(
-    Object.keys(client.currentInstructions)[0],
+    Object.keys(client._currentInstructions)[0],
   )
 
   t.snapshot(print(document))
@@ -138,7 +182,110 @@ test('nested mbedded type', t => {
   client.user()
 
   const document = client.getDocumentForInstructions(
-    Object.keys(client.currentInstructions)[0],
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('top level args', t => {
+  const typeDefs = `
+    type Query {
+      post(where: PostInput!): Post
+    }
+
+    input PostInput {
+      id: ID!
+    }
+
+    type Post {
+      id: ID!
+      title: String!
+      content: String!
+    }
+  `
+
+  const models: Model[] = [
+    {
+      embedded: false,
+      name: 'Post',
+    },
+  ]
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.post({ id: 'test' })
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('nested args', t => {
+  const typeDefs = `
+    type Query {
+      user: User
+      post(where: PostInput!): Post
+    }
+
+    input PostInput {
+      author: AuthorInput!
+    }
+
+    input AuthorInput {
+      firstName: String!
+      lastName: String!
+    }
+
+    type User {
+      id: ID!
+      post: Post
+    }
+
+    type Post {
+      id: ID!
+      title: String!
+      content: String!
+      user: User
+    }
+  `
+
+  const models: Model[] = [
+    {
+      embedded: false,
+      name: 'User',
+    },
+    {
+      embedded: false,
+      name: 'Post',
+    },
+  ]
+
+  const endpoint = 'http://localhost;4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.post({
+    author: {
+      firstName: 'Lydia',
+      lastName: 'Hallie',
+    },
+  })
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
   )
 
   t.snapshot(print(document))
