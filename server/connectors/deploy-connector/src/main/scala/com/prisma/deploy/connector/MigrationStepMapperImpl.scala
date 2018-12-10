@@ -57,6 +57,7 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       lazy val createTemporaryColumn = createColumn.copy(field = temporaryNext)
       lazy val renameTemporaryColumn = UpdateColumn(projectId, oldModel, temporaryNext, next.asScalarField_!)
 
+      // TODO: replace that with a pattern match based on the subtypes of `models.Field`
       () match {
         case _ if previous.isRelation && next.isRelation                                                             => Vector.empty
         case _ if previous.isRelation && next.isScalarNonList                                                        => Vector(createColumn)
