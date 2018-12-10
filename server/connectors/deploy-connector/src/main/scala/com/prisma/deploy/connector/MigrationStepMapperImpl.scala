@@ -115,8 +115,12 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
           Vector(
             UpdateRelationTable(projectId, previousRelation, nextRelation)
           )
-        case (None, None) =>
-          Vector.empty
+        case (None, None) => // this is the case for the legacy data model
+          x.newName.map { newName =>
+            val previousRelation = previousSchema.getRelationByName_!(x.name)
+            val nextRelation     = nextSchema.getRelationByName_!(newName)
+            RenameRelationTable(projectId = projectId, previousName = previousRelation.relationTableName, nextName = nextRelation.relationTableName)
+          }.toVector
 
         case (p, n) => sys.error(s"Combination $p, $n not supported here")
       }
