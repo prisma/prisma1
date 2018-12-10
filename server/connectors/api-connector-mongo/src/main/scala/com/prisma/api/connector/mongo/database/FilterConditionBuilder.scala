@@ -31,11 +31,12 @@ trait FilterConditionBuilder {
   private def buildConditionForFilter(path: String, filter: Filter, negate: Boolean = false): conversions.Bson = {
     val convertedFilter = filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter => hackForTrue
-      case AndFilter(filters)     => and(nonEmptyConditions(path, filters, negate): _*)
-      case OrFilter(filters)      => sys.error("These should not be hit ")
-      case NotFilter(filters)     => sys.error("These should not be hit ")
-      case x: RelationFilter      => relationFilterStatement(path, x)
+      case NodeSubscriptionFilter       => hackForTrue
+      case AndFilter(filters) if negate => or(nonEmptyConditions(path, filters, negate): _*)
+      case AndFilter(filters)           => and(nonEmptyConditions(path, filters, negate): _*)
+      case OrFilter(filters)            => sys.error("These should not be hit ")
+      case NotFilter(filters)           => sys.error("These should not be hit ")
+      case x: RelationFilter            => relationFilterStatement(path, x)
 
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => hackForTrue
