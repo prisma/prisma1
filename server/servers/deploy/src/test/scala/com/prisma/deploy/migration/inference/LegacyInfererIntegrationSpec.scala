@@ -184,6 +184,36 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     )
   }
 
+  "they" should "not detect a change in the onDelete relation argument as it does not need to update the schema" in {
+    val previousSchema =
+      """
+        |type Course {
+        |  id: ID! @unique
+        |	sections: [CourseSection] @relation(name: "CourseSections" onDelete: CASCADE)
+        |}
+        |
+        |type CourseSection {
+        |  id: ID! @unique
+        |  course: Course! @relation(name: "CourseSections")
+        |}
+      """.stripMargin
+    val project = inferSchema(previousSchema)
+    val nextSchema =
+      """
+        |type Course {
+        |  id: ID! @unique
+        |	sections: [CourseSection] @relation(name: "CourseSections")
+        |}
+        |
+        |type CourseSection {
+        |  id: ID! @unique
+        |  course: Course! @relation(name: "CourseSections")
+        |}
+      """.stripMargin
+    val steps = inferSteps(previousSchema = project, next = nextSchema)
+    steps should have(size(0))
+  }
+
   def inferSchema(schema: String): Schema = {
     inferSchema(Schema(), schema)
   }
