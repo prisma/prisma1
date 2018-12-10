@@ -143,6 +143,7 @@ lazy val prismaImageShared = imageProject("prisma-image-shared")
   .dependsOn(subscriptions)
   .dependsOn(sangriaServer)
 
+
 // ###################
 //       SERVERS
 // ###################
@@ -191,6 +192,7 @@ lazy val workers = serverProject("workers")
 
 lazy val serversShared = serverProject("servers-shared")
   .dependsOn(connectorUtils % "test->test")
+
 
 // ######################
 //       CONNECTORS
@@ -264,6 +266,7 @@ lazy val sharedModels = normalProject("shared-models")
   ) ++ joda
 )
 
+
 // #####################
 //   INTEGRATION TESTS
 // #####################
@@ -271,6 +274,7 @@ lazy val sharedModels = normalProject("shared-models")
 lazy val integrationTestsMySql = integrationTestProject("integration-tests-mysql")
   .dependsOn(deploy % "compile->compile;test->test")
   .dependsOn(api % "compile->compile;test->test")
+
 
 // ################
 //       LIBS
