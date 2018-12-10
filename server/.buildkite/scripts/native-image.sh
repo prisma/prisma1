@@ -3,7 +3,7 @@
 set -e
 
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
-  -w /root/build/server \
+  -w /root/build \
   -v $(pwd):/root/build \
   -v ~/.ivy2:/root/.ivy2 \
   -v ~/.coursier:/root/.coursier \
