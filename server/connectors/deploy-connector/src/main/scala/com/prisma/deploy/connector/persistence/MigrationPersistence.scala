@@ -22,6 +22,11 @@ trait MigrationPersistence {
 
   def loadDistinctUnmigratedProjectIds(): Future[Seq[String]]
 
+  /**
+    * This method can be used in implementations of `loadAll`.
+    * The implementation can then load all migrations and pass it to this function.
+    * The migrations must be sorted descending on the revision field.
+    */
   protected def enrichWithPreviousSchemas(migrations: Vector[Migration]): Vector[Migration] = {
     migrations.map { migration =>
       val previousMigration = migrations.find(mig => mig.status == MigrationStatus.Success && mig.revision < migration.revision)

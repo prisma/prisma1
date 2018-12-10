@@ -292,17 +292,6 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
   def containsEnum(schema: Schema, enumName: String): Boolean = schema.enums.exists(_.name == enumName)
 
-  def isAnyOptionSet(product: Product): Boolean = {
-    import shapeless._
-    import syntax.typeable._
-    product.productIterator.exists { value =>
-      value.cast[Option[Any]] match {
-        case Some(x) => x.isDefined
-        case None    => false
-      }
-    }
-  }
-
   def didSomethingChange[T](previous: T, next: T)(fns: (T => Any)*): Boolean = {
     fns.exists { fn =>
       val previousValue = fn(previous)
