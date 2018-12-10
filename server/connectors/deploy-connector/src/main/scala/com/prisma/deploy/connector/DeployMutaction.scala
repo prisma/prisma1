@@ -23,8 +23,8 @@ case class DeleteModelTable(projectId: String, model: Model, nameOfIdField: Stri
 case class RenameTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends DeployMutaction // rename based on migration setting
 case class RenameRelationTable(projectId: String, previousName: String, nextName: String)                                extends DeployMutaction // FIXME: is probably obsolete
 
-case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation)                 extends DeployMutaction
-case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation)                 extends DeployMutaction // based on migration settings;  set relation fields to null in document
+case class CreateRelationTable(projectId: String, relation: Relation)                                 extends DeployMutaction
+case class DeleteRelationTable(projectId: String, relation: Relation)                                 extends DeployMutaction // based on migration settings;  set relation fields to null in document
 case class UpdateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) extends DeployMutaction
 
 case class CreateInlineRelation(projectId: String, model: Model, references: Model, column: String) extends DeployMutaction

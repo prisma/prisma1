@@ -38,7 +38,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
 
         CreateInlineRelation(project.id, model, references, m.referencingColumn)
       case _ =>
-        CreateRelationTable(project.id, project.schema, relation = relation)
+        CreateRelationTable(project.id, relation = relation)
     }
     runMutaction(mutaction)
   }

@@ -133,7 +133,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
   }
 
   "changing the type of an id field should work" in {
-    // TODO: not sure whether this should work at all
     val capabilities = ConnectorCapabilities(IntIdCapability)
     val initialDataModel =
       """

@@ -18,7 +18,7 @@ case class DeleteRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder)
   }
 
   override def rollback(mutaction: DeleteRelationTable) = {
-    val createRelation = CreateRelationTable(mutaction.projectId, mutaction.schema, mutaction.relation)
+    val createRelation = CreateRelationTable(mutaction.projectId, mutaction.relation)
     CreateRelationInterpreter(builder).execute(createRelation)
   }
 }
