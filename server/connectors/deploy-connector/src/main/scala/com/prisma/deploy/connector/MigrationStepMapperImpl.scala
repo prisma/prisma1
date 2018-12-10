@@ -100,21 +100,21 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val nextManifestation     = nextRelation.manifestation
 
       val manifestationChange = (previousManifestation, nextManifestation) match {
-        case (Some(p: EmbeddedRelationLink), Some(_: RelationTable)) =>
+        case (Some(_: EmbeddedRelationLink), Some(_: RelationTable)) =>
           Vector(
-            DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
-            CreateRelationTable(projectId, nextRelation)
+            deleteRelation(previousRelation),
+            createRelation(nextRelation)
           )
-        case (Some(_: RelationTable), Some(p: EmbeddedRelationLink)) =>
+        case (Some(_: RelationTable), Some(_: EmbeddedRelationLink)) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
 
-        case (Some(p: EmbeddedRelationLink), Some(n: EmbeddedRelationLink)) =>
+        case (Some(_: EmbeddedRelationLink), Some(_: EmbeddedRelationLink)) =>
           Vector(
-            DeleteInlineRelation(projectId, p.inTableOfModel(previousRelation), p.referencedModel(previousRelation), p.referencingColumn),
-            CreateInlineRelation(projectId, n.inTableOfModel(nextRelation), n.referencedModel(nextRelation), n.referencingColumn)
+            deleteRelation(previousRelation),
+            createRelation(nextRelation)
           )
         case (Some(_: RelationTable), Some(_: RelationTable)) =>
           Vector(
