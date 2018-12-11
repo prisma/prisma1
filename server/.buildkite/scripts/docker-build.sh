@@ -6,7 +6,7 @@ CHANNEL="${1:?Provide the channel this script is run on (e.g. alpha, beta, stabl
 DOCKER_TAG="${2:?Provide the docker tag that should be released}"
 ADDITIONALLY_RELEASE="${3:?Provide the secondary docker tag that should be released}"
 
-mkdir /.cargo
+#mkdir /.cargo
 
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
   -w /root/build/server \
