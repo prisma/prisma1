@@ -51,7 +51,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
       agents:
         queue: native-linux
       artifact_paths:
-        - /server/images/prisma-native/target/prisma-native-image/prisma-native
+        - server/images/prisma-native/target/prisma-native-image/prisma-native
 
 ")
 
