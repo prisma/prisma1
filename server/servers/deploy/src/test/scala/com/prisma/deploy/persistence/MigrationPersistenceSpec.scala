@@ -214,7 +214,8 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
       stableIdentifier = "don't care",
       isEmbedded = false,
       fieldTemplates = List.empty,
-      manifestation = None
+      manifestation = None,
+      indexes = Vector(),
     )
 
     Schema(
