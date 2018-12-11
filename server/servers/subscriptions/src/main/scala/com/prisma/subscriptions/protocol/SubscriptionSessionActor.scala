@@ -48,7 +48,8 @@ case class SubscriptionSessionActor(
   import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
   import context.dispatcher
 
-  val reporter = dependencies.reporter
+  val reporter   = dependencies.reporter
+  val auth: Auth = dependencies.auth
 
   override def preStart() = {
     super.preStart()
@@ -77,23 +78,23 @@ case class SubscriptionSessionActor(
   def waitingForInit(project: Project): Receive = logUnhandled {
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
-        case Some(auth: Authorization) =>
-          auth.token match {
-            case Some(token) =>
-              val authResult = dependencies.auth.verifyToken(token, project.secrets)
-              if (authResult.isSuccess) {
-                sendToWebsocket(GqlConnectionAck)
-                context.become(initFinishedReceive(auth))
-              } else {
-                sendToWebsocket(GqlConnectionError("Authentication token is invalid."))
-              }
+        // Case 1: Project has no secrets. Provided auth doesn't matter.
+        case Some(x @ Authorization(_)) if project.secrets.isEmpty =>
+          sendToWebsocket(GqlConnectionAck)
+          context.become(initFinishedReceive(x))
 
-            case None =>
-              sendToWebsocket(GqlConnectionAck)
-              context.become(initFinishedReceive(auth))
+        // Case 2: Project has secrets. Verify provided auth.
+        case Some(x @ Authorization(Some(token))) if project.secrets.nonEmpty =>
+          val authResult = auth.verifyToken(auth.normalizeToken(token), project.secrets)
+          if (authResult.isSuccess) {
+            sendToWebsocket(GqlConnectionAck)
+            context.become(initFinishedReceive(x))
+          } else {
+            sendToWebsocket(GqlConnectionError("Authentication token is invalid."))
           }
 
-        case None =>
+        // Case 3: Project has secrets, but no auth provided.
+        case Some(x @ Authorization(None)) if project.secrets.nonEmpty =>
           sendToWebsocket(GqlConnectionError("No Authorization field was provided in payload."))
       }
 
@@ -110,6 +111,7 @@ case class SubscriptionSessionActor(
 
     case _: CreateSubscriptionSucceeded =>
     // NOOP
+
     case fail: CreateSubscriptionFailed =>
       sendToWebsocket(GqlError(fail.request.id, fail.errors.head.getMessage))
 
