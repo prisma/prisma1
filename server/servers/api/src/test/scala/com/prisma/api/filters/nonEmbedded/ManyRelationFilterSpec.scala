@@ -1,6 +1,6 @@
 package com.prisma.api.filters.nonEmbedded
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -208,7 +208,7 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       .toString should be("""{"data":{"posts":[]}}""")
   }
 
-  "Join Relation Filter on many to many relation" should "work on one level" in {
+  "Join Relation Filter on many to many relation" should "work on one level" taggedAs (IgnorePostgres) in {
 
     val project = SchemaDsl.fromString() {
       """

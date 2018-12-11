@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnorePostgres
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
@@ -1611,7 +1612,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
-  "Connecting several times" should "not error and only connect the item once" in {
+  "Connecting several times" should "not error and only connect the item once" taggedAs (IgnorePostgres) in {
 
     val project = SchemaDsl.fromString() {
       """
