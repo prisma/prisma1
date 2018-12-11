@@ -49,7 +49,7 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
     - label: \":rust: Native image\"
       command: cd server && ./.buildkite/scripts/native-image.sh
       agents:
-        queue: native-image-linux
+        queue: native-linux
       artifact_paths:
         - /server/images/prisma-native/target/prisma-native-image/prisma-native
 
