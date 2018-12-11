@@ -131,6 +131,9 @@ sealed trait Field {
   lazy val isVisible: Boolean         = !isHidden
 
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
+
+  def asScalarField_! : ScalarField     = this.asInstanceOf[ScalarField]
+  def asRelationField_! : RelationField = this.asInstanceOf[RelationField]
 }
 
 case class RelationField(
@@ -202,7 +205,7 @@ case class RelationField(
 
   def isRelationWithNameAndSide(relationName: String, side: RelationSide.Value): Boolean = relation.name == relationName && this.relationSide == side
 
-  def asScalarField: ScalarField = {
+  def scalarCopy: ScalarField = {
     model.idField_!.copy(
       name = this.name,
       typeIdentifier = this.relatedModel_!.idField_!.typeIdentifier,

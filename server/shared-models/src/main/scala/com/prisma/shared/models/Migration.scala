@@ -16,7 +16,8 @@ case class Migration(
     steps: Vector[MigrationStep],
     errors: Vector[String],
     startedAt: Option[DateTime] = None,
-    finishedAt: Option[DateTime] = None
+    finishedAt: Option[DateTime] = None,
+    previousSchema: Schema
 ) {
   def id: MigrationId                             = MigrationId(projectId, revision)
   def isRollingBack: Boolean                      = status == MigrationStatus.RollingBack
@@ -53,55 +54,36 @@ object Migration {
     applied = 0,
     rolledBack = 0,
     steps,
-    errors = Vector.empty
+    errors = Vector.empty,
+    previousSchema = Schema.empty
   )
 
-  def empty(projectId: String) = apply(projectId, Schema(), Vector.empty, Vector.empty)
+  def empty(projectId: String) = apply(projectId, Schema.empty, Vector.empty, Vector.empty)
 }
 
 sealed trait MigrationStep
 sealed trait ModelMigrationStep extends MigrationStep
 
-case class CreateModel(name: String)                                               extends ModelMigrationStep
-case class DeleteModel(name: String)                                               extends ModelMigrationStep
-case class UpdateModel(name: String, newName: String, isEmbedded: Option[Boolean]) extends ModelMigrationStep
+case class CreateModel(name: String)                  extends ModelMigrationStep
+case class DeleteModel(name: String)                  extends ModelMigrationStep
+case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
 
-sealed trait FieldMigrationStep extends MigrationStep
-case class CreateField(
-    model: String,
-    name: String,
-    typeName: String,
-    isRequired: Boolean,
-    isList: Boolean,
-    isUnique: Boolean,
-    relation: Option[String],
-    defaultValue: Option[String],
-    enum: Option[String]
-) extends FieldMigrationStep
-
+sealed trait FieldMigrationStep                     extends MigrationStep
+case class CreateField(model: String, name: String) extends FieldMigrationStep
 case class DeleteField(model: String, name: String) extends FieldMigrationStep
-
 case class UpdateField(
     model: String,
     newModel: String,
     name: String,
-    newName: Option[String],
-    typeName: Option[String],
-    isRequired: Option[Boolean],
-    isList: Option[Boolean],
-    isUnique: Option[Boolean],
-    isHidden: Option[Boolean],
-    relation: Option[Option[String]],
-    defaultValue: Option[Option[String]],
-    enum: Option[Option[String]]
+    newName: Option[String]
 ) extends FieldMigrationStep {
   def finalName = newName.getOrElse(name)
 }
 
-sealed trait EnumMigrationStep                                                               extends MigrationStep
-case class CreateEnum(name: String, values: Seq[String])                                     extends EnumMigrationStep
-case class DeleteEnum(name: String)                                                          extends EnumMigrationStep
-case class UpdateEnum(name: String, newName: Option[String], values: Option[Vector[String]]) extends EnumMigrationStep
+sealed trait EnumMigrationStep                               extends MigrationStep
+case class CreateEnum(name: String)                          extends EnumMigrationStep
+case class DeleteEnum(name: String)                          extends EnumMigrationStep
+case class UpdateEnum(name: String, newName: Option[String]) extends EnumMigrationStep { def finalName = newName.getOrElse(name) }
 
 object OnDelete extends Enumeration {
   type OnDelete = Value
@@ -112,28 +94,9 @@ object OnDelete extends Enumeration {
   val default = SetNull
 }
 
-sealed trait RelationMigrationStep extends MigrationStep
-case class CreateRelation(
-    name: String,
-    modelAName: String,
-    modelBName: String,
-    modelAOnDelete: OnDelete.Value,
-    modelBOnDelete: OnDelete.Value
-) extends RelationMigrationStep
-
-case class UpdateRelation(
-    name: String,
-    newName: Option[String],
-    modelAId: Option[String],
-    modelBId: Option[String],
-    modelAOnDelete: Option[OnDelete.Value],
-    modelBOnDelete: Option[OnDelete.Value]
-) extends RelationMigrationStep
-
-case class DeleteRelation(
-    name: String,
-    modelAName: String,
-    modelBName: String
-) extends MigrationStep
+sealed trait RelationMigrationStep                               extends MigrationStep
+case class CreateRelation(name: String)                          extends RelationMigrationStep
+case class UpdateRelation(name: String, newName: Option[String]) extends RelationMigrationStep { def finalName = newName.getOrElse(name) }
+case class DeleteRelation(name: String)                          extends RelationMigrationStep
 
 case class UpdateSecrets(secrets: Vector[String]) extends MigrationStep

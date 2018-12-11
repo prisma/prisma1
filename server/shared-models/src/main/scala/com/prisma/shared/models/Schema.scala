@@ -29,6 +29,7 @@ case class Schema(
   def getModelByName(name: String): Option[Model]                                   = models.find(_.name == name)
   def getFieldByName_!(model: String, name: String): Field                          = getModelByName_!(model).getFieldByName_!(name)
   def getFieldByName(model: String, name: String): Option[Field]                    = getModelByName(model).flatMap(_.getFieldByName(name))
+  def getEnumByName_!(name: String): Enum                                           = getEnumByName(name).get
   def getEnumByName(name: String): Option[Enum]                                     = enums.find(_.name == name)
   def getRelationByName_!(name: String): Relation                                   = getRelationByName(name).get
   def getRelationByName(name: String): Option[Relation]                             = relations.find(_.name == name)

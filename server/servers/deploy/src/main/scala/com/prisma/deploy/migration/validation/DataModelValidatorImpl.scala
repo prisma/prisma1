@@ -62,6 +62,7 @@ case class DataModelValidatorImpl(
           val relationDirective = RelationDirective.value(doc, typeDef, x, capabilities).get
           RelationalPrismaField(
             name = x.name,
+            columnName = x.dbName,
             relationDbDirective = x.relationDBDirective,
             strategy = relationDirective.strategy,
             isList = x.isList,
