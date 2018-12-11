@@ -14,6 +14,10 @@ object PrismaGraalPlugin extends AutoPlugin {
   }
 
   private val GraalVMNativeImageCommand = "native-image"
+  val logger = ProcessLogger(
+    (out: String) => println("[StdOut] " + out),
+    (err: String) => println("[StdErr] " + err)
+  )
 
   import autoImport._
 
@@ -46,10 +50,11 @@ object PrismaGraalPlugin extends AutoPlugin {
           val extraOptions = nativeImageOptions.value
           Seq("--class-path", classpath, s"-H:Name=$binaryName") ++ extraOptions ++ Seq(className)
         }
+
         Seq(GraalVMNativeImageCommand) ++ nativeImageArguments
       }
-      val logger = ProcessLogger(println, println)
-      sys.process.Process(command, targetDirectory) ! logger match { //streams.value.log match {
+
+      sys.process.Process(command, targetDirectory) ! logger match {
         case 0 => targetDirectory / binaryName
         case x => sys.error(s"Failed to run $GraalVMNativeImageCommand, exit status: " + x)
       }
