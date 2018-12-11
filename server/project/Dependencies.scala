@@ -87,8 +87,8 @@ object Dependencies {
   val apacheCommons     = "org.apache.commons"         % "commons-lang3"                  % "3.8.1"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"        % "3.11.7",
-    "org.jooq" %% "jooq-scala" % "3.11.7"
+    "org.jooq" % "jooq"        % "3.11.0",
+    "org.jooq" %% "jooq-scala" % "3.11.0"
   )
 
   val jna              = "net.java.dev.jna"      % "jna"                   % "4.5.2"
