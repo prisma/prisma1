@@ -55,32 +55,34 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
   }
 
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
-    val holder = iterableToNativeArray(secrets)
-    val target = strOptToPointer(expectedGrant.map(_.target))
-    val action = strOptToPointer(expectedGrant.map(_.action))
-    val buffer = GraalRustBridge.verify_token(
-      toCString(token),
-      holder.get(),
-      secrets.length,
-      target,
-      action
-    )
+    if (secrets.nonEmpty) {
+      val holder = iterableToNativeArray(secrets)
+      val target = strOptToPointer(expectedGrant.map(_.target))
+      val action = strOptToPointer(expectedGrant.map(_.action))
+      val buffer = GraalRustBridge.verify_token(
+        toCString(token),
+        holder.get(),
+        secrets.length,
+        target,
+        action
+      )
 
-    debug(buffer)
-    throwOnError(buffer)
+      debug(buffer)
+      throwOnError(buffer)
 
-    if (buffer.getDataLen > 1) {
-      throw AuthFailure(s"Boolean with size ${buffer.getDataLen} found.")
-    }
+      if (buffer.getDataLen > 1) {
+        throw AuthFailure(s"Boolean with size ${buffer.getDataLen} found.")
+      }
 
-    val failed = buffer.getData.readByte(0) == 0
-    GraalRustBridge.destroy_buffer(buffer)
+      val failed = buffer.getData.readByte(0) == 0
+      GraalRustBridge.destroy_buffer(buffer)
 
-    if (failed) {
-      // Only here as a safeguard, it is not expected to happen. If this ever pops up the rust impl needs to be checked again.
-      // Why? Because throwOnError should throw whatever error is contained in the result payload. If there's an error, this
-      // code shouldn't be reached. todo: Makes the boolean... pointless? Clean up the interface!
-      throw AuthFailure(s"Verification failed.")
+      if (failed) {
+        // Only here as a safeguard, it is not expected to happen. If this ever pops up the rust impl needs to be checked again.
+        // Why? Because throwOnError should throw whatever error is contained in the result payload. If there's an error, this
+        // code shouldn't be reached. todo: Makes the boolean... pointless? Clean up the interface!
+        throw AuthFailure(s"Verification failed.")
+      }
     }
   }
 

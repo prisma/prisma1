@@ -77,7 +77,7 @@ case class SubscriptionSessionActor(
   def waitingForInit(project: Project): Receive = logUnhandled {
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
-        case Some(auth) =>
+        case Some(auth: Authorization) =>
           auth.token match {
             case Some(token) =>
               val authResult = dependencies.auth.verifyToken(token, project.secrets)

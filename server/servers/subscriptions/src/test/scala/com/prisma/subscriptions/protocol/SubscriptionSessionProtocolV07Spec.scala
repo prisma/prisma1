@@ -43,7 +43,7 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
       parent.expectMsg(GqlConnectionAck)
     }
 
-    "succeed when the payload contains a String in the Authorization field" in withProjectFetcherStub(projectId) {
+    "succeed when the payload contains a String in the Authorization field and the project has no secrets" in withProjectFetcherStub(projectId) {
       val parent              = TestProbe()
       val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
       val payloadWithAuth     = Json.obj("Authorization" -> "abc")

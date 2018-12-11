@@ -47,27 +47,29 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
   }
 
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
-    val buffer = library.verify_token(
-      token,
-      secrets.toArray,
-      secrets.length,
-      expectedGrant.map(_.target).orNull,
-      expectedGrant.map(_.action).orNull
-    )
+    if (secrets.nonEmpty) {
+      val buffer = library.verify_token(
+        token,
+        secrets.toArray,
+        secrets.length,
+        expectedGrant.map(_.target).orNull,
+        expectedGrant.map(_.action).orNull
+      )
 
-    debug(buffer)
-    throwOnError(buffer)
+      debug(buffer)
+      throwOnError(buffer)
 
-    if (buffer.data_len.intValue() > 1) {
-      throw AuthFailure(s"Boolean with size ${buffer.data_len.intValue()} found.")
-    }
+      if (buffer.data_len.intValue() > 1) {
+        throw AuthFailure(s"Boolean with size ${buffer.data_len.intValue()} found.")
+      }
 
-    val failed = buffer.data.getByteArray(0, 1).head == 0
-    library.destroy_buffer(buffer)
+      val failed = buffer.data.getByteArray(0, 1).head == 0
+      library.destroy_buffer(buffer)
 
-    if (failed) {
-      // Only here as a safeguard, it is not expected to happen. If this ever pops up the rust impl needs to be checked again.
-      throw AuthFailure(s"Verification failed.")
+      if (failed) {
+        // Only here as a safeguard, it is not expected to happen. If this ever pops up the rust impl needs to be checked again.
+        throw AuthFailure(s"Verification failed.")
+      }
     }
   }
 
