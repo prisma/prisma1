@@ -78,12 +78,19 @@ case class SubscriptionSessionActor(
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
         case Some(auth) =>
-          val authResult = dependencies.auth.verifyToken(auth.token.getOrElse(""), project.secrets)
-          if (authResult.isSuccess) {
-            sendToWebsocket(GqlConnectionAck)
-            context.become(initFinishedReceive(auth))
-          } else {
-            sendToWebsocket(GqlConnectionError("Authentication token is invalid."))
+          auth.token match {
+            case Some(token) =>
+              val authResult = dependencies.auth.verifyToken(token, project.secrets)
+              if (authResult.isSuccess) {
+                sendToWebsocket(GqlConnectionAck)
+                context.become(initFinishedReceive(auth))
+              } else {
+                sendToWebsocket(GqlConnectionError("Authentication token is invalid."))
+              }
+
+            case None =>
+              sendToWebsocket(GqlConnectionAck)
+              context.become(initFinishedReceive(auth))
           }
 
         case None =>
