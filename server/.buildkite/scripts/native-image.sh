@@ -3,6 +3,7 @@
 ## Note: Execute in context of server sub folder of git repo/
 
 set -e
+export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://$ARTIFACT_BUCKET/$BUILDKITE_JOB_ID"
 
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
   -w /root/build \
@@ -13,7 +14,6 @@ docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "C
   prismagraphql/build-image:debian sbt "project prisma-native" prisma-native-image:packageBin
 #  -v /.cargo/:~/root/.cargo \
 
-export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://$ARTIFACT_BUCKET/$BUILDKITE_JOB_ID"
 buildkite-agent artifact upload images/prisma-native/target/prisma-native-image/prisma-native
 
 ## todo: Build & push image with binary inside
