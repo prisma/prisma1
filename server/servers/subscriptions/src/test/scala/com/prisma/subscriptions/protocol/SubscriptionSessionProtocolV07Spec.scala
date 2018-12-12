@@ -3,7 +3,6 @@ package com.prisma.subscriptions.protocol
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -50,19 +49,6 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
 
       subscriptionSession ! GqlConnectionInit(Some(payloadWithAuth))
       parent.expectMsg(GqlConnectionAck)
-    }
-
-    "fail when the payload contains a NON String value in the Authorization field" in withProjectFetcherStub(projectId) {
-      val parent              = TestProbe()
-      val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
-
-      val payload1 = Json.obj("Authorization" -> 123)
-      subscriptionSession ! GqlConnectionInit(Some(payload1))
-      parent.expectMsgType[GqlConnectionError]
-
-      val payload2 = Json.obj("Authorization" -> Json.obj())
-      subscriptionSession ! GqlConnectionInit(Some(payload2))
-      parent.expectMsgType[GqlConnectionError]
     }
   }
 

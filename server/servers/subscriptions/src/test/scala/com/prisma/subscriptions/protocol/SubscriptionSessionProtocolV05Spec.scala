@@ -3,6 +3,7 @@ package com.prisma.subscriptions.protocol
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
+import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.CreateSubscriptionSucceeded
@@ -31,8 +32,10 @@ class SubscriptionSessionProtocolV05Spec extends TestKit(ActorSystem("subscripti
     ret
   }
 
+  val projectId = "projectId"
+
   "Sending an INIT message" should {
-    "succeed when the payload is empty" in {
+    "succeed when the payload is empty" in withProjectFetcherStub(projectId) {
       val parent              = TestProbe()
       val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
       val emptyPayload        = Json.obj()
@@ -41,7 +44,7 @@ class SubscriptionSessionProtocolV05Spec extends TestKit(ActorSystem("subscripti
       parent.expectMsg(InitConnectionSuccess)
     }
 
-    "succeed when the payload contains a String in the Authorization field" in {
+    "succeed when the payload contains a String in the Authorization field" in withProjectFetcherStub(projectId) {
       val parent              = TestProbe()
       val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
       val payloadWithAuth     = Json.obj("Authorization" -> "abc")
@@ -49,23 +52,10 @@ class SubscriptionSessionProtocolV05Spec extends TestKit(ActorSystem("subscripti
       subscriptionSession ! InitConnection(Some(payloadWithAuth))
       parent.expectMsg(InitConnectionSuccess)
     }
-
-    "fail when the payload contains a NON String value in the Authorization field" in {
-      val parent              = TestProbe()
-      val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
-
-      val payload1 = Json.obj("Authorization" -> 123)
-      subscriptionSession ! InitConnection(Some(payload1))
-      parent.expectMsgType[InitConnectionFail]
-
-      val payload2 = Json.obj("Authorization" -> Json.obj())
-      subscriptionSession ! InitConnection(Some(payload2))
-      parent.expectMsgType[InitConnectionFail]
-    }
   }
 
   "Sending SUBSCRIPTION_START after an INIT" should {
-    "respond with SUBSCRIPTION_FAIL when the query is not valid GraphQL" in {
+    "respond with SUBSCRIPTION_FAIL when the query is not valid GraphQL" in withProjectFetcherStub(projectId) {
       val parent              = TestProbe()
       val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
       val emptyPayload        = Json.obj()
@@ -94,7 +84,7 @@ class SubscriptionSessionProtocolV05Spec extends TestKit(ActorSystem("subscripti
     "respond with SUBSCRIPTION_SUCCESS if " +
       "1. the query is valid " +
       "2. the subscriptions manager received CreateSubscription " +
-      "3. and the manager responded with CreateSubscriptionSucceeded" in {
+      "3. and the manager responded with CreateSubscriptionSucceeded" in withProjectFetcherStub(projectId) {
       val testProbe           = TestProbe()
       val parent              = TestProbe()
       val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(testProbe.ref)))
@@ -197,6 +187,12 @@ class SubscriptionSessionProtocolV05Spec extends TestKit(ActorSystem("subscripti
       subscriptionSession ! SubscriptionEnd(None)
       testProbe.expectNoMessage(3.seconds)
     }
+  }
+
+  def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
+    val project = TestProject().copy(id = projectId)
+    dependencies.projectFetcher.put(projectId, project)
+    fn
   }
 
   def subscriptionSessionActor(subscriptionsManager: ActorRef) = new SubscriptionSessionActorV05("sessionId", "projectId", subscriptionsManager)
