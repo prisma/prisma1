@@ -1,6 +1,6 @@
 package com.prisma.api.filters.nonEmbedded
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -206,6 +206,42 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
         project = project
       )
       .toString should be("""{"data":{"posts":[]}}""")
+  }
 
+  "Join Relation Filter on many to many relation" should "work on one level" taggedAs (IgnorePostgres) in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  authors: [AUser]
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  posts: [Post] @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(s""" mutation {createPost(data: {title:"Title1"}) {title}} """, project)
+    server.query(s""" mutation {createPost(data: {title:"Title2"}) {title}} """, project)
+    server.query(s""" mutation {createAUser(data: {name:"Author1"}) {name}} """, project)
+    server.query(s""" mutation {createAUser(data: {name:"Author2"}) {name}} """, project)
+
+    server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+    server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be(
+      """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"},{"title":"Title2"}]},{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
+
+    server.query("""query{posts {title, authors {name}}}""", project).toString should be(
+      """{"data":{"posts":[{"title":"Title1","authors":[{"name":"Author1"},{"name":"Author2"}]},{"title":"Title2","authors":[{"name":"Author1"},{"name":"Author2"}]}]}}""")
+
+    val res = server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
+    res.toString should be("""{"data":{"aUsers":[{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
   }
 }

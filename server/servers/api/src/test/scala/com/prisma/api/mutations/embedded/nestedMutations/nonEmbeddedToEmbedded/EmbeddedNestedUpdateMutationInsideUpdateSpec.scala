@@ -947,4 +947,66 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       errorContains = """The relation BottomToMiddle has no node for the model Middle connected to a Node for the model Bottom on your mutation path."""
     )
   }
+
+  "Updating toOne relations" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:{
+         |      unique: 11,
+         |      name: "Middle"
+         |   }
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11}}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {update:{
+         |          name: "MiddleNew"
+         |      }
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |    name
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"name":"MiddleNew"}}}}""")
+  }
 }

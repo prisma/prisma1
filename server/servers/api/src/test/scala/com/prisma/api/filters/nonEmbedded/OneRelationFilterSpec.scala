@@ -119,4 +119,42 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
       )
       .toString should be("""{"data":{"posts":[{"title":"post 1"}]}}""")
   }
+
+  "Join Relation Filter on one to one relation" should "work on one level" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  author: AUser
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  int: Int
+        |  post: Post @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(s""" mutation {createPost(data: {title:"Title1"}) {title}} """, project)
+    server.query(s""" mutation {createPost(data: {title:"Title2"}) {title}} """, project)
+    server.query(s""" mutation {createAUser(data: {name:"Author1", int: 5}) {name}} """, project)
+    server.query(s""" mutation {createAUser(data: {name:"Author2", int: 4}) {name}} """, project)
+
+    server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{post:{connect:{title: "Title1"}}}) {name}} """, project)
+    server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{post:{connect:{title: "Title2"}}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, post{title}}}""", project).toString should be(
+      """{"data":{"aUsers":[{"name":"Author1","post":{"title":"Title1"}},{"name":"Author2","post":{"title":"Title2"}}]}}""")
+
+    server.query("""query{posts {title, author {name}}}""", project).toString should be(
+      """{"data":{"posts":[{"title":"Title1","author":{"name":"Author1"}},{"title":"Title2","author":{"name":"Author2"}}]}}""")
+
+    val res = server.query("""query{aUsers(where:{ post:{title_ends_with: "1"}, name_starts_with: "Author", int: 5}){name, post{title}}}""", project)
+    res.toString should be("""{"data":{"aUsers":[{"name":"Author1","post":{"title":"Title1"}}]}}""")
+  }
 }

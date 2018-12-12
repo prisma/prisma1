@@ -175,6 +175,62 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     todoAndRelayCountShouldBe(3)
   }
 
+  "DeleteMany" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type ZChild{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    test: String
+        |    parent: Parent
+        |}
+        |
+        |type Parent{
+        |    id: ID! @unique
+        |    name: String @unique
+        |    children: [ZChild]
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation {
+         |   createParent(data: {
+         |   name: "Dad",
+         |   children: {create:[{ name: "Daughter"},{ name: "Daughter2"}, { name: "Son"},{ name: "Son2"}]}
+         |}){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+
+    create.toString should be(
+      """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter"},{"name":"Daughter2"},{"name":"Son"},{"name":"Son2"}]}}}""")
+
+    server.query(
+      s"""mutation {
+         |   updateParent(
+         |   where: { name: "Dad" }
+         |   data: {  children: {deleteMany:[
+         |      {
+         |          name_contains:"Daughter"
+         |      },
+         |      {
+         |          name_contains:"Son"
+         |      }
+         |   ]
+         |  }}
+         |){
+         |  name,
+         |  children{ name}
+         |}}""",
+      project
+    )
+  }
+
   def todoCount: Int = {
     val result = server.query(
       "{ todoes { id } }",

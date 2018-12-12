@@ -8,8 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRun = true // we don't run this suite as it takes ages. We rather run it manually.
-
+  override def doNotRun               = true // we don't run this suite as it takes ages. We rather run it manually.
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   //Postgres has a limit of 32678 parameters to a query
