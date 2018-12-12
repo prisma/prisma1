@@ -37,11 +37,10 @@ case class RequestThrottler()(implicit system: ActorSystem) {
     }
   }
 
-  def throttleCallIfNeeded(project: Project)(fn: => Future[Response]): Future[Response] = throttleCallIfNeeded(project.id)(fn)
-
-  def throttleCallIfNeeded(projectId: String)(fn: => Future[Response]): Future[Response] = {
+  def throttleCallIfNeeded(projectId: String, isManagementApiRequest: Boolean)(fn: => Future[Response]): Future[Response] = {
+    val mustBeThrottled = !isManagementApiRequest && !unthrottledProjectIds.contains(projectId)
     throttler match {
-      case Some(throttler) if !unthrottledProjectIds.contains(projectId) =>
+      case Some(throttler) if mustBeThrottled =>
         throttledCall(projectId, throttler, fn)
 
       case _ =>

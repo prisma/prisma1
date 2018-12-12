@@ -77,7 +77,7 @@ case class SangriaHandlerImpl(
         }
 
       case _ =>
-        requestThrottler.throttleCallIfNeeded(projectIdAsString) {
+        requestThrottler.throttleCallIfNeeded(projectIdAsString, isManagementApiRequest = isManagementApiRequest(rawRequest)) {
           super.handleRawRequest(rawRequest)
         }
     }
@@ -88,12 +88,14 @@ case class SangriaHandlerImpl(
   }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
-    if (request.path == Vector("management") && managementApiEnabled) {
+    if (isManagementApiRequest(request) && managementApiEnabled) {
       handleQueryForManagementApi(request, query)
     } else {
       handleQueryForServiceApi(request, query)
     }
   }
+
+  def isManagementApiRequest(request: RawRequest): Boolean = request.path == Vector("management")
 
   private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: Project => Future[T]): Future[T] = {
     for {
