@@ -77,19 +77,9 @@ case class SangriaHandlerImpl(
         }
 
       case _ =>
-        requestThrottler
-          .throttleCallIfNeeded(projectIdAsString) {
-            super.handleRawRequest(rawRequest)
-          }
-          .map { throttlerResult =>
-            throttlerResult.throttledBy match {
-              case Some(throttledBy) =>
-                val headers = throttlerResult.response.headers ++ Map("Throttled-By" -> (throttledBy.toString + "ms"))
-                Response(throttlerResult.response.json, headers)
-              case None =>
-                Response(throttlerResult.response.json, throttlerResult.response.headers)
-            }
-          }
+        requestThrottler.throttleCallIfNeeded(projectIdAsString) {
+          super.handleRawRequest(rawRequest)
+        }
     }
 
     result.recover {

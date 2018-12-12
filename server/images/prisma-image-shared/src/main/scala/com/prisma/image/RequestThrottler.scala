@@ -10,11 +10,6 @@ import com.prisma.util.env.EnvUtils
 
 import scala.concurrent.Future
 
-case class RequestThrottlerResult(
-    response: Response,
-    throttledBy: Option[Long]
-)
-
 case class RequestThrottler()(implicit system: ActorSystem) {
   import com.prisma.utils.future.FutureUtils._
   import system.dispatcher
@@ -42,26 +37,27 @@ case class RequestThrottler()(implicit system: ActorSystem) {
     }
   }
 
-  def throttleCallIfNeeded(project: Project)(fn: => Future[Response]): Future[RequestThrottlerResult] = throttleCallIfNeeded(project.id)(fn)
+  def throttleCallIfNeeded(project: Project)(fn: => Future[Response]): Future[Response] = throttleCallIfNeeded(project.id)(fn)
 
-  def throttleCallIfNeeded(projectId: String)(fn: => Future[Response]): Future[RequestThrottlerResult] = {
+  def throttleCallIfNeeded(projectId: String)(fn: => Future[Response]): Future[Response] = {
     throttler match {
       case Some(throttler) if !unthrottledProjectIds.contains(projectId) =>
-        throttledCall(projectId, throttler, fn).map(r => RequestThrottlerResult(r.result, Some(r.throttledBy)))
+        throttledCall(projectId, throttler, fn)
 
       case _ =>
-        fn.map(json => RequestThrottlerResult(json, throttledBy = None))
+        fn
     }
   }
 
-  private def throttledCall(projectId: String, throttler: Throttler[String], fn: => Future[Response]): Future[Throttler.ThrottleResult[Response]] = {
+  private def throttledCall(projectId: String, throttler: Throttler[String], fn: => Future[Response]): Future[Response] = {
     val result = throttler.throttled(projectId) { () =>
       fn
     }
     result.toFutureTry.map {
       case scala.util.Success(result) =>
-        result
-
+        result.result.copy(
+          headers = result.result.headers ++ Map("Throttled-By" -> (result.throttledBy.toString + "ms"))
+        )
       case scala.util.Failure(_: ThrottleBufferFullException) =>
         throw ThrottlerBufferFull()
 
