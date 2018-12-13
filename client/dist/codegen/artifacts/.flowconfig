@@ -1,5 +1,0 @@
- [ignore]
- [libs]
- [lints]
- [include] /Users/harshit/code/prisma/client/dist/codegen/artifacts 
- [strict]
