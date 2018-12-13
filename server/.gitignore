@@ -38,3 +38,4 @@ buildkite-script-*
 
 **/libjdbc_native*
 **/libjwt_native*
+.buildkite/scripts/docker-native/prisma-native
