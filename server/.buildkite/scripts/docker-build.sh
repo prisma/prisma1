@@ -23,14 +23,19 @@ for service in prisma prisma-prod;
 do
   echo "Tagging prismagraphql/$service:latest image with $DOCKER_TAG..."
   docker tag prismagraphql/${service}:latest prismagraphql/${service}:${DOCKER_TAG}
+  docker tag prismagraphql/${service}:graalvm prismagraphql/${service}:graalvm-${DOCKER_TAG}
 
   echo "Pushing prismagraphql/$service:$DOCKER_TAG..."
   docker push prismagraphql/${service}:${DOCKER_TAG}
+  docker push prismagraphql/${service}:graalvm-${DOCKER_TAG}
 
   if [ ! -z "$ADDITIONALLY_RELEASE" ]; then
     echo "Additionally tagging and pushing prismagraphql/$service:latest image with $ADDITIONALLY_RELEASE..."
     docker tag prismagraphql/${service}:latest prismagraphql/${service}:${ADDITIONALLY_RELEASE}
     docker push prismagraphql/${service}:${ADDITIONALLY_RELEASE}
+
+    docker tag prismagraphql/${service}:graalvm prismagraphql/${service}:graalvm-${ADDITIONALLY_RELEASE}
+    docker push prismagraphql/${service}:graalvm-${ADDITIONALLY_RELEASE}
   fi
 done
 

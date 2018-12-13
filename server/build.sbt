@@ -9,7 +9,7 @@ name := "server"
 lazy val commonSettings = Seq(
   organization := "com.prisma",
   organizationName := "Prisma",
-  scalaVersion := "2.12.3",
+  scalaVersion := "2.12.7",
   parallelExecution in Test := false,
   publishArtifact in (Test, packageDoc) := false,
   publishArtifact in (Compile, packageDoc) := false,
@@ -29,11 +29,11 @@ lazy val commonSettings = Seq(
 lazy val commonServerSettings = commonSettings ++ Seq(libraryDependencies ++= commonServerDependencies)
 lazy val prerunHookFile = new java.io.File(sys.props("user.dir") + "/prerun_hook.sh")
 
-def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
+def commonDockerImageSettings(imageName: String, baseImage: String, tag: String) = commonServerSettings ++ Seq(
   imageNames in docker := Seq(
-    ImageName(s"prismagraphql/$imageName:latest")
+    ImageName(s"prismagraphql/$imageName:$tag")
   ),
-  sources in (Compile,doc) := Seq.empty,
+  sources in (Compile, doc) := Seq.empty,
   dockerfile in docker := {
     val appDir    = stage.value
     val targetDir = "/app"
@@ -49,7 +49,7 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
     }
 
     new Dockerfile {
-      from("prismagraphql/runtime-base")
+      from(baseImage)
       copy(appDir, targetDir)
       libraries.foreach(f => copy(f._1, systemLibs))
       copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
@@ -68,7 +68,7 @@ def commonDockerImageSettings(imageName: String) = commonServerSettings ++ Seq(
 
 javaOptions in Universal ++= Seq("-Dorg.jooq.no-logo=true")
 
-def imageProject(name: String, imageName: String): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName): _*).dependsOn(prismaImageShared)
+def imageProject(name: String, imageName: String, baseImage: String = "anapsix/alpine-java", tag: String = "latest"): Project = imageProject(name).enablePlugins(sbtdocker.DockerPlugin, JavaAppPackaging).settings(commonDockerImageSettings(imageName, baseImage, tag): _*).dependsOn(prismaImageShared)
 def imageProject(name: String): Project = Project(id = name, base = file(s"./images/$name"))
 def serverProject(name: String): Project = Project(id = name, base = file(s"./servers/$name")).settings(commonServerSettings: _*).dependsOn(scalaUtils).dependsOn(tracing).dependsOn(logging)
 def connectorProject(name: String): Project =  Project(id = name, base = file(s"./connectors/$name")).settings(commonSettings: _*).dependsOn(scalaUtils).dependsOn(prismaConfig).dependsOn(tracing)
@@ -88,6 +88,10 @@ lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
+lazy val prismaLocalGraalVM = imageProject("prisma-local-graalvm", imageName = "prisma", baseImage = "prismagraphql/runtime-base", tag = "graalvm")
+  .dependsOn(prismaLocal)
+
+
 lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .settings(
     libraryDependencies ++= slick ++ Seq(postgresClient, mariaDbClient)
@@ -95,6 +99,9 @@ lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(graphQlClient)
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
+
+lazy val prismaProdGraalVM = imageProject("prisma-prod-graalvm", imageName = "prisma-prod", baseImage = "prismagraphql/runtime-base", tag = "graalvm")
+  .dependsOn(prismaProd)
 
 lazy val prismaNative = imageProject("prisma-native", "prisma-native")
   .settings(
@@ -430,7 +437,9 @@ lazy val sangriaServer = libProject("sangria-server")
 val allDockerImageProjects = List(
   prismaNative,
   prismaLocal,
-  prismaProd
+  prismaLocalGraalVM,
+  prismaProd,
+  prismaProdGraalVM
 )
 
 val allServerProjects = List(

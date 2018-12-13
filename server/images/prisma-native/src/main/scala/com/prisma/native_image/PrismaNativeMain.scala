@@ -5,8 +5,6 @@ import java.sql.DriverManager
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.oracle.svm.core.thread.VMThreads.StatusSupport
-import com.oracle.svm.core.thread.{JavaThreads, VMThreads}
 import com.prisma.image.{SangriaHandlerImpl, Version}
 import com.prisma.sangria_server.BlazeSangriaServer
 
