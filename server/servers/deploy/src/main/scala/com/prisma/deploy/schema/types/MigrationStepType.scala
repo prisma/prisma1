@@ -177,11 +177,17 @@ object MigrationStepType {
   )
 
   def fieldsHelper[T <: MigrationStep](fields: schema.Field[SystemUserContext, MigrationStepAndSchema[T]]*)(implicit ct: ClassTag[T]) = {
-    ObjectType(
-      ct.runtimeClass.getSimpleName,
-      "",
-      interfaces[SystemUserContext, MigrationStepAndSchema[T]](Type),
-      fields.toList
+    def instanceCheck(value: Any, clazz: Class[_], tpe: ObjectType[SystemUserContext, MigrationStepAndSchema[T]]): Boolean = {
+      val castedValue = value.asInstanceOf[MigrationStepAndSchema[MigrationStep]]
+      ct.runtimeClass.isAssignableFrom(castedValue.step.getClass)
+    }
+    new ObjectType(
+      name = ct.runtimeClass.getSimpleName,
+      description = None,
+      fieldsFn = () => fields.toList,
+      interfaces = interfaces[SystemUserContext, MigrationStepAndSchema[T]](Type).map(_.interfaceType),
+      instanceCheck = instanceCheck,
+      astDirectives = Vector.empty
     )
   }
 }
