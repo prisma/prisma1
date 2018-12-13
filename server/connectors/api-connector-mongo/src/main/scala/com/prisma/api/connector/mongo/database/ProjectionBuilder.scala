@@ -7,7 +7,8 @@ import org.mongodb.scala.model.Aggregates.project
 import org.mongodb.scala.model.Projections._
 
 trait ProjectionBuilder {
-  def projectSelected(selectedFields: SelectedFields): conversions.Bson = include(selectedFields.fields.map(_.dbName).toList: _*)
-  def idProjection: conversions.Bson                                    = include(ReservedFields.mongoInternalIdfieldName)
-  def idProjectionStage                                                 = project(idProjection)
+  def projectSelected(selectedFields: SelectedFields): conversions.Bson =
+    include(selectedFields.relationFields.map(_.dbName).toList ++ selectedFields.scalarFields.filterNot(_.isId).map(_.dbName) :+ "_id": _*)
+  def idProjection: conversions.Bson = include(ReservedFields.mongoInternalIdfieldName)
+  def idProjectionStage              = project(idProjection)
 }

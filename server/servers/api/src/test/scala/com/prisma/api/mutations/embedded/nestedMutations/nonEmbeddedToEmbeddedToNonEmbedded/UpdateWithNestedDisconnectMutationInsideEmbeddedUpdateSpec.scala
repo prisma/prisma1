@@ -77,14 +77,12 @@ class UpdateWithNestedDisconnectMutationInsideEmbeddedUpdateSpec extends FlatSpe
   "a FriendOpt relation" should "be possible" in {
 
     val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
-
     database.setup(project)
 
     val create = server
       .query(
         """mutation {
           |  createParent(
-          |  
           |  data: {
           |    p: "p1"
           |    children: {create:{
@@ -98,7 +96,6 @@ class UpdateWithNestedDisconnectMutationInsideEmbeddedUpdateSpec extends FlatSpe
           |       friendOpt{
           |         f
           |       }
-          |
           |    }
           |  }
           |}""",
@@ -136,7 +133,6 @@ class UpdateWithNestedDisconnectMutationInsideEmbeddedUpdateSpec extends FlatSpe
     update.toString should include("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendOpt":null}]}}}""")
 
     server.query("query{friends{f}}", project).toString should be("""{"data":{"friends":[{"f":"f1"}]}}""")
-
   }
 
   "a FriendsOpt relation" should "be possible" in {

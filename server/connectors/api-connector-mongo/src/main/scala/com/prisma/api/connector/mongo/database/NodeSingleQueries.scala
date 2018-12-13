@@ -29,7 +29,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
   def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database => //Fixme use projection here
-    database.getCollection(where.model.dbName).find(where).collect().toFuture.map { results: Seq[Document] =>
+    database.getCollection(where.model.dbName).find(where).projection(projectSelected(selectedFields)).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
         PrismaNode(root.idFieldByName(where.model.idField_!.name), root, Some(where.model.name))

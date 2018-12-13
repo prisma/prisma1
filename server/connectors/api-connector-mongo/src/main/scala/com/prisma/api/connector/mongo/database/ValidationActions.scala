@@ -37,8 +37,10 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     for {
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
+                         val selectedFields = SelectedFields((List(parent.where.model.idField_!, relationField) ++ parent.path.relationFieldToSelect).toSet)
+
                          for {
-                           optionRes <- getNodeByWhere(parent.where, selectedFields = SelectedFields(Set(parent.where.model.idField_!, relationField)))
+                           optionRes <- getNodeByWhere(parent.where, selectedFields)
                            filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
@@ -77,6 +79,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
       filter <- otherField.relationIsInlinedInParent match {
                  case false =>
                    val filter = ScalarFilter(relatedModel.idField_!, In(parentIds))
+
                    for {
                      result <- getNodes(relatedModel, QueryArguments.withFilter(filter), SelectedFields(Set(relatedModel.idField_!, relatedField)))
                      ids = result.nodes.flatMap { node =>
@@ -109,22 +112,22 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
 
     relationField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where).map(
-          optionRes => // Fixme can also be more limited
-            optionRes.foreach { res =>
-              val optionNode = PrismaNode.getNodeAtPath(Some(res), parent.path.segments)
+        val selectedFields = SelectedFields((List(parent.where.model.idField_!, relationField) ++ parent.path.relationFieldToSelect).toSet)
+        getNodeByWhere(parent.where, selectedFields).map(optionRes =>
+          optionRes.foreach { res =>
+            val optionNode = PrismaNode.getNodeAtPath(Some(res), parent.path.segments)
 
-              optionNode match {
-                case None => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
-                case Some(node) =>
-                  (relationField.isList, node.data.map.get(relationField.name)) match {
-                    case (true, Some(ListGCValue(values))) if values.contains(childId) => Future.successful(())
-                    case (false, Some(x)) if x == childId                              => Future.successful(())
-                    case (_, _)                                                        => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
-                  }
-              }
+            optionNode match {
+              case None => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
+              case Some(node) =>
+                (relationField.isList, node.data.map.get(relationField.name)) match {
+                  case (true, Some(ListGCValue(values))) if values.contains(childId) => Future.successful(())
+                  case (false, Some(x)) if x == childId                              => Future.successful(())
+                  case (_, _)                                                        => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
+                }
+            }
 
-          })
+        })
 
       case false =>
         val filter      = generateFilterForFieldAndId(relationField.relatedField, parent.idValue)

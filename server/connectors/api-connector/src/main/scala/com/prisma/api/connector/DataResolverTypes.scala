@@ -58,6 +58,7 @@ object SelectedFields {
   def all(model: Model) = SelectedFields(model.fields.toSet)
 }
 case class SelectedFields(fields: Set[Field]) {
+  val scalarFields        = fields.collect { case f: ScalarField              => f }
   val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
   val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
   val relationFields      = fields.collect { case f: RelationField            => f }
