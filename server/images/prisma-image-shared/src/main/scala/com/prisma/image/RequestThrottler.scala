@@ -4,16 +4,17 @@ import akka.actor.ActorSystem
 import com.prisma.akkautil.throttler.Throttler
 import com.prisma.akkautil.throttler.Throttler.ThrottleBufferFullException
 import com.prisma.api.schema.CommonErrors.ThrottlerBufferFull
+import com.prisma.sangria_server.Response
 import com.prisma.shared.models.Project
 import com.prisma.util.env.EnvUtils
-import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
 
 case class RequestThrottler()(implicit system: ActorSystem) {
   import com.prisma.utils.future.FutureUtils._
-  import scala.concurrent.duration._
   import system.dispatcher
+
+  import scala.concurrent.duration._
 
   lazy val unthrottledProjectIds = sys.env.get("UNTHROTTLED_PROJECT_IDS") match {
     case Some(envValue) => envValue.split('|').filter(_.nonEmpty).toVector
@@ -36,25 +37,26 @@ case class RequestThrottler()(implicit system: ActorSystem) {
     }
   }
 
-  def throttleCallIfNeeded(project: Project)(fn: => Future[JsValue]) = {
+  def throttleCallIfNeeded(projectId: String, isManagementApiRequest: Boolean)(fn: => Future[Response]): Future[Response] = {
+    val mustBeThrottled = !isManagementApiRequest && !unthrottledProjectIds.contains(projectId)
     throttler match {
-      case Some(throttler) if !unthrottledProjectIds.contains(project.id) => throttledCall(project, throttler, fn)
-      case _                                                              => fn
+      case Some(throttler) if mustBeThrottled =>
+        throttledCall(projectId, throttler, fn)
+
+      case _ =>
+        fn
     }
   }
 
-  private def throttledCall(project: Project, throttler: Throttler[String], fn: => Future[JsValue]) = {
-    val result = throttler.throttled(project.id) { () =>
+  private def throttledCall(projectId: String, throttler: Throttler[String], fn: => Future[Response]): Future[Response] = {
+    val result = throttler.throttled(projectId) { () =>
       fn
     }
     result.toFutureTry.map {
       case scala.util.Success(result) =>
-        // TODO: do we really need this?
-        //        respondWithHeader(RawHeader("Throttled-By", result.throttledBy.toString + "ms")) {
-        //          complete(result.result)
-        //        }
-        result.result
-
+        result.result.copy(
+          headers = result.result.headers ++ Map("Throttled-By" -> (result.throttledBy.toString + "ms"))
+        )
       case scala.util.Failure(_: ThrottleBufferFullException) =>
         throw ThrottlerBufferFull()
 

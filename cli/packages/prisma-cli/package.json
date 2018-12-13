@@ -43,7 +43,7 @@
     "tslint": "^5.6.0",
     "tslint-config-prettier": "^1.17.0",
     "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.1.6"
+    "typescript": "^3.2.2"
   },
   "scripts": {
     "build": "rimraf dist && tsc -d && chmod +x dist/index.js",
