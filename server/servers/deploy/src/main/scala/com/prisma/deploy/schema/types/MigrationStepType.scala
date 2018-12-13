@@ -85,7 +85,7 @@ object MigrationStepType {
   lazy val CreateFieldType = fieldsHelper[CreateField](
     Field("model", StringType, resolve = _.value.step.model),
     Field("name", StringType, resolve = _.value.step.name),
-    Field("typeName", StringType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).typeIdentifier.code),
+    Field("typeName", StringType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).userFriendlyTypeName),
     Field("isRequired", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isRequired),
     Field("isList", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isList),
     Field("unique", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isUnique),
@@ -123,7 +123,7 @@ object MigrationStepType {
     Field(
       "typeName",
       OptionType(StringType),
-      resolve = ctx => diffField(ctx.value, _.typeIdentifier.code)
+      resolve = ctx => diffField(ctx.value, _.userFriendlyTypeName)
     ),
     Field(
       "isRequired",
@@ -177,11 +177,17 @@ object MigrationStepType {
   )
 
   def fieldsHelper[T <: MigrationStep](fields: schema.Field[SystemUserContext, MigrationStepAndSchema[T]]*)(implicit ct: ClassTag[T]) = {
-    ObjectType(
-      ct.runtimeClass.getSimpleName,
-      "",
-      interfaces[SystemUserContext, MigrationStepAndSchema[T]](Type),
-      fields.toList
+    def instanceCheck(value: Any, clazz: Class[_], tpe: ObjectType[SystemUserContext, MigrationStepAndSchema[T]]): Boolean = {
+      val castedValue = value.asInstanceOf[MigrationStepAndSchema[MigrationStep]]
+      ct.runtimeClass.isAssignableFrom(castedValue.step.getClass)
+    }
+    new ObjectType(
+      name = ct.runtimeClass.getSimpleName,
+      description = None,
+      fieldsFn = () => fields.toList,
+      interfaces = interfaces[SystemUserContext, MigrationStepAndSchema[T]](Type).map(_.interfaceType),
+      instanceCheck = instanceCheck,
+      astDirectives = Vector.empty
     )
   }
 }
