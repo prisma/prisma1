@@ -13,7 +13,7 @@ import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.Future
-trait AggregationQueryBuilder extends FilterConditionBuilder {
+trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuilder {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
   import org.mongodb.scala.model.Aggregates._
@@ -48,7 +48,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder {
     val limitStage   = skipAndLimit.limit.map(limit)
 
     //-------------------------------- Project Result ---------------------------------------------------
-    val projectStage = Seq(project(Document("_id" -> 1)))
+    val projectStage = Seq(idProjectionStage)
 
     //--------------------------- Setup Query -----------------------------------------------------------
     val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
