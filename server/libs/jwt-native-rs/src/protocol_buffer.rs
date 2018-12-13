@@ -6,7 +6,6 @@ use ProtocolError;
 
 #[repr(C)]
 #[no_mangle]
-/// Always instantiate boxed to avoid a copy from stack to heap: Box::new(ProtocolBuffer { ... })
 pub struct ProtocolBuffer {
     error: *mut c_char, // Always use a CString here (ffi_utils::string_to_ptr).
     data: *mut u8,      // Always use raw pointers to Box<[u8]> here
@@ -21,15 +20,11 @@ impl ProtocolBuffer {
 
 impl Drop for ProtocolBuffer {
     fn drop(&mut self) {
-        println!("[Rust] Dropping ProtocolBuffer");
-
         if !self.error.is_null() {
-            println!("[Rust] Dropping contained error");
             drop(ffi_utils::to_string(self.error));
         }
 
         if self.data_len > 0 {
-            println!("[Rust] Dropping contained data");
             unsafe {
                 drop(Box::from_raw(self.data));
             };

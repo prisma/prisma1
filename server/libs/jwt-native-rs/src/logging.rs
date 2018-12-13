@@ -12,7 +12,7 @@ impl Log for SimpleLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            println!("[{}][Native] {}", record.level(), record.args());
+            println!("[{}][Jwt-rs] {}", record.level(), record.args());
         }
     }
 

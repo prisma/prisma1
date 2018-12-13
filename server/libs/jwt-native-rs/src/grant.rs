@@ -3,15 +3,14 @@ use Result;
 use std::os::raw::c_char;
 use ffi_utils::to_str;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Grant {
     pub target: String,
     pub action: String,
 }
 
 impl Grant {
-    /// Checks if self fulfills the other grant, meaning that the current grant is greater or equal in
-    /// access power.
+    /// Checks if self fulfills the other grant, meaning that the current grant is greater or equal in access power.
     pub fn fulfills(&self, other: &Grant) -> Result<bool> {
         // Format of target is "<service name>/<stage>"
         let (self_service, self_stage) = self.service_and_stage()?;
@@ -42,3 +41,4 @@ impl Grant {
         })
     }
 }
+

@@ -75,7 +75,9 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
     let header = Header::new(use_algorithm);
     let token = encode( &header, &claims, secret_str.as_ref()).unwrap();
 
-    ProtocolBuffer::from(token).into_boxed_ptr()
+    let ptr = ProtocolBuffer::from(token).into_boxed_ptr();
+    trace!("Create - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]
@@ -92,7 +94,6 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const *const c_ch
             },
             Err(e) => {
                 let err = format!("{}", e);
-                debug!("[Native] JWT error: {}", err);
                 if last_error != err {
                     last_error = err;
                 }
@@ -100,30 +101,37 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const *const c_ch
         }
     }
 
-    ProtocolBuffer::from(ProtocolError::GenericError(String::from(last_error))).into_boxed_ptr()
+    let ptr = ProtocolBuffer::from(ProtocolError::GenericError(String::from(last_error))).into_boxed_ptr();
+    trace!("Verify - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]
 pub extern "C" fn destroy_buffer(buffer: *mut ProtocolBuffer) {
+    trace!("Dropping buffer {:?}", buffer);
     unsafe { Box::from_raw(buffer) };
 }
 
 fn validate_claims(claims: Claims, grant: Option<Grant>) -> ProtocolBuffer {
     if is_expired(claims.exp) {
-        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is expired")));
+        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("Token is expired.")));
     }
 
     if is_issued_in_future(claims.iat) {
-        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is issued in the future")));
+        return ProtocolBuffer::from(ProtocolError::GenericError(format!("Token is issued in the future (iat).")));
     }
 
     if is_used_before_validity(claims.nbf) {
-        return ProtocolBuffer::from(ProtocolError::GenericError(String::from("token is not yet valid")));
+        return ProtocolBuffer::from(ProtocolError::GenericError(format!("Token is not yet valid (nbf in the future).")));
     }
 
-    match contains_valid_grant(grant, claims.grants) {
-        Ok(valid) if !valid =>  return ProtocolBuffer::from(ProtocolError::GenericError(String::from("Token grants do not satisfy the request."))),
-        Err(e) => return ProtocolBuffer::from(e),
+    match contains_valid_grant(&grant, &claims.grants) {
+        Ok(valid) if !valid => {
+            return ProtocolBuffer::from(ProtocolError::GenericError(format!("Token grants do not satisfy the request. Got: {:?} Required: {:?}", claims.grants, grant)))
+        }
+        Err(e) =>
+            return ProtocolBuffer::from(e),
+
         _ => (),
     }
 
@@ -151,7 +159,7 @@ fn is_issued_in_future(iat_claim: Option<i64>) -> bool{
     }
 }
 
-fn contains_valid_grant(expected: Option<Grant>, contained: Option<Vec<Grant>>) -> Result<bool> {
+fn contains_valid_grant(expected: &Option<Grant>, contained: &Option<Vec<Grant>>) -> Result<bool> {
     match (expected, contained) {
         (None, _) => Ok(true),
         (Some(ref ex), Some(ref grants)) if grants.len() > 0 => {
