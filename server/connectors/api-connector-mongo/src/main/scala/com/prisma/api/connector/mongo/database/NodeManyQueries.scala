@@ -5,9 +5,7 @@ import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
-import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.{Document, FindObservable, MongoDatabase}
 
 import scala.collection.JavaConverters._
@@ -15,19 +13,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder {
+trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder {
 
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    val nodes = manyQueryHelper(model, queryArguments, None, database).map { results: Seq[Document] =>
-      results.map { result =>
+    manyQueryHelper(model, queryArguments, None, database, false, selectedFields).map { results: Seq[Document] =>
+      val nodes = results.map { result =>
         val root = DocumentToRoot(model, result)
         PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
       }
-    }
 
-    nodes.map { n =>
-      ResolverResult[PrismaNode](queryArguments, n.toVector)
+      ResolverResult[PrismaNode](queryArguments, nodes.toVector)
     }
   }
 
@@ -38,7 +34,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       database
         .getCollection(model.dbName)
         .find(buildConditionForFilter(filter))
-        .projection(include("_id"))
+        .projection(idProjection)
         .collect()
         .toFuture
         .map(res => res.map(DocumentToId.toCUIDGCValue))
@@ -49,7 +45,8 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
                       queryArguments: QueryArguments,
                       extraFilter: Option[Filter] = None,
                       database: MongoDatabase,
-                      idOnly: Boolean = false): Future[Seq[Document]] = {
+                      idOnly: Boolean = false,
+                      selectedFields: SelectedFields): Future[Seq[Document]] = {
 
     val updatedQueryArgs = extraFilter match {
       case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
@@ -78,7 +75,8 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       }
 
       idOnly match {
-        case true  => queryWithLimit.projection(include("_id")).collect().toFuture
+        case true => queryWithLimit.projection(idProjection).collect().toFuture
+//        case false => queryWithLimit.projection(project(selectedFields)).collect().toFuture
         case false => queryWithLimit.collect().toFuture
       }
     }
@@ -90,7 +88,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       val model        = fromField.relatedModel_!
 
       val inFilter: Filter = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
-      manyQueryHelper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
+      manyQueryHelper(model, queryArguments, Some(inFilter), database, false, selectedFields).map { results: Seq[Document] =>
         val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
           case true =>
             val tuples = for {

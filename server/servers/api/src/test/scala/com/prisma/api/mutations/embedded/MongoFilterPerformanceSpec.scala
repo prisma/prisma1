@@ -7,7 +7,6 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.mutable.ListBuffer
 
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
-
   override def doNotRun: Boolean = true
 
   val project = SchemaDsl.fromString() {
