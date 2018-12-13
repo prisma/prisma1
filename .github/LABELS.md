@@ -4,7 +4,7 @@ This document describes the default labels, which are present on all public repo
 We go into detail about the meaning and processess around these issues.
 
 ## prisma-label-sync
-As we have 20+ labels which are being used in all public repositories of the `prisma` organization, we built a tool called `label-sync` to control these labels. The `label-sync` configuration for the Prisma organization is hosted [here](https://github.com/prisma/prisma-label-sync/blob/master/README.md)
+As we have 20+ labels which are being used in all public repositories of the `prisma` organization, we built a tool called `label-sync` to control these labels. The `label-sync` configuration for the Prisma organization is hosted [here](https://github.com/prisma/prisma-label-sync)
 
 ## Overview over current labels
 [Here](https://github.com/prisma/prisma/labels) you can get an overview over the
