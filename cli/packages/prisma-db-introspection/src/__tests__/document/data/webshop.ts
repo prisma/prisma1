@@ -131,7 +131,7 @@ type ItemReviews @embedded {
 type Order {
   # Type Int is currently not supported for id fields.
   _id: Int! @id
-  amount: Int
+  amount: Float
   customer: User
   items: [String!]!
   orderDate: String
@@ -147,7 +147,10 @@ type User {
 }
 
 type UserPaymentInfo @embedded {
+  accountId: String
+  BIC: String
   expires: String
+  IBAN: String
   number: String
   type: String
 }
