@@ -85,7 +85,7 @@ object MigrationStepType {
   lazy val CreateFieldType = fieldsHelper[CreateField](
     Field("model", StringType, resolve = _.value.step.model),
     Field("name", StringType, resolve = _.value.step.name),
-    Field("typeName", StringType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).typeIdentifier.code),
+    Field("typeName", StringType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).userFriendlyTypeName),
     Field("isRequired", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isRequired),
     Field("isList", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isList),
     Field("unique", BooleanType, resolve = ctx => ctx.value.schema.getFieldByName_!(ctx.value.step.model, ctx.value.step.name).isUnique),
@@ -123,7 +123,7 @@ object MigrationStepType {
     Field(
       "typeName",
       OptionType(StringType),
-      resolve = ctx => diffField(ctx.value, _.typeIdentifier.code)
+      resolve = ctx => diffField(ctx.value, _.userFriendlyTypeName)
     ),
     Field(
       "isRequired",
