@@ -54,8 +54,10 @@ object QueryArguments {
 }
 
 object SelectedFields {
-  val empty             = SelectedFields(Set.empty)
-  def all(model: Model) = SelectedFields(model.fields.toSet)
+  val empty                                            = SelectedFields(Set.empty)
+  def all(model: Model)                                = SelectedFields(model.fields.toSet)
+  def byFieldAndPath(field: Field, path: Path)         = SelectedFields((List(field) ++ path.relationFieldToSelect).toSet)
+  def byFieldsAndPath(fields: List[Field], path: Path) = SelectedFields((fields ++ path.relationFieldToSelect).toSet)
 }
 case class SelectedFields(fields: Set[Field]) {
   val scalarFields        = fields.collect { case f: ScalarField              => f }
