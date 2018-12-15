@@ -348,6 +348,37 @@ else
   npm publish --tag $CIRCLE_BRANCH
 fi
 
-cd ../../scripts/
+############################################
+# Run integration tests on prisma-examples #
+############################################
 
-./test-examples.sh $newVersion || echo ""
+languages=(typescript, flow)
+
+# Clone
+
+git clone git@github.com:prisma/prisma-examples.git
+cd prisma-examples
+
+if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
+  # Setup branch
+  git checkout "client-$CIRCLE_BRANCH"
+
+  # Bump prisma-client-lib version
+  for language in languages; do
+    cd $language
+
+    for example in */; do
+      cd $example
+
+      yarn add prisma-client-lib@$CIRCLE_BRANCH 
+
+      cd ..
+    done 
+
+    cd ..
+  done
+
+  # Push changes
+  git commit -a -m "bump prisma-client-lib versions"
+  git push origin "client-$CIRCLE_BRANCH"
+fi
