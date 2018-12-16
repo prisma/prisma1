@@ -15,6 +15,7 @@ case class Path(segments: List[PathSegment]) {
   def operatorName(field: RelationField, where: NodeSelector): String         = sanitize(s"${field.name}X${where.fieldName}X${where.hashCode().toString}")
   def operatorName(field: RelationField, whereFilter: Option[Filter]): String = sanitize(s"${field.name}X${whereFilter.hashCode().toString}")
   def dropLast: Path                                                          = this.copy(segments = this.segments.dropRight(1))
+  def dropFirst: Path                                                         = this.copy(segments = this.segments.drop(1))
   def relationFieldToSelect: Option[RelationField]                            = segments.headOption.map(_.rf)
   def combinedNames                                                           = this.segments.map(_.rf.name).mkString(".")
   private def sanitize(input: String): String = {
