@@ -52,7 +52,7 @@ type User {
 
 type UserOrders @embedded {
   count: Int
-  item: Item
+  item: Item @relation(link: INLINE)
 }`
 
 export function assertUserItemModel(allTypes: IGQLType[]) {
