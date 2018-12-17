@@ -352,7 +352,7 @@ fi
 # Run integration tests on prisma-examples #
 ############################################
 
-languages=(typescript, flow)
+languages=( typescript flow )
 
 # Clone
 
@@ -364,7 +364,7 @@ if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
   git checkout "client-$CIRCLE_BRANCH"
 
   # Bump prisma-client-lib version
-  for language in languages; do
+  for language in "${languages[@]}"; do
     cd $language
 
     for example in */; do
