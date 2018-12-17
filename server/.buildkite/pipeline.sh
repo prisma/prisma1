@@ -50,9 +50,11 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
       command: cd server && ./.buildkite/scripts/native-image.sh
       agents:
         queue: native-linux
-      artifact_paths:
-        - server/images/prisma-native/target/prisma-native-image/prisma-native
 
+    - label: \":lambda: Lambda native image\"
+      command: cd server && ./.buildkite/scripts/build-lambda.sh
+      agents:
+        queue: native-linux
 ")
 
 dynamic=""

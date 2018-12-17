@@ -26,4 +26,8 @@ then
     ./docker-native/build.sh alpha
 fi
 
+## Todo This is for testing only before the merges. Remove in final cleanup pass.
+./docker-native/build.sh latest
+
+
 ## todo: Upload to github release on tag
