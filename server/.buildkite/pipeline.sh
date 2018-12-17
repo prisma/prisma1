@@ -47,12 +47,12 @@ static=$(printf "    - label: \":mysql: MySql API connector\"
       command: cd server && ./.buildkite/scripts/test.sh shared-models mysql
 
     - label: \":rust: Native image\"
-      command: cd server && ./.buildkite/scripts/native-image.sh
+      command: ./.buildkite/scripts/native-image.sh
       agents:
         queue: native-linux
 
     - label: \":lambda: Lambda native image\"
-      command: cd server && ./.buildkite/scripts/build-lambda.sh
+      command: ./.buildkite/scripts/build-lambda.sh
       agents:
         queue: native-linux
 ")
