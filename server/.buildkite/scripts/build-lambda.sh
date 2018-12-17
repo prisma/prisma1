@@ -10,6 +10,11 @@ SCRIPT_ROOT=$(dirname "$(pwd)")
 BK_ROOT=$(dirname "$SCRIPT_ROOT")
 SERVER_ROOT=$(dirname "$BK_ROOT")
 
+echo "Current dir: $(pwd)"
+echo "Script: $SCRIPT_ROOT"
+echo "BK: $BK_ROOT"
+echo "Server: $SERVER_ROOT"
+
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
   -w /root/build \
   -v ${SERVER_ROOT}:/root/build \
