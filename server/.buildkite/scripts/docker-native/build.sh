@@ -5,8 +5,7 @@ TAG="${1:?Provide the tag this script is building}"
 
 cd "$(dirname "$0")"
 
-DOCKER_NATIVE_ROOT=$(dirname "$(pwd)")
-SCRIPT_ROOT=$(dirname "$DOCKER_NATIVE_ROOT")
+SCRIPT_ROOT=$(dirname "$(pwd)")
 BK_ROOT=$(dirname "$SCRIPT_ROOT")
 SERVER_ROOT=$(dirname "$BK_ROOT")
 
