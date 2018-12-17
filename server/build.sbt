@@ -126,9 +126,8 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
       s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
       "--verbose",
       "--no-server",
-
+      "--static"
     ),
-    nativeImageOptions ++= sys.env.getOrElse("NATIVE_IMAGE_FLAGS", "").split(",").map(_.trim).toSeq,
     unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar"),
     mappings in (Compile, packageBin) ~= { _.filter { case (_, path) =>
       val exclude = path.contains("mariadb") || path.contains("org.postgresql") || path.contains("micrometer") || path.contains("org.LatencyUtils") || path.contains("io.prometheus")
