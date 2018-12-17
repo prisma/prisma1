@@ -51,7 +51,9 @@ object PrismaGraalPlugin extends AutoPlugin {
           Seq("--class-path", classpath, s"-H:Name=$binaryName") ++ extraOptions ++ Seq(className)
         }
 
-        Seq(GraalVMNativeImageCommand) ++ nativeImageArguments
+        val fullCommand = Seq(GraalVMNativeImageCommand) ++ nativeImageArguments
+        println(s"Invoking: ${fullCommand.mkString(" ")}")
+        fullCommand
       }
 
       sys.process.Process(command, targetDirectory) ! logger match {
