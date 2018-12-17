@@ -6,8 +6,7 @@ export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://$ARTIFACT_BUCKET/$BUILDKITE_J
 # Use current dir as working dir base
 cd "$(dirname "$0")"
 
-SCRIPT_ROOT=$(dirname "$(pwd)")
-BK_ROOT=$(dirname "$SCRIPT_ROOT")
+BK_ROOT=$(dirname "$(pwd)")
 SERVER_ROOT=$(dirname "$BK_ROOT")
 
 docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
@@ -23,17 +22,17 @@ buildkite-agent artifact upload ${SERVER_ROOT}/images/prisma-native/target/prism
 
 if [ "$BUILDKITE_BRANCH" = "master" ]
 then
-    ${SCRIPT_ROOT}/docker-native/build.sh latest
+    ${BK_ROOT}/scripts/docker-native/build.sh latest
 elif [ "$BUILDKITE_BRANCH" = "beta" ]
 then
-    ${SCRIPT_ROOT}/docker-native/build.sh beta
+    ${BK_ROOT}/scripts/docker-native/build.sh beta
 elif [ "$BUILDKITE_BRANCH" = "alpha" ]
 then
-    ${SCRIPT_ROOT}/docker-native/build.sh alpha
+    ${BK_ROOT}/scripts/docker-native/build.sh alpha
 fi
 
 ## Todo This is for testing only before the merges. Remove in final cleanup pass.
-${SCRIPT_ROOT}/docker-native/build.sh latest
+${BK_ROOT}/scripts/docker-native/build.sh latest
 
 
 ## todo: Upload to github release on tag

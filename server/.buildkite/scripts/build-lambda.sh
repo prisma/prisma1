@@ -6,12 +6,10 @@ export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="s3://$ARTIFACT_BUCKET/lambda/$BUIL
 # Use current dir as working dir base
 cd "$(dirname "$0")"
 
-SCRIPT_ROOT=$(dirname "$(pwd)")
-BK_ROOT=$(dirname "$SCRIPT_ROOT")
+BK_ROOT=$(dirname "$(pwd)")
 SERVER_ROOT=$(dirname "$BK_ROOT")
 
 echo "Current dir: $(pwd)"
-echo "Script: $SCRIPT_ROOT"
 echo "BK: $BK_ROOT"
 echo "Server: $SERVER_ROOT"
 
