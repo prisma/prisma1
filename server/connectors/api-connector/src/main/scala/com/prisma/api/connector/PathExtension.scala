@@ -17,10 +17,12 @@ case class Path(segments: List[PathSegment]) {
   def dropLast: Path                                                          = this.copy(segments = this.segments.dropRight(1))
 
   private def sanitize(input: String): String = {
-    //Mongo only allows alphanumeric characters in arrayfilter names
-    input
+    //Mongo only allows alphanumeric characters in arrayfilter names and they have to start with lowercase
+    val alphanumeric = input
       .replace("-", "M") // for the minus in hash value
       .replace("_", "X") // for the _ in _id
+
+    alphanumeric.substring(0, 1).toLowerCase.concat(alphanumeric.substring(1))
   }
 
   private def stringGen(field: String, segments: List[PathSegment]): Vector[String] = segments match {
