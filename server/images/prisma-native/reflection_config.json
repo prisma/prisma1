@@ -263,5 +263,9 @@
   {
     "name" : "com.github.benmanes.caffeine.cache.PSMW",
     "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "akka.io.TcpOutgoingConnection",
+    "allDeclaredConstructors" : true
   }
 ]
