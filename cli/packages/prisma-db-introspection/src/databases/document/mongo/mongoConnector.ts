@@ -1,9 +1,9 @@
-import { IDataIterator, SamplingStrategy, ObjectTypeIdentifier, TypeInfo } from '../documentConnector'
+import { IDataIterator, SamplingStrategy, ObjectTypeIdentifier, TypeInfo, UnsupportedTypeError } from '../documentConnector'
 import { DocumentConnector } from '../documentConnectorBase'
 import { DatabaseType, ISDL } from "prisma-datamodel"
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
 import { MongoClient, Collection, Cursor, AggregationCursor } from 'mongodb'
-import { ObjectID } from 'bson'
+import * as BSON from 'bson'
 import { Data } from '../data'
 import { TypeIdentifiers } from '../../../../../prisma-datamodel/dist/datamodel/scalar';
 
@@ -95,9 +95,26 @@ export class MongoConnector extends DocumentConnector<Collection<Data>>{
   public inferType(value: any): TypeInfo  {
     const suggestion = super.inferType(value)
 
-    if(suggestion.type === ObjectTypeIdentifier && value instanceof ObjectID) {
-      suggestion.type = TypeIdentifiers.id
-      suggestion.isRelationCandidate = true
+    if(suggestion.type === ObjectTypeIdentifier) {
+      // Special BSON types. DateTime is JS DateTime and handled by base class. 
+      if(value instanceof BSON.ObjectID) {
+        suggestion.type = TypeIdentifiers.id
+        suggestion.isRelationCandidate = true
+      } else if (value instanceof BSON.Binary) {
+        throw new UnsupportedTypeError('Type not supported', 'Binary')
+      } else if (value instanceof BSON.BSONRegExp || value instanceof RegExp) {
+        throw new UnsupportedTypeError('Type not supported', 'RegExp')
+      } else if (value instanceof BSON.Code) {
+        throw new UnsupportedTypeError('Type not supported', 'Code')
+      } else if (value instanceof BSON.Int32) {
+        suggestion.type = TypeIdentifiers.integer
+      } else if (value instanceof BSON.Timestamp) {
+        throw new UnsupportedTypeError('Type not supported', 'Timestamp')
+      } else if (value instanceof BSON.Long) {
+        suggestion.type = TypeIdentifiers.long
+      } else if (value instanceof BSON.Decimal128) {
+        throw new UnsupportedTypeError('Type not supported', 'Decimal128')
+      }
     }
 
     return suggestion

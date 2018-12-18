@@ -11,7 +11,7 @@ import {
 
 const env = new MongoTestEnvironment()
 
-describe.skip('Mongo Model Introspector', () => {
+describe('Mongo Model Introspector', () => {
   beforeAll(async () => await env.connect())
   afterAll(async () => await env.disconnect())
   afterEach(async () => await env.clear())

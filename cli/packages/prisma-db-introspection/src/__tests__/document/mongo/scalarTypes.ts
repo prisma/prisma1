@@ -1,6 +1,6 @@
 import { MongoConnector } from '../../../databases/document/mongo/mongoConnector'
 import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
-import { collections, schemaString } from '../data/webshop'
+import { scalars, schemaString } from '../data/mongoTypes'
 
 const env = new MongoTestEnvironment()
 
@@ -9,12 +9,11 @@ describe('Mongo Model Introspector, end to end', () => {
   afterAll(async () => await env.disconnect())
   afterEach(async () => await env.clear())
 
-  it('Webshop', async () => {
-    await env.createCollections(collections)
+  it('Scalar Types', async () => {
+    await env.createCollections({ scalars })
 
     const connector = new MongoConnector(env.getClient())
     const introspection = await connector.introspect(env.schemaName)
-    const sdl = await introspection.getDatamodel()
     const schema = await introspection.renderToDatamodelString()
 
     expect(schema).toEqual(schemaString)
