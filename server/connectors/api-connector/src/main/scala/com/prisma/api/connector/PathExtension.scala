@@ -22,7 +22,7 @@ case class Path(segments: List[PathSegment]) {
       .replace("-", "M") // for the minus in hash value
       .replace("_", "X") // for the _ in _id
 
-    alphanumeric.substring(0, 1).toLowerCase.concat(alphanumeric.substring(1))
+    "x" + alphanumeric
   }
 
   private def stringGen(field: String, segments: List[PathSegment]): Vector[String] = segments match {
