@@ -91,7 +91,7 @@ export abstract class DocumentConnector<InternalCollectionType> implements IDocu
         // Special case: We treat int as a case of float, if needed.
         type.type = TypeIdentifiers.float
       } else if(type.type !== itemType.type) {
-        throw new UnsupportedArrayTypeError('Mixed arrays are not supported.', `Array of ${type} and ${itemType.type}`)
+        throw new UnsupportedArrayTypeError('Mixed arrays are not supported.', `[${type.type} | ${itemType.type}]`)
       }
     }
 
@@ -121,7 +121,14 @@ export abstract class DocumentConnector<InternalCollectionType> implements IDocu
       case "boolean": return { type: TypeIdentifiers.boolean, isArray: false, isRelationCandidate: false }
       // Base case: String types might identify relations.
       case "string": return { type: TypeIdentifiers.string, isArray: false, isRelationCandidate: true }
-      case "object": return { type: ObjectTypeIdentifier, isArray: false, isRelationCandidate: false }
+      case "object": 
+        if(value instanceof Date) {
+          return { type: TypeIdentifiers.dateTime, isArray: false, isRelationCandidate: false }
+        } else if (value === null) {
+          throw new UnsupportedTypeError('Received an unsupported type: ', 'null')
+        } else {
+          return { type: ObjectTypeIdentifier, isArray: false, isRelationCandidate: false }
+        }
       default: break
     }
 
