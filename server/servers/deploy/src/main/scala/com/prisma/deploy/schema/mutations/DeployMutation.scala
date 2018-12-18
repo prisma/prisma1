@@ -139,12 +139,8 @@ case class DeployMutation(
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
-    val migrationNeeded = if (isActive) {
-      steps.nonEmpty || functions.nonEmpty
-    } else {
-      project.schema != nextSchema
-    }
-    val isNotDryRun = !args.dryRun.getOrElse(false)
+    val migrationNeeded = steps.nonEmpty || functions.nonEmpty || project.schema != nextSchema
+    val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
       migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))

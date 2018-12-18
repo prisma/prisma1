@@ -43,7 +43,7 @@ class Model(
   lazy val idField                                       = scalarFields.find(_.isId)
   lazy val createdAtField                                = scalarFields.find(_.isCreatedAt)
   lazy val updatedAtField                                = scalarFields.find(_.isUpdatedAt)
-  lazy val idField_!                                     = idField.get
+  lazy val idField_!                                     = idField.getOrElse(sys.error(s"The model $name has no id field!"))
   lazy val dbNameOfIdField_!                             = idField_!.dbName
   lazy val hasUpdatedAtField                             = scalarFields.exists(_.isUpdatedAt)
   lazy val hasCreatedAtField                             = scalarFields.exists(_.isCreatedAt)

@@ -4,9 +4,10 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
-import com.prisma.gc_values.{GCValue, NullGCValue}
+import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.ScalarField
-import org.mongodb.scala.bson.conversions
+import org.mongodb.scala.bson.collection.mutable.Document
+import org.mongodb.scala.bson.{BsonArray, conversions}
 import org.mongodb.scala.model.Filters._
 
 //relationfilters depend on relationtype
@@ -19,23 +20,23 @@ import org.mongodb.scala.model.Filters._
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter("", filter)
-    case None         => hackForTrue
+    case None         => Document()
   }
 
   def buildConditionForScalarFilter(operator: String, filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter(operator, filter)
-    case None         => hackForTrue
+    case None         => Document()
   }
 
-  private def buildConditionForFilter(path: String, filter: Filter): conversions.Bson = {
-    filter match {
+  private def buildConditionForFilter(path: String, filter: Filter, negate: Boolean = false): conversions.Bson = {
+    val convertedFilter = filter match {
       //-------------------------------RECURSION------------------------------------
-      case NodeSubscriptionFilter => hackForTrue
-      case AndFilter(filters)     => and(nonEmptyConditions(path, filters): _*)
-      case OrFilter(filters)      => or(nonEmptyConditions(path, filters): _*)
-      case NotFilter(filters)     => nor(filters.map(f => buildConditionForFilter(path, f)): _*) //not can only negate equality comparisons not filters
-      case NodeFilter(filters)    => buildConditionForFilter(path, OrFilter(filters))
-      case x: RelationFilter      => relationFilterStatement(path, x)
+      case NodeSubscriptionFilter       => hackForTrue
+      case AndFilter(filters) if negate => or(nonEmptyConditions(path, filters, negate): _*)
+      case AndFilter(filters)           => and(nonEmptyConditions(path, filters, negate): _*)
+      case OrFilter(filters)            => sys.error("These should not be hit ")
+      case NotFilter(filters)           => sys.error("These should not be hit ")
+      case x: RelationFilter            => relationFilterStatement(path, x)
 
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => hackForTrue
@@ -65,23 +66,32 @@ trait FilterConditionBuilder {
       case OneRelationIsNullFilter(field)                               => equal(dotPath(path, field), null)
       case x                                                            => sys.error(s"Not supported: $x")
     }
+
+    (filter, negate) match {
+      case (AndFilter(_), _) => convertedFilter
+      case (_, true)         => not(convertedFilter)
+      case (_, false)        => convertedFilter
+    }
+
   }
 
-  def nonEmptyConditions(path: String, filters: Vector[Filter]): Vector[conversions.Bson] = filters.map(f => buildConditionForFilter(path, f)) match {
-    case x if x.isEmpty && path == "" => Vector(hackForTrue)
-    case x if x.isEmpty               => Vector(notEqual(s"$path._id", -1))
-    case x                            => x
-  }
+  def renameId(field: ScalarField): String = if (field.isId) "_id" else field.dbName
+
+  private def nonEmptyConditions(path: String, filters: Vector[Filter], negate: Boolean): Vector[conversions.Bson] =
+    filters.map(f => buildConditionForFilter(path, f, negate)) match {
+      case x if x.isEmpty && path == "" => Vector(hackForTrue)
+      case x if x.isEmpty               => Vector(notEqual(s"$path._id", -1))
+      case x                            => x
+    }
 
   private def relationFilterStatement(path: String, relationFilter: RelationFilter) = {
-    val toOneNested  = buildConditionForFilter(dotPath(path, relationFilter.field), relationFilter.nestedFilter)
-    val toManyNested = buildConditionForFilter("", relationFilter.nestedFilter)
+    val fieldName = if (relationFilter.field.relatedModel_!.isEmbedded) relationFilter.field.dbName else relationFilter.field.name
 
     relationFilter.condition match {
-      case AtLeastOneRelatedNode => elemMatch(relationFilter.field.dbName, toManyNested)
-      case EveryRelatedNode      => not(elemMatch(relationFilter.field.dbName, not(toManyNested)))
-      case NoRelatedNode         => not(elemMatch(relationFilter.field.dbName, toManyNested))
-      case ToOneRelatedNode      => toOneNested
+      case AtLeastOneRelatedNode => elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter))
+      case EveryRelatedNode      => not(elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter, true)))
+      case NoRelatedNode         => not(elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter)))
+      case ToOneRelatedNode      => buildConditionForFilter(dotPath(path, relationFilter.field), relationFilter.nestedFilter)
     }
   }
 }

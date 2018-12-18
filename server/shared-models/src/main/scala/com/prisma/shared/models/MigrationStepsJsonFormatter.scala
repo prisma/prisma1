@@ -9,80 +9,50 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val createModelFormat = Json.format[CreateModel]
   implicit val deleteModelFormat = Json.format[DeleteModel]
   implicit val updateModelFormat = new OFormat[UpdateModel] {
-    val oldNameField    = "name"
-    val newNameField    = "newName"
-    val isEmbeddedField = "isEmbedded"
+    val oldNameField = "name"
+    val newNameField = "newName"
 
     override def reads(json: JsValue): JsResult[UpdateModel] = {
       for {
-        name       <- (json \ oldNameField).validate[String]
-        newName    <- (json \ newNameField).validate[String]
-        isEmbedded <- (json \ isEmbeddedField).validateOpt[Boolean]
-      } yield { UpdateModel(name, newName, isEmbedded) }
+        name    <- (json \ oldNameField).validate[String]
+        newName <- (json \ newNameField).validate[String]
+      } yield { UpdateModel(name, newName) }
     }
 
-    override def writes(o: UpdateModel): JsObject = Json.obj(oldNameField -> o.name, newNameField -> o.newName, isEmbeddedField -> o.isEmbedded)
+    override def writes(o: UpdateModel): JsObject = Json.obj(oldNameField -> o.name, newNameField -> o.newName)
   }
 
   implicit val createFieldFormat = Json.format[CreateField]
   implicit val deleteFieldFormat = Json.format[DeleteField]
   implicit val updateFieldFormat = new OFormat[UpdateField] {
-    val modelField        = "model"
-    val newModelField     = "newModel"
-    val nameField         = "name"
-    val newNameField      = "newName"
-    val typeNameField     = "typeName"
-    val isRequiredField   = "isRequired"
-    val isListField       = "isList"
-    val isUniqueField     = "unique"
-    val isHiddenField     = "isHidden"
-    val relationField     = "relation"
-    val defaultValueField = "default"
-    val enumField         = "enum"
+    val modelField    = "model"
+    val newModelField = "newModel"
+    val nameField     = "name"
+    val newNameField  = "newName"
 
     override def reads(json: JsValue): JsResult[UpdateField] = {
       for {
-        model        <- (json \ modelField).validate[String]
-        newModel     <- (json \ newModelField).validateOpt[String]
-        name         <- (json \ nameField).validate[String]
-        newName      <- (json \ newNameField).validateOpt[String]
-        typeName     <- (json \ typeNameField).validateOpt[String]
-        isRequired   <- (json \ isRequiredField).validateOpt[Boolean]
-        isList       <- (json \ isListField).validateOpt[Boolean]
-        isHidden     <- (json \ isHiddenField).validateOpt[Boolean]
-        isUnique     <- (json \ isUniqueField).validateOpt[Boolean]
-        relation     <- (json \ relationField).validateDoubleOpt[String]
-        defaultValue <- (json \ defaultValueField).validateDoubleOpt[String]
-        enum         <- (json \ enumField).validateDoubleOpt[String]
+        model    <- (json \ modelField).validate[String]
+        newModel <- (json \ newModelField).validateOpt[String]
+        name     <- (json \ nameField).validate[String]
+        newName  <- (json \ newNameField).validateOpt[String]
       } yield {
         UpdateField(
           model = model,
           newModel = newModel.getOrElse(model),
           name = name,
-          newName = newName,
-          typeName = typeName,
-          isRequired = isRequired,
-          isList = isList,
-          isUnique = isUnique,
-          isHidden = isHidden,
-          relation = relation,
-          defaultValue = defaultValue,
-          enum = enum
+          newName = newName
         )
       }
     }
 
     override def writes(x: UpdateField): JsObject = {
       Json.obj(
-        modelField      -> x.model,
-        newModelField   -> x.newModel,
-        nameField       -> x.name,
-        newNameField    -> x.newName,
-        typeNameField   -> x.typeName,
-        isRequiredField -> x.isRequired,
-        isListField     -> x.isList,
-        isUniqueField   -> x.isUnique
-      ) ++ writeDoubleOpt(relationField, x.relation) ++ writeDoubleOpt(defaultValueField, x.defaultValue) ++ writeDoubleOpt(enumField, x.enum)
+        modelField    -> x.model,
+        newModelField -> x.newModel,
+        nameField     -> x.name,
+        newNameField  -> x.newName
+      )
     }
   }
 
@@ -111,49 +81,21 @@ object MigrationStepsJsonFormatter extends DefaultReads {
   implicit val updateEnumFormat = Json.format[UpdateEnum]
 
   implicit val createRelationFormat: OFormat[CreateRelation] = {
-    val reads = (
-      (JsPath \ "name").read[String] and
-        readOneOf[String]("leftModelName", "modelAName") and
-        readOneOf[String]("rightModelName", "modelBName") and
-        (JsPath \ "modelAOnDelete").readWithDefault(OnDelete.SetNull) and
-        (JsPath \ "modelBOnDelete").readWithDefault(OnDelete.SetNull)
-    )(CreateRelation.apply _)
-
-    val writes = (
-      (JsPath \ "name").write[String] and
-        (JsPath \ "leftModelName").write[String] and
-        (JsPath \ "rightModelName").write[String] and
-        (JsPath \ "modelAOnDelete").write[OnDelete.Value] and
-        (JsPath \ "modelBOnDelete").write[OnDelete.Value]
-    )(unlift(CreateRelation.unapply))
-
+    val reads  = (JsPath \ "name").read[String].map(CreateRelation.apply)
+    val writes = (JsPath \ "name").write[String].contramap(unlift(CreateRelation.unapply))
     OFormat(reads, writes)
   }
 
   implicit val deleteRelationFormat: OFormat[DeleteRelation] = {
-    val reads = (
-      (JsPath \ "name").read[String] and
-        (JsPath \ "modelA").readWithDefault("") and
-        (JsPath \ "modelB").readWithDefault("")
-    )(DeleteRelation.apply _)
-
-    val writes = (
-      (JsPath \ "name").write[String] and
-        (JsPath \ "modelA").write[String] and
-        (JsPath \ "modelB").write[String]
-    )(unlift(DeleteRelation.unapply))
-
+    val reads  = (JsPath \ "name").read[String].map(DeleteRelation.apply)
+    val writes = (JsPath \ "name").write[String].contramap(unlift(DeleteRelation.unapply))
     OFormat(reads, writes)
   }
 
   implicit val updateRelationFormat: OFormat[UpdateRelation] = {
     val format: OFormat[UpdateRelation] = (
       (JsPath \ "name").format[String] and
-        (JsPath \ "newName").formatNullable[String] and
-        (JsPath \ "modelAId").formatNullable[String] and
-        (JsPath \ "modelBId").formatNullable[String] and
-        (JsPath \ "modelAOnDelete").formatNullable[OnDelete.Value] and
-        (JsPath \ "modelBOnDelete").formatNullable[OnDelete.Value]
+        (JsPath \ "newName").formatNullable[String]
     )(UpdateRelation.apply, unlift(UpdateRelation.unapply))
 
     format

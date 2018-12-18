@@ -1,14 +1,14 @@
 package com.prisma.api.filters.nonEmbedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, SupportsExistingDatabasesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForPrototypes: Boolean = true
-  override def doNotRunForCapabilities        = Set(SupportsExistingDatabasesCapability)
-  override def runOnlyForCapabilities         = Set(JoinRelationLinksCapability)
+  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
+  override def runOnlyForCapabilities  = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() {
     """type Human{
@@ -123,7 +123,7 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(filterWifeNull, project, dataContains = "{\"songs\":[{\"title\":\"My Girl\"},{\"title\":\"Imagine\"}]}")
   }
 
-  "Filter Queries along OneToMany self relations" should "fail with  null filter" in {
+  "Filter Queries along OneToMany self relations" should "fail with  null filter" taggedAs (IgnoreMongo) in {
 
     val filterDaughterNull = s"""query{songs (
                                           where: {
@@ -175,7 +175,7 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(filterGroupies, project, dataContains = "{\"songs\":[{\"title\":\"My Girl\"},{\"title\":\"Imagine\"}]}")
   }
 
-  "Filter Queries along ManyToMany self relations" should "succeed with valid filter _none" in {
+  "Filter Queries along ManyToMany self relations" should "succeed with valid filter _none" taggedAs (IgnoreMongo) in {
 
     val filterGroupies = s"""query{songs (
                                           where: {
@@ -193,7 +193,7 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(filterGroupies, project, dataContains = "{\"songs\":[{\"title\":\"Bicycle\"},{\"title\":\"Gasag\"}]}")
   }
 
-  "Filter Queries along ManyToMany self relations" should "succeed with valid filter _every" in {
+  "Filter Queries along ManyToMany self relations" should "succeed with valid filter _every" taggedAs (IgnoreMongo) in {
 
     val filterGroupies = s"""query{songs (
                                           where: {
@@ -211,7 +211,7 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(filterGroupies, project, dataContains = "{\"songs\":[{\"title\":\"Imagine\"},{\"title\":\"Bicycle\"},{\"title\":\"Gasag\"}]}")
   }
 
-  "Filter Queries along ManyToMany self relations" should "give an error with null" in {
+  "Filter Queries along ManyToMany self relations" should "give an error with null" taggedAs (IgnoreMongo) in {
 
     val filterGroupies = s"""query{songs (
                                           where: {
@@ -245,7 +245,7 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(filterGroupies, project, dataContains = "{\"songs\":[{\"title\":\"My Girl\"},{\"title\":\"Imagine\"}]}")
   }
 
-  "Filter Queries along ManyToMany self relations" should "succeed with {} filter _none" in {
+  "Filter Queries along ManyToMany self relations" should "succeed with {} filter _none" taggedAs (IgnoreMongo) in {
 
     val filterGroupies = s"""query{humans(
                                           where: {fans_none: {}
@@ -263,7 +263,7 @@ class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "Filter Queries along ManyToMany self relations" should "succeed with {} filter _every" in {
+  "Filter Queries along ManyToMany self relations" should "succeed with {} filter _every" taggedAs (IgnoreMongo) in {
 
     val filterGroupies = s"""query{humans(
                                           where: {fans_every: {}
