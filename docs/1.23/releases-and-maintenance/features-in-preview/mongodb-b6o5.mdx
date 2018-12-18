@@ -8,7 +8,7 @@ export const meta = {
 
 ## Concepts
 
-With the `1.22`-release, Prisma introduces a database connector for [MongoDB](https://www.mongodb.com/). MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database). Document databases stand in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database) (RDBMS). 
+With the `1.22`-release, Prisma introduced a database connector for [MongoDB](https://www.mongodb.com/). MongoDB is a [document database](https://en.wikipedia.org/wiki/Document-oriented_database). Document databases stand in contrast to [relational databases](https://en.wikipedia.org/wiki/Relational_database) (RDBMS). 
 
 Here is an overview of how the vocabulary differs between the two database types:
 
@@ -248,7 +248,7 @@ You can verify that the Docker containers for Prisma and for your MongoDB have b
 $ docker ps
 CONTAINER ID        IMAGE                             COMMAND                  CREATED              STATUS              PORTS                      NAMES
 5f3d8cc20699        mongo:3.6                         "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:27017->27017/tcp   hello-mongo_mongo_1
-fc261a149740        prismagraphql/prisma:1.22    "/bin/sh -c /app/sta…"   About a minute ago   Up About a minute   0.0.0.0:4466->4466/tcp     hello-mongo_prisma_1
+fc261a149740        prismagraphql/prisma:1.23    "/bin/sh -c /app/sta…"   About a minute ago   Up About a minute   0.0.0.0:4466->4466/tcp     hello-mongo_prisma_1
 ```
 
 Once you're sure the Prisma server is running, you can deploy the Prisma service:
@@ -388,7 +388,7 @@ Then add the following contents into the `docker-compose.yml`:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.22
+    image: prismagraphql/prisma:1.23
     restart: always
     ports:
     - "4466:4466"
@@ -408,7 +408,7 @@ Replace both placeholders that are written in uppercase letters with the appropr
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.22
+    image: prismagraphql/prisma:1.23
     restart: always
     ports:
     - "4466:4466"
