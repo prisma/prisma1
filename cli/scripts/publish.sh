@@ -380,9 +380,9 @@ if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
   done
 
   # Push changes
-  git commit -a -m "bump prisma-client-lib versions to ${newVersion}"
   git config --global user.email "tim.suchanek@gmail.com"
   git config --global user.name "Tim Suchanek"
+  git commit -a -m "bump prisma-client-lib versions to ${newVersion}"
   git remote add origin-push https://${GH_TOKEN}@github.com/prisma/prisma-examples.git > /dev/null 2>&1
   git push --quiet --set-upstream origin-push $branch
 fi
