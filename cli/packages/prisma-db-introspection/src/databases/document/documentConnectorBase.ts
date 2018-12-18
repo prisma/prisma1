@@ -56,7 +56,7 @@ export abstract class DocumentConnector<InternalCollectionType> implements IDocu
     throw new Error('Invalid sampling type specified: ' + samplingStrategy)
   }
 
-  public async listModels(schemaName: string, modelSamplingStrategy: SamplingStrategy = SamplingStrategy.One, relationSamplingStrategy: SamplingStrategy = SamplingStrategy.Random): Promise<ISDL> {
+  public async listModels(schemaName: string, modelSamplingStrategy: SamplingStrategy = SamplingStrategy.Random, relationSamplingStrategy: SamplingStrategy = SamplingStrategy.Random): Promise<ISDL> {
     // First, we sample our collections to create a flat type schema. 
     // Then, we attempt to find relations using sampling and a ratio test.
 

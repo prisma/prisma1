@@ -20,7 +20,7 @@
     "ts-jest": "^23.1.4",
     "tslint-config-prettier": "^1.17.0",
     "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.0.1"
+    "typescript": "^3.2.2"
   },
   "dependencies": {
     "graphql": "^14.0.2",

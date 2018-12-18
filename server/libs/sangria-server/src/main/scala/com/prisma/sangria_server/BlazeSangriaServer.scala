@@ -56,8 +56,10 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
 
       val response: IO[http4s.Response[IO]] = for {
         rawRequest <- http4sRequestToRawRequest(request, requestId)
-        result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest).map(playJsonToCircleJson)))
-        response   <- Ok.apply(result, requestIdHeader)
+        result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest)))
+        json       = playJsonToCircleJson(result.json)
+        headers    = result.headers.map(h => Header(h._1, h._2)) ++ Vector(requestIdHeader)
+        response   <- Ok.apply(json, headers.toSeq: _*)
       } yield response
 
       response.handleErrorWith { exception =>
