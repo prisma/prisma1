@@ -589,7 +589,7 @@ export class EndpointDialog {
     }))
 
     const { choice } = await this.out.prompt({
-      message: 'Please select the Postgres schema you want to introspect',
+      message: 'Please select the schema you want to introspect',
       name: 'choice',
       type: 'list',
       choices,

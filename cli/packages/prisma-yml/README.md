@@ -156,5 +156,3 @@ Contributions are **welcome and extremely helpful** 🙌
 Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.
 
 
-
-
