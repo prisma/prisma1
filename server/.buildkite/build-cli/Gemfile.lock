@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    gli (2.18.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  gli
+
+RUBY VERSION
+   ruby 2.4.4p296
+
+BUNDLED WITH
+   1.16.6
