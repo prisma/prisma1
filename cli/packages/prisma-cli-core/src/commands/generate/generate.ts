@@ -106,9 +106,13 @@ export default class GenereateCommand extends Command {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
+        const isMongo =
+          this.definition.definition &&
+          this.definition.definition.databaseType === 'document'
+
         const internalTypes = parseInternalTypes(
           this.definition.typesString!,
-          DatabaseType.postgres,
+          isMongo ? DatabaseType.mongo : DatabaseType.postgres,
         ).types
 
         if (generator === 'typescript-client') {
