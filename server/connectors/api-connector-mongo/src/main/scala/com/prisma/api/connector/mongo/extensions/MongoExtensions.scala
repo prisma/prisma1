@@ -126,16 +126,11 @@ object DocumentToRoot {
 }
 
 object FieldCombinators {
-  def combineThree(path: String, relationField: String, field: String): String = {
-    path match {
-      case ""   => s"$relationField.$field"
-      case path => s"$path.$relationField.$field"
-    }
-  }
-
-  def combineTwo(path: String, relationField: String): String = path match {
-    case ""   => relationField
-    case path => s"$path.$relationField"
+  def dotPath(path: String, field: Field): String = (path, field) match {
+    case ("", rf: RelationField)   => rf.dbName
+    case (path, rf: RelationField) => path + "." + rf.dbName
+    case ("", sf: ScalarField)     => if (sf.isId) "_id" else sf.dbName
+    case (path, sf: ScalarField)   => path + "." + (if (sf.isId) "_id" else sf.dbName)
   }
 }
 

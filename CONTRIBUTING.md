@@ -96,48 +96,4 @@ git push
 
 # Labels
 
-## Category: Kind
-
-- kind/bug
-- kind/rfc
-- kind/question
-- kind/discussion
-- kind/duplicate
-
-## Category: Bug
-
-- bug/0-needs-info
-- bug/1-repro-available
-- bug/2-confirmed
-
-## Category: RFC
-
-- rfc/0-strawman
-- rfc/1-proposal
-- rfc/2-draft
-- rfc/3-accepted
-- rfc/x-rejected
-
-## Category: Area
-
-- area/docs
-- area/...
-
-## Category: Status
-
-- status/pr-welcome
-- status/on-hold
-- status/stale
-- status/candidate
-
-
-# Use Case Documentation
-
-## Bug Handling
-
-If a user reports unexpected behavior, it's not necessarily a bug. The issue supervisor has to identify, it's indeed an unintended behavior or just unintuitive behavior for the user reporting the issue.
-The first level is `bug/0-needs-info`, which means that it has been reported, but the information provided is not sufficient to reproduce the problem.
-
-As soon as the user has provided a reproduction, that the issue supervisor can reproduce, the issue goes into the next state: `bug/1-repro-available`. This state implies, that there is a reproduction available, which needs to be looked at by a support engineer. As soon as a Prisma support engineer looked into this reproduction and can actually reproduce the issue, too, the issue get be moved into the last stage: `bug/2-confirmed`.
-
-From this moment on, it's officially a bug. This bug can now be added to the Project `PM Core`. From here it will be picked up in a weekly planning session and scheduled for the engineering team.
+Read more about our labels [here](https://github.com/prisma/prisma/blob/master/.github/LABELS.md)
