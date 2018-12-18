@@ -37,8 +37,8 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
     }
   }
 
-  def getNodeByWhere(where: NodeSelector, path: Path) = SimpleMongoAction { database =>
-    database.getCollection(where.model.dbName).find(where).projection(projectPath(path)).collect().toFuture.map { results: Seq[Document] =>
+  def getNodeByWhere(where: NodeSelector, path: Path, relationField: RelationField) = SimpleMongoAction { database =>
+    database.getCollection(where.model.dbName).find(where).projection(projectPath(path, relationField)).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
         PrismaNode(root.idFieldByName(where.model.idField_!.name), root, Some(where.model.name))
@@ -78,7 +78,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where, SelectedFields.byFieldAndPath(parentField, parent.path)).flatMap {
+        getNodeByWhere(parent.where, parent.path, parentField).flatMap {
           case None =>
             noneHelper
           case Some(n) =>

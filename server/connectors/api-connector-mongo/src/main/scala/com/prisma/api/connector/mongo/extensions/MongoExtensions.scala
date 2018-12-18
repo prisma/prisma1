@@ -136,10 +136,7 @@ object FieldCombinators {
     case (path, sf: ScalarField)   => path + "." + (if (sf.isId) "_id" else sf.dbName)
   }
 
-  def combineTwo(path: String, field: String): String = path match {
-    case ""   => field
-    case path => path + "." + field
-  }
+  def combineTwo(path: String, field: String): String = if (path == "") field else path + "." + field
 
 }
 
@@ -165,8 +162,5 @@ object ArrayFilter extends FilterConditionBuilder {
       Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter)) ++ arrayFilter(path.dropLast)
   }
 
-  def fieldName(where: NodeSelector): String = where.field.isId match {
-    case true  => "_id"
-    case false => where.field.dbName
-  }
+  def fieldName(where: NodeSelector): String = if (where.field.isId) "_id" else where.field.dbName
 }

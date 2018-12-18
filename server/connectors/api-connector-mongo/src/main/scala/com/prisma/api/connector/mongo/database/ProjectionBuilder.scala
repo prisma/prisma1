@@ -1,8 +1,10 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.shared.models.ReservedFields
-import org.mongodb.scala.bson.conversions
+import com.prisma.api.connector.mongo.extensions.ArrayFilter
+import com.prisma.api.connector.mongo.extensions.FieldCombinators._
+import com.prisma.shared.models.{RelationField, ReservedFields}
+import org.mongodb.scala.bson.{BsonDocument, conversions}
 import org.mongodb.scala.model.Aggregates.project
 import org.mongodb.scala.model.Projections._
 
@@ -13,19 +15,17 @@ trait ProjectionBuilder {
   def projectSelected(selectedFields: SelectedFields): conversions.Bson =
     include(selectedFields.relationFields.map(_.dbName).toList ++ selectedFields.scalarFields.filterNot(_.isId).map(_.dbName) :+ "_id": _*)
 
-  //Fixme project along the path and only return the needed subfields
-  // should mirror getNode at path
-  //need to check whether the conversion to prisma node fails if fields are missing
-  //also how much overhead does it save to insert NullGCValues instead of converting the data
-  def projectPath(path: Path): conversions.Bson = {
-//    val doc = path.segments.headOption match {
-//      case None                                       => 1
-//      case Some(ToOneSegment(rf))                     => Document(rf.dbName -> projectPath(path.dropFirst))
-//      case Some(ToManySegment(rf, where))             => Document(rf.dbName -> projectPath(path.dropFirst))
-//      case Some(ToManyFilterSegment(rf, whereFilter)) => Document(rf.dbName -> projectPath(path.dropFirst))
-//    }
-//
-//    include(doc)
-    include("")
+  def projectPath(path: Path, relationField: RelationField): conversions.Bson = {
+    def helper(path: Path, stringPath: String): List[String] = path.segments.headOption match {
+      case None                   => List(s""""${combineTwo(stringPath, relationField.dbName)}": 1""")
+      case Some(ToOneSegment(rf)) => helper(path.dropFirst, combineTwo(stringPath, rf.dbName))
+      case Some(ToManySegment(rf, where)) =>
+        helper(path.dropFirst, combineTwo(stringPath, rf.dbName)) :+ s""""${combineTwo(stringPath, s"${rf.dbName}.${ArrayFilter.fieldName(where)}")}" : 1"""
+      case Some(ToManyFilterSegment(rf, _)) => helper(path.dropFirst, combineTwo(stringPath, rf.dbName))
+    }
+
+    BsonDocument(s"""{${helper(path, "").mkString(",")}}""")
   }
+
+  //Fixme, do we also need a aggregation stage for that?
 }

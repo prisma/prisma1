@@ -37,10 +37,8 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     for {
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
-                         val selectedFields = SelectedFields.byFieldsAndPath(List(parent.where.model.idField_!, relationField), parent.path)
-
                          for {
-                           optionRes <- getNodeByWhere(parent.where, selectedFields)
+                           optionRes <- getNodeByWhere(parent.where, parent.path, relationField)
                            filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
@@ -112,8 +110,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
 
     relationField.relationIsInlinedInParent match {
       case true =>
-        val selectedFields = SelectedFields.byFieldsAndPath(List(parent.where.model.idField_!, relationField), parent.path)
-        getNodeByWhere(parent.where, selectedFields).map(optionRes =>
+        getNodeByWhere(parent.where, parent.path, relationField).map(optionRes =>
           optionRes.foreach { res =>
             val optionNode = PrismaNode.getNodeAtPath(Some(res), parent.path.segments)
 
