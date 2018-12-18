@@ -11,14 +11,14 @@ export default class RelationalParser extends Parser {
   protected isIdField(field: any): boolean {
     return field.name.value === idFieldName
   }
-  protected isReadOnly(field: any): boolean {
-    return field.name.value === idFieldName ||
-      field.name.value === createdAtFieldName ||
-      field.name.value === updatedAtFieldName
+  protected isCreatedAtField(field: any): boolean {
+    return field.name.value === createdAtFieldName
+  }
+  protected isUpdatedAtField(field: any): boolean {
+    return field.name.value === updatedAtFieldName
   }
   protected isEmbedded(type: any): boolean {
     // Related models are never embedded
     return false
   }
-
 }

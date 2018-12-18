@@ -89,9 +89,25 @@ export interface IGQLField {
   isId: boolean
 
   /**
+   * Indicates if this field is the created at timestamp.
+   */
+  isCreatedAt: boolean
+
+  /**
+   * Indicates if this field is the updated at timestamp.
+   */
+  isUpdatedAt: boolean
+
+  /**
    * Indicates if this field is read-only. 
    */
   isReadOnly: boolean
+
+  /**
+   * Indicates how this field is called in the database. If this value is not set,
+   * the name in the database is equal to the field name. 
+   */
+  databaseName?: string
 
   /**
    * Indicates this fields extra directives, 
@@ -131,6 +147,12 @@ export interface IGQLType {
   fields: IGQLField[]
 
   /**
+   * Indicates how this type is called in the database. If this value is not set,
+   * the name in the database is equal to the type name. 
+   */
+  databaseName?: string
+
+  /**
    * Indicates this types extra directives, 
    * which can not expressed using this 
    * interface's other members.
@@ -167,8 +189,11 @@ export class GQLFieldBase implements IGQLField {
   public relationName: string | null
   public isUnique: boolean
   public defaultValue: any
+  public isCreatedAt: boolean
+  public isUpdatedAt: boolean
   public isId: boolean
   public isReadOnly: boolean
+  public databaseName?: string
   public directives?: IDirectiveInfo[]
   public comments?: IComment[]
 
@@ -181,6 +206,8 @@ export class GQLFieldBase implements IGQLField {
     this.relationName = null
     this.isUnique = false
     this.defaultValue = null
+    this.isCreatedAt = false
+    this.isUpdatedAt = false
     this.isId = false
     this.isReadOnly = false
 

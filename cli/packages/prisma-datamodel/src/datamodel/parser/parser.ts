@@ -55,12 +55,26 @@ export default abstract class Parser {
   protected abstract isIdField(field: any): boolean
 
   /**
-   * Checks if the given field is read-only.
-   * If the field is an ID field, this method is not called and
-   * read-only is assumed.
+   * Checks if the given field is an updatedAt field
    * @param field
    */
-  protected abstract isReadOnly(field: any): boolean
+  protected abstract isUpdatedAtField(field: any): boolean
+
+  /**
+   * Checks if the given field is a createdAt field
+   * @param field
+   */
+  protected abstract isCreatedAtField(field: any): boolean
+
+  /**
+   * Checks if the given field is reserved and read-only.
+   * @param field
+   */
+  protected isReservedReadOnlyField(field: any) {
+    return this.isIdField(field) ||
+      this.isUpdatedAtField(field) ||
+      this.isCreatedAtField(field)
+  }
 
   /**
    * Finds a directive on a field or type by name.
@@ -117,6 +131,23 @@ export default abstract class Parser {
 
     return null
   }
+  
+  /**
+   * Gets a fields or types relation name. If no directive
+   * exists, returns null.
+   * @param field
+   */
+  protected getDatabaseName(fieldOrType: any): string | null {
+    const directive = this.getDirectiveByName(fieldOrType, DirectiveKeys.db)
+    if (directive && directive.arguments) {
+      const nameArgument = directive.arguments.find(
+        a => a.name.value === 'name',
+      )
+      return nameArgument ? nameArgument.value.value : null
+    }
+
+    return null
+  }
 
   /**
    * Parses a model field, respects all
@@ -130,9 +161,12 @@ export default abstract class Parser {
     const fieldType = this.parseType(field.type)
     const isId = this.isIdField(field)
     const isUnique = isId || this.isUniqe(field)
-    const isReadOnly = isId || this.isReadOnly(field)
+    const isReadOnly = this.isReservedReadOnlyField(field)
+    const isUpdatedAt = this.isUpdatedAtField(field)
+    const isCreatedAt = this.isCreatedAtField(field)
     const defaultValue = this.getDefaultValue(field)
     const relationName = this.getRelationName(field)
+    const databaseName = this.getDatabaseName(field) || undefined
 
     return {
       name,
@@ -144,7 +178,10 @@ export default abstract class Parser {
       isRequired: kind === 'NonNullType',
       relatedField: null,
       isId,
+      isUpdatedAt,
+      isCreatedAt,
       isReadOnly,
+      databaseName
     }
   }
 
@@ -172,6 +209,7 @@ export default abstract class Parser {
       }
     }
 
+    const databaseName = this.getDatabaseName(type) || undefined
     const isEmbedded = this.isEmbedded(type)
 
     return {
@@ -179,6 +217,7 @@ export default abstract class Parser {
       fields,
       isEnum: false,
       isEmbedded,
+      databaseName
     }
   }
 

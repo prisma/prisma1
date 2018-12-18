@@ -38,6 +38,7 @@ export default class Renderer {
 
     // TODO Move direction magic to superclass
     if(type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
+    if(type.databaseName) { typedirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }) }
 
     const renderedDirectives = this.renderDirectives(typedirectives)
     const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
@@ -73,8 +74,11 @@ export default class Renderer {
     // TODO Move direction magic to superclass
     if(field.defaultValue !== null) { fieldDirectives.push({ name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}) }
     if(field.isUnique) { fieldDirectives.push({ name: DirectiveKeys.isUnique, arguments: {} }) }
-    if(field.relationName !== null) { fieldDirectives.push({ name: DirectiveKeys.relation, arguments: { name: field.relationName } }) }
-    if(field.isId) { fieldDirectives.push({ name: DirectiveKeys.isId, arguments: { } }) } 
+    if(field.relationName !== null) { fieldDirectives.push({ name: DirectiveKeys.relation, arguments: { name: this.renderValue(TypeIdentifiers.string, field.relationName) } }) }
+    if(field.isId) { fieldDirectives.push({ name: DirectiveKeys.isId, arguments: { } }) }
+    if(field.isCreatedAt) { fieldDirectives.push({ name: DirectiveKeys.isCreatedAt, arguments: { } }) }
+    if(field.isUpdatedAt) { fieldDirectives.push({ name: DirectiveKeys.isUpdatedAt, arguments: { } }) }
+    if(field.databaseName) { fieldDirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }) }
 
     const renderedDirectives = this.renderDirectives(fieldDirectives)
     
@@ -140,7 +144,7 @@ export default class Renderer {
 
   /**
    * Merges directives by summarizing arguments of
-   * directives with equal name.
+   * directives with equal name. That saves work when adding directives. 
    */
   protected mergeDirectives(directives: IDirectiveInfo[]): IDirectiveInfo[] {
     // Group by name
