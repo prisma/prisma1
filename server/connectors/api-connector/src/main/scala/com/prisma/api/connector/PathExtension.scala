@@ -19,10 +19,12 @@ case class Path(segments: List[PathSegment]) {
   def relationFieldToSelect: Option[RelationField]                            = segments.headOption.map(_.rf)
   def combinedNames                                                           = this.segments.map(_.rf.name).mkString(".")
   private def sanitize(input: String): String = {
-    //Mongo only allows alphanumeric characters in arrayfilter names
-    input
+    //Mongo only allows alphanumeric characters in arrayfilter names and they have to start with lowercase
+    val alphanumeric = input
       .replace("-", "M") // for the minus in hash value
       .replace("_", "X") // for the _ in _id
+
+    "x" + alphanumeric
   }
 
   private def stringGen(field: String, segments: List[PathSegment]): Vector[String] = segments match {

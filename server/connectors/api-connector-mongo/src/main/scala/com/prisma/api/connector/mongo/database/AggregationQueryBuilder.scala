@@ -107,7 +107,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
   private def oneRelationNull(relationField: RelationField, path: Path): Seq[Bson] = {
     relationField.relatedModel_!.isEmbedded match {
       case true =>
-        Seq(`match`(equal(combineTwo(path.combinedNames, relationField.dbName), null)))
+        Seq(`match`(equal(dotPath(path.combinedNames, relationField), null)))
 
       case false =>
         relationField.relationIsInlinedInParent match {
@@ -115,12 +115,12 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
             Seq(`match`(equal(combineTwo(path.combinedNames, relationField.relation.inlineManifestation.get.referencingColumn), null)))
           case false =>
             val mongoJoin = lookup(
-              localField = combineTwo(path.combinedNames, renameId(relationField.model.idField_!)),
+              localField = dotPath(path.combinedNames, relationField.model.idField_!),
               from = relationField.relatedModel_!.dbName,
               foreignField = relationField.relatedField.dbName,
-              as = combineTwo(path.combinedNames, relationField.dbName)
+              as = dotPath(path.combinedNames, relationField)
             )
-            val mongoMatch = `match`(size(combineTwo(path.combinedNames, relationField.dbName), 0))
+            val mongoMatch = `match`(size(dotPath(path.combinedNames, relationField), 0))
             Seq(mongoJoin, mongoMatch)
         }
     }
@@ -141,7 +141,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
         val mongoLookup = rf.relationIsInlinedInParent match {
           case true =>
             lookup(
-              localField = combineTwo(path.combinedNames, rf.dbName),
+              localField = dotPath(path.combinedNames, rf),
               from = rf.relatedModel_!.dbName,
               foreignField = renameId(rf.relatedModel_!.idField_!),
               as = updatedPath.combinedNames
@@ -149,7 +149,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
 
           case false =>
             lookup(
-              localField = combineTwo(path.combinedNames, renameId(rf.model.idField_!)),
+              localField = dotPath(path.combinedNames, rf.model.idField_!),
               from = rf.relatedModel_!.dbName,
               foreignField = rf.relatedField.dbName,
               as = updatedPath.combinedNames
@@ -165,7 +165,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
   }
 
   //-------------------------------------------------- Helpers ------------------------------------------------------
-  private def nameHelper(path: Path, scalarField: ScalarField): String = combineTwo(path.combinedNames, renameId(scalarField))
+  private def nameHelper(path: Path, scalarField: ScalarField): String = dotPath(path.combinedNames, scalarField)
 
   //-------------------------------Determine if Aggregation is needed -----------------------------------
   def needsAggregation(filter: Option[Filter]): Boolean = filter match {
@@ -199,7 +199,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
     current || next
   }
 
-  //------------------------------Sort Filters - JoinRelationals Last --------------------------------
+  //------------------------------Sort Filters - Join Relations Last --------------------------------
   private def sortFilters(filters: Seq[Filter]): Seq[Filter] = {
     val withRelationFilter    = filters.collect { case x if needsAggregation(Some(x))  => x }
     val withoutRelationFilter = filters.collect { case x if !needsAggregation(Some(x)) => x }

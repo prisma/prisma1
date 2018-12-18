@@ -405,33 +405,16 @@ The `hooks` property expects an **object**. The properties of that object match 
 
 #### Examples
 
-Here is an example that performs three tasks after `prisma deploy` was executed:
+Here is an example that performs two tasks after `prisma deploy` was executed:
 
 1. Print "Deployment finished"
-1. Download the GraphQL schema for the `db` project specified in `.graphqlconfig.yml`
-1. Invoke code generation as specified in `.graphqlconfig.yml`
+1. Invoke code generation with `prisma generate`
 
 ```yml
 hooks:
   post-deploy:
     - echo "Deployment finished"
-    - graphql get-schema --project db
-    - graphql codegen
-```
-
-Note that this setup assumes the availability of a `.graphqlconfig.yml` looking similar to this:
-
-```yml
-projects:
-  db:
-    schemaPath: generated/prisma.graphql
-    extensions:
-      prisma: prisma.yml
-      codegen:
-        - generator: prisma-binding
-          language: typescript
-          output:
-            binding: src/generated/prisma.ts
+    - prisma generate
 ```
 
 ### seed (optional)
