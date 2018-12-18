@@ -253,7 +253,7 @@ ${this.renderExports(options)}
     return `\
 ${codeComment}
 
-import { DocumentNode, GraphQLSchema } from 'graphql'
+import { DocumentNode } from 'graphql'
 import { makePrismaClientClass, BaseClientOptions, Model } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'`
   }
