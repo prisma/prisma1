@@ -12,12 +12,12 @@ import {
   FlowGenerator,
 } from 'prisma-client-lib'
 import { spawnSync } from 'npm-run'
+import { spawnSync as nativeSpawnSync } from 'child_process'
 import generateCRUDSchemaString, {
   parseInternalTypes,
 } from 'prisma-generate-schema'
-import { DatabaseType } from 'prisma-datamodel'
+import { DatabaseType, IGQLType } from 'prisma-datamodel'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
-import { IGQLType } from 'prisma-datamodel'
 
 export default class GenereateCommand extends Command {
   static topic = 'generate'
@@ -106,9 +106,13 @@ export default class GenereateCommand extends Command {
           await this.generateSchema(resolvedOutput, schemaString)
         }
 
+        const isMongo =
+          this.definition.definition &&
+          this.definition.definition.databaseType === 'document'
+
         const internalTypes = parseInternalTypes(
           this.definition.typesString!,
-          DatabaseType.postgres,
+          isMongo ? DatabaseType.mongo : DatabaseType.postgres,
         ).types
 
         if (generator === 'typescript-client') {
@@ -252,7 +256,9 @@ export default class GenereateCommand extends Command {
 
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
-    spawnSync('go', ['fmt', path.join(output, 'prisma.go')])
+    const isPackaged = fs.existsSync('/snapshot')
+    const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+    spawnPath('go', ['fmt', path.join(output, 'prisma.go')])
   }
 
   async generateFlow(

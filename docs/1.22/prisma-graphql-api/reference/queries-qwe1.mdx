@@ -344,6 +344,12 @@ query {
 
 #### Relation filters
 
+<Warning>
+
+The relation filter API when using the [MongoDB database connector](jgfm) is constrained. You can view the Prisma GraphQL schema of your Prisma API to learn about the available filter criteria. 
+
+</Warning>
+
 For _to-one_ relations, you can define conditions on the related node by nesting the according argument in `where`.
 
 **Query all `Post` nodes where the `author` has the `USER` access role:**

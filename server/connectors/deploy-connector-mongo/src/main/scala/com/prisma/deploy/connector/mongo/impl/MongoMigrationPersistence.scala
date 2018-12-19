@@ -16,37 +16,43 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoMigrationPersistence(internalDatabase: MongoDatabase)(implicit ec: ExecutionContext) extends MigrationPersistence with MongoExtensions {
   val migrations: MongoCollection[Document] = internalDatabase.getCollection("Migration")
 
+  val revision = "revision"
+
   override def byId(migrationId: MigrationId): Future[Option[Migration]] = {
-    migrations
-      .find(Filters.and(projectIdFilter(migrationId.projectId), revisionFilter(migrationId.revision)))
-      .collect
-      .toFuture()
-      .map(_.headOption.map(DbMapper.convertToMigrationModel))
+    enrichWithPreviousMigration {
+      migrations
+        .find(Filters.and(projectIdFilter(migrationId.projectId), revisionFilter(migrationId.revision)))
+        .collect
+        .toFuture()
+        .map(_.headOption.map(DbMapper.convertToMigrationModel))
+    }
   }
 
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
     migrations
       .find(projectIdFilter(projectId))
-      .sort(descending("revision"))
+      .sort(descending(revision))
       .collect
       .toFuture()
       .map(_.map(DbMapper.convertToMigrationModel))
+      .map(migs => enrichWithPreviousSchemas(migs.toVector))
   }
 
   override def create(migration: Migration): Future[Migration] = {
     def lastRevision =
       migrations
         .find(projectIdFilter(migration.projectId))
-        .sort(descending("revision"))
+        .sort(descending(revision))
         .collect
         .toFuture()
         .map(_.headOption.map(DbMapper.convertToMigrationModel(_).revision))
 
     for {
-      lastRevision       <- lastRevision
-      withRevisionBumped = migration.copy(revision = lastRevision.getOrElse(0) + 1)
-      _                  <- migrations.insertOne(DbMapper.convertToDocument(withRevisionBumped)).toFuture()
-    } yield migration.copy(revision = withRevisionBumped.revision)
+      lastRevision          <- lastRevision
+      withRevisionBumped    = migration.copy(revision = lastRevision.getOrElse(0) + 1)
+      _                     <- migrations.insertOne(DbMapper.convertToDocument(withRevisionBumped)).toFuture()
+      withPreviousMigration <- enrichWithPreviousMigration(withRevisionBumped)
+    } yield withPreviousMigration
   }
 
   private def updateColumn(id: MigrationId, field: String, value: Any) = {
@@ -82,26 +88,30 @@ case class MongoMigrationPersistence(internalDatabase: MongoDatabase)(implicit e
   }
 
   override def getLastMigration(projectId: String): Future[Option[Migration]] = {
-    migrations
-      .find(Filters.and(projectIdFilter(projectId), statusFilter(MigrationStatus.Success)))
-      .sort(descending("revision"))
-      .collect
-      .toFuture()
-      .map(_.headOption.map(DbMapper.convertToMigrationModel))
+    enrichWithPreviousMigration {
+      migrations
+        .find(Filters.and(projectIdFilter(projectId), statusFilter(MigrationStatus.Success)))
+        .sort(descending(revision))
+        .collect
+        .toFuture()
+        .map(_.headOption.map(DbMapper.convertToMigrationModel))
+    }
   }
 
   override def getNextMigration(projectId: String): Future[Option[Migration]] = {
-    migrations
-      .find(
-        Filters.and(
-          projectIdFilter(projectId),
-          Filters.or(statusFilter(MigrationStatus.Pending), statusFilter(MigrationStatus.InProgress), statusFilter(MigrationStatus.RollingBack))
+    enrichWithPreviousMigration {
+      migrations
+        .find(
+          Filters.and(
+            projectIdFilter(projectId),
+            Filters.or(statusFilter(MigrationStatus.Pending), statusFilter(MigrationStatus.InProgress), statusFilter(MigrationStatus.RollingBack))
+          )
         )
-      )
-      .sort(ascending("revision"))
-      .collect
-      .toFuture()
-      .map(_.headOption.map(DbMapper.convertToMigrationModel))
+        .sort(ascending(revision))
+        .collect
+        .toFuture()
+        .map(_.headOption.map(DbMapper.convertToMigrationModel))
+    }
   }
 
   override def loadDistinctUnmigratedProjectIds(): Future[Seq[String]] = {
@@ -113,6 +123,35 @@ case class MongoMigrationPersistence(internalDatabase: MongoDatabase)(implicit e
   }
 
   private def projectIdFilter(projectId: String)    = Filters.eq("projectId", projectId)
-  private def revisionFilter(revision: Int)         = Filters.eq("revision", revision)
+  private def revisionFilter(revision: Int)         = Filters.eq(this.revision, revision)
   private def statusFilter(status: MigrationStatus) = Filters.eq("status", status.toString)
+
+  private def enrichWithPreviousMigration(migration: Future[Option[Migration]]): Future[Option[Migration]] = {
+    migration.flatMap {
+      case Some(mig) => enrichWithPreviousMigration(mig).map(Some(_))
+      case None      => Future.successful(None)
+    }
+  }
+
+  private def enrichWithPreviousMigration(migration: Migration): Future[Migration] = {
+    migrations
+      .find(
+        Filters.and(
+          projectIdFilter(migration.projectId),
+          Filters.lt(revision, migration.revision),
+          statusFilter(MigrationStatus.Success)
+        )
+      )
+      .sort(descending(revision))
+      .collect
+      .toFuture()
+      .map(_.headOption)
+      .map {
+        case Some(doc) =>
+          val previousMigration = DbMapper.convertToMigrationModel(doc)
+          migration.copy(previousSchema = previousMigration.schema)
+        case None =>
+          migration
+      }
+  }
 }

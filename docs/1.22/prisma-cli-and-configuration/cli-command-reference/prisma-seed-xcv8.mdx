@@ -1,0 +1,37 @@
+export const meta = {
+  title: "prisma seed",
+  position: 200,
+}
+
+## `$ prisma seed`
+
+Seeds the service with data. 
+
+This command expects that the [`seed`](5cy7#seed-optional) property in prisma.yml is specified.
+
+#### Usage
+
+```sh
+prisma seed [flags]
+```
+
+#### Flags
+
+```
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+-r, --reset                Reset the service before seeding
+```
+
+#### Examples
+
+**Seed service with initial data**
+
+```sh
+prisma seed
+```
+
+**Seed service with initial data after deleting all of the service's data first**
+
+```sh
+prisma seed --reset
+```

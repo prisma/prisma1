@@ -128,7 +128,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String]
   }
 
   private def getResultForMutactionFromPreviousResults(previousResults: MutactionResults, m: DatabaseMutaction) = {
-    previousResults.results.find(res => res.mutaction == m).get
+    previousResults.results.find(res => res.mutaction.id == m.id).get
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {

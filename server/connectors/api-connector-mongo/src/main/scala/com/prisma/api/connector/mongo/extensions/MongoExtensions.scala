@@ -73,7 +73,10 @@ object BisonToGC {
         ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
 
       case (false, true) =>
-        DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, bison.asDocument())
+        bison match {
+          case _: BsonNull => NullGCValue
+          case x           => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, x.asDocument())
+        }
     }
   }
 
@@ -86,7 +89,7 @@ object BisonToGC {
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
-    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("implement this" + value)
+    case (TypeIdentifier.UUID, value: BsonString)       => sys.error("Not implemented: " + value)
     case (_, value: BsonNull)                           => NullGCValue
     case (x, y)                                         => sys.error("Not implemented: " + x + y)
   }
@@ -119,24 +122,25 @@ object DocumentToRoot {
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
 
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
-      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
+      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(ListGCValue.empty))
 
     RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
   }
 }
 
 object FieldCombinators {
-  def combineThree(path: String, relationField: String, field: String): String = {
-    path match {
-      case ""   => s"$relationField.$field"
-      case path => s"$path.$relationField.$field"
-    }
+  def dotPath(path: String, field: Field): String = (path, field) match {
+    case ("", rf: RelationField)   => rf.dbName
+    case (path, rf: RelationField) => path + "." + rf.dbName
+    case ("", sf: ScalarField)     => if (sf.isId) "_id" else sf.dbName
+    case (path, sf: ScalarField)   => path + "." + (if (sf.isId) "_id" else sf.dbName)
   }
 
-  def combineTwo(path: String, relationField: String): String = path match {
-    case ""   => relationField
-    case path => s"$path.$relationField"
+  def combineTwo(path: String, field: String): String = path match {
+    case ""   => field
+    case path => path + "." + field
   }
+
 }
 
 object HackforTrue {

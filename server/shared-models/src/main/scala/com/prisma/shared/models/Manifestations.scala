@@ -7,8 +7,11 @@ object Manifestations {
   case class FieldManifestation(dbName: String)
 
   sealed trait RelationLinkManifestation
-  case class EmbeddedRelationLink(inTableOfModelName: String, referencingColumn: String) extends RelationLinkManifestation
-  case class RelationTable(table: String, modelAColumn: String, modelBColumn: String)    extends RelationLinkManifestation
+  case class EmbeddedRelationLink(inTableOfModelName: String, referencingColumn: String) extends RelationLinkManifestation {
+    def inTableOfModel(relation: Relation)  = if (relation.modelAName == inTableOfModelName) relation.modelA else relation.modelB
+    def referencedModel(relation: Relation) = if (relation.modelAName == inTableOfModelName) relation.modelB else relation.modelA
+  }
+  case class RelationTable(table: String, modelAColumn: String, modelBColumn: String) extends RelationLinkManifestation
 }
 
 sealed trait FieldBehaviour

@@ -21,9 +21,10 @@ case class UpdateScalarListTable(projectId: String, oldModel: Model, newModel: M
 case class CreateModelTable(projectId: String, model: Model)                                                             extends DeployMutaction
 case class DeleteModelTable(projectId: String, model: Model, nameOfIdField: String, scalarListFields: Vector[String])    extends DeployMutaction // delete/truncate collection based on migrations setting in server config
 case class RenameTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends DeployMutaction // rename based on migration setting
-case class RenameRelationTable(projectId: String, previousName: String, nextName: String)                                extends DeployMutaction // rename based on migration setting
 
-case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
-case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction // based on migration settings;  set relation fields to null in document
+case class CreateRelationTable(projectId: String, relation: Relation)                                 extends DeployMutaction
+case class DeleteRelationTable(projectId: String, relation: Relation)                                 extends DeployMutaction // based on migration settings;  set relation fields to null in document
+case class UpdateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) extends DeployMutaction
 
-case class CreateInlineRelationForTests(projectId: String, model: Model, field: RelationField, references: Model, column: String) extends DeployMutaction
+case class CreateInlineRelation(projectId: String, model: Model, references: Model, column: String) extends DeployMutaction
+case class DeleteInlineRelation(projectId: String, model: Model, references: Model, column: String) extends DeployMutaction
