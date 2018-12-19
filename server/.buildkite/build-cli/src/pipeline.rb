@@ -1,5 +1,28 @@
 class PipelineRenderer
-  def self.render!(steps, context)
+  @@rules = {
+    :'api-connector-mysql' => {
+      :label => ":mysql: MySql API connector"
+      :connectors => [:mysql]
+    },
+    :'deploy-connector-mysql' => {
+      :label => ":mysql: MySql deploy connector"
+      :connectors => [:mysql]
+    },
+    :'integration-tests-mysql' => {
+      :label => ":mysql: MySql integration tests"
+      :connectors => [:mysql]
+    },
+    :'api-connector-postgres' => {
+      :label => ":postgres: Postgres API connector"
+      :connectors => [:postgres]
+    },
+    :'deploy-connector-postgres' => {
+      :label => ":postgres: Postgres deploy connector"
+      :connectors => [:postgres]
+    }
+  }
+
+  def self.render!(context)
     rendered = <<~EOS
       steps:
       #{steps.map { |step| step.render!(2) }.join "\n\n"}
