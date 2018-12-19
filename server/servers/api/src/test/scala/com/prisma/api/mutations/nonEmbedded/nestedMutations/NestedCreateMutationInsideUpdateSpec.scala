@@ -1,12 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation" should "error since old required parent relation would be broken" in {
     val project = SchemaDsl.fromString() { schemaP1reqToC1req }
@@ -516,7 +516,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |
         |type Todo{
         |   id: ID! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 
@@ -568,7 +568,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |type Todo{
         |   id: ID! @unique
         |   title: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 
@@ -621,7 +621,7 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |type Todo{
         |   id: ID! @unique
         |   title: String! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}"""
     }
 

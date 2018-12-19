@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, JoinRelationsCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, JoinRelationLinksCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -220,6 +220,69 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
         |}""".stripMargin,
       project
     )
+  }
+
+  "Deleting toMany relations if they have a unique" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: [Middle]
+        |}
+        |
+        |type Middle @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:[{
+         |      unique: 11,
+         |      name: "Middle"
+         |   },
+         |   {
+         |      unique: 12,
+         |      name: "Middle2"
+         |   }
+         |
+         |   ]}
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11},{"unique":12}]}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {delete:{unique:11}}
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":12}]}}}""")
   }
 
 }

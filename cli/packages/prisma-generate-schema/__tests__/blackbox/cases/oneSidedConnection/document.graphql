@@ -1,5 +1,5 @@
-type A {
-  id: Int!
+type A implements Node {
+  id: ID!
   x: TypeWithId!
   y: TypeWithoutId!
 }
@@ -76,7 +76,7 @@ enum AOrderByInput {
 }
 
 type APreviousValues {
-  id: Int!
+  id: ID!
 }
 
 type ASubscriptionPayload {
@@ -136,43 +136,67 @@ input AWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 input AWhereUniqueInput {
-  id: Int
+  id: ID
 }
 
-type B {
-  id: Int!
+type B implements Node {
+  id: ID!
   x: TypeWithId
   y: TypeWithoutId
 }
@@ -224,7 +248,7 @@ enum BOrderByInput {
 }
 
 type BPreviousValues {
-  id: Int!
+  id: ID!
 }
 
 type BSubscriptionPayload {
@@ -284,43 +308,67 @@ input BWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 input BWhereUniqueInput {
-  id: Int
+  id: ID
 }
 
-type C {
-  id: Int!
+type C implements Node {
+  id: ID!
   x(where: TypeWithIdWhereInput, orderBy: TypeWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithId!]
   y(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithoutId!]
 }
@@ -365,7 +413,7 @@ enum COrderByInput {
 }
 
 type CPreviousValues {
-  id: Int!
+  id: ID!
 }
 
 type CSubscriptionPayload {
@@ -425,39 +473,63 @@ input CWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [CWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 input CWhereUniqueInput {
-  id: Int
+  id: ID
 }
 
 type D implements Node {
@@ -954,11 +1026,6 @@ input FWhereInput {
 input FWhereUniqueInput {
   id: ID
 }
-
-"""
-Raw JSON value
-"""
-scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -1505,8 +1572,8 @@ input TypeWithIdWhereUniqueInput {
   id: ID
 }
 
-type TypeWithoutId {
-  id: Int!
+type TypeWithoutId implements Node {
+  id: ID!
   field: String!
 }
 
@@ -1561,7 +1628,7 @@ enum TypeWithoutIdOrderByInput {
 }
 
 type TypeWithoutIdPreviousValues {
-  id: Int!
+  id: ID!
   field: String!
 }
 
@@ -1578,35 +1645,59 @@ input TypeWithoutIdScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [TypeWithoutIdScalarWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   field: String
   """
   All values that are not equal to given value.
@@ -1778,35 +1869,59 @@ input TypeWithoutIdWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [TypeWithoutIdWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   field: String
   """
   All values that are not equal to given value.
@@ -1863,6 +1978,6 @@ input TypeWithoutIdWhereInput {
 }
 
 input TypeWithoutIdWhereUniqueInput {
-  id: Int
+  id: ID
 }
 

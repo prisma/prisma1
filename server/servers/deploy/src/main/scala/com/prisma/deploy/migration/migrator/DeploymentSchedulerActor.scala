@@ -1,7 +1,8 @@
 package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.DeployConnector
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -49,7 +50,7 @@ case class DeploymentSchedulerActor(
   def initialize(): Future[Unit] = {
     // Ensure that we're the only deploy agent running on the db, then resume init.
     println("Obtaining exclusive agent lock...")
-    migrationPersistence.lock().flatMap { _ =>
+    deployConnector.managementLock().flatMap { _ =>
       println("Obtaining exclusive agent lock... Successful.")
       migrationPersistence.loadDistinctUnmigratedProjectIds().transformWith {
         case Success(projectIds) => Future { projectIds.foreach(workerForProject) }

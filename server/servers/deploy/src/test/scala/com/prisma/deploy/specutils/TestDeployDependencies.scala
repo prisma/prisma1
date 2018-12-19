@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
 import com.prisma.auth.AuthImpl
 import com.prisma.config.ConfigLoader
-import com.prisma.connectors.utils.ConnectorUtils
+import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations.{FunctionInput, FunctionValidator}
@@ -29,7 +29,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   override def apiAuth = AuthImpl
 
-  def deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  def deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))), isTest = true)
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 

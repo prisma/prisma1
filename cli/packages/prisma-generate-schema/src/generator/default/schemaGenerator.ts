@@ -1,11 +1,10 @@
-
 import { SchemaGeneratorBase } from '../generator'
-import { IGQLType } from '../../datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 import { GraphQLSchema } from 'graphql/type'
 
 export default class SchemaGenerator extends SchemaGeneratorBase {
   public getTypeName(input: IGQLType[], args: {}) {
-    return "__Schema";
+    return '__Schema'
   }
   public generate(input: IGQLType[], args?: {}) {
     return new GraphQLSchema({

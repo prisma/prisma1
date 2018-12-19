@@ -3,13 +3,13 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 import java.util.UUID
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMongo, IgnoreMySql}
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation" should "be possible" in {
     val project = SchemaDsl.fromString() { schemaP1reqToC1req }
@@ -265,7 +265,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment{
@@ -340,13 +340,13 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       """type Todo{
         |   id: ID! @unique
         |   title: String!
-        |   tags: [Tag!]!
+        |   tags: [Tag]
         |}
         |
         |type Tag{
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}"""
     }
 
@@ -512,7 +512,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       """type List{
         |   id: ID! @unique
         |   name: String!
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo{
@@ -736,7 +736,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       s"""
          |type List {
          |  id: ID! @unique
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {
@@ -768,6 +768,74 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     result.pathAsString("data.createList.todos.[0].title") should equal("the todo")
     val theUuid = result.pathAsString("data.createList.todos.[0].id")
     UUID.fromString(theUuid) // should now blow up
+  }
+
+  "Backrelation bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  nick: String! @unique
+        |  memberships: [ListMembership]
+        |}
+        |
+        |type List {
+        |  id: ID! @unique
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |  name: String!
+        |  memberships: [ListMembership]
+        |}
+        |
+        |type ListMembership {
+        |  id: ID! @unique
+        |  user: User! @mongoRelation(field: "user")
+        |  list: List! @mongoRelation(field: "list")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation createUser {
+  createUser(data: {
+    nick: "marcus"
+    memberships: {
+      create: [
+        {
+          list: {
+            create: {
+              name: "Personal Inbox"
+            }
+          }
+        }
+      ]
+    }
+  }){
+    nick
+  }
+}""",
+      project
+    )
+
+    create.toString should be("""{"data":{"createUser":{"nick":"marcus"}}}""")
+
+    val result = server.query(
+      s"""query users {
+  users{
+    nick
+    memberships {
+      list {
+        name
+      }
+    }
+  }
+}""",
+      project
+    )
+
+    result.toString should be("""{"data":{"users":[{"nick":"marcus","memberships":[{"list":{"name":"Personal Inbox"}}]}]}}""")
   }
 
 }

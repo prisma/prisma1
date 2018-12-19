@@ -6,6 +6,6 @@ import cool.graph.cuid.Cuid
 object TestProject {
   def apply(): Project = {
     val projectId = Cuid.createCuid() + "@" + Cuid.createCuid()
-    Project(id = projectId, ownerId = Cuid.createCuid(), schema = Schema())
+    Project(id = projectId, schema = Schema())
   }
 }

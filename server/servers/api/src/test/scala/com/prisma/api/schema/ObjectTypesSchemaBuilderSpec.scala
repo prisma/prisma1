@@ -15,7 +15,7 @@ class ObjectTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBa
       |  id: ID! @unique
       |  title: String!
       |  user: User! @relation(name: "TodoToUser1")
-      |  users: [User!]! @relation(name: "TodoToUser2")
+      |  users: [User] @relation(name: "TodoToUser2")
       |}
       |
       |type User {

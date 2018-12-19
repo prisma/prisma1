@@ -1,10 +1,10 @@
 import { ModelObjectTypeGenerator, RelatedGeneratorArgs, RelatedModelInputObjectTypeGenerator, TypeFromModelGenerator } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLString } from "graphql/type"
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 
 
-export default class ModelUpdateOneRequiredInputTypeGenerator extends ModelUpdateInputGenerator {
+export default class ModelUpdateOneRequiredInputTypeGenerator extends RelatedModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
     return `${input.name}UpdateOneRequiredInput`
   }

@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLObjectType } from 'graphql/type'
 import { AuxillaryObjectTypeGenerator } from '../../../generator'
-import { TypeIdentifiers } from '../../scalar/scalarTypeGenerator'
+import { TypeIdentifiers } from 'prisma-datamodel'
 
 export default class BatchPayloadGenerator extends AuxillaryObjectTypeGenerator {
   public getTypeName(input: null, args: {}) {

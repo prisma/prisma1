@@ -1,6 +1,5 @@
 import { GraphQLFieldConfigMap, GraphQLObjectType } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
-import { camelCase } from '../../../util/util'
+import { IGQLType, camelCase } from 'prisma-datamodel'
 import { FieldConfigUtils, RootGenerator } from '../../generator'
 
 export default class SubscriptionGenerator extends RootGenerator {

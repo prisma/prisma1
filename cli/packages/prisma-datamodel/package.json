@@ -1,0 +1,48 @@
+{
+  "name": "prisma-datamodel",
+  "version": "1.23.0-alpha.1",
+  "description": "Transform prisma datamodel SDL into graphql-js SDL",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "rm -rf dist && jest",
+    "build": "tsc -d"
+  },
+  "files": [
+    "dist"
+  ],
+  "typings": "dist/index.d.ts",
+  "author": "Emanuel Jöbstl",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^23.3.1",
+    "jest": "^23.5.0",
+    "jest-cli": "^23.6.0",
+    "ts-jest": "^23.1.4",
+    "tslint-config-prettier": "^1.17.0",
+    "tslint-eslint-rules": "^5.4.0",
+    "typescript": "^3.2.2"
+  },
+  "dependencies": {
+    "graphql": "^14.0.2",
+    "pluralize": "^7.0.0",
+    "popsicle": "10"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "helpers.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  }
+}

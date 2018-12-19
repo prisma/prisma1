@@ -1,12 +1,16 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapability.MongoJoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
 import sangria.renderer.SchemaRenderer
 
 class SubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
+  override def doNotRunForCapabilities: Set[ConnectorCapability] = Set(MongoJoinRelationLinksCapability)
+
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the single item query for a model" must {

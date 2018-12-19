@@ -1,4 +1,4 @@
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
 import { TypeFromModelGenerator } from '../../../generator';
 

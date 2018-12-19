@@ -8,18 +8,20 @@ import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient)(implicit ec: ExecutionContext) extends ClientDbQueries {
+case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient, databaseOption: Option[String])(implicit ec: ExecutionContext)
+    extends ClientDbQueries {
+  val database = databaseOption.getOrElse(project.id)
 
-  def existsByModel(modelName: String): Future[Boolean] = {
-    clientDatabase.getDatabase(project.id).getCollection(modelName).countDocuments().toFuture().map(count => if (count > 0) true else false)
+  def existsByModel(model: Model): Future[Boolean] = {
+    clientDatabase.getDatabase(database).getCollection(model.dbName).countDocuments().toFuture().map(count => if (count > 0) true else false)
   }
 
-  def existsByRelation(relationId: String): Future[Boolean] = {
+  def existsByRelation(relation: Relation): Future[Boolean] = {
 //    val query = MongoDeployDatabaseQueryBuilder.existsByRelation(project.id, relationId)
     Future.successful(false)
   }
 
-  def existsDuplicateByRelationAndSide(relationId: String, relationSide: RelationSide): Future[Boolean] = {
+  def existsDuplicateByRelationAndSide(relation: Relation, relationSide: RelationSide): Future[Boolean] = {
 //    val query = MongoDeployDatabaseQueryBuilder.existsDuplicateByRelationAndSide(project.id, relationId, relationSide)
     Future.successful(false)
   }

@@ -2,12 +2,12 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1 to C1  relation " should "be disconnectable through a nested mutation by id" in {
     val project = SchemaDsl.fromString() { schemaP1optToC1opt }
@@ -512,7 +512,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() {
       """type Todo{
                             id: ID! @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }
 
                         type Comment{
@@ -572,7 +572,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() {
       """type Todo{
                             id: ID! @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }
 
                         type Comment{
@@ -630,7 +630,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() {
       """type Todo{
                             id: ID! @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }
 
                         type Comment{
@@ -738,7 +738,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
       """type Todo{
                             id: ID! @unique
                             title: String @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }
 
                         type Comment{
@@ -808,8 +808,8 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
                                               |  username: String! @unique
                                               |  password: String!
                                               |  salt: String!
-                                              |  followers: [User!]! @relation(name: "UserFollowers")
-                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |  followers: [User] @relation(name: "UserFollowers")
+                                              |  follows: [User] @relation(name: "UserFollows")
                                               |}""".stripMargin }
     database.setup(project)
 
@@ -872,8 +872,8 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
                                               |  username: String! @unique
                                               |  password: String!
                                               |  salt: String!
-                                              |  followers: [User!]! @relation(name: "UserFollowers")
-                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |  followers: [User] @relation(name: "UserFollowers")
+                                              |  follows: [User] @relation(name: "UserFollows")
                                               |}""".stripMargin }
     database.setup(project)
 
@@ -936,20 +936,20 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""".stripMargin }
     database.setup(project)
 
@@ -1020,13 +1020,13 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -1102,13 +1102,13 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -1194,7 +1194,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {
@@ -1426,8 +1426,8 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type User {
                                              |  id: ID! @unique
                                              |  name: String! @unique
-                                             |  follower: [User!]! @relation(name: "UserFollow")
-                                             |  following: [User!]! @relation(name: "UserFollow")
+                                             |  follower: [User] @relation(name: "UserFollow")
+                                             |  following: [User] @relation(name: "UserFollow")
                                              |}""" }
     database.setup(project)
 

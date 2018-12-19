@@ -1,6 +1,5 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-import * as fs from 'fs-extra'
-import * as ncp from 'copy-paste'
+import * as clipboardy from 'clipboardy'
 
 export default class Token extends Command {
   static topic = 'token'
@@ -30,7 +29,8 @@ export default class Token extends Command {
     } else {
       if (copy) {
         await new Promise(r => {
-          ncp.copy(token, () => r())
+          clipboardy.writeSync(token)
+          r()
         })
         this.out.log(`Token copied to clipboard`)
       } else {

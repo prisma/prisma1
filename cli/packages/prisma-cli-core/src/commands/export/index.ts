@@ -30,6 +30,13 @@ export default class Export extends Command {
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
+    if (
+      this.definition.definition!.databaseType &&
+      this.definition.definition!.databaseType === 'document'
+    ) {
+      throw new Error('Export is not yet supported for document stores.')
+    }
+
     const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
