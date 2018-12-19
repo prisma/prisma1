@@ -22,7 +22,7 @@ object SangriaExtensions {
       case astField: sangria.ast.Field =>
         model.getFieldByName(astField.name) match {
           case Some(sf: ScalarField)   => Some(SelectedScalarField(sf))
-          case Some(rf: RelationField) => Some(SelectedRelationField.empty(rf)) // ++ recurse(rf.relatedModel_!, astField.selections)
+          case Some(rf: RelationField) => Some(SelectedRelationField(rf, SelectedFields(recurse(rf.relatedModel_!, astField.selections).toSet)))
           case None                    => recurse(model, astField.selections)
         }
 

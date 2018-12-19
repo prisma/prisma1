@@ -56,6 +56,9 @@ object QueryArguments {
 object SelectedFields {
   val empty             = SelectedFields(Set.empty)
   def all(model: Model) = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
+  def allRecursive(model: Model) = {
+    SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
+  }
   def byFieldAndPath(field: RelationField, path: Path) =
     SelectedFields((List(SelectedRelationField.empty(field)) ++ path.relationFieldToSelect.map(SelectedRelationField.empty)).toSet)
 }
@@ -79,8 +82,9 @@ case class SelectedFields(fields: Set[SelectedField]) {
     case rf if rf.relation.isInlineRelation && !rf.relation.isSelfRelation && rf.relation.inlineManifestation.get.inTableOfModelName == rf.model.name => rf
   }
 
-  val scalarDbFields         = scalarNonListFields ++ inlineRelationFields.map(_.scalarCopy)
-  val scalarSelectedDbFields = scalarDbFields.map(SelectedScalarField)
+  val scalarDbFields           = scalarNonListFields ++ inlineRelationFields.map(_.scalarCopy)
+  val scalarSelectedFields     = fields.collect { case selected: SelectedScalarField => selected }
+  val relationalSelectedFields = fields.collect { case selected: SelectedRelationField => selected }
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 

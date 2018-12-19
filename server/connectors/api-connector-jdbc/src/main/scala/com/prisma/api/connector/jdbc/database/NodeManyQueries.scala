@@ -69,7 +69,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
 
-    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.scalarSelectedDbFields ++ Set(SelectedRelationField.empty(fromField)))
+    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.scalarSelectedFields ++ Set(SelectedRelationField.empty(fromField)))
 
     if (isMySql && queryArguments.isWithPagination) {
       selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, queryArguments, selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))

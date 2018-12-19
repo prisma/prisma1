@@ -23,7 +23,7 @@ case class MongoDataResolver(project: Project, client: MongoClient, databaseOpti
   }
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
-    val query = queryBuilder.getNodeByWhere(where, selectedFields)
+    val query = queryBuilder.getNodeByWhere(where, selectedFields ++ SelectedFields(Set(SelectedScalarField(where.field))))
     SlickReplacement.run(database, query)
   }
 

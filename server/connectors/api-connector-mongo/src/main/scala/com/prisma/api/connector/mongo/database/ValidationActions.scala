@@ -13,7 +13,8 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     for {
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
-                         val selectedFields = SelectedFields(Set(SelectedScalarField(where.model.idField_!), SelectedRelationField.empty(relationField)))
+                         val selectedFields = SelectedFields(
+                           Set(SelectedScalarField(where.model.idField_!), SelectedScalarField(where.field), SelectedRelationField.empty(relationField)))
                          for {
                            optionRes <- getNodeByWhere(where, selectedFields)
                            filterOption = optionRes.flatMap { res =>
