@@ -1,0 +1,53 @@
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "prisma introspect",
+  position: 140,
+}
+
+## `$ prisma introspect`
+
+Creates a [datamodel](knul) by _introspecting_ the schema of an existing database.
+
+<Warning>
+
+`prisma introspect` currently only works for PostgreSQL and MongoDB databases.
+
+</Warning>
+
+Learn more about database introspection with Prisma [here](soi1).
+
+### Usage
+
+```sh
+prisma introspect
+```
+
+### Examples
+
+**Introspect an existing database**
+
+```sh
+prisma introspect
+```
+
+Here is a sample interaction where the PostgreSQL database connection details are provided through the wizard:
+
+```
+? What kind of database do you want to introspect? Postgres
+? Enter database host localhost
+? Enter database port 5432
+? Enter database user prisma
+? Enter database password ****
+? Enter name of existing database prisma-db
+? Enter name of existing schema public
+
+Introspecting database 402ms
+Created datamodel mapping based on 7 database tables.
+
+Created 1 new file:               
+
+  datamodel-[TIMESTAMP].graphql    GraphQL SDL-based datamodel (derived from existing database)
+```
+
+The generated datamodel file will contain a timestamp in its name to avoid overriding your existing `datamodel.prisma` file.
