@@ -44,16 +44,19 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def deleteModelValidation(x: DeleteModel) = {
-    clientDbQueries.existsByModel(x.name).map {
+    val model = previousSchema.getModelByName_!(x.name)
+    clientDbQueries.existsByModel(model).map {
       case true  => Vector(DeployWarnings.dataLossModel(x.name))
       case false => Vector.empty
     }
   }
 
   private def createFieldValidation(x: CreateField) = {
-    def newRequiredScalarField(model: Model) = x.relation.isEmpty && x.isRequired match {
+    val field = nextSchema.getFieldByName_!(x.model, x.name)
+
+    def newRequiredScalarField(model: Model) = field.isScalar && field.isRequired match {
       case true =>
-        clientDbQueries.existsByModel(model.name).map {
+        clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
               DeployError(`type` = model.name,
@@ -64,24 +67,24 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       case false =>
         validationSuccessful
     }
-    def newToOneBackRelationField(model: Model) = x.relation.nonEmpty && !x.isList && previousSchema.relations.map(_.name).contains(x.relation.get) match {
-      case true =>
-        val previousRelation                   = previousSchema.relations.find(r => x.relation.contains(r.name)).get
-        val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
+    def newToOneBackRelationField(model: Model) = {
+      field match {
+        case rf: RelationField if !rf.isList && previousSchema.relations.exists(rel => rel.name == rf.relation.name) =>
+          val previousRelation                   = previousSchema.getRelationByName_!(rf.relation.name)
+          val relationSideThatCantHaveDuplicates = if (previousRelation.modelAName == model.name) RelationSide.A else RelationSide.B
 
-        clientDbQueries.existsDuplicateByRelationAndSide(s"_${x.relation.get}", relationSideThatCantHaveDuplicates).map {
-          case true =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                description =
-                  s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
-              ))
-          case false => Vector.empty
-        }
-
-      case false =>
-        validationSuccessful
+          clientDbQueries.existsDuplicateByRelationAndSide(previousRelation, relationSideThatCantHaveDuplicates).map {
+            case true =>
+              Vector(
+                DeployError(
+                  `type` = model.name,
+                  description =
+                    s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
+                ))
+            case false => Vector.empty
+          }
+        case _ => validationSuccessful
+      }
     }
 
     previousSchema.getModelByName(x.model) match {
@@ -103,7 +106,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     val isScalar = model.fields.find(_.name == x.name).get.isScalar
 
     if (isScalar) {
-      clientDbQueries.existsByModel(model.name).map {
+      clientDbQueries.existsByModel(model).map {
         case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
         case false => Vector.empty
       }
@@ -116,17 +119,16 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     val model                    = previousSchema.getModelByName_!(x.model)
     val oldField                 = model.getFieldByName_!(x.name)
     val newField                 = nextSchema.getModelByName_!(x.newModel).getFieldByName_!(x.finalName)
-    val cardinalityChanges       = x.isList.isDefined
-    val typeChanges              = x.typeName.isDefined
-    val goesFromScalarToRelation = oldField.isScalar && x.relation.isDefined
-    val goesFromRelationToScalar = oldField.isRelation && x.relation.isDefined && x.relation.get.isEmpty
-
-    val becomesRequired = x.isRequired.contains(true)
-    val becomesUnique   = x.isUnique.contains(true)
+    val cardinalityChanges       = oldField.isList != newField.isList
+    val typeChanges              = oldField.typeIdentifier != newField.typeIdentifier
+    val goesFromScalarToRelation = oldField.isScalar && newField.isRelation
+    val goesFromRelationToScalar = oldField.isRelation && newField.isScalar
+    val becomesRequired          = !oldField.isRequired && newField.isRequired
+    val becomesUnique            = !oldField.isUnique && newField.isUnique
 
     def warnings: Future[Vector[DeployWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
       case true =>
-        clientDbQueries.existsByModel(model.name).map {
+        clientDbQueries.existsByModel(model).map {
           case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
           case false => Vector.empty
         }
@@ -147,7 +149,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
           case false => Vector.empty
         }
       } else if (newField.isRequired && typeChanges) {
-        clientDbQueries.existsByModel(model.name).map {
+        clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
               DeployError(
@@ -192,11 +194,9 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def updateEnumValidation(x: UpdateEnum) = {
-    val oldEnum = previousSchema.enums.find(_.name == x.name)
-    val deletedValues: Vector[String] = x.values match {
-      case None            => Vector.empty
-      case Some(newValues) => oldEnum.get.values.filter(value => !newValues.contains(value))
-    }
+    val oldEnum                       = previousSchema.getEnumByName_!(x.name)
+    val newEnum                       = nextSchema.getEnumByName_!(x.finalName)
+    val deletedValues: Vector[String] = oldEnum.values.filter(value => !newEnum.values.contains(value))
 
     if (deletedValues.nonEmpty) {
       val modelsWithFieldsThatUseEnum = previousSchema.models.filter(m => m.fields.exists(f => f.enum.isDefined && f.enum.get.name == x.name)).toVector
@@ -228,7 +228,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
 
       if (modelARequired) previousSchema.models.find(_.name == modelName) match {
         case Some(model) =>
-          clientDbQueries.existsByModel(model.name).map {
+          clientDbQueries.existsByModel(model).map {
             case true =>
               Vector(DeployError(`type` = model.name, s"You are creating a required relation, but there are already nodes that would violate that constraint."))
             case false => Vector.empty
@@ -240,7 +240,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       }
     }
 
-    val checks = Vector(checkRelationSide(x.modelAName), checkRelationSide(x.modelBName))
+    val checks = Vector(checkRelationSide(nextRelation.modelAName), checkRelationSide(nextRelation.modelBName))
 
     Future.sequence(checks).map(_.flatten)
   }
@@ -248,7 +248,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   private def deleteRelationValidation(x: DeleteRelation) = {
     val previousRelation = previousSchema.relations.find(_.name == x.name).get
 
-    clientDbQueries.existsByRelation(previousRelation.relationTableName).map {
+    clientDbQueries.existsByRelation(previousRelation).map {
       case true  => Vector(DeployWarnings.dataLossRelation(x.name))
       case false => Vector.empty
     }

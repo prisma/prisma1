@@ -248,11 +248,11 @@ type Post {
 
 #### 1.2. Deploy a Prisma service
 
-To deploy the Prisma service, we also need a minimal prisma.yml. Assumed the above data model is stored in a file called `datamodel.graphql`, this is what prisma.yml could look like:
+To deploy the Prisma service, we also need a minimal prisma.yml. Assumed the above data model is stored in a file called `datamodel.prisma`, this is what prisma.yml could look like:
 
 ```yml
 endpoint: http://localhost:4466
-datatamodel: datamodel.graphql
+datatamodel: datamodel.prisma
 ```
 
 Now you can run `prisma deploy` and the service will be deployed to a Prisma server running on `http://localhost:4466`.

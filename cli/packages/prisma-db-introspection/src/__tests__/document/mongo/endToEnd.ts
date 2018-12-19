@@ -4,7 +4,7 @@ import { collections, schemaString } from '../data/webshop'
 
 const env = new MongoTestEnvironment()
 
-describe.skip('Mongo Model Introspector, end to end', () => {
+describe('Mongo Model Introspector, end to end', () => {
   beforeAll(async () => await env.connect())
   afterAll(async () => await env.disconnect())
   afterEach(async () => await env.clear())
@@ -18,5 +18,5 @@ describe.skip('Mongo Model Introspector, end to end', () => {
     const schema = await introspection.renderToDatamodelString()
 
     expect(schema).toEqual(schemaString)
-  }, 10000)
+  }, 20000)
 })

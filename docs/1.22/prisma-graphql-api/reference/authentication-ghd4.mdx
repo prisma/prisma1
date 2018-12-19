@@ -174,7 +174,7 @@ endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo se
 datamodel: datamodel.prisma
 ```
 
-For this example, assume the service gets deployed to a Demo server and therefore is available on the public internet.
+For this example, assume the service gets deployed to a [Demo server](jfr3) and therefore is available on the public internet.
 
 When the service gets deployed with the above service configuration, _everyone_ who knows the service's endpoint is able to send queries and mutations to its API, meaning they effectively can perform **arbitrary reads and writes against your database**:
 

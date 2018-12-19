@@ -248,23 +248,13 @@ Field names can only contain **alphanumeric characters** and need to start with 
 
 A `String` holds text. This is the type you would use for a username, the content of a blog post or anything else that is best represented as text.
 
-String values are currently limited to 256KB in size on Demo servers. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
+String values are currently limited to 256KB in size on [Demo servers](jfr3). This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
 
 Here is an example of a `String` scalar definition:
 
 ```graphql
 type User {
   name: String
-}
-```
-
-When used as arguments in an operation, `String` fields have to be specified using enclosing double quotes:
-
-```graphql
-query {
-  user(name: "Sarah") {
-    id
-  }
 }
 ```
 
@@ -282,16 +272,6 @@ type User {
 }
 ```
 
-When used as arguments in an operation, `Int` fields have to be specified without any enclosing characters:
-
-```graphql
-query {
-  user(age: 42) {
-    id
-  }
-}
-```
-
 #### Float
 
 A `Float` is a number that can have decimals. Use this to store values such as the price of an item in a store or the result of complex calculations.
@@ -303,16 +283,6 @@ Here is an example of a `Float` scalar definition:
 ```graphql
 type Item {
   price: Float
-}
-```
-
-When used as arguments in an operation, `Float` fields have to be specified without any enclosing characters and an optional decimal point:
-
-```graphql
-query {
-  item(priceLargerThan: 42.2) {
-    id
-  }
 }
 ```
 
@@ -328,16 +298,6 @@ type User {
 }
 ```
 
-When used as arguments in an operation, `Float` fields have to be specified without any enclosing characters: `boolean: true`, `boolean: false`:
-
-```graphql
-query {
-  user(overEighteen: true) {
-    id
-  }
-}
-```
-
 #### DateTime
 
 The `DateTime` type can be used to store date and/or time values. A good example might be a person's date of birth or the time/data when a specific event is happening.
@@ -350,22 +310,12 @@ type User {
 }
 ```
 
-When used as arguments in an operation, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes:
+When used as arguments in an operation, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) and are typically passed as strings, here are a few examples:
 
-```graphql
-query {
-  user(birthday: "2015-11-22") { # November 22, 2015
-    id
-  }
-}
-```
-
-ISO 8601 further accepts the following formats:
-
-- `datetime: "2015"`
-- `datetime: "2015-11"`
-- `datetime: "2015-11-22"`
-- `datetime: "2015-11-22T13:57:31.123Z"`.
+- `"2015"`
+- `"2015-11"`
+- `"2015-11-22"`
+- `"2015-11-22T13:57:31.123Z"`.
 
 #### Enum
 
@@ -387,16 +337,6 @@ type Article {
 }
 ```
 
-When used as arguments in an operation, Enum fields have to be specified in without enclosing double quotes:
-
-```graphql
-query {
-  article(format: COMPACT) {
-    id
-  }
-}
-```
-
 #### Json
 
 Sometimes you might need to store arbitrary JSON values for loosely structured data. The `Json` type makes sure that it is actually valid JSON and returns the value as a parsed JSON object/array instead of a string.
@@ -408,16 +348,6 @@ Here is an example of a `Json` definition:
 ```graphql
 type Item {
   data: Json
-}
-```
-
-When used as arguments in an operation, `Json` fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
-
-```graphql
-mutation {
-  createItem(data: "{\"int\": 1, \"string\": \"value\"}") {
-    data
-  }
 }
 ```
 
@@ -437,8 +367,8 @@ type User {
 
 In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifiers:
 
-- Required fields: Annotate the type with a `!`, e.g. `name: String!`
-- Lists: Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
+- **Lists**: Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
+- **Required fields**: Annotate the type with a `!`, e.g. `name: String!`
 
 #### List
 
@@ -469,6 +399,18 @@ type User {
 }
 ```
 
+When adding a required field to a model that already contains nodes, you receive this error message: "You are creating a required field but there are already nodes present that would violate that constraint."
+
+This is because all existing nodes would receive a `null` value for this field. This would violate the constraint of this field being _required_ (or _non-nullable_).
+
+Here are the steps that are needed to add a required field:
+
+1. Add the field being _optional_
+1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
+1. Now you can mark the field as _required_ and deploy as expected
+
+A more convenient workflow is discussed [in this feature request](https://github.com/prisma/prisma/issues/2323) on Github.
+
 ### Field constraints
 
 Fields can be configured with field constraints to add further semantics and enforce certain rules in your datamodel.
@@ -495,6 +437,33 @@ For every field that's annotated with `@unique`, you're able to query the corres
 
 For example, considering the above datamodel, you can now retrieve a particular `User` node by its `email` address:
 
+<Code languages={["TypeScript", "JavaScript", "Flow", "Go", "GraphQL"]}>
+
+```ts
+const user = await prisma.user({
+  email: "alice@prisma.io"
+})
+```
+
+```js
+const user = await prisma.user({
+  email: "alice@prisma.io"
+})
+```
+
+```flow
+const user = await prisma.user({
+  email: "alice@prisma.io"
+})
+```
+
+```go
+email := "alice@prisma.io"
+userByEmail, err := client.User(prisma.UserWhereUniqueInput{
+  Email: &email,
+}).Exec(ctx)
+```
+
 ```graphql
 query {
   user(where: {
@@ -504,6 +473,8 @@ query {
   }
 }
 ```
+
+</Code>
 
 #### More constraints
 
@@ -577,42 +548,6 @@ type User {
 }
 ```
 
-### Generated API operations for fields
-
-Fields in the datamodel affect the available query arguments.
-
-### Changing the value of multiple scalar fields
-
-You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
-
-```graphql
-mutation {
-  # update the email of all users with no email address to the empty string
-  updateManyUsers(
-    where: {
-      email: null
-    }
-    data: {
-      email: ""
-    }
-  )
-}
-```
-
-### Adding a required field to the datamodel
-
-When adding a required field to a model that already contains nodes, you receive this error message: "You are creating a required field but there are already nodes present that would violate that constraint."
-
-This is because all existing nodes would receive a `null` value for this field. This would violate the constraint of this field being _required_ (or _non-nullable_).
-
-Here are the steps that are needed to add a required field:
-
-1. Add the field being _optional_
-1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
-1. Now you can mark the field as _required_ and deploy as expected
-
-A more convenient workflow is discussed [in this feature request](https://github.com/prisma/prisma/issues/2323) on Github.
-
 ## Relations
 
 A _relation_ defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields). When a relation is ambiguous, the relation field needs to be annotated with the [`@relation`](#relation-fields) directive to disambiguate it.
@@ -645,8 +580,8 @@ A self-relation can also be bidirectional:
 ```graphql
 type User {
   id: ID! @unique
-  following: [User!]! @relation(name: "Followers")
-  followers: [User!]! @relation(name: "Followers")
+  following: [User!]! @relation(name: "FollowRelation")
+  followers: [User!]! @relation(name: "FollowRelation")
 }
 ```
 
@@ -673,7 +608,55 @@ type Car {
 }
 ```
 
-A `Car` can never be created without a `User` and the other way around because that would violate the required constraint. You therefore need to create both at the same time using a nested mutation:
+A `Car` can never be created without a `User` and the other way around because that would violate the required constraint. You therefore need to create both at the same time using a declarative nested write:
+
+<Code languages={["TypeScript", "JavaScript", "Flow", "Go", "GraphQL"]}>
+
+```ts
+const newUser = await prisma
+  .createUser({
+    car: {
+      create: {
+        color: "Yellow"
+      }
+    }
+  })
+```
+
+```js
+const newUser = await prisma
+  .createUser({
+    car: {
+      create: {
+        color: "Yellow"
+      }
+    }
+  })
+```
+
+```flow
+const newUser = await prisma
+  .createUser({
+    car: {
+      create: {
+        color: "Yellow"
+      }
+    }
+  })
+```
+
+```go
+color := "Yellow"
+newUser, err := client.CreateUser(prisma.UserCreateInput{
+	Car: &prisma.CarCreateManyWithoutOwnerInput{
+		Create: []prisma.CarCreateWithoutOwnerInput{
+			prisma.CarCreateWithoutOwnerInput{
+				Color: color,
+			},
+		},
+	},
+}).Exec(ctx)
+```
 
 ```graphql
 mutation {
@@ -691,6 +674,8 @@ mutation {
   }
 }
 ```
+
+</Code>
 
 Note that a _to-many_ relation field is always set to required. For example, a field that contains many user addresses always uses the type `[Address!]!` and can never be of type `[Address!]`, `[Address]!` or `[Address]`.
 
@@ -809,14 +794,6 @@ Let's investigate the deletion behaviour for the three types:
 - When a `Comment` node gets deleted,
   - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
   - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
-
-### Generated API operations for relations
-
-The relations that are included in your schema affect the available operations in the [Prisma API](/use-prisma-api). Here is an overview of the generated CRUD and realtime operations for every relation in your Prisma API:
-
-- [Relation queries](qwe1#querying-data-across-relations) allow you to query data across types or aggregated for a relation (note that this is also possible using [Relay](https://facebook.github.io/relay/)'s [connection model](qwe1#connection-queries)).
-- [Nested mutations](qwe2#nested-mutations) allow you to create, connect, update, upsert and delete multiple related nodes within the same mutation.
-- [Relation subscriptions](qwe3#relation-subscriptions) allow you to get notified of changes to a relation.
 
 ## SDL directives
 

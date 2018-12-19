@@ -5,6 +5,7 @@ import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonValue, conversions}
 import org.mongodb.scala.model.Updates.combine
+import collection.JavaConverters._
 
 case class CombinedPullDefinition(keys: Vector[String], value: BsonValue)
 
@@ -39,9 +40,10 @@ object CustomUpdateCombiner {
   }
 
   private def bsonDocumentFilter(keys: List[String], array: BsonArray): Document = keys match {
-    case Nil          => sys.error("should not happen")
-    case head :: Nil  => BsonDocument(head -> BsonDocument("$in" -> array))
-    case head :: tail => BsonDocument(head -> bsonDocumentFilter(tail, array))
+    case Nil                  => sys.error("should not happen")
+    case head :: Nil          => BsonDocument(head -> BsonDocument("$in" -> array))
+    case head :: "$in" :: Nil => BsonDocument(head -> BsonDocument("$in" -> array.getValues.asScala.flatMap(_.asArray().getValues.asScala)))
+    case head :: tail         => BsonDocument(head -> bsonDocumentFilter(tail, array))
   }
 
   private def documentToCombinedPullDefinition(doc: Document, keys: Vector[String] = Vector.empty): CombinedPullDefinition = {
