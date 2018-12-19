@@ -17,11 +17,13 @@ object InternalDatabaseSchema {
 
   def dropAction(internalSchema: String) = DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "#$internalSchema" CASCADE;""")
 
-  def setupActions(internalSchema: String)(implicit ec: ExecutionContext) = DBIO.seq(
-    sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",
-    sqlu"""SET SCHEMA '#$internalSchema';""",
-    // Project
-    sqlu"""
+  def setupActions(internalSchema: String)(implicit ec: ExecutionContext) =
+    DBIO
+      .seq(
+        sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",
+        sqlu"""SET SCHEMA '#$internalSchema';""",
+        // Project
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "Project" (
         "id" varchar(200) NOT NULL DEFAULT '',
         "secrets" text DEFAULT NULL,
@@ -30,8 +32,8 @@ object InternalDatabaseSchema {
         "functions" text DEFAULT NULL,
         PRIMARY KEY ("id")
       );""",
-    // Migration
-    sqlu"""
+        // Migration
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "Migration" (
         "projectId" varchar(200)  NOT NULL DEFAULT '',
         "revision" int NOT NULL DEFAULT '1',
@@ -47,28 +49,29 @@ object InternalDatabaseSchema {
         PRIMARY KEY ("projectId", "revision"),
         CONSTRAINT "migrations_projectid_foreign" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
       );""",
-    addDataModelColumnToMigrationTable(internalSchema),
-    // Internal migrations
-    sqlu"""
+        addDataModelColumnToMigrationTable(internalSchema),
+        // Internal migrations
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "InternalMigration" (
         "id" varchar(255)  NOT NULL,
         "appliedAt" timestamp NOT NULL,
         PRIMARY KEY ("id")
       );""",
-    // Telemetry
-    sqlu"""
+        // Telemetry
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "TelemetryInfo" (
         "id" varchar(255)  NOT NULL,
         "lastPinged" timestamp,
         PRIMARY KEY ("id")
       );""",
-    // CloudSecret
-    sqlu"""
+        // CloudSecret
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "CloudSecret" (
         "secret" varchar(255) NOT NULL,
         PRIMARY KEY ("secret")
       );"""
-  )
+      )
+      .withPinnedSession // used pinned connection so that the SET SCHEMA statement is valid throughout all statements
 
   def addDataModelColumnToMigrationTable(internalSchema: String)(implicit ec: ExecutionContext) =
     for {
