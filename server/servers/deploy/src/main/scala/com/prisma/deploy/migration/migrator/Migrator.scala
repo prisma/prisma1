@@ -6,5 +6,5 @@ import scala.concurrent.Future
 
 trait Migrator {
   def initialize: Unit
-  def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration]
+  def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function], rawDataModel: String): Future[Migration]
 }
