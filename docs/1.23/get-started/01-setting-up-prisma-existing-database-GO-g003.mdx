@@ -50,7 +50,7 @@ You also need to know whether your database server uses **SSL**.
 
 <Collapse title="Required connection details for MongoDB">
 
-Your MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string/).
+Your MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string/). Note that this must include the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database that's storing the credentials of your MongoDB admin user.
 
 </Collapse>
 
@@ -94,7 +94,7 @@ touch docker-compose.yml
 
 ### Add Prisma Docker image
 
-Paste the following contents into the Docker Compose file you just created:
+Select your database on the code block and put the following contents into the Docker Compose file you just created:
 
 <Code languages={["PostgreSQL", "MySQL", "MongoDB"]}>
 
