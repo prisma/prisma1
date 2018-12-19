@@ -4,7 +4,7 @@ import Warning from 'components/Markdown/Warning'
 export const meta = {
   title: "Database Connector (Mongo)",
   position: 52,
-  technology: "mongo",
+  technology: "mongodb",
   technologyOrder: 3,
   articleGroup: "Database Connector"
 }
@@ -35,16 +35,6 @@ PRISMA_CONFIG: |
 ```
 
 </Code>
-
-## Migrations
-
-The 
-
-### Enabling and disabling database migrations
-
-If `migrations` is set to `true`, deploying a Prisma service migrates the structure of the connected database. In these cases, the Prisma CLI will be the main interface to govern the structure of the database based on the datamodel of your Prisma services.
-
-If `migrations` is set to `false`, the database schema is "locked" and Prisma won't perform any changes on it.
 
 ## Managing database connections
 

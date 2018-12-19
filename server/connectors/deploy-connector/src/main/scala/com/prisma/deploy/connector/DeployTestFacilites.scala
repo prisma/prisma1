@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector
 
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+
 import scala.concurrent.Future
 
 case class DeployTestFacilites(inspector: DatabaseInspector)
@@ -24,6 +26,6 @@ case class Table(name: String, columns: Vector[Column], indexes: Vector[Index]) 
   def column(name: String): Option[Column] = columns.find(_.name == name)
 }
 
-case class Index(name: String)
-case class Column(name: String, tpe: String, foreignKey: Option[ForeignKey])
+case class Index(name: String, columns: Vector[String], unique: Boolean)
+case class Column(name: String, tpe: String, typeIdentifier: TypeIdentifier, isRequired: Boolean, foreignKey: Option[ForeignKey])
 case class ForeignKey(table: String, column: String)

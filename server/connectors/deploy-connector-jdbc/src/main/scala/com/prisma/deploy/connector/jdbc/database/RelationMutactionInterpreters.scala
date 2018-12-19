@@ -1,18 +1,10 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.deploy.connector.{CreateInlineRelationForTests, CreateRelationTable, DeleteRelationTable, RenameRelationTable}
+import com.prisma.deploy.connector._
 
 case class CreateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable) = {
-    val modelA = mutaction.relation.modelA
-    val modelB = mutaction.relation.modelB
-
-    builder.createRelationTable(
-      projectId = mutaction.projectId,
-      relationTableName = mutaction.relation.relationTableName,
-      modelA = modelA,
-      modelB = modelB
-    )
+    builder.createRelationTable(mutaction.projectId, mutaction.relation)
   }
 
   override def rollback(mutaction: CreateRelationTable) = {
@@ -26,26 +18,37 @@ case class DeleteRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder)
   }
 
   override def rollback(mutaction: DeleteRelationTable) = {
-    val createRelation = CreateRelationTable(mutaction.projectId, mutaction.schema, mutaction.relation)
+    val createRelation = CreateRelationTable(mutaction.projectId, mutaction.relation)
     CreateRelationInterpreter(builder).execute(createRelation)
   }
 }
 
-case class RenameRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[RenameRelationTable] {
-  override def execute(mutaction: RenameRelationTable) = {
-    builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.previousName, newName = mutaction.nextName)
+case class UpdateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateRelationTable] {
+  override def execute(mutaction: UpdateRelationTable) = {
+    builder.updateRelationTable(mutaction.projectId, previousRelation = mutaction.previousRelation, nextRelation = mutaction.nextRelation)
   }
 
-  override def rollback(mutaction: RenameRelationTable) = {
-    builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.nextName, newName = mutaction.previousName)
-
+  override def rollback(mutaction: UpdateRelationTable) = {
+    builder.updateRelationTable(mutaction.projectId, previousRelation = mutaction.nextRelation, nextRelation = mutaction.previousRelation)
   }
 }
 
-case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelationForTests] {
-  override def execute(mutaction: CreateInlineRelationForTests) = {
+case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelation] {
+  override def execute(mutaction: CreateInlineRelation) = {
     builder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
   }
 
-  override def rollback(mutaction: CreateInlineRelationForTests) = ???
+  override def rollback(mutaction: CreateInlineRelation) = {
+    DeleteInlineRelationInterpreter(builder).execute(DeleteInlineRelation(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column))
+  }
+}
+
+case class DeleteInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteInlineRelation] {
+  override def execute(mutaction: DeleteInlineRelation) = {
+    builder.deleteRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
+  }
+
+  override def rollback(mutaction: DeleteInlineRelation) = {
+    CreateInlineRelationInterpreter(builder).execute(CreateInlineRelation(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column))
+  }
 }

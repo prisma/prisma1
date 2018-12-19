@@ -73,7 +73,7 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     userUniques(filter) should be(Vector(1, 2, 3, 4))
   }
 
-  "Relation Null filter" should "work" taggedAs (IgnoreMongo) in {
+  "Relation Null filter" should "work" in {
 
     val filter = "(where: {ride: null})"
 
@@ -94,42 +94,42 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     userUniques(filter) should be(Vector(1, 2, 3, 4))
   }
 
-  "OR filter" should "work" in {
+  "OR filter" should "work" taggedAs (IgnoreMongo) in {
 
     val filter = """(where: {OR:[{unique_gt: 2},{name_starts_with: "P"}]})"""
 
     userUniques(filter) should be(Vector(1, 3, 4))
   }
 
-  "Empty OR filter" should "work" in {
+  "Empty OR filter" should "work" taggedAs (IgnoreMongo) in {
 
     val filter = """(where: {OR:[]})"""
 
     userUniques(filter) should be(Vector())
   }
 
-  "Empty NOT filter" should "work" in {
+  "Empty NOT filter" should "work" taggedAs (IgnoreMongo) in {
 
     val filter = """(where: {NOT:[]})"""
 
     userUniques(filter) should be(Vector(1, 2, 3, 4))
   }
 
-  "NOT filter" should "work" in {
+  "NOT filter" should "work" taggedAs (IgnoreMongo) in {
 
     val filter = """(where: {NOT:{name_starts_with: "P"}})"""
 
     userUniques(filter) should be(Vector(2, 3, 4))
   }
 
-  "NOT filter" should "work as list" in {
+  "NOT filter" should "work as list" taggedAs (IgnoreMongo) in {
 
     val filter = """(where: {NOT:[{name_contains: "e"},{unique:1}]})"""
 
     userUniques(filter) should be(Vector(4))
   }
 
-  "Nested filter" should "work" taggedAs (IgnoreMongo) in {
+  "Nested filter" should "work" in {
 
     val filter = """(where: {ride:{brand_starts_with: "P"}})"""
 

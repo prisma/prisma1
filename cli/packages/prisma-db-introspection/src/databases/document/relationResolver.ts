@@ -2,6 +2,7 @@ import { SamplingStrategy, ICollectionDescription, IDocumentConnector, IDataExis
 import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { Data } from './data'
 import { ModelSampler } from './modelSampler'
+import { IDirectiveInfo } from '../../../../prisma-datamodel/dist/datamodel/model';
 
 export interface IRelationResolver<InternalCollectionType> {
   resolve(types: IGQLType[], resolver: IDataExists<InternalCollectionType>, schemaName: string) : Promise<void>
@@ -139,11 +140,18 @@ class RelationResolveContext<Type> {
             if(field.relationName === ModelSampler.ErrorType) {
               if(data[field.name] !== undefined) {
                 const value = data[field.name]
-                for(const collection of this.collections) {
-                  if(await this.connector.exists(collection.collection, value)) {
-                    this.fieldScores[field.name][collection.name].hits += 1
-                  } else {
-                    this.fieldScores[field.name][collection.name].misses += 1
+                if(Array.isArray(value) !== field.isList) {
+                  throw new Error(`Array declaration missmatch: ${this.type.name}.${field.name} `)
+                }
+                const values = Array.isArray(value) ? value : [value]
+                // Handling of array relations. 
+                for(const value of values) {
+                  for(const collection of this.collections) {
+                    if(await this.connector.exists(collection.collection, value)) {
+                      this.fieldScores[field.name][collection.name].hits += 1
+                    } else {
+                      this.fieldScores[field.name][collection.name].misses += 1
+                    }
                   }
                 }
               }
@@ -193,6 +201,25 @@ class RelationResolveContext<Type> {
               }
 
               field.type = foreignType
+
+              // Add relation directive
+              const relationDirective: IDirectiveInfo = {
+                name: "relation",
+                arguments: { }
+              }
+
+              // Explicit assignment here is a workaround for a TS/Jest bug. 
+              // The object initialization above creates a field called 'arguments_1' for 
+              // whatever reason. 
+              relationDirective.arguments = {
+                link: "INLINE"
+              }
+
+              if(field.directives === undefined) {
+                field.directives = [relationDirective]
+              } else {
+                field.directives.push(relationDirective)
+              }
             }
             // We always remove the fields <unknown> relation tag. 
             field.relationName = null

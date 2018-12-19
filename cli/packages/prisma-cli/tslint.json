@@ -1,9 +1,5 @@
 {
-  "extends": [
-    "tslint:latest",
-    "tslint-eslint-rules",
-    "tslint-config-prettier"
-  ],
+  "extends": ["tslint:latest", "tslint-eslint-rules", "tslint-config-prettier"],
   "rules": {
     "semicolon": false,
     "ordered-imports": false,
@@ -11,6 +7,7 @@
     "interface-name": false,
     "member-access": false,
     "no-object-literal-type-assertion": false,
-    "no-console": [false]
+    "no-console": [false],
+    "no-implicit-dependencies": [true, "dev"]
   }
 }
