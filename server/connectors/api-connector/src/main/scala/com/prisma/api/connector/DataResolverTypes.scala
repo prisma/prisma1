@@ -54,37 +54,39 @@ object QueryArguments {
 }
 
 object SelectedFields {
-  val empty                                            = SelectedFields(Set.empty)
-  def all(model: Model)                                = SelectedFields(model.fields.toSet)
-  def byFieldAndPath(field: Field, path: Path)         = SelectedFields((List(field) ++ path.relationFieldToSelect).toSet)
-  def byFieldsAndPath(fields: List[Field], path: Path) = SelectedFields((fields ++ path.relationFieldToSelect).toSet)
-}
-object SelectedFieldsNew {
-  sealed trait SelectedField
-  case class SelectedScalarField(field: ScalarField)                                     extends SelectedField
-  case class SelectedRelationField(field: RelationField, selectedFields: SelectedFields) extends SelectedField
-
-  case class SelectedFields(fields: Set[SelectedField])
+  val empty             = SelectedFields(Set.empty)
+  def all(model: Model) = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
+  def byFieldAndPath(field: RelationField, path: Path) =
+    SelectedFields((List(SelectedRelationField.empty(field)) ++ path.relationFieldToSelect.map(SelectedRelationField.empty)).toSet)
 }
 
-case class SelectedFields(fields: Set[Field]) {
-  val scalarFields        = fields.collect { case f: ScalarField              => f }
-  val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
-  val scalarNonListFields = fields.collect { case f: ScalarField if !f.isList => f }
-  val relationFields      = fields.collect { case f: RelationField            => f }
+sealed trait SelectedField
+case class SelectedScalarField(field: ScalarField)                                     extends SelectedField
+case class SelectedRelationField(field: RelationField, selectedFields: SelectedFields) extends SelectedField
+
+object SelectedRelationField {
+  def empty(rf: RelationField) = SelectedRelationField(rf, SelectedFields.empty)
+}
+
+case class SelectedFields(fields: Set[SelectedField]) {
+  val scalarFields        = fields.collect { case selected: SelectedScalarField                           => selected.field }
+  val scalarListFields    = fields.collect { case selected: SelectedScalarField if selected.field.isList  => selected.field }
+  val scalarNonListFields = fields.collect { case selected: SelectedScalarField if !selected.field.isList => selected.field }
+  val relationFields      = fields.collect { case selected: SelectedRelationField                         => selected.field }
   private val inlineRelationFields = relationFields.collect {
     case rf if !rf.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.B                        => rf
     case rf if rf.relatedField.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.A            => rf
     case rf if rf.relation.isInlineRelation && !rf.relation.isSelfRelation && rf.relation.inlineManifestation.get.inTableOfModelName == rf.model.name => rf
   }
 
-  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.scalarCopy)
+  val scalarDbFields         = scalarNonListFields ++ inlineRelationFields.map(_.scalarCopy)
+  val scalarSelectedDbFields = scalarDbFields.map(SelectedScalarField)
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 
   def includeOrderBy(queryArguments: QueryArguments): SelectedFields = queryArguments.orderBy match {
     case None          => this
-    case Some(orderBy) => this ++ SelectedFields(Set(orderBy.field))
+    case Some(orderBy) => this ++ SelectedFields(Set(SelectedScalarField(orderBy.field)))
   }
 
 }
