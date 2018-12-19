@@ -21,6 +21,12 @@ Here is an overview of how the vocabulary differs between the two database types
 | JOIN | Embedded Document _or_ Reference |
 *Source: [MongoDB Documentation](https://www.mongodb.com/blog/post/thinking-documents-part-1)*
 
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
 ### Tables vs Collections
 
 Relational databases store their data in **tables** that are defined within the database _schema_. Data is [normalized](https://en.wikipedia.org/wiki/Database_normalization) (_flattened_) and relations between tables are implemented using _keys_ as references between data records. A table contains a number of **rows** which represent _instances_ of the table.
@@ -212,10 +218,11 @@ type Post @db(name: "post") {
 
 The `@embedded` directive is used for _embedded types_. Find more info [above](#embedded-types).
 
-### Limitations & Notes
+## Limitations & Notes
 
 - The `@rename` directive doesn't work with MongoDB
 - Any field that's annotated with the `@id` directive is mapped to the [`_id`](https://docs.mongodb.com/manual/core/document/#the-id-field) field in MongoDB.
+- The MongoDB connector does not support transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
 
 ## Get started with a new database
 
