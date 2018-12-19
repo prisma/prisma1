@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/ruby -w
 
 # Regardless of where the script is called, always use the script location as base.
 Dir.chdir(__dir__)
