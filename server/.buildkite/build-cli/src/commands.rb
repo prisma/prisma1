@@ -5,11 +5,11 @@ def upload_pipeline(context)
   yml = PipelineRenderer.render!([
     PipelineStep.new
       .label(":mysql: MySql API connector")
-      .command("./.buildkite/scripts/test.sh deploy-connector-mysql mysql"),
+      .command("./server/.buildkite/scripts/test.sh deploy-connector-mysql mysql"),
 
     PipelineStep.new
       .label(":mysql: MySql deploy connector")
-      .command("./.buildkite/scripts/test.sh deploy-connector-mysql mysql")
+      .command("./server/.buildkite/scripts/test.sh deploy-connector-mysql mysql")
   ], context)
 
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([yml]).run!
