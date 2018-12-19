@@ -2,7 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.api.connector.SelectedFields
 import com.prisma.api.schema.SangriaExtensions.ContextExtensions
-import com.prisma.shared.models.Model
+import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import sangria.ast.Selection
 import sangria.schema.Context
 
@@ -20,7 +20,11 @@ object SangriaExtensions {
 
     private def recurse(model: Model, selections: Vector[Selection]): Vector[com.prisma.shared.models.Field] = selections.flatMap {
       case astField: sangria.ast.Field =>
-        model.getFieldByName(astField.name) ++ recurse(model, astField.selections)
+        model.getFieldByName(astField.name) match {
+          case Some(sf: ScalarField)   => Some(sf)
+          case Some(rf: RelationField) => Some(rf) // ++ recurse(rf.relatedModel_!, astField.selections) here we could go to other models
+          case None                    => recurse(model, astField.selections)
+        }
 
       case fragmentSpread: sangria.ast.FragmentSpread =>
         val fragment = ctx.query.fragments(fragmentSpread.name)

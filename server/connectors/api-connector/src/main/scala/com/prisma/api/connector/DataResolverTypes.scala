@@ -59,6 +59,14 @@ object SelectedFields {
   def byFieldAndPath(field: Field, path: Path)         = SelectedFields((List(field) ++ path.relationFieldToSelect).toSet)
   def byFieldsAndPath(fields: List[Field], path: Path) = SelectedFields((fields ++ path.relationFieldToSelect).toSet)
 }
+object SelectedFieldsNew {
+  sealed trait SelectedField
+  case class SelectedScalarField(field: ScalarField)                                     extends SelectedField
+  case class SelectedRelationField(field: RelationField, selectedFields: SelectedFields) extends SelectedField
+
+  case class SelectedFields(fields: Set[SelectedField])
+}
+
 case class SelectedFields(fields: Set[Field]) {
   val scalarFields        = fields.collect { case f: ScalarField              => f }
   val scalarListFields    = fields.collect { case f: ScalarField if f.isList  => f }
