@@ -2,8 +2,10 @@ package com.prisma.deploy.connector.mysql.database
 
 import slick.jdbc.MySQLProfile.api._
 
+import scala.concurrent.ExecutionContext
+
 object MySqlInternalDatabaseSchema {
-  def createSchemaActions(databaseName: String, recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
+  def createSchemaActions(databaseName: String, recreate: Boolean)(implicit ec: ExecutionContext): DBIO[Unit] = {
     if (recreate) {
       DBIO.seq(dropAction(databaseName), setupActions(databaseName))
     } else {
@@ -13,7 +15,7 @@ object MySqlInternalDatabaseSchema {
 
   def dropAction(db: String) = DBIO.seq(sqlu"DROP SCHEMA IF EXISTS `#$db`;")
 
-  def setupActions(db: String) = DBIO.seq(
+  def setupActions(db: String)(implicit ec: ExecutionContext) = DBIO.seq(
     sqlu"CREATE SCHEMA IF NOT EXISTS `#$db` DEFAULT CHARACTER SET latin1;",
     sqlu"USE `#$db`;",
     // Project
@@ -43,6 +45,7 @@ object MySqlInternalDatabaseSchema {
         PRIMARY KEY (`projectId`, `revision`),
         CONSTRAINT `migrations_projectid_foreign` FOREIGN KEY (`projectId`) REFERENCES `Project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
+    addDataModelColumnToMigrationTable(db),
     // Internal migrations
     sqlu"""
       CREATE TABLE IF NOT EXISTS `InternalMigration` (
@@ -64,4 +67,19 @@ object MySqlInternalDatabaseSchema {
         PRIMARY KEY (`secret`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;""",
   )
+
+  def addDataModelColumnToMigrationTable(internalSchema: String)(implicit ec: ExecutionContext) =
+    for {
+      doesExist <- doesColumnExist(internalSchema, "Migration", "datamodel")
+      _         <- if (doesExist) DBIO.successful(()) else sqlu"""ALTER TABLE `Migration` ADD COLUMN `datamodel` mediumtext COLLATE utf8_unicode_ci DEFAULT NULL;"""
+    } yield ()
+
+  def doesColumnExist(schema: String, table: String, column: String)(implicit ec: ExecutionContext): DBIO[Boolean] = {
+    sql"""
+         select column_name from information_schema.columns
+         where table_schema = '#$schema'
+         and table_name = '#$table'
+         and column_name = '#$column'
+      """.as[String].map(_.nonEmpty)
+  }
 }
