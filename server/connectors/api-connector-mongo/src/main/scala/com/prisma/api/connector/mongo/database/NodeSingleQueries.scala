@@ -1,6 +1,6 @@
 package com.prisma.api.connector.mongo.database
 
-import com.prisma.api.connector._
+import com.prisma.api.connector.{SelectedFields, _}
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
@@ -70,10 +70,13 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where, SelectedFields.byFieldAndPath(parentField, parent.path)).map {
-          case None    => None
-          case Some(n) => n.getIDAtPath(parentField, parent.path)
-        }
+        getNodeByWhereComplete(parent.where)
+        //FIXME
+//        getNodeByWhere(parent.where, SelectedFields.byFieldAndPath(parentField, parent.path) ++ SelectedFields(Set(SelectedScalarField(parent.where.field))))
+          .map {
+            case None    => None
+            case Some(n) => n.getIDAtPath(parentField, parent.path)
+          }
 
       case false =>
         val filter = generateFilterForFieldAndId(parentField.relatedField, parent.idValue)
