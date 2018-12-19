@@ -56,9 +56,6 @@ object QueryArguments {
 object SelectedFields {
   val empty             = SelectedFields(Set.empty)
   def all(model: Model) = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
-  def allRecursive(model: Model) = {
-    SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
-  }
   def byFieldAndPath(field: RelationField, path: Path) =
     SelectedFields((List(SelectedRelationField.empty(field)) ++ path.relationFieldToSelect.map(SelectedRelationField.empty)).toSet)
 }

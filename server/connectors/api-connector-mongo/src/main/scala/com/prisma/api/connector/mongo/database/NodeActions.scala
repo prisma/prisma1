@@ -43,7 +43,7 @@ trait NodeActions extends NodeSingleQueries {
 
   def updateNodeByWhere(mutaction: UpdateNode, where: NodeSelector)(implicit ec: ExecutionContext) = {
     for {
-      previousValues <- getNodeByWhere(where)
+      previousValues <- getNodeByWhereComplete(where)
       results        <- updateHelper(mutaction, where, previousValues)
     } yield results
   }

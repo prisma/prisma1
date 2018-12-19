@@ -137,7 +137,6 @@ object FieldCombinators {
   }
 
   def combineTwo(path: String, field: String): String = if (path == "") field else path + "." + field
-
 }
 
 object HackforTrue {

@@ -126,7 +126,6 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
                   case (_, _)                                                        => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
                 }
             }
-
         })
 
       case false =>

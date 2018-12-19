@@ -26,9 +26,16 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
     Future.sequence(outer).map(_.flatten.headOption)
   }
 
-  def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]]          = getNodeByWhere(where, SelectedFields.all(where.model))
-  def getNodeByWhereRecursive(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
+  def getNodeByWhereComplete(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = SimpleMongoAction { database =>
+    database.getCollection(where.model.dbName).find(where).collect().toFuture.map { results: Seq[Document] =>
+      results.headOption.map { result =>
+        val root = DocumentToRoot(where.model, result)
+        PrismaNode(root.idFieldByName(where.model.idField_!.name), root, Some(where.model.name))
+      }
+    }
+  }
 
+  def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     val selected = projectSelected(selectedFields)
     database.getCollection(where.model.dbName).find(where).projection(selected).collect().toFuture.map { results: Seq[Document] =>

@@ -22,13 +22,13 @@ trait ProjectionBuilder {
 
   private def helper(fields: Set[SelectedRelationField], prefix2: String = ""): Vector[String] = {
     fields.flatMap { selected =>
-      val prefix                 = combineTwo(prefix2, selected.field.dbName + ".")
-      val scalarFields           = selected.selectedFields.scalarFields.filterNot(_.isId).map(x => prefix + x.dbName).toVector :+ (prefix + "_id")
-      val embeddedRelationFields = helper(selected.selectedFields.relationalSelectedFields.filter(x => x.field.relatedModel_!.isEmbedded), prefix)
-      val nonEmbeddedRelationFields =
-        selected.selectedFields.relationalSelectedFields.filterNot(x => x.field.relatedModel_!.isEmbedded).map(x => prefix + x.field.dbName)
+      val prefix    = combineTwo(prefix2, selected.field.dbName)
+      val scalars   = selected.selectedFields.scalarFields.filterNot(_.isId).map(x => combineTwo(prefix, x.dbName)).toVector :+ combineTwo(prefix, "_id")
+      val embeddeds = helper(selected.selectedFields.relationalSelectedFields.filter(x => x.field.relatedModel_!.isEmbedded), prefix)
+      val nonEmbeddeds =
+        selected.selectedFields.relationalSelectedFields.filterNot(x => x.field.relatedModel_!.isEmbedded).map(x => combineTwo(prefix, x.field.dbName))
 
-      scalarFields ++ embeddedRelationFields ++ nonEmbeddedRelationFields
+      scalars ++ embeddeds ++ nonEmbeddeds
     }.toVector
   }
 
