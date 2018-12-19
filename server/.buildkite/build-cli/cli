@@ -3,22 +3,23 @@
 # Regardless of where the script is called, always use the script location as base.
 Dir.chdir(__dir__)
 
-require './build_context'
-require './commands'
+require_relative './src/build_context'
+require_relative './src/cmd'
+require_relative './src/commands'
 
 context = BuildContext.new
 
-unless valid_build?
-  puts "Nothing to do"
-  exit 0
-end
+# unless context.valid_build?
+#   puts "Nothing to do"
+#   exit 0
+# end
 
 if ARGV.length <= 0
   puts """Prisma Build Tool
 Usage: cli <subcommand>
 
 Subcommands:
-\tpipeline 
+\tpipeline
 \t\tRenders the pipeline based on the current build context and uploads it to buildkite.
 
 \ttest <project> <connector>
@@ -32,7 +33,7 @@ command = ARGV[0]
 case command
 when "pipeline"
   upload_pipeline(context)
-  
+
 when "test"
 
 else
