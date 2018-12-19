@@ -1,13 +1,16 @@
 require 'open3'
 
-class ShellResult
-    def initialize(status, std_out, std_err)
+class ExecResult
+    attr_accessor :status, :stdout, :stderr
+
+    def initialize(status, stdout, stderr)
         @status = status
-        @std_out = std_out
-        @std_err = std_err
+        @stdout = stdout
+        @stderr = stderr
     end
 end
 
 def run(cmd, args)
     stdout, stderr, status = Open3.capture3(cmd, args)
+    ExecResult.new(status, stdout, stderr)
 end

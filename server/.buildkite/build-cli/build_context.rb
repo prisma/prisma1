@@ -2,6 +2,8 @@ require 'rbconfig'
 require 'pathname'
 
 class BuildContext
+  attr_accessor :branch, :tag, :last_git_tag, :next_docker_tags, :server_root_path
+
   def initialize
     @branch = ENV["BUILDKITE_BRANCH"] || "local"
     @tag = ENV["BUILDKITE_TAG"] || nil

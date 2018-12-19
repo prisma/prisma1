@@ -8,7 +8,7 @@ require './commands'
 
 context = BuildContext.new
 
-unless context.server_changed? || context.local_build?
+unless valid_build?
   puts "Nothing to do"
   exit 0
 end

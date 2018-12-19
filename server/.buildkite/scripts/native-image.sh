@@ -8,7 +8,8 @@ cd "$(dirname "$0")"
 BK_ROOT=$(dirname "$(pwd)")
 SERVER_ROOT=$(dirname "$BK_ROOT")
 
-docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=$DOCKER_TAG" \
+# todo: correct docker build
+docker run -e "BRANCH=$BUILDKITE_BRANCH" -e "COMMIT_SHA=$BUILDKITE_COMMIT" -e "CLUSTER_VERSION=testbuild" \
   -w /root/build \
   -v ${SERVER_ROOT}:/root/build \
   -v ~/.ivy2:/root/.ivy2 \
