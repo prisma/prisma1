@@ -570,6 +570,12 @@ mutation {
 
 Nested object writes let you modify database records across multiple models in a single transaction. The corresponding concept from Prisma GraphQL API is called [nested mutations](vw4d#transactions--nested-mutations). Nested object writes are available for `create`- and `update`-methods.
 
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
 If a model has a relation to a different model, the corresponding relation field is set with an object that has a subset of the following properties:
 
 - `create`: Creates a new record of the related model and connects it via the relation.

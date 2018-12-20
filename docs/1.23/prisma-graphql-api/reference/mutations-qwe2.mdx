@@ -219,6 +219,12 @@ mutation {
 
 You can use `create` and `update` mutations to modify nodes across relations at the same time. This is referred to as **nested mutations** and is executed [transactionally](vw4d#transactions--nested-mutations).
 
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
 Several nested mutation arguments exist:
 
 - `create`

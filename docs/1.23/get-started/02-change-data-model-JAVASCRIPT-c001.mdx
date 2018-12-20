@@ -107,6 +107,12 @@ hooks:
 
 The Prisma client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
 
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
 Update your `index.js` to look as follows:
 
 ```js copy

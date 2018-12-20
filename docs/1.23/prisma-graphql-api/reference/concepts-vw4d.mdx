@@ -226,7 +226,13 @@ query {
 
 ## Transactions & Nested mutations
 
-Single mutations in the Prisma API that are not batch operations are always executed _transactionally_, even if they consist of many actions that potentially spread across multiple related nodes. This is especially useful for [nested mutations](qwe2#nested-mutations) that perform several database writes on multiple types.
+For the [MySQL](jgfs) and [PostgreSQL](jgfr) database connectors, single mutations in the Prisma API that are not batch operations are always executed _transactionally_ ([ACID](https://en.wikipedia.org/wiki/ACID_(computer_science)) compliant), even if they consist of many actions that potentially spread across multiple related nodes. This is also true for [nested mutations](qwe2#nested-mutations) that perform several database writes on multiple types.
+
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
 
 Nested mutations are mutations that are touching _at least_ two nodes, each of a different type. Here is a simple example:
 
@@ -266,7 +272,7 @@ This mutation performs **six** single actions in total:
 
 If any of the mentioned actions fail (for example because of a violated `@unique` field constraint), the _entire_ mutation is rolled back!
 
-Mutations are _transactional_, meaning they are [_atomic_](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) and [_isolated_](https://en.wikipedia.org/wiki/Isolation_(database_systems)). This means that between two separate actions of the same nested mutation, no other mutations can alter the data. Also the result of a single action cannot be observed until the complete mutation has been processed.
+For the SQL connectors, mutations are _transactional_ and [ACID](https://en.wikipedia.org/wiki/ACID_(computer_science)) compliant, meaning they are [_atomic_](https://en.wikipedia.org/wiki/Atomicity_(database_systems)), [consistent](https://en.wikipedia.org/wiki/Consistency_(database_systems)), [_isolated_](https://en.wikipedia.org/wiki/Isolation_(database_systems)) and [durable](https://en.wikipedia.org/wiki/Durability_(database_systems)). This means that between two separate actions of the same nested mutation, no other mutations can alter the data. Also the result of a single action cannot be observed until the complete mutation has been processed.
 
 ## Cascading deletes
 
