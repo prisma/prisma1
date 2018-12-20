@@ -53,28 +53,52 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
 
     database.setup(project)
 
-    var times = new ListBuffer[Long]
+    var timesFilter     = new ListBuffer[Long]
+    var timesFilterDeep = new ListBuffer[Long]
+    var findFilter      = new ListBuffer[Long]
+    var findFilterDeep  = new ListBuffer[Long]
+
+    val filter     = """query{users(where:{int_gt: 5, int_lt: 19, posts_some:{int_gt: 10000, comments_some: {int_gt:10000}}}){int}}"""
+    val filterDeep = """query{users(where:{int_gt: 5,int_lt: 19, posts_some:{int_gt: 10000,comments_some: {int_gt:10000}}}){int, posts{int,comments{int}}}}"""
+    val find       = """query{users(where:{int_gt: 5, int_lt: 19}){int}}"""
+    val findDeep   = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
 
     val mutStart = System.currentTimeMillis()
-    for (x <- 1 to 1000) {
+    for (x <- 1 to 100) {
       createData(x)
     }
     val mutEnd = System.currentTimeMillis()
 
-    println("Creation: " + (mutEnd - mutStart))
+    val numQueries = 40
 
-    val results = for (x <- 1 to 40) {
-      times += filterquery
+    for (x <- 1 to numQueries) {
+      timesFilter += query(filter)
     }
 
-    println("Times: " + times + " Average: " + (times.sum / times.length))
+    for (x <- 1 to numQueries) {
+      timesFilterDeep += query(filterDeep)
+    }
+
+    for (x <- 1 to numQueries) {
+      findFilter += query(find)
+    }
+
+    for (x <- 1 to numQueries) {
+      findFilterDeep += query(findDeep)
+    }
+    Thread.sleep(1000)
+
+    println("Data Creation: " + (mutEnd - mutStart))
+    println("Filterquery Average: " + (timesFilter.sum / numQueries))
+    println("Filterquery Deep Average: " + (timesFilterDeep.sum / numQueries))
+    println("Findquery Average: " + (findFilter.sum / numQueries))
+    println("Findquery Deep Average: " + (findFilterDeep.sum / numQueries))
 
   }
 
-  def filterquery: Long = {
+  def query(query: String): Long = {
     val qStart = System.currentTimeMillis()
-    server.query("""query{users(where:{int_gt: 5, int_lt: 19, posts_some:{int_gt: 10000, comments_some: {int_gt:10000}}}){int, posts{int, comments{int}}}}""",
-                 project)
+    server.query(query, project)
     val qEnd = System.currentTimeMillis()
     qEnd - qStart
   }
