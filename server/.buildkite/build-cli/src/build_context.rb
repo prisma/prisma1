@@ -3,9 +3,7 @@ require 'pathname'
 require_relative './cmd'
 
 class BuildContext
-  attr_accessor :branch, :tag, :commit, :last_git_tag, :next_docker_tags, :server_root_path, :connectors
-
-  @connectors = [:mongo, :postgres, :mysql]
+  attr_accessor :branch, :tag, :commit, :last_git_tag, :next_docker_tags, :server_root_path
 
   def initialize
     @branch = ENV["BUILDKITE_BRANCH"] || nil
@@ -41,6 +39,14 @@ class BuildContext
 
   def buildkite_build?
     @branch == "local"
+  end
+
+  def connectors
+    [:mongo, :postgres, :mysql]
+  end
+
+  def native_image_targets
+    [:debian, :lambda]
   end
 
   private
