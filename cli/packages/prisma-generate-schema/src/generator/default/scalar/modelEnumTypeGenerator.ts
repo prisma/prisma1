@@ -1,5 +1,5 @@
 import { GraphQLEnumType, GraphQLEnumValueConfigMap } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelEnumTypeGeneratorBase } from '../../generator'
 import GQLAssert from '../../../util/gqlAssert'
 

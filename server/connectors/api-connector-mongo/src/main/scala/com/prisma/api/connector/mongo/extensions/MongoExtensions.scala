@@ -1,14 +1,16 @@
 package com.prisma.api.connector.mongo.extensions
 
-import com.prisma.api.connector.{NodeSelector, Path, ToManySegment, ToOneSegment}
+import com.prisma.api.connector._
+import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
+import com.prisma.api.schema.APIErrors.MongoInvalidObjectId
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonString, BsonTransformer, BsonValue}
+import org.mongodb.scala.bson.{BsonArray, BsonBoolean, BsonDateTime, BsonDouble, BsonInt32, BsonNull, BsonObjectId, BsonString, BsonTransformer, BsonValue}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Filters.notEqual
 import play.api.libs.json.Json
@@ -24,20 +26,26 @@ object GCBisonTransformer {
       case FloatGCValue(v)    => BsonDouble(v)
       case JsonGCValue(v)     => BsonString(v.toString())
       case EnumGCValue(v)     => BsonString(v)
-      case StringIdGCValue(v) => BsonString(v)
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
       case BooleanGCValue(v)  => BsonBoolean(v)
       case ListGCValue(list)  => BsonArray(list.map(x => GCToBson(x)))
       case NullGCValue        => null
-      case _: RootGCValue     => sys.error("not implemented")
+      case StringIdGCValue(v) =>
+        try {
+          BsonObjectId(v)
+        } catch {
+          case e: java.lang.IllegalArgumentException => throw MongoInvalidObjectId(v)
+        }
+
+      case _: RootGCValue => sys.error("not implemented")
     }
   }
 }
 
 object NodeSelectorBsonTransformer {
   implicit def whereToBson(where: NodeSelector): Bson = {
-    val fieldName = if (where.fieldName == "id") "_id" else where.fieldName
+    val fieldName = if (where.field.isId) "_id" else where.field.dbName
     val value     = GCToBson(where.fieldGCValue)
 
     Filters.eq(fieldName, value)
@@ -45,7 +53,7 @@ object NodeSelectorBsonTransformer {
 }
 
 object DocumentToId {
-  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asString.getValue)
+  def toCUIDGCValue(document: Document): IdGCValue = StringIdGCValue(document("_id").asObjectId().getValue.toString)
 }
 
 object BisonToGC {
@@ -74,7 +82,7 @@ object BisonToGC {
     case (TypeIdentifier.Int, value: BsonInt32)         => IntGCValue(value.getValue)
     case (TypeIdentifier.Float, value: BsonDouble)      => FloatGCValue(value.getValue)
     case (TypeIdentifier.Enum, value: BsonString)       => EnumGCValue(value.getValue)
-    case (TypeIdentifier.Cuid, value: BsonString)       => StringIdGCValue(value.getValue)
+    case (TypeIdentifier.Cuid, value: BsonObjectId)     => StringIdGCValue(value.getValue.toString)
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
@@ -86,24 +94,19 @@ object BisonToGC {
 
 object DocumentToRoot {
   def apply(model: Model, document: Document): RootGCValue = {
-    val nonReservedFields = model.scalarNonListFields.filter(f => f.name != "createdAt" && f.name != "updatedAt" && f.name != "id")
+    val nonReservedFields = model.scalarNonListFields.filter(_ != model.idField_!)
 
     val scalarNonList: List[(String, GCValue)] =
-      nonReservedFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
+      nonReservedFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
 
-    val createdAt: (String, GCValue) =
-      document.get("createdAt").map(v => "createdAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("createdAt" -> NullGCValue)
-
-    val updatedAt: (String, GCValue) =
-      document.get("updatedAt").map(v => "updatedAt" -> BisonToGC(TypeIdentifier.DateTime, v)).getOrElse("updatedAt" -> NullGCValue)
-
-    val id: (String, GCValue) = document.get("_id").map(v => "id" -> BisonToGC(model.idField_!, v)).getOrElse("id" -> StringIdGCValue.dummy)
+    val id: (String, GCValue) =
+      document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
-      model.scalarListFields.map(field => field.name -> document.get(field.name).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
+      model.scalarListFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
     val relationFields: List[(String, GCValue)] = model.relationFields.collect {
-      case f if !f.relation.isInlineRelation => f.name -> document.get(f.name).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+      case f if !f.relation.isInlineRelation => f.name -> document.get(f.dbName).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
     }
 
     //inline Ids, needs to fetch lists or single values
@@ -118,21 +121,16 @@ object DocumentToRoot {
     val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(NullGCValue))
 
-    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ createdAt :+ updatedAt :+ id).toMap)
+    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
   }
 }
 
 object FieldCombinators {
-  def combineThree(path: String, relationField: String, field: String): String = {
-    path match {
-      case ""   => s"$relationField.$field"
-      case path => s"$path.$relationField.$field"
-    }
-  }
-
-  def combineTwo(path: String, relationField: String): String = path match {
-    case ""   => relationField
-    case path => s"$path.$relationField"
+  def dotPath(path: String, field: Field): String = (path, field) match {
+    case ("", rf: RelationField)   => rf.dbName
+    case (path, rf: RelationField) => path + "." + rf.dbName
+    case ("", sf: ScalarField)     => if (sf.isId) "_id" else sf.dbName
+    case (path, sf: ScalarField)   => path + "." + (if (sf.isId) "_id" else sf.dbName)
   }
 }
 
@@ -140,18 +138,26 @@ object HackforTrue {
   val hackForTrue = notEqual("_id", -1)
 }
 
-object ArrayFilter {
+object ArrayFilter extends FilterConditionBuilder {
 
   //Fixme: we are using uniques here, but these might change during an update
 
   def arrayFilter(path: Path): Vector[Bson] = path.segments.lastOption match {
-    case None                           => Vector.empty
-    case Some(ToOneSegment(_))          => Vector.empty
-    case Some(ToManySegment(rf, where)) => Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue)))
+    case None =>
+      Vector.empty
+
+    case Some(ToOneSegment(_)) =>
+      Vector.empty ++ arrayFilter(path.dropLast)
+
+    case Some(ToManySegment(rf, where)) =>
+      Vector(Filters.equal(s"${path.operatorName(rf, where)}.${fieldName(where)}", GCToBson(where.fieldGCValue))) ++ arrayFilter(path.dropLast)
+
+    case Some(ToManyFilterSegment(rf, whereFilter)) =>
+      Vector(buildConditionForScalarFilter(path.operatorName(rf, whereFilter), whereFilter)) ++ arrayFilter(path.dropLast)
   }
 
-  def fieldName(where: NodeSelector): String = where.fieldName match {
-    case "id" => "_id"
-    case x    => x
+  def fieldName(where: NodeSelector): String = where.field.isId match {
+    case true  => "_id"
+    case false => where.field.dbName
   }
 }

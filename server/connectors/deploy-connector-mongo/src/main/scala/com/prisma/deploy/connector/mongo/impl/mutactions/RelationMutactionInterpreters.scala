@@ -15,29 +15,26 @@ object CreateRelationInterpreter extends MongoMutactionInterpreter[CreateRelatio
 
 object DeleteRelationInterpreter extends MongoMutactionInterpreter[DeleteRelationTable] {
   override def execute(mutaction: DeleteRelationTable)  = NoAction.unit //gets dropped with collection
-  override def rollback(mutaction: DeleteRelationTable) = Indexhelper.add(mutaction.relation)
+  override def rollback(mutaction: DeleteRelationTable) = NoAction.unit //Indexhelper.add(mutaction.relation)
 }
+
+//Fixme add relationindexes for ids on embedded types
+//embedded types need their path upwards to set the relation index
 
 object Indexhelper {
   def add(relation: Relation) = DeployMongoAction { database =>
-    if (relation.isInlineRelation) {
-      relation.modelAField.relationIsInlinedInParent match {
-        case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-        case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
-      }
-    } else {
-      Future.successful(())
+    (relation.isInlineRelation, relation.modelAField.relationIsInlinedInParent) match {
+      case (true, true) if !relation.modelA.isEmbedded  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+      case (true, false) if !relation.modelB.isEmbedded => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+      case (_, _)                                       => Future.successful(())
     }
   }
 
   def remove(relation: Relation) = DeployMongoAction { database =>
-    if (relation.isInlineRelation) {
-      relation.modelAField.relationIsInlinedInParent match {
-        case true  => removeRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-        case false => removeRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
-      }
-    } else {
-      Future.successful(())
+    (relation.isInlineRelation, relation.modelAField.relationIsInlinedInParent) match {
+      case (true, true) if !relation.modelA.isEmbedded  => removeRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+      case (true, false) if !relation.modelB.isEmbedded => removeRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+      case (_, _)                                       => Future.successful(())
     }
   }
 }

@@ -1,6 +1,5 @@
 import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
-import { capitalize } from '../../../../util/util';
+import { IGQLType, IGQLField, capitalize } from 'prisma-datamodel'
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
 
 
@@ -8,6 +7,10 @@ export default class ModelUpdateWithoutRelatedInputGenerator extends RelatedMode
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
     const field = args.relatedField.relatedField as IGQLField
     return `${input.name}UpdateWithout${capitalize(field.name)}DataInput`
+  }
+
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
+    return !this.hasFieldsExcept(this.getWriteableFields(model.fields), (args.relatedField.relatedField as IGQLField).name)
   }
 
   protected generateScalarFieldType(model: IGQLType, args: {}, field: IGQLField) {

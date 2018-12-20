@@ -9,8 +9,10 @@ object Schema {
 case class Schema(
     modelTemplates: List[ModelTemplate] = List.empty,
     relationTemplates: List[RelationTemplate] = List.empty,
-    enums: List[Enum] = List.empty
+    enums: List[Enum] = List.empty,
+    version: Option[String] = None
 ) {
+  val isLegacy                              = version.isEmpty
   val models                                = modelTemplates.map(_.build(this))
   val relations                             = relationTemplates.map(_.build(this))
   val allFields: Seq[Field]                 = models.flatMap(_.fields)

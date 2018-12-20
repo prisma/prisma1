@@ -9,14 +9,14 @@ import play.api.libs.json.{JsValue, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String])(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = true)
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = MongoActionsBuilder(mutaction.project.id, client)
+    val actionsBuilder = MongoActionsBuilder(schema.getOrElse(mutaction.project.id), client)
     val action         = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
 
     run(actionsBuilder.database, action)
@@ -66,25 +66,40 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   ): MongoAction[MutactionResults] = {
     mutaction match {
       case m: NestedUpsertNode =>
-        for {
-          result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
-          childResult <- generateNestedMutaction(
-                          database,
-                          result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
-                          previousResults.merge(result),
-                          parent,
-                          mutationBuilder
-                        )
-        } yield previousResults.merge(result).merge(childResult)
+        if (previousResults.contains(m)) {
+          val result = getResultForMutactionFromPreviousResults(previousResults, m)
+          for {
+            childResult <- generateNestedMutaction(
+                            database,
+                            result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
+                            previousResults,
+                            parent,
+                            mutationBuilder
+                          )
+          } yield result.merge(childResult)
 
+        } else {
+          for {
+            result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
+            childResult <- generateNestedMutaction(
+                            database,
+                            result.results.head.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction],
+                            previousResults.merge(result),
+                            parent,
+                            mutationBuilder
+                          )
+          } yield result.merge(childResult)
+        }
       case m: FurtherNestedMutaction =>
         if (previousResults.contains(m)) {
+          val result: DatabaseMutactionResult = getResultForMutactionFromPreviousResults(previousResults, m)
+
           val nestedMutactions =
             m.allNestedMutactions.map(x => generateNestedMutaction(database, x, previousResults, previousResults.nodeAddress(m), mutationBuilder))
 
           for {
             childResults <- MongoAction.seq(nestedMutactions)
-          } yield previousResults.merge(childResults)
+          } yield result.merge(childResults)
 
         } else {
           for {
@@ -97,11 +112,12 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
                                MongoAction.seq(nestedMutactions)
                              case _ => MongoAction.successful(Vector.empty)
                            }
-          } yield previousResults.merge(result).merge(childResults)
+          } yield result.merge(childResults)
         }
       case m: FinalMutaction =>
         if (previousResults.contains(m)) {
-          MongoAction.successful(previousResults)
+          val result = getResultForMutactionFromPreviousResults(previousResults, m)
+          MongoAction.successful(MutactionResults(Vector(result)))
         } else {
           for {
             result <- interpreterFor(m).mongoActionWithErrorMapped(mutationBuilder, parent)
@@ -109,6 +125,10 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
         }
       case _ => sys.error("not implemented yet")
     }
+  }
+
+  private def getResultForMutactionFromPreviousResults(previousResults: MutactionResults, m: DatabaseMutaction) = {
+    previousResults.results.find(res => res.mutaction.id == m.id).get
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
@@ -126,12 +146,14 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
 
   //for embedded types none of these should actually fire since they should be embedded in their toplevel actions
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode => NestedCreateNodeInterpreter(mutaction = m)
-    case m: NestedUpdateNode => NestedUpdateNodeInterpreter(mutaction = m)
-    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(mutaction = m)
-    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(mutaction = m)
-    case m: NestedConnect    => NestedConnectInterpreter(mutaction = m)
-    case m: NestedDisconnect => NestedDisconnectInterpreter(mutaction = m)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(mutaction = m)
+    case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(mutaction = m)
+    case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(mutaction = m)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(mutaction = m)
+    case m: NestedConnect     => NestedConnectInterpreter(mutaction = m)
+    case m: NestedDisconnect  => NestedDisconnectInterpreter(mutaction = m)
+    case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(mutaction = m)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(mutaction = m)
   }
 
   override def executeRaw(query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))

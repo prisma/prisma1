@@ -1,4 +1,4 @@
-import { IGQLField, IGQLType } from '../../../datamodel/model'
+import { IGQLField, IGQLType } from 'prisma-datamodel'
 import { GraphQLInputFieldConfigMap } from "graphql/type"
 import ModelWhereInputGenerator from './modelWhereInputGenerator'
 import { TypeFromModelGenerator } from '../../generator';

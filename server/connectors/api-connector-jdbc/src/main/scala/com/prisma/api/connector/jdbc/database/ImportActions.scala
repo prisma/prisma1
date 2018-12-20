@@ -3,6 +3,7 @@ package com.prisma.api.connector.jdbc.database
 import java.sql.{PreparedStatement, Statement}
 
 import com.prisma.api.connector.{ImportNodes, ImportRelations, ImportScalarLists}
+import com.prisma.connector.shared.jdbc.SharedJdbcExtensions
 import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
 import com.prisma.shared.models.ScalarField
 import com.prisma.slick.ReadsResultSet
@@ -11,7 +12,7 @@ import org.jooq.impl.DSL.max
 
 import scala.concurrent.ExecutionContext
 
-trait ImportActions extends BuilderBase {
+trait ImportActions extends BuilderBase with SharedJdbcExtensions {
   import slickDatabase.profile.api._
 
   def importNodes(mutaction: ImportNodes): SimpleDBIO[Vector[String]] = {
@@ -35,10 +36,10 @@ trait ImportActions extends BuilderBase {
           model.scalarNonListFields.zipWithIndex.foreach {
             case (field, index) =>
               arg.rootGCMap.get(field.name) match {
-                case Some(NullGCValue) if field.name == createdAtField || field.name == updatedAtField => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case Some(gCValue)                                                                     => itemInsert.setGcValue(index + 1, gCValue)
-                case None if field.name == createdAtField || field.name == updatedAtField              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
-                case None                                                                              => itemInsert.setNull(index + 1, java.sql.Types.NULL)
+                case Some(NullGCValue) if field.isCreatedAt || field.isUpdatedAt => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case Some(gCValue)                                               => itemInsert.setGcValue(index + 1, gCValue)
+                case None if field.isCreatedAt || field.isUpdatedAt              => itemInsert.setTimestamp(index + 1, currentTimeStamp)
+                case None                                                        => itemInsert.setNull(index + 1, java.sql.Types.NULL)
               }
           }
           itemInsert.addBatch()
@@ -145,7 +146,7 @@ trait ImportActions extends BuilderBase {
     val nodeIds = mutaction.values.keys
 
     for {
-      startPositions <- startPositions(field, nodeIds.toSeq)
+      startPositions: Map[IdGCValue, Int] <- startPositions(field, nodeIds.toSeq)
       // begin massage
 
       listValuesWithStartPosition: Iterable[(IdGCValue, ListGCValue, Int)] = {
@@ -156,7 +157,7 @@ trait ImportActions extends BuilderBase {
 
       individualValuesWithPosition: Iterable[(IdGCValue, GCValue, Int)] = listValuesWithStartPosition.flatMap {
         case (id, list, start) =>
-          list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000)) }
+          list.values.zipWithIndex.map { case (value, index) => (id, value, start + (index * 1000) + 1000) }
       }
       // end massage
       res <- importScalarListValues(field, individualValuesWithPosition)
@@ -168,7 +169,7 @@ trait ImportActions extends BuilderBase {
     val placeholders = nodeIds.map(_ => placeHolder)
 
     val query = sql
-      .select(nodeIdField, max(scalarListColumn(field, positionFieldName)))
+      .select(nodeIdField, max(scalarListColumn(field, positionFieldName)).as("max"))
       .from(scalarListTable(field))
       .groupBy(nodeIdField)
       .having(nodeIdField.in(placeholders: _*))
@@ -216,7 +217,8 @@ trait ImportActions extends BuilderBase {
               e.getCause.toString)}"
           }
           .toVector
-      case e: Exception => Vector(e.getMessage)
+      case e: Exception =>
+        Vector(e.getMessage)
     }
     if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
     res

@@ -1,7 +1,9 @@
 package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
+import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.typesafe.config.{Config, ConfigFactory}
+import slick.jdbc.PostgresProfile
 
 case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   import slick.jdbc.PostgresProfile.api._
@@ -16,9 +18,12 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   private lazy val dbDriver = new org.postgresql.Driver
 
-  def getDatabase(dbToUse: String, schemaToUse: String) = {
-    val config = typeSafeConfigFromDatabaseConfig(dbToUse, schemaToUse, dbConfig)
-    Database.forConfig("database", config, driver = dbDriver)
+  def getDatabase(dbToUse: String, schemaToUse: String): Databases = {
+    val config        = typeSafeConfigFromDatabaseConfig(dbToUse, schemaToUse, dbConfig)
+    val masterDb      = Database.forConfig("database", config, driver = dbDriver)
+    val slickDatabase = SlickDatabase(PostgresProfile, masterDb)
+
+    Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
   def typeSafeConfigFromDatabaseConfig(database: String, schema: String, dbConfig: DatabaseConfig): Config = {

@@ -16,15 +16,15 @@ object airbnb_setup_data {
       |  responseTime: Int
       |
       |  isSuperHost: Boolean! @default(value: "false")
-      |  ownedPlaces: [Place!]!
+      |  ownedPlaces: [Place]
       |  location: Location
-      |  bookings: [Booking!]!
-      |  paymentAccount: [PaymentAccount!]!
-      |  sentMessages: [Message!]! @relation(name: "SentMessages")
-      |  receivedMessages: [Message!]! @relation(name: "ReceivedMessages")
-      |  notifications: [Notification!]!
+      |  bookings: [Booking]
+      |  paymentAccount: [PaymentAccount]
+      |  sentMessages: [Message] @relation(name: "SentMessages")
+      |  receivedMessages: [Message] @relation(name: "ReceivedMessages")
+      |  notifications: [Notification]
       |  profilePicture: Picture
-      |  hostingExperiences: [Experience!]!
+      |  hostingExperiences: [Experience]
       |}
       |
       |type Place {
@@ -38,7 +38,7 @@ object airbnb_setup_data {
       |  numBedrooms: Int!
       |  numBeds: Int!
       |  numBaths: Int!
-      |  reviews: [Review!]!
+      |  reviews: [Review]
       |  amenities: Amenities!
       |  host: User!
       |  pricing: Pricing!
@@ -47,8 +47,8 @@ object airbnb_setup_data {
       |  guestRequirements: GuestRequirements
       |  policies: Policies
       |  houseRules: HouseRules
-      |  bookings: [Booking!]!
-      |  pictures: [Picture!]!
+      |  bookings: [Booking]
+      |  pictures: [Picture]
       |  popularity: Int!
       |}
       |
@@ -120,7 +120,7 @@ object airbnb_setup_data {
       |
       |type Neighbourhood {
       |  id: ID! @unique
-      |  locations: [Location!]!
+      |  locations: [Location]
       |  name: String!
       |  slug: String!
       |  homePreview: Picture
@@ -132,7 +132,7 @@ object airbnb_setup_data {
       |type City {
       |  id: ID! @unique
       |  name: String!
-      |  neighbourhoods: [Neighbourhood!]!
+      |  neighbourhoods: [Neighbourhood]
       |}
       |
       |type Picture {
@@ -146,7 +146,7 @@ object airbnb_setup_data {
       |  host: User!
       |  location: Location!
       |  pricePerPerson: Int!
-      |  reviews: [Review!]!
+      |  reviews: [Review]
       |  preview: Picture!
       |  popularity: Int!
       |}
@@ -243,7 +243,7 @@ object airbnb_setup_data {
       |  createdAt: DateTime!
       |  type: PAYMENT_PROVIDER
       |  user: User!
-      |  payments: [Payment!]!
+      |  payments: [Payment]
       |  paypal: PaypalInformation
       |  creditcard: CreditCardInformation
       |}
@@ -292,7 +292,7 @@ object airbnb_setup_data {
       |  createdAt: DateTime!
       |  title: String!
       |  avgPricePerPerson: Int!
-      |  pictures: [Picture!]!
+      |  pictures: [Picture]
       |  location: Location!
       |  isCurated: Boolean! @default(value: "true")
       |  slug: String!

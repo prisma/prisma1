@@ -2,7 +2,8 @@ package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.Metrics
-import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 

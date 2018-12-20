@@ -4,6 +4,6 @@ type TypeWithId {
 }
 
 type TypeWithoutId {
-  removeThisIdd: Int! @id
+  removeThisIdd: ID! @id
   field: String!
 }

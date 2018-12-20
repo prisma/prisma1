@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -13,7 +13,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -73,7 +73,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       """type List {
         | id: ID! @unique
         | listUnique: String! @unique
-        | todoes: [Todo!]!
+        | todoes: [Todo]
         |}
         |
         |type Todo @embedded{
@@ -189,7 +189,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |type Note {
         | id: ID! @unique
         | text: String
-        | todoes: [Todo!]!
+        | todoes: [Todo]
         |}
       """
     }
@@ -247,7 +247,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       """type Note {
         | id: ID! @unique
         | text: String @unique
-        | todos: [Todo!]!
+        | todos: [Todo]
         |}
         |
         |type Todo @embedded{
@@ -310,12 +310,12 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
@@ -389,12 +389,12 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
@@ -468,7 +468,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
@@ -551,7 +551,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below @embedded{
@@ -638,7 +638,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below @embedded{

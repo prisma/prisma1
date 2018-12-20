@@ -1,7 +1,7 @@
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.20.1
+    image: prismagraphql/prisma:1.23-alpha
     restart: always
     ports:
     - "4466:4466"

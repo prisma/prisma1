@@ -1,9 +1,9 @@
 package com.prisma.api.connector.jdbc.extensions
 
-import java.sql.{PreparedStatement, ResultSet, Timestamp}
-import java.time.ZoneOffset
+import java.sql.{PreparedStatement, ResultSet}
 import java.util.{Calendar, TimeZone}
 
+import com.prisma.connector.shared.jdbc.SharedJdbcExtensions
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, TypeIdentifier}
 import org.joda.time.{DateTime, DateTimeZone}
@@ -12,19 +12,14 @@ import play.api.libs.json.Json
 trait JdbcExtensions {
   import JdbcExtensionsValueClasses._
 
-  def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(DateTime.now(DateTimeZone.UTC))
-  def currentDateTimeGCValue            = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
+  def currentDateTimeGCValue = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
 
   implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
-
 }
 
-object JdbcExtensionsValueClasses {
+object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
   val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-
-  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp =
-    Timestamp.valueOf(java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateTime.getMillis), ZoneOffset.UTC))
 
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
 

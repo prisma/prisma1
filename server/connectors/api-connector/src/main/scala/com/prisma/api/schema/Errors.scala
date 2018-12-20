@@ -16,7 +16,7 @@ object CommonErrors {
   case class MutationsNotAllowedForProject(projectId: String)
       extends UserFacingError(s"The project '$projectId' is currently in read-only mode. Please try again in a few minutes", 1003)
 
-  case class ThrottlerBufferFullException() extends UserFacingError("There are too many concurrent queries for this service.", 1004)
+  case class ThrottlerBufferFull() extends UserFacingError("There are too many concurrent queries for this service.", 1004)
 }
 
 object APIErrors {
@@ -110,6 +110,18 @@ object APIErrors {
       extends ClientApiError(
         s"The change you are trying to make would violate the required relation '${relation.name}' between ${relation.modelA.name} and ${relation.modelB.name}",
         3042
+      )
+
+  case class MongoConflictingUpdates(model: String, override val message: String)
+      extends ClientApiError(
+        s"You have several updates affecting the same area of the document underlying $model. MongoMessage: $message",
+        3043
+      )
+
+  case class MongoInvalidObjectId(id: String)
+      extends ClientApiError(
+        s"You provided an ID that was not a valid MongoObjectId: $id",
+        3044
       )
 
   case class ExecuteRawError(e: SQLException) extends ClientApiError(e.getMessage, e.getErrorCode)

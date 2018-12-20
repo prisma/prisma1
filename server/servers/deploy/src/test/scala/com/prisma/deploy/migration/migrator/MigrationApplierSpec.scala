@@ -38,7 +38,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    testDependencies.projectPersistence.create(Project(projectId, "ownerId", 1, emptySchema)).await
+    testDependencies.projectPersistence.create(Project(projectId, 1, emptySchema)).await
   }
 
   "the applier" should "succeed when all steps succeed" in {

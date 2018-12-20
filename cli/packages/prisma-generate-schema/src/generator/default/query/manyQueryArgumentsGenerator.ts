@@ -1,5 +1,5 @@
 import { ArgumentsGenerator, RelatedGeneratorArgs } from "../../generator"
-import { IGQLField, IGQLType } from "../../../datamodel/model"
+import { IGQLField, IGQLType } from 'prisma-datamodel'
 import { GraphQLFieldConfigArgumentMap, GraphQLInt, GraphQLString } from 'graphql/type'
 
 export default class ManyQueryArgumentsGenerator extends ArgumentsGenerator {
