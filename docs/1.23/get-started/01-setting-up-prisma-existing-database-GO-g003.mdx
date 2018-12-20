@@ -32,29 +32,6 @@ Using your existing database with Prisma currently only works when using **Postg
 
 </Warning>
 
-## Prerequisites
-
-Make sure to have connection details for your database at hand. This includes the following pieces of information:
-
-<Collapse title="Required connection details for PostgreSQL">
-
-- **Host**: The host of your Postgres server, e.g. `localhost`.
-- **Port**: The port where your Postgres server listens, e.g. `5432`.
-- **User & Password**: The credentials for your Postgres server.
-- **Name of existing _database_**: The name of the Postgres _database_.
-- **Name of existing _schema_**: The name of the Postgres _schema_, e.g. `public`.
-
-You also need to know whether your database server uses **SSL**.
-
-</Collapse>
-
-<Collapse title="Required connection details for MongoDB">
-
-- **MongoDB connection string**: Your MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string/), e.g. `http://user1:myPassword@localhost:27017/admin`. Note that this must include the database credentials as well as the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database that's storing the credentials of your MongoDB admin user (by default it is often called `admin`).
-- **Name of existing _database_**: The name of the MongoDB database you want to connect to. This is not part of the connection string.
-
-</Collapse>
-
 ## Install the Prisma CLI
 
 The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
@@ -165,10 +142,10 @@ To specify the database to which Prisma should connect, replace the placeholders
 
 <Collapse title="Placeholder overview for MongoDB">
 
-- `__YOUR_CONNECTION_STRING__`: Your MongoDB connection string, e.g. `http://user1:myPassword@localhost:27017/admin`. Learn more [here](b6o5#prisma_config). Note that this must include the database credentials as well as the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database that's storing the credentials of your MongoDB admin user (by default it is often called `admin`).
+- `__YOUR_CONNECTION_STRING__`: Your MongoDB connection string, e.g. `http://user1:myPassword@localhost:27017/admin`. Note that this must include the database credentials as well as the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database that's storing the credentials of your MongoDB admin user (by default it is often called `admin`). Learn more [here](b6o5#prisma_config).
 - `__YOUR_MONGODB_DATABASE__`: The name of your MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases).
 
-> If you're using MongoDB Atlas, you can find your connection string by clicking the **CONNECT**-button on your cluster overview page.
+If you're using MongoDB Atlas, you can find your connection string by clicking the **CONNECT**-button on your cluster overview page. It looks similar to this: `mongodb+srv://user:pw@cluster0-sapwg.mongodb.net/test?retryWrites=true`.
 
 </Collapse>
 
@@ -204,11 +181,45 @@ endpoint: http://localhost:4466
 
 You now need to introspect your database schema to generate the datamodel which is the foundation for the API of your Prisma client:
 
+<Collapse title="See introspection command for PostgreSQL">
+
 ```bash copy
-prisma introspect
+prisma introspect \\
+  --pg-host __YOUR_POSTGRES_HOST__ \\
+  --pg-port __YOUR_POSTGRES_PORT__ \\
+  --pg-db __YOUR_POSTGRES_DB__ \\
+  --pg-schema __YOUR_POSTGRES_SCHEMA__ \\
+  --pg-user __YOUR_POSTGRES_USER__ \\
+  --pg-password __YOUR_POSTGRES_PASSWORD__
 ```
 
-The CLI generates the `datamodel-[TIMESTAMP].prisma` (e.g. `datamodel-1533886167692.prisma`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
+If your PostgreSQL server uses SSL, you need to append the `--pg-ssl` flag as well. The placeholders you need to replace in the command are identical to the ones from above:
+
+- `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`. (When connecting to a local database, you might need to use `host.docker.internal`.)
+- `__YOUR_POSTGRES_PORT__`: The port where your Postgres server listens, e.g. `5432`.
+- `__YOUR_POSTGRES_DB__`: The name of your Postgres database.
+- `__YOUR_POSTGRES_SCHEMA__`: The name of your Postgres schema, e.g. `public`.
+- `__YOUR_POSTGRES_USER__`: The database user.
+- `__YOUR_POSTGRES_PASSWORD__`: The password for the database user.
+
+</Collapse>
+
+<Collapse title="See introspection command for MongoDB">
+
+```bash copy
+prisma introspect \\
+  --mongo-uri __YOUR_CONNECTION_STRING__ \\
+  --mongo-db __YOUR_MONGODB_DATABASE__
+```
+
+The placeholders you need to replace in the command are identical to the ones from above:
+
+- `__YOUR_CONNECTION_STRING__`: Your MongoDB connection string, e.g. `http://user1:myPassword@localhost:27017/admin`. Learn more [here](b6o5#prisma_config). Note that this must include the database credentials as well as the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database that's storing the credentials of your MongoDB admin user (by default it is often called `admin`).
+- `__YOUR_MONGODB_DATABASE__`: The name of your MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases).
+
+</Collapse>
+
+The CLI generates the `datamodel-[TIMESTAMP].prisma` file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
 
 Finally, you need to rename the file to `datamodel.prisma` because that's the file name you specifed in `prisma.yml`.
 
