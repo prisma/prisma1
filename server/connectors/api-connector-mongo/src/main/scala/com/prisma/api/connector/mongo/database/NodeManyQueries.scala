@@ -75,9 +75,8 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       }
 
       idOnly match {
-        case true => queryWithLimit.projection(idProjection).collect().toFuture
-//        case false => queryWithLimit.projection(project(selectedFields)).collect().toFuture
-        case false => queryWithLimit.collect().toFuture
+        case true  => queryWithLimit.projection(idProjection).collect().toFuture
+        case false => queryWithLimit.projection(projectSelected(selectedFields)).collect().toFuture
       }
     }
   }
@@ -87,34 +86,36 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       val relatedField = fromField.relatedField
       val model        = fromField.relatedModel_!
 
-      val inFilter: Filter = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
-      manyQueryHelper(model, queryArguments, Some(inFilter), database, false, selectedFields).map { results: Seq[Document] =>
-        val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
-          case true =>
-            val tuples = for {
-              result <- results
-              id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
-            } yield (id, result)
+      val inFilter: Filter      = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
+      val updatedSelectedFields = selectedFields ++ SelectedFields(Set(SelectedRelationField.empty(relatedField)))
+      manyQueryHelper(model, queryArguments, Some(inFilter), database, false, updatedSelectedFields)
+        .map { results: Seq[Document] =>
+          val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
+            case true =>
+              val tuples = for {
+                result <- results
+                id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
+              } yield (id, result)
 
-            tuples.groupBy(_._1).mapValues(_.map(_._2))
+              tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-          case false =>
-            results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
-        }
+            case false =>
+              results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
+          }
 
-        fromNodeIds.map { id =>
-          groups.get(id.asInstanceOf[StringIdGCValue]) match {
-            case Some(group) =>
-              val roots = group.map(DocumentToRoot(model, _))
-              val prismaNodes: Vector[PrismaNodeWithParent] =
-                roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idFieldByName(model.idField_!.name), r, Some(model.name)))).toVector
-              ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
+          fromNodeIds.map { id =>
+            groups.get(id.asInstanceOf[StringIdGCValue]) match {
+              case Some(group) =>
+                val roots = group.map(DocumentToRoot(model, _))
+                val prismaNodes: Vector[PrismaNodeWithParent] =
+                  roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idFieldByName(model.idField_!.name), r, Some(model.name)))).toVector
+                ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
 
-            case None =>
-              ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+              case None =>
+                ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+            }
           }
         }
-      }
     }
 
   //Fixme this does not use all queryarguments
