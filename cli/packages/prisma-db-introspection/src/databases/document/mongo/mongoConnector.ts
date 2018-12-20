@@ -1,6 +1,6 @@
 import { IDataIterator, SamplingStrategy, ObjectTypeIdentifier, TypeInfo, UnsupportedTypeError } from '../documentConnector'
 import { DocumentConnector } from '../documentConnectorBase'
-import { DatabaseType, ISDL } from "prisma-datamodel"
+import { DatabaseType, ISDL } from 'prisma-datamodel'
 import { DocumentIntrospectionResult } from "../documentIntrospectionResult"
 import { MongoClient, Collection, Cursor, AggregationCursor } from 'mongodb'
 import * as BSON from 'bson'
