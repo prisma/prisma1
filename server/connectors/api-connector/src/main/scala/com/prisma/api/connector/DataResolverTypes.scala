@@ -57,7 +57,7 @@ object SelectedFields {
   val empty             = SelectedFields(Set.empty)
   def all(model: Model) = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
   def byFieldAndPath(field: RelationField, path: Path) =
-    SelectedFields((List(SelectedRelationField.empty(field)) ++ path.relationFieldToSelect.map(SelectedRelationField.empty)).toSet)
+    SelectedFields((List(SelectedRelationField.empty(field)) ++ path.relationFieldToSelect.map(SelectedRelationField.empty)).toSet) //Fixme: finish this
 }
 
 sealed trait SelectedField
@@ -69,10 +69,12 @@ object SelectedRelationField {
 }
 
 case class SelectedFields(fields: Set[SelectedField]) {
-  val scalarFields        = fields.collect { case selected: SelectedScalarField                           => selected.field }
-  val scalarListFields    = fields.collect { case selected: SelectedScalarField if selected.field.isList  => selected.field }
-  val scalarNonListFields = fields.collect { case selected: SelectedScalarField if !selected.field.isList => selected.field }
-  val relationFields      = fields.collect { case selected: SelectedRelationField                         => selected.field }
+  val scalarFields          = fields.collect { case selected: SelectedScalarField                             => selected.field }
+  val scalarListFields      = fields.collect { case selected: SelectedScalarField if selected.field.isList    => selected.field }
+  val scalarNonListFields   = fields.collect { case selected: SelectedScalarField if !selected.field.isList   => selected.field }
+  val relationFields        = fields.collect { case selected: SelectedRelationField                           => selected.field }
+  val relationListFields    = fields.collect { case selected: SelectedRelationField if selected.field.isList  => selected.field }
+  val relationNonListFields = fields.collect { case selected: SelectedRelationField if !selected.field.isList => selected.field }
   private val inlineRelationFields = relationFields.collect {
     case rf if !rf.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.B                        => rf
     case rf if rf.relatedField.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.A            => rf

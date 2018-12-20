@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
+import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
@@ -13,16 +13,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder {
+trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder with MongoResultReader {
 
   // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     manyQueryHelper(model, queryArguments, None, database, false, selectedFields).map { results: Seq[Document] =>
-      val nodes = results.map { result =>
-        val root = DocumentToRoot(model, result)
-        PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
-      }
-
+      val nodes = results.map(readsPrismaNode(_, model, selectedFields))
       ResolverResult[PrismaNode](queryArguments, nodes.toVector)
     }
   }
@@ -37,7 +33,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
         .projection(idProjection)
         .collect()
         .toFuture
-        .map(res => res.map(DocumentToId.toCUIDGCValue))
+        .map(_.map(readId))
     }
   }
 
@@ -105,14 +101,8 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
 
           fromNodeIds.map { id =>
             groups.get(id.asInstanceOf[StringIdGCValue]) match {
-              case Some(group) =>
-                val roots = group.map(DocumentToRoot(model, _))
-                val prismaNodes: Vector[PrismaNodeWithParent] =
-                  roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idFieldByName(model.idField_!.name), r, Some(model.name)))).toVector
-                ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
-
-              case None =>
-                ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+              case Some(group) => ResolverResult(queryArguments, group.map(readsPrismaNodeWithParent(_, model, selectedFields, id)).toVector, Some(id))
+              case None        => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
             }
           }
         }
