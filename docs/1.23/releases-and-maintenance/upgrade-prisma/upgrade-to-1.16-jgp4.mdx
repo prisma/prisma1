@@ -1,0 +1,52 @@
+export const meta = {
+  title: "Upgrade to 1.16",
+  position: 50,
+}
+
+## Overview
+
+Prisma 1.16 introduces a number of non-breaking changes.
+
+## Changing the suffix of datamodel files
+
+The suffix of datamodel files is changed to `.prisma` instead of `.graphql`. This is backwards compatible, so `.graphql` will continue to work.
+
+## Introducing Prisma client
+
+Prisma client is an auto-generated library that can be used to consume a Prisma API.
+
+### Generating a Prisma client
+
+To generate a Prisma client, you need to add the [`generate`](5cy7#generate-optional) property to your prisma.yml:
+
+The `generate` property is used to specify how and where a Prisma client (or other files) should be generated.
+
+The following generators are built-into the Prisma CLI:
+
+- Prisma client in JavaScript: `javascript-client`
+- Prisma client in TypeScript: `typescript-client`
+- Prisma client in Flow: `flow-client`
+- Prisma client in Go: `go-client`
+- GraphQL schema of the Prisma API: `graphql-schema`
+
+The `generate` property expects a **list of objects**. There are two properties on these objects:
+
+- `generator`: One of the available generators from the list above.
+- `output`: Specifies where the generated files should be located.
+
+Here is an example that generates the Prisma client in JavaScript and the GraphQL schema of the Prisma API:
+
+```yml
+generate:
+    - generator: javascript-client
+      output: ./generated/prisma
+    - generator: graphql-schema
+      output: ./generated/prisma
+```
+
+### Using the Prisma client
+
+Follow the updated [Quickstart](/get-started), check out one of the [examples](https://github.com/prisma/prisma-examples) or read the [Prisma client documentation](/prisma-client) to learn more about the new Prisma client.
+
+
+

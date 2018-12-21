@@ -42,8 +42,8 @@ object MongoDeployDatabaseMutationBuilder {
       Future.sequence(project.relations.collect {
         case relation if relation.isInlineRelation =>
           relation.modelAField.relationIsInlinedInParent match {
-            case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-            case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+            case true if !relation.modelB.isEmbedded  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+            case false if !relation.modelA.isEmbedded => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
           }
       })
 
