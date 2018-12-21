@@ -114,13 +114,13 @@ object BisonToGC {
 
 trait MongoResultReader {
 
-  def readsPrismaNode(document: Document, model: Model, selectedFields: SelectedFields) = {
-    val root = DocumentToRoot(model, document, selectedFields)
+  def readsCompletePrismaNode(document: Document, model: Model) = {
+    val root = DocumentToRoot(model, document)
     PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
   }
 
-  def readsCompletePrismaNode(document: Document, model: Model) = {
-    val root = DocumentToRoot(model, document)
+  def readsPrismaNode(document: Document, model: Model, selectedFields: SelectedFields) = {
+    val root = DocumentToRoot(model, document, selectedFields)
     PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
   }
 
