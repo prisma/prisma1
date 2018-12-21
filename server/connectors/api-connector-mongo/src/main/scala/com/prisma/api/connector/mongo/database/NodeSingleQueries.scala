@@ -1,9 +1,8 @@
 package com.prisma.api.connector.mongo.database
 
-import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whereToBson
-import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
+import com.prisma.api.connector.{SelectedFields, _}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Project, RelationField}
 import org.mongodb.scala.Document
@@ -26,14 +25,16 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
     Future.sequence(outer).map(_.flatten.headOption)
   }
 
-  def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
-
-  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database => //Fixme use projection here
+  def getNodeByWhereComplete(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = SimpleMongoAction { database =>
     database.getCollection(where.model.dbName).find(where).collect().toFuture.map { results: Seq[Document] =>
-      results.headOption.map { result =>
-        val root = DocumentToRoot(where.model, result)
-        PrismaNode(root.idFieldByName(where.model.idField_!.name), root, Some(where.model.name))
-      }
+      results.headOption.map(readsCompletePrismaNode(_, where.model))
+    }
+  }
+
+  def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database =>
+    database.getCollection(where.model.dbName).find(where).projection(projectSelected(selectedFields)).collect().toFuture.map { results: Seq[Document] =>
+      results.headOption.map(readsPrismaNode(_, where.model, selectedFields))
     }
   }
 
@@ -44,7 +45,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
       .projection(idProjection)
       .collect()
       .toFuture
-      .map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
+      .map(_.headOption.map(readsId))
   }
 
   def getNodeIdByParent(parentField: RelationField, parent: NodeAddress): MongoAction[Option[IdGCValue]] = {
@@ -52,10 +53,11 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where).map { //Fixme limit the selection set
-          case None    => None
-          case Some(n) => n.getIDAtPath(parentField, parent.path)
-        }
+        getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(parentField, parent))
+          .map {
+            case None    => None
+            case Some(n) => n.getIDAtPath(parentField, parent.path)
+          }
 
       case false =>
         val filter = generateFilterForFieldAndId(parentField.relatedField, parent.idValue)
@@ -69,7 +71,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where).flatMap { //Fixme limit the selection set
+        getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(parentField, parent)).flatMap {
           case None =>
             noneHelper
           case Some(n) =>

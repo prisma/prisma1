@@ -223,7 +223,7 @@ class ObjectTypeBuilder(
                 val existingFilter: Filter = arguments.filter.getOrElse(Filter.empty)
                 val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
                 val newQueryArguments      = arguments.copy(filter = Some(newFilter))
-                DeferredValue(ManyModelDeferred(f.relatedModel_!, newQueryArguments, SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, newQueryArguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
               case _ => Vector.empty[PrismaNode]
             }

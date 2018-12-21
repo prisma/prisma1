@@ -1,10 +1,10 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.DocumentToId
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
+import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{IdGCValue, NullGCValue}
 import com.prisma.shared.models.{Model, RelationField, ScalarField}
@@ -13,7 +13,7 @@ import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.Future
-trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuilder {
+trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuilder with MongoResultReader {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
   import org.mongodb.scala.model.Aggregates._
@@ -53,7 +53,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
     //--------------------------- Setup Query -----------------------------------------------------------
     val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
 
-    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(DocumentToId.toCUIDGCValue))
+    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(readsId))
   }
 
   //-------------------------------------- Join And Filter ---------------------------------------------------
