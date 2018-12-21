@@ -15,7 +15,6 @@ import scala.language.existentials
 
 trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder with MongoResultReader {
 
-  // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
     manyQueryHelper(model, queryArguments, None, database, false, selectedFields).map { results: Seq[Document] =>
       val nodes = results.map(readsPrismaNode(_, model, selectedFields))
@@ -33,7 +32,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
         .projection(idProjection)
         .collect()
         .toFuture
-        .map(_.map(readId))
+        .map(_.map(readsId))
     }
   }
 

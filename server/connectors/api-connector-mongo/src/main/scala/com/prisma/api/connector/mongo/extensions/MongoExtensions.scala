@@ -129,7 +129,7 @@ trait MongoResultReader {
     PrismaNodeWithParent(id, PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name)))
   }
 
-  def readId(document: Document): IdGCValue = StringIdGCValue(document("_id").asObjectId().getValue.toString)
+  def readsId(document: Document): IdGCValue = StringIdGCValue(document("_id").asObjectId().getValue.toString)
 }
 
 object DocumentToRoot {

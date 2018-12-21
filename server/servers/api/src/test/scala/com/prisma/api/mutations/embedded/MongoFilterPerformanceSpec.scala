@@ -21,6 +21,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  f: Boolean
         |  int: Int! @unique
         |  posts: [Post] @mongoRelation(field: "posts")
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
         |}
         |
         |type Post {
@@ -34,6 +36,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  comments: [Comment] @mongoRelation(field: "comments")
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
         |}
         |
         |type Comment {
@@ -46,6 +50,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  post: Post @mongoRelation(field: "comments")
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
         |}"""
   }
 

@@ -51,7 +51,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
       .projection(idProjection)
       .collect()
       .toFuture
-      .map(_.headOption.map(readId))
+      .map(_.headOption.map(readsId))
   }
 
   def getNodeIdByParent(parentField: RelationField, parent: NodeAddress): MongoAction[Option[IdGCValue]] = {
@@ -59,9 +59,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhereComplete(parent.where)
-        //FIXME
-//        getNodeByWhere(parent.where, SelectedFields.byFieldAndPath(parentField, parent.path) ++ SelectedFields(Set(SelectedScalarField(parent.where.field))))
+        getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(parentField, parent))
           .map {
             case None    => None
             case Some(n) => n.getIDAtPath(parentField, parent.path)
@@ -79,7 +77,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where, parent.path, parentField).flatMap {
+        getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(parentField, parent)).flatMap {
           case None =>
             noneHelper
           case Some(n) =>

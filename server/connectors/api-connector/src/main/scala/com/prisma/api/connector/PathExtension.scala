@@ -16,7 +16,6 @@ case class Path(segments: List[PathSegment]) {
   def operatorName(field: RelationField, whereFilter: Option[Filter]): String = sanitize(s"${field.name}X${whereFilter.hashCode().toString}")
   def dropLast: Path                                                          = this.copy(segments = this.segments.dropRight(1))
   def dropFirst: Path                                                         = this.copy(segments = this.segments.drop(1))
-  def relationFieldToSelect: Option[RelationField]                            = segments.headOption.map(_.rf)
   def combinedNames                                                           = this.segments.map(_.rf.name).mkString(".")
   private def sanitize(input: String): String = {
     //Mongo only allows alphanumeric characters in arrayfilter names and they have to start with lowercase
@@ -25,6 +24,14 @@ case class Path(segments: List[PathSegment]) {
       .replace("_", "X") // for the _ in _id
 
     "x" + alphanumeric
+  }
+
+  def selectedFields(field: RelationField): SelectedFields = selectedFieldsHelper(field, this.segments)
+  private def selectedFieldsHelper(field: RelationField, segments: List[PathSegment]): SelectedFields = segments match {
+    case Nil                                => SelectedFields(Set(SelectedRelationField(field, SelectedFields.empty)))
+    case ToOneSegment(rf) :: tail           => SelectedFields(Set(SelectedRelationField(rf, selectedFieldsHelper(field, tail))))
+    case ToManySegment(rf, where) :: tail   => SelectedFields(Set(SelectedScalarField(where.field), SelectedRelationField(rf, selectedFieldsHelper(field, tail))))
+    case ToManyFilterSegment(rf, _) :: tail => SelectedFields(Set(SelectedRelationField(rf, selectedFieldsHelper(field, tail)))) //Fixme
   }
 
   private def stringGen(field: String, segments: List[PathSegment]): Vector[String] = segments match {

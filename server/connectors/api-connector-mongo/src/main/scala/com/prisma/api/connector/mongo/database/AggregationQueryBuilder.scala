@@ -53,7 +53,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
     //--------------------------- Setup Query -----------------------------------------------------------
     val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
 
-    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(readId))
+    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(readsId))
   }
 
   //-------------------------------------- Join And Filter ---------------------------------------------------
