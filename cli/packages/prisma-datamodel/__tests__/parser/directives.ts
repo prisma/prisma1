@@ -7,7 +7,7 @@ const parsersToTest = [{ name: 'relational', instance: new RelationalParser()}, 
 
 for(const parser of parsersToTest) {
   describe(`${parser.name} parser directive tests`, () => {
-    test('Parse a type with directives correctly.', () => {
+    test('Parse a type with build-in directives correctly.', () => {
       const model = `
         type User @db(name: "user") {
           id: Int! @id
@@ -31,6 +31,28 @@ for(const parser of parsersToTest) {
       const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String', false, false)
       expect(mappedField.databaseName).toBe('dbField')
       expect(mappedField.relationName).toBe('typeRelation')
+    })
+
+    test('Parse a type with unknown directives correctly.', () => {
+      const model = `
+        type DirectiveUser @typeDirective(name: "database") {
+          id: Int! @id
+          createdAt: DateTime! @funnyDirective @createdAt
+          updatedAt: DateTime!
+          mappedField: String! @unfunnyDirective(funny: "false")
+        }
+      `
+
+      const { types } = parser.instance.parseFromSchemaString(model)
+
+      const userType = SdlExpect.type(types, 'DirectiveUser')
+      SdlExpect.directive(userType, { name: 'typeDirective', arguments: { name: 'database' } })
+
+      const createdAtField = SdlExpect.field(userType, 'createdAt', true, false, 'DateTime', false, true)
+      SdlExpect.directive(createdAtField, { name: 'funnyDirective', arguments: {} })
+
+      const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String')
+      SdlExpect.directive(mappedField, { name: 'unfunnyDirective', arguments: { funny: 'false' } })
     })
   })
 }

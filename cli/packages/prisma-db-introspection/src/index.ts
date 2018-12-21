@@ -11,3 +11,5 @@ export { PostgresConnector } from './databases/relational/postgres/postgresConne
 export { MongoConnector } from './databases/document/mongo/mongoConnector'
 
 export { PrismaDBClient } from './databases/prisma/prismaDBClient'
+
+export { default as ModelNameAndDirectiveNormalizer } from './common/modelNameAndDirectiveNormalizer'

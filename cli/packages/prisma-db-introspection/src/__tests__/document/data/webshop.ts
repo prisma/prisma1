@@ -109,21 +109,68 @@ export const orders = [{
 }]
 
 export const collections = {
-  User: users,
-  Order: orders, 
-  Item: items
+  users: users,
+  orders: orders, 
+  items: items
 }
 
-export const schemaString = `type Item {
+export const schemaString = `type items {
   # Type String is currently not supported for id fields.
   _id: String! @id
   keywords: [String!]!
   price: Float
   rating: Float
-  reviews: [ItemReviews!]!
+  reviews: [itemsreviews!]!
 }
 
-type ItemReviews @embedded {
+type itemsreviews @embedded {
+  rating: Float
+  text: String
+}
+
+type orders {
+  # Type Int is currently not supported for id fields.
+  _id: Int! @id
+  amount: Float
+  customer: users @relation(link: INLINE)
+  items: [items!]! @relation(link: INLINE)
+  orderDate: String
+}
+
+type users {
+  # Type String is currently not supported for id fields.
+  _id: String! @id
+  firstName: String
+  lastName: String
+  paymentInfo: [userspaymentInfo!]!
+  shippingAddress: usersshippingAddress
+}
+
+type userspaymentInfo @embedded {
+  accountId: String
+  BIC: String
+  expires: String
+  IBAN: String
+  number: String
+  type: String
+}
+
+type usersshippingAddress @embedded {
+  country: String
+  number: String
+  street: String
+}`
+
+export const normalizedSchemaString = `type Item {
+  # Type String is currently not supported for id fields.
+  _id: String! @id
+  keywords: [String!]!
+  price: Float
+  rating: Float
+  reviews: [ItemReview!]!
+}
+
+type ItemReview @embedded {
   rating: Float
   text: String
 }

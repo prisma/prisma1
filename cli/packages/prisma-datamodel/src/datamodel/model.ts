@@ -20,7 +20,7 @@ import {
  * to represent arguments.
  */
 export interface IArguments {
-  [name: string]: string
+  readonly [name: string]: string
 }
 
 /**
@@ -233,4 +233,77 @@ export class GQLMultiRelationField extends GQLFieldBase {
     super(name, type, isRequired)
     this.isList = true
   }
+}
+
+function cloneComments(copy: ISDL | IGQLField | IGQLType, obj: ISDL | IGQLField | IGQLType) {
+  if(obj.comments !== undefined) {
+    copy.comments = []
+    for(const comment of obj.comments) {
+      copy.comments.push({...comment})
+    }
+  }
+}
+
+function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField | IGQLType) {
+  if(obj.directives !== undefined) {
+    copy.directives = []
+    for(const directive of obj.directives) {
+      copy.directives.push({...directive})
+    }
+  }
+
+  cloneComments(copy, obj)
+}
+
+// Start: 8:00
+function cloneField(field: IGQLField): IGQLField {
+  const copy = {
+    ...field
+  }
+
+  cloneCommentsAndDirectives(copy, field)
+
+  return copy
+}
+
+function cloneType(type: IGQLType): IGQLType {
+  const copy = {
+    ...type
+  }
+
+  cloneCommentsAndDirectives(copy, type)
+
+  copy.fields = []
+  for(const field of type.fields) {
+    copy.fields.push(cloneField(field))
+  }
+
+  return copy
+}
+
+export function cloneSchema(schema: ISDL): ISDL {
+  const copy = {
+    ...schema
+  }
+
+  cloneComments(copy, schema)
+
+  copy.types = []
+  for(const type of schema.types) {
+    copy.types.push(cloneType(type))
+  }
+
+  // Re-Assign type pointer
+  for(const type of copy.types) {
+    for(const field of type.fields) {
+      if(typeof field.type !== 'string') {
+        const typeName = field.type.name
+        const [fieldType] = copy.types.filter(x => x.name === typeName)
+        console.assert(fieldType !== undefined) // This case should never happen
+        field.type = fieldType
+      }
+    }
+  }
+
+  return copy
 }

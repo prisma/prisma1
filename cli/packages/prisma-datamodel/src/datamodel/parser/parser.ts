@@ -1,8 +1,9 @@
-import { IGQLType, IGQLField, GQLScalarField, ISDL } from '../model'
+import { IGQLType, IGQLField, GQLScalarField, ISDL, IDirectiveInfo, IArguments } from '../model'
 import { parse } from 'graphql'
 import { DirectiveKeys } from '../directives';
 
 // TODO(ejoebstl): It would be good to have this Parser fill the directive field for types and models as well.
+// TODO(ejoebstl): Directive parsing should be cleaned up: Parse all directives first and then extract build-in directives.
 
 /**
  * Parses a datamodel given as DSL
@@ -131,7 +132,7 @@ export default abstract class Parser {
 
     return null
   }
-  
+
   /**
    * Gets a fields or types relation name. If no directive
    * exists, returns null.
@@ -147,6 +148,43 @@ export default abstract class Parser {
     }
 
     return null
+  }
+
+  /**
+   * Gets all reserved directive keys. 
+   */
+  protected getReservedDirectiveNames() {
+    return [DirectiveKeys.default, DirectiveKeys.isEmbedded, DirectiveKeys.db, DirectiveKeys.isCreatedAt, DirectiveKeys.isUpdatedAt, DirectiveKeys.isUnique, DirectiveKeys.isId]
+  }
+
+  /**
+   * Parses all directives that are not reserved (build-in) 
+   * from a field or type
+   */
+  protected parseDirectives(fieldOrType: any) {
+    const res: IDirectiveInfo[] = []
+    const reservedDirectiveNames = this.getReservedDirectiveNames()
+
+    for(const directive of fieldOrType.directives) {
+      if(reservedDirectiveNames.includes(directive.name)) {
+        continue
+      }
+
+      const resArgs = {}
+      for(const args of directive.arguments) {
+        resArgs[args.name.value] = args.value.value
+      }
+      res.push({
+        name: directive.name.value,
+        arguments: resArgs
+      })
+    }
+
+    if(res.length === null) {
+      return undefined
+    } else {
+      return res
+    }
   }
 
   /**
@@ -167,6 +205,7 @@ export default abstract class Parser {
     const defaultValue = this.getDefaultValue(field)
     const relationName = this.getRelationName(field)
     const databaseName = this.getDatabaseName(field) || undefined
+    const directives = this.parseDirectives(field)
 
     return {
       name,
@@ -181,7 +220,8 @@ export default abstract class Parser {
       isUpdatedAt,
       isCreatedAt,
       isReadOnly,
-      databaseName
+      databaseName,
+      directives
     }
   }
 
@@ -211,13 +251,15 @@ export default abstract class Parser {
 
     const databaseName = this.getDatabaseName(type) || undefined
     const isEmbedded = this.isEmbedded(type)
+    const directives = this.parseDirectives(type)
 
     return {
       name: type.name.value,
       fields,
       isEnum: false,
       isEmbedded,
-      databaseName
+      databaseName,
+      directives
     }
   }
 
@@ -255,11 +297,14 @@ export default abstract class Parser {
           }
         }
 
+        const directives = this.parseDirectives(type)
+
         enumTypes.push({
           name: type.name.value,
           fields: values,
           isEnum: true,
           isEmbedded: false,
+          directives
         })
       }
     }

@@ -9,7 +9,7 @@ export default class ModelNameNormalizer {
   }
 
   private setNameInternal(obj: IGQLType | IGQLField, newName: string) {
-    if(obj.databaseName !== undefined) {
+    if(obj.databaseName === undefined) {
       // If name was already changed, we don't touch it.
       if(newName !== obj.name) {
         // If name is already conforming to prisma, skip. 
@@ -23,11 +23,17 @@ export default class ModelNameNormalizer {
     this.setNameInternal(type, capitalize(singular(type.name)))
 
     for(const field of type.fields) {
-      this.normalizeField(field)
+      this.normalizeField(field, type)
     }
   }
 
-  protected normalizeField(field: IGQLField) {
-    this.setNameInternal(field, plural(field.name))
+  protected normalizeField(field: IGQLField, parentType: IGQLType) {
+    // Make embedded type names pretty
+    if(typeof field.type !== 'string' && field.type.isEmbedded) {
+      // TODO: This might break with nested embedded types in incorrect order. 
+      if(!field.type.databaseName)
+        field.type.databaseName = field.type.name
+      field.type.name = parentType.name + capitalize(singular(field.name))
+    }
   }
 }

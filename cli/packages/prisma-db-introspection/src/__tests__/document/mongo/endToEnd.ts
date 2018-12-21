@@ -1,6 +1,7 @@
 import { MongoConnector } from '../../../databases/document/mongo/mongoConnector'
 import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
-import { collections, schemaString } from '../data/webshop'
+import { collections, schemaString, normalizedSchemaString } from '../data/webshop'
+import ModelNameNormalizer from '../../../common/modelNameNormalizer';
 
 const env = new MongoTestEnvironment()
 
@@ -14,9 +15,14 @@ describe('Mongo Model Introspector, end to end', () => {
 
     const connector = new MongoConnector(env.getClient())
     const introspection = await connector.introspect(env.schemaName)
-    const sdl = await introspection.getDatamodel()
     const schema = await introspection.renderToDatamodelString()
 
     expect(schema).toEqual(schemaString)
+
+    const normalizedSchema = await introspection.renderToNormalizedDatamodelString()
+  
+    console.log(normalizedSchema)
+
+    expect(normalizedSchema).toEqual(normalizedSchemaString)
   }, 10000)
 })

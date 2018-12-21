@@ -1,4 +1,4 @@
-import { IGQLType, IGQLField } from '../datamodel/model'
+import { IGQLType, IGQLField, IDirectiveInfo } from '../datamodel/model'
 
 
 export abstract class SdlExpect {
@@ -51,5 +51,22 @@ export abstract class SdlExpect {
     expect(type.isEmbedded).toEqual(isEmbedded)
 
     return type
+  }
+
+  /**
+   * Assertion helper for directives. 
+   */
+  static directive(obj: IGQLType | IGQLField, target: IDirectiveInfo) {
+    expect(obj.directives).not.toBeUndefined()
+
+    if(obj.directives !== undefined) {
+      const [directive] = obj.directives.filter(x => x.name === target.name)
+      expect(directive).not.toBeUndefined()
+      expect(directive).toEqual(target)
+
+      return directive
+    } else {
+      throw new Error('This is a dummy to ensure correct type inferrence.')
+    }
   }
 }
