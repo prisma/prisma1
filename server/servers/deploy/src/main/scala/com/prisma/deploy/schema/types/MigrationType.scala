@@ -18,6 +18,7 @@ object MigrationType {
       Field("errors", ListType(StringType), resolve = _.value.errors),
       Field("startedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.startedAt),
       Field("finishedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.finishedAt),
+      Field("datamodel", StringType, resolve = _.value.rawDataModel),
       Field(
         "steps",
         ListType(MigrationStepType.Type),
