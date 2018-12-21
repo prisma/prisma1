@@ -54,13 +54,10 @@ object QueryArguments {
 }
 
 object SelectedFields {
-  val empty             = SelectedFields(Set.empty)
-  def all(model: Model) = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
-  def byFieldAndNodeAddress(field: RelationField, address: NodeAddress) = {
-    val root = SelectedFields(Set(SelectedScalarField(address.where.field)))
-    val path = address.path.selectedFields(field)
-    root ++ path
-  }
+  val empty                                                             = SelectedFields(Set.empty)
+  def forRelationField(rf: RelationField)                               = SelectedFields(Set(SelectedRelationField.empty(rf)))
+  def all(model: Model)                                                 = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
+  def byFieldAndNodeAddress(field: RelationField, address: NodeAddress) = address.path.selectedFields(field)
 }
 
 sealed trait SelectedField

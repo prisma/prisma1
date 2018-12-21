@@ -82,7 +82,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       val model        = fromField.relatedModel_!
 
       val inFilter: Filter      = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
-      val updatedSelectedFields = selectedFields ++ SelectedFields(Set(SelectedRelationField.empty(relatedField)))
+      val updatedSelectedFields = selectedFields ++ SelectedFields.forRelationField(relatedField)
       manyQueryHelper(model, queryArguments, Some(inFilter), database, false, updatedSelectedFields)
         .map { results: Seq[Document] =>
           val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {

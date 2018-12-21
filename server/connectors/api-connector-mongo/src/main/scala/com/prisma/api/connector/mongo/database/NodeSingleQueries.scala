@@ -38,12 +38,6 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
     }
   }
 
-  def getNodeByWhere(where: NodeSelector, path: Path, relationField: RelationField) = SimpleMongoAction { database =>
-    database.getCollection(where.model.dbName).find(where).projection(projectPath(path, relationField)).collect().toFuture.map { results: Seq[Document] =>
-      results.headOption.map(readsPrismaNode(_, where.model, SelectedFields.all(where.model))) //Fixme: path should generate selectedFields
-    }
-  }
-
   def getNodeIdByWhere(where: NodeSelector): SimpleMongoAction[Option[IdGCValue]] = SimpleMongoAction { database =>
     database
       .getCollection(where.model.dbName)

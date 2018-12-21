@@ -13,10 +13,8 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     for {
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
-                         val selectedFields = SelectedFields(
-                           Set(SelectedScalarField(where.model.idField_!), SelectedScalarField(where.field), SelectedRelationField.empty(relationField)))
                          for {
-                           optionRes <- getNodeByWhere(where, selectedFields)
+                           optionRes <- getNodeByWhere(where, SelectedFields.forRelationField(relationField))
                            filterOption = optionRes.flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
@@ -78,11 +76,9 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
     for {
       filter <- otherField.relationIsInlinedInParent match {
                  case false =>
-                   val filter         = ScalarFilter(relatedModel.idField_!, In(parentIds))
-                   val selectedFields = SelectedFields(Set(SelectedScalarField(relatedModel.idField_!), SelectedRelationField.empty(relatedField)))
-
+                   val filter = ScalarFilter(relatedModel.idField_!, In(parentIds))
                    for {
-                     result <- getNodes(relatedModel, QueryArguments.withFilter(filter), selectedFields)
+                     result <- getNodes(relatedModel, QueryArguments.withFilter(filter), SelectedFields.forRelationField(relatedField))
                      ids = result.nodes.flatMap { node =>
                        (otherField.relatedField.isList, node.data.map.get(relatedField.name)) match {
                          case (true, Some(ListGCValue(values))) => values
