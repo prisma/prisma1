@@ -1,0 +1,185 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Collapse from 'components/Markdown/Collapse'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Set up Prisma',
+  position: 1,
+  gettingStartedOrder: 3,
+  gettingStartedTitle: 'Demo database',
+  nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and regenerate your Prisma client.',
+  technology: 'go',
+  technologyOrder: 4,
+  articleGroup: 'Set up Prisma',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Set up Prisma with a sandboxed demo database
+- Read and write data using the Prisma Go client
+
+## Install the Prisma CLI
+
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew tap prisma/prisma
+brew install prisma
+```
+
+```bash copy
+npm install -g prisma
+```
+
+</Code>
+
+## Set up Prisma
+
+To bootstrap the configuration files for your Prisma setup, run the `prisma init` command **in your [GOPATH](https://github.com/golang/go/wiki/GOPATH)**:
+
+```bash copy
+mkdir hello-world
+cd hello-world
+prisma init
+```
+
+After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy Prisma:
+
+1. Select **Demo server** from the list.
+1. When your browser opens, register with [Prisma Cloud](https://www.prisma.io/cloud/). This is needed because that's where the Demo server is hosted.
+1. Go back to your terminal.
+1. Confirm the suggested values for the following questions with **Return**:
+    1. The **region** where Prisma service should be hosted
+    1. The **name** for Prisma service
+    1. The **stage** for Prisma service
+1. Select **Prisma Go Client** to generate Prisma client for Golang.
+
+<Collapse title="Learn about the generated files">
+
+- `prisma.yml`: The root configuration file for your Prisma setup.
+- `datamodel.prisma`: Specifies the datamodel for your application that will be mapped to the database (it basically defines your database schema).
+- `generated/`: Contains the generated source files for the Prisma Go client.
+
+</Collapse>
+
+## Deploy Prisma
+
+The interactive wizard created the _minimal_ Prisma configuration based on a hosted demo database: `prisma.yml` and `datamodel.prisma`. Prisma now needs to be _deployed_ so you can [use the Prisma API](nms2):
+
+```bash copy
+prisma deploy
+```
+
+Congratulations, you have successfully deployed Prisma. You can now start using the Prisma client to talk to your database from code.
+
+## Prepare Go application
+
+```bash copy
+touch index.go
+```
+
+You'll be using [dep](https://golang.github.io/dep/) for dependency management in this tutorial. Run the following command to create the required setup:
+
+```bash copy
+dep init
+```
+
+Great, you're now ready to write some code and talk to your database programmatically!
+
+## Read and write data using the Prisma client
+
+Add the following code in `index.go`:
+
+```go copy
+package main
+
+import (
+	"context"
+	"fmt"
+	prisma "hello-world/generated/prisma-client"
+)
+
+func main() {
+	client := prisma.New(nil)
+	ctx := context.TODO()
+
+	// Create a new user
+	name := "Alice"
+	newUser, err := client.CreateUser(prisma.UserCreateInput{
+		Name: name,
+	}).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Created new user: %+v\\n", newUser)
+
+	users, err := client.Users(nil).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\\n", users)
+}
+```
+
+Before executing the script, you need to _ensure_ all dependencies are available. Run the following command:
+
+```bash copy
+dep ensure
+```
+
+Now execute the script with the following command:
+
+```bash copy
+go run index.go
+```
+
+Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
+
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+
+<QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
+
+```go lineNumbers,copy
+id := "__USER_ID__"
+userById, err := client.User(prisma.UserWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
+```
+
+```go lineNumbers,copy
+filter := "Alice"
+posts, err := client.Users(&prisma.UsersParams{
+  Where: &prisma.UserWhereInput{
+    Name: &filter,
+  },
+}).Exec(ctx)
+```
+
+```go lineNumbers,copy
+id := "__USER_ID__"
+newName := "Bob"
+updatedUser, err := client.UpdateUser(prisma.UserUpdateParams{
+  Where: prisma.UserWhereUniqueInput{
+    ID: &id,
+  },
+  Data: prisma.UserUpdateInput{
+    Name: &newName,
+  },
+}).Exec(ctx)
+```
+
+```go lineNumbers,copy
+id := "__USER_ID__"
+deletedUser, err := client.DeleteUser(prisma.UserWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.
