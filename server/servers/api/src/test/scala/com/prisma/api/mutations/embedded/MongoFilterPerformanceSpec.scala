@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
 
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-//  override def doNotRun: Boolean = true
+  override def doNotRun: Boolean = true
 
   "Testing a query that uses the aggregation framework" should "work" in {
     val project = SchemaDsl.fromString() {
@@ -231,10 +231,10 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
                    |                      {
                    |                        int: ${1000 + int}1
                    |                        a: "Just a Dummy"
-                   |                        b: "Just a Dummy"     
+                   |                        b: "Just a Dummy"
                    |                        c: "Just a Dummy"     
                    |                        d: 500     
-                   |                        e: 100.343     
+                   |                        e: 100.343
                    |                        f: true
                    |                        comments:{create:[
                    |                            {int: ${1000 + int}10, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}

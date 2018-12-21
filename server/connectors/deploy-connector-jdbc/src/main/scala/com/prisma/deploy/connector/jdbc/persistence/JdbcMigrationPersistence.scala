@@ -24,6 +24,7 @@ object MigrationTable {
   val revision           = field(name(migrationTableName, "revision"))
   val schema             = field(name(migrationTableName, "schema"))
   val functions          = field(name(migrationTableName, "functions"))
+  val dataModel          = field(name(migrationTableName, "datamodel"))
   val status             = field(name(migrationTableName, "status"))
   val applied            = field(name(migrationTableName, "applied"))
   val rolledBack         = field(name(migrationTableName, "rolledBack"))
@@ -32,7 +33,7 @@ object MigrationTable {
   val startedAt          = field(name(migrationTableName, "startedAt"))
   val finishedAt         = field(name(migrationTableName, "finishedAt"))
 
-  val *             = Seq(projectId, revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt)
+  val *             = Seq(projectId, revision, schema, functions, dataModel, status, applied, rolledBack, steps, errors, startedAt, finishedAt)
   val insertColumns = Seq(revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt)
 }
 
@@ -114,6 +115,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
         placeHolder,
         placeHolder,
         placeHolder,
+        placeHolder,
         placeHolder
       )
 
@@ -153,6 +155,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
               pp.setInt(revision)
               pp.setString(schema)
               pp.setString(functions)
+              pp.setString(migration.rawDataModel)
               pp.setString(migration.status.toString)
               pp.setInt(migration.applied)
               pp.setInt(migration.rolledBack)
@@ -416,6 +419,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       revision = rs.getInt(mt.revision.getName),
       schema,
       functions,
+      rawDataModel = Option(rs.getString(mt.dataModel.getName)).getOrElse(""),
       status = MigrationStatus.withName(rs.getString(mt.status.getName)),
       applied = rs.getInt(mt.applied.getName),
       rolledBack = rs.getInt(mt.rolledBack.getName),
