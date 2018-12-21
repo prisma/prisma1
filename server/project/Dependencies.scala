@@ -34,9 +34,9 @@ object Dependencies {
   val slickJoda   = "com.github.tototoshi" %% "slick-joda-mapper" % "2.3.0"
   val slick       = Seq(slickCore, slickHikari, slickJoda)
 
-  val mariaDbClient  = "org.mariadb.jdbc"  % "mariadb-java-client" % "2.1.2"
-  val postgresClient = "org.postgresql"    % "postgresql"          % "42.2.2"
-  val mongoClient    = "org.mongodb.scala" %% "mongo-scala-driver" % "2.4.0"
+  val mysqlClient    = "mysql"             % "mysql-connector-java" % "8.0.13"
+  val postgresClient = "org.postgresql"    % "postgresql"           % "42.2.2"
+  val mongoClient    = "org.mongodb.scala" %% "mongo-scala-driver"  % "2.4.0"
 
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play

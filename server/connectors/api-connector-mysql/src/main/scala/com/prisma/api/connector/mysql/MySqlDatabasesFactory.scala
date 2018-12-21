@@ -7,7 +7,7 @@ import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
 object MySqlDatabasesFactory {
-  private lazy val dbDriver = new org.mariadb.jdbc.Driver
+  private lazy val dbDriver = new com.mysql.jdbc.Driver
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
     val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)

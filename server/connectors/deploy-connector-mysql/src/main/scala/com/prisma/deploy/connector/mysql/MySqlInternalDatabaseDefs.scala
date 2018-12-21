@@ -13,7 +13,7 @@ case class MySqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
   lazy val setupDatabases      = databases(root = true)
   lazy val managementDatabases = databases(root = false)
 
-  private lazy val dbDriver = new org.mariadb.jdbc.Driver
+  private lazy val dbDriver = new com.mysql.jdbc.Driver
 
   def databases(root: Boolean): Databases = {
     val config        = typeSafeConfigFromDatabaseConfig(dbConfig, root)
