@@ -24,16 +24,16 @@ object DeleteRelationInterpreter extends MongoMutactionInterpreter[DeleteRelatio
 object Indexhelper {
   def add(relation: Relation) = DeployMongoAction { database =>
     (relation.isInlineRelation, relation.modelAField.relationIsInlinedInParent) match {
-      case (true, true) if !relation.modelA.isEmbedded  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-      case (true, false) if !relation.modelB.isEmbedded => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+      case (true, true) if !relation.modelB.isEmbedded  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+      case (true, false) if !relation.modelA.isEmbedded => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
       case (_, _)                                       => Future.successful(())
     }
   }
 
   def remove(relation: Relation) = DeployMongoAction { database =>
     (relation.isInlineRelation, relation.modelAField.relationIsInlinedInParent) match {
-      case (true, true) if !relation.modelA.isEmbedded  => removeRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-      case (true, false) if !relation.modelB.isEmbedded => removeRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+      case (true, true) if !relation.modelB.isEmbedded  => removeRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+      case (true, false) if !relation.modelA.isEmbedded => removeRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
       case (_, _)                                       => Future.successful(())
     }
   }
