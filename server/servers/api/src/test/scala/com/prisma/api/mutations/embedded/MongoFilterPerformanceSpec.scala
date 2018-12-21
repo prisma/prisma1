@@ -8,6 +8,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.mutable.ListBuffer
 
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
+
 //  override def doNotRun: Boolean = true
 
   "Testing a query that uses the aggregation framework" should "work" in {
@@ -112,7 +113,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  int: Int! @unique
-        |  posts: [Post] @mongoRelation(field: "posts")
+        |  posts: [Post]
         |  createdAt: DateTime!
         |  updatedAt: DateTime!
         |}
@@ -125,7 +126,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  comments: [Comment] @mongoRelation(field: "comments")
+        |  comments: [Comment]
         |  createdAt: DateTime!
         |  updatedAt: DateTime!
         |}
@@ -149,8 +150,10 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     var findFilter      = new ListBuffer[Long]
     var findFilterDeep  = new ListBuffer[Long]
 
-    val find     = """query{users(where:{int_gt: 5, int_lt: 19}){int}}"""
-    val findDeep = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
+    val filter     = """query{users(where:{int_gt: 5, int_lt: 19, posts_some:{int_gt: 10000, comments_some: {int_gt:10000}}}){int}}"""
+    val filterDeep = """query{users(where:{int_gt: 5,int_lt: 19, posts_some:{int_gt: 10000,comments_some: {int_gt:10000}}}){int, posts{int,comments{int}}}}"""
+    val find       = """query{users(where:{int_gt: 5, int_lt: 19}){int}}"""
+    val findDeep   = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
 
     val mutStart = System.currentTimeMillis()
     for (x <- 1 to 100) {
@@ -159,6 +162,14 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     val mutEnd = System.currentTimeMillis()
 
     val numQueries = 40
+
+    for (x <- 1 to numQueries) {
+      timesFilter += query(project, filter)
+    }
+
+    for (x <- 1 to numQueries) {
+      timesFilterDeep += query(project, filterDeep)
+    }
 
     for (x <- 1 to numQueries) {
       findFilter += query(project, find)
@@ -170,6 +181,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     Thread.sleep(1000)
 
     println("Data Creation: " + (mutEnd - mutStart))
+    println("Filterquery Average: " + (timesFilter.sum / numQueries))
+    println("Filterquery Deep Average: " + (timesFilterDeep.sum / numQueries))
     println("Findquery Average: " + (findFilter.sum / numQueries))
     println("Findquery Deep Average: " + (findFilterDeep.sum / numQueries))
   }
@@ -186,21 +199,21 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
                    |mutation {
                    |  createUser(data: {
                    |                    int:$int
-                   |                    a: "Just a Dummy"     
-                   |                    b: "Just a Dummy"     
-                   |                    c: "Just a Dummy"     
-                   |                    d: 500     
-                   |                    e: 100.343     
-                   |                    f: true     
+                   |                    a: "Just a Dummy"
+                   |                    b: "Just a Dummy"
+                   |                    c: "Just a Dummy"
+                   |                    d: 500
+                   |                    e: 100.343
+                   |                    f: true
                    |                    posts:{create:[
                    |                      {
                    |                        int: ${1000 + int}0
-                   |                        a: "Just a Dummy"     
-                   |                        b: "Just a Dummy"     
-                   |                        c: "Just a Dummy"     
-                   |                        d: 500     
-                   |                        e: 100.343     
-                   |                        f: true 
+                   |                        a: "Just a Dummy"
+                   |                        b: "Just a Dummy"
+                   |                        c: "Just a Dummy"
+                   |                        d: 500
+                   |                        e: 100.343
+                   |                        f: true
                    |                        comments:{create:[
                    |                            {int: ${1000 + int}00, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
                    |                            {int: ${1000 + int}01, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
@@ -217,12 +230,12 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
                    |                      },
                    |                      {
                    |                        int: ${1000 + int}1
-                   |                        a: "Just a Dummy"     
+                   |                        a: "Just a Dummy"
                    |                        b: "Just a Dummy"     
                    |                        c: "Just a Dummy"     
                    |                        d: 500     
                    |                        e: 100.343     
-                   |                        f: true 
+                   |                        f: true
                    |                        comments:{create:[
                    |                            {int: ${1000 + int}10, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
                    |                            {int: ${1000 + int}11, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
@@ -238,12 +251,12 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
                    |                      },
                    |                      {
                    |                        int: ${1000 + int}2
-                   |                        a: "Just a Dummy"     
-                   |                        b: "Just a Dummy"     
-                   |                        c: "Just a Dummy"     
-                   |                        d: 500     
-                   |                        e: 100.343     
-                   |                        f: true 
+                   |                        a: "Just a Dummy"
+                   |                        b: "Just a Dummy"
+                   |                        c: "Just a Dummy"
+                   |                        d: 500
+                   |                        e: 100.343
+                   |                        f: true
                    |                        comments:{create:[
                    |                            {int: ${1000 + int}20, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
                    |                            {int: ${1000 + int}21, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
