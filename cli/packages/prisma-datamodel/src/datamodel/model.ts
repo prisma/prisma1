@@ -281,7 +281,13 @@ function cloneType(type: IGQLType): IGQLType {
   return copy
 }
 
+/**
+ * Deep-copies a datamodel and re-connects all types correctly.
+ * @param schema The datamodel to clone. 
+ */
 export function cloneSchema(schema: ISDL): ISDL {
+  // TODO(ejoebstl): It would be better to have a concrete implementation for 
+  // each SDL object and require a clone method on interface level.
   const copy = {
     ...schema
   }
