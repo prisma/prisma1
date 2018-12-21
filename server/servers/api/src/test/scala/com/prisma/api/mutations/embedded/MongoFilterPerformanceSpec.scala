@@ -1,6 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -9,8 +10,9 @@ import scala.collection.mutable.ListBuffer
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
 //  override def doNotRun: Boolean = true
 
-  val project = SchemaDsl.fromString() {
-    """
+  "Testing a query that uses the aggregation framework" should "work" in {
+    val project = SchemaDsl.fromString() {
+      """
         |type User {
         |  id: ID! @unique
         |  a: String
@@ -53,10 +55,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  createdAt: DateTime!
         |  updatedAt: DateTime!
         |}"""
-  }
-
-  "Testing a query that uses the aggregation framework" should "work" in {
-
+    }
     database.setup(project)
 
     var timesFilter     = new ListBuffer[Long]
@@ -71,26 +70,26 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
 
     val mutStart = System.currentTimeMillis()
     for (x <- 1 to 100) {
-      createData(x)
+      createData(project, x)
     }
     val mutEnd = System.currentTimeMillis()
 
     val numQueries = 40
 
     for (x <- 1 to numQueries) {
-      timesFilter += query(filter)
+      timesFilter += query(project, filter)
     }
 
     for (x <- 1 to numQueries) {
-      timesFilterDeep += query(filterDeep)
+      timesFilterDeep += query(project, filterDeep)
     }
 
     for (x <- 1 to numQueries) {
-      findFilter += query(find)
+      findFilter += query(project, find)
     }
 
     for (x <- 1 to numQueries) {
-      findFilterDeep += query(findDeep)
+      findFilterDeep += query(project, findDeep)
     }
     Thread.sleep(1000)
 
@@ -99,17 +98,90 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     println("Filterquery Deep Average: " + (timesFilterDeep.sum / numQueries))
     println("Findquery Average: " + (findFilter.sum / numQueries))
     println("Findquery Deep Average: " + (findFilterDeep.sum / numQueries))
-
   }
 
-  def query(query: String): Long = {
+  "Testing with embedded types" should "work" in {
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  a: String
+        |  b: String
+        |  c: String
+        |  d: Int
+        |  e: Float
+        |  f: Boolean
+        |  int: Int! @unique
+        |  posts: [Post] @mongoRelation(field: "posts")
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Post @embedded {
+        |  int: Int!
+        |  a: String
+        |  b: String
+        |  c: String
+        |  d: Int
+        |  e: Float
+        |  f: Boolean
+        |  comments: [Comment] @mongoRelation(field: "comments")
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Comment @embedded {
+        |  int: Int!
+        |  a: String
+        |  b: String
+        |  c: String
+        |  d: Int
+        |  e: Float
+        |  f: Boolean
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}"""
+    }
+    database.setup(project)
+
+    var timesFilter     = new ListBuffer[Long]
+    var timesFilterDeep = new ListBuffer[Long]
+    var findFilter      = new ListBuffer[Long]
+    var findFilterDeep  = new ListBuffer[Long]
+
+    val find     = """query{users(where:{int_gt: 5, int_lt: 19}){int}}"""
+    val findDeep = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
+
+    val mutStart = System.currentTimeMillis()
+    for (x <- 1 to 100) {
+      createData(project, x)
+    }
+    val mutEnd = System.currentTimeMillis()
+
+    val numQueries = 40
+
+    for (x <- 1 to numQueries) {
+      findFilter += query(project, find)
+    }
+
+    for (x <- 1 to numQueries) {
+      findFilterDeep += query(project, findDeep)
+    }
+    Thread.sleep(1000)
+
+    println("Data Creation: " + (mutEnd - mutStart))
+    println("Findquery Average: " + (findFilter.sum / numQueries))
+    println("Findquery Deep Average: " + (findFilterDeep.sum / numQueries))
+  }
+
+  def query(project: Project, query: String): Long = {
     val qStart = System.currentTimeMillis()
     server.query(query, project)
     val qEnd = System.currentTimeMillis()
     qEnd - qStart
   }
 
-  def createData(int: Int) = {
+  def createData(project: Project, int: Int) = {
     val query = s"""
                    |mutation {
                    |  createUser(data: {
@@ -141,7 +213,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
                    |                            {int: ${1000 + int}08, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
                    |                            {int: ${1000 + int}09, a: "Just a Dummy", b: "Just a Dummy", c: "Just a Dummy", d: 5, e: 5.3, f: false}
                    |
-                 |                        ]}
+                   |                        ]}
                    |                      },
                    |                      {
                    |                        int: ${1000 + int}1
