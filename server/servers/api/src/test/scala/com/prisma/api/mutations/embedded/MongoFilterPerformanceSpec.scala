@@ -70,7 +70,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     val findDeep   = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
 
     val mutStart = System.currentTimeMillis()
-    for (x <- 1 to 100) {
+    for (x <- 1 to 1000) {
       createData(project, x)
     }
     val mutEnd = System.currentTimeMillis()
@@ -156,7 +156,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     val findDeep   = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
 
     val mutStart = System.currentTimeMillis()
-    for (x <- 1 to 100) {
+    for (x <- 1 to 1000) {
       createData(project, x)
     }
     val mutEnd = System.currentTimeMillis()

@@ -69,12 +69,12 @@ object SelectedRelationField {
 }
 
 case class SelectedFields(fields: Set[SelectedField]) {
-  val scalarFields          = fields.collect { case selected: SelectedScalarField                             => selected.field }
-  val scalarListFields      = fields.collect { case selected: SelectedScalarField if selected.field.isList    => selected.field }
-  val scalarNonListFields   = fields.collect { case selected: SelectedScalarField if !selected.field.isList   => selected.field }
-  val relationFields        = fields.collect { case selected: SelectedRelationField                           => selected.field }
-  val relationListFields    = fields.collect { case selected: SelectedRelationField if selected.field.isList  => selected.field }
-  val relationNonListFields = fields.collect { case selected: SelectedRelationField if !selected.field.isList => selected.field }
+  val scalarFields          = fields.collect { case selected: SelectedScalarField                             => selected.field }.toList
+  val scalarListFields      = fields.collect { case selected: SelectedScalarField if selected.field.isList    => selected.field }.toList
+  val scalarNonListFields   = fields.collect { case selected: SelectedScalarField if !selected.field.isList   => selected.field }.toList
+  val relationFields        = fields.collect { case selected: SelectedRelationField                           => selected.field }.toList
+  val relationListFields    = fields.collect { case selected: SelectedRelationField if selected.field.isList  => selected.field }.toList
+  val relationNonListFields = fields.collect { case selected: SelectedRelationField if !selected.field.isList => selected.field }.toList
   private val inlineRelationFields = relationFields.collect {
     case rf if !rf.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.B                        => rf
     case rf if rf.relatedField.isHidden && rf.relation.isInlineRelation && rf.relation.isSelfRelation && rf.relationSide == RelationSide.A            => rf

@@ -55,28 +55,7 @@ object NodeSelectorBsonTransformer {
 object BisonToGC {
   import scala.collection.JavaConverters._
 
-  def apply(field: Field, bison: BsonValue): GCValue = {
-    (field.isList, field.isRelation) match {
-      case (true, false) if bison.isArray =>
-        val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
-        ListGCValue(arrayValues.map(v => apply(field.typeIdentifier, v)).toVector)
-
-      case (false, false) =>
-        apply(field.typeIdentifier, bison)
-
-      case (true, true) if bison.isArray =>
-        val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
-        ListGCValue(arrayValues.map(v => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, v.asDocument())).toVector)
-
-      case (false, true) =>
-        bison match {
-          case _: BsonNull => NullGCValue
-          case x           => DocumentToRoot(field.asInstanceOf[RelationField].relatedModel_!, x.asDocument())
-        }
-    }
-  }
-
-  def apply(field: Field, bison: BsonValue, selectedFields: SelectedFields): GCValue = {
+  def apply(field: Field, bison: BsonValue, selectedFields: Option[SelectedFields] = None): GCValue = {
     (field.isList, field.isRelation) match {
       case (true, false) if bison.isArray =>
         val arrayValues: mutable.Seq[BsonValue] = bison.asArray().getValues.asScala
@@ -120,12 +99,12 @@ trait MongoResultReader {
   }
 
   def readsPrismaNode(document: Document, model: Model, selectedFields: SelectedFields) = {
-    val root = DocumentToRoot(model, document, selectedFields)
+    val root = DocumentToRoot(model, document, Some(selectedFields))
     PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
   }
 
   def readsPrismaNodeWithParent(document: Document, model: Model, selectedFields: SelectedFields, id: IdGCValue) = {
-    val root = DocumentToRoot(model, document, selectedFields)
+    val root = DocumentToRoot(model, document, Some(selectedFields))
     PrismaNodeWithParent(id, PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name)))
   }
 
@@ -133,8 +112,13 @@ trait MongoResultReader {
 }
 
 object DocumentToRoot {
-  def apply(model: Model, document: Document, selectedFields: SelectedFields): RootGCValue = {
-    val nonReservedFields = selectedFields.scalarNonListFields.filter(_ != model.idField_!).toList
+  def apply(model: Model, document: Document, selectedFields: Option[SelectedFields] = None): RootGCValue = {
+    val (scalarNonListFields, scalarListFields, relationalFields, relationListFields, relationNonListFields) = selectedFields match {
+      case Some(sf) => (sf.scalarNonListFields, sf.scalarListFields, sf.relationFields, sf.relationListFields, sf.relationNonListFields)
+      case None     => (model.scalarNonListFields, model.scalarListFields, model.relationFields, model.relationListFields, model.relationNonListFields)
+    }
+
+    val nonReservedFields = scalarNonListFields.filter(_ != model.idField_!)
 
     val scalarNonList: List[(String, GCValue)] =
       nonReservedFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
@@ -143,50 +127,27 @@ object DocumentToRoot {
       document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
 
     val scalarList: List[(String, GCValue)] =
-      selectedFields.scalarListFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty)).toList
+      scalarListFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
 
-    val relationFields: List[(String, GCValue)] = selectedFields.relationFields.collect {
-      case f if !f.relation.isInlineRelation =>
-        val selectedRelationField = selectedFields.relationalSelectedFields.find(sf => sf.field == f).get
-        f.name -> document.get(f.dbName).map(v => BisonToGC(f, v, selectedRelationField.selectedFields)).getOrElse(NullGCValue)
-    }.toList
+    val relationFields: List[(String, GCValue)] = selectedFields match {
+      case Some(sf) =>
+        relationalFields.collect {
+          case f if !f.relation.isInlineRelation =>
+            val selectedRelationField = sf.relationalSelectedFields.find(sf => sf.field == f).get
+            f.name -> document.get(f.dbName).map(v => BisonToGC(f, v, Some(selectedRelationField.selectedFields))).getOrElse(NullGCValue)
+        }
 
-    //inline Ids, needs to fetch lists or single values
-
-    val listRelationFieldsWithInlineManifestationOnThisSide = selectedFields.relationListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
-
-    val nonListRelationFieldsWithInlineManifestationOnThisSide = selectedFields.relationNonListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
-
-    val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>
-      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
-
-    val listInlineIds = listRelationFieldsWithInlineManifestationOnThisSide.map(f =>
-      f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!.copy(isList = true), v)).getOrElse(ListGCValue.empty))
-
-    RootGCValue((scalarNonList ++ scalarList ++ relationFields ++ singleInlineIds ++ listInlineIds :+ id).toMap)
-  }
-
-  def apply(model: Model, document: Document): RootGCValue = {
-    val nonReservedFields = model.scalarNonListFields.filter(_ != model.idField_!)
-
-    val scalarNonList: List[(String, GCValue)] =
-      nonReservedFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(NullGCValue))
-
-    val id: (String, GCValue) =
-      document.get("_id").map(v => model.idField_!.name -> BisonToGC(model.idField_!, v)).getOrElse(model.idField_!.name -> StringIdGCValue.dummy)
-
-    val scalarList: List[(String, GCValue)] =
-      model.scalarListFields.map(field => field.name -> document.get(field.dbName).map(v => BisonToGC(field, v)).getOrElse(ListGCValue.empty))
-
-    val relationFields: List[(String, GCValue)] = model.relationFields.collect {
-      case f if !f.relation.isInlineRelation => f.name -> document.get(f.dbName).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+      case None =>
+        relationalFields.collect {
+          case f if !f.relation.isInlineRelation => f.name -> document.get(f.dbName).map(v => BisonToGC(f, v)).getOrElse(NullGCValue)
+        }
     }
 
     //inline Ids, needs to fetch lists or single values
 
-    val listRelationFieldsWithInlineManifestationOnThisSide = model.relationListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
+    val listRelationFieldsWithInlineManifestationOnThisSide = relationListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
 
-    val nonListRelationFieldsWithInlineManifestationOnThisSide = model.relationNonListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
+    val nonListRelationFieldsWithInlineManifestationOnThisSide = relationNonListFields.filter(f => f.relationIsInlinedInParent && !f.isHidden)
 
     val singleInlineIds = nonListRelationFieldsWithInlineManifestationOnThisSide.map(f =>
       f.name -> document.get(f.dbName).map(v => BisonToGC(model.idField_!, v)).getOrElse(NullGCValue))
