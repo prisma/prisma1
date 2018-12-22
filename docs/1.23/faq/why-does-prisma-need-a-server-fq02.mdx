@@ -1,0 +1,15 @@
+export const meta = {
+  title: 'Why does Prisma require an extra server on top of my database if it replaces an ORM?',
+  position: 8,
+  articleGroup: 'FAQ 8',
+}
+
+## FAQ
+
+The [Prisma client](/prisma-client) acts as a replacement for traditional ORMs in your application architecture. It enables a simplified and type-safe database access by providing an intuitive API that has been designed for modern application development.
+
+The Prisma client is connected to your database through a [Prisma server](/prisma-server). The Prisma server can be configured via Docker and enables high-scalability and great performance for your application.
+
+![](https://imgur.com/OyIQQxF.png)
+
+We are currently working on a version of the Prisma client that can be used without running the Prisma server. This will allow for an easier setup of Prisma and a faster way to get started. The Prisma server can is added to the architecture once the application goes to production.
