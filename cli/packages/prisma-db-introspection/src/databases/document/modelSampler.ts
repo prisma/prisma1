@@ -1,4 +1,4 @@
-import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers } from 'prisma-datamodel'
+import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers, capitalize } from 'prisma-datamodel'
 import { Data } from './data'
 import { isArray, isRegExp } from 'util'
 import { ObjectID } from 'bson' // TODO - remove dependency to mongo's BSON and subclass to abstract primitive type inferrer. 
@@ -273,7 +273,7 @@ export class ModelMerger {
       // Recursive embedding case. 
       if(typeInfo.type === ObjectTypeIdentifier) {
         // Generate basic embedded model name, which has no purpose outside of the schema. 
-        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + name, true, this.primitiveResolver)
+        this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true, this.primitiveResolver)
         if(typeInfo.isArray) {
           // Embedded array. 
           for(const item of value) {

@@ -21,8 +21,6 @@ describe('Mongo Model Introspector, end to end', () => {
 
     const normalizedSchema = await introspection.renderToNormalizedDatamodelString()
   
-    console.log(normalizedSchema)
-
     expect(normalizedSchema).toEqual(normalizedSchemaString)
-  }, 10000)
+  }, 60000)
 })

@@ -7,7 +7,7 @@ import { DatabaseType } from '../../src/databaseType';
 const renderer = Renderer.create(DatabaseType.postgres)
 const parser = Parser.create(DatabaseType.postgres)
 
-const modelWithDirectives = `type Test @db(name: "testType") @embedded {
+const modelWithDirectives = `type Test @embedded {
   hasBeenCreatedAt: DateTime @createdAt
   hasBeenUpdatedAt: DateTime @updatedAt
   mappedField: String @db(name: "dbField") @relation(name: "typeRelation")
@@ -29,6 +29,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: "Test", 
       isEmbedded: true,
+      // This will be ignored since we are dealing with an embedded type
       databaseName: 'testType',
       isEnum: false,
       fields: [

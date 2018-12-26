@@ -149,6 +149,8 @@ export interface IGQLType {
   /**
    * Indicates how this type is called in the database. If this value is not set,
    * the name in the database is equal to the type name. 
+   * 
+   * This field is ignored for embedded types, which never have a database name. 
    */
   databaseName?: string
 
@@ -255,7 +257,7 @@ function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField |
   cloneComments(copy, obj)
 }
 
-// Start: 8:00
+// 21st of Dec: Start: 8:00 - end: 9:45
 function cloneField(field: IGQLField): IGQLField {
   const copy = {
     ...field

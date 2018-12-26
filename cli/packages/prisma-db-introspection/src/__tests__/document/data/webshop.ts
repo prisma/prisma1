@@ -120,10 +120,10 @@ export const schemaString = `type items {
   keywords: [String!]!
   price: Float
   rating: Float
-  reviews: [itemsreviews!]!
+  reviews: [itemsReviews!]!
 }
 
-type itemsreviews @embedded {
+type itemsReviews @embedded {
   rating: Float
   text: String
 }
@@ -142,11 +142,11 @@ type users {
   _id: String! @id
   firstName: String
   lastName: String
-  paymentInfo: [userspaymentInfo!]!
-  shippingAddress: usersshippingAddress
+  paymentInfo: [usersPaymentInfo!]!
+  shippingAddress: usersShippingAddress
 }
 
-type userspaymentInfo @embedded {
+type usersPaymentInfo @embedded {
   accountId: String
   BIC: String
   expires: String
@@ -155,13 +155,13 @@ type userspaymentInfo @embedded {
   type: String
 }
 
-type usersshippingAddress @embedded {
+type usersShippingAddress @embedded {
   country: String
   number: String
   street: String
 }`
 
-export const normalizedSchemaString = `type Item {
+export const normalizedSchemaString = `type Item @db(name: "items") {
   # Type String is currently not supported for id fields.
   _id: String! @id
   keywords: [String!]!
@@ -175,7 +175,7 @@ type ItemReview @embedded {
   text: String
 }
 
-type Order {
+type Order @db(name: "orders") {
   # Type Int is currently not supported for id fields.
   _id: Int! @id
   amount: Float
@@ -184,7 +184,7 @@ type Order {
   orderDate: String
 }
 
-type User {
+type User @db(name: "users") {
   # Type String is currently not supported for id fields.
   _id: String! @id
   firstName: String

@@ -38,7 +38,8 @@ export default class Renderer {
 
     // TODO Move direction magic to superclass
     if(type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
-    if(type.databaseName) { typedirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }) }
+    // We ignore the database name for embedded types.
+    if(type.databaseName && !type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }) }
 
     const renderedDirectives = this.renderDirectives(typedirectives)
     const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)

@@ -39,5 +39,5 @@ describe("Mongo Model Introspector", () => {
     SdlExpect.field(movieType, 'rating', false, false, TypeIdentifiers.float)
     SdlExpect.field(movieType, 'hasLeonardo', false, false, TypeIdentifiers.boolean)
     SdlExpect.field(movieType, 'roles', false, true, TypeIdentifiers.string)
-  }, 10000)
+  }, 60000)
 })
