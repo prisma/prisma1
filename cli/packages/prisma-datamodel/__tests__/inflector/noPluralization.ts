@@ -1,4 +1,4 @@
-import { plural } from '../src/util/util'
+import { plural } from '../../src/util/util'
 
 const exampleWordList = [
   ['News', 'Newses'],
