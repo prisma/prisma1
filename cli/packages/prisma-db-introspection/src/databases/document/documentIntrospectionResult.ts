@@ -17,7 +17,6 @@ export class DocumentIntrospectionResult extends IntrospectionResult {
 
   public async getDatamodel(): Promise<ISDL> {
     // Return a copy - object is muteable.
-    // TODO: Add safe copy feature. JSON does not work as data struct has cycles. 
     return cloneSchema(this.model)
   }
 }

@@ -1,12 +1,12 @@
 import { singular } from 'pluralize'
-import { IGQLType, IGQLField, ISDL, capitalize, plural } from 'prisma-datamodel'
+import { IGQLType, IGQLField, ISDL, capitalize, plural, toposort } from 'prisma-datamodel'
 
 export default class ModelNameNormalizer {
   public normalize(model: ISDL) {
     // We need to sort types according to topological order for name normalization.
-    // Otherwise embedded type naming might brake as embedded types depend on 
+    // Otherwise embedded type naming might break as embedded types depend on 
     // their parent type. 
-    for(const type of model.types) {
+    for(const type of toposort(model.types)) {
       this.normalizeType(type)
     } 
   }
