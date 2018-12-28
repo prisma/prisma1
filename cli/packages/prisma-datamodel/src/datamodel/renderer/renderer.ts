@@ -72,15 +72,18 @@ export default class Renderer {
   protected renderField(field: IGQLField) : string {
     const fieldDirectives: IDirectiveInfo[] = field.directives || []
 
-    // TODO Move direction magic to superclass
+    // TODO(ejoebstl) Move direction magic to superclass
     if(field.defaultValue !== null) { fieldDirectives.push({ name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}) }
-    if(field.isUnique) { fieldDirectives.push({ name: DirectiveKeys.isUnique, arguments: {} }) }
+    // No explicit unique directive for id fields.
+    if(field.isUnique && !field.isId) { fieldDirectives.push({ name: DirectiveKeys.isUnique, arguments: {} }) }
     if(field.relationName !== null) { fieldDirectives.push({ name: DirectiveKeys.relation, arguments: { name: this.renderValue(TypeIdentifiers.string, field.relationName) } }) }
     if(field.isId) { fieldDirectives.push({ name: DirectiveKeys.isId, arguments: { } }) }
     if(field.isCreatedAt) { fieldDirectives.push({ name: DirectiveKeys.isCreatedAt, arguments: { } }) }
     if(field.isUpdatedAt) { fieldDirectives.push({ name: DirectiveKeys.isUpdatedAt, arguments: { } }) }
-    if(field.databaseName) { fieldDirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }) }
-
+    // No explicit database name direcitve for mongo _id fields
+    // TODO(ejoebstl): This really should be moved to a superclass and only conducted for mongo DB types
+    if(field.databaseName && !(field.isId && field.databaseName === '_id')) { fieldDirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }) }
+    
     const renderedDirectives = this.renderDirectives(fieldDirectives)
     
     let type = this.extractTypeIdentifier(field.type)

@@ -20,9 +20,9 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
   private findBaseByName<T extends IGQLField | IGQLType>(baseObjs: Array<T>, obj: T) {
     const [baseCandidate] = baseObjs.filter(base => {
       if(base.databaseName) {
-        return obj.databaseName === base.name
+        return base.databaseName === obj.name
       } else {
-        return obj.name === base.name
+        return base.name === obj.name
       }
     })
         
@@ -31,7 +31,7 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
 
 
   private findBaseById(baseObjs: IGQLField[], obj: IGQLField) {
-    const [baseCandidate] = baseObjs.filter(baseObj => baseObj.isId === obj.isId)
+    const [baseCandidate] = baseObjs.filter(baseObj => baseObj.isId && obj.isId)
         
     return baseCandidate || null
   }
@@ -75,9 +75,13 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
       if(baseField === null) {
         // Fallback - if no name match, we check if the field is an ID.
         baseField = this.findBaseById(this.baseType.fields, field)
+        // Special handling for ID fields. We just assign the name.
+        if(baseField !== null) {
+          this.assignName(field, baseField.name)
+        }
       }
     }
-  
+
     this.assignFieldProperties(baseField, field)
     super.normalizeField(field, parentType)
   }

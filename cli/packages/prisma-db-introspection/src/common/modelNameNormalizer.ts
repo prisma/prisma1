@@ -11,7 +11,7 @@ export default class ModelNameNormalizer {
     } 
   }
 
-  private setNameInternal(obj: IGQLType | IGQLField, newName: string) {
+  protected assignName(obj: IGQLType | IGQLField, newName: string) {
     if(obj.databaseName === undefined) {
       // If name was already changed, we don't touch it.
       if(newName !== obj.name) {
@@ -23,7 +23,7 @@ export default class ModelNameNormalizer {
   }
 
   protected normalizeType(type: IGQLType) {
-    this.setNameInternal(type, capitalize(singular(type.name)))
+    this.assignName(type, capitalize(singular(type.name)))
 
     for(const field of type.fields) {
       this.normalizeField(field, type)
