@@ -7,9 +7,9 @@ def upload_pipeline(context)
   if res.success?
     puts "Successfully uploaded pipeline"
   else
-    puts <<~EOS
+    wat =<<~EOS
       Failed to upload pipeline: Exit #{res.status}
-      Stdout: --------"
+      Stdout: --------
       #{res.print_stdout}
 
       Stderr: --------
