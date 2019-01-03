@@ -20,7 +20,7 @@ class DockerCommands
     sleep(15)
 
     puts "Starting tests for #{project}..."
-    test_run = Command.new("docker-compose", *compose_flags, "run", "app", "sbt", "-mem", "3072").puts!.run!.raise!
+    test_run = Command.new("docker-compose", *compose_flags, "run", "app", "sbt", "-mem", "3072", "#{project}/test").puts!.run!.raise!
 
     puts "Stopping dependency services..."
     cleanup = Command.new("docker-compose", *compose_flags, "kill").puts!.run!.raise!
