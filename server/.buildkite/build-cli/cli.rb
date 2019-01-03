@@ -21,6 +21,9 @@ Subcommands:
 
 \ttest <project> <connector>
 \t\tTests given sbt project against the given connector.
+
+\tbuild <tag>
+\t\tBuilds the image on the current branch with the given tag. Additional tags to build are inferred from the given tag.
   """
 end
 
@@ -51,7 +54,12 @@ when "test"
   test_project(context, project, connector)
 
 when "build"
-  # ...
+  if ARGV.length < 1
+    print_usage
+    exit 1
+  end
+
+  build_images(context, Tag.new(ARGV[1]))
 
 else
   puts "Invalid command: #{command}"
