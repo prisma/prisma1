@@ -14,6 +14,10 @@ class BuildContext
     @server_root_path = find_server_root
   end
 
+  def cli_invocation_path
+    "#{server_root_path}/.buildkite/pipeline.sh"
+  end
+
   def is_windows?
     os == :windows
   end

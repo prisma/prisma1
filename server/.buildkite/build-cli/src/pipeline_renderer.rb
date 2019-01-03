@@ -84,7 +84,7 @@ class PipelineRenderer
     [ test_steps,
       build_steps,
       @@wait_step,
-      publish_artifacts_steps].flatten
+      release_artifacts_steps].flatten
   end
 
   def test_steps
@@ -95,22 +95,22 @@ class PipelineRenderer
           @context.connectors.map do |registered_connector|
             PipelineStep.new
               .label("#{rule[:label]} [#{registered_connector}]")
-              .command("cd server && ./.buildkite/scripts/test.sh #{service} #{registered_connector}")
-              #.command("./server/build-cli/cli test #{service} #{registered_connector}")
+              .command("#{@context.cli_invocation_path} test #{service} #{registered_connector}")
+              # .command("cd server && ./.buildkite/scripts/test.sh #{service} #{registered_connector}")
 
           end
 
         when :none
           PipelineStep.new
             .label(rule[:label])
-            .command("cd server && ./.buildkite/scripts/test.sh #{service} mysql")
-            #.command("./server/build-cli/cli test #{service}")
+            .command("#{@context.cli_invocation_path} test #{service}")
+            # .command("cd server && ./.buildkite/scripts/test.sh #{service} mysql")
 
         else
           PipelineStep.new
             .label(rule[:connectors].length > 1 ? "#{rule[:label]} [#{connector}]" : rule[:label])
-            .command("cd server && ./.buildkite/scripts/test.sh #{service} #{connector == :none ? "" : connector}")
-            #.command("./server/build-cli/cli test #{service} #{connector == :none ? "" : connector}")
+            .command("#{@context.cli_invocation_path} test #{service} #{connector == :none ? "" : connector}")
+            # .command("cd server && ./.buildkite/scripts/test.sh #{service} #{connector == :none ? "" : connector}")
         end
       end
     end.flatten
@@ -137,7 +137,7 @@ class PipelineRenderer
     ]
   end
 
-  def publish_artifacts_steps
+  def release_artifacts_steps
     [
       PipelineStep.new
         .label(":docker: Build alpha channel")

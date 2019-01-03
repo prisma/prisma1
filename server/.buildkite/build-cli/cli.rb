@@ -11,7 +11,7 @@ context = BuildContext.new
 #   exit 0
 # end
 
-if ARGV.length <= 0
+def print_usage
   puts """Prisma Build Tool
 Usage: cli <subcommand>
 
@@ -22,6 +22,10 @@ Subcommands:
 \ttest <project> <connector>
 \t\tTests given sbt project against the given connector.
   """
+end
+
+if ARGV.length <= 0
+  print_usage
   exit 1
 end
 
@@ -32,7 +36,22 @@ when "pipeline"
   upload_pipeline(context)
 
 when "test"
-  #test_project(context)
+  if ARGV.length <= 1
+    print_usage
+    exit 1
+  end
+
+  project = ARGV[1]
+  if ARGV[2].nil?
+    connector = :none
+  else
+    connector = ARGV[2].to_sym
+  end
+
+  test_project(context, project, connector)
+
+when "build"
+  # ...
 
 else
   puts "Invalid command: #{command}"

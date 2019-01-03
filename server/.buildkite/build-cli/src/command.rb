@@ -25,6 +25,10 @@ class Command
     self
   end
 
+  def stringify
+    "#{cmd} #{args.join(" ")}"
+  end
+
   def run!
     outputs = { :stdout => [], :stderr => [] }
 
@@ -46,24 +50,25 @@ class Command
 
         thread.join
         exit_status = thread.value
-        result = ExecResult.new(exit_status, outputs[:stdout], outputs[:stderr])
+        result = ExecResult.new(self,exit_status, outputs[:stdout], outputs[:stderr])
 
         if pipe_to != nil && result.success?
           pipe_to.with_stdin(result.stdout).run!
         else
-          ExecResult.new(exit_status, outputs[:stdout], outputs[:stderr])
+          ExecResult.new(self,exit_status, outputs[:stdout], outputs[:stderr])
         end
       end
     rescue => e
-      ExecResult.new(-1, [], ["Exception: #{e}", "No such command, file, or directory: #{cmd}"])
+      ExecResult.new(self, -1, [], ["Exception: #{e}", "No such command, file, or directory: #{cmd}"])
     end
   end
 end
 
 class ExecResult
-  attr_accessor :status, :stdout, :stderr
+  attr_accessor :status, :stdout, :stderr, :command
 
-  def initialize(status, stdout, stderr)
+  def initialize(origin, status, stdout, stderr)
+    @command = origin
     @status = status
     @stdout = stdout
     @stderr = stderr
@@ -87,5 +92,17 @@ class ExecResult
 
   def success?
     status == 0
+  end
+
+  def raise!
+    unless success?
+      raise <<~EOS
+        Command '#{@command.stringify}' exited with #{status}
+        #{stdout.empty? ? "" : "\nStdout: --------\n#{get_stdout}"}
+        #{stderr.empty? ? "" : "\nStderr: --------\n#{get_stderr}"}
+      EOS
+    end
+
+    self
   end
 end
