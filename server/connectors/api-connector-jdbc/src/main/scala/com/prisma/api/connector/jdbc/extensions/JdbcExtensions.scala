@@ -87,5 +87,10 @@ object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
       val sqlType = resultSet.getString(name)
       if (sqlType != null) JsonGCValue(Json.parse(sqlType)) else NullGCValue
     }
+
+    private def getUuidGCValue(name: String) = {
+      val sqlType = resultSet.getString(name)
+      if (sqlType != null) UuidGCValue.parse_!(sqlType) else NullGCValue
+    }
   }
 }

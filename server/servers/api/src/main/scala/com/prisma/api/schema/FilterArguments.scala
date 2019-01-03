@@ -91,6 +91,7 @@ object FilterArguments {
       } else {
         field.typeIdentifier match {
           case TypeIdentifier.Cuid     => List(baseFilters, inclusionFilters, alphanumericFilters, stringFilters)
+          case TypeIdentifier.UUID     => List(baseFilters, inclusionFilters)
           case TypeIdentifier.String   => List(baseFilters, inclusionFilters, alphanumericFilters, stringFilters)
           case TypeIdentifier.Int      => List(baseFilters, inclusionFilters, alphanumericFilters)
           case TypeIdentifier.Float    => List(baseFilters, inclusionFilters, alphanumericFilters)
