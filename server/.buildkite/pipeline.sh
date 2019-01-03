@@ -1,6 +1,9 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby -w
+## Retained for backwards compatibility until merged into all branches.
 
-env
+# Regardless of where the script is called, always use the script location as base.
+Dir.chdir(__dir__)
 
-cd "$(dirname "$0")"
-./build-cli/cli pipeline
+require_relative './build-cli/cli'
+
+CLI.main(ARGV)

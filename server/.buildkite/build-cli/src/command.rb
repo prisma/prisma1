@@ -55,7 +55,7 @@ class Command
         end
       end
     rescue => e
-      ExecResult.new(-1, ["No such command, file, or directory: #{cmd}"], [])
+      ExecResult.new(-1, [], ["Exception: #{e}", "No such command, file, or directory: #{cmd}"])
     end
   end
 end
