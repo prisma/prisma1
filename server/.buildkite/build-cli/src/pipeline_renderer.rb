@@ -95,7 +95,7 @@ class PipelineRenderer
           @context.connectors.map do |registered_connector|
             PipelineStep.new
               .label("#{rule[:label]} [#{registered_connector}]")
-              .command("./server/.buildkite/pipline.sh test #{service} #{registered_connector}")
+              .command("./server/.buildkite/pipeline.sh test #{service} #{registered_connector}")
               # .command("cd server && ./.buildkite/scripts/test.sh #{service} #{registered_connector}")
 
           end
@@ -103,13 +103,13 @@ class PipelineRenderer
         when :none
           PipelineStep.new
             .label(rule[:label])
-            .command("./server/.buildkite/pipline.sh test #{service}")
+            .command("./server/.buildkite/pipeline.sh test #{service}")
             # .command("cd server && ./.buildkite/scripts/test.sh #{service} mysql")
 
         else
           PipelineStep.new
             .label(rule[:connectors].length > 1 ? "#{rule[:label]} [#{connector}]" : rule[:label])
-            .command("./server/.buildkite/pipline.sh test #{service} #{connector == :none ? "" : connector}")
+            .command("./server/.buildkite/pipeline.sh test #{service} #{connector == :none ? "" : connector}")
             # .command("cd server && ./.buildkite/scripts/test.sh #{service} #{connector == :none ? "" : connector}")
         end
       end
