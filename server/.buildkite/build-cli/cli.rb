@@ -2,41 +2,39 @@ require_relative './src/build_context'
 require_relative './src/command'
 require_relative './src/commands'
 
-class CLI
-  def self.main(argv)
-    context = BuildContext.new
+Dir.chdir(__dir__)
 
-    # unless context.should_build?
-    #   puts "Nothing to do"
-    #   exit 0
-    # end
+context = BuildContext.new
 
-    if ARGV.length <= 0
-      puts """Prisma Build Tool
-    Usage: cli <subcommand>
+# unless context.should_build?
+#   puts "Nothing to do"
+#   exit 0
+# end
 
-    Subcommands:
-    \tpipeline
-    \t\tRenders the pipeline based on the current build context and uploads it to buildkite.
+if ARGV.length <= 0
+  puts """Prisma Build Tool
+Usage: cli <subcommand>
 
-    \ttest <project> <connector>
-    \t\tTests given sbt project against the given connector.
-      """
-      exit 1
-    end
+Subcommands:
+\tpipeline
+\t\tRenders the pipeline based on the current build context and uploads it to buildkite.
 
-    command = ARGV[0]
+\ttest <project> <connector>
+\t\tTests given sbt project against the given connector.
+  """
+  exit 1
+end
 
-    case command
-    when "pipeline"
-      upload_pipeline(context)
+command = ARGV[0]
 
-    when "test"
-      #test_project(context)
+case command
+when "pipeline"
+  upload_pipeline(context)
 
-    else
-      puts "Invalid command: #{command}"
-      exit 1
-    end
-  end
+when "test"
+  #test_project(context)
+
+else
+  puts "Invalid command: #{command}"
+  exit 1
 end

@@ -70,11 +70,11 @@ class ExecResult
   end
 
   def get_stdout
-    stdout.join('')
+    stdout.join("\n")
   end
 
   def get_stderr
-    stderr.join('')
+    stderr.join("\n")
   end
 
   def print_stdout
