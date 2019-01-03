@@ -1,19 +1,21 @@
 require_relative './pipeline_renderer'
-require_relative './cmd'
+require_relative './command'
 
 def upload_pipeline(context)
   yml = PipelineRenderer.new(context).render!
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([yml]).run!
+  
   if res.success?
     puts "Successfully uploaded pipeline"
   else
-    wat =<<~EOS
-      Failed to upload pipeline: Exit #{res.status}
+    puts <<~EOS
+      Failed to upload pipeline, command exited with #{res.status}
+      
       Stdout: --------
-      #{res.print_stdout}
+      #{res.get_stdout}
 
       Stderr: --------
-      #{res.print_stderr}
+      #{res.get_stderr}
     EOS
   end
 end

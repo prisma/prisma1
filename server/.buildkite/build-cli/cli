@@ -1,15 +1,15 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby -w
 
 # Regardless of where the script is called, always use the script location as base.
 Dir.chdir(__dir__)
 
 require_relative './src/build_context'
-require_relative './src/cmd'
+require_relative './src/command'
 require_relative './src/commands'
 
 context = BuildContext.new
 
-# unless context.valid_build?
+# unless context.should_build?
 #   puts "Nothing to do"
 #   exit 0
 # end
@@ -35,6 +35,7 @@ when "pipeline"
   upload_pipeline(context)
 
 when "test"
+  #test_project(context)
 
 else
   puts "Invalid command: #{command}"

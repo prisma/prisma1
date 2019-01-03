@@ -1,6 +1,6 @@
 require 'rbconfig'
 require 'pathname'
-require_relative './cmd'
+require_relative './command'
 
 class BuildContext
   attr_accessor :branch, :tag, :commit, :last_git_tag, :next_docker_tags, :server_root_path
@@ -22,7 +22,7 @@ class BuildContext
     os == :macosx || os == :unix || os == :linux
   end
 
-  def valid_build?
+  def should_build?
     (server_changed? || !tag != nil) && buildkite_build?
   end
 
