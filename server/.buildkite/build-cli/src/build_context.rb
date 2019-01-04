@@ -10,7 +10,7 @@ class BuildContext
 
   def initialize
     @branch = ENV["BUILDKITE_BRANCH"] || nil
-    @tag = ENV["BUILDKITE_TAG"].nil? ? nil : Tag.new(ENV["BUILDKITE_TAG"])
+    @tag = ENV["BUILDKITE_TAG"].empty? ? nil : Tag.new(ENV["BUILDKITE_TAG"])
     @commit = ENV["BUILDKITE_COMMIT"] || nil
     @last_git_tag = get_last_git_tag
     @server_root_path = find_server_root
