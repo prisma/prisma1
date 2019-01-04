@@ -178,6 +178,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     for (x <- 1 to numQueries) {
       findFilterDeep += query(project, findDeep)
     }
+
     Thread.sleep(1000)
 
     println("Data Creation: " + (mutEnd - mutStart))
