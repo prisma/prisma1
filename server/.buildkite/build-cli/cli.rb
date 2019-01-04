@@ -6,10 +6,10 @@ Dir.chdir(__dir__)
 
 context = BuildContext.new
 
-# unless context.should_build?
-#   puts "Nothing to do"
-#   exit 0
-# end
+unless context.should_build?
+  puts "Nothing to do"
+  exit 0
+end
 
 def print_usage
   puts """Prisma Build Tool

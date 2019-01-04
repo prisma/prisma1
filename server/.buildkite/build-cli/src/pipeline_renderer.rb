@@ -146,11 +146,11 @@ class PipelineRenderer
         .label(":docker: Release stable #{@context.tag.stringify}")
         .command("./server/.buildkite/pipeline.sh build stable #{@context.tag.stringify}")
 
-    elsif @context.tag != nil && !@context.tag.stable? && @context.branch == "beta"
-      # Not sure this is super useful
-      steps.push PipelineStep.new
-        .label(":docker: Release beta #{@context.tag.stringify}")
-        .command("./server/.buildkite/pipeline.sh build beta #{@context.tag.stringify}")
+    # elsif @context.tag != nil && !@context.tag.stable? && @context.branch == "beta"
+    #   # Not sure this is super useful
+    #   steps.push PipelineStep.new
+    #     .label(":docker: Release beta #{@context.tag.stringify}")
+    #     .command("./server/.buildkite/pipeline.sh build beta #{@context.tag.stringify}")
 
     elsif @context.branch == "alpha" || @context.branch == "beta"
       channel_tag = @context.last_git_tag.dup

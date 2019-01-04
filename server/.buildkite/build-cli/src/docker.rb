@@ -42,15 +42,16 @@ class DockerCommands
       'sbt', 'docker').puts!.run!.raise!
   end
 
-  def self.tag_and_push(tags)
-    tags.each do |tag|
-      puts "Tagging prismagraphql/$service:latest image with $DOCKER_TAG..."
-  # docker tag prismagraphql/${service}:latest prismagraphql/${service}:${DOCKER_TAG}
-  # docker tag prismagraphql/${service}:graalvm prismagraphql/${service}:graalvm-${DOCKER_TAG}
-    end
+  def self.tag_and_push(context, tags)
+    # On the stable channel we additionally release -graalvm versions, running on graalvm.
+    from_tags = context.branch == 'master' ? ['latest', 'graalvm'] : ['latest']
 
-  puts "Pushing prismagraphql/$service:$DOCKER_TAG..."
-  # docker push prismagraphql/${service}:${DOCKER_TAG}
-  # docker push prismagraphql/${service}:graalvm-${DOCKER_TAG}
+    @images.product(from_tags, tags).each do |image, from_tag, to_tag|
+      suffix = from_tag == 'graalvm' ? '-graalvm' : ''
+
+      puts "Tagging and pushing prismagraphql/#{image}:#{from_tag} image with #{to_tag}#{suffix}..."
+      Command.new("docker", "tag", "prismagraphql/#{image}:#{from_tag}", "prismagraphql/#{image}:#{to_tag}#{suffix}").puts!.run!.raise!
+      Command.new("docker", "push", "prismagraphql/#{image}:#{to_tag}#{suffix}").puts!.run!.raise!
+    end
   end
 end

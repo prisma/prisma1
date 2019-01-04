@@ -98,7 +98,7 @@ class BuildContext
   end
 
   def buildkite_build?
-    @branch == "local"
+    @branch != "local"
   end
 
   def connectors
@@ -139,18 +139,20 @@ class Tag
   attr_accessor :major, :minor, :patch, :channel, :revision
 
   def initialize(tag)
-    chunked = tag.split("-")
-    raw_version = chunked[0]
+    unless tag.nil?
+      chunked = tag.split("-")
+      raw_version = chunked[0]
 
-    if chunked.length > 2
-      @channel = chunked[1]
+      if chunked.length > 2
+        @channel = chunked[1]
+      end
+
+      if chunked.length == 3
+        @revision = chunked[2].to_i
+      end
+
+      @major, @minor, @patch = raw_version.split(".").map { |x| x.to_i }
     end
-
-    if chunked.length == 3
-      @revision = chunked[2].to_i
-    end
-
-    @major, @minor, @patch = raw_version.split(".").map { |x| x.to_i }
   end
 
   def stable?
