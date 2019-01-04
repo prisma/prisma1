@@ -46,7 +46,7 @@ const userFragment = await prisma.user({ id }).$fragment(`
 
 TypeORM 
 
-<Code languages={["Using `relations`", "Eager relations", "Using JOINs"]}>
+<Code languages={["Using `relations`", "Using JOIN", "Eager relations"]}>
 
 ```ts
 const userRepository = getRepository(User)
@@ -69,9 +69,7 @@ const user = await userRepository.findOne(id, {
 
 ```ts
 const userRepository = getRepository(User)
-const user = await userRepository.findOne(id, {
-  relations: ["posts"]
-})
+const user = await userRepository.findOne(id)
 ```
 
 </Code>
