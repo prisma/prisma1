@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
 
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-//  override def doNotRun: Boolean = true
+  override def doNotRun: Boolean = true
 
   "Testing a query that uses the aggregation framework" should "work" in {
     val project = SchemaDsl.fromString() {
