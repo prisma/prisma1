@@ -270,4 +270,40 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"createArtist":{"ArtistId":1,"Name":"artist1","Albums":[{"AlbumId":1,"Title":"artist1album1","Tracks":[{"TrackId":2,"Name":"track2","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}},{"TrackId":3,"Name":"track3","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}}]},{"AlbumId":2,"Title":"artist1album2","Tracks":[{"TrackId":4,"Name":"track4","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}},{"TrackId":5,"Name":"track5","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}}]}]}}}""")
   }
 
+  "Relations on embedded types" should "be indexed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type A {
+        |   id: ID! @unique
+        |   u: Int! @unique
+        |   name: String!
+        |   emb:  AEmbedded @relation(name: "AEmbeddedOnA")
+        |   embs: [AEmbedded!]! @relation(name: "AEmbeddedsOnA")
+        |}
+        |
+        |type AA {
+        |   id: ID! @unique
+        |   u: Int! @unique
+        |   name: String!
+        |   emb:  AEmbedded @relation(name: "AAEmbeddedOnA")
+        |}
+        |
+        |type AEmbedded @embedded {
+        |   u: Int! @unique
+        |   name: String!
+        |   bs: [B!]!
+        |}
+        |
+        |type B {
+        |   id: ID! @unique
+        |   u: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+  }
+
 }

@@ -39,7 +39,8 @@ case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBu
   }
 
   override def rollback(mutaction: CreateInlineRelation) = {
-    DeleteInlineRelationInterpreter(builder).execute(DeleteInlineRelation(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column))
+    DeleteInlineRelationInterpreter(builder).execute(
+      DeleteInlineRelation(mutaction.projectId, mutaction.relation, mutaction.model, mutaction.references, mutaction.column))
   }
 }
 
@@ -49,6 +50,7 @@ case class DeleteInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBu
   }
 
   override def rollback(mutaction: DeleteInlineRelation) = {
-    CreateInlineRelationInterpreter(builder).execute(CreateInlineRelation(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column))
+    CreateInlineRelationInterpreter(builder).execute(
+      CreateInlineRelation(mutaction.projectId, mutaction.relation, mutaction.model, mutaction.references, mutaction.column))
   }
 }

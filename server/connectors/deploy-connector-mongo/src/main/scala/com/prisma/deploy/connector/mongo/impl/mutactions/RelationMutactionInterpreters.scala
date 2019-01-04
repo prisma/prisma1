@@ -3,19 +3,29 @@ package com.prisma.deploy.connector.mongo.impl.mutactions
 import com.prisma.deploy.connector.mongo.database.MongoDeployDatabaseMutationBuilder._
 import com.prisma.deploy.connector.mongo.database.NoAction
 import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
-import com.prisma.deploy.connector.{CreateRelationTable, DeleteRelationTable, UpdateRelationTable}
+import com.prisma.deploy.connector._
 import com.prisma.shared.models.Relation
 
 import scala.concurrent.Future
 
 object CreateRelationInterpreter extends MongoMutactionInterpreter[CreateRelationTable] {
-  override def execute(mutaction: CreateRelationTable)  = Indexhelper.add(mutaction.relation)
-  override def rollback(mutaction: CreateRelationTable) = Indexhelper.remove(mutaction.relation)
+  override def execute(mutaction: CreateRelationTable)  = NoAction.unit
+  override def rollback(mutaction: CreateRelationTable) = NoAction.unit
 }
 
 object DeleteRelationInterpreter extends MongoMutactionInterpreter[DeleteRelationTable] {
   override def execute(mutaction: DeleteRelationTable)  = NoAction.unit //gets dropped with collection
   override def rollback(mutaction: DeleteRelationTable) = NoAction.unit //Indexhelper.add(mutaction.relation)
+}
+
+object CreateInlineRelationInterpreter extends MongoMutactionInterpreter[CreateInlineRelation] {
+  override def execute(mutaction: CreateInlineRelation)  = Indexhelper.add(mutaction.relation)
+  override def rollback(mutaction: CreateInlineRelation) = Indexhelper.remove(mutaction.relation)
+}
+
+object DeleteInlineRelationInterpreter extends MongoMutactionInterpreter[DeleteInlineRelation] {
+  override def execute(mutaction: DeleteInlineRelation)  = NoAction.unit //gets dropped with collection
+  override def rollback(mutaction: DeleteInlineRelation) = NoAction.unit //Indexhelper.add(mutaction.relation)
 }
 
 //Fixme again: Index Renaming does not work -> see Rename Model
