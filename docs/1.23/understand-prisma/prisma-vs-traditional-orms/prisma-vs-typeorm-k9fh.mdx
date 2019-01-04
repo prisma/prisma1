@@ -3,7 +3,7 @@ import Collapse from 'components/Markdown/Collapse'
 export const meta = {
   title: "Prisma & TypeORM",
   position: 60,
-  description: "Learn how Prisma compares to traditional ORMs"
+  description: "Learn how Prisma compares to TypeORM"
 }
 
 ## Reading data
@@ -27,6 +27,7 @@ const user = await prisma.user({ id })
 #### TypeORM
 
 ```ts
+const userRepository = getRepository(User) 
 const user = await getRepository(User).findOne(id, {
   select: ['id', 'email']
 })
