@@ -155,7 +155,7 @@ Prisma generates many additional filters that are commonly used in modern applic
 
 TypeORM
 
-TypeORM doesn"t offer a dedicated API for relation filters. You can get similar functionality by using the `QueryBuilder` or writing the queries by hand.
+TypeORM doesn't offer a dedicated API for relation filters. You can get similar functionality by using the `QueryBuilder` or writing the queries by hand.
 
 Prisma
 
@@ -189,7 +189,7 @@ const posts = await getRepository(Post).find({
 Prisma
 
 ```ts
-const users = await prisma.posts({
+const posts = await prisma.posts({
   skip: 5,
   first: 10
 })
@@ -293,7 +293,7 @@ const deletedUser = await prisma.deleteUser({ id })
 
 TypeORM
 
-TypeORM doesn"t offer a dedicated API for batch updates, but you can use `save` on an array of entities which leads to similar functionality.
+TypeORM doesn't offer a dedicated API for batch updates, but you can use `save` on an array of entities which leads to similar functionality.
 
 Prisma
 

@@ -130,7 +130,7 @@ Prisma generates many additional filters that are commonly used in modern applic
 
 Sequelize
 
-Sequelize doesn"t offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
+Sequelize doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
 
 Prisma
 
@@ -155,7 +155,7 @@ query {
 Sequelize
 
 ```ts
-const users = await User.findAll({ 
+const posts = await Post.findAll({ 
   offset: 5, 
   limit: 10 
 })
@@ -164,7 +164,7 @@ const users = await User.findAll({
 Prisma
 
 ```ts
-const users = await prisma.posts({
+const posts = await prisma.posts({
   skip: 5,
   first: 10
 })
