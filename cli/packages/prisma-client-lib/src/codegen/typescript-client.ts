@@ -49,6 +49,7 @@ export class TypescriptGenerator extends Generator {
     DateTimeOutput: 'string',
     Json: 'any',
   }
+  typeObjectType = 'interface'
 
   graphqlRenderers = {
     GraphQLUnionType: (type: GraphQLUnionType): string => {
@@ -103,12 +104,20 @@ export class TypescriptGenerator extends Generator {
         interfaces = (type as any).getInterfaces()
       }
 
-      return this.renderInterfaceWrapper(
-        type.name,
-        type.description!,
-        interfaces,
-        fieldDefinition,
-      )
+      if (this.typeObjectType === 'interface') {
+        return this.renderInterfaceWrapper(
+          type.name,
+          type.description!,
+          interfaces,
+          fieldDefinition,
+        )
+      } else {
+        return this.renderTypeWrapper(
+          type.name,
+          type.description!,
+          fieldDefinition
+        )
+      }
     },
 
     GraphQLScalarType: (type: GraphQLScalarType): string => {
