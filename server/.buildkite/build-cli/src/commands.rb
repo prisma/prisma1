@@ -50,7 +50,7 @@ def native_image(context, target, version_str)
 
   # Produces a binary in the target folder
   DockerCommands.native_image(context, version_to_build, "build-image:#{target}")
-  Dir.chdir("#{context.server_root}/images/prisma-native/target/prisma-native-image/") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+  Dir.chdir("#{context.server_root_path}/images/prisma-native/target/prisma-native-image/") # Necessary to keep the buildkite agent from prefixing the binary when uploading
 
   artifact_s3_paths.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma-native").with_env({
