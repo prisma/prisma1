@@ -294,13 +294,13 @@ export default class GenereateCommand extends Command {
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
       return this.replaceEnv(
-        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}'] ${isFlow ? '|| ""' : ''}}${str.slice(
           match[0].length + match.index,
         )}`,
         isFlow
       )
     } else {
-      return isFlow ? `\`${str}\``.replace('${', '${+') : `\`${str}\``
+      return `\`${str}\``
     }
   }
 }
