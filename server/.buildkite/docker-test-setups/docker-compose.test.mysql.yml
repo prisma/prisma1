@@ -1,7 +1,7 @@
 version: "3"
 services:
   app:
-    image: prismagraphql/build-image
+    image: prismagraphql/build-image:debian
     environment:
       CLUSTER_VERSION: "latest"
       COMMIT_SHA: "123abcd"
