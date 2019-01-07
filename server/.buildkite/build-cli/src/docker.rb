@@ -13,7 +13,7 @@ class DockerCommands
   end
 
   def self.run_tests_for(context, project, connector)
-    compose_flags = ["--project-name", "#{project}", "--file", "#{context.server_root_path}/.buildkite/scripts/docker-test-setups/docker-compose.test.#{connector}.yml"]
+    compose_flags = ["--project-name", "#{project}", "--file", "#{context.server_root_path}/.buildkite/docker-test-setups/docker-compose.test.#{connector}.yml"]
 
     # Start rabbit and db, wait a bit for init
     puts "Starting dependency services..."
