@@ -10,7 +10,7 @@ class BuildContext
 
   def initialize
     @branch = ENV["BUILDKITE_BRANCH"] || nil
-    @tag = ENV["BUILDKITE_TAG"].empty? ? nil : Tag.new(ENV["BUILDKITE_TAG"])
+    @tag = (ENV["BUILDKITE_TAG"].nil? || ENV["BUILDKITE_TAG"].empty?) ? nil : Tag.new(ENV["BUILDKITE_TAG"])
     @commit = ENV["BUILDKITE_COMMIT"] || nil
     @last_git_tag = get_last_git_tag
     @server_root_path = find_server_root
@@ -139,7 +139,7 @@ class Tag
   attr_accessor :major, :minor, :patch, :channel, :revision
 
   def initialize(tag)
-    unless tag.nil?
+    unless tag.nil? || !tag.include?(".")
       chunked = tag.split("-")
       raw_version = chunked[0]
 
@@ -155,20 +155,28 @@ class Tag
     end
   end
 
+  def nil?
+    @major.nil? || @minor.nil?
+  end
+
   def stable?
-    @channel.nil?
+    !nil? && @channel.nil?
   end
 
   def stringify
-    stringified = "#{@major}.#{@minor}#{@patch.nil? ? "" : ".#{@patch}"}"
-    unless @channel.nil?
-      stringified += "-#{@channel}"
-    end
+    if nil?
+      ""
+    else
+      stringified = "#{@major}.#{@minor}#{@patch.nil? ? "" : ".#{@patch}"}"
+      unless @channel.nil?
+        stringified += "-#{@channel}"
+      end
 
-    unless @revision.nil?
-      stringified += "-#{@revision}"
-    end
+      unless @revision.nil?
+        stringified += "-#{@revision}"
+      end
 
-    stringified
+      stringified
+    end
   end
 end

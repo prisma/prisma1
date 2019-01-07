@@ -23,7 +23,10 @@ Subcommands:
 \t\tTests given sbt project against the given connector.
 
 \tbuild <tag>
-\t\tBuilds the image on the current branch with the given tag. Additional tags to build are inferred from the given tag.
+\t\tBuilds and tags the docker image(s) on the current branch with the given tag. Additional tags to process are inferred from the given tag.
+
+\tnative-image <target> <version>
+\t\tBuilds the native image on the current branch. Artifacts are always published to S3. <version> is the version string to be baked into the binary.
   """
 end
 
@@ -60,6 +63,14 @@ when "build"
   end
 
   build_images(context, Tag.new(ARGV[1]))
+
+when "native-image"
+  if ARGV.length < 2
+    print_usage
+    exit 1
+  end
+
+  native_image(context, ARGV[1], ARGV[2])
 
 else
   puts "Invalid command: #{command}"

@@ -81,10 +81,11 @@ class PipelineRenderer
   end
 
   def collect_steps
+    release_steps = release_artifacts_steps
     [ test_steps,
-      build_steps,
+      release_steps[:before_wait],
       @@wait_step,
-      release_artifacts_steps].flatten
+      release_steps[:after_wait]].flatten
   end
 
   def test_steps
@@ -112,61 +113,63 @@ class PipelineRenderer
     end.flatten
   end
 
-  def build_steps
-    # @context.native_image_targets.map do |target|
-    #   PipelineStep.new
-    #     .label(":rust: Native image [#{target}]")
-    #     .command("./server/build-cli/cli native-image #{target}")
-    #     .queue("native-linux")
-    # end
-
-    [
-      PipelineStep.new
-        .label(":rust: Native image [debian]")
-        .command("./server/.buildkite/scripts/native-image.sh")
-        .queue("native-linux"),
-
-      PipelineStep.new
-        .label(":rust: Native image [lambda]")
-        .command("./server/.buildkite/scripts/build-lambda.sh")
-        .queue("native-linux")
-    ]
-  end
-
   def release_artifacts_steps
     # Option 1: It's a tag on master -> check branches match and build stable images for next tag.
     # Option 2: It's a tag, but on beta -> check branches match and add step to build beta image. todo: Useful?
     # Option 3: It's a normal build on either alpha or beta. Release images with incremented revision of the last tag on the channel.
-    # Everything else doesn't trigger image builds
+    # Everything else doesn't trigger image builds, only build native images for compile-checks
 
-    steps = []
+    steps = {
+      :before_wait => [],
+      :after_wait => []
+    }
 
     if @context.tag != nil && @context.tag.stable? && @context.branch == "master"
-      steps.push PipelineStep.new
+      steps[:before_wait] = build_steps_for(@context.tag.stringify)
+      steps[:after_wait].push PipelineStep.new
         .label(":docker: Release stable #{@context.tag.stringify}")
-        .command("./server/.buildkite/pipeline.sh build stable #{@context.tag.stringify}")
-
-    # elsif @context.tag != nil && !@context.tag.stable? && @context.branch == "beta"
-    #   # Not sure this is super useful
-    #   steps.push PipelineStep.new
-    #     .label(":docker: Release beta #{@context.tag.stringify}")
-    #     .command("./server/.buildkite/pipeline.sh build beta #{@context.tag.stringify}")
+        .command("./server/.buildkite/pipeline.sh build #{@context.tag.stringify}")
 
     elsif @context.branch == "alpha" || @context.branch == "beta"
-      channel_tag = @context.last_git_tag.dup
-      channel_tag.patch = nil # Ignore patches for unstable releases
-      channel_tag.minor += (@context.branch == "alpha") ? 2 : 1
-      last_docker_tag = @context.get_last_docker_tag_for("#{channel_tag.stringify}-#{@context.branch}-") # Check for previous revision of the unstable version
+      next_tag = calculate_next_unstable_docker_tag()
+      steps[:before_wait] = build_steps_for(next_tag.stringify)
+      steps[:after_wait].push PipelineStep.new
+        .label(":docker: Release #{@context.branch} #{next_tag.stringify}")
+        .command("./server/.buildkite/pipeline.sh build #{next_tag.stringify}")
+
+    else
+      steps[:before_wait] = build_steps_for(@context.branch)
+    end
+
+    steps
+  end
+
+  def build_steps_for(version)
+    ['debian' ,'lambda'].map do |target|
+      PipelineStep.new
+        .label(":rust: Native image [#{target}] [#{version}]")
+        .command("./server/build-cli/cli native-image #{target} #{version}")
+        .queue("native-linux")
+    end
+  end
+
+  def calculate_next_unstable_docker_tag()
+    @next_docker_tag ||= lambda do
+      new_tag = @context.last_git_tag.dup
+      new_tag.channel = @context.branch
+      new_tag.patch = nil  # Ignore patches for unstable releases
+      new_tag.minor += (@context.branch == "alpha") ? 2 : 1
+      last_docker_tag = @context.get_last_docker_tag_for("#{new_tag.stringify}-") # Check for previous revision of the unstable version
 
       if last_docker_tag.nil?
-        next_docker_tag = "#{channel_tag.stringify}-#{@context.branch}-1"
+        new_tag.revision = 1
       else
-        next_docker_tag = "#{channel_tag.stringify}-#{@context.branch}-#{last_docker_tag.revision + 1}"
+        new_tag.revision = last_docker_tag.revision + 1
       end
 
-      steps.push PipelineStep.new
-        .label(":docker: Release #{@context.branch} #{next_docker_tag}")
-        .command("./server/.buildkite/pipeline.sh build #{@context.branch} #{next_docker_tag}")
-    end
+      new_tag
+    end.call
+
+    @next_docker_tag
   end
 end

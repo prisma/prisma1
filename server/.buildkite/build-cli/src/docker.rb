@@ -54,4 +54,15 @@ class DockerCommands
       Command.new("docker", "push", "prismagraphql/#{image}:#{to_tag}#{suffix}").puts!.run!.raise!
     end
   end
+
+  def self.native_image(context, prisma_version, build_image)
+    Command.new("docker", "run", "-e", "BRANCH=#{context.branch}", "-e", "COMMIT_SHA=#{context.commit}", "-e", "CLUSTER_VERSION=#{prisma_version}",
+      '-w', '/root/build',
+      '-v', "#{context.server_root_path}:/root/build",
+      '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
+      '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
+      '-v', '/var/run/docker.sock:/var/run/docker.sock',
+      build_image,
+      'sbt', '"project prisma-native"', "prisma-native-image:packageBin").puts!.run!.raise!
+  end
 end

@@ -1,12 +1,18 @@
 require 'open3'
 
 class Command
-  attr_accessor :stdin, :cmd, :args, :stream_output, :pipe_to
+  attr_accessor :stdin, :cmd, :args, :stream_output, :pipe_to, :env
 
   def initialize(command, *arguments)
     @cmd = command
     @args = arguments
     @stream_output = false
+    @env = {}
+  end
+
+  def with_env(env)
+    @env = env
+    self
   end
 
   ## input: array of strings
@@ -33,7 +39,7 @@ class Command
     outputs = { :stdout => [], :stderr => [] }
 
     begin
-      Open3.popen3(cmd, *args) do |s_in, stdout, stderr, thread|
+      Open3.popen3(@env.merge(ENV.to_h), cmd, *args, unsetenv_others: true) do |s_in, stdout, stderr, thread|
         unless stdin.nil?
           stdin.each { |line| s_in.puts line }
           s_in.close
