@@ -4,6 +4,8 @@ import { getExistsFlowTypes } from '../utils'
 import * as prettier from 'prettier'
 import { codeComment } from '../utils/codeComment'
 
+import * as os from 'os'
+
 export interface RenderOptions {
   endpoint?: string
   secret?: string
@@ -24,8 +26,8 @@ export class FlowGenerator extends TypescriptGenerator {
 
 ${codeComment}
 
-import type { GraphQLSchema, DocumentNode } from 'graphql'
-import type { BasePrismaOptions as BPOType, Options } from 'prisma-client-lib'
+import type { DocumentNode } from 'graphql'
+import type { BasePrismaOptions as BPOType } from 'prisma-client-lib'
 import { makePrismaClientClass, Model } from 'prisma-client-lib'
 import { typeDefs } from './prisma-schema'
 
@@ -64,5 +66,8 @@ type NodePromise = Promise<Node>`
     return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
 
 export const prisma = new Prisma()`
+  }
+  renderTypedefsFirstLine() {
+    return `// @flow${os.EOL}`
   }
 }
