@@ -41,7 +41,7 @@ def native_image(context, target, version_str)
 
     # Also store as latest
     artifact_s3_paths.push "s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/latest"
-  elsif @context.branch == "alpha" || @context.branch == "beta"
+  elsif context.branch == "alpha" || context.branch == "beta"
     version_to_build = version_str
     artifact_s3_paths.push "s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/latest"
   else

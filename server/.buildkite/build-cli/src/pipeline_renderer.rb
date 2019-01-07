@@ -76,7 +76,6 @@ class PipelineRenderer
       #{steps.compact.map { |step| step.render!(2) }.join "\n\n"}
     EOS
 
-    puts rendered
     rendered
   end
 
