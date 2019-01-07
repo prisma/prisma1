@@ -63,6 +63,6 @@ class DockerCommands
       '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
       '-v', '/var/run/docker.sock:/var/run/docker.sock',
       "prismagraphql/#{build_image}",
-      'sbt', '"project prisma-native"', "prisma-native-image:packageBin").puts!.run!.raise!
+      'sbt', 'project prisma-native', "prisma-native-image:packageBin").puts!.run!.raise!
   end
 end
