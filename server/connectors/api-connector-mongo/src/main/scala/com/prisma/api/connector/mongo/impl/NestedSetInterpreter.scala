@@ -14,27 +14,12 @@ case class NestedSetInterpreter(mutaction: NestedSet)(implicit val ec: Execution
     SequenceAction(Vector(requiredCheck(parent), removalAction(parent), addAction(parent))).map(_ => MutactionResults(Vector.empty))
   }
 
-  def requiredCheck(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) =
-    (p.isList, p.isRequired, c.isList, c.isRequired) match {
-      case (false, true, false, true)   => requiredRelationViolation
-      case (false, true, false, false)  => checkForOldParentByChildWhere
-      case (false, false, false, true)  => checkForOldChild(parent)
-      case (false, false, false, false) => noCheckRequired
-      case (true, false, false, true)   => noCheckRequired
-      case (true, false, false, false)  => noCheckRequired
-      case (false, true, true, false)   => noCheckRequired
-      case (false, false, true, false)  => noCheckRequired
-      case (true, false, true, false)   => noCheckRequired
-      case _                            => errorBecauseManySideIsRequired
-    }
+  def requiredCheck(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = noCheckRequired
 
-  def removalAction(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) =
-    (p.isList, c.isList) match {
-      case (false, false) => SequenceAction(Vector(removalByParent(parent), removalByChild))
-      case (true, false)  => SequenceAction(Vector(removalByParent(parent), removalByChild))
-      case (false, true)  => removalByParent(parent)
-      case (true, true)   => removalByParent(parent)
-    }
+  def removalAction(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = c.isList match {
+    case false => SequenceAction(Vector(removalByParent(parent), removalByChild))
+    case true  => removalByParent(parent)
+  }
 
   def removalByChild(implicit mutationBuilder: MongoActionsBuilder) = {
     SequenceAction(mutaction.wheres.map { where =>

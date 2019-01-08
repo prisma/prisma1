@@ -57,7 +57,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input BUpdateOneWithoutCInput {
                        |  create: BCreateWithoutCInput
                        |  connect: BWhereUniqueInput
-                       |  set: BWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: BUpdateWithoutCDataInput
@@ -91,7 +90,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input CUpdateOneWithoutBInput {
                        |  connect: CWhereUniqueInput
-                       |  set: CWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
                        |}
@@ -120,7 +118,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input UserUpdateOneInput {
                        |  create: UserCreateInput
                        |  connect: UserWhereUniqueInput
-                       |  set: UserWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: UserUpdateDataInput
@@ -241,7 +238,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |input UserUpdateOneInput {
         |  create: UserCreateInput
         |  connect: UserWhereUniqueInput
-        |  set: UserWhereUniqueInput
         |  disconnect: Boolean
         |  delete: Boolean
         |  update: UserUpdateDataInput
@@ -308,7 +304,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input UserUpdateOneRequiredWithoutFriendInput {
                        |  create: UserCreateWithoutFriendInput
                        |  connect: UserWhereUniqueInput
-                       |  set: UserWhereUniqueInput
                        |  update: UserUpdateWithoutFriendDataInput
                        |  upsert: UserUpsertWithoutFriendInput
                        |}
@@ -316,7 +311,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input UserUpdateOneRequiredWithoutFriendOfInput {
                        |  create: UserCreateWithoutFriendOfInput
                        |  connect: UserWhereUniqueInput
-                       |  set: UserWhereUniqueInput
                        |  update: UserUpdateWithoutFriendOfDataInput
                        |  upsert: UserUpsertWithoutFriendOfInput
                        |}
@@ -382,7 +376,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input UserUpdateOneInput {
                        |  create: UserCreateInput
                        |  connect: UserWhereUniqueInput
-                       |  set: UserWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: UserUpdateDataInput
@@ -489,7 +482,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input ParentUpdateOneRequiredWithoutChildInput {
                        |  create: ParentCreateWithoutChildInput
                        |  connect: ParentWhereUniqueInput
-                       |  set: ParentWhereUniqueInput
                        |  update: ParentUpdateWithoutChildDataInput
                        |  upsert: ParentUpsertWithoutChildInput
                        |}
@@ -554,7 +546,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input AUpdateOneInput {
                        |  create: ACreateInput
                        |  connect: AWhereUniqueInput
-                       |  set: AWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: AUpdateDataInput
@@ -564,7 +555,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input AUpdateOneRequiredInput {
                        |  create: ACreateInput
                        |  connect: AWhereUniqueInput
-                       |  set: AWhereUniqueInput
                        |  update: AUpdateDataInput
                        |  upsert: AUpsertNestedInput
                        |}
@@ -642,7 +632,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |input AUpdateOneInput {
         |  create: ACreateInput
         |  connect: AWhereUniqueInput
-        |  set: AWhereUniqueInput
         |  disconnect: Boolean
         |  delete: Boolean
         |  update: AUpdateDataInput
@@ -652,7 +641,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |input AUpdateOneRequiredInput {
         |  create: ACreateInput
         |  connect: AWhereUniqueInput
-        |  set: AWhereUniqueInput
         |  update: AUpdateDataInput
         |  upsert: AUpsertNestedInput
         |}

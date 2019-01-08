@@ -18,27 +18,12 @@ case class NestedSetInterpreter(mutaction: NestedSet)(implicit val ec: Execution
       .andThen(unitResult)
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[_] = {
-    (p.isList, p.isRequired, c.isList, c.isRequired) match {
-      case (false, true, false, true)   => requiredRelationViolation
-      case (false, true, false, false)  => checkForOldParentByChildWhere
-      case (false, false, false, true)  => checkForOldChild(parentId)
-      case (false, false, false, false) => noCheckRequired
-      case (true, false, false, true)   => noCheckRequired
-      case (true, false, false, false)  => noCheckRequired
-      case (false, true, true, false)   => noCheckRequired
-      case (false, false, true, false)  => noCheckRequired
-      case (true, false, true, false)   => noCheckRequired
-      case _                            => errorBecauseManySideIsRequired
-    }
-  }
+  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[_] = noCheckRequired
 
   def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[_] =
-    (p.isList, c.isList) match {
-      case (false, false) => DBIO.seq(removalByParent(parentId), removalByChild)
-      case (true, false)  => DBIO.seq(removalByParent(parentId), removalByChild)
-      case (false, true)  => removalByParent(parentId)
-      case (true, true)   => removalByParent(parentId)
+    c.isList match {
+      case false => DBIO.seq(removalByParent(parentId), removalByChild)
+      case true  => removalByParent(parentId)
     }
 
   def removalByChild(implicit mutationBuilder: JdbcActionsBuilder) = {

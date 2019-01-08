@@ -405,9 +405,10 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     case false => whereInputField(field, name = "connect")
   }
 
-  def nestedSetInputField(field: RelationField): Option[InputField[Any]] = field.relatedModel_!.isEmbedded match {
-    case true  => None
-    case false => whereInputField(field, name = "set")
+  def nestedSetInputField(field: RelationField): Option[InputField[Any]] = (field.relatedModel_!.isEmbedded, field.isList) match {
+    case (true, _)      => None
+    case (false, true)  => whereInputField(field, name = "set")
+    case (false, false) => None
   }
 
   def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.relatedModel_!.isEmbedded, field.isList, field.isRequired) match {
