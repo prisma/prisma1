@@ -11,6 +11,9 @@ extern crate num_traits;
 extern crate uuid;
 
 #[macro_use]
+extern crate log;
+
+#[macro_use]
 extern crate serde_derive;
 
 use std::ffi::{CStr, CString};
@@ -23,42 +26,28 @@ use postgres::rows::Rows;
 mod driver;
 mod serialization;
 mod jdbc_params;
+mod logging;
 
 use serialization::ResultSet;
+use driver::PointerAndError;
 
-// todo pointerandresult
-#[repr(C)]
 #[no_mangle]
-pub struct PointerAndError<'a> {
-    error: *const c_char,
-    pointer: *mut driver::PsqlPreparedStatement<'a>
-}
-
-impl<'a> Drop for PointerAndError<'a> {
-    fn drop(&mut self) {
-        // Do NOT drop the contained statement, it will be closed separately. This drop is only dropping the protocol structure.
-        println!("[Rust] Dropping PointerAndError");
-        if !self.error.is_null() {
-            println!("[Rust] Dropping contained error");
-            drop(unsafe {
-                String::from_utf8(CString::from_raw(self.error as *mut c_char).into_bytes()).unwrap()
-            });
-        }
-    }
+pub extern "C" fn initialize() {
+    logging::init();
 }
 
 #[no_mangle]
-    pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
+pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
     let mut connection = driver::connect(to_string(url));
     let ptr = Box::into_raw(Box::new(connection));
-
-    println!("New connection: {:?}", ptr);
+    trace!("New connection at: {:?}", ptr);
     return ptr;
 }
 
 #[no_mangle]
 pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, query: *const c_char) -> *mut PointerAndError {
-    println!("Preparing: {}", to_string(query));
+    trace!("Preparing query: {}", to_string(query));
+
     let pointerAndError = match conn.prepareStatement(to_string(query)) {
         Ok(pStmt) => PointerAndError {
             error: serializeCallResult(Ok(CallResult::empty())),
@@ -71,14 +60,16 @@ pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, que
         }
     };
 
-    Box::into_raw(Box::new(pointerAndError))
+    let ptr = Box::into_raw(Box::new(pointerAndError));
+    trace!("Prepare - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]
 pub extern "C" fn closeStatement(stmt: *mut driver::PsqlPreparedStatement) -> *const c_char  {
+    trace!("Closing statement: {:?}", stmt);
     let boxedStmt = unsafe { Box::from_raw(stmt) };
-
-    return serializeCallResult(Ok(CallResult::empty()));
+    serializeCallResult(Ok(CallResult::empty()))
 }
 
 
@@ -87,7 +78,6 @@ pub extern "C" fn executePreparedstatement(
     stmt: &driver::PsqlPreparedStatement,
     params: *const c_char,
 ) -> *const c_char {
-    println!("[Rust] Calling exec on prepared statement");
     let paramsString = to_string(params);
     let callResult = jdbc_params::toJdbcParameterList(&paramsString).and_then(|p| {
         stmt.execute(p.iter().map(|x| x.iter().collect()).collect())
@@ -95,7 +85,9 @@ pub extern "C" fn executePreparedstatement(
         CallResult::count(x)
     });
 
-    return serializeCallResult(callResult);
+    let ptr = serializeCallResult(callResult);
+    trace!("Exec prepared result - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]
@@ -110,7 +102,9 @@ pub extern "C" fn queryPreparedstatement(
         CallResult::result_set(rows)
     });
 
-    return serializeCallResult(callResult);
+    let ptr = serializeCallResult(callResult);
+    trace!("Query prepared result - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]
@@ -127,7 +121,9 @@ pub extern "C" fn sqlQuery(
         CallResult::result_set(rows)
     });
 
-    return serializeCallResult(callResult);
+    let ptr = serializeCallResult(callResult);
+    trace!("Query result - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]
@@ -136,7 +132,6 @@ pub extern "C" fn sqlExecute(
     query: *const c_char,
     params: *const c_char,
 ) -> *const c_char {
-    println!("[Rust] Calling exec");
     let queryString = to_string(query);
     let paramsString = to_string(params);
     let callResult = jdbc_params::toJdbcParameters(&paramsString).and_then(|p| {
@@ -145,7 +140,9 @@ pub extern "C" fn sqlExecute(
         CallResult::count(vec!(x as i32))
     });
 
-    return serializeCallResult(callResult);
+    let ptr = serializeCallResult(callResult);
+    trace!("Exec result - handing out: {:?}", ptr);
+    ptr
 }
 
 #[derive(Serialize)]
@@ -219,8 +216,8 @@ fn handleResult(result: driver::Result<CallResult>) -> CallResult {
 }
 
 fn errorToCallResult(e: driver::DriverError) -> CallResult {
-    let err = format!("[Rust ERROR] {:?}", e);
-    println!("{}", err.red());
+    let err = format!("[Rust] {:?}", e);
+    trace!("{}", err);
 
     match e {
         driver::DriverError::PsqlError(ref e) => match e.as_db() {
@@ -234,7 +231,7 @@ fn errorToCallResult(e: driver::DriverError) -> CallResult {
 
 #[no_mangle]
 pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c_char  {
-    println!("[Rust] Closing connection, pointer is: {:?}", conn);
+    trace!("Closing connection at {:?}", conn);
     let connection = unsafe { Box::from_raw(conn) };
     connection.close();
 
@@ -243,6 +240,7 @@ pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c
 
 #[no_mangle]
 pub extern "C" fn destroy(pointerAndError: *mut PointerAndError) {
+    trace!("Destroying PointerAndError at: {:?}", pointerAndError);
     unsafe {
         Box::from_raw(pointerAndError)
     };
@@ -250,7 +248,7 @@ pub extern "C" fn destroy(pointerAndError: *mut PointerAndError) {
 
 #[no_mangle]
 pub extern "C" fn destroy_string(s: *mut c_char) {
-    println!("[Rust] Dropping string, pointer is: {:?}", s);
+    trace!("Dropping string buffer at {:?}", s);
     unsafe {
         String::from_utf8(CString::from_raw(s).into_bytes()).unwrap()
     };
@@ -260,30 +258,29 @@ pub extern "C" fn destroy_string(s: *mut c_char) {
 pub extern "C" fn startTransaction<'a>(conn: *mut driver::PsqlConnection) -> *const c_char  {
     unsafe {
         let res = (*conn).startTransaction();
-        return serializeCallResult(res.map(|_| { CallResult::empty() }));
+        let ptr = serializeCallResult(res.map(|_| { CallResult::empty() }));
+        trace!("Opened transaction on {:?} - handing out: {:?}", conn, ptr);
+        ptr
     }
 }
 
 #[no_mangle]
 pub extern "C" fn commitTransaction(conn: *mut driver::PsqlConnection) -> *const c_char  {
-    println!("[Rust] committing");
     let ptr = unsafe { Box::from_raw(conn) };
     let ret = serializeCallResult(ptr.commitTransaction().map(|_| { CallResult::empty() }));
-    mem::forget(ptr);
-    println!("[Rust] committed");
 
+    mem::forget(ptr);
+    trace!("Committed on connection {:?} - handing out: {:?}", conn, ret);
     ret
 }
 
 #[no_mangle]
 pub extern "C" fn rollbackTransaction(conn: *mut driver::PsqlConnection) -> *const c_char  {
-    println!("[Rust] Rolling back");
     let ptr = unsafe { Box::from_raw(conn) };
     let ret = serializeCallResult(ptr.rollbackTransaction().map(|_| { CallResult::empty() }));
 
     mem::forget(ptr);
-    println!("[Rust] Rolled back");
-
+    trace!("Rolled back on connection {:?} - handing out: {:?}", conn, ret);
     ret
 }
 

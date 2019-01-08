@@ -126,7 +126,7 @@ impl ToSql for JdbcParameter {
                             postgres::types::INT2 => out.write_i16::<BigEndian>(magic.value as i16).unwrap(),
                             postgres::types::INT4 => out.write_i32::<BigEndian>(magic.value as i32).unwrap(),
                             postgres::types::INT8 => out.write_i64::<BigEndian>(magic.value).unwrap(),
-                            x => println!("[Rust] Unhandled MagicInt OID: {}", x),
+                            x => error!("[Rust] Unhandled MagicInt OID: {}", x),
                         }
                     }
                     x => panic!("[Rust] No underlying type present for MagicInt."),
@@ -144,7 +144,7 @@ impl ToSql for JdbcParameter {
                             postgres::types::NUMERIC => {
                                 Decimal::from_f64(magic.value).unwrap().to_sql(ty, out);
                             },
-                            x => println!("[Rust] Unhandled MagicFloat OID: {}", x),
+                            x => error!("[Rust] Unhandled MagicFloat OID: {}", x),
                         }
                     }
                     x => panic!("[Rust] No underlying type present for MagicFloat."),

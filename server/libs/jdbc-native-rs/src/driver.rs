@@ -24,6 +24,28 @@ use num_traits::ToPrimitive;
 use num_traits::cast::FromPrimitive;
 
 use jdbc_params;
+use std::os::raw::c_char;
+use std::ffi::{CStr, CString};
+
+#[repr(C)]
+#[no_mangle]
+pub struct PointerAndError<'a> {
+    pub error: *const c_char,
+    pub pointer: *mut PsqlPreparedStatement<'a>
+}
+
+impl<'a> Drop for PointerAndError<'a> {
+    fn drop(&mut self) {
+        trace!("Dropping PointerAndError");
+        // Do NOT drop the contained statement, it will be closed separately. This drop is only dropping the protocol structure.
+        if !self.error.is_null() {
+            trace!("Dropping contained error in PointerAndError");
+            drop(unsafe {
+                String::from_utf8(CString::from_raw(self.error as *mut c_char).into_bytes()).unwrap()
+            });
+        }
+    }
+}
 
 #[repr(C)]
 #[no_mangle]
@@ -50,7 +72,7 @@ impl<'a> PsqlPreparedStatement<'a> {
             match res {
                 Ok(count) => counts.push(count as i32),
                 Err(ref e) if paramLength > 1 => {
-                    println!("[Rust] Error during prep exec: {:?}", e);
+                    debug!("Error during prep exec: {:?}", e);
                     counts.push(-3)
                 },
                 Err(_) => return res.map(|v| vec!(v as i32))
@@ -67,7 +89,7 @@ impl<'a> PsqlPreparedStatement<'a> {
 
 impl<'a> Drop for PsqlPreparedStatement<'a> {
     fn drop(&mut self) {
-        println!("[Rust] Dropping prepared statement");
+        trace!("Dropping prepared statement");
     }
 }
 
@@ -91,7 +113,7 @@ pub fn connect<'a>(url: String) -> PsqlConnection<'a> {
 
 impl<'a> Drop for PsqlConnection<'a> {
     fn drop(&mut self) {
-        println!("[Rust] Dropping psql connection");
+        trace!("Dropping psql connection");
     }
 }
 
@@ -132,40 +154,32 @@ impl<'a> PsqlConnection<'a> {
     }
 
     pub fn query(&self, query: String, params: Vec<&jdbc_params::JdbcParameter>) -> Result<Rows> {
-        println!("[Rust] Query received the params: {:?}", params);
+        trace!("Querying {} with params: {:?}", query, params);
+
         let mutRef = self.transaction.try_borrow_mut()?;
         let rows = match *mutRef {
             Some(ref t) => t.query(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?,
             None => self.connection.query(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?,
         };
 
-        println!("[Rust] The result set has {} columns", rows.columns().len());
-        for column in rows.columns() {
-            println!("[Rust] column {} of type {}", column.name(), column.type_());
-        }
-
         return Ok(rows);
     }
 
     pub fn execute(&self, query: String, params: Vec<&jdbc_params::JdbcParameter>) -> Result<u64> {
-        println!("[Rust] Execute received the params: {:?}", params);
+        trace!("Executing {} with params: {:?}", query, params);
 
         let mutRef = self.transaction.try_borrow_mut()?;
         let result = match *mutRef {
             Some(ref t) => {
-                println!("[Rust] Have transaction");
                 t.execute(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?
             }
             None => self.connection.execute(&*query, &jdbc_params::JdbcParameter::paramsToSql(params)[..])?,
         };
 
-        println!("[Rust] EXEC DONE");
         return Ok(result);
     }
 
-    pub fn close(self) {
-        // Simply drops the moved var for now, which calls the drop Impl
-    }
+    pub fn close(self) {}
 
     pub fn startTransaction(&'a mut self) -> Result<()> {
         let ta = self.connection.transaction()?;
@@ -177,23 +191,16 @@ impl<'a> PsqlConnection<'a> {
     pub fn commitTransaction(&self) -> Result<()> {
         let taOpt = self.transaction.replace(None);
         match taOpt {
-            Some(ta) => {
-                println!("[Rust] Have transaction");
-                Ok(ta.commit()?)
-            }
-            None => Ok(()),
+            Some(ta) => Ok(ta.commit()?),
+            None     => Ok(()),
         }
     }
 
     pub fn rollbackTransaction(&self) -> Result<()> {
         let taOpt = self.transaction.replace(None);
         match taOpt {
-            Some(ta) => {
-                println!("[Rust] Have transaction");
-                Ok(ta.set_rollback())
-            }
-
-            None => Ok(()),
+            Some(ta) => Ok(ta.set_rollback()),
+            None     => Ok(()),
         }
     }
 }
