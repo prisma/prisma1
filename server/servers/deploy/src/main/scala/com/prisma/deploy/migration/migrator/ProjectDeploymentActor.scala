@@ -37,8 +37,13 @@ case class ProjectDeploymentActor(
     with Stash {
   import DeploymentProtocol._
 
-  implicit val ec          = context.system.dispatcher
-  val applier              = MigrationApplierImpl(migrationPersistence, MigrationStepMapperImpl(projectId), deployConnector.deployMutactionExecutor)
+  implicit val ec = context.system.dispatcher
+  val applier = MigrationApplierImpl(
+    migrationPersistence,
+    MigrationStepMapperImpl(projectId),
+    deployConnector.deployMutactionExecutor,
+    deployConnector.testFacilities.inspector
+  )
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all

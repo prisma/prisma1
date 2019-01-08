@@ -23,7 +23,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
   val config = ConfigLoader.load()
 
   implicit val reporter: ErrorReporter    = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)
+  override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor, deployConnector.testFacilities.inspector)
   override lazy val managementAuth        = DummyManagementAuth()
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 

@@ -20,6 +20,9 @@ case class Tables(tables: Vector[Table]) {
   def table_!(name: String): Table       = table(name).getOrElse(sys.error(s"Table $name was not found."))
   def table(name: String): Option[Table] = tables.find(_.name == name)
 }
+object Tables {
+  val empty = Tables(Vector.empty)
+}
 
 case class Table(name: String, columns: Vector[Column], indexes: Vector[Index]) {
   def column_!(name: String): Column       = column(name).getOrElse(sys.error(s"Column $name was not found."))

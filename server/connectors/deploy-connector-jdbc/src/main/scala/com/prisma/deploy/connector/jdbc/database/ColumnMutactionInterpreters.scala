@@ -4,7 +4,7 @@ import com.prisma.deploy.connector._
 import slick.jdbc.PostgresProfile.api._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
-  override def execute(mutaction: CreateColumn) = {
+  override def execute(mutaction: CreateColumn, schemaBeforeMigration: Tables) = {
     builder.createColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
@@ -16,7 +16,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     )
   }
 
-  override def rollback(mutaction: CreateColumn) = {
+  override def rollback(mutaction: CreateColumn, schemaBeforeMigration: Tables) = {
     builder.deleteColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
@@ -26,7 +26,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 }
 
 case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteColumn] {
-  override def execute(mutaction: DeleteColumn) = {
+  override def execute(mutaction: DeleteColumn, schemaBeforeMigration: Tables) = {
     builder.deleteColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
@@ -34,7 +34,7 @@ case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     )
   }
 
-  override def rollback(mutaction: DeleteColumn) = {
+  override def rollback(mutaction: DeleteColumn, schemaBeforeMigration: Tables) = {
     builder.createColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
@@ -48,7 +48,7 @@ case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 }
 
 case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateColumn] {
-  override def execute(mutaction: UpdateColumn) = {
+  override def execute(mutaction: UpdateColumn, schemaBeforeMigration: Tables) = {
     if (shouldUpdateClientDbColumn(mutaction)) {
       // when type changes to/from String we need to change the subpart
       // when fieldName changes we need to update index name
@@ -59,9 +59,9 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     }
   }
 
-  override def rollback(mutaction: UpdateColumn) = {
+  override def rollback(mutaction: UpdateColumn, schemaBeforeMigration: Tables) = {
     val oppositeMutaction = mutaction.copy(oldField = mutaction.newField, newField = mutaction.oldField)
-    execute(oppositeMutaction)
+    execute(oppositeMutaction, schemaBeforeMigration)
   }
 
   def shouldUpdateClientDbColumn(mutaction: UpdateColumn): Boolean = {
