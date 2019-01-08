@@ -89,12 +89,12 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
     val connector = deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.managementDatabase.createSession()
     val statement = session.createStatement()
-    statement.execute(s"drop schema if exists $schemaName cascade;")
+    statement.execute(s"""drop schema if exists "$schemaName" cascade;""")
 
     server.addProject(name, stage)
-    statement.execute(s"create schema if not exists $schemaName;")
+    statement.execute(s"""create schema if not exists "$schemaName";""")
 
-    statement.execute(s"SET search_path TO $schemaName;")
+    statement.execute(s"""SET search_path TO "$schemaName";""")
     statement.execute(sql)
     session.close()
   }
