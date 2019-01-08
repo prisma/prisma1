@@ -18,6 +18,7 @@ object RustBindingJna extends RustBinding {
   System.setProperty("jna.debug_load", "true")
 
   val library = Native.loadLibrary("jdbc_native", classOf[JnaRustBridge])
+  library.jdbc_initialize()
 
   override def newConnection(url: String): RustConnectionJna = {
     new RustConnectionJna(library.newConnection(url))

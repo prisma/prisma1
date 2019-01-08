@@ -44,7 +44,7 @@ pub struct Claims {
 }
 
 #[no_mangle]
-pub extern "C" fn initialize() {
+pub extern "C" fn jwt_initialize() {
     logging::init();
 }
 

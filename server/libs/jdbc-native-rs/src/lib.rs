@@ -32,7 +32,7 @@ use serialization::ResultSet;
 use driver::PointerAndError;
 
 #[no_mangle]
-pub extern "C" fn initialize() {
+pub extern "C" fn jdbc_initialize() {
     logging::init();
 }
 

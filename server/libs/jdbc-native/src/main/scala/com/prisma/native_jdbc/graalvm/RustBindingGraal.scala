@@ -13,6 +13,11 @@ object RustBindingGraal extends RustBinding {
   override type Conn = RustConnectionGraal
   override type Stmt = RustPreparedStatementGraal
 
+  def initialize() = {
+    RustInterfaceGraal.jdbc_initialize()
+    this
+  }
+
   override def newConnection(url: String): RustConnectionGraal = {
     val conn = new RustConnectionGraal(RustInterfaceGraal.newConnection(toCString(url)))
     println(s"Connected: ${conn.hashCode()}")

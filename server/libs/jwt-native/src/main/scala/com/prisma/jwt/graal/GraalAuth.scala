@@ -11,6 +11,10 @@ import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.util.Try
 
+object GraalAuth {
+  def initialize = GraalRustBridge.jwt_initialize()
+}
+
 case class GraalAuth(algorithm: Algorithm) extends Auth {
   def toJavaString(str: CCharPointer) = CTypeConversion.toJavaString(str)
   def toCString(str: String)          = CTypeConversion.toCString(str).get()

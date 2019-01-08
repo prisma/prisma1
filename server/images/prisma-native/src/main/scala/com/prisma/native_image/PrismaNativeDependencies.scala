@@ -39,6 +39,8 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
     with ApiDependencies
     with WorkerDependencies
     with SubscriptionDependencies {
+  // Todo this is a temporary workaround for initializing native dependencies
+  GraalAuth.initialize
 
   val config: PrismaConfig = ConfigLoader.load()
 

@@ -15,4 +15,7 @@ public class GraalRustBridge {
 
     @CFunction
     static native void destroy_buffer(CIntegration.ProtocolBuffer buffer);
+
+    @CFunction
+    static native void jwt_initialize();
 }

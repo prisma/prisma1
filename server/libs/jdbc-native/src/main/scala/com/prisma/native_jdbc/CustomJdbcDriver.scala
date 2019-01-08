@@ -9,7 +9,7 @@ import com.prisma.native_jdbc.jna.RustBindingJna
 
 object CustomJdbcDriver {
   lazy val jna   = driverWithBinding(RustBindingJna)
-  lazy val graal = driverWithBinding(RustBindingGraal)
+  lazy val graal = driverWithBinding(RustBindingGraal.initialize())
 
   def driverWithBinding(binding: RustBinding): CustomJdbcDriver = {
     val driver = CustomJdbcDriver(binding)

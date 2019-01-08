@@ -4,6 +4,8 @@ import com.sun.jna.Library;
 import com.sun.jna.Pointer;
 
 public interface JnaRustBridge extends Library {
+    void jdbc_initialize();
+
     PointerAndError prepareStatement(Pointer connection, String query);
 
     Pointer newConnection(String url);
