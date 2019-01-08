@@ -121,6 +121,7 @@ case class JdbcDatabaseMutactionExecutor(
     case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
     case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
     case m: NestedConnect     => NestedConnectInterpreter(m)
+    case m: NestedSet         => NestedSetInterpreter(m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
     case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)

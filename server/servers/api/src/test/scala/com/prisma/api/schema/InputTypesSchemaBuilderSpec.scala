@@ -432,6 +432,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input ChildUpdateManyWithoutParentInput {
                        |  create: [ChildCreateWithoutParentInput!]
                        |  connect: [ChildWhereUniqueInput!]
+                       |  set: [ChildWhereUniqueInput!]
                        |  disconnect: [ChildWhereUniqueInput!]
                        |  delete: [ChildWhereUniqueInput!]
                        |  update: [ChildUpdateWithWhereUniqueWithoutParentInput!]
