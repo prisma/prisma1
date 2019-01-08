@@ -65,7 +65,7 @@ object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
       val gcValue = typeIdentifier match {
         case TypeIdentifier.String   => StringGCValue(resultSet.getString(name))
         case TypeIdentifier.Cuid     => StringIdGCValue(resultSet.getString(name))
-        case TypeIdentifier.UUID     => UuidGCValue.parse_!(resultSet.getString(name))
+        case TypeIdentifier.UUID     => getUuidGCValue(name)
         case TypeIdentifier.Int      => IntGCValue(resultSet.getInt(name))
         case TypeIdentifier.DateTime => getDateTimeGCValue(name)
         case TypeIdentifier.Float    => FloatGCValue(resultSet.getDouble(name))
@@ -86,6 +86,11 @@ object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
     private def getJsonGCValue(name: String) = {
       val sqlType = resultSet.getString(name)
       if (sqlType != null) JsonGCValue(Json.parse(sqlType)) else NullGCValue
+    }
+
+    private def getUuidGCValue(name: String) = {
+      val sqlType = resultSet.getString(name)
+      if (sqlType != null) UuidGCValue.parse_!(sqlType) else NullGCValue
     }
   }
 }
