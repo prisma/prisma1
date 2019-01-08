@@ -66,7 +66,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         },
         deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteByWhere(args.extractNodeSelector(subModel))),
         connects = subArgsVector("connect").getOrElse(Vector.empty).map(args => ConnectByWhere(args.extractNodeSelector(subModel))),
-        sets = subArgsVector("set").getOrElse(Vector.empty).map(args => SetByWhere(args.extractNodeSelector(subModel))),
+        sets = subArgsVector("set").map(args => args.map(arg => SetByWhere(arg.extractNodeSelector(subModel)))),
         disconnects = subArgsVector("disconnect").getOrElse(Vector.empty).map(args => DisconnectByWhere(args.extractNodeSelector(subModel))),
         updateManys = subArgsVector("updateMany")
           .getOrElse(Vector.empty)
@@ -86,7 +86,7 @@ case class CoolArgs(raw: Map[String, Any]) {
           .toVector,
         deletes = getFieldValueAs[Boolean]("delete").flatten.collect { case x if x => DeleteByRelation(x) }.toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
-        sets = subArgsOption("set").flatten.map(args => SetByWhere(args.extractNodeSelector(subModel))).toVector,
+        sets = subArgsOption("set").flatten.map(arg => Vector(SetByWhere(arg.extractNodeSelector(subModel)))),
         disconnects = getFieldValueAs[Boolean]("disconnect").flatten.collect { case x if x => DisconnectByRelation(x) }.toVector,
         updateManys = Vector.empty,
         deleteManys = Vector.empty

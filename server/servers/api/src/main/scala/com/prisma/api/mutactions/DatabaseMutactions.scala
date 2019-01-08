@@ -212,8 +212,9 @@ case class DatabaseMutactions(project: Project) {
     nestedMutation.connects.map(connect => NestedConnect(project, field, connect.where, topIsCreate))
   }
 
-  def getMutactionsForNestedSetMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedSet] = {
-    Vector(NestedSet(project, field, nestedMutation.sets.map(_.where)))
+  def getMutactionsForNestedSetMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedSet] = nestedMutation.sets match {
+    case None       => Vector.empty
+    case Some(sets) => Vector(NestedSet(project, field, sets.map(_.where)))
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedDisconnect] = {

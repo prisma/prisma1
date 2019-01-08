@@ -8,14 +8,14 @@ case class NestedMutations(
     upserts: Vector[UpsertOne],
     deletes: Vector[DeleteOne],
     connects: Vector[ConnectByWhere],
-    sets: Vector[SetByWhere],
+    sets: Option[Vector[SetByWhere]],
     disconnects: Vector[DisconnectOne],
     updateManys: Vector[NestedUpdateMany],
     deleteManys: Vector[NestedDeleteMany]
 )
 
 object NestedMutations {
-  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
+  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, None, Vector.empty, Vector.empty, Vector.empty)
 }
 
 sealed trait NestedMutation
