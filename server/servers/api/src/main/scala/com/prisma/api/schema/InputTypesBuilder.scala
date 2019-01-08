@@ -48,7 +48,6 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 }
 
 abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBuilder {
-  import com.prisma.utils.boolean.BooleanUtils._
 
   override def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForCreate(model, parentField)

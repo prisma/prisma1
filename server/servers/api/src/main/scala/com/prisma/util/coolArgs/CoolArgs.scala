@@ -55,13 +55,13 @@ case class CoolArgs(raw: Map[String, Any]) {
       NestedMutations(
         creates = subArgsVector("create").getOrElse(Vector.empty).map(CreateOne),
         updates = subArgsVector("update").getOrElse(Vector.empty).map { args =>
-          UpdateByWhere(args.extractNodeSelectorFromWhereField(subModel), args.subArgsOption("data").get.get)
+          UpdateByWhere(args.extractNodeSelectorFromWhereField(subModel), args.subArg_!("data"))
         },
         upserts = subArgsVector("upsert").getOrElse(Vector.empty).map { args =>
           UpsertByWhere(
             where = args.extractNodeSelectorFromWhereField(subModel),
-            update = args.subArgsOption("update").get.get,
-            create = args.subArgsOption("create").get.get
+            update = args.subArg_!("update"),
+            create = args.subArg_!("create")
           )
         },
         deletes = subArgsVector("delete").getOrElse(Vector.empty).map(args => DeleteByWhere(args.extractNodeSelector(subModel))),
@@ -72,7 +72,7 @@ case class CoolArgs(raw: Map[String, Any]) {
           .getOrElse(Vector.empty)
           .map(args =>
             NestedUpdateMany(args.raw.get("where").map(x => FilterHelper.generateFilterElement(x.asInstanceOf[Map[String, Any]], subModel, false)),
-                             args.subArgsOption("data").get.get)),
+                             args.subArg_!("data"))),
         deleteManys = subArgsVector("deleteMany")
           .getOrElse(Vector.empty)
           .map(args => NestedDeleteMany(Some(FilterHelper.generateFilterElement(args.raw, subModel, false))))
@@ -82,7 +82,7 @@ case class CoolArgs(raw: Map[String, Any]) {
         creates = subArgsOption("create").flatten.map(CreateOne).toVector,
         updates = subArgsOption("update").flatten.map(UpdateByRelation).toVector,
         upserts = subArgsOption("upsert").flatten
-          .map(args => UpsertByRelation(update = args.subArgsOption("update").get.get, create = args.subArgsOption("create").get.get))
+          .map(args => UpsertByRelation(update = args.subArg_!("update"), create = args.subArg_!("create")))
           .toVector,
         deletes = getFieldValueAs[Boolean]("delete").flatten.collect { case x if x => DeleteByRelation(x) }.toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
@@ -120,6 +120,8 @@ case class CoolArgs(raw: Map[String, Any]) {
       case Some(Some(x)) => Some(Some(CoolArgs(x)))
     }
   }
+
+  private def subArg_!(name: String) = subArgsOption(name).get.get
 
   /**
     * The outer option is defined if the field key was specified in the arguments at all.
