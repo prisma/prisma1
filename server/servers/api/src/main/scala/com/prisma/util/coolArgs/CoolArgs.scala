@@ -86,7 +86,7 @@ case class CoolArgs(raw: Map[String, Any]) {
           .toVector,
         deletes = getFieldValueAs[Boolean]("delete").flatten.collect { case x if x => DeleteByRelation(x) }.toVector,
         connects = subArgsOption("connect").flatten.map(args => ConnectByWhere(args.extractNodeSelector(subModel))).toVector,
-        sets = subArgsOption("set").flatten.map(arg => Vector(SetByWhere(arg.extractNodeSelector(subModel)))),
+        sets = None,
         disconnects = getFieldValueAs[Boolean]("disconnect").flatten.collect { case x if x => DisconnectByRelation(x) }.toVector,
         updateManys = Vector.empty,
         deleteManys = Vector.empty
