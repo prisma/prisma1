@@ -331,6 +331,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           fieldsFn = () =>
             nestedCreateInputField(field).toList ++
               nestedConnectInputField(field) ++
+              nestedSetInputField(field) ++
               nestedDisconnectInputField(field) ++
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
@@ -391,9 +392,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   def nestedCreateInputField(field: RelationField): Option[InputField[Any]] = {
-    val subModel        = field.relatedModel_!
-    val inputObjectType = inputObjectTypeForCreate(subModel, Some(field))
-
+    val inputObjectType = inputObjectTypeForCreate(field.relatedModel_!, Some(field))
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any]("create", x))
   }
 
@@ -405,6 +404,11 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = field.relatedModel_!.isEmbedded match {
     case true  => None
     case false => whereInputField(field, name = "connect")
+  }
+
+  def nestedSetInputField(field: RelationField): Option[InputField[Any]] = field.relatedModel_!.isEmbedded match {
+    case true  => None
+    case false => whereInputField(field, name = "set")
   }
 
   def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.relatedModel_!.isEmbedded, field.isList, field.isRequired) match {
@@ -421,16 +425,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   def trueInputFlag(field: RelationField, name: String): Option[InputField[Any]] = {
-    val subModel        = field.relatedModel_!
-    val inputObjectType = inputObjectTypeForWhereUnique(subModel)
-
+    val inputObjectType = inputObjectTypeForWhereUnique(field.relatedModel_!)
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any](name, x))
   }
 
   def whereInputField(field: RelationField, name: String): Option[InputField[Any]] = {
-    val subModel        = field.relatedModel_!
-    val inputObjectType = inputObjectTypeForWhereUnique(subModel)
-
+    val inputObjectType = inputObjectTypeForWhereUnique(field.relatedModel_!)
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any](name, x))
   }
 
