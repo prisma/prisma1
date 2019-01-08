@@ -14,7 +14,7 @@ import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
 import { User, Migration, DeployPayload, Workspace, Service } from './types'
 import * as opn from 'opn'
-import { concatName } from '../../../prisma-yml/dist/PrismaDefinition'
+import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 
 const debug = require('debug')('client')
 
