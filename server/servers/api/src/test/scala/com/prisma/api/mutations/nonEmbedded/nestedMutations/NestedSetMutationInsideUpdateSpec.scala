@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnorePostgres
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
@@ -1624,7 +1625,7 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
         |type AUser {
         |  id: ID! @unique
         |  name: String! @unique
-        |  posts: [Post] @mongoRelation(field: "posts")
+        |  posts: [Post]
         |}"""
     }
 

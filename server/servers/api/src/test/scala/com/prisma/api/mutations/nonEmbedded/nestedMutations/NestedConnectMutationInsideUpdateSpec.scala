@@ -1612,7 +1612,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
-  "Connecting several times" should "not error and only connect the item once" taggedAs (IgnorePostgres) in {
+  "Connecting several times" should "not error and only connect the item once" in {
 
     val project = SchemaDsl.fromString() {
       """
@@ -1625,7 +1625,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
         |type AUser {
         |  id: ID! @unique
         |  name: String! @unique
-        |  posts: [Post] @mongoRelation(field: "posts")
+        |  posts: [Post]
         |}"""
     }
 
