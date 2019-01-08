@@ -3,9 +3,13 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, Tables}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
+import com.prisma.deploy.migration.SchemaMapper
+import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
+import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
-import com.prisma.shared.models.{ConnectorCapability, Migration, Project}
+import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -93,5 +97,58 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
     statement.execute(s"SET search_path TO $schemaName;")
     statement.execute(sql)
     session.close()
+  }
+}
+
+trait DataModelV2Base { self: PassiveDeploySpecBase =>
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  val project = Project(id = projectId, schema = Schema.empty)
+
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
+    val input = DeployMutationInput(
+      clientMutationId = None,
+      name = projectName,
+      stage = projectStage,
+      types = dataModel,
+      dryRun = None,
+      force = None,
+      secrets = Vector.empty,
+      functions = Vector.empty
+    )
+    val refreshedProject = testDependencies.projectPersistence.load(projectId).await.get
+    val mutation = DeployMutation(
+      args = input,
+      project = refreshedProject,
+      schemaInferrer = SchemaInferrer(capabilities),
+      migrationStepsInferrer = MigrationStepsInferrer(),
+      schemaMapper = SchemaMapper,
+      migrationPersistence = testDependencies.migrationPersistence,
+      projectPersistence = testDependencies.projectPersistence,
+      migrator = testDependencies.migrator,
+      functionValidator = testDependencies.functionValidator,
+      invalidationPublisher = testDependencies.invalidationPublisher,
+      capabilities = capabilities,
+      clientDbQueries = deployConnector.clientDBQueries(project),
+      databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
+      fieldRequirements = FieldRequirementsInterface.empty,
+      isActive = true
+    )
+
+    val result = mutation.execute.await
+    result match {
+      case MutationSuccess(result) =>
+        if (result.errors.nonEmpty) {
+          sys.error(s"Deploy returned unexpected errors: ${result.errors}")
+        } else {
+          inspect
+        }
+      case MutationError =>
+        sys.error("Deploy returned an unexpected error")
+    }
+  }
+
+  def inspect: Tables = {
+    deployConnector.testFacilities.inspector.inspect(projectId).await()
   }
 }
