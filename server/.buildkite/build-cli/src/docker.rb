@@ -34,7 +34,7 @@ class DockerCommands
   def self.build(context, prisma_version)
     Command.new("docker", "run", "-e", "BRANCH=#{context.branch}", "-e", "COMMIT_SHA=#{context.commit}", "-e", "CLUSTER_VERSION=#{prisma_version.stringify}",
       '-w', '/root',
-      '-v', "#{context.server_root_path}:/root",
+      '-v', "#{context.server_root_path}:/root/build",
       '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
       '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
       '-v', '/var/run/docker.sock:/var/run/docker.sock',
@@ -58,7 +58,7 @@ class DockerCommands
   def self.native_image(context, prisma_version, build_image)
     Command.new("docker", "run", "-e", "BRANCH=#{context.branch}", "-e", "COMMIT_SHA=#{context.commit}", "-e", "CLUSTER_VERSION=#{prisma_version}",
       '-w', '/root',
-      '-v', "#{context.server_root_path}:/root",
+      '-v', "#{context.server_root_path}:/root/build",
       '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
       '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
       '-v', '/var/run/docker.sock:/var/run/docker.sock',

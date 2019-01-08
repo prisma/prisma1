@@ -21,10 +21,10 @@ services:
             password: prisma
             rawAccess: true
     volumes:
-      - ../..:/root
+      - ../..:/root/build
       - ~/.ivy2:/root/.ivy2
       - ~/.coursier:/root/.coursier
-    working_dir: /root
+    working_dir: /root/build
     networks:
       - tests
 
