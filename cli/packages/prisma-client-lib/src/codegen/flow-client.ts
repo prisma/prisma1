@@ -18,6 +18,9 @@ export class FlowGenerator extends TypescriptGenerator {
   exportPrisma = true
 
   prismaInterface = 'PrismaInterface'
+
+  typeObjectType = 'type'
+
   renderImports() {
     return `\
 /**
