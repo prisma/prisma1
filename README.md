@@ -4,11 +4,11 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-Prisma replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. It is used to build **GraphQL servers, REST APIs & more**.
+**Prisma replaces traditional ORMs** and custom data access layers with a universal database abstraction used via the **Prisma client**. It is used to build **GraphQL servers, REST APIs & more**.
 
 <!-- TODO: Try with CSB -->
 
-- **Prisma client for various languages** such as JavaScript, TypeScript, Flow, Go.
+- **Prisma client for various languages** such as [JavaScript](https://www.prisma.io/client/client-javascript), [TypeScript](https://www.prisma.io/client/client-typescript), [Flow](https://www.prisma.io/client/client-flow), [Go](https://www.prisma.io/client/client-go).
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
 - **Type-safe database access** including filters, aggregations, pagination and transactions.
 - **Realtime event systems for your database** to get notified about database events.
@@ -25,7 +25,7 @@ Prisma replaces traditional ORMs and data access layers with a universal databas
 
 ## Quickstart
 
-<!-- TODO: Explain what happens _from scratch_, second half of sentence, click here withh existing DB -->
+Get started with Prisma from scratch (or [use your existing database](https://www.prisma.io/docs/-t003/)):
 
 #### 1. Install Prisma via Homebrew
 
@@ -54,7 +54,7 @@ prisma init hello-world
 
 The interactive CLI wizard now helps you with the required setup:
 
-- Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/) or a hosted [demo database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-demo-server-a001/))
+- Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/-t003/) or a hosted [demo database](https://www.prisma.io/docs/-t001/))
 - Select the database type: **MySQL** or **PostgreSQL**
 - Select the language for the generated Prisma client: **TypeScript**, **Flow**, **JavaScript** or **Go**
 
@@ -192,9 +192,9 @@ const postsByAuthor = await prisma
 
 Here is what you can do next:
 
-- [Build an app with Prisma client](https://www.prisma.io/docs/get-started/03-build-graphql-servers-with-prisma-e001/)
+- [Build an app with Prisma client](https://www.prisma.io/docs/-t201/)
 - [Check out some examples](#examples)
-- [Read more about how Prisma works](https://www.prisma.io/docs/understand-prisma/prisma-introduction-what-why-how-j9ff/).
+- [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/).
 
 ## Examples
 
