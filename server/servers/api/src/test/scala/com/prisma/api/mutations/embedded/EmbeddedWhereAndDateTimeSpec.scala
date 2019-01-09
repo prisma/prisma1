@@ -25,7 +25,6 @@ class EmbeddedWhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBa
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
         |}"""
-
     }
 
     database.setup(project)
