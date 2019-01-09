@@ -36,4 +36,20 @@ class UUIDCreateGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
     val theUUID = result.pathAsString("data.createTodo.id")
     UUID.fromString(theUUID) // should just not blow up
   }
+
+  "Fetching a UUID field that is null" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
+    val project = SchemaDsl.fromString() {
+      s"""
+         |type TableA {
+         |    id:             UUID! @unique
+         |    name:           String!
+         |    b:              UUID @unique
+         |}""".stripMargin
+    }
+    database.setup(project)
+
+    server.query("""mutation {createTableA(data: {name:"testA"}){id}}""", project)
+
+    server.query("""query {tableAs {name, b}}""", project).toString should be("""{"data":{"tableAs":[{"name":"testA","b":null}]}}""")
+  }
 }

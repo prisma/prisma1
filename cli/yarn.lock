@@ -6628,26 +6628,6 @@ pretty-ms@^3.0.0:
   dependencies:
     parse-ms "^1.0.0"
 
-prisma-client-lib@1.23.0-test.3:
-  version "1.23.0-test.3"
-  resolved "https://registry.yarnpkg.com/prisma-client-lib/-/prisma-client-lib-1.23.0-test.3.tgz#7259e200ba936575ce8e205e78b4bf872c732a70"
-  dependencies:
-    "@types/node" "^10.12.0"
-    "@types/prettier" "^1.13.2"
-    debug "^4.1.0"
-    flow-bin "^0.87.0"
-    graphql-tag "^2.10.0"
-    http-link-dataloader "^0.1.6"
-    jsonwebtoken "^8.3.0"
-    lodash.flatten "^4.4.0"
-    prettier "^1.14.3"
-    prisma-datamodel "1.23.0-alpha.1"
-    prisma-generate-schema "1.23.0-alpha.173"
-    subscriptions-transport-ws "^0.9.15"
-    uppercamelcase "^3.0.0"
-    ws "^6.1.0"
-    zen-observable "^0.8.10"
-
 prisma-datamodel@1.23.0-alpha.173:
   version "1.23.0-alpha.173"
   resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.173.tgz#1c8ba6b9d35b86f4eeb2e6f90113141b7391445c"

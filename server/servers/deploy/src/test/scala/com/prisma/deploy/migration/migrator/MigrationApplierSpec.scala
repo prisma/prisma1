@@ -24,7 +24,8 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     rolledBack = 0,
     steps = Vector(CreateModel("Step1"), CreateModel("Step2"), CreateModel("Step3")),
     errors = Vector.empty,
-    previousSchema = Schema.empty
+    previousSchema = Schema.empty,
+    rawDataModel = ""
   )
 
   val step1Model = Model.empty.copy(name = "Step1").build(emptySchema)
