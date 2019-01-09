@@ -4,10 +4,11 @@ import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.specutils.{DataModelV2Base, DeploySpecBase, PassiveDeploySpecBase}
 import com.prisma.shared.models.ConnectorCapability.IntIdCapability
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase with DataModelV2Base {
+  val TI = TypeIdentifier
   case class SQLs(postgres: String, mysql: String)
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
@@ -75,7 +76,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     finalResult should equal(result)
   }
 
-  "creating a field for an existing column should work" in {
+  "creating a field for an existing column (compatible type) should work" in {
     val postgres =
       s"""
          | CREATE TABLE blog (
@@ -103,6 +104,112 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
 
     val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
     result should equal(initialResult)
+  }
+
+  "creating a field for an existing column and simultaneously changing its type and unique constraint should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title int
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL,
+         |   title int,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+    val tableBefore   = initialResult.table_!("blog")
+    val columnBefore  = tableBefore.column_!("title")
+    columnBefore.typeIdentifier should be(TI.Int)
+    columnBefore.isRequired should be(false)
+    tableBefore.indexByColumns("title").isDefined should be(false)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String! @unique
+         |}
+       """.stripMargin
+
+    val result      = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val tableAfter  = result.table_!("blog")
+    val columnAfter = tableAfter.column_!("title")
+    columnAfter.typeIdentifier should be(TI.String)
+    columnAfter.isRequired should be(true)
+    tableAfter.indexByColumns_!("title").unique should be(true)
+  }
+
+  "creating a field for an existing column and simultaneously adding a unique constraint should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title int
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL,
+         |   title int,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+    val tableBefore   = initialResult.table_!("blog")
+    tableBefore.indexByColumns("title") should be(empty)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String! @unique
+         |}
+       """.stripMargin
+
+    val result     = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val tableAfter = result.table_!("blog")
+    tableAfter.indexByColumns_!("title").unique should be(true)
+  }
+
+  "creating a field for an existing column and simultaneously removing the unique constraint should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title int
+         |);
+         |CREATE UNIQUE INDEX "title_index" ON blog(title ASC);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL,
+         |   title int,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+    val tableBefore   = initialResult.table_!("blog")
+    tableBefore.indexByColumns_!("title").unique should be(true)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |}
+       """.stripMargin
+
+    val result     = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val tableAfter = result.table_!("blog")
+    tableAfter.indexByColumns("title") should be(empty)
   }
 
   def setup(sqls: SQLs): DatabaseSchema = {

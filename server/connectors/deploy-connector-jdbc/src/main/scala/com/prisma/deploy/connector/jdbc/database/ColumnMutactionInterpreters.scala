@@ -2,8 +2,10 @@ package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.deploy.connector._
 import slick.jdbc.PostgresProfile.api._
+import com.prisma.utils.boolean.BooleanUtils._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
+  // todo: that does not consider unique constraints yet
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table_!(mutaction.model.dbName).column(mutaction.field.dbName) match {
       case None =>
@@ -16,9 +18,43 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           isList = mutaction.field.isList,
           typeIdentifier = mutaction.field.typeIdentifier
         )
-      case Some(_) =>
-        DBIO.successful(())
+      case Some(c) =>
+        val updateColumn = mustUpdateColumn(c, mutaction).toOption {
+          builder.updateColumn(
+            projectId = mutaction.projectId,
+            tableName = mutaction.model.dbName,
+            oldColumnName = mutaction.field.dbName,
+            newColumnName = mutaction.field.dbName,
+            newIsRequired = mutaction.field.isRequired,
+            newIsList = mutaction.field.isList,
+            newTypeIdentifier = mutaction.field.typeIdentifier
+          )
+        }
+        val addUniqueConstraint = mustAddUniqueConstraint(c, mutaction).toOption {
+          builder.addUniqueConstraint(mutaction.projectId, mutaction.model.dbName, mutaction.field.dbName, mutaction.field.typeIdentifier)
+        }
+        val removeUniqueConstraint = mustRemoveUniqueConstraint(c, mutaction).toOption {
+          builder.removeUniqueConstraint(mutaction.projectId, mutaction.model.dbName, mutaction.field.dbName)
+        }
+        val allActions = updateColumn ++ addUniqueConstraint ++ removeUniqueConstraint
+
+        DBIO.seq(allActions.toVector: _*)
     }
+  }
+
+  private def mustUpdateColumn(column: Column, mutaction: CreateColumn) = {
+    column.typeIdentifier != mutaction.field.typeIdentifier ||
+    column.isRequired == mutaction.field.isRequired
+  }
+
+  private def mustAddUniqueConstraint(column: Column, mutaction: CreateColumn) = {
+    val index = column.table.indexByColumns(column.name)
+    index.forall(_.unique == false) && mutaction.field.isUnique
+  }
+
+  private def mustRemoveUniqueConstraint(column: Column, mutaction: CreateColumn) = {
+    val index = column.table.indexByColumns(column.name)
+    index.exists(_.unique == true) && !mutaction.field.isUnique
   }
 
   override def rollback(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
