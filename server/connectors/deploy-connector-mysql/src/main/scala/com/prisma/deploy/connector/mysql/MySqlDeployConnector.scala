@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MysqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
@@ -106,5 +107,8 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
     )
   }
 
-  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
+  override def testFacilities() = {
+    val db = internalDatabaseDefs.databases(root = true)
+    DeployTestFacilites(DatabaseInspectorImpl(db.primary.database))
+  }
 }

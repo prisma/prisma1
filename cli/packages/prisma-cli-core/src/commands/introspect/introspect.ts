@@ -270,18 +270,22 @@ ${chalk.bold(
     }
   }
   async hasExecuteRaw() {
-    const service = this.definition.service!
-    const stage = this.definition.stage!
-    const token = this.definition.getToken(service, stage)
-    const workspace = this.definition.getWorkspace()
-    const introspection = await this.client.introspect(
-      service,
-      stage,
-      token,
-      workspace!,
-    )
-    const introspectionString = JSON.stringify(introspection)
-    return introspectionString.includes('executeRaw')
+    try {
+      const service = this.definition.service!
+      const stage = this.definition.stage!
+      const token = this.definition.getToken(service, stage)
+      const workspace = this.definition.getWorkspace()
+      const introspection = await this.client.introspect(
+        service,
+        stage,
+        token,
+        workspace!,
+      )
+      const introspectionString = JSON.stringify(introspection)
+      return introspectionString.includes('executeRaw')
+    } catch (e) {
+      return false
+    }
   }
   connectToMongo(credentials: DatabaseCredentials): Promise<MongoClient> {
     return new Promise((resolve, reject) => {

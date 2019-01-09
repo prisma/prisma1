@@ -127,6 +127,7 @@ case class LegacyDataModelValidator(
         case x if isRelationField(x) =>
           RelationalPrismaField(
             name = x.name,
+            columnName = None,
             relationDbDirective = x.relationDBDirective,
             strategy = None,
             isList = x.isList,

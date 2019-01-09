@@ -53,45 +53,14 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
 
-    steps should have(size(3))
-    steps should contain allOf (
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "comments",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_CommentToTodo")),
-        defaultValue = None,
-        enum = None
-      ),
-      UpdateField(
-        model = "Comment",
-        newModel = "Comment",
-        name = "todo",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_CommentToTodo")),
-        defaultValue = None,
-        enum = None
-      ),
-      UpdateRelation(
-        name = "ManualRelationName",
-        newName = Some("CommentToTodo"),
-        modelAId = None,
-        modelBId = None,
-        modelAOnDelete = None,
-        modelBOnDelete = None
-      )
-    )
+    steps should have(size(1))
+    steps should be(
+      Vector(
+        UpdateRelation(
+          name = "ManualRelationName",
+          newName = Some("CommentToTodo")
+        )
+      ))
 
   }
 
@@ -120,45 +89,14 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
 
-    steps should have(size(3))
-    steps should contain allOf (
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "comments",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName")),
-        defaultValue = None,
-        enum = None
-      ),
-      UpdateField(
-        model = "Comment",
-        newModel = "Comment",
-        name = "todo",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName")),
-        defaultValue = None,
-        enum = None
-      ),
-      UpdateRelation(
-        name = "CommentToTodo",
-        newName = Some("ManualRelationName"),
-        modelAId = None,
-        modelBId = None,
-        modelAOnDelete = None,
-        modelBOnDelete = None
-      )
-    )
+    steps should have(size(1))
+    steps should be(
+      Vector(
+        UpdateRelation(
+          name = "CommentToTodo",
+          newName = Some("ManualRelationName")
+        )
+      ))
   }
 
   "they" should "not propose an Update and Delete at the same time when renaming a relation" in {
@@ -186,38 +124,10 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
 
-    steps should have(size(4))
+    steps should have(size(2))
     steps should contain allOf (
-      DeleteRelation("ManualRelationName1", "Comment", "Todo"),
-      CreateRelation("ManualRelationName2", "Comment", "Todo", OnDelete.SetNull, OnDelete.SetNull),
-      UpdateField(
-        model = "Todo",
-        newModel = "Todo",
-        name = "comments",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName2")),
-        defaultValue = None,
-        enum = None
-      ),
-      UpdateField(
-        model = "Comment",
-        newModel = "Comment",
-        name = "todo",
-        newName = None,
-        typeName = None,
-        isRequired = None,
-        isList = None,
-        isHidden = None,
-        isUnique = None,
-        relation = Some(Some("_ManualRelationName2")),
-        defaultValue = None,
-        enum = None
-      )
+      DeleteRelation("ManualRelationName1"),
+      CreateRelation("ManualRelationName2")
     )
   }
 
@@ -251,66 +161,30 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     steps should contain allOf (
       CreateField(
         model = "Todo",
-        name = "comment1",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment1"),
-        defaultValue = None,
-        enum = None
+        name = "comment1"
       ),
       CreateField(
         model = "Todo",
-        name = "comment2",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment2"),
-        defaultValue = None,
-        enum = None
+        name = "comment2"
       ),
       CreateField(
         model = "Comment",
-        name = "todo1",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment1"),
-        defaultValue = None,
-        enum = None
+        name = "todo1"
       ),
       CreateField(
         model = "Comment",
-        name = "todo2",
-        typeName = "Relation",
-        isRequired = false,
-        isList = false,
-        isUnique = false,
-        relation = Some("TodoToComment2"),
-        defaultValue = None,
-        enum = None
+        name = "todo2"
       ),
       CreateRelation(
-        name = "TodoToComment1",
-        modelAName = "Comment",
-        modelBName = "Todo",
-        modelAOnDelete = OnDelete.SetNull,
-        modelBOnDelete = OnDelete.SetNull
+        name = "TodoToComment1"
       ),
       CreateRelation(
-        name = "TodoToComment2",
-        modelAName = "Comment",
-        modelBName = "Todo",
-        modelAOnDelete = OnDelete.SetNull,
-        modelBOnDelete = OnDelete.SetNull
+        name = "TodoToComment2"
       )
     )
   }
 
-  "they" should "detect a change in the onDelete relation argument" in {
+  "they" should "not detect a change in the onDelete relation argument as it does not need to update the schema" in {
     val previousSchema =
       """
         |type Course {
@@ -324,7 +198,6 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
         |}
       """.stripMargin
     val project = inferSchema(previousSchema)
-
     val nextSchema =
       """
         |type Course {
@@ -338,17 +211,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
         |}
       """.stripMargin
     val steps = inferSteps(previousSchema = project, next = nextSchema)
-    steps should have(size(1))
-    steps should contain(
-      UpdateRelation(
-        name = "CourseSections",
-        newName = None,
-        modelAId = None,
-        modelBId = None,
-        modelAOnDelete = Some(OnDelete.SetNull),
-        modelBOnDelete = None
-      )
-    )
+    steps should have(size(0))
   }
 
   def inferSchema(schema: String): Schema = {
