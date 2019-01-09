@@ -1,4 +1,4 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.sqlite.database
 
 import com.prisma.deploy.connector.jdbc.database.TypeMapper
 import com.prisma.gc_values.GCValue
@@ -6,7 +6,7 @@ import com.prisma.shared.models.TypeIdentifier
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import org.jooq.DSLContext
 
-case class MySqlTypeMapper() extends TypeMapper {
+case class SQLiteTypeMapper() extends TypeMapper {
   override def rawSQLFromParts(
       name: String,
       isRequired: Boolean,

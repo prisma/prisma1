@@ -37,6 +37,7 @@ object Dependencies {
   val mariaDbClient  = "org.mariadb.jdbc"  % "mariadb-java-client" % "2.1.2"
   val postgresClient = "org.postgresql"    % "postgresql"          % "42.2.2"
   val mongoClient    = "org.mongodb.scala" %% "mongo-scala-driver" % "2.4.0"
+  val sqliteClient   = "org.xerial"        % "sqlite-jdbc"         % "3.25.2"
 
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play

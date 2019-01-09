@@ -1,16 +1,16 @@
-package com.prisma.deploy.connector.mysql.database
+package com.prisma.deploy.connector.sqlite.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
-import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
 
 import scala.concurrent.ExecutionContext
 
-case class MySqlJdbcDeployDatabaseMutationBuilder(
+case class SQLiteJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)

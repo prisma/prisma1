@@ -1,12 +1,17 @@
-package com.prisma.deploy.connector.mysql
+package com.prisma.deploy.connector.sqlite
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
-import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MySqlTypeMapper}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
+import com.prisma.deploy.connector.sqlite.database.{
+  SQLiteFieldRequirement,
+  SQLiteInternalDatabaseSchema,
+  SQLiteJdbcDeployDatabaseMutationBuilder,
+  SQLiteTypeMapper
+}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -17,17 +22,17 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
-  override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
+  override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
 
-  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary
   lazy val projectDatabase      = databases.primary.database
-  lazy val mySqlTypeMapper      = MySqlTypeMapper()
-  lazy val mutationBuilder      = MySqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
+  lazy val mySqlTypeMapper      = SQLiteTypeMapper()
+  lazy val mutationBuilder      = SQLiteJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
   override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
@@ -67,7 +72,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def initialize(): Future[Unit] = {
     setupDatabase.primary.database
-      .run(MySqlInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
+      .run(SQLiteInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
       .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
   }
 
