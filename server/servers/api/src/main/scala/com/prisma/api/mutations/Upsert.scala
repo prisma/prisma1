@@ -32,9 +32,9 @@ case class Upsert(
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
     val firstResult = results.results.collectFirst {
-      case r: FurtherNestedMutactionResult if r.mutaction == upsertMutaction.create || r.mutaction == upsertMutaction.update => r
+      case r: FurtherNestedMutactionResult if r.mutaction.id == upsertMutaction.create.id || r.mutaction.id == upsertMutaction.update.id => r
     }.get
-    val selector   = NodeSelector.forIdGCValue(model, firstResult.id)
+    val selector   = NodeSelector.forId(model, firstResult.id)
     val itemFuture = dataResolver.getNodeByWhere(selector, selectedFields)
     itemFuture.map {
       case Some(prismaNode) => ReturnValue(prismaNode)

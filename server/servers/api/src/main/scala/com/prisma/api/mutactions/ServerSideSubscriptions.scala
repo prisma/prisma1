@@ -83,7 +83,7 @@ object ServerSideSubscriptions {
         mutactionResult.mutaction.model,
         ModelMutationType.Deleted,
         sssFn,
-        nodeId = mutactionResult.id,
+        nodeId = mutactionResult.previousValues.id,
         requestId = requestId,
         previousValues = Some(mutactionResult.previousValues)
       )

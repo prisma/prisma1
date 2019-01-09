@@ -1,18 +1,15 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation " should "error when deleting the child" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childReq", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaP1reqToC1req }
     database.setup(project)
 
     val res = server
@@ -63,10 +60,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a P1! to C1 relation" should "always fail when trying to delete the child" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
-    }
+    val project = SchemaDsl.fromString() { schemaP1reqToC1opt }
     database.setup(project)
 
     val res = server
@@ -90,7 +84,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val childId  = res.pathAsString("data.createParent.childReq.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -114,14 +108,11 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       errorContains = "Argument 'update' expected type 'ParentUpdateInput!'"
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to C1  relation " should "work through a nested mutation by id" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val res = server
@@ -145,7 +136,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val childId  = res.pathAsString("data.createParent.childOpt.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     val res2 = server.query(
       s"""
@@ -169,14 +160,11 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
 
     res2.toString should be("""{"data":{"upsertParent":{"childOpt":null}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a P1 to C1  relation" should "error if the nodes are not connected" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val child1Id = server
@@ -203,7 +191,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       )
       .pathAsString("data.createParent.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     val res = server.queryThatMustFail(
       s"""
@@ -227,17 +215,14 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       errorCode = 3041
     )
 
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a PM to C1!  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation_!("childrenOpt", "parentReq", child)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     server.query(
@@ -256,7 +241,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.query(
       s"""
@@ -277,16 +262,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(0)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(0)
   }
 
   "a P1 to C1!  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1req }
     database.setup(project)
 
     server.query(
@@ -327,15 +309,12 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(0)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(0)
   }
 
   "a PM to C1 " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation("childrenOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToC1opt }
     database.setup(project)
 
     server
@@ -355,7 +334,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
         project
       )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -378,16 +357,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"upsertParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
-    dataResolver(project).countByTable("Parent").await should be(1)
-    dataResolver(project).countByTable("Child").await should be(1)
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
   }
 
   "a P1! to CM  relation" should "error " in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation_!("parentsOpt", "childReq", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaP1reqToCM }
     database.setup(project)
 
     server.query(
@@ -431,10 +407,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a P1 to CM  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToCM }
     database.setup(project)
 
     server.query(
@@ -480,10 +453,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to CM  relation" should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
     server.query(
@@ -531,11 +501,27 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to CM  relation" should "delete fail if other req relations would be violated" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent   = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child    = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
-      val reqOther = schema.model("ReqOther").field_!("r", _.String, isUnique = true).oneToOneRelation_!("childReq", "otherReq", child)
-    }
+
+    val schema = """type Parent{
+                            id: ID! @unique
+                            p: String! @unique
+                            childrenOpt: [Child]
+                        }
+
+                        type Child{
+                            id: ID! @unique
+                            c: String! @unique
+                            parentsOpt: [Parent]
+                            otherReq: ReqOther!
+                        }
+                       
+                        type ReqOther{
+                            id: ID! @unique
+                            r: String! @unique
+                            childReq: Child!
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     server.query(
@@ -552,7 +538,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ReqOtherToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToReqOther").await should be(1) }
 
     server.query(
       """mutation {
@@ -589,21 +575,35 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       """,
       project,
       errorCode = 3042,
-      errorContains = """The change you are trying to make would violate the required relation 'ReqOtherToChild' between ReqOther and Child"""
+      errorContains = """The change you are trying to make would violate the required relation 'ChildToReqOther' between Child and ReqOther"""
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_ReqOtherToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToReqOther").await should be(1) }
 
   }
 
   "a PM to CM  relation" should "delete the child from other relations as well" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent   = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child    = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
-      val optOther = schema.model("OptOther").field_!("o", _.String, isUnique = true).oneToOneRelation("childOpt", "otherOpt", child)
+    val schema = """type Parent{
+                            id: ID! @unique
+                            p: String! @unique
+                            childrenOpt: [Child]
+                        }
 
-    }
+                        type Child{
+                            id: ID! @unique
+                            c: String! @unique
+                            parentsOpt: [Parent]
+                            otherOpt: OptOther
+                        }
+
+                        type OptOther{
+                            id: ID! @unique
+                            o: String! @unique
+                            childOpt: Child
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     server.query(
@@ -620,7 +620,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_OptOtherToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOptOther").await should be(1) }
 
     server.query(
       """mutation {
@@ -662,14 +662,23 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be("""{"data":{"children":[]}}""")
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_OptOtherToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToOptOther").await should be(0) }
   }
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").field("text", _.String).oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -722,10 +731,21 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String).field_!("alias", _.String, isUnique = true)
-      schema.model("Todo").field("text", _.String).oneToManyRelation("comments", "todo", comment)
-    }
+
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            alias: String! @unique
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -775,10 +795,19 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a many to one relation" should "be deletable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -829,10 +858,19 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "one2one relation both exist and are connected" should "be deletable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-    }
+    val schema = """type Note{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String!
+                            note: Note
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -883,10 +921,19 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "one2one relation both exist and are connected" should "be deletable by unique field through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String, isUnique = true)
-      schema.model("Todo").field_!("title", _.String, isUnique = true).oneToOneRelation("note", "todo", note)
-    }
+    val schema = """type Note{
+                            id: ID! @unique
+                            text: String @unique
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String! @unique
+                            note: Note
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -938,10 +985,19 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
   }
 
   "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-    }
+    val schema = """type Note{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String!
+                            note: Note
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -980,7 +1036,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       project,
       errorCode = 3041,
       errorContains =
-        s"The relation TodoToNote has no node for the model Note with the value '$noteId' for the field 'id' connected to a node for the model Todo on your mutation path."
+        s"The relation NoteToTodo has no node for the model Note with the value '$noteId' for the field 'id' connected to a node for the model Todo on your mutation path."
     )
 
     val query = server.query("""{ todoes { title }}""", project)
@@ -994,20 +1050,20 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""" }
     database.setup(project)
 
@@ -1075,13 +1131,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -1154,13 +1210,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -1243,7 +1299,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {

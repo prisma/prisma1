@@ -187,14 +187,14 @@ hooks:
 **`.graphqlconfig.yml`**
 
 ```yml
-project:
+projects:
   db:
     schemaPath: prisma.graphql
     extensions:
       prisma: prisma.yml
 ```
 
-Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prima.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
+Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prisma.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
 
 ### A note on the application schema
 
@@ -215,8 +215,6 @@ type Query {
 ```
 
 `graphql-import` currently uses SDL comments to import types. In the future, there might be an official import syntax for SDL as has already been [discussed](https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import) in the GraphQL working group.
-
-Learn more about the application schema and building GraphQL servers with Prisma [here](dvw4).
 
 ## Files
 
@@ -397,7 +395,7 @@ When used as arguments in an operation, `DateTime` fields have to be specified i
 
 ```graphql
 query {
-  user(birthday: "2015-11-22) { # November 22, 2015
+  user(birthday: "2015-11-22") { # November 22, 2015
     id
   }
 }

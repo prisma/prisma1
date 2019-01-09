@@ -2,15 +2,14 @@ package com.prisma.subscriptions
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
 
 class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(EmbeddedTypesCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(EmbeddedTypesCapability)
 
   val webhookTestKit = testDependencies.webhookPublisher
 
@@ -31,7 +30,7 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
       |   id: ID! @unique
       |   title: String
       |   status: TodoStatus
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |}
       |
       |type Comment @embedded{

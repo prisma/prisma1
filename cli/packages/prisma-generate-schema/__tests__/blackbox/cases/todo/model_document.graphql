@@ -1,0 +1,12 @@
+
+type Todo {
+  id: ID! @id
+  text: String!
+  done: Boolean!
+  user: User! @relation(link: INLINE)
+}
+
+type User {
+  id: ID! @id
+  name: String!
+}

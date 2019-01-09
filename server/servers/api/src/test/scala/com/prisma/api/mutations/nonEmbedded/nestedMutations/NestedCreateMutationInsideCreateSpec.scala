@@ -2,30 +2,17 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import java.util.UUID
 
-import com.prisma.IgnoreMySql
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
+import com.prisma.{IgnoreMongo, IgnoreMySql}
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation" should "be possible" in {
-    val project = SchemaDsl.fromString() {
-      """type Parent{
-        |   id: ID! @unique
-        |   p: String! @unique
-        |   childReq: Child!
-        |}
-        |
-        |type Child{
-        |   id: ID! @unique
-        |   c: String! @unique
-        |   parentReq: Parent!
-        |}""".stripMargin
-    }
-
+    val project = SchemaDsl.fromString() { schemaP1reqToC1req }
     database.setup(project)
 
     val res = server
@@ -52,10 +39,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1! to C1 relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation_!("childReq", "parentOpt", child, isRequiredOnFieldB = false)
-    }
+    val project = SchemaDsl.fromString() { schemaP1reqToC1opt }
     database.setup(project)
 
     val child1Id = server
@@ -76,14 +60,11 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       )
       .pathAsString("data.createParent.childReq.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to C1  relation" should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val res = server
@@ -105,14 +86,11 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a PM to C1! " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation_!("childrenOpt", "parentReq", child)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     val res = server
@@ -134,14 +112,11 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a P1 to C1!  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1req }
     database.setup(project)
 
     val res = server
@@ -167,10 +142,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to C1  relation" should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation("childrenOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToC1opt }
     database.setup(project)
 
     val res = server
@@ -192,14 +164,11 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
   }
 
   "a P1! to CM  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation_!("parentsOpt", "childReq", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaP1reqToCM }
     database.setup(project)
 
     val res = server
@@ -225,10 +194,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a P1 to CM relation" should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToCM }
     database.setup(project)
 
     val res = server
@@ -270,10 +236,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
     val res = server
@@ -299,10 +262,19 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
+    val project = SchemaDsl.fromString() {
+      """type Todo{
+        |   id: ID! @unique
+        |   comments: [Comment]
+        |}
+        |
+        |type Comment{
+        |   id: ID! @unique
+        |   text: String!
+        |   todo: Todo
+        |}"""
     }
+
     database.setup(project)
 
     val result = server.query(
@@ -326,10 +298,20 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to one relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToManyRelation("comments", "todo", comment)
+    val project = SchemaDsl.fromString() {
+      """type Todo{
+        |   id: ID! @unique
+        |   title: String!
+        |   comments: Comment
+        |}
+        |
+        |type Comment{
+        |   id: ID! @unique
+        |   text: String!
+        |   todo: Todo
+        |}"""
     }
+
     database.setup(project)
 
     val result = server.query(
@@ -353,11 +335,21 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.createComment.todo.title"), "todo1")
   }
 
-  "a many to many relation" should "creatable through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val tag = schema.model("Tag").field_!("name", _.String)
-      schema.model("Todo").field_!("title", _.String).manyToManyRelation("tags", "todos", tag)
+  "a many to many relation" should "be creatable through a nested mutation" in {
+    val project = SchemaDsl.fromString() {
+      """type Todo{
+        |   id: ID! @unique
+        |   title: String!
+        |   tags: [Tag]
+        |}
+        |
+        |type Tag{
+        |   id: ID! @unique
+        |   name: String!
+        |   todos: [Todo]
+        |}"""
     }
+
     database.setup(project)
 
     val result = server
@@ -403,11 +395,23 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
   }
 
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val user = schema.model("User").field_!("name", _.String).field("unique", _.String, isUnique = true)
-      schema.model("Post").field_!("title", _.String).field("uniquePost", _.String, isUnique = true).oneToOneRelation("user", "post", user)
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute first direction" in {
+    val project = SchemaDsl.fromString() {
+      """type User{
+        |   id: ID! @unique
+        |   name: String!
+        |   unique: String @unique
+        |   post: Post
+        |}
+        |
+        |type Post{
+        |   id: ID! @unique
+        |   title: String!
+        |   uniquePost: String @unique
+        |   user: User
+        |}"""
     }
+
     database.setup(project)
 
     server.query(
@@ -445,6 +449,43 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
+  }
+
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute second direction" in {
+    val project = SchemaDsl.fromString() {
+      """type User{
+        |   id: ID! @unique
+        |   name: String!
+        |   unique: String @unique
+        |   post: Post
+        |}
+        |
+        |type Post{
+        |   id: ID! @unique
+        |   title: String!
+        |   uniquePost: String @unique
+        |   user: User
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      """mutation{
+        |  createUser(data:{
+        |    name: "Paul"
+        |    unique: "uniqueUser"
+        |    post: {create:{title: "test"    uniquePost: "uniquePost"}
+        |    }
+        |  })
+        |    {id}
+        |  }
+      """.stripMargin,
+      project
+    )
+
+    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
 
     server.queryThatMustFail(
       """mutation{
@@ -462,19 +503,32 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
       errorContains = "A unique constraint would be violated on Post. Details: Field name = uniquePost"
     )
 
-    server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1)
+    ifConnectorIsNotMongo(server.query("query{users{id}}", project).pathAsSeq("data.users").length should be(1))
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("name", _.String)
-      val todo = schema.model("Todo").field_!("title", _.String)
-      val tag  = schema.model("Tag").field_!("name", _.String)
-
-      list.oneToManyRelation("todos", "list", todo)
-      todo.oneToOneRelation("tag", "todo", tag)
+    val project = SchemaDsl.fromString() {
+      """type List{
+        |   id: ID! @unique
+        |   name: String!
+        |   todos: [Todo]
+        |}
+        |
+        |type Todo{
+        |   id: ID! @unique
+        |   title: String!
+        |   list: List
+        |   tag: Tag
+        |}
+        |
+        |type Tag{
+        |   id: ID! @unique
+        |   name: String!
+        |   todo: Todo
+        |}"""
     }
+
     database.setup(project)
 
     val mutation =
@@ -513,10 +567,23 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a required one2one relation" should "be creatable through a nested create mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("reqOnComment", _.String).field("optOnComment", _.String)
-      schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String).oneToOneRelation_!("comments", "todo", comment)
+
+    val project = SchemaDsl.fromString() {
+      """type Comment{
+        |   id: ID! @unique
+        |   reqOnComment: String!
+        |   optOnComment: String
+        |   todo: Todo!
+        |}
+        |
+        |type Todo{
+        |   id: ID! @unique
+        |   reqOnTodo: String!
+        |   optOnTodo: String
+        |   comment: Comment!
+        |}"""
     }
+
     database.setup(project)
 
     val result = server.query(
@@ -558,14 +625,23 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
   }
 
   "a required one2one relation" should "be creatable through a nested connected mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val todo = schema.model("Todo").field_!("reqOnTodo", _.String).field("optOnTodo", _.String)
-      schema
-        .model("Comment")
-        .field_!("reqOnComment", _.String)
-        .field("optOnComment", _.String)
-        .oneToOneRelation_!("todo", "comment", todo, isRequiredOnFieldB = false)
+
+    val project = SchemaDsl.fromString() {
+      """type Comment{
+        |   id: ID! @unique
+        |   reqOnComment: String!
+        |   optOnComment: String
+        |   todo: Todo!
+        |}
+        |
+        |type Todo{
+        |   id: ID! @unique
+        |   reqOnTodo: String!
+        |   optOnTodo: String
+        |   comment: Comment
+        |}"""
     }
+
     database.setup(project)
 
     val result = server.query(
@@ -655,12 +731,12 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
   }
 
-  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql) in {
+  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       s"""
          |type List {
          |  id: ID! @unique
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {
@@ -692,6 +768,74 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     result.pathAsString("data.createList.todos.[0].title") should equal("the todo")
     val theUuid = result.pathAsString("data.createList.todos.[0].id")
     UUID.fromString(theUuid) // should now blow up
+  }
+
+  "Backrelation bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  nick: String! @unique
+        |  memberships: [ListMembership]
+        |}
+        |
+        |type List {
+        |  id: ID! @unique
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |  name: String!
+        |  memberships: [ListMembership]
+        |}
+        |
+        |type ListMembership {
+        |  id: ID! @unique
+        |  user: User! @mongoRelation(field: "user")
+        |  list: List! @mongoRelation(field: "list")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation createUser {
+  createUser(data: {
+    nick: "marcus"
+    memberships: {
+      create: [
+        {
+          list: {
+            create: {
+              name: "Personal Inbox"
+            }
+          }
+        }
+      ]
+    }
+  }){
+    nick
+  }
+}""",
+      project
+    )
+
+    create.toString should be("""{"data":{"createUser":{"nick":"marcus"}}}""")
+
+    val result = server.query(
+      s"""query users {
+  users{
+    nick
+    memberships {
+      list {
+        name
+      }
+    }
+  }
+}""",
+      project
+    )
+
+    result.toString should be("""{"data":{"users":[{"nick":"marcus","memberships":[{"list":{"name":"Personal Inbox"}}]}]}}""")
   }
 
 }

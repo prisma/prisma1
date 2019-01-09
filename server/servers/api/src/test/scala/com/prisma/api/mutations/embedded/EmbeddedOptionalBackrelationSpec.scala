@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -52,13 +52,13 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
     res.toString() should be("""{"data":{"updateOwner":{"ownerName":"jon","cat":{"catName":"azrael"}}}}""")
   }
 
-  "Nested Upsert" should "work for models with missing backrelations for update " taggedAs (IgnoreMongo) in {
+  "Nested Upsert" should "work for models with missing backrelations for update " in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat @embedded{
@@ -100,13 +100,13 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
     res.toString should be("""{"data":{"updateOwner":{"ownerName":"jon","cats":[{"catName":"azrael"}]}}}""")
   }
 
-  "Nested Upsert" should "work for models with missing backrelations for create" taggedAs (IgnoreMongo) in {
+  "Nested Upsert" should "work for models with missing backrelations for create" in {
     val project = SchemaDsl.fromString() {
       """
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat @embedded{

@@ -3,10 +3,9 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.deploy.connector.DeployConnectorCapability
-import com.prisma.deploy.connector.DeployConnectorCapability.MigrationsCapability
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
-import com.prisma.shared.models.{Migration, Project}
+import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.{ConnectorCapability, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -14,25 +13,20 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait DeploySpecBase
-    extends ConnectorAwareTest[DeployConnectorCapability]
-    with BeforeAndAfterEach
-    with BeforeAndAfterAll
-    with AwaitUtils
-    with PlayJsonExtensions { self: Suite =>
+trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with BeforeAndAfterAll with AwaitUtils with PlayJsonExtensions {
+  self: Suite =>
 
   implicit lazy val system                                   = ActorSystem()
   implicit lazy val materializer                             = ActorMaterializer()
   implicit lazy val testDependencies: TestDeployDependencies = TestDeployDependencies()
   implicit lazy val implicitSuite                            = self
   implicit lazy val deployConnector                          = testDependencies.deployConnector
-  override def prismaConfig                                  = testDependencies.config
-  val server                                                 = DeployTestServer()
-  val internalDB                                             = testDependencies.deployConnector
-  val projectsToCleanUp                                      = new ArrayBuffer[String]
-  def capabilities                                           = deployConnector.capabilities
 
-  def connectorHasCapability(capability: DeployConnectorCapability) = deployConnector.hasCapability(capability)
+  val server            = DeployTestServer()
+  val projectsToCleanUp = new ArrayBuffer[String]
+
+  override def prismaConfig = testDependencies.config
+  def capabilities          = deployConnector.capabilities
 
   val basicTypesGql =
     """
@@ -61,9 +55,9 @@ trait DeploySpecBase
       stage: String = "default",
       secrets: Vector[String] = Vector.empty
   )(implicit suite: Suite): (Project, Migration) = {
-    val name      = suite.getClass.getSimpleName
-    val idAsStrig = testDependencies.projectIdEncoder.toEncodedString(name, stage)
-    internalDB.deleteProjectDatabase(idAsStrig).await()
+    val name       = suite.getClass.getSimpleName
+    val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
+    deployConnector.deleteProjectDatabase(idAsString).await()
     server.addProject(name, stage)
     server.deploySchema(name, stage, schema.stripMargin, secrets)
   }

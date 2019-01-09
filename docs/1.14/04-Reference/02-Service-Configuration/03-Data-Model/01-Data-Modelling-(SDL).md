@@ -608,7 +608,7 @@ Find more info about the `@unique` directive [above](#unique).
 
 #### Relation fields
 
-The directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a relation field.
+The directive `@relation(name: String, onDelete: ON_DELETE! = CASCADE)` can be attached to a relation field.
 
 [See above](#the-relation-directive) for more information.
 

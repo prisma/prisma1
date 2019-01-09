@@ -5,31 +5,31 @@ import java.sql.PreparedStatement
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.connector.jdbc.extensions.SlickExtensions
 import com.prisma.api.helpers.LimitClauseHelper
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.{NullGCValue, StringGCValue}
 import slick.jdbc.PositionedParameters
 
 object SetParams extends SlickExtensions with LimitClauseBuilder {
-  def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: Option[QueryArguments]): Unit = {
+  def setQueryArgs(preparedStatement: PreparedStatement, queryArguments: QueryArguments): Unit = {
     val pp = new PositionedParameters(preparedStatement)
     setQueryArgs(pp, queryArguments)
   }
 
-  def setQueryArgs(pp: PositionedParameters, queryArguments: Option[QueryArguments]): Unit = {
-    queryArguments.foreach { queryArgs =>
-      setFilter(pp, queryArgs.filter)
-      setCursor(pp, queryArgs)
-      setLimit(pp, queryArgs)
-    }
+  def setQueryArgs(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
+    setFilter(pp, queryArguments.filter)
+    setCursor(pp, queryArguments)
+    setLimit(pp, queryArguments)
+
   }
 
   def setCursor(pp: PositionedParameters, queryArguments: QueryArguments): Unit = {
     queryArguments.after.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
+      pp.setGcValue(value)
+      pp.setGcValue(value)
     }
     queryArguments.before.foreach { value =>
-      pp.setString(value)
-      pp.setString(value)
+      pp.setGcValue(value)
+      pp.setGcValue(value)
     }
   }
 
@@ -52,7 +52,6 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
       case AndFilter(filters)                 => filters.foreach(setFilter(pp, _))
       case OrFilter(filters)                  => filters.foreach(setFilter(pp, _))
       case NotFilter(filters)                 => filters.foreach(setFilter(pp, _))
-      case NodeFilter(filters)                => setFilter(pp, OrFilter(filters))
       case RelationFilter(_, nestedFilter, _) => setFilter(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                  => // NOOP
@@ -79,4 +78,7 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
       case x                                           => sys.error(s"Not supported: $x")
     }
   }
+
+  // todo find solution / factor out of shared trait
+  override lazy val slickDatabase: SlickDatabase = null
 }

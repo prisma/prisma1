@@ -1,0 +1,22 @@
+type Parent {
+  id: ID! @id
+  p: String @unique
+  children: [Child!]!
+  j: [Joint!]! @relation(link: INLINE)
+}
+
+type Child @embedded {
+  c: String
+  friendsOpt: [Friend!]! @mongoRelation(field: "friends")
+  jointOpt: Joint! @mongoRelation(field: "joint")
+}
+
+type Friend {
+  f: String @unique
+  test: ID! @id
+}
+
+type Joint {
+  id: ID! @id
+  j: String
+}

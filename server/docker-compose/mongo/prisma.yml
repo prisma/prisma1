@@ -2,8 +2,4 @@ port: 4466
 databases:
   default:
     connector: mongo
-    migrations: false
-    host: 127.0.0.1
-    port: 27017
-    user: prisma
-    password: prisma
+    uri: mongodb://prisma:prisma@127.0.0.1:27017/?authSource=admin&ssl=false

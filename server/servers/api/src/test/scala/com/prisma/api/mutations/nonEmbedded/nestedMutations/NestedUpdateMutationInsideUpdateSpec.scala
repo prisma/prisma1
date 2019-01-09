@@ -1,19 +1,20 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability)
+class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
   "a one to many relation" should "be updateable by id through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment {
@@ -77,7 +78,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment {
@@ -140,7 +141,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """type List {
         | id: ID! @unique
         | listUnique: String! @unique
-        | todoes: [Todo!]!
+        | todoes: [Todo]
         |}
         |
         |type Todo {
@@ -197,7 +198,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """type Todo {
         | id: ID! @unique
         | title: String
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment {
@@ -310,18 +311,19 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsJsValue("data.updateNote.todo").toString, """{"title":"updated title"}""")
   }
 
-  "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
+  //Transactionality
+  "TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
         | title: String!
-        | notes: [Note!]!
+        | notes: [Note]
         |}
         |
         |type Note {
         | id: ID! @unique
         | text: String
-        | todoes: [Todo!]!
+        | todoes: [Todo]
         |}
       """.stripMargin
     }
@@ -376,19 +378,82 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{todo(where:{id: "$todoId"}){title}}""", project, dataContains = """{"todo":{"title":"the title"}}""")
   }
 
+  "NON-TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
+    val project = SchemaDsl.fromString() {
+      """type Todo {
+        | id: ID! @unique
+        | title: String!
+        | notes: [Note]
+        |}
+        |
+        |type Note {
+        | id: ID! @unique
+        | text: String
+        | todoes: [Todo]
+        |}
+      """.stripMargin
+    }
+    database.setup(project)
+
+    val createResult = server.query(
+      """mutation {
+        |  createNote(
+        |    data: {
+        |      text: "Some Text"
+        |      todoes: {
+        |        create: { title: "the title" }
+        |      }
+        |    }
+        |  ){
+        |    id
+        |    todoes { id }
+        |  }
+        |}""".stripMargin,
+      project
+    )
+    val noteId = createResult.pathAsString("data.createNote.id")
+    val todoId = createResult.pathAsString("data.createNote.todoes.[0].id")
+
+    server.queryThatMustFail(
+      s"""
+         |mutation {
+         |  updateNote(
+         |    where: {
+         |      id: "$noteId"
+         |    }
+         |    data: {
+         |      text: "Some Changed Text"
+         |      todoes: {
+         |        update: {
+         |          where: {id: "5beea4aa6183dd734b2dbd9b"},
+         |          data:{title: "updated title"}
+         |        }
+         |      }
+         |    }
+         |  ){
+         |    text
+         |  }
+         |}
+      """.stripMargin,
+      project,
+      errorCode = 3039,
+      errorContains = "No Node for the model Todo with value 5beea4aa6183dd734b2dbd9b for id found."
+    )
+  }
+
   "a many to many relation" should "handle null in unique fields" in {
     val project = SchemaDsl.fromString() {
       """type Note {
         | id: ID! @unique
         | text: String @unique
-        | todos: [Todo!]!
+        | todos: [Todo]
         |}
         |
         |type Todo {
         | id: ID! @unique
         | title: String! @unique
         | unique: String @unique
-        | notes: [Note!]!
+        | notes: [Note]
         |}
       """.stripMargin
     }
@@ -446,20 +511,20 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""".stripMargin }
     database.setup(project)
 
@@ -529,13 +594,13 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -610,13 +675,13 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -699,7 +764,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {
@@ -789,7 +854,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {

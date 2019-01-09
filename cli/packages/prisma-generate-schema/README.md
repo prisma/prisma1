@@ -25,6 +25,12 @@ const openCRUDSchema = generateCRUDSchemaString(modelInSDL)
 
 This section is intended for maintainers.
 
-First, a datamodel is parsed using the [`DatamodelParser`](src/datamodel/parser.ts). Then, an OpenCRUD schema is created using the [`SchemaGenerator`](src/generator/schemaGenerator.ts).
+First, a datamodel is parsed using the [`DatamodelParser`](src/datamodel/parser.ts). Then, an OpenCRUD schema is created using the [`SchemaGenerator`](src/generator/default/schemaGenerator.ts).
 
-The schema generator utilizes several other generators to generate the `mutation`, `query` and `subscription` objects and all corresponding types. A [`Generator`](src/generator/generator.ts) is usually responsible for a single type only but will access other generators to recursively build the schema. All generators which return object types implement lazy evaluation and caching of generated types via their base class. The generators can be configured using dependency injection, if needed, to switch out the implementation for certain types in the schema. All default generators, one for each type that can occur in an OpenCRUD schema, can ge found in the [`DefaultGenerators`](src/generator/defaultGenerators.ts) class.
+The schema generator utilizes several other generators to generate the `mutation`, `query` and `subscription` objects and all corresponding types.
+A [`Generator`](src/generator/generator.ts) is usually responsible for a single type only but will access other generators to recursively build the schema. All generators which return object types implement lazy evaluation and caching of generated types via their base class. The generators can be configured using dependency injection, if needed, to switch out the implementation for certain types in the schema.
+
+All default generators, i.e. generators for a **relational model**, one for each type that can occur in an OpenCRUD schema, can ge found in the [`DefaultGenerators`](src/generator/default/index.ts) class.
+
+All special document generators, i.e. generators for a **document model**, can ge found in the [`DocumentGenerators`](src/generator/document/index.ts) class.
+

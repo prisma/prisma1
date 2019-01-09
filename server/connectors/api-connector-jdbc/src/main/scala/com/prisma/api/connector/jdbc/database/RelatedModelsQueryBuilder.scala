@@ -2,6 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
 import com.prisma.api.helpers.LimitClauseHelper
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
@@ -10,7 +11,7 @@ case class RelatedModelsQueryBuilder(
     slickDatabase: SlickDatabase,
     schemaName: String,
     fromField: RelationField,
-    queryArguments: Option[QueryArguments],
+    queryArguments: QueryArguments,
     relatedNodeIds: Vector[IdGCValue],
     selectedFields: SelectedFields
 ) extends BuilderBase
@@ -30,12 +31,12 @@ case class RelatedModelsQueryBuilder(
   val aliasedTable            = modelTable(relatedModel).as(topLevelAlias)
   val relationTable2          = relationTable(relation).as(relationTableAlias)
   val relatedNodesCondition   = field(name(relationTableAlias, modelRelationSideColumn)).in(placeHolders(relatedNodeIds))
-  val queryArgumentsCondition = buildConditionForFilter(queryArguments.flatMap(_.filter))
+  val queryArgumentsCondition = buildConditionForFilter(queryArguments.filter)
 
   val relatedModelSide = relation.columnForRelationSide(fromField.oppositeRelationSide)
   val parentModelSide  = relation.columnForRelationSide(fromField.relationSide)
 
-  val selectedJooqFields = selectedFields.scalarNonListFields.map(aliasColumn).toVector :+
+  val selectedJooqFields = selectedFields.scalarDbFields.map(aliasColumn).toVector :+
     field(name(relationTableAlias, relatedModelSide)).as(relatedModelAlias) :+
     field(name(relationTableAlias, parentModelSide)).as(parentModelAlias)
 

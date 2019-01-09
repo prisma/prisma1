@@ -5,7 +5,6 @@ import org.scalatest.{FlatSpec, Matchers}
 class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
   "Adding a unique constraint with violating data" should "throw a deploy error" in {
-
     val schema =
       """type Team {
         |  name: String! @unique
@@ -29,7 +28,6 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   }
 
   "Adding a unique constraint without violating data" should "work" in {
-
     val schema =
       """type Team {
         |  name: String! @unique
@@ -51,7 +49,6 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   }
 
   "Adding a unique constraint without violating data" should "work even with multiple nulls" in {
-
     val schema =
       """type Team {
         |  name: String! @unique
@@ -73,7 +70,6 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   }
 
   "Adding a new String field with a unique constraint" should "work" in {
-
     val schema =
       """type Team {
         |  name: String! @unique
@@ -96,7 +92,6 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   }
 
   "Adding a new required String field with a unique constraint" should "error" in {
-
     val schema =
       """type Team {
         |  name: String! @unique
@@ -121,7 +116,6 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   }
 
   "Adding a new Int field with a unique constraint" should "work" in {
-
     val schema =
       """type Team {
         |  name: String! @unique
@@ -141,5 +135,27 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
+  }
+
+  "Removing a unique constraint" should "work" in {
+    val schema =
+      """type Team {
+        |  name: String! @unique
+        |  dummy: String
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createTeam(data:{name:"Bayern", dummy: "String"}){name}}""", project)
+    apiServer.query("""mutation{createTeam(data:{name:"Real", dummy: "String2"}){name}}""", project)
+
+    val schema1 =
+      """type Team {
+        |  name: String!
+        |  dummy: String
+        |}"""
+
+    deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
+    apiServer.query("""mutation{createTeam(data:{name:"Bayern", dummy: "String"}){name}}""", project)
   }
 }

@@ -12,11 +12,8 @@ services:
         databases:
           default:
             connector: mongo
-            migrations: false
-            host: test-db
-            port: 27017
-            user: prisma
-            password: prisma
+            uri: mongodb://prisma:prisma@test-db:27017/?authSource=admin&ssl=false
+
     volumes:
       - ../../../..:/root
       - ~/.ivy2:/root/.ivy2

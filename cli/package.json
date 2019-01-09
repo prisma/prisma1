@@ -14,7 +14,7 @@
     "release-all": "./scripts/release-all.sh"
   },
   "devDependencies": {
-    "husky": "^0.14.3",
-    "lint-staged": "^4.2.3"
+    "husky": "^1.2.0",
+    "lint-staged": "^8.1.0"
   }
 }

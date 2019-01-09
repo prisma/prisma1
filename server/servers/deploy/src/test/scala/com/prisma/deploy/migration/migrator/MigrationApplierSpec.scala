@@ -23,7 +23,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     applied = 0,
     rolledBack = 0,
     steps = Vector(CreateModel("Step1"), CreateModel("Step2"), CreateModel("Step3")),
-    errors = Vector.empty
+    errors = Vector.empty,
+    previousSchema = Schema.empty,
+    rawDataModel = ""
   )
 
   val step1Model = Model.empty.copy(name = "Step1").build(emptySchema)
@@ -38,7 +40,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    testDependencies.projectPersistence.create(Project(projectId, "ownerId", 1, emptySchema)).await
+    testDependencies.projectPersistence.create(Project(projectId, 1, emptySchema)).await
   }
 
   "the applier" should "succeed when all steps succeed" in {

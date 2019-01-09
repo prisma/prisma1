@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -18,14 +18,13 @@ class EmbeddedWhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBa
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo @embedded{
         |   innerString: String!
         |   innerDateTime: DateTime! @unique
         |}"""
-
     }
 
     database.setup(project)
@@ -86,7 +85,7 @@ class EmbeddedWhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBa
         |   id: ID! @unique
         |   outerString: String!
         |   outerDateTime: DateTime! @unique
-        |   todos: [Todo!]!
+        |   todos: [Todo]
         |}
         |
         |type Todo @embedded{

@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.ApiConnectorCapability.{EmbeddedScalarListsCapability, EmbeddedTypesCapability}
 import com.prisma.api.connector.LogicalKeyWords._
 import com.prisma.api.connector.{TrueFilter, _}
 import com.prisma.api.mutations.BatchPayload
@@ -9,6 +8,7 @@ import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
 import com.prisma.gc_values._
 import com.prisma.shared.models
+import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.util.coolArgs.GCAnyConverter
 import sangria.schema.{Field => SangriaField, _}
@@ -20,7 +20,7 @@ class ObjectTypeBuilder(
     nodeInterface: Option[InterfaceType[ApiUserContext, PrismaNode]] = None,
     withRelations: Boolean = true,
     onlyId: Boolean = false,
-    capabilities: Set[ApiConnectorCapability]
+    capabilities: ConnectorCapabilities
 )(implicit ec: ExecutionContext)
     extends SangriaExtensions {
 
@@ -49,12 +49,11 @@ class ObjectTypeBuilder(
       name = model.name,
       nodeType = modelObjectTypes(model.name),
       connectionFields = {
-
         List(
           SangriaField(
             "aggregate",
             aggregateTypeForModel(model),
-            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[PrismaNode]]) => ctx.value.parent.args.getOrElse(QueryArguments.empty)
+            resolve = (ctx: Context[ApiUserContext, IdBasedConnection[PrismaNode]]) => ctx.value.parent.args
           )
         )
       }
@@ -68,7 +67,7 @@ class ObjectTypeBuilder(
         SangriaField(
           "count",
           IntType,
-          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, Some(ctx.value))
+          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, ctx.value)
         )
       )
     )
@@ -89,12 +88,9 @@ class ObjectTypeBuilder(
           .map(mapClientField(model))
       },
       interfaces = {
-        val idFieldHasRightType = model.idField.exists(f => f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid)
-        if (model.hasVisibleIdField && idFieldHasRightType) {
-          nodeInterface.toList
-        } else {
-          List.empty
-        }
+        val idFieldHasRightType = model.idField.exists(f =>
+          f.name == ReservedFields.idFieldName && (f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid))
+        if (model.hasVisibleIdField && idFieldHasRightType) nodeInterface.toList else List.empty
       },
       instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
         value match {
@@ -146,10 +142,11 @@ class ObjectTypeBuilder(
   }
 
   def mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = field match {
-    case f if f.isHidden               => List.empty
-    case _: ScalarField                => List.empty
-    case f: RelationField if f.isList  => mapToListConnectionArguments(f.relatedModel_!)
-    case f: RelationField if !f.isList => List.empty
+    case f if f.isHidden                                              => List.empty
+    case _: ScalarField                                               => List.empty
+    case f: RelationField if f.isList && !f.relatedModel_!.isEmbedded => mapToListConnectionArguments(f.relatedModel_!)
+    case f: RelationField if f.isList && f.relatedModel_!.isEmbedded  => List.empty
+    case f: RelationField if !f.isList                                => List.empty
   }
 
   def mapToListConnectionArguments(model: Model): List[Argument[Option[Any]]] = {
@@ -157,7 +154,7 @@ class ObjectTypeBuilder(
     val skipArgument = Argument("skip", OptionInputType(IntType))
 
     List(
-      whereArgument(model, project),
+      whereArgument(model, project, capabilities = capabilities),
       orderByArgument(model).asInstanceOf[Argument[Option[Any]]],
       skipArgument.asInstanceOf[Argument[Option[Any]]],
       IdBasedConnection.Args.After.asInstanceOf[Argument[Option[Any]]],
@@ -175,6 +172,113 @@ class ObjectTypeBuilder(
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field)))
   }
 
+  def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): QueryArguments = {
+    extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = false)
+  }
+
+  def extractQueryArgumentsFromContextForSubscription(model: Model, ctx: Context[_, Unit]): QueryArguments = {
+    extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = true)
+  }
+
+  private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): QueryArguments = {
+    def convertCursorToGcValue(s: String) = {
+      model.idField_!.typeIdentifier match {
+        case TypeIdentifier.Cuid => StringIdGCValue(s)
+        case TypeIdentifier.UUID => UuidGCValue.parse_!(s)
+        case TypeIdentifier.Int  => IntGCValue(s.toInt)
+        case x                   => sys.error(s"This must not happen. $x is not a valid type identifier for an id field.")
+      }
+    }
+    val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
+    val filterOpt                              = rawFilterOpt.map(FilterHelper.generateFilterElement(_, model, isSubscriptionFilter))
+    val skipOpt                                = ctx.argOpt[Int]("skip")
+    val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
+    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name).map(convertCursorToGcValue)
+    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name).map(convertCursorToGcValue)
+    val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
+    val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
+
+    QueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt)
+  }
+
+  def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
+      ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
+
+    val item: PrismaNode = unwrapDataItemFromContext(ctx)
+
+    field match {
+      case f: ScalarField if f.isList => //Fixme have the way to resolve the field on the field itself
+        if (capabilities.has(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
+
+      case f: ScalarField if !f.isList =>
+        item.data.map(field.name).value
+
+      case f: RelationField if f.isList && f.relation.isInlineRelation =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+
+        f.relationIsInlinedInParent match {
+          case true =>
+            item.data.map.get(f.name) match {
+              case Some(list: ListGCValue) =>
+                val existingFilter: Filter = arguments.filter.getOrElse(Filter.empty)
+                val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
+                val newQueryArguments      = arguments.copy(filter = Some(newFilter))
+                DeferredValue(ManyModelDeferred(f.relatedModel_!, newQueryArguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+
+              case _ => Vector.empty[PrismaNode]
+            }
+          case false =>
+            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+        }
+
+      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
+        item.data.map(f.name) match {
+          case ListGCValue(values) => values.map(v => PrismaNode(v.asRoot.idFieldByName(f.relatedModel_!.idField_!.name), v.asRoot))
+          case NullGCValue         => Vector.empty[PrismaNode]
+          case x                   => sys.error("not handled yet" + x)
+        }
+
+      case f: RelationField if !f.isList && f.relation.isInlineRelation =>
+        f.relationIsInlinedInParent match {
+          case true =>
+            item.data.map.get(f.name) match {
+              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id))
+              case _                   => None
+            }
+
+          case false =>
+            FromOneDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
+        }
+
+      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
+        item.data.map(field.name) match {
+          case NullGCValue => None
+          case value       => Some(PrismaNode(value.asRoot.idFieldByName(f.relatedModel_!.idField_!.name), value.asRoot))
+        }
+
+      case f: RelationField if f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+
+      case f: RelationField if !f.isList =>
+        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
+        FromOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+    }
+  }
+
+  def unwrapDataItemFromContext[C <: ApiUserContext](ctx: Context[C, PrismaNode]) = {
+    // note: ctx.value is sometimes of type Some[DataItem] at runtime even though the type is DataItem
+    //metacounts of relations being required or not is one cause see RequiredRelationMetaQueriesSpec
+    // todo: figure out why and fix issue at source
+    ctx.value.asInstanceOf[Any] match {
+      case Some(x: PrismaNode) => x
+      case x: PrismaNode       => x
+      case None                => throw new Exception("Resolved DataItem was None. This is unexpected - please investigate why and fix.")
+    }
+  }
+}
+
+object FilterHelper {
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
     val filterArguments = new FilterArguments(model, isSubscriptionFilter)
 
@@ -191,13 +295,13 @@ class ObjectTypeBuilder(
         def isFilterList(value: Seq[Any], filterName: String): Boolean         = value.nonEmpty && value.head.isInstanceOf[Map[_, _]] && filter.name == filterName
         def getGCValue(value: Any): GCValue                                    = GCAnyConverter(field.get.typeIdentifier, isList = false).toGCValue(unwrapSome(value)).get
         def scalarFilter(condition: ScalarCondition): ScalarFilter             = ScalarFilter(asScalarField, condition)
-        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(key, field.get, condition)
+        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(asScalarField, condition)
         def generateSubFilter(value: Map[_, _], model: Model): Filter          = generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
         def generateSubFilters(values: Seq[Any]): Vector[Filter]               = values.map(x => generateSubFilter(x.asInstanceOf[Map[String, Any]], model)).toVector
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
           RelationFilter(asRelationField, generateSubFilter(value, asRelationField.relatedModel_!), condition)
 
-        value match {
+        unwrapSome(value) match {
           //-------------------------RECURSION-----------------------------
           case value: Map[_, _] if isLogicFilter(key) || (isSubscriptionFilter && key == "node") => generateSubFilter(value, model)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)
@@ -210,7 +314,7 @@ class ObjectTypeBuilder(
           case value: Seq[Any] if isFilterList(value, filterName = "OR")                         => OrFilter(generateSubFilters(value))
           case Seq() if filter.name == "NOT"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "NOT")                        => NotFilter(generateSubFilters(value))
-          case value: Seq[Any] if isFilterList(value, filterName = "node")                       => NodeFilter(generateSubFilters(value))
+
           //--------------------------ANCHORS------------------------------
           case values: Seq[Any] if isScalarListFilter(filterName = "_contains_every") => scalarListFilter(ListContainsEvery(values.map(getGCValue).toVector))
           case values: Seq[Any] if isScalarListFilter(filterName = "_contains_some")  => scalarListFilter(ListContainsSome(values.map(getGCValue).toVector))
@@ -244,72 +348,5 @@ class ObjectTypeBuilder(
   def unwrapSome(value: Any): Any = value match {
     case Some(x) => x
     case x       => x
-  }
-
-  def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): Option[QueryArguments] = {
-    extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = false)
-  }
-
-  def extractQueryArgumentsFromContextForSubscription(model: Model, ctx: Context[_, Unit]): Option[QueryArguments] = {
-    extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = true)
-  }
-
-  private def extractQueryArgumentsFromContext(model: Model, ctx: Context[_, Unit], isSubscriptionFilter: Boolean): Option[QueryArguments] = {
-    val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
-    val skipOpt                                = ctx.argOpt[Int]("skip")
-    val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
-    val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name)
-    val beforeOpt                              = ctx.argOpt[String](IdBasedConnection.Args.Before.name)
-    val firstOpt                               = ctx.argOpt[Int](IdBasedConnection.Args.First.name)
-    val lastOpt                                = ctx.argOpt[Int](IdBasedConnection.Args.Last.name)
-
-    Some(QueryArguments(skipOpt, afterOpt, firstOpt, beforeOpt, lastOpt, filterOpt, orderByOpt))
-  }
-
-  def mapToOutputResolve[C <: ApiUserContext](model: models.Model, field: models.Field)(
-      ctx: Context[C, PrismaNode]): sangria.schema.Action[ApiUserContext, _] = {
-
-    val item: PrismaNode = unwrapDataItemFromContext(ctx)
-
-    field match {
-      case f: ScalarField if f.isList =>
-        if (capabilities.contains(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
-
-      case f: ScalarField if !f.isList =>
-        item.data.map(field.name).value
-
-      case f: RelationField if f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
-        item.data.map(field.name) match {
-          case ListGCValue(values) => values.map(v => PrismaNode(CuidGCValue.dummy, v.asRoot))
-          case NullGCValue         => Vector.empty[PrismaNode]
-          case x                   => sys.error("not handled yet" + x)
-        }
-
-      case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded && capabilities.contains(EmbeddedTypesCapability) =>
-        item.data.map(field.name) match {
-          case NullGCValue => None
-          case value       => Some(PrismaNode(CuidGCValue.dummy, value.asRoot))
-        }
-
-      case f: RelationField if f.isList =>
-        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
-
-      case f: RelationField if !f.isList =>
-        val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
-    }
-  }
-
-  def unwrapDataItemFromContext[C <: ApiUserContext](ctx: Context[C, PrismaNode]) = {
-    // note: ctx.value is sometimes of type Some[DataItem] at runtime even though the type is DataItem
-    //metacounts of relations being required or not is one cause see RequiredRelationMetaQueriesSpec
-    // todo: figure out why and fix issue at source
-    ctx.value.asInstanceOf[Any] match {
-      case Some(x: PrismaNode) => x
-      case x: PrismaNode       => x
-      case None                => throw new Exception("Resolved DataItem was None. This is unexpected - please investigate why and fix.")
-    }
   }
 }

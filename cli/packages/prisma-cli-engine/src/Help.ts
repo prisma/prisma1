@@ -4,19 +4,17 @@ import { Output } from './Output/index'
 import { Config } from './Config'
 import { linewrap } from './util'
 import chalk from 'chalk'
+import { padStart, maxBy } from 'lodash'
 
 function renderList(items: string[][]): string {
-  const S = require('string')
-  const max = require('lodash.maxby')
-
-  const maxLength = max(items, '[0].length')[0].length
+  const maxLength = maxBy(items, '[0].length')![0].length
   const lines = items.map(i => {
     let left = i[0]
     let right = i[1]
     if (!right) {
       return left
     }
-    left = `${S(left).padRight(maxLength)}`
+    left = `${padStart(left, maxLength)}`
     right = linewrap(maxLength + 2, right)
     return `${left}    ${right}`
   })

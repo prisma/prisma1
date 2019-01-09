@@ -1,43 +1,22 @@
 import {
-  AccountInfo,
   AuthenticateCustomerPayload,
-  FunctionInfo,
-  FunctionLog,
-  PAT,
   Project,
-  ProjectDefinition,
-  ProjectInfo,
-  RemoteProject,
   SimpleProjectInfo,
   CloudTokenRequestPayload,
 } from '../types/common'
 
 import { GraphQLClient } from 'graphql-request'
-import { omit, flatMap, flatten } from 'lodash'
+import { flatten } from 'lodash'
 import { Config } from '../Config'
-import { getFastestRegion } from './ping'
 import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
 import { User, Migration, DeployPayload, Workspace, Service } from './types'
-import boolean from '../Flags/boolean'
 import * as opn from 'opn'
-import { concatName } from '../../../prisma-yml/dist/PrismaDefinition'
+import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 
 const debug = require('debug')('client')
-
-const REMOTE_PROJECT_FRAGMENT = `
-  fragment RemoteProject on Project {
-    id
-    name
-    schema
-    alias
-    region
-    isEjected
-    projectDefinitionWithFileContent
-  }
-`
 
 const MIGRATION_FRAGMENT = `
 fragment MigrationFragment on Migration {
@@ -437,9 +416,9 @@ export class Client {
       }
     }
 
-    const { requestCloudToken: { secret } } = await this.cloudClient.request<
-      RequestCloudTokenPayload
-    >(mutation)
+    const {
+      requestCloudToken: { secret },
+    } = await this.cloudClient.request<RequestCloudTokenPayload>(mutation)
 
     return secret
   }
@@ -633,7 +612,9 @@ export class Client {
       }
     }`
 
-    const { me: { memberships } } = await this.cloudClient.request<{
+    const {
+      me: { memberships },
+    } = await this.cloudClient.request<{
       me: {
         memberships: Array<{ workspace: Workspace }>
       }
@@ -673,7 +654,9 @@ export class Client {
       throw new Error(`Could not create service ${name}`)
     }
 
-    const { addProject: { project } } = result
+    const {
+      addProject: { project },
+    } = result
 
     // TODO set project definition, should be possibility in the addProject mutation
 
@@ -697,7 +680,7 @@ export class Client {
 
       await this.client.request(mutation, {
         input: {
-          name: concatName(cluster, name, workspaceSlug),
+          name: concatName(cluster as any, name, workspaceSlug),
           stage,
         },
       })

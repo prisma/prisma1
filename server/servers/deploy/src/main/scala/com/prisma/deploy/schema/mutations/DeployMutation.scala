@@ -1,15 +1,18 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{DeployConnector, InferredTables, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector._
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
 import com.prisma.deploy.validation.DestructiveChanges
+import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema, UpdateSecrets}
+import com.prisma.shared.models.ConnectorCapability.{IntrospectionCapability, LegacyDataModelCapability}
+import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.future.FutureUtils.FutureOr
 import org.scalactic.{Bad, Good, Or}
@@ -28,11 +31,16 @@ case class DeployMutation(
     schemaMapper: SchemaMapper,
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    deployConnector: DeployConnector,
-    migrator: Migrator
+    migrator: Migrator,
+    functionValidator: FunctionValidator,
+    invalidationPublisher: PubSubPublisher[String],
+    capabilities: ConnectorCapabilities,
+    clientDbQueries: ClientDbQueries,
+    databaseIntrospectionInferrer: DatabaseIntrospectionInferrer,
+    fieldRequirements: FieldRequirementsInterface,
+    isActive: Boolean
 )(
-    implicit ec: ExecutionContext,
-    dependencies: DeployDependencies
+    implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload]
     with AwaitUtils {
 
@@ -70,15 +78,20 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
-    SchemaSyntaxValidator(args.types, isActive = deployConnector.isActive).validateSyntax
+    val validator = if (capabilities.has(LegacyDataModelCapability)) {
+      LegacyDataModelValidator
+    } else {
+      DataModelValidatorImpl
+    }
+    validator.validate(args.types, fieldRequirements, capabilities)
   }
 
   private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
-    deployConnector.databaseIntrospectionInferrer(project.id).infer().map(Good(_))
+    databaseIntrospectionInferrer.infer().map(Good(_))
   }
 
   private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (deployConnector.isPassive) {
+    if (!isActive && capabilities.has(IntrospectionCapability)) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
         Future.successful(Good(()))
@@ -91,7 +104,7 @@ case class DeployMutation(
   }
 
   private def inferMigrationSteps(nextSchema: Schema, schemaMapping: SchemaMapping): Future[Vector[MigrationStep] Or Vector[DeployError]] = {
-    val steps = if (deployConnector.isActive) {
+    val steps = if (isActive) {
       migrationStepsInferrer.infer(project.schema, nextSchema, schemaMapping)
     } else {
       Vector.empty
@@ -100,11 +113,11 @@ case class DeployMutation(
   }
 
   private def checkForDestructiveChanges(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Vector[DeployWarning] Or Vector[DeployError]] = {
-    DestructiveChanges(deployConnector, project, nextSchema, steps).check
+    DestructiveChanges(clientDbQueries, project, nextSchema, steps).check
   }
 
   private def getFunctionModels(nextSchema: Schema, fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {
-    dependencies.functionValidator.validateFunctionInputs(nextSchema, fns)
+    functionValidator.validateFunctionInputs(nextSchema, fns)
   }
 
   private def performDeployment(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Good[DeployMutationPayload]] = {
@@ -112,7 +125,7 @@ case class DeployMutation(
       secretsStep <- updateSecretsIfNecessary()
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
     } yield {
-      dependencies.invalidationPublisher.publish(Only(project.id), project.id)
+      invalidationPublisher.publish(Only(project.id), project.id)
       Good(DeployMutationPayload(args.clientMutationId, migration, errors = Vector.empty, warnings = Vector.empty))
     }
   }
@@ -126,21 +139,17 @@ case class DeployMutation(
   }
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
-    val migrationNeeded = if (deployConnector.isActive) {
-      steps.nonEmpty || functions.nonEmpty
-    } else {
-      project.schema != nextSchema
-    }
-    val isNotDryRun = !args.dryRun.getOrElse(false)
+    val migrationNeeded = steps.nonEmpty || functions.nonEmpty || project.schema != nextSchema
+    val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
-      migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))
+      migrator.schedule(project.id, nextSchema, steps, functions, args.types).map(Some(_))
     } else {
       Future.successful(None)
     }
   }
 
-  private def invalidateSchema(): Unit = dependencies.invalidationPublisher.publish(Only(project.id), project.id)
+  private def invalidateSchema(): Unit = invalidationPublisher.publish(Only(project.id), project.id)
 }
 
 case class DeployMutationInput(

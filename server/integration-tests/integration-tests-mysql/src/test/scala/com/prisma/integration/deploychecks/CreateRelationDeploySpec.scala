@@ -29,7 +29,7 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
          |
          |type B {
          | name: String! @unique
-         | a: [A!]!
+         | a: [A]
          |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)

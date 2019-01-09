@@ -1,0 +1,16 @@
+{
+  "extends": ["tslint:latest", "tslint-eslint-rules", "tslint-config-prettier"],
+  "rules": {
+    "semicolon": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "interface-name": false,
+    "member-access": false,
+    "no-object-literal-type-assertion": false,
+    "no-console": [false],
+    "no-var-requires": null,
+    "no-submodule-imports": null,
+    "no-invalid-template-strings": null,
+    "no-implicit-dependencies": null
+  }
+}

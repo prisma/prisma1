@@ -51,7 +51,7 @@ export class PrismaDefinitionClass {
     this.out = out
     this.envVars = envVars
   }
-  async load(args: Args, envPath?: string) {
+  async load(args: Args, envPath?: string, graceful?: boolean) {
     if (envPath) {
       if (!fs.pathExistsSync(envPath)) {
         envPath = path.join(process.cwd(), envPath)
@@ -63,7 +63,7 @@ export class PrismaDefinitionClass {
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      await this.loadDefinition(args)
+      await this.loadDefinition(args, graceful)
 
       this.validate()
     } else {
@@ -73,12 +73,13 @@ export class PrismaDefinitionClass {
     }
   }
 
-  private async loadDefinition(args) {
+  private async loadDefinition(args: any, graceful?: boolean) {
     const { definition, rawJson } = await readDefinition(
       this.definitionPath!,
       args,
       this.out,
       this.envVars,
+      graceful,
     )
     this.rawEndpoint = rawJson.endpoint
     this.definition = definition
@@ -218,16 +219,18 @@ and execute ${chalk.bold.green(
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         debug('making cluster here')
-        const existingCluster = this.env.clusters.find(
-          c => c.baseUrl.toLowerCase() === clusterBaseUrl,
-        )
+        const existingCluster = !process.env.PRISMA_MANAGEMENT_API_SECRET
+          ? this.env.clusters.find(
+              c => c.baseUrl.toLowerCase() === clusterBaseUrl,
+            )
+          : null
         const cluster =
           existingCluster ||
           new Cluster(
             this.out!,
             clusterName,
             clusterBaseUrl,
-            shared ? this.env.cloudSessionKey : undefined,
+            shared || isPrivate ? this.env.cloudSessionKey : undefined,
             local,
             shared,
             isPrivate,

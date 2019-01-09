@@ -2,19 +2,19 @@ package com.prisma.api
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.api.connector.{ApiConnector, ApiConnectorCapability, DataResolver, DatabaseMutactionExecutor}
+import com.prisma.api.connector.{ApiConnector, DataResolver, DatabaseMutactionExecutor}
 import com.prisma.api.mutactions.{DatabaseMutactionVerifier, SideEffectMutactionExecutor}
 import com.prisma.api.project.ProjectFetcher
 import com.prisma.api.resolver.DeferredResolverImpl
 import com.prisma.api.schema.{ApiUserContext, SchemaBuilder}
-import com.prisma.api.server.{GraphQlRequestHandler, GraphQlRequestHandlerImpl, RequestHandler}
+import com.prisma.api.server.QueryExecutor
 import com.prisma.auth.{Auth, AuthImpl}
 import com.prisma.config.PrismaConfig
 import com.prisma.errors.{BugsnagErrorReporter, ErrorReporter}
 import com.prisma.messagebus.{PubSub, PubSubPublisher, PubSubSubscriber, QueuePublisher}
 import com.prisma.profiling.JvmProfiler
 import com.prisma.shared.messages.SchemaInvalidatedMessage
-import com.prisma.shared.models.{Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import com.prisma.subscriptions.Webhook
 import com.prisma.utils.await.AwaitUtils
 
@@ -35,14 +35,13 @@ trait ApiDependencies extends AwaitUtils {
   def sideEffectMutactionExecutor: SideEffectMutactionExecutor
   def mutactionVerifier: DatabaseMutactionVerifier
   def projectIdEncoder: ProjectIdEncoder
-  def capabilities: Set[ApiConnectorCapability] = apiConnector.capabilities
+  def capabilities: ConnectorCapabilities = apiConnector.capabilities
 
-  implicit lazy val executionContext: ExecutionContext  = system.dispatcher
-  implicit lazy val reporter: ErrorReporter             = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
-  lazy val graphQlRequestHandler: GraphQlRequestHandler = GraphQlRequestHandlerImpl(println)
-  lazy val auth: Auth                                   = AuthImpl
-  lazy val requestHandler: RequestHandler               = RequestHandler(projectFetcher, apiSchemaBuilder, graphQlRequestHandler, auth, println)
-  lazy val maxImportExportSize: Int                     = 1000000
+  implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  implicit lazy val reporter: ErrorReporter            = BugsnagErrorReporter(sys.env.getOrElse("BUGSNAG_API_KEY", ""))
+  lazy val auth: Auth                                  = AuthImpl
+  lazy val queryExecutor: QueryExecutor                = QueryExecutor()
+  lazy val maxImportExportSize: Int                    = 1000000
 
   val sssEventsPubSub: PubSub[String]
   lazy val sssEventsPublisher: PubSubPublisher[String] = sssEventsPubSub

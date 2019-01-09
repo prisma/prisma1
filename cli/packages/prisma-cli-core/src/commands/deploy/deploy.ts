@@ -1,13 +1,11 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
 import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
-import * as chokidar from 'chokidar'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
-import * as semver from 'semver'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName, defaultDockerCompose } from '../../util'
 import * as sillyname from 'sillyname'
@@ -41,10 +39,6 @@ ${chalk.gray(
       char: 'f',
       description: 'Accept data loss caused by schema changes',
     }),
-    watch: flags.boolean({
-      char: 'w',
-      description: 'Watch for changes',
-    }),
     new: flags.boolean({
       char: 'n',
       description: 'Force interactive mode to select the cluster',
@@ -72,7 +66,7 @@ ${chalk.gray(
     /**
      * Get Args
      */
-    const { force, watch } = this.flags
+    const { force } = this.flags
     const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
@@ -182,30 +176,6 @@ ${chalk.gray(
       projectNew,
       workspace!,
     )
-
-    if (watch) {
-      this.out.log('Watching for change...')
-      chokidar
-        .watch(this.config.definitionDir, { ignoreInitial: true })
-        .on('all', () => {
-          setImmediate(async () => {
-            if (!this.deploying) {
-              await this.definition.load(this.flags)
-              await this.deploy(
-                stage,
-                serviceName,
-                cluster,
-                cluster.name,
-                force,
-                dryRun,
-                false,
-                workspace!,
-              )
-              this.out.log('Watching for change...')
-            }
-          })
-        })
-    }
   }
 
   private getSillyName() {
@@ -305,10 +275,22 @@ ${chalk.gray(
         )
 
         if (migration.errors && migration.errors.length > 0) {
-          await this.out.error(migration.errors.join('\n'))
+          this.out.action.stop(prettyTime(Date.now() - before))
+          throw new Error(
+            `The Migration failed and has not been performed. This is very likely not a transient issue.\n` +
+              migration.errors.join('\n'),
+          )
         }
 
-        if (migration.applied === migrationResult.migration.steps.length) {
+        /**
+         * Read more here about the different deployment statuses https://github.com/prisma/prisma/issues/3326
+         */
+        if (
+          migration.applied === migrationResult.migration.steps.length ||
+          ['SUCCESS', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE'].includes(
+            migration.status,
+          )
+        ) {
           done = true
         }
         this.out.action.status = this.getProgress(
@@ -367,7 +349,7 @@ ${chalk.gray(
         this.out.log(stdout)
       }
       const { status, error } = child
-      if (error || status != 0) {
+      if (error || status !== 0) {
         if (error) {
           this.out.log(chalk.red(error.message))
         }
@@ -408,7 +390,9 @@ ${chalk.gray(
       this.definition.definition!.seed!.run
     if (!seedSource) {
       this.out.log(
-        chalk.yellow('Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional')
+        chalk.yellow(
+          'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional',
+        ),
       )
     } else {
       this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)

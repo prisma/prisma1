@@ -1,13 +1,14 @@
 package com.prisma.api.mutations.nonEmbedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "One2One relations" should "only allow one item per side" in {
 
@@ -77,7 +78,8 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
     res6.toString should be("""{"data":{"owner":{"ownerName":"gargamel","cat":{"catName":"garfield"}}}}""")
   }
 
-  "Required One2One relations" should "throw an error if an update would leave one item without a partner" in {
+  //Fixme this tests transactionality as well
+  "Required One2One relations" should "throw an error if an update would leave one item without a partner" taggedAs (IgnoreMongo) in {
 
     val project = SchemaDsl.fromString() {
       """type Owner{

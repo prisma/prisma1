@@ -1,14 +1,13 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, NonEmbeddedScalarListCapability}
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
+import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities: Set[ApiConnectorCapability] = Set(JoinRelationsCapability, NonEmbeddedScalarListCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability, ScalarListsCapability)
   //region top level upserts
 
   "An upsert on the top level" should "only execute the scalar lists of the correct create branch" in {
@@ -17,14 +16,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -53,14 +52,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -104,14 +103,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
+        |   listInts: [Int]
         |   todo: Todo
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -148,15 +147,15 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
-        |   lists: [List!]!
+        |   todoInts: [Int]
+        |   lists: [List]
         |}"""
     }
 
@@ -189,15 +188,15 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
-        |   lists: [List!]!
+        |   todoInts: [Int]
+        |   lists: [List]
         |}"""
     }
 
@@ -230,14 +229,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }
@@ -271,14 +270,14 @@ class NonEmbeddedUpsertListDesignSpec extends FlatSpec with Matchers with ApiSpe
       """type List{
         |   id: ID! @unique
         |   uList: String @unique
-        |   listInts: [Int!]!
-        |   todoes: [Todo!]!
+        |   listInts: [Int]
+        |   todoes: [Todo]
         |}
         |
         |type Todo{
         |   id: ID! @unique
         |   uTodo: String @unique
-        |   todoInts: [Int!]!
+        |   todoInts: [Int]
         |   list: List
         |}"""
     }

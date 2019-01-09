@@ -25,10 +25,16 @@ object RootGCValue {
     RootGCValue(empty)
   }
 }
+
 case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
     case Some(id) => id.asInstanceOf[IdGCValue]
     case None     => sys.error("There was no field with name 'id'.")
+  }
+
+  def idFieldByName(name: String) = map.get(name) match {
+    case Some(id) => id.asInstanceOf[IdGCValue]
+    case None     => sys.error(s"There was no id field with name '$name'.")
   }
 
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
@@ -58,7 +64,7 @@ object ListGCValue {
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def isEmpty: Boolean   = values.isEmpty
   def size: Int          = values.size
-  def value: Vector[Any] = values.map(_.value)
+  def value: Vector[Any] = values.collect { case x if !x.isInstanceOf[RootGCValue] => x.value }
 
   def ++(other: ListGCValue) = ListGCValue(this.values ++ other.values)
 }
@@ -73,10 +79,10 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
 
-sealed trait IdGCValue                extends LeafGCValue
-case class CuidGCValue(value: String) extends IdGCValue
-case class UuidGCValue(value: UUID)   extends IdGCValue
-case class IntGCValue(value: Int)     extends IdGCValue
+sealed trait IdGCValue                    extends LeafGCValue
+case class StringIdGCValue(value: String) extends IdGCValue
+case class UuidGCValue(value: UUID)       extends IdGCValue
+case class IntGCValue(value: Int)         extends IdGCValue
 
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
@@ -85,7 +91,7 @@ object UuidGCValue {
   def random: UuidGCValue = UuidGCValue(UUID.randomUUID())
 }
 
-object CuidGCValue {
-  def random: CuidGCValue = CuidGCValue(Cuid.createCuid())
-  def dummy: CuidGCValue  = CuidGCValue("")
+object StringIdGCValue {
+  def random: StringIdGCValue = StringIdGCValue(Cuid.createCuid())
+  def dummy: StringIdGCValue  = StringIdGCValue("")
 }

@@ -292,14 +292,14 @@ For the following prompts, you can simply hit **Enter** to choose the suggested 
 
 After those selections, the CLI creates a new directory called `my-prisma-service` with your project files.
 
-Before deploying your service with `prisma deploy`, you need to ensure the Prisma CLI is authorized to access your Prisma server. To do so, you need to set the `MANAGEMENT_API_SECRET` environment variable in your shell. The CLI will read this environment variable and generate a JWT based on it which it uses to authenticate against the server.
+Before deploying your service with `prisma deploy`, you need to ensure the Prisma CLI is authorized to access your Prisma server. To do so, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable in your shell. The CLI will read this environment variable and generate a JWT based on it which it uses to authenticate against the server.
 
 <Instruction>
 
-Set the `MANAGEMENT_API_SECRET` environment variable in your terminal:
+Set the `PRISMA_MANAGEMENT_API_SECRET` environment variable in your terminal:
 
 ```bash
-export MANAGEMENT_API_SECRET="protecting-my-prisma-server"
+export PRISMA_MANAGEMENT_API_SECRET="protecting-my-prisma-server"
 ```
 
 </Instruction>

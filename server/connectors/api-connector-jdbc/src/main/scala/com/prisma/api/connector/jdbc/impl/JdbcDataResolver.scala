@@ -2,7 +2,8 @@ package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.Metrics
-import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values._
 import com.prisma.shared.models._
 
@@ -20,7 +21,7 @@ case class JdbcDataResolver(
     slickDatabase = slickDatabase
   )
 
-  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
     val query = queryBuilder.getModelForGlobalId(project.schema, globalId)
     performWithTiming("getModelForGlobalId", slickDatabase.database.run(query))
   }
@@ -29,7 +30,7 @@ case class JdbcDataResolver(
     performWithTiming("getNodeByWhere", slickDatabase.database.run(queryBuilder.getNodeByWhere(where, selectedFields)))
   }
 
-  override def getNodes(model: Model, args: Option[QueryArguments], selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
+  override def getNodes(model: Model, args: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
     val query = queryBuilder.getNodes(model, args, selectedFields)
     performWithTiming("loadModelRowsForExport", slickDatabase.database.run(query))
   }
@@ -37,14 +38,14 @@ case class JdbcDataResolver(
   override def getRelatedNodes(
       fromField: RelationField,
       fromNodeIds: Vector[IdGCValue],
-      args: Option[QueryArguments],
+      args: QueryArguments,
       selectedFields: SelectedFields
   ): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.getRelatedNodes(fromField, fromNodeIds, args, selectedFields)
     performWithTiming("resolveByRelation", slickDatabase.database.run(query))
   }
 
-  override def getScalarListValues(model: Model, field: ScalarField, args: Option[QueryArguments] = None): Future[ResolverResult[ScalarListValues]] = {
+  override def getScalarListValues(model: Model, field: ScalarField, args: QueryArguments): Future[ResolverResult[ScalarListValues]] = {
     val query = queryBuilder.getScalarListValues(model, field, args)
     performWithTiming("loadListRowsForExport", slickDatabase.database.run(query))
   }
@@ -54,7 +55,7 @@ case class JdbcDataResolver(
     performWithTiming("batchResolveScalarList", slickDatabase.database.run(query))
   }
 
-  override def getRelationNodes(relationId: String, args: Option[QueryArguments] = None): Future[ResolverResult[RelationNode]] = {
+  override def getRelationNodes(relationId: String, args: QueryArguments): Future[ResolverResult[RelationNode]] = {
     val relation = project.schema.relations.find(_.relationTableName == relationId).get
     val query    = queryBuilder.getRelationNodes(relation, args)
     performWithTiming("loadRelationRowsForExport", slickDatabase.database.run(query))
@@ -69,7 +70,7 @@ case class JdbcDataResolver(
     performWithTiming("countByTable", slickDatabase.database.run(query))
   }
 
-  override def countByModel(model: Model, args: Option[QueryArguments]) = {
+  override def countByModel(model: Model, args: QueryArguments) = {
     val query = queryBuilder.countFromModel(model, args)
     performWithTiming("countByModel", slickDatabase.database.run(query))
   }
