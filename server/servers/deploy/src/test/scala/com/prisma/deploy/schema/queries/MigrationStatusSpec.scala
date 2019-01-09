@@ -51,7 +51,8 @@ class MigrationStatusSpec extends FlatSpec with Matchers with ActiveDeploySpecBa
               "TestField"
             )
           ),
-          functions = Vector.empty
+          functions = Vector.empty,
+          rawDataModel = ""
         )
       )
       .await
