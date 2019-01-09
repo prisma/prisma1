@@ -152,11 +152,8 @@ lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient),
-    scalacOptions := {
-      val oldOptions = scalacOptions.value
-      oldOptions.filterNot(_ == "-Xfatal-warnings")
-    })
+    libraryDependencies ++= Seq(mongoClient)
+  )
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)

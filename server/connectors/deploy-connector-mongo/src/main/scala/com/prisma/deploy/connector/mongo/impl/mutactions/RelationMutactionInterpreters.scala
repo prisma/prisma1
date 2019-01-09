@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mongo.impl.mutactions
 import com.prisma.deploy.connector.mongo.database.MongoDeployDatabaseMutationBuilder._
 import com.prisma.deploy.connector.mongo.database.NoAction
 import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
-import com.prisma.deploy.connector.{CreateRelationTable, DeleteRelationTable, RenameRelationTable}
+import com.prisma.deploy.connector.{CreateRelationTable, DeleteRelationTable, UpdateRelationTable}
 import com.prisma.shared.models.Relation
 
 import scala.concurrent.Future
@@ -16,6 +16,12 @@ object CreateRelationInterpreter extends MongoMutactionInterpreter[CreateRelatio
 object DeleteRelationInterpreter extends MongoMutactionInterpreter[DeleteRelationTable] {
   override def execute(mutaction: DeleteRelationTable)  = NoAction.unit //gets dropped with collection
   override def rollback(mutaction: DeleteRelationTable) = NoAction.unit //Indexhelper.add(mutaction.relation)
+}
+
+//Fixme again: Index Renaming does not work -> see Rename Model
+object UpdateRelationInterpreter extends MongoMutactionInterpreter[UpdateRelationTable] {
+  override def execute(mutaction: UpdateRelationTable)  = NoAction.unit
+  override def rollback(mutaction: UpdateRelationTable) = NoAction.unit
 }
 
 //Fixme add relationindexes for ids on embedded types
@@ -37,12 +43,4 @@ object Indexhelper {
       case (_, _)                                       => Future.successful(())
     }
   }
-}
-
-//Fixme again: Index Renaming does not work -> see Rename Model
-object RenameRelationInterpreter extends MongoMutactionInterpreter[RenameRelationTable] {
-  override def execute(mutaction: RenameRelationTable) = NoAction.unit
-
-  override def rollback(mutaction: RenameRelationTable) = NoAction.unit
-
 }

@@ -12,6 +12,7 @@ import org.joda.time.DateTime
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 import play.api.libs.json.Json
+import slick.dbio.DBIO
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,7 +51,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       .where(mt.projectId.equal(placeHolder))
       .and(mt.revision.equal(placeHolder))
 
-    database.run(
+    val migration = database.run(
       queryToDBIO(query)(
         setParams = { pp =>
           pp.setString(migrationId.projectId)
@@ -64,6 +65,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
           }
         }
       ))
+    enrichWithPreviousMigration(migration)
   }
 
   override def loadAll(projectId: String): Future[Seq[Migration]] = {
@@ -84,7 +86,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
             buffer += migrationFromResultSet(rs)
           }
 
-          buffer
+          enrichWithPreviousSchemas(buffer.toVector)
         }
       ))
   }
@@ -162,6 +164,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
           ))
           .map(_ => migration.copy(revision = revision))
       }
+      .flatMap(enrichWithPreviousMigration)
   }
 
   override def getNextMigration(projectId: String): Future[Option[Migration]] = {
@@ -173,7 +176,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       .orderBy(mt.revision.asc())
       .limit(DSL.inline(1))
 
-    database.run(
+    val migration = database.run(
       queryToDBIO(query)(
         setParams = { pp =>
           pp.setString(projectId)
@@ -187,6 +190,8 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
           }
         }
       ))
+
+    enrichWithPreviousMigration(migration)
   }
 
   override def getLastMigration(projectId: String): Future[Option[Migration]] = {
@@ -198,20 +203,23 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       .orderBy(mt.revision.desc())
       .limit(DSL.inline(1))
 
-    database.run(
-      queryToDBIO(query)(
-        setParams = { pp =>
-          pp.setString(projectId)
-          pp.setString(MigrationStatus.Success.toString)
-        },
-        readResult = { rs =>
-          if (rs.next()) {
-            Some(migrationFromResultSet(rs))
-          } else {
-            None
+    val migration = database
+      .run(
+        queryToDBIO(query)(
+          setParams = { pp =>
+            pp.setString(projectId)
+            pp.setString(MigrationStatus.Success.toString)
+          },
+          readResult = { rs =>
+            if (rs.next()) {
+              Some(migrationFromResultSet(rs))
+            } else {
+              None
+            }
           }
-        }
-      ))
+        ))
+
+    enrichWithPreviousMigration(migration)
   }
 
   override def updateMigrationStatus(id: MigrationId, status: MigrationStatus): Future[Unit] = {
@@ -352,7 +360,43 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       ))
   }
 
-  def migrationFromResultSet(rs: ResultSet): Migration = {
+  private def enrichWithPreviousMigration(migration: Future[Option[Migration]]): Future[Option[Migration]] = {
+    migration.flatMap {
+      case Some(mig) => enrichWithPreviousMigration(mig).map(Some(_))
+      case None      => Future.successful(None)
+    }
+  }
+
+  private def enrichWithPreviousMigration(migration: Migration): Future[Migration] = {
+    val query = sql
+      .select(mt.* : _*)
+      .from(mt.t)
+      .where(mt.projectId.equal(placeHolder))
+      .and(mt.revision.lt(placeHolder))
+      .and(mt.status.equal(placeHolder))
+      .orderBy(mt.revision.desc())
+      .limit(DSL.inline(1))
+
+    database.run(
+      queryToDBIO(query)(
+        setParams = { pp =>
+          pp.setString(migration.projectId)
+          pp.setInt(migration.revision)
+          pp.setString(MigrationStatus.Success.toString)
+        },
+        readResult = { rs =>
+          if (rs.next()) {
+            val previousMigration = migrationFromResultSet(rs)
+            migration.copy(previousSchema = previousMigration.schema)
+          } else {
+            migration
+          }
+        }
+      )
+    )
+  }
+
+  private def migrationFromResultSet(rs: ResultSet): Migration = {
     val schema    = Json.parse(rs.getString(mt.schema.getName)).as[Schema]
     val functions = Json.parse(rs.getString(mt.functions.getName)).as[Vector[models.Function]]
     val steps     = Json.parse(rs.getString(mt.steps.getName)).as[Vector[MigrationStep]]
@@ -378,7 +422,8 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       steps,
       errors,
       startedAt,
-      finishedAt
+      finishedAt,
+      previousSchema = Schema.empty
     )
   }
 }

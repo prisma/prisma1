@@ -67,7 +67,7 @@ case class SelectedFields(fields: Set[Field]) {
     case rf if rf.relation.isInlineRelation && !rf.relation.isSelfRelation && rf.relation.inlineManifestation.get.inTableOfModelName == rf.model.name => rf
   }
 
-  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.asScalarField)
+  val scalarDbFields = scalarNonListFields ++ inlineRelationFields.map(_.scalarCopy)
 
   def ++(other: SelectedFields) = SelectedFields(fields ++ other.fields)
 
@@ -99,10 +99,9 @@ object Filter {
 }
 sealed trait Filter
 
-case class AndFilter(filters: Vector[Filter])  extends Filter
-case class OrFilter(filters: Vector[Filter])   extends Filter
-case class NotFilter(filters: Vector[Filter])  extends Filter
-case class NodeFilter(filters: Vector[Filter]) extends Filter
+case class AndFilter(filters: Vector[Filter]) extends Filter
+case class OrFilter(filters: Vector[Filter])  extends Filter
+case class NotFilter(filters: Vector[Filter]) extends Filter
 
 case class ScalarFilter(field: ScalarField, condition: ScalarCondition) extends Filter
 

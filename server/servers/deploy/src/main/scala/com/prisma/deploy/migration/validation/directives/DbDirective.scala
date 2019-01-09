@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.validation.directives
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.DeployErrors
-import com.prisma.shared.models.ConnectorCapabilities
+import com.prisma.shared.models.{ConnectorCapabilities, RelationStrategy}
 import sangria.ast.{Directive, Document, FieldDefinition, ObjectTypeDefinition}
 
 object TypeDbDirective extends TypeDirective[String] {
@@ -31,7 +31,8 @@ object FieldDbDirective extends FieldDirective[String] {
       directive: Directive,
       capabilities: ConnectorCapabilities
   ) = {
-    val errors = fieldDef.isRelationField(document).toOption(DeployErrors.relationFieldsMustNotSpecifyDbName(typeDef, fieldDef))
+    val isNotInline = !RelationDirective.value(document, typeDef, fieldDef, capabilities).map(_.strategy).contains(Some(RelationStrategy.Inline))
+    val errors      = (fieldDef.isRelationField(document) && isNotInline).toOption(DeployErrors.relationFieldsMustNotSpecifyDbName(typeDef, fieldDef))
     errors.toVector
   }
 
