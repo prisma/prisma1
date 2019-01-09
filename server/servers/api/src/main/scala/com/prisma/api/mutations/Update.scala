@@ -28,13 +28,13 @@ case class Update(
 
   lazy val prismaNode: Future[Option[PrismaNode]] = dataResolver.getNodeByWhere(where, selectedFields)
 
-  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful {
-    DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs)
-  }
+  lazy val updateMutaction = DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs)
+
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful { updateMutaction }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val udpateResult = results.databaseResult.asInstanceOf[UpdateNodeResult]
-    returnValueByUnique(NodeSelector.forIdGCValue(model, udpateResult.id), selectedFields)
+    val updateResult = results.results.collectFirst { case r: UpdateNodeResult if r.mutaction.id == updateMutaction.id => r }.head
+    returnValueByUnique(NodeSelector.forId(model, updateResult.id), selectedFields)
   }
 
 }

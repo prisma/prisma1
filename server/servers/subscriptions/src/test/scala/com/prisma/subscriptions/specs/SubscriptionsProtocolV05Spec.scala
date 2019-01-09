@@ -9,6 +9,7 @@ import play.api.libs.json._
 import scala.concurrent.duration._
 
 class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SubscriptionSpecBase {
+
   val project = SchemaDsl.fromBuilder { schema =>
     val todo = schema
       .model("Todo")
@@ -31,7 +32,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with Subscript
   }
 
   "All subscriptions" should "support the basic subscriptions protocol when id is string" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV05(project) { wsClient =>
       wsClient.sendMessage("{}")
       wsClient.expectMessage(cantBeParsedError)
 
@@ -99,7 +100,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with Subscript
   }
 
   "All subscriptions" should "support the basic subscriptions protocol when id is number, part 1" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV05(project) { wsClient =>
       wsClient.sendMessage("{}")
       wsClient.expectMessage(cantBeParsedError)
 
@@ -171,7 +172,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with Subscript
   }
 
   "Create Subscription" should "support the node filters" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV05(project) { wsClient =>
       // CREATE
       // should work with variables
       wsClient.sendMessage("{}")
@@ -205,7 +206,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with Subscript
   }
 
   "Update Subscription" should "support the node filters" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV05(project) { wsClient =>
       // CREATE
       // should work with variables
       wsClient.sendMessage("{}")
@@ -235,7 +236,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with Subscript
   }
 
   "Delete Subscription" should "ignore the node filters" in {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV05(project) { wsClient =>
       // should work with variables
       wsClient.sendMessage("{}")
       wsClient.expectMessage(cantBeParsedError)
@@ -262,7 +263,7 @@ class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with Subscript
   }
 
   "Subscription" should "regenerate changed schema and work on reconnect" ignore {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV05(project) { wsClient =>
       // SCHEMA INVALIDATION
 
       wsClient.sendMessage(s"""{"type":"init","payload":{}}""")

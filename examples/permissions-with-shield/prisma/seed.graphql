@@ -1,9 +1,0 @@
-mutation {
-  user: createRole(data: { name: USER }) {
-    id
-  }
-
-  admin: createRole(data: { name: ADMIN }) {
-    id
-  }
-}

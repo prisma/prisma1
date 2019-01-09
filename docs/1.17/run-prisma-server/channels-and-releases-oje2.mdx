@@ -1,0 +1,66 @@
+export const meta = {
+  title: "Channels & Releases",
+  position: 60
+}
+
+## Overview
+
+Release channels let you to work with different Prisma versions. This can e.g. be helpful if you want to test new features before they are officially released.
+
+There are three _channels_: **stable**, **beta** and **alpha**
+
+> Read more about the **Prisma's release process** [here](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/).
+
+### Stable
+
+Always run the stable channel on your production servers. Releases on the stable channel follow a bi-weekly cadence and only include very minor changes compared to the beta channel. This ensures that the combination of features in a release has been thoroughly tested on the beta channel.
+
+### Beta
+
+Features on the beta channel are tested and unlikely to change before the final release. The beta channel is a great way to try new features and provide feedback before they are available in a stable release.
+
+### Alpha
+
+The alpha channel is ideal for contributors and developers who want to try new features as early as possible. Features on the alpha channel are not fully tested and might see significant changes before they are included in a stable release.
+
+## Using the alpha and beta channels
+
+The **stable** channel is the default for everything you do with Prisma. Whether it's installing the Prisma CLI or pulling the latest Docker image, you'll download the latest stable release.
+
+In order to access the **alpha** and **beta** channels, follow these steps outlined below.
+
+### Beta
+
+#### Prisma CLI
+
+Install the **beta** channel of the Prisma CLI using NPM:
+
+```sh
+npm install -g prisma@beta
+```
+
+#### Docker image
+
+You can find the latest beta image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/) or simply use the `__VERSION__-beta` tag when using the Docker CLI (where `__VERSION__` is a placeholder for the Prisma version you're targeting):
+
+```bash
+docker pull prismagraphql/prisma:1.17-beta
+```
+
+### Alpha
+
+Install the **alpha** channel of the Prisma CLI using NPM:
+
+#### Prisma CLI
+
+```sh
+npm install -g prisma@alpha
+```
+
+#### Docker image
+
+You can find the latest beta image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/) or simply use the `__VERSION__alpha` tag when using the Docker CLI (where `__VERSION__` is a placeholder for the Prisma version you're targeting):
+
+```bash
+docker pull prismagraphql/prisma:1.17-alpha
+```

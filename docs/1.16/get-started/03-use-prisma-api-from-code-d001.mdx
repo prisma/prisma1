@@ -1,0 +1,156 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: 'Use Prisma API from Code',
+  position: 3,
+  nextText: 'Bonkerz! 💯 With everything you learned so far, you\'re now able to build a GraphQL server with Prisma and Prisma bindings. Let\'s go!'
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Download the GraphQL schema of your Prisma API using the GraphQL CLI
+- Create a Prisma binding for your Prisma API
+- Use the Prisma binding to send queries and mutations to your Prisma API
+
+> The Prisma API is a GraphQL API that's served via HTTP. You can therefore consume it using any HTTP tool you like, such as `curl` or JavaScript's `fetch` ([learn more](nms2)). On this page, you're using [Prisma bindings](wer1) which provide a convenient abstraction on top of `fetch` to reduce boilerplate and improve the developer experience when working with Prisma. 
+
+## Setup Node.JS project
+
+For this tutorial, you'll use an extremely simple setup for your Node.JS app. Create your project in a directory called `myapp` using the following commands; note that `myapp` should _not_ be located _inside_ the `hello-world` directory which holds the service configuration of your service:
+
+```bash copy
+mkdir myapp
+cd myapp
+touch index.js
+yarn init -y
+```
+
+## Install Prisma bindings
+
+Go ahead and add the Prisma binding dependency to your project:
+
+```bash copy
+yarn add prisma-binding graphql
+```
+
+## Download the GraphQL schema of your Prisma API
+
+When using Prisma bindings in your project, you need to have access to the auto-generated GraphQL schema of your Prisma API. 
+
+Download the GraphQL schema using the following command from the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli); you need to replace the `__YOUR_PRISMA_ENDPOINT__`-placeholder with the actual endpoint of your Prisma API (which you can find in your `prisma.yml`).
+
+```bash copy
+npx graphql get-schema --endpoint __YOUR_PRISMA_ENDPOINT__ --output prisma.graphql --no-all
+```
+
+The GraphQL schema is now stored in `prisma.graphql` (as specified in the `--output` parameter of the command).
+
+## Instantiate Prisma API using Prisma bindings
+
+Prisma bindings provide a convenient way to interact with Prisma APIs. Instead of manually constructing HTTP requests and sending them to Prisma, you can use the auto-generated binding functions to send queries and mutations.
+
+## Instantiate a `Prisma` binding
+
+It's time to write some code! Add the following snippet into `index.js`; like in the previous step you need to replace the `≥__YOUR_PRISMA_ENDPOINT__`-placeholder with your actual endpoint:
+
+```js copy
+const { Prisma } = require('prisma-binding')
+
+const prisma = new Prisma({
+  typeDefs: 'prisma.graphql',
+  endpoint: '__YOUR_PRISMA_ENDPOINT__'
+})
+```
+
+## Use your Prisma binding to send queries and mutations
+
+Add the following code snippet _after_ the code you have added in the previous step:
+
+```js lineNumbers,copy
+// send `users` query
+prisma.query.users({}, `{ id name }`)
+  .then(users => console.log(users))
+  .then(() =>
+    // send `createUser` mutation
+    prisma.mutation.createUser(
+      {
+        data: { name: `Sarah` },
+      },
+      `{ id name }`,
+    ),
+  )
+  .then(newUser => {
+    console.log(newUser)
+    return newUser
+  })
+  .then(newUser =>
+    // send `user` query
+    prisma.query.user(
+      {
+        where: { id: newUser.id },
+      },
+      `{ name }`,
+    ),
+  )
+  .then(user => console.log(user))
+```
+
+<Collapse title="What does the code do?">
+
+Here is a sequential overview of the tasks performed by the Node script:
+
+1. Fetch all `User`s from the Prisma API using the `users` query (**line 2**):
+  ```graphql
+  query {
+    users {
+      id
+      name
+    }
+  }
+  ```
+1. Print the data that was received from the Prisma API using `console.log` (**line 3**). 
+1. Create a new `User` using the `createUser` mutation (**line 6**):
+  ```graphql
+  mutation {
+    createUser(data: {
+      name: "Sarah"
+    }) {
+      id
+      name
+    }
+  }
+  ```
+1. Print the data of the newly created `User` that was received from the Prisma API using `console.log` (**line 13**).
+1. Fetch the newly created `User` using the `user` query (**line 18**):
+  ```graphql
+  query {
+    user(where: {
+      id: $id # the `id` parameter is provided as `newUser.id` in the binding function
+    }) {
+      name
+    }
+  }
+  ```
+
+</Collapse>
+
+## Execute the Node.JS script
+
+To run the script and actually send the above queries and mutations to your Prisma service, run the following command:
+
+```bash copy
+node index.js
+```
+
+The expected output looks similar to this:
+
+```
+[]
+{ id: 'cjjya4inyel970b296r43qwhn', name: 'Sarah' }
+{ name: 'Sarah' }
+```
+
+If you already created some `User`s in your Prisma service, the array that's printed in the first line will not be empty.

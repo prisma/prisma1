@@ -2,12 +2,13 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.util.TroubleCharacters
+import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
   val project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum(
@@ -95,5 +96,34 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
       )
       .toString should be("""{"data":{"createScalarModel":{"optJsons":[{}]}}}""")
 
+  }
+
+  "ListValues" should "work" in {
+
+    val project2 = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   ints: [Int]
+        |}"""
+    }
+
+    database.setup(project2)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   ints: {set:[1,2,3,4,5]}
+         |}){
+         |  unique,
+         |  ints
+         |}}""",
+      project2
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"ints":[1,2,3,4,5]}}}""")
   }
 }

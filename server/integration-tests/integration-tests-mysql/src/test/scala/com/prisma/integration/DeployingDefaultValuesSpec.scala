@@ -47,7 +47,7 @@ class DeployingDefaultValuesSpec extends FlatSpec with Matchers with Integration
     val schema =
       """type Person {
         |  name: String
-        |  children: [String!]!
+        |  children: [String]
         |}"""
 
     val (project, _) = setupProject(schema)
@@ -55,7 +55,7 @@ class DeployingDefaultValuesSpec extends FlatSpec with Matchers with Integration
     val schema1 =
       """type Person {
         |  name: String
-        |  children: [String!]! @default(value:"[\"Pia\",\"Paul\"]")
+        |  children: [String] @default(value:"[\"Pia\",\"Paul\"]")
         |}"""
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
@@ -75,7 +75,7 @@ class DeployingDefaultValuesSpec extends FlatSpec with Matchers with Integration
     val schema1 =
       """type Person {
         |  name: String
-        |  children: [String!]! @default(value:"Pia")
+        |  children: [String] @default(value:"Pia")
         |}"""
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)

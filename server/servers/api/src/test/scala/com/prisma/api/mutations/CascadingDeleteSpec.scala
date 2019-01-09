@@ -1,11 +1,15 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
+
+  override def doNotRunForPrototypes: Boolean = true
 
   //region  TOP LEVEL DELETE
 
@@ -63,14 +67,13 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
     server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
 
-    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
-    server.query("""query{ps{p, c {c}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p","c":[{"c":"c"},{"c":"c2"}]},{"p":"pz","c":[{"c":"c2"}]}]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(0) }
   }
 
-  "P1!-C1! relation deleting the parent" should "error if both sides are marked marked cascading" in {
+  "P1!-C1! relation deleting the parent" should "work if both sides are marked marked cascading" in {
     //         P-C
     val project = SchemaDsl.fromBuilder { schema =>
       val parent = schema.model("P").field_!("p", _.String, isUnique = true)
@@ -82,10 +85,11 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
 
-    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3043)
-    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}}]}}""")
+    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
+    server.query("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[]}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(0) }
   }
 
   "P1!-C1! relation deleting the parent" should "error if only child is marked marked cascading" in {
@@ -496,13 +500,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
     server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
 
-    server.queryThatMustFail("""mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
-                             project,
-                             errorCode = 3039,
-                             errorContains = "No Node for the model")
-    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
+    server.queryThatMustFail(
+      """mutation{updateC(where: {c:"c"} data: {p: {delete: true}}){id}}""",
+      project,
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'CUpdateInput!'"
+    )
   }
 
   "P1-C1-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "work" in {
@@ -548,18 +551,141 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.queryThatMustFail(
       """mutation{updateP(where: {p:"p"}, data: { c: {delete: true}}){id}}""",
       project,
-      errorCode = 3042,
-      errorContains = "The change you are trying to make would violate the required relation 'CToP' between C and P"
+      errorCode = 0,
+      errorContains = "Argument 'data' expected type 'PUpdateInput!'"
     )
-
-    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be(
-      """{"data":{"ps":[{"p":"p","c":{"c":"c","gc":{"gc":"gc"}}},{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be(
-      """{"data":{"cs":[{"c":"c","gc":{"gc":"gc"},"p":{"p":"p"}},{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
-      """{"data":{"gCs":[{"gc":"gc","c":{"c":"c","p":{"p":"p"}}},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(6) }
   }
   //endregion
+
+  "Self Relations" should "work" in {
+    val project = SchemaDsl.fromString() { """type Folder {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
+                                             |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
+                                             |}""" }
+    database.setup(project)
+
+    server.query(
+      """mutation{createFolder(data:{
+        |           name: "Top",
+        |           children: {create:{
+        |               name: "Middle",
+        |               children :{create:{
+        |                   name: "Bottom"}}}}})
+        | { name,
+        |   parent{name},
+        |   children{
+        |       name,
+        |       parent{name},
+        |       children{
+        |           name,
+        |           parent{name},
+        |           children{name}}}}}""".stripMargin,
+      project
+    )
+
+    server.query("""mutation{deleteFolder(where: {name: "Top"}){name, children{name}}}""", project)
+
+    server.query("""query{folders{name}}""", project).toString should be("""{"data":{"folders":[]}}""")
+  }
+
+  "Self Relations" should "work 2" in {
+    val project = SchemaDsl.fromString() { """type Folder  {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
+                                             |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
+                                             |}""" }
+    database.setup(project)
+
+    server.query(
+      """mutation{createFolder(data:{
+        |           name: "Top",
+        |           children: {create:{
+        |               name: "Middle",
+        |               children :{create:{
+        |                   name: "Bottom"}}}}})
+        | { name,
+        |   parent{name},
+        |   children{
+        |       name,
+        |       parent{name},
+        |       children{
+        |           name,
+        |           parent{name},
+        |           children{name}}}}}""".stripMargin,
+      project
+    )
+
+    server.query("""mutation{deleteFolder(where: {name: "Top"}){name, children{name}}}""", project)
+
+    server.query("""query{folders{name}}""", project).toString should be("""{"data":{"folders":[]}}""")
+  }
+
+  "Self Relations" should "work 3" in {
+    val project = SchemaDsl.fromString() { """type Folder  {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  parent: Folder @relation(name: "FolderOnFolder", onDelete: SET_NULL)
+                                             |  children: [Folder] @relation(name: "FolderOnFolder", onDelete: CASCADE)
+                                             |}""" }
+    database.setup(project)
+
+    server.query(
+      """mutation{createFolder(data:{
+        |           name: "Top",
+        |           children: {create:{
+        |               name: "Middle"}}})
+        | { name,
+        |   parent{name},
+        |   children{
+        |       name,
+        |       parent{name},
+        |       children{
+        |           name,
+        |           parent{name},
+        |           children{name}}}}}""".stripMargin,
+      project
+    )
+
+    server.query("""mutation{deleteFolder(where: {name: "Top"}){name, children{name}}}""", project)
+
+    server.query("""query{folders{name}}""", project).toString should be("""{"data":{"folders":[]}}""")
+  }
+
+  "Cascade on both sides" should "halt" in {
+    val project = SchemaDsl.fromString() { """type User {
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  a: [A] @relation(name: "A", onDelete: CASCADE)
+                                             |  b: [B] @relation(name: "B", onDelete: CASCADE)
+                                             |}
+                                             |
+                                             |type A{
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  user: User! @relation(name: "A", onDelete: CASCADE)
+                                             |}
+                                             |
+                                             |type B{
+                                             |  id: ID! @unique
+                                             |  name: String! @unique
+                                             |  user: User! @relation(name: "B", onDelete: CASCADE)
+                                             |}""" }
+    database.setup(project)
+
+    server.query("""mutation createUser{createUser(data:{name: "Paul"}){id}}""", project)
+
+    server.query("""mutation createA{createA(data:{name:"A" user: {connect:{name: "Paul"}}}){id}}""", project)
+
+    server.query("""mutation createB{createB(data:{name:"B" user: {connect:{name: "Paul"}}}){id}}""", project)
+
+    server.query("""mutation deleteUser{deleteUser(where: {name: "Paul"}){id}}""", project)
+
+    server.query("""query{users{name}}""", project).toString should be("""{"data":{"users":[]}}""")
+    server.query("""query{as{name}}""", project).toString should be("""{"data":{"as":[]}}""")
+    server.query("""query{bs{name}}""", project).toString should be("""{"data":{"bs":[]}}""")
+
+  }
 }

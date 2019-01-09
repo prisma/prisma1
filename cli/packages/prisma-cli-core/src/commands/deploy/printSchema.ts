@@ -22,8 +22,14 @@ export async function fetchAndPrintSchema(
   serviceName: string,
   stageName: string,
   token?: string,
+  workspaceSlug?: string,
 ): Promise<string> {
-  const introspection = await client.introspect(serviceName, stageName, token)
+  const introspection = await client.introspect(
+    serviceName,
+    stageName,
+    token,
+    workspaceSlug,
+  )
   const schema = buildClientSchema(introspection)
 
   const sdl = printSchema(schema)

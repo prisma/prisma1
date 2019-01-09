@@ -9,30 +9,25 @@ import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
 import com.prisma.auth.AuthImpl
 import com.prisma.config.{ConfigLoader, PrismaConfig}
-import com.prisma.connectors.utils.ConnectorUtils
+import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.TelemetryActor
 import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
-import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
+import com.prisma.image.{FunctionValidatorImpl, SingleServerProjectFetcher}
 import com.prisma.messagebus._
-import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.pubsub.rabbit.RabbitAkkaPubSub
-import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.messagebus.queue.rabbit.RabbitQueue
 import com.prisma.metrics.MetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import com.prisma.subscriptions.protocol.SubscriptionRequest
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
-import com.prisma.websocket.protocol.{Request => WebsocketRequest}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
-import play.api.libs.json.Json
+
+import scala.concurrent.ExecutionContext
 
 case class PrismaProdDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends DeployDependencies
@@ -40,9 +35,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     with SubscriptionDependencies
     with WorkerDependencies {
 
-  val config: PrismaConfig = ConfigLoader.load()
-  MetricsRegistry.init(deployConnector.cloudSecretPersistence)
-
+  val config: PrismaConfig      = ConfigLoader.load()
   private val rabbitUri: String = config.rabbitUri.getOrElse("RabbitMQ URI required but not found in Prisma configuration.")
 
   override implicit def self: PrismaProdDependencies = this
@@ -78,27 +71,6 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   override lazy val sssEventsPubSub: PubSub[String]               = theSssEventsPubSub
   override lazy val sssEventsSubscriber: PubSubSubscriber[String] = theSssEventsPubSub
 
-  // Note: The subscription stuff can be in memory
-  private lazy val requestsQueue: InMemoryAkkaQueue[WebsocketRequest]         = InMemoryAkkaQueue[WebsocketRequest]()
-  override lazy val requestsQueuePublisher: QueuePublisher[WebsocketRequest]  = requestsQueue
-  override lazy val requestsQueueConsumer: QueueConsumer[SubscriptionRequest] = requestsQueue.map(Converters.websocketRequest2SubscriptionRequest)
-
-  private lazy val responsePubSub: InMemoryAkkaPubSub[String]          = InMemoryAkkaPubSub[String]()
-  override lazy val responsePubSubSubscriber: PubSubSubscriber[String] = responsePubSub
-
-  private lazy val converterResponse07ToString: SubscriptionSessionResponse => String = (response: SubscriptionSessionResponse) => {
-    import com.prisma.subscriptions.protocol.ProtocolV07.SubscriptionResponseWriters._
-    Json.toJson(response).toString
-  }
-
-  private lazy val converterResponse05ToString: SubscriptionSessionResponseV05 => String = (response: SubscriptionSessionResponseV05) => {
-    import com.prisma.subscriptions.protocol.ProtocolV05.SubscriptionResponseWriters._
-    Json.toJson(response).toString
-  }
-
-  override lazy val responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05] = responsePubSub.map(converterResponse05ToString)
-  override lazy val responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]    = responsePubSub.map(converterResponse07ToString)
-
   override lazy val keepAliveIntervalSeconds = 10
 
   override lazy val webhookPublisher: QueuePublisher[Webhook] =
@@ -108,14 +80,19 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   override lazy val httpClient                           = SimpleHttpClient()
   override lazy val apiAuth                              = AuthImpl
-  override lazy val deployConnector: DeployConnector     = ConnectorUtils.loadDeployConnector(config)
+  override lazy val deployConnector: DeployConnector     = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator: FunctionValidator = FunctionValidatorImpl()
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 
-  override lazy val apiConnector                = ConnectorUtils.loadApiConnector(config)
+  override lazy val apiConnector                = ConnectorLoader.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
+
+  override def initialize()(implicit ec: ExecutionContext): Unit = {
+    super.initialize()(ec)
+    MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+  }
 }

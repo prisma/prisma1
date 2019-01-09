@@ -1,0 +1,154 @@
+
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: 'Authentication & Security',
+  position: 30
+}
+
+## Overview
+
+Once up-and-running, Prisma servers are primarily used via the Management API. This page explains how to secure the Management API and protect your Prisma server from unwanted requests.
+
+## Management API secret
+
+To ensure only entitled users are able to perform actions through the Management API, it needs to be protected with a _secret_. This secret is called **Management API secret**.
+
+The Management API secret is set in the Docker Compose file you're using to configure your Prisma server. It is part of the `PRISMA_CONFIG` environment variable and specified via the `managementApiSecret` key:
+
+
+<Code lines="10">
+
+```
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:__LATEST_PRISMA_VERSION__
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+        port: __YOUR_PRISMA_SERVER_PORT__
+        databases:
+          default:
+            connector: __YOUR_DATABASE_CONNECTOR__
+            migrations: __ENABLE_DB_MIGRATIONS__
+            host: __YOUR_DATABASE_HOST__
+            port: __YOUR_DATABASE_PORT__
+            user: __YOUR_DATABASE_USER__
+            password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+<Warning>
+
+If the Docker configuration of your Prisma server does not contain a `managementApiSecret`, everyone with access to the URL of your Prisma server will be able to make arbitrary requests to it. This includes deploying and deleting Prisma services as well as modifying data.
+
+</Warning>
+
+## Management API token
+
+Service tokens follow the [JSON Web Token](https://jwt.io/) (JWT) specification ([RFC 7519](https://tools.ietf.org/html/rfc7519)):
+
+_"JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be transferred between two parties.  The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure, enabling the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted."_
+
+A JWT has the following three components:
+
+- **Header**: The header typically consists of two parts: the type of the token, which is `JWT`, and the hashing algorithm being used (which is `HS256` in the case of Prisma service tokens).
+
+  ```json
+  {
+    "alg": "HS256",
+    "typ": "JWT"
+  }
+  ```
+
+- **Payload**: The payload contains the [claims](#claims). Claims are statements about an entity (typically, the user) and additional data. Here is what it looks like when granting permissions for modifying a service called `demo` deployed to the `dev` stage:
+
+  ```json
+  {
+    "grants": [
+      {
+        "target": "demo/dev",
+        "action": "*"
+      }
+    ],
+    "iat": 1532956915,
+    "exp": 1690744915
+  }
+  ```
+
+- **Signature**: The signature is used to verify the message wasn't changed along the way. To create the signature part you have to take the encoded header, the encoded payload, a secret, the algorithm specified in the header, and sign that. For example if you want to use the HMAC SHA256 algorithm, the signature will be created in the following way:
+
+  ```js
+  HMACSHA256(
+    base64UrlEncode(header) + "." +
+    base64UrlEncode(payload),
+    secret)
+  ```
+
+Therefore, a JWT typically looks like this: `xxxxx.yyyyy.zzzzz`
+
+> Read more about JWTs [here](https://jwt.io/introduction/).
+
+### Claims
+
+The JWT must contain the following [claims](https://jwt.io/introduction/#payload):
+
+- **Issued at**: The `iat` field contains a Unix timestamp with the exact time when the token was generated.
+- **Expiration date**: The `exp` field containts a Unix timestamp denoting the expiration date of the token.
+- **Grants**: The `grants` field is an object with two keys
+  - The `target` field specifies the _name_ and _stage_ of the service that's modified with a certain action. Use the `*/*` wildcard to allows actions for all services running on the Prisma server.
+  - The `action` field specifies which actions are allowed against the `target`. The wildcard `*` allows all actions.
+
+Here is the sample payload of a JWT using wildcards to allow _all_ actions on _all_ services:
+
+```json
+  {
+    "grants": [
+      {
+        "target": "*/*",
+        "action": "*"
+      }
+    ],
+    "iat": 1532956915,
+    "exp": 1690744915
+  }
+```
+
+## Authenticating against the Management API
+
+There are two ways to use the Management API:
+
+- Use the Prisma CLI which then performs the actual API requests
+- Send requests directly to the `/management` path of your Prisma server
+
+### Using the Prisma CLI
+
+When using the Prisma CLI to perform requests against the Management API (e.g. using `prisma deploy`), you don't need to worry about generating Management API tokens. The CLI generates them for you upon every API request. Therefore, the CLI needs to know the Management API secret of your Prisma server in order to generate a Management API token and authenticate its requests.
+
+**This is why you have to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable when using the Prisma CLI**.
+
+The CLI reads the secret from the `PRISMA_MANAGEMENT_API_SECRET` environment variable and uses it to generate the JWT which it then attaches to the API request.
+
+Depending on your shell, the syntax for setting environment variables might differ. The standard Unix shell uses the following syntax:
+
+```bash
+export PRISMA_MANAGEMENT_API_SECRET="my-server-secret-42"
+```
+
+### Sending requests directly
+
+When you want to send HTTP requests directly to the Management API of your Prisma server, you need to generate a JWT and attach it to the `Authorization` field of the HTTP header (prefixed with `Bearer` and a whitespace).
+
+<Warning>
+
+The Prisma CLI has a hidden helper command for generating Management API tokens: `prisma cluster-token`. Before running it, you need to set the `PRISMA_MANAGEMENT_API_SECRET` environment variable. Note that this command is not officially documented and might change without further notice.
+
+There already is a [pending feature request](https://github.com/prisma/prisma/issues/2772) for a similar command.
+
+</Warning>

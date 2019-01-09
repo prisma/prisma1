@@ -22,7 +22,7 @@ case class SubscriptionSchema(
 
   import dependencies.system
 
-  val schemaBuilder    = SchemaBuilderImpl(project, dependencies.capabilities)
+  val schemaBuilder    = SchemaBuilderImpl(project, dependencies.capabilities, enableRawAccess = false)
   val modelObjectTypes = schemaBuilder.objectTypes
   val outputMapper     = OutputTypesBuilder(project, modelObjectTypes, dependencies.dataResolver(project))
 
@@ -39,18 +39,19 @@ case class SubscriptionSchema(
           previousValues,
           isDelete match {
             case false => None
-            case true  => Some(SimpleResolveOutput(PrismaNode.dummy, Args.empty))
+            case true  => Some(PrismaNode.dummy)
           }
         )),
     arguments = List(
       externalSchema match {
-        case false => SangriaQueryArguments.internalWhereSubscriptionArgument(model = model, project = project)
-        case true  => SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)
+        case false =>
+          SangriaQueryArguments.internalWhereSubscriptionArgument(model = model, project = project, capabilities = dependencies.apiConnector.capabilities)
+        case true => SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project, capabilities = dependencies.apiConnector.capabilities)
       }
     ),
     resolve = (ctx) =>
       isDelete match { // in the delete case there MUST be the previousValues
-        case true  => Future.successful(Some(SimpleResolveOutput(previousValues.get, Args.empty)))
+        case true  => Future.successful(previousValues)
         case false => SubscriptionDataResolver.resolve(dependencies.dataResolver(project), schemaBuilder.objectTypeBuilder, model, ctx)
     }
   )

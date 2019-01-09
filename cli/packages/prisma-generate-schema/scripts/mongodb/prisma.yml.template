@@ -1,0 +1,3 @@
+endpoint: http://{{prisma_host}}:4466/schema-generator/{{model}}
+datamodel: ../../__tests__/blackbox/cases/{{model}}/model_{{type}}.graphql
+databaseType: 'document'

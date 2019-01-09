@@ -14,6 +14,7 @@ import play.api.libs.json._
 import sangria.ast.Document
 import sangria.execution.Executor
 import sangria.parser.QueryParser
+import sangria.renderer.QueryRenderer
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,9 +68,10 @@ object SubscriptionExecutor {
   )(implicit dependencies: ApiDependencies, ec: ExecutionContext): Future[Option[JsValue]] = {
     import com.prisma.api.server.JsonMarshalling._
 
-    val internalSchema       = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
-    val transformedQuery     = QueryTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(query, mutationType, updatedFields)
-    val transformedVariables = VariablesTransformer.replaceExternalFieldsWithBooleanFieldsForInternalSchema(variables, mutationType, updatedFields)
+    val updatedFieldsSet                       = updatedFields.getOrElse(List.empty).toSet
+    val internalSchema                         = SubscriptionSchema(model, project, updatedFields, mutationType, previousValues).build()
+    val (filtersMatch, transformedQuery)       = QueryTransformer.evaluateInMemoryFilters(query, mutationType, updatedFieldsSet)
+    val (variablesMatch, transformedVariables) = VariablesTransformer.evaluateInMemoryFilters(variables, mutationType, updatedFieldsSet)
 
     val context = SubscriptionUserContext(
       nodeId = nodeId,
@@ -88,7 +90,9 @@ object SubscriptionExecutor {
 
     val sangriaHandler = ErrorHandler(
       requestId,
-      HttpRequest(),
+      method = "",
+      uri = "",
+      headers = Vector.empty,
       query.renderPretty,
       variables,
       dependencies.reporter,
@@ -96,20 +100,24 @@ object SubscriptionExecutor {
       errorCodeExtractor = errorExtractor
     ).sangriaExceptionHandler
 
-    Executor
-      .execute(
-        schema = internalSchema,
-        queryAst = transformedQuery,
-        userContext = context,
-        variables = transformedVariables,
-        exceptionHandler = sangriaHandler,
-        operationName = operationName,
-        deferredResolver = new DeferredResolverImpl(dataResolver)
-      )
-      .map { result =>
-        val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
-        if (lookup.validate[JsValue].get != JsNull) Some(result) else None
-      }
+    if (filtersMatch && variablesMatch) {
+      Executor
+        .execute(
+          schema = internalSchema,
+          queryAst = transformedQuery,
+          userContext = context,
+          variables = transformedVariables,
+          exceptionHandler = sangriaHandler,
+          operationName = operationName,
+          deferredResolver = new DeferredResolverImpl(dataResolver)
+        )
+        .map { result =>
+          val lookup = result.as[JsObject] \ "data" \ camelCase(model.name)
+          if (lookup.validate[JsValue].get != JsNull) Some(result) else None
+        }
+    } else {
+      Future.successful(None)
+    }
   }
 
   def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)

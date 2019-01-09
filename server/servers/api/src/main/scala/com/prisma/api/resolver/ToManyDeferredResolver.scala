@@ -15,7 +15,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
     val headDeferred   = deferreds.head
     val relatedField   = headDeferred.relationField
     val args           = headDeferred.args
-    val selectedFields = headDeferred.selectedFields
+    val selectedFields = deferreds.foldLeft(SelectedFields.empty)(_ ++ _.selectedFields)
 
     // Get ids of nodes in related model we need to fetch (actual rows of data)
     val relatedModelInstanceIds: Vector[IdGCValue] = deferreds.map(deferred => deferred.parentNodeId)

@@ -20,13 +20,13 @@ The Prisma GraphQL API provides powerful abstractions and building blocks to dev
 <img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
 -->
 
-* [Quickstart](#quickstart)
-* [Examples](#examples)
-* [Architecture](#architecture)
-* [Supported Databases](#supported-databases)
-* [GraphQL API](#graphql-api)
-* [Community](#community)
-* [Contributing](#contributing)
+- [Quickstart](#quickstart)
+- [Examples](#examples)
+- [Architecture](#architecture)
+- [Supported Databases](#supported-databases)
+- [GraphQL API](#graphql-api)
+- [Community](#community)
+- [Contributing](#contributing)
 
 ## Quickstart
 
@@ -48,7 +48,7 @@ prisma init
 
 3. **Define your data model:**
 
-Edit `datamodel.graphql` to define your data model using the [GraphQL SDL notation](https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u).
+Edit `datamodel.prisma` to define your data model using the [GraphQL SDL notation](<https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u>).
 
 ```graphql
 type Tweet {
@@ -100,7 +100,6 @@ Use the endpoint from the previous step in your frontend (or backend) applicatio
 - [resolver-forwarding](examples/resolver-forwarding)
 - [subscriptions](examples/subscriptions)
 
-
 ## Architecture
 
 Prisma is a secure API layer that sits in front of your database. Acting as a proxy, Prisma exposes a powerful GraphQL API and manages Rate-Limiting, Authentication, Logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
@@ -111,23 +110,23 @@ Prisma is a secure API layer that sits in front of your database. Acting as a pr
 
 Prisma can be used for MySQL Databases out of the box. More database connectors will follow:
 
-* [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
-* [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
-* [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
-* [Oracle Connector](https://github.com/graphcool/prisma/issues/1644)
-* [ArangoDB Connector](https://github.com/graphcool/prisma/issues/1645)
-* [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
-* [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
-* [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
-* [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
-* [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
-* [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
-* [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
-* [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
-* [Redis Connector](https://github.com/graphcool/prisma/issues/1722)
-* [AWS Neptune Connector](https://github.com/graphcool/prisma/issues/1752)
-* [CosmosDB Connector](https://github.com/graphcool/prisma/issues/1663)
-* [Influx Connector](https://github.com/graphcool/prisma/issues/1857)
+- [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
+- [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
+- [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
+- [Oracle Connector](https://github.com/graphcool/prisma/issues/1644)
+- [ArangoDB Connector](https://github.com/graphcool/prisma/issues/1645)
+- [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
+- [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
+- [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
+- [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
+- [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
+- [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
+- [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
+- [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
+- [Redis Connector](https://github.com/graphcool/prisma/issues/1722)
+- [AWS Neptune Connector](https://github.com/graphcool/prisma/issues/1752)
+- [CosmosDB Connector](https://github.com/graphcool/prisma/issues/1663)
+- [Influx Connector](https://github.com/graphcool/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
@@ -135,8 +134,8 @@ Join the discussion or contribute to influence which we'll work on next!
 
 The most important component in Prisma is the GraphQL API:
 
-* Query, mutate & stream data via GraphQL CRUD API
-* Define and evolve your data model using GraphQL SDL
+- Query, mutate & stream data via GraphQL CRUD API
+- Define and evolve your data model using GraphQL SDL
 
 Try the online demo: [open GraphQL Playground](https://www.prismagraphql.com/features)
 
@@ -144,14 +143,15 @@ Try the online demo: [open GraphQL Playground](https://www.prismagraphql.com/fea
 
 Prisma has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
-* [Forum](https://www.graph.cool/forum)
-* [Slack](https://slack.graph.cool/)
-* [Twitter](https://twitter.com/graphcool)
-* [Facebook](https://www.facebook.com/GraphcoolHQ)
-* [Meetup](https://www.meetup.com/graphql-berlin)
-* [Email](hello@graph.cool)
+- [Forum](https://www.graph.cool/forum)
+- [Slack](https://slack.graph.cool/)
+- [Twitter](https://twitter.com/graphcool)
+- [Facebook](https://www.facebook.com/GraphcoolHQ)
+- [Meetup](https://www.meetup.com/graphql-berlin)
+- [Email](hello@graph.cool)
 
 ## Contributing
 
 Contributions are **welcome and extremely helpful** 🙌
 Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.
+

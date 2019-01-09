@@ -1,4 +1,0 @@
-type Todo {
-  id: ID! @unique
-  title: String! @unique
-}

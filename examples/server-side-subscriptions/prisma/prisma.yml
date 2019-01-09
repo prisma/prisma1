@@ -1,7 +1,0 @@
-endpoint: http://localhost:4466/server-side-subscriptions
-datamodel: datamodel.graphql
-
-subscriptions:
-  welcomeNewUser:
-    query: subscription.graphql
-    webhook: http://ptsv2.com/t/prisma/post

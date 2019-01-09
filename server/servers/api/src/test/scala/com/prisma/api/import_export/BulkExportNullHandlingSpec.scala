@@ -4,12 +4,14 @@ import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, JsonBundle, ResultFormat}
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val start       = Cursor(0, 0)
   val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1), isFull = false)

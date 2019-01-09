@@ -17,6 +17,7 @@ services:
             port: 5432
             user: postgres
             password: prisma
+            rawAccess: true
     volumes:
       - ../../../..:/root
       - ~/.ivy2:/root/.ivy2

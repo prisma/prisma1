@@ -1,0 +1,166 @@
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: "Prisma Introduction: What, Why & How",
+  position: 10,
+  description: 'Learn about Prisma\'s use cases, main benefits and how it fits into your stack.'
+}
+
+## What is Prisma?
+
+Prisma is an **open-source**, **GraphQL-based data access layer (DAL)** that turns your database into a GraphQL API.
+
+### Core features
+
+Prisma lets you:
+
+1. **Read and write to your database** using GraphQL queries and mutations
+2. **Receive realtime updates** for database events using GraphQL subscriptions
+3. **Perform migrations** and model your data using GraphQL SDL
+
+### Use cases
+
+**Prisma's main use case is to provide the _data access layer_ (_think ORM_) for API servers.** Because of its GraphQL engine, Prisma is _most often_ used to build GraphQL APIs but also works with REST or any other API paradigm. 
+
+Other use cases for Prisma are scripts, functions, queue workers or _any other  context where developers need to talk to a database_.
+
+When building a GraphQL server that uses Prisma as its data access layer, it is important to understand that the auto-generated Prisma GraphQL API is _not_ consumed by your client applications - instead you build the actual _API server_ on top of Prisma.
+
+### What Prisma is not
+
+To prevent misconceptions about Prisma, here's a list of **what Prisma is not**:
+
+- ... **a database** - When using Prisma, you use it as a layer *on top* *of* your database.
+- ... **a BaaS/PaaS** - Prisma doesn't replace your entire backend and isn't a hosted service/hosting provider.
+- ... an [AI painting app](https://prisma-ai.com/) 😑
+
+<Collapse title="A note on Prisma Cloud">
+
+_Prisma_ is open-source and can be used as a standalone infrastructure component hosted on your favorite cloud provider. [_Prisma Cloud_](https://www.prisma.io/cloud) is an application (used through a CLI & web interface) that provides tools and services around Prisma. When you're using Prisma, usage of Prisma Cloud is optional.
+
+The goal of Prisma Cloud is to ease the workflows in Prisma projects. It features a **data browser**, a **deployment history** (soon with **automatic rollbacks**), various **team collaboration** options as well as **cloud provider integrations** to make it easy for developers to setup and maintain their Prisma servers.
+
+**Get started with Prisma Cloud [here](https://app.prisma.io/).**
+
+</Collapse>
+
+
+## Why use Prisma?
+
+### Simple database workflows
+
+Prisma's overall goal is to remove complexity from common database workflows and make it easy for developers to work with databases:
+
+- **Auto-generated CRUD GraphQL API** for easy database access. ([Learn more](/use-prisma-api).)
+  - **Type safe database access** thanks to a strongly typed GraphQL schema.
+  - GraphQL is a lot more **practical and developer-friendly** than SQL or NoSQL APIs.
+  - Adheres to the [**OpenCRUD**](https://www.opencrud.org/) standard.
+- Prisma unifies access to multiple databases at once (_coming soon_) and therefore drastically **reduces complexity in cross-database workflows** using GraphQL as a universal query language.
+- **Realtime streaming & event system for your database** ensuring you're getting updates for all important events happening in your database.
+- **Automatic database migrations** based on a declarative data model expressed using GraphQL's schema definition language (SDL).
+- Other database workflows such as **[data import, export](jsw9) & more**.
+
+### A realtime layer for your database
+
+Some databases, such as RethinkDB or DynamoDB provide a realtime API out-of-the box. Such an API lets clients _subscribe_ to any changes happening in the database. The vast majority of conventional databases however does not offer such a realtime API, and implementing it manually gets very complex.
+
+**Prisma offers a realtime API for every [supported database](https://www.prisma.io/features/databases/)**, letting clients subscribe to any database event using GraphQL subscriptions. 
+
+### End-to-end type safety
+
+Programming in a type safe way is the default for modern application development. Here are some of the core benefits type safety provides:
+
+- **Confidence**: Developers can have strong confidence in their code thanks to static analysis and compile-time error checks.
+- **Developer experience**: Developer experience increases drastically when having clearly defined data types. Type definitions are the foundation for IDE features like *intelligent auto-completion* or *jump-to-definition*.
+- **Code generation**: It's easy to leverage code generation in your development workflows to prevent writing boilerplate code.
+- **Cross-system contracts:** Type definitions can be shared across systems (e.g. between client and server) and serve as contracts that define the respective interfaces/APIs.
+
+**End-to-end type safety** refers to having type safety across the entire stack, from client to database. An end-to-end type safe GraphQL architecture might look as follows:
+
+- **Database**: Prisma provides the strongly typed database layer, the *data model* defines the data types that are being stored in the database
+- **Application server (GraphQL)**: The application server defines its own GraphQL schema where it either reuses or transforms the data types from the database. The GraphQL server needs to be written in a type safe language (e.g. TypeScript, Scala, Go).
+- **Client**: A client being aware of the application server's GraphQL schema can validate API requests and potential responses at build-time. Popular GraphQL clients like Apollo and Relay support code generation workflows out-of-the-box.
+
+### Clean and layered architecture
+
+When developing application servers, most complexity lies in implementing a safe and well-organized database access with respect to _synchronization_, _query optimization_/_performance_ and _security_. This becomes even more complicated when *multiple* databases are involved.
+
+One common solution to thius problem is the introduction of a dedicated _data access layer_ (DAL) that abstracts away the complexities of database access. The DAL's API is consumed by the application server, allowing API developers to simply think about _what_ data they need instead of worrying about _how_ to securely and performantly retrieve it from the database.
+
+![](https://i.imgur.com/SUH6AqW.png)
+
+Using a DAL ensures a **clear separation of concerns** and therefore **improves maintainability and reusability** of your code. Having some sort of database abstraction (be it a simple ORM library or a standalone infrastructure component) is **best practice** for smaller sized applications as well as for applications running at scale. It ensures the application server can talk to your database(s) in a **secure and performant** way.
+
+Prisma is an auto-generated DAL following the same principles as industry-leading DALs (such as Twitter's [Strato](https://about.sourcegraph.com/graphql/graphql-at-twitter/) or Facebook's [TAO](https://www.facebook.com/notes/facebook-engineering/tao-the-power-of-the-graph/10151525983993920/)) while still being accessible for smaller applications.
+
+Prisma lets you start your project with a clean architecture from the beginning and saves you from writing the boilerplate that is otherwise required to glue together database and application server.
+
+### Easiest way to develop and evolve GraphQL servers
+
+Despite being a fairly new technology, GraphQL sees a tremendous adoption. [Many small and big companies](http://graphql.org/users) are using it in production today and there's good [reasons](https://www.prisma.io/blog/top-5-reasons-to-use-graphql-b60cfa683511/) to assume adoption will further increase in the future.
+
+As mentioned above, Prisma's main use case is building GraphQ servers. The process of developing a GraphQL server commonly follows the model of _schema-driven development_ where a new API feature is first defined in the _GraphQL schema_ and then implemented using _resolver functions_.
+
+Using Prisma as the data access layer and _GraphQL bindings_ that connect to Prisma, resolver implementation becomes straightforward. 
+
+To get advanced API features such as cursor-based/Relay pagination, powerful filters or sorting mechanisms you can simply _piggyback_ on Prisma's GraphQL API instead of implementing them from scratch.
+
+## How does Prisma fit into your stack?
+
+### Composing GraphQL APIs with GraphQL bindings
+
+When working with Prisma, you'll usually work with _multiple_ GraphQL APIs across your stack, each having a different responsibility (e.g. Application server, DAL, ...).
+
+Prisma's auto-generated CRUD/realtime GraphQL API is the foundation for your _application server_. In the application server, Prisma's generic CRUD operations are re-exposed via _GraphQL bindings_ and transformed into a domain-specific GraphQL API (with a custom schema) which is exposed to your client applications.
+
+Another common approach is to use Prisma for developing "GraphQL microservices" with a GraphQL gateway layer on top, combining the underlying microservices (using [_GraphQL schema stitching_](https://www.prisma.io/blog/graphql-schema-stitching-explained-schema-delegation-4c6caf468405/)).
+
+#### Example Architectures
+
+Prisma is extremely flexible and can be used with almost any architecture. Here are some sample architectures demonstrating how Prisma fits into your stack.
+
+----
+
+### Architecture #1
+
+- 1 Application server
+- 1 Prisma service
+- 1 Database
+
+![](https://i.imgur.com/pfzYRo7.png)
+
+This architecture is very common to start out with. It's often used for small- and medium-sized applications where you don't need to split up your data across several databases or use multiple services.
+
+In this setup, the Prisma service provides the interface to the database (the _data access layer_). Its GraphQL API is consumed by the GraphQL application server which tailors the generic CRUD operations to the clients' needs.
+
+----
+
+### Architecture #2
+
+- 1 GraphQL "gateway" server
+- n Application servers (Microservices)
+- n Prisma services
+- n Database
+
+![](https://i.imgur.com/e5gdkoY.png)
+
+When an application grows, it often makes sense to create separate "microservices" with distinct responsibilities. For example in a webshop application, one service could be responsible for *user management*, another could be responsible for *payment and shipping*, another one for storing *products*.
+
+Creating multiple microservices (each backed by one Prisma service) with clear responsibilities improves the modularity of your codebase. It also makes it easier to work in bigger organizations as each team can develop and maintain their own microservice(s).
+
+----
+
+### Architecture #3
+
+- 1 Prisma service
+- 1 Database
+
+![](https://i.imgur.com/LPtASMz.png)
+
+In the rare cases where your app doesn't require any authentication, authorization or other business logic on the server-side, this architecture might be appropriate for you. Exposing Prisma directly to your clients means that these are now effectively talking directly to your database (through Prisma's GraphQL abstraction).
+
+Here's a few use cases where this architecture works:
+
+- Prototyping
+- Internal tooling, exposing public data or other use cases where authentication and authorization are not important
+- Learning how GraphQL works on the frontend

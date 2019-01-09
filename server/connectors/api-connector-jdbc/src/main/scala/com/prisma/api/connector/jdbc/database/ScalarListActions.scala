@@ -23,39 +23,13 @@ trait ScalarListActions extends BuilderBase with FilterConditionBuilder with Nod
     updateScalarListValuesForIds(model, listFieldMap, Vector(id))
   }
 
-  def updateScalarListValuesByFilter(model: Model, listFieldMap: Vector[(String, ListGCValue)], whereFilter: Option[Filter]): DBIO[Unit] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    if (listFieldMap.isEmpty) {
-      DBIOAction.successful(())
-    } else {
-      val condition    = buildConditionForFilter(whereFilter)
-      val aliasedTable = modelTable(model).as(topLevelAlias)
-      val query = sql
-        .select(aliasColumn(model.dbNameOfIdField_!))
-        .from(aliasedTable)
-        .where(condition)
-
-      val idQuery = queryToDBIO(query)(
-        setParams = pp => SetParams.setFilter(pp, whereFilter),
-        readResult = rs => rs.readWith(readNodeId(model))
-      )
-      for {
-        // FIXME: bring back the commented code once SelectedFields have landed on stable
-//        result <- getNodes(model, whereFilter.map(QueryArguments.withFilter), SelectedFields(model.idField_!))
-//        ids    = result.nodes.map(_.id)
-        ids <- idQuery
-        _   <- updateScalarListValuesForIds(model, listFieldMap, ids)
-      } yield ()
-    }
-  }
-
   def deleteScalarListValuesByNodeIds(model: Model, ids: Vector[IdGCValue]): DBIO[Unit] = {
     val actions = model.scalarListFields.map(deleteListValuesForIds(_, ids))
     DBIO.seq(actions: _*)
   }
 
-  private def updateScalarListValuesForIds(model: Model, listFieldMap: Vector[(String, ListGCValue)], ids: Vector[IdGCValue]): DBIO[Unit] = {
-    if (ids.isEmpty) {
+  def updateScalarListValuesForIds(model: Model, listFieldMap: Vector[(String, ListGCValue)], ids: Vector[IdGCValue]): DBIO[Unit] = {
+    if (ids.isEmpty || listFieldMap.isEmpty) {
       DBIOAction.successful(())
     } else {
       val actions = listFieldMap.map {

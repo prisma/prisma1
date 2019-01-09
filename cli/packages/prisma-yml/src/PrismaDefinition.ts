@@ -11,7 +11,6 @@ import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
 import { replaceYamlValue } from './utils/yamlComment'
-import { DefinitionMigrator } from './utils/DefinitionMigrator'
 import { parseEndpoint } from './utils/parseEndpoint'
 const debug = require('debug')('prisma definition')
 
@@ -25,8 +24,6 @@ export interface EnvVars {
 
 export type HookType = 'post-deploy'
 
-type DeprecationType = 'cluster'
-
 export class PrismaDefinitionClass {
   definition?: PrismaDefinition
   rawJson?: any
@@ -37,6 +34,7 @@ export class PrismaDefinitionClass {
   env: Environment
   out?: IOutput
   envVars: any
+  rawEndpoint?: string
   private definitionString: string
   constructor(
     env: Environment,
@@ -53,7 +51,7 @@ export class PrismaDefinitionClass {
     this.out = out
     this.envVars = envVars
   }
-  async load(args: Args, envPath?: string) {
+  async load(args: Args, envPath?: string, graceful?: boolean) {
     if (envPath) {
       if (!fs.pathExistsSync(envPath)) {
         envPath = path.join(process.cwd(), envPath)
@@ -65,13 +63,7 @@ export class PrismaDefinitionClass {
     }
     dotenv.config({ path: envPath })
     if (this.definitionPath) {
-      await this.loadDefinition(args)
-      const migrator = new DefinitionMigrator(this)
-      const migrated = migrator.migrate(this.definitionPath)
-      // if there was a migration, reload the definition
-      if (migrated) {
-        await this.loadDefinition(args)
-      }
+      await this.loadDefinition(args, graceful)
 
       this.validate()
     } else {
@@ -81,24 +73,15 @@ export class PrismaDefinitionClass {
     }
   }
 
-  private handleDeprecation(deprecationType: DeprecationType) {
-    if (deprecationType === 'cluster') {
-      throw new Error(`
-        ${chalk.yellow(`cluster, service, and stage are deprecated.`)}
-        ${chalk.yellow(`Use the 'endpoint' property to define the endpoint of a service:`)}
-        ${chalk.yellow(`endpoint: http://localhost:4466/[<workspace>/]<service>/<stage>.`)}
-      `
-      )
-    }
-  }
-
-  private async loadDefinition(args) {
+  private async loadDefinition(args: any, graceful?: boolean) {
     const { definition, rawJson } = await readDefinition(
       this.definitionPath!,
       args,
       this.out,
       this.envVars,
+      graceful,
     )
+    this.rawEndpoint = rawJson.endpoint
     this.definition = definition
     this.rawJson = rawJson
     this.definitionString = fs.readFileSync(this.definitionPath!, 'utf-8')
@@ -115,7 +98,7 @@ export class PrismaDefinitionClass {
   }
 
   get clusterBaseUrl(): string | undefined {
-    if (!this.definition || this.definition.cluster || !this.endpoint) {
+    if (!this.definition || !this.endpoint) {
       return undefined
     }
     const { clusterBaseUrl } = parseEndpoint(this.endpoint)
@@ -125,12 +108,6 @@ export class PrismaDefinitionClass {
   get service(): string | undefined {
     if (!this.definition) {
       return undefined
-    }
-    if (this.endpoint && this.definition.service) {
-      this.handleDeprecation('cluster')
-    }
-    if (!this.endpoint && this.definition.service) {
-      return this.definition.service
     }
     if (!this.endpoint) {
       return undefined
@@ -143,12 +120,6 @@ export class PrismaDefinitionClass {
     if (!this.definition) {
       return undefined
     }
-    if (this.endpoint && this.definition.stage) {
-      this.handleDeprecation('cluster')
-    }
-    if (!this.endpoint && this.definition.stage) {
-      return this.definition.stage
-    }
     if (!this.endpoint) {
       return undefined
     }
@@ -159,12 +130,6 @@ export class PrismaDefinitionClass {
   get cluster(): string | undefined {
     if (!this.definition) {
       return undefined
-    }
-    if (this.endpoint && this.definition.cluster) {
-      this.handleDeprecation('cluster')
-    }
-    if (!this.endpoint && this.definition.cluster) {
-      return this.definition.cluster
     }
     if (!this.endpoint) {
       return undefined
@@ -179,7 +144,6 @@ export class PrismaDefinitionClass {
     const cluster = this.env.clusterByName(clusterName!)!
     if (
       this.definition &&
-      this.definition.cluster &&
       clusterName &&
       cluster &&
       cluster.shared &&
@@ -255,16 +219,18 @@ and execute ${chalk.bold.green(
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
         debug('making cluster here')
-        const existingCluster = this.env.clusters.find(
-          c => c.baseUrl.toLowerCase() === clusterBaseUrl,
-        )
+        const existingCluster = !process.env.PRISMA_MANAGEMENT_API_SECRET
+          ? this.env.clusters.find(
+              c => c.baseUrl.toLowerCase() === clusterBaseUrl,
+            )
+          : null
         const cluster =
           existingCluster ||
           new Cluster(
             this.out!,
             clusterName,
             clusterBaseUrl,
-            shared ? this.env.cloudSessionKey : undefined,
+            shared || isPrivate ? this.env.cloudSessionKey : undefined,
             local,
             shared,
             isPrivate,
@@ -280,14 +246,16 @@ and execute ${chalk.bold.green(
   }
 
   getTypesString(definition: PrismaDefinition) {
-    const typesPaths = Array.isArray(definition.datamodel)
-      ? definition.datamodel
-      : [definition.datamodel]
+    const typesPaths = definition.datamodel
+      ? Array.isArray(definition.datamodel)
+        ? definition.datamodel
+        : [definition.datamodel]
+      : []
 
     const errors: ErrorMessage[] = []
     let allTypes = ''
     typesPaths.forEach(unresolvedTypesPath => {
-      const typesPath = path.join(this.definitionDir, unresolvedTypesPath)
+      const typesPath = path.join(this.definitionDir, unresolvedTypesPath!)
       if (fs.existsSync(typesPath)) {
         const types = fs.readFileSync(typesPath, 'utf-8')
         allTypes += types + '\n'
@@ -302,20 +270,10 @@ and execute ${chalk.bold.green(
   }
 
   getClusterName(): string | null {
-    if (this.definition && this.definition.cluster) {
-      return this.definition!.cluster!.split('/').slice(-1)[0]
-    }
     return this.cluster || null
   }
 
   getWorkspace(): string | null {
-    if (this.definition && this.definition.cluster) {
-      const splitted = this.definition!.cluster!.split('/')
-      if (splitted.length > 1) {
-        return splitted[0]
-      }
-    }
-
     if (this.definition && this.endpoint) {
       const { workspaceSlug } = parseEndpoint(this.endpoint)
       if (workspaceSlug) {
@@ -328,7 +286,7 @@ and execute ${chalk.bold.green(
 
   getDeployName() {
     const cluster = this.getCluster()
-    return concatName(cluster!, this.definition!.service!, this.getWorkspace())
+    return concatName(cluster!, this.service!, this.getWorkspace())
   }
 
   getSubscriptions(): FunctionInput[] {
@@ -367,15 +325,6 @@ and execute ${chalk.bold.green(
     return []
   }
 
-  async addCluster(cluster: string, args: any) {
-    if (!this.definition!.cluster) {
-      this.definition!.cluster = cluster
-      const newString = this.definitionString + `\ncluster: ${cluster}`
-      fs.writeFileSync(this.definitionPath!, newString)
-      await this.load(args)
-    }
-  }
-
   replaceEndpoint(newEndpoint) {
     this.definitionString = replaceYamlValue(
       this.definitionString,
@@ -383,6 +332,12 @@ and execute ${chalk.bold.green(
       newEndpoint,
     )
     fs.writeFileSync(this.definitionPath!, this.definitionString)
+  }
+
+  addDatamodel(datamodel) {
+    this.definitionString += `\ndatamodel: ${datamodel}`
+    fs.writeFileSync(this.definitionPath!, this.definitionString)
+    this.definition!.datamodel = datamodel
   }
 
   getEndpoint(serviceInput?: string, stageInput?: string) {

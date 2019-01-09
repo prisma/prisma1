@@ -10,12 +10,7 @@ trait CursorConditionBuilder extends BuilderBase {
   // The subquery Q fetches all the ID's defined by the cursors and order.
   // On invalid cursor params, no error is thrown. The result set will just be empty.
 
-  def buildCursorCondition(queryArguments: Option[QueryArguments], model: Model): Condition = queryArguments match {
-    case Some(args) => buildCursorCondition(args, model)
-    case None       => noCondition()
-  }
-
-  private def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
+  def buildCursorCondition(queryArguments: QueryArguments, model: Model): Condition = {
     val (before, after, orderBy) = (queryArguments.before, queryArguments.after, queryArguments.orderBy)
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return noCondition()
@@ -37,7 +32,7 @@ trait CursorConditionBuilder extends BuilderBase {
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
-    def cursorFor(cursor: String, cursorType: String): Condition = (cursorType, sortDirection.toLowerCase.trim) match {
+    def cursorFor(cursorType: String): Condition = (cursorType, sortDirection.toLowerCase.trim) match {
       case ("before", "asc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
       case ("before", "desc") => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
       case ("after", "asc")   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
@@ -45,8 +40,8 @@ trait CursorConditionBuilder extends BuilderBase {
       case _                  => throw new IllegalArgumentException
     }
 
-    val afterCursorFilter  = after.map(cursorFor(_, "after")).getOrElse(noCondition())
-    val beforeCursorFilter = before.map(cursorFor(_, "before")).getOrElse(noCondition())
+    val afterCursorFilter  = after.map(_ => cursorFor("after")).getOrElse(noCondition())
+    val beforeCursorFilter = before.map(_ => cursorFor("before")).getOrElse(noCondition())
 
     afterCursorFilter.and(beforeCursorFilter)
   }

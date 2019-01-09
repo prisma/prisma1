@@ -1,18 +1,20 @@
 package com.prisma.api.mutations
 
-import com.prisma.IgnoreActive
+import com.prisma.ConnectorTag.PostgresConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
+import com.prisma.shared.models.ConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   val schema = "passive_test"
 
-  override def runSuiteOnlyForPassiveConnectors = true
+  override def runOnlyForConnectors   = Set(PostgresConnectorTag)
+  override def runOnlyForCapabilities = Set(SupportsExistingDatabasesCapability)
 
   def executeOnInternalDatabase(sql: String) = {
-    val connector = testDependencies.deployConnector.asInstanceOf[PostgresDeployConnector]
+    val connector = deployConnector.asInstanceOf[PostgresDeployConnector]
     val session   = connector.managementDatabase.createSession()
     val statement = session.createStatement()
     statement.execute(sql)
@@ -28,33 +30,45 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
                                 |CREATE SCHEMA $schema;
                                 |CREATE TABLE $schema.list (
                                 |  id      varchar PRIMARY KEY  -- implicit primary key constraint
+                                |, name    text NOT NULL UNIQUE
+                                |);
+                                |
+                                |CREATE TABLE $schema.user (
+                                |  id      varchar PRIMARY KEY  -- implicit primary key constraint
                                 |, name    text NOT NULL
                                 |);
                                 |
                                 |CREATE TABLE $schema.todo (
                                 |  id       varchar PRIMARY KEY
-                                |, title     text NOT NULL
-                                |, list_id varchar NOT NULL REFERENCES $schema.list (id) ON UPDATE CASCADE
+                                |, title     text NOT NULL UNIQUE
+                                |, list_id varchar REFERENCES $schema.list (id) ON UPDATE CASCADE
+                                |, user_id varchar REFERENCES $schema.user (id) ON UPDATE CASCADE
                                 |);
       """.stripMargin
 
-  lazy val inlineRelationProject = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
+  lazy val inlineRelationProject = SchemaDsl.fromPassiveConnectorSdl(deployConnector, id = schema) {
     """
       | type List @pgTable(name: "list"){
       |   id: ID! @unique
-      |   name: String!
-      |   todos: [Todo!]!
+      |   name: String! @unique
+      |   todos: [Todo]
       | }
       |
       | type Todo @pgTable(name: "todo"){
       |   id: ID! @unique
-      |   title: String!
+      |   title: String! @unique
       |   list: List @pgRelation(column: "list_id")
+      |   user: MyUser @pgRelation(column: "user_id")
+      | }
+      |
+      | type MyUser @pgTable(name: "user"){ # it's called MyUser so that the type is on the right side of the relation to ensure a bug is not there
+      |   id: ID! @unique
+      |   name: String!
       | }
     """.stripMargin
   }
 
-  "A Create Mutation" should "create and return item" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "create and return item" in {
     executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
@@ -67,9 +81,8 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" taggedAs (IgnoreActive) ignore {
+  "A Create Mutation" should "created nested items" in {
     executeOnInternalDatabase(inlineRelationSchema)
-    // TODO: how do we implement this? We would have to reorder in this case?
     val res = server.query(
       s"""mutation {
          |  createTodo(data: {
@@ -77,14 +90,18 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
          |    list: {
          |      create: { name: "the list" }
          |    }
-         |  }){ title }
+         |  }){ title
+         |      list{
+         |          name
+         |      }
+         |  }
          |}""".stripMargin,
       project = inlineRelationProject
     )
-    res.toString should be(s"""{"data":{"createTodo":{"title":"the todo"}}}""")
+    res.toString should be(s"""{"data":{"createTodo":{"title":"the todo","list":{"name":"the list"}}}}""")
   }
 
-  "A Create Mutation" should "created nested items 2" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "create nested items 2" in {
     executeOnInternalDatabase(inlineRelationSchema)
     val res = server.query(
       s"""mutation {
@@ -100,9 +117,73 @@ class PassiveConnectorSpecForInlineRelations extends PassiveConnectorSpec {
     res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
   }
 
-  "the connector" should "support diverging names for models/tables and fields/columns" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "create nested items 3" in {
     executeOnInternalDatabase(inlineRelationSchema)
-    val project = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
+    val res = server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{ title: "the todo" }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+    res.toString should be(s"""{"data":{"createList":{"name":"the list"}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |  updateList(
+         |  where: {name:"the list"}
+         |  data: {
+         |    todos: {
+         |      create: [{ title: "the todo 2" }]
+         |    }
+         |  }){ name todos{title} }
+         |}""",
+      project = inlineRelationProject
+    )
+    res2.toString should be(s"""{"data":{"updateList":{"name":"the list","todos":[{"title":"the todo"},{"title":"the todo 2"}]}}}""")
+
+  }
+
+  "Expanding 2 inline relations on a type" should "work" in {
+    executeOnInternalDatabase(inlineRelationSchema)
+
+    server.query(
+      s"""mutation {
+         |  createList(data: {
+         |    name: "the list"
+         |    todos: {
+         |      create: [{
+         |         title: "the todo"
+         |         user: {
+         |           create: { name: "the user" }
+         |         }
+         |      }]
+         |    }
+         |  }){ name }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+
+    val res = server.query(
+      s"""{
+         |  todoes {
+         |    title
+         |    list { name }
+         |    user { name }
+         |  }
+         |}""".stripMargin,
+      project = inlineRelationProject
+    )
+    res should be(s"""{"data":{"todoes":[{"title":"the todo","list":{"name":"the list"},"user":{"name":"the user"}}]}}""".parseJson)
+  }
+
+  "the connector" should "support diverging names for models/tables and fields/columns" in {
+    executeOnInternalDatabase(inlineRelationSchema)
+    val project = SchemaDsl.fromPassiveConnectorSdl(deployConnector, id = schema) {
       """
         | type List @pgTable(name: "list"){
         |   id: ID! @unique
@@ -143,12 +224,12 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
        |);
      """.stripMargin
 
-  lazy val relationTableProject = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
+  lazy val relationTableProject = SchemaDsl.fromPassiveConnectorSdl(deployConnector, id = schema) {
     """
       | type List @pgTable(name: "list"){
       |   id: ID! @unique
       |   name: String!
-      |   todos: [Todo!]! @pgRelationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
+      |   todos: [Todo] @pgRelationTable(table: "list_to_todo", relationColumn: "list_id", targetColumn: "todo_id")
       | }
       |
       | type Todo @pgTable(name: "todo"){
@@ -159,7 +240,7 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
     """.stripMargin
   }
 
-  "A Create Mutation" should "create and return item" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "create and return item" in {
     executeOnInternalDatabase(relationTableSchema)
     val res = server.query(
       s"""mutation {
@@ -172,7 +253,7 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
     res.toString should be(s"""{"data":{"createList":{"name":"the list name"}}}""")
   }
 
-  "A Create Mutation" should "created nested items" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "created nested items" in {
     executeOnInternalDatabase(relationTableSchema)
     // how do we implement this? We would have to reorder in this case?
     val res = server.query(
@@ -208,13 +289,13 @@ class PassiveConnectorSpecForAutoGeneratedIds extends FlatSpec with PassiveConne
        |);
      """.stripMargin
 
-  lazy val project = SchemaDsl.fromPassiveConnectorSdl(testDependencies.deployConnector, id = schema) {
+  lazy val project = SchemaDsl.fromPassiveConnectorSdl(deployConnector, id = schema) {
     """
       | type List @pgTable(name: "list"){
       |   id: Int! @unique
       |   name: String!
       |   foo: String
-      |   todos: [Todo!]!
+      |   todos: [Todo]
       | }
       |
       | type Todo @pgTable(name: "todo"){
@@ -225,7 +306,7 @@ class PassiveConnectorSpecForAutoGeneratedIds extends FlatSpec with PassiveConne
     """.stripMargin
   }
 
-  "A Create Mutation" should "create and return item" taggedAs (IgnoreActive) in {
+  "A Create Mutation" should "create and return item" in {
     executeOnInternalDatabase(sqlSchema)
     val res1 = server.query(
       s"""mutation {
@@ -248,7 +329,7 @@ class PassiveConnectorSpecForAutoGeneratedIds extends FlatSpec with PassiveConne
     res2.toString should be(s"""{"data":{"createList":{"id":2,"name":"the list name"}}}""")
   }
 
-  "A nested Create" should "create and return the item" taggedAs (IgnoreActive) in {
+  "A nested Create" should "create and return the item" in {
     executeOnInternalDatabase(sqlSchema)
     val res1 = server.query(
       s"""mutation {

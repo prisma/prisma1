@@ -1,0 +1,16 @@
+type A {
+  toB: B! @relation(name: "RaToB")
+  toB2: B! @relation(name: "RaToB2")
+  toC: C
+}
+
+type B {
+  toA: A! @relation(name: "RaToB")
+  toA2: A! @relation(name: "RaToB2")
+  toC: C!
+}
+
+type C {
+  toB: [B!]!
+  toA: [A!]!
+}

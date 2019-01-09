@@ -1,0 +1,19 @@
+type A {
+  toB: B! @relation(name: "RaToB", link: INLINE)
+  toB2: B! @relation(name: "RaToB2", link: INLINE)
+  toC: C
+  id: ID! @id
+}
+
+type B {
+  toA: A! @relation(name: "RaToB")
+  toA2: A! @relation(name: "RaToB2")
+  toC: C!
+  id: ID! @id
+}
+
+type C {
+  toB: [B!]! @relation(link: INLINE)
+  toA: [A!]! @relation(link: INLINE)
+  id: ID! @id
+}

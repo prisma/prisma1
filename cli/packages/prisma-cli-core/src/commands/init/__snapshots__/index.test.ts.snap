@@ -2,7 +2,7 @@
 
 exports[`init choose local 1`] = `
 Object {
-  "datamodel.graphql": "type User {
+  "datamodel.prisma": "type User {
   id: ID! @unique
   name: String!
 }
@@ -22,6 +22,7 @@ services:
           default:
             connector: mysql
             host: mysql
+            rawAccess: true
             port: 3306
             migrations: true
   mysql:
@@ -34,7 +35,7 @@ volumes:
   mysql:
 ",
   "prisma.yml": "endpoint: http://localhost:4466
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
 }
 `;
 
@@ -43,7 +44,7 @@ exports[`init choose local 2`] = `
 Created 3 new files:                                                                          
 
   prisma.yml           Prisma service definition
-  datamodel.graphql    GraphQL SDL-based datamodel (foundation for database)
+  datamodel.prisma    GraphQL SDL-based datamodel (foundation for database)
   docker-compose.yml   Docker configuration file
 
 Next steps:
@@ -59,7 +60,7 @@ exports[`init choose local 3`] = `""`;
 
 exports[`init test project 1`] = `
 Object {
-  "datamodel.graphql": "type User {
+  "datamodel.prisma": "type User {
   id: ID! @unique
   name: String!
 }
@@ -79,10 +80,11 @@ services:
           default:
             connector: postgres
             host: localhost
+            rawAccess: true
             port: 5432
             migrations: true",
   "prisma.yml": "endpoint: http://localhost:4466
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
 }
 `;
 
@@ -92,7 +94,7 @@ exports[`init test project 2`] = `
 Created 3 new files:                                                                          
 
   prisma.yml           Prisma service definition
-  datamodel.graphql    GraphQL SDL-based datamodel (foundation for database)
+  datamodel.prisma    GraphQL SDL-based datamodel (foundation for database)
   docker-compose.yml   Docker configuration file
 
 Next steps:

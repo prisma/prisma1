@@ -4,6 +4,7 @@ import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
@@ -11,6 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.JsArray
 
 class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum("Enum", Vector("HA", "HO"))

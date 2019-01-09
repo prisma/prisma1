@@ -24,7 +24,7 @@ function makeDefinition(
 ) {
   const definitionDir = getTmpDir()
   const definitionPath = path.join(definitionDir, 'prisma.yml')
-  const modelPath = path.join(definitionDir, 'datamodel.graphql')
+  const modelPath = path.join(definitionDir, 'datamodel.prisma')
   const env = makeEnv(defaultGlobalRC)
 
   const definition = new PrismaDefinitionClass(env, definitionPath, envVars)
@@ -56,7 +56,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: some-secret
 
@@ -70,11 +70,11 @@ type User @model {
   what: String
 }
 `
-
-    const { definition } = await loadDefinition(yml, datamodel)
-
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.getCluster()).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('load yml with secret and env var', async () => {
     const secret = 'this-is-a-long-secret'
@@ -85,7 +85,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: \${env:MY_TEST_SECRET}
 
@@ -100,9 +100,11 @@ type User @model {
 }
 `
 
-    const { definition } = await loadDefinition(yml, datamodel)
-
-    expect(definition.definition).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('load yml with secret and env var in .env', async () => {
     const secret = 'this-is-a-long-secret'
@@ -112,7 +114,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: \${env:MY_DOT_ENV_SECRET}
 
@@ -135,10 +137,12 @@ type User @model {
     )
 
     await env.load()
-    await definition.load({}, envPath)
 
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('load yml with injected env var', async () => {
     const secret = 'this-is-a-long-secret'
@@ -148,7 +152,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 secret: \${env:MY_INJECTED_ENV_SECRET}
 
@@ -175,10 +179,11 @@ type User @model {
     )
 
     await env.load()
-    await definition.load({})
-
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   /**
    * This test ensures, that GRAPHCOOL_SECRET can't be injected anymore
@@ -190,7 +195,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 schema: schemas/database.graphql
     `
@@ -205,7 +210,7 @@ type User @model {
 
     const definitionDir = getTmpDir()
     const definitionPath = path.join(definitionDir, 'prisma.yml')
-    const modelPath = path.join(definitionDir, 'datamodel.graphql')
+    const modelPath = path.join(definitionDir, 'datamodel.prisma')
     const env = makeEnv(defaultGlobalRC)
 
     const definition = new PrismaDefinitionClass(env, definitionPath, {
@@ -233,7 +238,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 disableAuth: true
 
@@ -256,10 +261,11 @@ type User @model {
     )
 
     await env.load()
-    await definition.load({}, envPath)
-
-    expect(definition.definition).toMatchSnapshot()
-    expect(definition.secrets).toMatchSnapshot()
+    try {
+      await loadDefinition(yml, datamodel)
+    } catch (e) {
+      expect(e).toMatchSnapshot()
+    }
   })
   test('throw when no secret or disable auth provided', async () => {
     const yml = `\
@@ -268,7 +274,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 schema: schemas/database.graphql
     `
@@ -297,7 +303,7 @@ stage: dev
 cluster: local
 
 datamodel:
-- datamodel.graphql
+- datamodel.prisma
 
 schema: schemas/database.graphql
 

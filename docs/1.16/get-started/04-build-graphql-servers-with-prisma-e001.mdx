@@ -1,0 +1,287 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Collapse from 'components/Markdown/Collapse'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: 'Build GraphQL Servers with Prisma',
+  position: 4,
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and Prisma bindings to build a GraphQL server.'
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Define the GraphQL schema for a _domain-specific_ GraphQL API
+- Implement resolver functions that are _delegating_ requests to Prisma using Prisma bindings
+
+## Add `graphql-yoga` server library to Node.JS project
+
+[`grahpql-yoga`](https://github.com/graphcool/graphql-yoga) is a GraphQL server library based on [Express.js](https://expressjs.com/). Add it to your project with the following command:
+
+```bash copy
+yarn add graphql-yoga
+```
+
+## Create and define the application schema
+
+When building GraphQL servers with Prisma, you're working with two GraphQL APIs:
+
+- The **database layer** exposing _generic CRUD operations_ (configured with Prisma)
+- The **application layer** exposing a _domain-specific API_ tailored to the needs of your client applications
+
+While the auto-generated GraphQL schema in `prisma.graphql` defines the API of your Prisma service, the GraphQL schema of your application layer (also called **application schema**) still needs to be defined.
+
+### Create application schema: `schema.graphql`
+
+Create a new file called `schema.graphql` which you will use to store the application schema:
+
+```bash copy
+touch schema.graphql
+```
+
+### Define API operations for application layer
+
+To define the API operations for your client applications, you need to specify the `Query` and `Mutation` types in your application schema - the following operations are examples for a simple blogging application:
+
+```graphql copy
+# import User, Post from "prisma.graphql"
+
+type Query {
+  publishedPosts: [Post!]!
+  post(postId: ID!): Post
+  postsByUser(userId: ID!): [Post!]!
+}
+
+type Mutation {
+  createUser(name: String!): User
+  createDraft(title: String!, userId: ID!): Post
+  publish(postId: ID!): Post
+}
+```
+
+<Warning>
+
+What looks like a comment in the first line of the application schema is **not** a comment but a required import statement from the [`graphql-import`](https://github.com/prismagraphql/graphql-import) library. If it was removed, the application schema would not be valid any more as the `Post` and `User` types were both undefined.
+
+</Warning>
+
+
+## Implement resolver functions
+
+Each API operation is backed by exactly one resolver function that's invoked when the operation is requested by a client. Here is how you implement the resolver functions for the six API operations you defined in the application schema. Replace the current contents of `index.js` entirely with the following code snippet:
+
+```js lineNumbers,copy
+const { GraphQLServer } = require('graphql-yoga')
+const { Prisma } = require('prisma-binding')
+
+const resolvers = {
+  Query: {
+    publishedPosts(parent, args, context, info) {
+      return context.db.query.posts({ where: { published: true } }, info)
+    },
+    post(parent, args, context, info) {
+      return context.db.query.post({ where: { id: args.postId } }, info)
+    },
+    postsByUser(parent, args, context, info) {
+      return context.db.query.posts(
+        {
+          where: {
+            author: { id: args.userId }
+          }
+        },
+        info
+      )
+    }
+  },
+  Mutation: {
+    createDraft(parent, args, context, info) {
+      return context.db.mutation.createPost(
+        {
+          data: {
+            title: args.title,
+            author: {
+              connect: { id: args.userId }
+            }
+          },
+        },
+        info
+      )
+    },
+    publish(parent, args, context, info) {
+      return context.db.mutation.updatePost(
+        {
+          where: { id: args.postId },
+          data: { published: true },
+        },
+        info
+      )
+    },
+    createUser(parent, args, context, info) {
+      return context.db.mutation.createUser(
+        {
+          data: { name: args.name }
+        },
+        info
+      )
+    }
+  },
+}
+```
+
+Each resolver simply delegates incoming requests to the Prisma binding object which is called `db` and attached to the resolvers' `context`.
+
+## Configure your GraphQL server
+
+Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the application schema along with its resolver functions. You're also instantiating the `Prisma` binding object and attach it to the `context` so that the resolvers can access it; again the `__YOUR__PRISMA_ENDPOINT__`-placeholder needs to be replaced with your acual endpoint:
+
+```js lineNumbers,copy
+const server = new GraphQLServer({
+  typeDefs: './src/schema.graphql',
+  resolvers,
+  context: req => ({
+    ...req,
+    db: new Prisma({
+      typeDefs: ‘prisma.graphql’,
+      endpoint: '__YOUR__PRISMA_ENDPOINT__',
+    }),
+  }),
+})
+server.start(() => console.log('Server is running on http://localhost:4000'))
+```
+
+## Launch the GraphQL server
+
+To start the GraphQL server (of the _application layer_) run the following command:
+
+```bash copy
+node index.js
+```
+
+## Explore the GraphQL API of the application layer in a Playground
+
+The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`. To test these operations, navigate your browser to [`http://localhost:4000`](http://localhost:4000) where the GraphQL server is running.
+
+Here are a few sample queries and mutations you can send to explore the API.
+
+<QueryChooser titles={["Create a new User", "Create new draft", "Publish a Post", "Fetch published Posts"]}>
+
+```graphql lineNumbers,copy
+mutation {
+  createUser(name: "Jenny") {
+    id
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  createDraft(
+    title: "GraphQL is great"
+    userId: "__USER_ID__"
+  ) {
+    id
+    published
+    author {
+      id
+    }
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  publish(postId: "__POST_ID__") {
+    id
+    title
+    published
+  }
+}
+```
+
+```graphql lineNumbers,copy
+query {
+  publishedPosts {
+    id
+    title
+    author {
+      id
+      name
+    }
+  }
+}
+```
+
+
+</QueryChooser>
+
+## Best practices for your GraphQL server
+
+<Collapse title="File Structure">
+
+Here are some hints for structuring your project:
+
+- Include the directory that contains the service configuration files for your Prisma service (in your case that's the `hello-world` directory) _inside_ the project directory of the GraphQL server.
+- The GraphQL schema of your Prisma API (called `prisma.graphql`) should be available in the directory where the source code for your GraphQL server is located. As it's auto-generated, it is helpful to put it into a dedicated directory, e.g. called `generated`.
+- Use `graphql-config` to enable the GraphQL Playground to show the two GraphQL APIs (Prisma and application server) side-by-side.
+
+Here's how your project structure will look like if you follow above:
+
+```
+.
+├── .graphqlconfig
+# defines the Prisma service (database layer)
+├── hello-world
+│   ├── datamodel.graphql
+│   └── prisma.yml
+# implementation of the GraphQL server (application layer)
+├── src                     
+│   ├── generated
+│   │   └── prisma.graphql
+│   ├── index.js
+│   └── schema.graphql
+├── package.json
+└── yarn.lock
+```
+
+</Collapse>
+
+<Collapse title="GraphQL Config">
+
+Your `.graphqlconfig.yml` file needs to define both GraphQL _projects_ you're working with:
+
+```yml
+projects:
+  app:
+    schemaPath: src/schema.graphql
+    extensions:
+      endpoints:
+        default: http://localhost:4000
+  hello-world:
+    schemaPath: src/generated/prisma.graphql
+    extensions:
+      prisma: hello-world/prisma.yml
+```
+
+This allows to quickly switch between the two GraphQL APIs using the sidenav inside the GraphQL Playground. Note that for this to work you need to open the Playground using the `graphql playground` command (from the GraphQL CLI) inside the same directory where your `.graphqlconfig` is located. 
+
+</Collapse>
+
+<Collapse title="Keep the GraphQL schema of your Prisma API up-to-date">
+
+Prisma's auto-generated GraphQL schema changes whenever you deploy changes to the service's data model. To ensure your local `prisma.graphql` stays up-to-date you can configure a post-deployment _hook_ which updates it after every deploy.
+
+You can configure the hook in `prisma.yml`:
+
+```yml
+datamodel: datamodel.graphql
+endpoint: http://localhost:4466 # or some other endpoint
+
+hooks:
+  post-deploy:
+    - graphql get-schema --endpoint ${self:endpoint} --output src/generated/prisma.graphql --no-all
+```
+
+This assumes that the GraphQL CLI is installed globally on your machine.
+
+</Collapse>

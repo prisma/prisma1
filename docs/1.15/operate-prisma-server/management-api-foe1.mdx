@@ -1,0 +1,54 @@
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: 'The Management API',
+  position: 20
+}
+
+## Overview
+
+The Management API of a Prisma server is used to deploy and manage the Prisma services running on the server. It is available via the `/management` path of your Prisma server, e.g. `http://localhost:4466/management`.
+
+## API Reference
+
+The Management API exposes the following operations (you can find the full GraphQL schema of the Management API [here](https://gist.github.com/nikolasburk/a1421fc218f00b6f552cc455ae309af0)).
+
+```graphql
+type Query {
+  """
+  Shows the status of the next migration in line to be applied to the project.
+  If no such migration exists, it shows the last applied migration.
+  """
+  migrationStatus(name: String!, stage: String!): Migration!
+
+  """Shows all projects the caller has access to."""
+  listProjects: [Project!]!
+
+  """
+  Shows all migrations for the project. Debug query, will likely be removed in the future.
+  """
+  listMigrations(name: String!, stage: String!): [Migration!]!
+
+  """Gets a project by name and stage."""
+  project(name: String!, stage: String!): Project!
+
+  """Information about the server"""
+  serverInfo: ServerInfo!
+
+  """generates a token for the given project"""
+  generateProjectToken(name: String!, stage: String!): String!
+}
+
+type Mutation {
+  deploy(input: DeployInput!): DeployPayload
+  addProject(input: AddProjectInput!): AddProjectPayload
+  deleteProject(input: DeleteProjectInput!): DeleteProjectPayload
+  setCloudSecret(input: SetCloudSecretInput!): SetCloudSecretPayload
+}
+```
+
+<Warning>
+
+Duye to legacy reasons, the Management API currently uses outdated terminology to refer to certain Prisma concepts. Most importantly, **Prisma services** are called **projects** (e.g. `listProjects`) and **Prisma servers** are called **clusters** in the terminology of the API.
+
+</Warning>

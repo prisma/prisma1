@@ -49,9 +49,9 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
           throw NodesNotConnectedError(
             relation = relationField.relation,
             parent = relationField.model,
-            parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+            parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
             child = relationField.relatedModel_!,
-            childWhere = Some(NodeSelector.forIdGCValue(relationField.relatedModel_!, childId))
+            childWhere = Some(NodeSelector.forId(relationField.relatedModel_!, childId))
           )
       }
     )
@@ -77,7 +77,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
           throw NodesNotConnectedError(
             relation = relationField.relation,
             parent = relationField.model,
-            parentWhere = Some(NodeSelector.forIdGCValue(relationField.model, parentId)),
+            parentWhere = Some(NodeSelector.forId(relationField.model, parentId)),
             child = relationField.relatedModel_!,
             childWhere = None
           )
@@ -101,14 +101,7 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
 
     queryToDBIO(query)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
-      readResult = rs => {
-        if (rs.next) {
-          // fixme: decide which error to use
-          throw RequiredRelationWouldBeViolated(relation)
-          //        throw RelationIsRequired(field.name, field.model.name)
-        }
-
-      }
+      readResult = rs => if (rs.next) throw RequiredRelationWouldBeViolated(relation)
     )
   }
 }

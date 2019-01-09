@@ -23,14 +23,13 @@ case class Create(
   implicit val system: ActorSystem             = apiDependencies.system
   implicit val materializer: ActorMaterializer = apiDependencies.materializer
 
-  val coolArgs: CoolArgs = CoolArgs.fromSchemaArgs(args.raw)
+  val coolArgs: CoolArgs   = CoolArgs.fromSchemaArgs(args.raw)
+  lazy val createMutaction = DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs)
 
-  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful {
-    DatabaseMutactions(project).getMutactionsForCreate(model, coolArgs)
-  }
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful { createMutaction }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val createdItem = results.databaseResult.asInstanceOf[CreateNodeResult]
-    returnValueByUnique(NodeSelector.forIdGCValue(model, createdItem.id), selectedFields)
+    val createdItem = results.results.collectFirst { case r: CreateNodeResult if r.mutaction.id == createMutaction.id => r }.get
+    returnValueByUnique(NodeSelector.forId(model, createdItem.id), selectedFields)
   }
 }

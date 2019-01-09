@@ -1,6 +1,6 @@
 import { EndpointDialog } from './EndpointDialog'
 import { Output, Config, Client } from 'prisma-cli-engine'
-import { Environment } from 'prisma-yml'
+import { Environment, PrismaDefinitionClass } from 'prisma-yml'
 import { getTmpDir } from '../test/getTmpDir'
 import { normalizeDockerCompose } from '../commands/init/index.test'
 
@@ -9,7 +9,16 @@ function makeDialog() {
   const output = new Output(config)
   const env = new Environment(getTmpDir(), output)
   const client = new Client(config, env, output)
-  const dialog = new EndpointDialog(output, client, env, config)
+  const definition = new PrismaDefinitionClass(env)
+
+  const dialog = new EndpointDialog({
+    out: output,
+    client,
+    env,
+    config,
+    definition,
+    shouldAskForGenerator: false,
+  })
 
   return dialog
 }

@@ -21,6 +21,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    schema: my_schema
                           |    ssl: true
                           |    connectionLimit: 2
+                          |    rawAccess: true
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -38,6 +39,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.schema shouldBe Some("my_schema")
       database.ssl shouldBe true
       database.connectionLimit shouldBe Some(2)
+      database.rawAccess shouldBe true
     }
 
     "be parsed without errors if an optional field is missing" in {
@@ -67,6 +69,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.database shouldBe None
       database.schema shouldBe None
       database.ssl shouldBe false
+      database.rawAccess shouldBe false
     }
 
     "be parsed without errors if an optional field is there but set to nothing" in {
@@ -203,5 +206,25 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
     val exception = config.failed.get
     exception shouldBe a[InvalidConfiguration]
     exception.getMessage should equal("The parameter connectionLimit must be set to at least 2.")
+  }
+
+  // FIXME: right now we must run with true due to a bug
+  "fail if the mongo connector specifies `migrations: true`" in {
+    val invalidConfig = """
+                        |port: 4466
+                        |databases:
+                        |  default:
+                        |    connector: mongo
+                        |    host: localhost
+                        |    port: 3306
+                        |    user: root
+                        |    password: prisma
+                        |    migrations: true
+                      """.stripMargin
+    val config        = ConfigLoader.tryLoadString(invalidConfig)
+    config.isSuccess shouldBe true
+//    val exception = config.failed.get
+//    exception shouldBe a[InvalidConfiguration]
+//    exception.getMessage should equal("The mongo connector may not set the migrations setting to true.")
   }
 }

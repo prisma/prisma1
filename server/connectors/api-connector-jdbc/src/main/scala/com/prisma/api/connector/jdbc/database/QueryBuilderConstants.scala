@@ -5,8 +5,8 @@ trait QueryBuilderConstants {
   val relationTableAlias  = "RelationTable"
   val intDummy            = 1
   val stringDummy         = ""
-  val aSideAlias          = "__Relation__A"
-  val bSideAlias          = "__Relation__B"
+  val relatedModelAlias   = "__RelatedModel__"
+  val parentModelAlias    = "__ParentModel__"
   val rowNumberAlias      = "prismaRowNumberAlias"
   val baseTableAlias      = "prismaBaseTableAlias"
   val rowNumberTableAlias = "prismaRowNumberTableAlias"
@@ -15,6 +15,4 @@ trait QueryBuilderConstants {
   val valueFieldName      = "value"
   val placeHolder         = "?"
   val relayTableName      = "_RelayId"
-  val updatedAtField      = "updatedAt"
-  val createdAtField      = "createdAt"
 }

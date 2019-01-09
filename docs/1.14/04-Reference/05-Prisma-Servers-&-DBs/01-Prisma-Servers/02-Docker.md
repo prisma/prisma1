@@ -81,7 +81,7 @@ The `prisma-db` service is based on the [`prismagraphlq/prisma`](https://hub.doc
     - `default.active`: Setting this to `true` means you're using an _active_ (as opposed to a _passive_) database connector
     - `default.host`: The host machine of the database.
     - `default.port`: The port on whcih the database is running.
-    - `default.user` and `default.password`: Credentials to authentivate against the database.
+    - `default.user` and `default.password`: Credentials to authenticate against the database.
 
 #### `db`
 

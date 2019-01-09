@@ -3,10 +3,10 @@
 exports[`migrateToEndpoint ignore when endpoint present 1`] = `
 Object {
   "input": "endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
   "output": "#endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 endpoint: 
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
 }
 `;
 
@@ -15,11 +15,11 @@ Object {
   "input": "service: my-service
 stage: dev
 cluster: public-asdf/prisma-eu1
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
   "output": "#service: my-service
 #stage: dev
 #cluster: public-asdf/prisma-eu1
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 ",
 }
@@ -35,7 +35,7 @@ service: my-service
 
 
 
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
   "output": "# don't delete me
 #stage: dev
 #cluster: public-asdf/prisma-eu1
@@ -44,7 +44,7 @@ datamodel: datamodel.graphql",
 
 
 
-datamodel: datamodel.graphql
+datamodel: datamodel.prisma
 endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 ",
 }
@@ -56,30 +56,30 @@ Object {
 endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 
 #endpoint: asdasd
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
   "output": "#anothercomment: asdasd
 #endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 endpoint: http://localhost:4466
 
 #endpoint: asdasd
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
 }
 `;
 
 exports[`replaceYamlValue when document is clean 1`] = `
 Object {
   "input": "endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
   "output": "#endpoint: https://eu1.prisma.sh/public-asdf/my-service/dev
 endpoint: http://localhost:4466
-datamodel: datamodel.graphql",
+datamodel: datamodel.prisma",
 }
 `;
 
 exports[`replaceYamlValue when key does not yet exist 1`] = `
 Object {
-  "input": "datamodel: datamodel.graphql",
-  "output": "datamodel: datamodel.graphql
+  "input": "datamodel: datamodel.prisma",
+  "output": "datamodel: datamodel.prisma
 endpoint: http://localhost:4466
 ",
 }

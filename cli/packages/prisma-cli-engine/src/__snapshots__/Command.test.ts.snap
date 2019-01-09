@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`buildHelp 1`] = `
+exports[`has help: buildHelp 1`] = `
 "Usage: prisma config get
 
 this is
@@ -9,7 +9,7 @@ some multiline help
 "
 `;
 
-exports[`buildHelpLine 1`] = `
+exports[`has help: buildHelpLine 1`] = `
 Array [
   "config get",
   null,

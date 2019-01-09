@@ -1,9 +1,0 @@
-subscription {
-  user(where: { mutation_in: [CREATED] }) {
-    mutation
-    node {
-      id
-      name
-    }
-  }
-}

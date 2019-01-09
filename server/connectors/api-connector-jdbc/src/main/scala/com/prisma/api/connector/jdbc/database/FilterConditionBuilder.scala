@@ -3,7 +3,7 @@ package com.prisma.api.connector.jdbc.database
 import com.prisma.api.connector._
 import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.{RelationField, ScalarField}
-import org.jooq.{Condition, Field}
+import org.jooq._
 import org.jooq.impl.DSL._
 
 trait FilterConditionBuilder extends BuilderBase {
@@ -12,7 +12,7 @@ trait FilterConditionBuilder extends BuilderBase {
     case None         => noCondition()
   }
 
-  private def buildConditionForFilter(filter2: Filter, alias: String, relField: Option[Field[AnyRef]] = None, invert: Boolean = false): Condition = {
+  private def buildConditionForFilter(unprocessedFilter: Filter, alias: String): Condition = {
 
     def stripLogicalFiltersWithOnlyOneFilterContained(filter: Filter): Filter = {
       filter match {
@@ -22,13 +22,12 @@ trait FilterConditionBuilder extends BuilderBase {
         case AndFilter(filters)              => AndFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
         case OrFilter(filters)               => OrFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
         case NotFilter(filters)              => NotFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
-        case NodeFilter(filters)             => NodeFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
         case x: RelationFilter               => x.copy(nestedFilter = stripLogicalFiltersWithOnlyOneFilterContained(x.nestedFilter))
         case x                               => x
       }
     }
 
-    val filter = stripLogicalFiltersWithOnlyOneFilterContained(filter2)
+    val filter = stripLogicalFiltersWithOnlyOneFilterContained(unprocessedFilter)
 
     def fieldFrom(scalarField: ScalarField) = field(name(alias, scalarField.dbName))
     def nonEmptyConditions(filters: Vector[Filter]): Vector[Condition] = {
@@ -44,8 +43,12 @@ trait FilterConditionBuilder extends BuilderBase {
       case AndFilter(filters)     => nonEmptyConditions(filters).reduceLeft(_ and _)
       case OrFilter(filters)      => nonEmptyConditions(filters).reduceLeft(_ or _)
       case NotFilter(filters)     => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
-      case NodeFilter(filters)    => buildConditionForFilter(OrFilter(filters), alias)
-      case x: RelationFilter      => relationFilterStatement(alias, x, relField, invert)
+      case relationFilter: RelationFilter =>
+        inStatementForRelationCondition(
+          jooqField = modelIdColumn(alias, relationFilter.field.model),
+          condition = relationFilter.condition,
+          subSelect = relationFilterSubSelect(alias, relationFilter)
+        )
 
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => trueCondition()
@@ -73,7 +76,7 @@ trait FilterConditionBuilder extends BuilderBase {
     }
   }
 
-  private def relationFilterStatement(alias: String, relationFilter: RelationFilter, relField: Option[Field[AnyRef]], invert: Boolean): Condition = {
+  private def relationFilterSubSelect(alias: String, relationFilter: RelationFilter): SelectConditionStep[Record1[AnyRef]] = {
     // this skips intermediate tables when there is no condition on them. so the following will not join with the album table but join the artist-album relation with the album-track relation
     // artists(where:{albums_some:{tracks_some:{condition}}})
     //
@@ -82,54 +85,56 @@ trait FilterConditionBuilder extends BuilderBase {
     // the same is true for explicit AND, OR, NOT with more than one nested relationfilter. they do not profit from skipping intermediate tables at the moment
     // these cases could be improved as well at the price of higher code complexity
 
-    val relationField = relationFilter.field
-    val relation      = relationField.relation
-    val newAlias      = relationField.relatedModel_!.dbName + "_" + alias
+    val relationField              = relationFilter.field
+    val relation                   = relationField.relation
+    val newAlias                   = relationField.relatedModel_!.dbName + "_" + alias
+    val invertConditionOfSubSelect = relationFilter.condition == EveryRelatedNode
 
     relationFilter.nestedFilter match {
-      case x: RelationFilter =>
-        val relField = Some(relationColumn(relation, relationField.oppositeRelationSide))
-        val select = sql
+      case nested: RelationFilter =>
+        val condition = inStatementForRelationCondition(
+          jooqField = relationColumn(relation, relationField.oppositeRelationSide),
+          condition = nested.condition,
+          subSelect = relationFilterSubSelect(newAlias, nested)
+        )
+        sql
           .select(relationColumn(relation, relationField.relationSide))
           .from(relationTable(relation))
+          .where(condition.invert(invertConditionOfSubSelect))
 
-        relationFilter.condition match {
-          case AtLeastOneRelatedNode => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
-          case EveryRelatedNode      => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField, invert = true)))
-          case NoRelatedNode         => modelIdColumn(alias, relationField.model).notIn(select.where(buildConditionForFilter(x, newAlias, relField)))
-          case NoRelationCondition   => modelIdColumn(alias, relationField.model).in(select.where(buildConditionForFilter(x, newAlias, relField)))
-        }
-
-      case _ =>
-        val nestedFilterStatement = buildConditionForFilter(relationFilter.nestedFilter, newAlias)
-
-        val select = sql
+      case nested =>
+        val condition = buildConditionForFilter(nested, newAlias)
+        sql
           .select(relationColumn(relation, relationField.relationSide))
-          .from(modelTable(relationField.relatedModel_!).as(newAlias))
-          .innerJoin(relationTable(relation))
+          .from(relationTable(relation))
+          .innerJoin(modelTable(relationField.relatedModel_!).as(newAlias))
           .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
+          .where(condition.invert(invertConditionOfSubSelect))
+    }
+  }
 
-        val baseField = relField.getOrElse(modelIdColumn(alias, relationField.model))
-
-        (relationFilter.condition, invert) match {
-          case (AtLeastOneRelatedNode, true)  => baseField.notIn(select.and(nestedFilterStatement))
-          case (AtLeastOneRelatedNode, false) => baseField.in(select.and(nestedFilterStatement))
-          case (EveryRelatedNode, true)       => baseField.in(select.andNot(nestedFilterStatement))
-          case (EveryRelatedNode, false)      => baseField.notIn(select.andNot(nestedFilterStatement))
-          case (NoRelatedNode, true)          => baseField.in(select.and(nestedFilterStatement))
-          case (NoRelatedNode, false)         => baseField.notIn(select.and(nestedFilterStatement))
-          case (NoRelationCondition, true)    => baseField.notIn(select.and(nestedFilterStatement))
-          case (NoRelationCondition, false)   => baseField.in(select.and(nestedFilterStatement))
-        }
+  private def inStatementForRelationCondition(jooqField: Field[AnyRef], condition: RelationCondition, subSelect: SelectConditionStep[_]) = {
+    condition match {
+      case EveryRelatedNode      => jooqField.notIn(subSelect)
+      case NoRelatedNode         => jooqField.notIn(subSelect)
+      case AtLeastOneRelatedNode => jooqField.in(subSelect)
+      case ToOneRelatedNode      => jooqField.in(subSelect)
     }
   }
 
   private def oneRelationIsNullFilter(relationField: RelationField, alias: String): Condition = {
     val relation = relationField.relation
-    val select = sql
-      .select(relationColumn(relation, relationField.relationSide))
-      .from(relationTable(relation))
 
-    modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
+    relationField.relationIsInlinedInParent match {
+      case true =>
+        field(name(alias, relationField.dbName)).isNull
+
+      case false =>
+        val select = sql
+          .select(relationColumn(relation, relationField.relationSide))
+          .from(relationTable(relation))
+
+        modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
+    }
   }
 }

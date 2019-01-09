@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mysql
 
-import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
 import com.prisma.config.DatabaseConfig
+import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -13,6 +13,7 @@ object MySqlDatabasesFactory {
     val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
     val masterDb                     = Database.forConfig("database", config, driver = dbDriver)
     val slickDatabase: SlickDatabase = SlickDatabase(MySQLProfile, masterDb)
+
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
@@ -23,7 +24,7 @@ object MySqlDatabasesFactory {
         |  connectionInitSql="set names utf8mb4;"
         |  dataSourceClass = "slick.jdbc.DriverDataSource"
         |  properties {
-        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/?autoReconnect=true&useSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false&cachePrepStmts=true"
+        |    url = "jdbc:mysql://${dbConfig.host}:${dbConfig.port}/?autoReconnect=true&useSSL=${dbConfig.ssl}&requireSSL=false&serverTimeZone=UTC&useUnicode=true&characterEncoding=UTF-8&socketTimeout=60000&usePipelineAuth=false&cachePrepStmts=true"
         |    user = "${dbConfig.user}"
         |    password = "${dbConfig.password.getOrElse("")}"
         |  }

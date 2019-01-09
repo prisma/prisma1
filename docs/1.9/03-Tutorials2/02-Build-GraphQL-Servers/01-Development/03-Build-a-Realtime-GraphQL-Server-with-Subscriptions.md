@@ -53,7 +53,7 @@ Subscriptions are commonly implemented with [WebSockets](https://en.wikipedia.or
 
 Dealing with realtime logic and pub/sub-systems, properly accessing databases and taking care of implementing the subscription protocol can become fairly complex. Authentication and authorization logic further complicate the implementation of GraphQL subscriptions on the server. In these cases, it’s helpful to use proper abstractions that make your life easier.
 
-One such abstraction is provided by [Prisma](https://www.prisma.io) in combination with [Prisma bindings](https://github.com/prismagraphql/prisma-binding). Think of that combo as a [“GraphQL ORM”](https://github.com/prismagraphql/prisma#is-prisma-an-orm) layer where realtime subscriptions are supported out-of-the-box, making it easy for you to add subscriptions to your API.
+One such abstraction is provided by [Prisma](https://www.prisma.io) in combination with [Prisma bindings](https://github.com/prisma/prisma-binding). Think of that combo as a [“GraphQL ORM”](https://github.com/prisma/prisma#is-prisma-an-orm) layer where realtime subscriptions are supported out-of-the-box, making it easy for you to add subscriptions to your API.
 
 ## 1. Project setup
 
@@ -384,7 +384,7 @@ type Subscription {
 
 </Instruction>
 
-The referenced `PostSubscriptionPayload` is directly taken from the Prisma GraphQL schema. 
+The referenced `PostSubscriptionPayload` is directly taken from the Prisma GraphQL schema.
 
 <Instruction>
 
@@ -606,7 +606,7 @@ Navigating back to the subscription tab, you’ll see that the `id` and `title` 
 
 ## Summary
 
-In this tutorial, you learned how to add realtime subscriptions to a GraphQL API using [Prisma](https://www.prisma.io/) and [Prisma bindings](https://github.com/prismagraphql/prisma-binding).
+In this tutorial, you learned how to add realtime subscriptions to a GraphQL API using [Prisma](https://www.prisma.io/) and [Prisma bindings](https://github.com/prisma/prisma-binding).
 
 Similar to implementing queries and mutations with Prisma, you are piggybacking on Prisma’s GraphQL API, leaving the heavy-lifting of database access and pub/sub logic to the powerful Prisma query engine.
 

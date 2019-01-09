@@ -3,17 +3,16 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
+import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
-import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred, OneDeferred}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
-import com.prisma.gc_values.CuidGCValue
-import com.prisma.shared.models.{Model, Project, ScalarField}
+import com.prisma.gc_values.StringIdGCValue
+import com.prisma.shared.models.ConnectorCapability.NodeQueryCapability
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model, Project}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
-import com.prisma.utils.future.FutureUtils.FutureOpt
 import org.atteo.evo.inflector.English
 import sangria.ast
-import sangria.ast.Selection
 import sangria.relay._
 import sangria.schema._
 
@@ -27,14 +26,19 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
-    SchemaBuilderImpl(project, apiDependencies.capabilities).build()
+  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { project: Project =>
+    SchemaBuilderImpl(
+      project = project,
+      capabilities = apiDependencies.capabilities,
+      enableRawAccess = apiDependencies.config.databases.head.rawAccess
+    ).build()
   }
 }
 
 case class SchemaBuilderImpl(
     project: Project,
-    capabilities: Vector[ApiConnectorCapability]
+    capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
+    enableRawAccess: Boolean = false
 )(implicit apiDependencies: ApiDependencies, system: ActorSystem)
     extends SangriaExtensions {
   import system.dispatcher
@@ -42,7 +46,7 @@ case class SchemaBuilderImpl(
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
   val dataResolver                         = apiDependencies.dataResolver(project)
   val masterDataResolver                   = apiDependencies.masterDataResolver(project)
-  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface))
+  val objectTypeBuilder: ObjectTypeBuilder = new ObjectTypeBuilder(project = project, nodeInterface = Some(nodeInterface), capabilities = capabilities)
   val objectTypes                          = objectTypeBuilder.modelObjectTypes
   val connectionTypes                      = objectTypeBuilder.modelConnectionTypes
   val outputTypesBuilder                   = OutputTypesBuilder(project, objectTypes, dataResolver)
@@ -56,30 +60,34 @@ case class SchemaBuilderImpl(
     val mutation     = buildMutation()
     val subscription = buildSubscription()
 
-    Schema(
-      query = query,
-      mutation = mutation,
-      subscription = subscription,
-      validationRules = SchemaValidationRule.empty
-    )
+    FilterOutEmptyInputTypes(
+      Schema(
+        query = query,
+        mutation = mutation,
+        subscription = subscription,
+        validationRules = SchemaValidationRule.empty
+      )
+    ).applyFilter()
   }
 
   def buildQuery(): ObjectType[ApiUserContext, Unit] = {
-    val fields = project.models.map(getAllItemsField) ++
-      project.models.flatMap(getSingleItemField) ++
-      project.models.map(getAllItemsConnectionField) ++
-      capabilities.contains(NodeQueryCapability).toOption(nodeField)
+    val fields = project.nonEmbeddedModels.map(getAllItemsField) ++
+      project.nonEmbeddedModels.flatMap(getSingleItemField) ++
+      project.nonEmbeddedModels.map(getAllItemsConnectionField) ++
+      capabilities.has(NodeQueryCapability).toOption(nodeField)
 
     ObjectType("Query", fields)
   }
 
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
-    val fields = project.models.map(createItemField) ++
-      project.models.flatMap(updateItemField) ++
-      project.models.flatMap(deleteItemField) ++
-      project.models.flatMap(upsertItemField) ++
-      project.models.flatMap(updateManyField) ++
-      project.models.map(deleteManyField)
+
+    val fields = project.nonEmbeddedModels.map(createItemField) ++
+      project.nonEmbeddedModels.flatMap(updateItemField) ++
+      project.nonEmbeddedModels.flatMap(deleteItemField) ++
+      project.nonEmbeddedModels.flatMap(upsertItemField) ++
+      project.nonEmbeddedModels.flatMap(updateManyField) ++
+      project.nonEmbeddedModels.map(deleteManyField) ++
+      rawAccessField
     Some(ObjectType("Mutation", fields))
   }
 
@@ -95,7 +103,7 @@ case class SchemaBuilderImpl(
       camelCase(pluralsCache.pluralName(model)),
       fieldType = ListType(OptionType(objectTypes(model.name))),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
         DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
       }
@@ -107,7 +115,7 @@ case class SchemaBuilderImpl(
       s"${camelCase(pluralsCache.pluralName(model))}Connection",
       fieldType = connectionTypes(model.name),
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
         def getSelectedFields(field: ast.Field): Vector[ast.Field] = {
           val fields = field.selections.collect {
@@ -150,9 +158,9 @@ case class SchemaBuilderImpl(
   def createItemField(model: Model): Field[ApiUserContext, Unit] = {
     Field(
       s"create${model.name}",
-      fieldType = outputTypesBuilder.mapCreateOutputType(model, objectTypes(model.name)),
+      fieldType = objectTypes(model.name),
       arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
-      resolve = (ctx) => {
+      resolve = ctx => {
         val mutation = Create(
           model = model,
           project = project,
@@ -170,9 +178,9 @@ case class SchemaBuilderImpl(
     argumentsBuilder.getSangriaArgumentsForUpdate(model).map { args =>
       Field(
         s"update${model.name}",
-        fieldType = OptionType(outputTypesBuilder.mapUpdateOutputType(model, objectTypes(model.name))),
+        fieldType = OptionType(objectTypes(model.name)),
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val mutation = Update(
             model = model,
             project = project,
@@ -194,8 +202,8 @@ case class SchemaBuilderImpl(
         s"updateMany${pluralsCache.pluralName(model)}",
         fieldType = objectTypeBuilder.batchPayloadType,
         arguments = args,
-        resolve = (ctx) => {
-          val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+        resolve = ctx => {
+          val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).filter
           val mutation  = UpdateMany(project, model, ctx.args, arguments, dataResolver = masterDataResolver)
           ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
         }
@@ -207,9 +215,9 @@ case class SchemaBuilderImpl(
     argumentsBuilder.getSangriaArgumentsForUpsert(model).map { args =>
       Field(
         s"upsert${model.name}",
-        fieldType = outputTypesBuilder.mapUpsertOutputType(model, objectTypes(model.name)),
+        fieldType = objectTypes(model.name),
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val mutation = Upsert(
             model = model,
             project = project,
@@ -228,9 +236,9 @@ case class SchemaBuilderImpl(
     argumentsBuilder.getSangriaArgumentsForDelete(model).map { args =>
       Field(
         s"delete${model.name}",
-        fieldType = OptionType(outputTypesBuilder.mapDeleteOutputType(model, objectTypes(model.name), onlyId = false)),
+        fieldType = OptionType(objectTypes(model.name)),
         arguments = args,
-        resolve = (ctx) => {
+        resolve = ctx => {
           val mutation = Delete(
             model = model,
             modelObjectTypes = objectTypeBuilder,
@@ -251,12 +259,33 @@ case class SchemaBuilderImpl(
       s"deleteMany${pluralsCache.pluralName(model)}",
       fieldType = objectTypeBuilder.batchPayloadType,
       arguments = argumentsBuilder.getSangriaArgumentsForDeleteMany(model),
-      resolve = (ctx) => {
-        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).flatMap(_.filter)
+      resolve = ctx => {
+        val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx).filter
         val mutation  = DeleteMany(project, model, arguments, dataResolver = masterDataResolver)
         ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
       }
     )
+  }
+
+  val rawAccessField: Option[Field[ApiUserContext, Unit]] = {
+    import com.prisma.utils.boolean.BooleanUtils._
+
+    val enumValues = apiDependencies.config.databases.map(x => EnumValue(x.name, value = x.name)).toList
+    enableRawAccess.toOption {
+      Field(
+        s"executeRaw",
+        fieldType = CustomScalarTypes.JsonType,
+        arguments = List(
+          Argument("database", OptionInputType(EnumType[String]("PrismaDatabase", values = enumValues))),
+          Argument("query", StringType)
+        ),
+        resolve = ctx => {
+          val query    = ctx.arg[String]("query")
+          val database = ctx.argOpt[String]("database") //Fixme is this intentional?
+          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
+        }
+      )
+    }
   }
 
   def getSubscriptionField(model: Model): Field[ApiUserContext, Unit] = {
@@ -265,7 +294,7 @@ case class SchemaBuilderImpl(
     Field(
       camelCase(model.name),
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
-      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
+      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project, capabilities = capabilities)),
       resolve = _ => None
     )
   }
@@ -276,10 +305,10 @@ case class SchemaBuilderImpl(
     resolve = (id: String, ctx: Context[ApiUserContext, Unit]) => {
       for {
         _         <- Future.unit
-        idGcValue = CuidGCValue(id)
+        idGcValue = StringIdGCValue(id)
         modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
         resultOpt <- modelOpt match {
-                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forIdGCValue(model, idGcValue), ctx.getSelectedFields(model))
+                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model))
                       case None        => Future.successful(None)
                     }
       } yield resultOpt
@@ -297,9 +326,9 @@ case class SchemaBuilderImpl(
 
   def camelCase(string: String): String = Character.toLowerCase(string.charAt(0)) + string.substring(1)
 
-  private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[SimpleResolveOutput] = {
+  private def mapReturnValueResult(result: Future[ReturnValueResult], args: Args): Future[PrismaNode] = {
     result.map {
-      case ReturnValue(prismaNode) => outputTypesBuilder.mapResolve(prismaNode, args)
+      case ReturnValue(prismaNode) => prismaNode
       case NoReturnValue(where)    => throw APIErrors.NodeNotFoundForWhereError(where)
     }
   }
@@ -314,8 +343,18 @@ object SangriaEvidences {
 class PluralsCache {
   private val cache = mutable.Map.empty[Model, String]
 
-  def pluralName(model: Model): String = cache.getOrElseUpdate(
-    key = model,
-    op = English.plural(model.name).capitalize
-  )
+  def pluralName(model: Model): String = {
+    val pluralCandidate = English.plural(model.name)
+    val plural = if (pluralCandidate != model.name) {
+      pluralCandidate
+    } else if (model.name.endsWith("s")) {
+      model.name + "es"
+    } else {
+      model.name + "s"
+    }
+    cache.getOrElseUpdate(
+      key = model,
+      op = plural.capitalize
+    )
+  }
 }

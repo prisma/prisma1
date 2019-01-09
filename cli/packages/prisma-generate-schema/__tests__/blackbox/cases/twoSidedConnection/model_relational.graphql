@@ -1,0 +1,149 @@
+# Two Sided Connections of all types
+# With/Without ID
+# Case A: Required
+# Case B: Not Required
+# Case C: List
+
+type AWithIdWithA {
+  id: ID! @unique
+  field: String!
+  x: AWithA!
+}
+
+type AWithoutIdWithA {
+  field: String!
+  x: AWithA!
+}
+
+type BWithIdWithA {
+  id: ID! @unique
+  field: String!
+  x: AWithB
+}
+
+type BWithoutIdWithA {
+  field: String!
+  x: AWithB
+}
+
+type CWithIdWithA {
+  id: ID! @unique
+  field: String!
+  x: [AWithC!]!
+}
+
+type CWithoutIdWithA {
+  field: String!
+  x: [AWithC!]!
+}
+
+type AWithIdWithB {
+  id: ID! @unique
+  field: String!
+  x: BWithA!
+}
+
+type AWithoutIdWithB {
+  field: String!
+  x: BWithA!
+}
+
+type BWithIdWithB {
+  id: ID! @unique
+  field: String!
+  x: BWithB
+}
+
+type BWithoutIdWithB {
+  field: String!
+  x: BWithB
+}
+
+type CWithIdWithB {
+  id: ID! @unique
+  field: String!
+  x: [BWithC!]!
+}
+
+type CWithoutIdWithB {
+  field: String!
+  x: [BWithC!]!
+}
+
+type AWithIdWithC {
+  id: ID! @unique
+  field: String!
+  x: CWithA!
+}
+
+type AWithoutIdWithC {
+  field: String!
+  x: CWithA!
+}
+
+type BWithIdWithC {
+  id: ID! @unique
+  field: String!
+  x: CWithB
+}
+
+type BWithoutIdWithC {
+  field: String!
+  x: CWithB
+}
+
+type CWithIdWithC {
+  id: ID! @unique
+  field: String!
+  x: [CWithC!]!
+}
+
+type CWithoutIdWithC {
+  field: String!
+  x: [CWithC!]!
+}
+
+type AWithA {
+  x: AWithIdWithA!
+  y: AWithoutIdWithA!
+}
+
+type AWithB {
+  x: BWithIdWithA!
+  y: BWithoutIdWithA!
+}
+
+type AWithC {
+  x: CWithIdWithA!
+  y: CWithoutIdWithA!
+}
+
+type BWithA {
+  x: AWithIdWithB
+  y: AWithoutIdWithB
+}
+
+type BWithB {
+  x: BWithIdWithB
+  y: BWithoutIdWithB
+}
+
+type BWithC {
+  x: CWithIdWithB
+  y: CWithoutIdWithB
+}
+
+type CWithA {
+  x: [AWithIdWithC!]!
+  y: [AWithoutIdWithC!]!
+}
+
+type CWithB {
+  x: [BWithIdWithC!]!
+  y: [BWithoutIdWithC!]!
+}
+
+type CWithC {
+  x: [CWithIdWithC!]!
+  y: [CWithoutIdWithC!]!
+}

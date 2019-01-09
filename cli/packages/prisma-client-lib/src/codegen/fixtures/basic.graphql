@@ -1,0 +1,21 @@
+type Query {
+  id: ID!
+  custom_required: Number!
+  custom_nullable: Number
+  custom_array_nullable: [Number]
+  custom_array_required: [Number]!
+  custom_with_arg(id: Int!): Number!
+  custom_with_custom_arg(id: Number!): Number!
+  scalar_required: Boolean!
+  scalar_nullable: Boolean
+  scalar_array_nullable: [Boolean]
+  scalar_array_required: [Boolean]!
+  scalar_with_arg(id: Int!): Boolean!
+  scalar_with_custom_arg(id: Number!): Boolean!
+  # commented_field: Boolean!
+}
+
+type Number {
+  id: ID
+  value: Float
+}

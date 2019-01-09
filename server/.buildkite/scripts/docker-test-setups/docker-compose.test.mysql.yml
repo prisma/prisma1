@@ -17,6 +17,7 @@ services:
             port: 3306
             user: root
             password: prisma
+            rawAccess: true
     volumes:
       - ../../../..:/root
       - ~/.ivy2:/root/.ivy2

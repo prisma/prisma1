@@ -58,7 +58,7 @@ prisma          Active    2s
 
 ## MySQL
 
-Prisma supports a [good range](https://github.com/prismagraphql/prisma/issues/1751) of different database systems. Although we use MySQL for this tutorial, the steps can be easily adopted for a different database system, like PostgreSQL.
+Prisma supports a [good range](https://github.com/prisma/prisma/issues/1751) of different database systems. Although we use MySQL for this tutorial, the steps can be easily adopted for a different database system, like PostgreSQL.
 
 ### Disk provisioning
 

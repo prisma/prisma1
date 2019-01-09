@@ -1,0 +1,968 @@
+import Collapse from 'components/Markdown/Collapse'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: "Data Model",
+  position: 20,
+}
+
+## Overview
+
+The data model of your service configuration has two major roles:
+
+- **Define the underlying database schema** (they are mapped to database tables or equivalent structures, like _documents_, in the case of schemaless databases).
+- It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
+
+The data model is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.graphql`-files](#files). These `.graphql`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
+
+<Code language="yml" lines="2">
+
+```yml
+endpoint: __YOUR_PRISMA_ENDPOINT__
+datamodel: datamodel.graphql
+```
+
+</Code>
+
+### Building blocks of the data model
+
+There are several available building blocks to shape your data model.
+
+- [Types](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your data model is mapped to a database table (or an equivalent structure for schemaless databases) and CRUD operations are added to the GraphQL schema.
+- [Relations](#relations) describe _relationships_ between types.
+- [Directives](#graphql-directives) covering different use cases such as type constraints or cascading delete behaviour.
+- [Interfaces](http://graphql.org/learn/schema/#interfaces) are abstract types that include a certain set of fields which a type must include to _implement_ the interface. Interfaces are currently not available for data modelling in Prisma, but there's a [pending feature request](https://github.com/prisma/prisma/issues/83) for their support.
+
+### Why SDL?
+
+The main reason why SDL is used for data modelling is twofold:
+
+- SDL is an **intuitive, simple and concise** way to express type definitions and therefore contributes to a **great developer experience**.
+- Using GraphQL SDL to define models that are used as foundation for a GraphQL API is an **idiomatic** approach.
+
+There is no hard technical requirement that would dictate the use of SDL and Prisma might allows for other approaches to provide model definitions in the future.
+
+> To learn more about the SDL, you can check out the official [GraphQL documentation](http://graphql.org/learn/schema/#type-language) or read the actual [specification](http://facebook.github.io/graphql/draft/#sec-Type-System).
+
+## Example
+
+A simple example `datamodel.graphql` file:
+
+```graphql
+type Tweet {
+  id: ID! @unique
+  createdAt: DateTime!
+  text: String!
+  owner: User!
+  location: Location!
+}
+
+type User {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  handle: String! @unique
+  name: String
+  tweets: [Tweet!]!
+}
+
+type Location {
+  latitude: Float!
+  longitude: Float!
+}
+```
+
+This example illustrates a few important concepts when working with your data model:
+
+- The three types `Tweet`, `User` and `Location` are mapped to database tables (or an equivalent structure for schemaless databases).
+- There is a _bidirectional_ relation between `User` and `Tweet` (via the `owner` and `tweets` fields).
+- There is a _unidirectional_ relation from `Tweet` to `Location` (via the `location` field).
+- Except for the `name` field on `User`, all fields are _required_ in the data model (as indicated by the `!` following the type).
+- The `id`, `createdAt` and `updatedAt` fields are managed by Prisma and _read-only_ in the exposed Prisma API (meaning they can not be altered via mutations).
+- The `@unique` directive expresses a _unique constraint_, meaning Prisma ensures that there never will be two nodes with the same values for the annotated field.
+
+Creating and updating your data model is as simple as writing and saving the data model file. Once you're happy with your data model, you can save the file and apply the changes to your Prisma service by running `prisma deploy`:
+
+```
+$ prisma deploy
+
+Changes:
+
+  Tweet (Type)
+  + Created type `Tweet`
+  + Created field `id` of type `GraphQLID!`
+  + Created field `createdAt` of type `DateTime!`
+  + Created field `text` of type `String!`
+  + Created field `owner` of type `Relation!`
+  + Created field `location` of type `Relation!`
+  + Created field `updatedAt` of type `DateTime!`
+
+  User (Type)
+  + Created type `User`
+  + Created field `id` of type `GraphQLID!`
+  + Created field `createdAt` of type `DateTime!`
+  + Created field `updatedAt` of type `DateTime!`
+  + Created field `handle` of type `String!`
+  + Created field `name` of type `String`
+  + Created field `tweets` of type `[Relation!]!`
+
+  Location (Type)
+  + Created type `Location`
+  + Created field `latitude` of type `Float!`
+  + Created field `longitude` of type `Float!`
+  + Created field `id` of type `GraphQLID!`
+  + Created field `updatedAt` of type `DateTime!`
+  + Created field `createdAt` of type `DateTime!`
+
+  TweetToUser (Relation)
+  + Created relation between Tweet and User
+
+  LocationToTweet (Relation)
+  + Created relation between Location and Tweet
+
+Applying changes... (22/22)
+Applying changes... 0.4s
+```
+
+## Data model vs Prisma GraphQL schema
+
+When starting out with GraphQL and Prisma, the amount of `.graphql`-files you're working with can be confusing. Yet, it's crucial to understand what the role of each of them is.
+
+Looking only at Prisma, there are two `.graphql`-files that are relevant:
+
+- The **data model** containing the _model definitions_ for your service's APIs, typically called `datamodel.graphql`.
+- The **Prisma GraphQL schema** defining the actual CRUD/realtime _operations_ of the service's API, typically called `prisma.graphql`.
+
+The Prisma database database schema is generated based on the data model:
+
+![](https://i.imgur.com/jHkNjKU.png)
+
+The illustration shows a simplified version of the generated Prisma GraphQL schema, you can find the full schema [here](https://gist.github.com/gc-codesnippets/f302c104f2806f9e13f41d909e07d82d).
+
+<Collapse title="Learn more about GraphQL schemas">
+
+A [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defines the operations of a GraphQL API. It effectively is a collection of _types_ written in SDL (SDL also supports primitives like interfaces, enums, union types and more, you can learn everything about GraphQL's type system [here](http://graphql.org/learn/schema/#type-system)).
+
+A GraphQL schema has three special _root types_: `Query`, `Mutation` and `Subscription`. These types define the _entry points_ for the API and define what operations the API will accept. To learn more about GraphQL schema, check out this [article](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/).
+
+</Collapse>
+
+### The data model
+
+The data model is written manually by the developers of the Prisma service. It defines the models and structures the developer wants to use in their API.
+
+Strictly speaking, the **data model is not a valid GraphQL schema** because it does not contain any of GraphQL's root types (`Query`, `Mutation`, `Subscription`) and therefore does not define any API operations.
+
+The data model only serves as _foundation_ for the generation of the actual GraphQL schema that defines the GraphQL API of your Prisma service.
+
+### The Prisma GraphQL schema
+
+The Prisma GraphQL schema can be dowloaded from a Prisma service using the `get-schema` command of the [GraphQL CLI](https://github.com/graphql-cli/graphql-cli) or via an [introspection query](https://graphql.org/learn/introspection/) made directly against the service's API.
+
+#### Downloading the Prisma GraphQL schema using the service's endpoint
+
+Assuming `http://localhost:4466/myservice/dev` is the endpoint of your service, this is the command you need to run in order to download the Prisma GraphQL schema and store it in a file called `prisma.graphql`:
+
+```bash
+graphql get-schema --endpoint http://localhost:4466/myservice/dev --output prisma.graphql --no-all
+```
+
+#### Downloading the Prisma GraphQL schema using graphql-config and a post-deployment hook
+
+In real-world development setups, you want to keep your local Prisma GraphQL schema in sync with the service's API and ensure it gets updated upon every deploy of your Prisma service. That's what you can a use a _post-deployment_ [hook](5cy7#hooks-optional) for.
+
+This is what a `.graphqlconfig.yml` and prisma.yml might look like in such as setups:
+
+**prisma.yml**
+
+```yml
+datamodel: datamodel.graphql
+endpoint: http://localhost:4466/myservice/dev
+secret: mysecret
+hooks:
+  post-deploy:
+    - graphql get-schema --project db
+```
+
+**`.graphqlconfig.yml`**
+
+```yml
+project:
+  db:
+    schemaPath: prisma.graphql
+    extensions:
+      prisma: prisma.yml
+```
+
+Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prisma.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
+
+### A note on the application schema
+
+If you've already looked into building your own GraphQL server based on Prisma, you might have come across another `.graphql`-file which is referred to as your **application schema** (typically called `schema.graphql` or `app.graphql`).
+
+This is a valid GraphQL schema (meaning it contains the `Query`, `Mutation` and `Subscription` root types) that defines the API of your _application layer_. In contrast to Prisma's _generic_ CRUD API, the application layer's API should expose _domain-specific_ operations that are tailored to the needs of your client applications.
+
+The application layer uses Prisma as a _data access layer_ and delegates incoming requests to the service's Prisma API where they're actually resolved against the database.
+
+You typically don't redefine your model definitions in the application schema. Instead, you _import_ them using [`graphql-import`](https://github.com/prismagraphql/graphql-import):
+
+```graphql
+# import Post from "prisma.graphql"
+
+type Query {
+  feed: [Post!]!
+}
+```
+
+`graphql-import` currently uses SDL comments to import types. In the future, there might be an official import syntax for SDL as has already been [discussed](https://github.com/graphql/graphql-wg/blob/master/notes/2018-02-01.md#present-graphql-import) in the GraphQL working group.
+
+Learn more about the application schema and building GraphQL servers with Prisma [here](dvw4).
+
+## Files
+
+You can write your data model in a single `.graphql`-file or split it accross multiple ones.
+
+The `.graphql`-files containing the data model need to be specified in your prisma.yml under the `datamodel` property. For example:
+
+```yml
+datamodel:
+  - types.graphql
+  - enums.graphql
+```
+
+If there is only a single file that defines the data model, it can be specified as follows:
+
+```yml
+datamodel: datamodel.graphql
+```
+
+
+## Object types
+
+An _object type_ (or short _type_) defines the structure for one _model_ in your data model. It is used to represent _entities_ from your _application domain_.
+
+Each object type is mapped to the database. For relational databases, one _table_ is created per type. For schemaless databases, an equivalent structure is used (e.g. a _document_). Note that Prisma enforces a schema even for schemaless databases!
+
+![](https://i.imgur.com/NFLy3AO.png)
+
+A type has a _name_ and one or multiple [_fields_](#fields). Type names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **at most 64 characters**.
+
+An instantiation of a type is called a _node_. This term refers to a node inside your _data graph_.
+
+Every type you define in your data model will be available as an analogous type in the generated _Prisma GraphQL schema_.
+
+### Defining an object type
+
+A object type is defined in the data model with the keyword `type`:
+
+```graphql
+type Article {
+  id: ID! @unique
+  title: String!
+  text: String
+  isPublished: Boolean! @default(value: "false")
+}
+```
+
+The type defined above has the following properties:
+
+- Name: `Article`
+- Fields: `id`, `title`, `text` and `isPublished` (with the default value `false`)
+
+`id` and `title` and `isPublished` are required (as indicated by the `!` following the type), `text` is optional.
+
+### Generated API operations for types
+
+The types in your data model affect the available operations in the Prisma API. Here is an overview of the generated CRUD and realtime operations for every type in your Prisma API:
+
+- Queries let you fetch one or many nodes of that type
+- Mutations let you create, update or delete nodes of that type
+- Subscriptions let you get notified of changes to nodes of that type (i.e. new nodes are _created_ or existing nodes are _updated_ or _deleted_)
+
+## Fields
+
+_Fields_ are the building blocks of a [type](#object-types), giving a node its _shape_. Every field is referenced by its name and is either [scalar](#scalars) or a [relation](#relations) field.
+
+Field names can only contain **alphanumeric characters** and need to start with a lowercase letter. They can contain **at most 64 characters**.
+
+### Scalar fields
+
+#### String
+
+A `String` holds text. This is the type you would use for a username, the content of a blog post or anything else that is best represented as text.
+
+String values are currently limited to 256KB in size on Demo servers. This limit can be increased on other clusters using [the cluster configuration](https://github.com/graphcool/framework/issues/748).
+
+Here is an example of a `String` scalar definition:
+
+```graphql
+type User {
+  name: String
+}
+```
+
+When used as arguments in an operation, `String` fields have to be specified using enclosing double quotes:
+
+```graphql
+query {
+  user(name: "Sarah") {
+    id
+  }
+}
+```
+
+#### Integer
+
+An `Int` is a number that cannot have decimals. Use this to store values such as the weight of an ingredient required for a recipe or the minimum age for an event.
+
+`Int` values range from -2147483648 to 2147483647.
+
+Here is an example of an `Int` scalar definition:
+
+```graphql
+type User {
+  age: Int
+}
+```
+
+When used as arguments in an operation, `Int` fields have to be specified without any enclosing characters:
+
+```graphql
+query {
+  user(age: 42) {
+    id
+  }
+}
+```
+
+#### Float
+
+A `Float` is a number that can have decimals. Use this to store values such as the price of an item in a store or the result of complex calculations.
+
+In queries or mutations, `Float` fields have to be specified without any enclosing characters and an optional decimal point: `float: 42`, `float: 4.2`.
+
+Here is an example of a `Float` scalar definition:
+
+```graphql
+type Item {
+  price: Float
+}
+```
+
+When used as arguments in an operation, `Float` fields have to be specified without any enclosing characters and an optional decimal point:
+
+```graphql
+query {
+  item(priceLargerThan: 42.2) {
+    id
+  }
+}
+```
+
+#### Boolean
+
+A `Boolean` can have the value `true` or `false`. This is useful to keep track of settings such as whether the user wants to receive an email newsletter or if a recipe is appropriate for vegetarians.
+
+Here is an example of a `Boolean` scalar definition:
+
+```graphql
+type User {
+  overEighteen: Boolean
+}
+```
+
+When used as arguments in an operation, `Float` fields have to be specified without any enclosing characters: `boolean: true`, `boolean: false`:
+
+```graphql
+query {
+  user(overEighteen: true) {
+    id
+  }
+}
+```
+
+#### DateTime
+
+The `DateTime` type can be used to store date and/or time values. A good example might be a person's date of birth or the time/data when a specific event is happening.
+
+Here is an example of a `DateTime` scalar definition:
+
+```graphql
+type User {
+  birthday: DateTime
+}
+```
+
+When used as arguments in an operation, `DateTime` fields have to be specified in [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) with enclosing double quotes:
+
+```graphql
+query {
+  user(birthday: "2015-11-22) { # November 22, 2015
+    id
+  }
+}
+```
+
+ISO 8601 further accepts the following formats:
+
+- `datetime: "2015"`
+- `datetime: "2015-11"`
+- `datetime: "2015-11-22"`
+- `datetime: "2015-11-22T13:57:31.123Z"`.
+
+#### Enum
+
+Like a `Boolean` an Enum can have one of a predefined set of values. The difference is that _you_ can define the possible values (whereas for a `Boolean` the options are restriced to `true` and `false`). For example you could specify how an article should be formatted by creating an Enum with the possible values `COMPACT`, `WIDE` and `COVER`.
+
+Enum values can only contain **alphanumeric characters and underscores** and need to start with an uppercase letter. The name of an enum value can be used in query filters and mutations. They can contain **at most 191 characters**.
+
+Here is an example of an enum definition:
+
+```graphql
+enum ArticleFormat {
+  COMPACT,
+  WIDE,
+  COVER
+}
+
+type Article {
+  format: ArticleFormat
+}
+```
+
+When used as arguments in an operation, Enum fields have to be specified in without enclosing double quotes:
+
+```graphql
+query {
+  article(format: COMPACT) {
+    id
+  }
+}
+```
+
+#### Json
+
+Sometimes you might need to store arbitrary JSON values for loosely structured data. The `Json` type makes sure that it is actually valid JSON and returns the value as a parsed JSON object/array instead of a string.
+
+Json values are currently limited to 256KB in size.
+
+Here is an example of a `Json` definition:
+
+```graphql
+type Item {
+  data: Json
+}
+```
+
+When used as arguments in an operation, , `Json` fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
+
+```graphql
+mutation {
+  createItem(data: "{\"int\": 1, \"string\": \"value\"}") {
+    data
+  }
+}
+```
+
+#### ID
+
+An `ID` value is a generated unique 25-character string based on [cuid](https://github.com/prismagraphql/cuid-java). Fields with `ID` values are [system fields](#system-fields) and just used internally, therefore it is not possible to create new fields with the `ID` type.
+
+`ID` fields can only be used once on a type and always need to be annotated with the `@unique` directive:
+
+```graphql
+type User {
+  id: ID! @unique
+}
+```
+
+### Type modifiers
+
+In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifies:
+
+- Required fields: Annotate the type with a `!`, e.g. `name: String!`
+- Lists: Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
+
+#### List
+
+Scalar fields can be marked with the list field type. A field of a relation that has the many multiplicity will also be marked as a list.
+
+You will often find list definitions looking similar to this:
+
+```graphql
+type Article {
+  tags: [String!]!
+}
+```
+
+Notice the two `!` type modifiers, here is what they express:
+
+- The first `!` type modifier (right after `String`) means that no item in the list can be `null`, e.g. this value for `tags` would not be valid: `["Software", null, "GraphQL"]`
+- The second `!` type modifier (after the closing square bracket) means that the list itself can never be `null`, it might be _empty_ though. Consequently, `null` is not a valid value for the `tags` field but `[]` is.
+
+#### Required
+
+Fields can be marked as required (sometimes also referred to as "non-null"). When creating a new node, you need to supply a value for fields which are required and don't have a [default value](#default-value).
+
+Required fields are marked using a `!` after the field type:
+
+```graphql
+type User {
+  name: String!
+}
+```
+
+### Field constraints
+
+Fields can be configured with field constraints to add further semantics and enforce certain rules in your data model.
+
+#### Unique
+
+Setting the _unique_ constraint makes sure that two nodes of the type in question cannot have the same value for a certain field. The only exception is the `null` value, meaning that multiple nodes can have the value `null` without violating the constraint. Unique fields have a unique _index_ applied in the underlying database.
+
+A typical example would be an `email` field on the `User` type where the assumption is that every `User` should have a globally unique email address.
+
+Only the first 191 characters in a String field are considered for uniqueness and the unique check is _case insensitive_. Storing two different strings is not possible if the first 191 characters are the same or if they only differ in casing.
+
+To mark a field as unique, simply append the `@unique` directive to its definition:
+
+```graphql
+type User {
+  id: ID! @unique
+  email: String! @unique
+  name: String!
+}
+```
+
+For every field that's annotated with `@unique`, you're able to query the corresponding node by providing a value for that field as a query argument.
+
+For example, considering the above data model, you can now retrieve a particular `User` node by its `email` address:
+
+```graphql
+query {
+  user(where: {
+    email: "alice@prisma.io"
+  }) {
+    name
+  }
+}
+```
+
+#### More constraints
+
+More database constraints will be added soon. Please join the discussion in this [feature request](https://github.com/prisma/prisma/issues/728) if you have wish to see certain constraints implemented in Prisma.
+
+### Default value
+
+You can set a _default value_ for non-list scalar fields. The value will be applied to newly created nodes when no value was supplied during the `create`-mutation.
+
+To specify a default value for a field, you can use the `@default` directive:
+
+```graphql
+type Story {
+  isPublished: Boolean @default(value: "false")
+  someNumber: Int! @default(value: "42")
+  title: String! @default(value: "My New Post")
+  publishDate: DateTime! @default(value: "2018-01-26")
+}
+```
+
+Notice that you need to always enclose the value in double-quotes, even for non-string types such as `Boolean` or `Int`.
+
+### System fields
+
+The three fields `id`, `createdAt` and `updatedAt` have special semantics in Prisma. They are optional in your data model, but will always be maintained in the underlying database. This way you can always add the field to your data model later, and the data will still be available for existing nodes.
+
+The values of these fields are currently read-only in the Prisma API (except when importing data) but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
+
+Notice that you cannot have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields. Here are the only supported declarations for these three fields:
+
+- `id: ID! @unique`
+- `createdAt: DateTime!`
+- `updatedAt: DateTime!`
+
+All system fields need to be marked as [required](#required) and the `id` field further needs to be annotated with the `@unique` directive.
+
+#### System field: `id`
+
+A node will automatically get assigned a globally unique identifier when it's created, this identifier is stored in the `id` field.
+
+Whenever you add the `id` field to a type definition to expose it in the GraphQL API, you must annotate it with the `@unique` directive.
+
+The `id` has the following properties:
+
+* Consists of 25 alphanumeric characters (letters are always lowercase)
+* Always starts with a (lowercase) letter, e.g. `c`
+* Follows [cuid](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
+
+Notice that all model types in the Prisma GraphQL schema will implement the `Node` interface. This is what the `Node` interface looks like:
+
+```graphql
+interface Node {
+  id: ID! @unique
+}
+```
+
+#### System fields: `createdAt` and `updatedAt`
+
+The data model further provides two special fields which you can add to your types:
+
+- `createdAt: DateTime!`: Stores the exact date and time for when a node of this object type was _created_.
+- `updatedAt: DateTime!`: Stores the exact date and time for when a node of this object type was _last updated_.
+
+If you want your types to expose these fields, you can simply add them to the type definition, for example:
+
+```graphql
+type User {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+```
+
+### Generated API operations for fields
+
+Fields in the data model affect the available [query arguments](tbd).
+
+### Changing the value of multiple scalar fields
+
+> TODO: Better as FAQ?
+
+You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
+
+```graphql
+mutation {
+  # update the email of all users with no email address to the empty string
+  updateManyUsers(
+    where: {
+      email: null
+    }
+    data: {
+      email: ""
+    }
+  )
+}
+```
+
+### Adding a required field to the data model
+
+> TODO: Better as FAQ?
+
+When adding a required field to a model that already contains nodes, you receive this error message: "You are creating a required field but there are already nodes present that would violate that constraint."
+
+This is because all existing nodes would receive a `null` value for this field. This would violate the constraint of this field being _required_ (or _non-nullable_).
+
+Here are the steps that are needed to add a required field:
+
+1. Add the field being _optional_
+1. Use `updateManyXs` to migrate the field of all nodes from `null` to a non-null value
+1. Now you can mark the field as _required_ and deploy as expected
+
+A more convenient workflow is discussed [in this feature request](https://github.com/prisma/prisma/issues/2323) on Github.
+
+## Relations
+
+A _relation_ defines the semantics of a connection between two [types](#object-types). Two types in a relation are connected via a [relation field](#scalar-and-relation-fields). When a relation is ambiguous, the relation field needs to be annotated with the [`@relation`](#relation-fields) directive to disambiguate it.
+
+Here is an example for a simple bidirectional relation:
+
+```graphql
+type User {
+  id: ID! @unique
+  articles: [Article!]!
+}
+
+type Article {
+  id: ID! @unique
+  author: User!
+}
+```
+
+A relation can also connect a type with itself. It is then referred to as a _self-relation_:
+
+```graphql
+type User {
+  id: ID! @unique
+  friends: [User!]!
+}
+```
+
+A self-relation can also be bidirectional:
+
+```graphql
+type User {
+  id: ID! @unique
+  following: [User!]! @relation(name: "Followers")
+  followers: [User!]! @relation(name: "Followers")
+}
+```
+
+Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive).
+
+### Required relations
+
+For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
+
+Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](qwe2#nested-mutations) to ensure the respective field will not be `null`.
+
+Consider again the following relation:
+
+```graphql
+type User {
+  id: ID! @unique
+  car: Car!
+}
+
+type Car {
+  id: ID! @unique
+  owner: User!
+  color: String!
+}
+```
+
+A `Car` can never be created without a `User` and the other way around because that would violate the required constraint. You therefore need to create both at the same time using a nested mutation:
+
+```graphql
+mutation {
+  createUser(data: {
+    car: {
+      create: {
+        color: "Yellow"
+      }
+    }
+  }) {
+    id
+    car {
+      id
+    }
+  }
+}
+```
+
+Note that a _to-many_ relation field is always set to required. For example, a field that contains many user addresses always uses the type `[Address!]!` and can never be of type `[Address!]`, `[Address]!` or `[Address]`.
+
+### The `@relation` directive
+
+When defining relations between types, you _can_ the `@relation` directive which provides meta-information about the relation. If a relation is ambiguous, you _must_ use the `@relation` directive to disambiguate it.
+
+It can take two arguments:
+
+- `name` (required): An identifier for this relation, provided as a string.
+- `onDelete`: Specifies the _deletion behaviour_ and enables _cascading deletes_. In case a node with related nodes gets deleted, the deletion behaviour determines what should happen to the related nodes. The input values for this argument are defined as an enum with the following possible values:
+  - `SET_NULL` (default): Set the related node(s) to `null`.
+  - `CASCADE`: Delete the related node(s). Note that is not possible to set _both_ ends of a bidirectional relation to `CASCADE`.
+
+Here is an example of a data model where the `@relation` directive is used:
+
+```graphql
+type User {
+  id: ID! @unique
+  stories: [Story!]! @relation(name: "StoriesByUser" onDelete: CASCADE)
+}
+
+type Story {
+  id: ID! @unique
+  text: String!
+  author: User @relation(name: "StoriesByUser")
+}
+```
+
+The relation is named `StoriesByUser` and the deletion behaviour is as follows:
+
+- When a `User` node gets deleted, all its related `Story` nodes will be deleted as well.
+- When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
+
+#### Omitting the `@relation` directive
+
+In the simplest case, where a relation between two types is unambiguous and the default deletion behaviour (`SET_NULL`) should be applied, the corresponding relation fields do not have to be annotated with the `@relation` directive.
+
+Here we are defining a bidirectional _one-to-many_ relation between the `User` and `Story` types. Since `onDelete` has not been provided, the default deletion behaviour is used: `SET_NULL`:
+
+```graphql
+type User {
+  id: ID! @unique
+  stories: [Story!]!
+}
+
+type Story {
+  id: ID! @unique
+  text: String!
+  author: User
+}
+```
+
+The deletion behaviour in this example is as follows:
+
+- When a `User` node gets deleted, the `author` field on all its related `Story` nodes will be set to `null`. Note that if the `author` field was marked as [required](#required), the operation would result in an error.
+- When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
+
+#### Using the `name` argument of the `@relation` directive
+
+In certain cases, your data model may contain ambiguous relations. For example, consider you not only want a relation to express the "author-relationship" between `User` and `Story`, but you also want a relation to express which `Story` nodes have been _liked_ by a `User`.
+
+In that case, you end up with two different relations between `User` and `Story`! In order to disambiguate them, you need to give the relation a name:
+
+```graphql
+type User {
+  id: ID! @unique
+  writtenStories: [Story!]! @relation(name: "WrittenStories")
+  likedStories: [Story!]! @relation(name: "LikedStories")
+}
+
+type Story {
+  id: ID! @unique
+  text: String!
+  author: User! @relation(name: "WrittenStories")
+  likedBy: [User!]! @relation(name: "LikedStories")
+}
+```
+
+If the `name` wasn't provided in this case, there would be no way to decide whether `writtenStories` should relate to the `author` or the `likedBy` field.
+
+#### Using the `onDelete` argument of the `@relation` directive
+
+As mentioned above, you can specify a dedicated deletion behaviour for the related nodes. That's what the `onDelete` argument of the `@relation` directive is for.
+
+Consider the following example:
+
+```graphql
+type User {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "CommentAuthor", onDelete: CASCADE)
+  blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE)
+}
+
+type Blog {
+  id: ID! @unique
+  comments: [Comment!]! @relation(name: "Comments", onDelete: CASCADE)
+  owner: User! @relation(name: "BlogOwner", onDelete: SET_NULL)
+}
+
+type Comment {
+  id: ID! @unique
+  blog: Blog! @relation(name: "Comments", onDelete: SET_NULL)
+  author: User @relation(name: "CommentAuthor", onDelete: SET_NULL)
+}
+```
+
+Let's investigate the deletion behaviour for the three types:
+
+- When a `User` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `Blog` node will be deleted.
+- When a `Blog` node gets deleted,
+  - all related `Comment` nodes will be deleted.
+  - the related `User` node will have its `blog` field set to `null`.
+- When a `Comment` node gets deleted,
+  - the related `Blog` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+  - the related `User` node continues to exist and the deleted `Comment` node is removed from its `comments` list.
+
+### Generated API operations for relations
+
+The relations that are included in your schema affect the available operations in the [Prisma API](/use-prisma-api). Here is an overview of the generated CRUD and realtime operations for every relation in your Prisma API:
+
+- [Relation queries](qwe1#querying-data-across-relations) allow you to query data across types or aggregated for a relation (note that this is also possible using [Relay](https://facebook.github.io/relay/)'s [connection model](qwe1#connection-queries)).
+- [Nested mutations](qwe2#nested-mutations) allow you to create, connect, update, upsert and delete multiple related nodes within the same mutation.
+- [Relation subscriptions](qwe3#relation-subscriptions) allow you to get notified of changes to a relation.
+
+## GraphQL directives
+
+Directives are used to provide additional information in your data model. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
+
+### Data model directives
+
+Data model directives describe additional information about types or fields in the GraphQL schema.
+
+#### Unique scalar fields
+
+The `@unique` directive marks a scalar field as [unique](#unique). Unique fields will have a unique _index_ applied in the underlying database.
+
+```graphql
+# the `User` type has a unique `email` field
+type User {
+  email: String @unique
+}
+```
+
+Find more info about the `@unique` directive [above](#unique).
+
+#### Relation fields
+
+The directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a relation field.
+
+[See above](#the-relation-directive) for more information.
+
+#### Default value for scalar fields
+
+The directive `@default(value: String!)` sets [a default value](#default-value) for a scalar field. Note that the `value` argument is of type String for all scalar fields (even if the fields themselves are not strings):
+
+```graphql
+# the `title`, `published` and `someNumber` fields have default values `New Post`, `false` and `42`
+type Post {
+  title: String! @default(value: "New Post")
+  published: Boolean! @default(value: "false")
+  someNumber: Int! @default(value: "42")
+}
+```
+
+### Temporary directives
+
+Temporary directives are used to perform one-time migration operations. After deploying a service that contain a temporary directive, **a temporary directive needs to be manually removed from the type definitions file**.
+
+#### Renaming a type or field
+
+The temporary directive `@rename(oldName: String!)` is used to rename a type or field.
+
+```graphql
+# renaming the `Post` type to `Story`, and its `text` field to `content`
+type Story @rename(oldName: "Post") {
+  content: String @rename(oldName: "text")
+}
+```
+
+> If the rename directive is not used, Prisma would remove the old type and field before creating the new one, resulting in loss of data!
+
+## Naming conventions
+
+Different objects you encounter in a Prisma service like types or relations follow separate naming conventions to help you distinguish them.
+
+### Types
+
+The type name determines the name of derived queries and mutations as well as the argument names for nested mutations.
+
+Here are the conventions for naming types:
+
+- Choose type names in **singular**:
+  - **Yes**: `type User { ... }`
+  - **No**: `type Users { ... }`
+
+### Scalar and relation fields
+
+The name of a scalar field is used in queries and in query arguments of mutations. The name of relation fields follows the same conventions and determines the argument names for relation mutations.Relation field names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **at most 64 characters**.
+
+Field names are unique per type.
+
+Here are the conventions for naming fields:
+
+- Choose plural names for list fields:
+  - **Yes**: `friends: [User!]!`
+  - **No**: `friendList: [User!]!`
+- Choose singular names for non-list fields:
+  - **Yes**: `post: Post!`
+  - **No**: `posts: Post!`
+
+## More SDL features
+
+In this section, we describe further SDL features that are not yet supported for data modelling with Prisma.
+
+### Interfaces
+
+"Like many type systems, GraphQL supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#interfaces)
+
+To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/prisma/prisma/issues/83).
+
+### Union types
+
+"Union types are very similar to interfaces, but they don't get to specify any common fields between the types." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#union-types)
+
+To learn more about when and how union types are coming to Prisma, check out this [feature request](https://github.com/prisma/prisma/issues/165).

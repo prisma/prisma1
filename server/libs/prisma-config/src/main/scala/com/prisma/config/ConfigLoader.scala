@@ -1,8 +1,8 @@
 package com.prisma.config
 
 import java.io.File
-import java.net.URI
-import io.lemonlabs.uri.{Uri, Url}
+
+import io.lemonlabs.uri.Url
 import io.lemonlabs.uri.config.UriConfig
 import io.lemonlabs.uri.decoding.NoopDecoder
 import org.yaml.snakeyaml.Yaml
@@ -61,7 +61,6 @@ object ConfigLoader {
       val port           = sys.env.getOrElse("PORT", "4466").toInt
       val secret         = sys.env.getOrElse("PRISMA_MANAGEMENT_API_JWT_SECRET", "")
       val legacySecret   = sys.env.getOrElse("CLUSTER_PUBLIC_KEY", "")
-      val s2sSecret      = sys.env.getOrElse("SCHEMA_MANAGER_SECRET", "")
       val clusterAddress = sys.env.getOrElse("CLUSTER_ADDRESS", "")
       val rabbitUri      = sys.env.getOrElse("RABBITMQ_URI", "")
       val dbHost         = sys.env.getOrElse("SQL_CLIENT_HOST", sys.error("Env var SQL_CLIENT_HOST required but not found"))
@@ -79,7 +78,6 @@ object ConfigLoader {
         |port: $port
         |managementApiSecret: $secret
         |legacySecret: $legacySecret
-        |server2serverSecret: $s2sSecret
         |clusterAddress: $clusterAddress
         |rabbitUri: $rabbitUri
         |enableManagementApi: $mgmtApiEnabled
@@ -100,7 +98,6 @@ object ConfigLoader {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
     val legacySecret   = extractStringOpt("legacySecret", map)
-    val s2sSecret      = extractStringOpt("server2serverSecret", map)
     val clusterAddress = extractStringOpt("clusterAddress", map)
     val rabbitUri      = extractStringOpt("rabbitUri", map)
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
@@ -118,7 +115,6 @@ object ConfigLoader {
       port = port,
       managementApiSecret = secret,
       legacySecret = legacySecret,
-      server2serverSecret = s2sSecret,
       clusterAddress = clusterAddress,
       rabbitUri = rabbitUri,
       managmentApiEnabled = mgmtApiEnabled,
@@ -129,43 +125,70 @@ object ConfigLoader {
   private def readDbWithConnectionString(dbName: String, dbJavaMap: Any): Try[DatabaseConfig] = Try {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
-    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
-    val uriString   = extractString("uri", db)
-    val connLimit   = extractIntOpt("connectionLimit", db)
-    val pooled      = extractBooleanOpt("pooled", db)
-    val schema      = extractStringOpt("schema", db)
-    val mgmtSchema  = extractStringOpt("managementSchema", db)
-    val uri         = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
-    val dbHost      = uri.hostOption.get.value
-    val dbUser      = uri.user.get
-    val dbPass      = uri.password
-    val dbPort      = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
-    val database    = uri.path.toAbsolute.parts.headOption
-    val ssl         = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
 
-    databaseConfig(
-      name = dbName,
-      connector = dbConnector,
-      active = dbActive,
-      host = dbHost,
-      port = dbPort,
-      user = dbUser,
-      password = dbPass,
-      connectionLimit = connLimit,
-      pooled = pooled,
-      database = database,
-      schema = schema,
-      managementSchema = mgmtSchema,
-      ssl = ssl
-    )
+    if (dbConnector == "mongo") {
+      val uri      = extractString("uri", db)
+      val database = extractStringOpt("database", db)
+
+      databaseConfig(
+        name = dbName,
+        connector = dbConnector,
+        active = None,
+        host = "",
+        port = 0,
+        user = "",
+        password = None,
+        connectionLimit = None,
+        pooled = None,
+        database = database,
+        schema = None,
+        managementSchema = None,
+        ssl = None,
+        rawAccess = None,
+        uri = uri
+      )
+
+    } else {
+
+      val dbActive   = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
+      val uriString  = extractString("uri", db)
+      val connLimit  = extractIntOpt("connectionLimit", db)
+      val pooled     = extractBooleanOpt("pooled", db)
+      val schema     = extractStringOpt("schema", db)
+      val mgmtSchema = extractStringOpt("managementSchema", db)
+      val uri        = Url.parse(uriString)(UriConfig(decoder = NoopDecoder))
+      val dbHost     = uri.hostOption.get.value
+      val dbUser     = uri.user.get
+      val dbPass     = uri.password
+      val dbPort     = uri.port.getOrElse(5432) // FIXME: how could we not hardcode the postgres port
+      val database   = uri.path.toAbsolute.parts.headOption
+      val ssl        = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
+      val rawAccess  = extractBooleanOpt("rawAccess", db)
+
+      databaseConfig(
+        name = dbName,
+        connector = dbConnector,
+        active = dbActive,
+        host = dbHost,
+        port = dbPort,
+        user = dbUser,
+        password = dbPass,
+        connectionLimit = connLimit,
+        pooled = pooled,
+        database = database,
+        schema = schema,
+        managementSchema = mgmtSchema,
+        ssl = ssl,
+        rawAccess = rawAccess,
+        uri = uriString
+      )
+    }
   }
 
   private def readExplicitDb(dbName: String, dbJavaMap: Any) = {
     val db          = extractScalaMap(dbJavaMap, path = dbName)
     val dbConnector = extractString("connector", db)
-    val dbActive    = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db))
     val dbHost      = extractString("host", db)
-    val dbPort      = extractInt("port", db)
     val dbUser      = extractString("user", db)
     val dbPass      = extractStringOpt("password", db)
     val connLimit   = extractIntOpt("connectionLimit", db)
@@ -174,6 +197,28 @@ object ConfigLoader {
     val database    = extractStringOpt("database", db)
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
+    val rawAccess   = extractBooleanOpt("rawAccess", db)
+    val dbActive = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)) match {
+      case Some(x) if dbConnector == "mongo" =>
+        println(
+          "[WARNING] The mongo connector does not support the concept of migrations, the migrations: true | false / isActive: true | false setting is ignored. ")
+        Some(x)
+      case x => x
+    }
+
+    val uri = dbConnector match {
+      case "mongo" =>
+        extractStringOpt("uri", db) match {
+          case None         => sys.error("Please provide a valid Mongo connection uri.")
+          case Some(string) => string
+        }
+      case _ => ""
+    }
+
+    val dbPort = dbConnector match {
+      case "mongo" => 0
+      case _       => extractInt("port", db)
+    }
 
     databaseConfig(
       name = dbName,
@@ -188,7 +233,9 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = mgmtSchema,
-      ssl = ssl
+      ssl = ssl,
+      rawAccess = rawAccess,
+      uri = uri
     )
   }
 
@@ -205,7 +252,9 @@ object ConfigLoader {
       database: Option[String],
       schema: Option[String],
       managementSchema: Option[String],
-      ssl: Option[Boolean]
+      ssl: Option[Boolean],
+      rawAccess: Option[Boolean],
+      uri: String
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -220,7 +269,9 @@ object ConfigLoader {
       database = database,
       schema = schema,
       managementSchema = managementSchema,
-      ssl = ssl.getOrElse(false)
+      ssl = ssl.getOrElse(false),
+      rawAccess = rawAccess.getOrElse(false),
+      uri = uri
     )
     validateDatabaseConfig(config)
   }
@@ -231,6 +282,9 @@ object ConfigLoader {
         throw InvalidConfiguration("The parameter connectionLimit must be set to at least 2.")
       }
     }
+//    if (config.connector == "mongo" && config.active) {
+//      throw InvalidConfiguration("The mongo connector may not set the migrations setting to true.")
+//    }
 
     config
   }
@@ -291,7 +345,6 @@ case class PrismaConfig(
     port: Option[Int],
     managementApiSecret: Option[String],
     legacySecret: Option[String],
-    server2serverSecret: Option[String],
     clusterAddress: Option[String],
     rabbitUri: Option[String],
     managmentApiEnabled: Option[Boolean],
@@ -311,7 +364,9 @@ case class DatabaseConfig(
     pooled: Boolean,
     database: Option[String],
     schema: Option[String],
-    ssl: Boolean
+    ssl: Boolean,
+    rawAccess: Boolean,
+    uri: String
 )
 
 abstract class ConfigError(reason: String)       extends Exception(reason)

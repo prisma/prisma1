@@ -4,271 +4,307 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma is a performant open-source GraphQL [ORM-like layer](#is-prisma-an-orm)** doing the heavy lifting in your GraphQL server. It turns your database into a GraphQL API which can be consumed by your resolvers via [GraphQL bindings](https://oss.prisma.io/content/graphql-binding/01-overview).
+Prisma replaces traditional ORMs and data access layers with a universal database abstraction used via the **Prisma client**. It is used to build **GraphQL servers, REST APIs & more**.
 
-Prisma's auto-generated GraphQL API provides powerful abstractions and modular building blocks to develop flexible and scalable GraphQL backends:
+<!-- TODO: Try with CSB -->
 
-- **Type-safe API** including filters, aggregations, pagination and transactions.
-- **Data modeling & migrations** with declarative GraphQL SDL.
-- **Realtime API** using GraphQL subscriptions.
-- **Advanced API composition** using GraphQL bindings and schema stitching.
-- **Works with all frontend frameworks** like React, Vue.js, Angular.
+- **Prisma client for various languages** such as JavaScript, TypeScript, Flow, Go.
+- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
+- **Type-safe database access** including filters, aggregations, pagination and transactions.
+- **Realtime event systems for your database** to get notified about database events.
+- **Declarative data modeling & migrations (optional)** with simple SDL syntax.
 
 ## Contents
 
 - [Quickstart](#quickstart)
 - [Examples](#examples)
 - [Architecture](#architecture)
-- [Is Prisma an ORM?](#is-prisma-an-orm)
 - [Database Connectors](#database-connectors)
-- [GraphQL API](#graphql-api)
 - [Community](#community)
 - [Contributing](#contributing)
 
 ## Quickstart
 
-[Watch this 3-min tutorial](https://www.youtube.com/watch?v=CORQo5rooX8) or follow the steps below to get started with Prisma.
+<!-- TODO: Explain what happens _from scratch_, second half of sentence, click here withh existing DB -->
 
-#### 1. Install the CLI via NPM
+#### 1. Install Prisma via Homebrew
 
-```bash
-npm install -g prisma
+```
+brew tap prisma/prisma
+brew install prisma
 ```
 
-#### 2. Create a new Prisma service
+<Details>
+<Summary><b>Alternative</b>: Install with NPM or Yarn</Summary>
 
-Run the following command to create the files you need for a new Prisma [service](https://www.prisma.io/docs/reference/service-configuration/overview-ieshoo5ohm).
+```
+npm install -g prisma
+# or
+yarn global add prisma
+```
+</Details>
 
-```bash
+#### 2. Connect Prisma to a database
+
+To setup Prisma, you need to have [Docker](https://www.docker.com) installed. Run the following command to get started with Prisma:
+
+```
 prisma init hello-world
 ```
 
-Then select the **Demo server** (hosted in Prisma Cloud) and follow the instructions of the interactive CLI prompt.
+The interactive CLI wizard now helps you with the required setup:
 
-<details><summary><b>Alternative: Setup Prisma with your own database.</b></summary>
-<p>
+- Select **Create new database** (you can also use an [existing database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-existing-database-a003/) or a hosted [demo database](https://www.prisma.io/docs/1.16/get-started/01-setting-up-prisma-demo-server-a001/))
+- Select the database type: **MySQL** or **PostgreSQL**
+- Select the language for the generated Prisma client: **TypeScript**, **Flow**, **JavaScript** or **Go**
 
-Instead of using a Demo server, you can also setup a Prisma server that is connected to your own database. Note that this **requires [Docker](https://www.docker.com)**.
+Once the wizard has terminated, run the following commands to setup Prisma:
 
-To do so, run `prisma init` as shown above and follow the interactive CLI prompts to choose your own database setup:
+```
+cd hello-world
+docker-compose up -d
+```
 
-- Create a new database
-- Connect an existing database
+#### 3. Define your datamodel
 
-Once the command has finished, you need to run `docker-compose up -d` to start the Prisma server.
-
-</p>
-</details>
-
-#### 3. Define your data model
-
-Edit `datamodel.graphql` to define your data model using GraphQL SDL:
+Edit `datamodel.prisma` to define your datamodel using [SDL](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) syntax. Each model is mapped to a table in your database schema:
 
 ```graphql
-type Tweet {
-  id: ID! @unique
-  createdAt: DateTime!
-  text: String!
-  owner: User!
-}
-
 type User {
   id: ID! @unique
-  handle: String! @unique
+  email: String @unique
   name: String!
-  tweets: [Tweet!]!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
 }
 ```
 
-#### 4. Deploy your Prisma service
+#### 4. Deploy datamodel to your migrate database
 
-To deploy your service, run the following command:
+To deploy your Prisma API, run the following command:
 
-```bash
+```
 prisma deploy
 ```
 
-#### 5. Explore the API in a Playground
+The Prisma API is deployed based on the datamodel and exposes CRUD & realtime operations for each model in that file.
 
-Run the following command to open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground/releases) and start sending queries and mutations:
+#### 5. Use the Prisma client (JavaScript)
 
-```bash
-prisma playground
+The Prisma client connects to the Prisma API and lets you perform read and write operations against your database. This section explains how to use the Prisma client from **JavaScript**.
+
+First, inside the `hello-world` directory, install the `prisma-client-lib` dependency:
+
+```
+npm install --save prisma-client-lib
 ```
 
-<details><summary><b>I don't know what queries and mutations I can send.</b></summary>
+Next, to generate the Prisma client, run the following command:
+
+```
+prisma generate
+```
+
+Create a new Node script inside the `hello-world` directory:
+
+```
+touch index.js
+```
+
+Now add the following code to it:
+
+```js
+const { prisma } = require('./generated/prisma-client')
+
+// A `main` function so that we can use async/await
+async function main() {
+  // Create a new user with a new post
+  const newUser = await prisma.createUser({
+    name: 'Alice',
+    posts: {
+      create: { title: 'The data layer for modern apps' }
+    }
+  })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+
+  // Read all posts from the database and print them to the console
+  const allPosts = await prisma.posts()
+  console.log(allPosts)
+}
+
+main().catch(e => console.error(e))
+```
+
+Finally, run the code using the following command:
+
+```
+node index.js
+```
+
+<details><summary><b>See more API operations</b></summary>
 <p>
 
-**Create a new user**:
-
-```graphql
-mutation {
-  createUser(data: { name: "Alice", handle: "alice" }) {
-    id
-  }
-}
+```js
+const usersCalledAlice = await prisma
+  .users({
+    where: {
+      name: "Alice"
+    }
+  })
 ```
 
-**Query all users and their tweets**:
-
-```graphql
-query {
-  users {
-    id
-    name
-    tweets {
-      id
-      createdAt
-      text
-    }
-  }
-}
+```js
+// replace the __USER_ID__ placeholder with an actual user ID
+const updatedUser = await prisma
+  .updateUser({
+    where: { id: "__USER_ID__" },
+    data: { email: "alice@prisma.io" }
+  })
 ```
 
-**Create a new tweet for a user**:
+```js
+// replace the __USER_ID__ placeholder with an actual user ID
+ const deletedUser = await prisma
+  .deleteUser({ id: "__USER_ID__" })
+```
 
-> Replace the `__USER_ID__` placeholder with the `id` of an actual `User`
-
-```graphql
-mutation {
-  createTweet(
-    data: {
-      text: "Prisma makes building GraphQL servers fun & easy"
-      owner: { connect: { id: "__USER_ID__" } }
-    }
-  ) {
-    id
-    createdAt
-    owner {
-      name
-    }
-  }
-}
+```js
+const postsByAuthor = await prisma
+  .user({ email: "alice@prisma.io" })
+  .posts()
 ```
 
 </p>
 </details>
 
+
 #### 6. Next steps
 
-You can now connect to Prisma's GraphQL API, select what you would like to do next:
+Here is what you can do next:
 
-- [**Build a GraphQL server (recommended)**](https://www.prisma.io/docs/tutorials/-ohdaiyoo6c)
-- Access Prisma's GraphQL API from a Node script (_coming soon_)
-- Access Prisma's GraphQL API directly from the frontend (_coming soon_)
+- [Build an app with Prisma client](https://www.prisma.io/docs/get-started/03-build-graphql-servers-with-prisma-e001/)
+- [Check out some examples](#examples)
+- [Read more about how Prisma works](https://www.prisma.io/docs/understand-prisma/prisma-introduction-what-why-how-j9ff/).
 
 ## Examples
 
-Collection of Prisma example projects 💡
+#### TypeScript
 
-- [application-server](./examples/application-server)
-- [authentication](./examples/authentication)
-- [cli-tool](./examples/cli-tool)
-- [data-modelling](./examples/data-modelling)
-- [hooks](./examples/hooks)
-- [permissions-with-shield](./examples/permissions-with-shield)
-- [postgres](./examples/postgres)
-- [resolver-forwarding](./examples/resolver-forwarding)
-- [server-side-subscriptions](./examples/server-side-subscriptions)
-- [subscriptions](./examples/subscriptions)
-- [travis](./examples/travis)
-- [yml-structure](./examples/yml-structure)
+| Demo | Description |
+|:------|:----------|
+| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/typescript/cli-app) | Simple CLI TODO list app |
+| [`graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-auth) | GraphQL server with email-password authentication & permissions |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql) | Simple GraphQL server |
+| [`graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/typescript/graphql-subscriptions) | GraphQL server with realtime subscriptions |
+| [`rest-express`](https://github.com/prisma/prisma-examples/tree/master/typescript/rest-express) | Simple REST API with Express.JS |
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/typescript/script) | Simple usage of Prisma client in script |
 
-You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
+> You can also check the [**AirBnB clone example**](https://github.com/prismagraphql/graphql-server-example) we built as a fully-featured demo app for Prisma.
+
+#### Node.JS
+
+| Demo | Description |
+|:------|:----------|
+| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/node/cli-app) | Simple CLI TODO list app |
+| [`graphql-auth`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-auth) | GraphQL server with email-password authentication & permissions |
+| [`graphql-schema-delegation`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-schema-delegation) | [Schema delegation](https://www.prisma.io/docs/prisma-graphql-api/usage/prisma-bindings-prb1/#building-graphql-servers-with-prisma-bindings) with Prisma binding |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/node/graphql) | Simple GraphQL server |
+| [`graphql-subscriptions`](https://github.com/prisma/prisma-examples/tree/master/node/graphql-subscriptions) | GraphQL server with realtime subscriptions |
+| [`rest-express`](https://github.com/prisma/prisma-examples/tree/master/node/rest-express) | Simple REST API with Express.JS |
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/node/script) | Simple usage of Prisma client in script |
+
+#### Golang
+
+| Demo | Description |
+|:------|:----------|
+| [`cli-app`](https://github.com/prisma/prisma-examples/tree/master/go/cli-app) | Simple CLI TODO list app |
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/go/graphql) | Simple GraphQL server |
+| [`http-mux`](https://github.com/prisma/prisma-examples/tree/master/go/http-mux) | Simple REST API with [gorilla/mux](https://github.com/gorilla/mux) |
+| [`rest-gin`](https://github.com/prisma/prisma-examples/tree/master/go/rest-gin) | Simple REST API with [Gin](https://github.com/gin-gonic/gin) |
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/go/script) | Simple usage of Prisma client in script |
+
+#### Flow
+
+| Demo | Description |
+|:------|:----------|
+| [`graphql`](https://github.com/prisma/prisma-examples/tree/master/flow/graphql) | Simple GraphQL server |
+| [`script`](https://github.com/prisma/prisma-examples/tree/master/flow/script) | Simple usage of Prisma client in script |
 
 ## Architecture
 
-Prisma takes the role of a [data access layer](https://en.wikipedia.org/wiki/Data_access_layer) in your backend architecture by connecting your API server to your databases. It enables a layered architecture which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
+Prisma takes the role of the **data layer** in your backend architecture, replacing traditional ORMs and custom data access layers. It enables a _layered architecture_ which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
 
-Acting as a _GraphQL database proxy_, Prisma provides a GraphQL-based abstraction for your databases enabling you to read and write data with GraphQL queries and mutations. Using [Prisma bindings](https://github.com/prismagraphql/prisma-binding), you can access Prisma's GraphQL API from your programming language.
+The **Prisma client** is used inside your application server to perform read and write operations against your database through the Prisma API.
 
-Prisma servers run as standalone processes which allows for them to be scaled independently from your API server.
+Prisma runs as _standalone processes_ which allows for it to be scaled independently from your application server.
 
-<!-- Prisma is a secure API layer that sits in front of your database. Acting as a _GraphQL database proxy_, Prisma exposes a powerful GraphQL API and manages rate limiting, authentication, logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure. -->
-
-<p align="center"><img src="https://i.imgur.com/vVaq6yq.png" height="250" /></p>
-
-## Is Prisma an ORM?
-
-Prisma provides a mapping from your API to your database. In that sense, it solves similar problems as conventional ORMs. The big difference between Prisma and other ORMs is _how_ the mapping is implemented.
-
-**Prisma takes a radically different approach which avoids the shortcomings and limitations commonly experienced with ORMs.** The core idea is that Prisma turns your database into a GraphQL API which is then consumed by your API server (via [GraphQL binding](https://oss.prisma.io/content/graphql-binding/01-overview)). While this makes Prisma particularly well-suited for building GraphQL servers, it can definitely be used in other contexts as well.
-
-Here is how Prisma compares to conventional ORMs:
-
-- **Expressiveness**: Full flexibility thanks to Prisma's GraphQL API, including relational filters and nested mutations.
-- **Performance**: Prisma uses various optimization techniques to ensure top performance in complex scenarios.
-- **Architecture**: Using Prisma enables a layered and clean architecture, allowing you to focus on your API layer.
-- **Type safety**: Thanks to GraphQL's strong type system you're getting a strongly typed API layer for free.
-- **Realtime**: Out-of-the-box support for realtime updates for all events happening in the database.
+<p align="center"><img src="https://imgur.com/OyIQQxF.png" height="132" /></p>
 
 ## Database Connectors
 
-[Database connectors](https://github.com/prismagraphql/prisma/issues/1751) provide the link between Prisma and the underlying database.
+[Database connectors](https://github.com/prisma/prisma/issues/1751) provide the link between Prisma and the underlying database.
 
 You can connect the following databases to Prisma already:
 
 - MySQL
-- Postgres
-
-More database connectors will follow.
+- PostgreSQL
+- MongoDB ([beta](https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/))
 
 ### Upcoming Connectors
 
 If you are interested to participate in the preview for one of the following connectors, please reach out in our [Slack](https://slack.prisma.io).
 
-- [MongoDB Connector](https://github.com/prismagraphql/prisma/issues/1643)
-- [Elastic Search Connector](https://github.com/prismagraphql/prisma/issues/1665)
-
-### Further Connectors
-
-We are still collecting use cases and feedback for the API design and feature set of the following connectors:
-
-- [MS SQL Connector](https://github.com/prismagraphql/prisma/issues/1642)
-- [Oracle Connector](https://github.com/prismagraphql/prisma/issues/1644)
-- [ArangoDB Connector](https://github.com/prismagraphql/prisma/issues/1645)
-- [Neo4j Connector](https://github.com/prismagraphql/prisma/issues/1646)
-- [Druid Connector](https://github.com/prismagraphql/prisma/issues/1647)
-- [Dgraph Connector](https://github.com/prismagraphql/prisma/issues/1648)
-- [DynamoDB Connector](https://github.com/prismagraphql/prisma/issues/1655)
-- [Cloud Firestore Connector](https://github.com/prismagraphql/prisma/issues/1660)
-- [CockroachDB Connector](https://github.com/prismagraphql/prisma/issues/1705)
-- [Cassandra Connector](https://github.com/prismagraphql/prisma/issues/1750)
-- [Redis Connector](https://github.com/prismagraphql/prisma/issues/1722)
-- [AWS Neptune Connector](https://github.com/prismagraphql/prisma/issues/1752)
-- [CosmosDB Connector](https://github.com/prismagraphql/prisma/issues/1663)
-- [Influx Connector](https://github.com/prismagraphql/prisma/issues/1857)
+- [Elastic Search](https://github.com/prisma/prisma/issues/1665)
+- [MS SQL](https://github.com/prisma/prisma/issues/1642)
+- [Oracle](https://github.com/prisma/prisma/issues/1644)
+- [ArangoDB](https://github.com/prisma/prisma/issues/1645)
+- [Neo4j](https://github.com/prisma/prisma/issues/1646)
+- [Druid](https://github.com/prisma/prisma/issues/1647)
+- [Dgraph](https://github.com/prisma/prisma/issues/1648)
+- [DynamoDB](https://github.com/prisma/prisma/issues/1655)
+- [Cloud Firestore](https://github.com/prisma/prisma/issues/1660)
+- [CockroachDB](https://github.com/prisma/prisma/issues/1705)
+- [Cassandra](https://github.com/prisma/prisma/issues/1750)
+- [Redis](https://github.com/prisma/prisma/issues/1722)
+- [AWS Neptune](https://github.com/prisma/prisma/issues/1752)
+- [CosmosDB](https://github.com/prisma/prisma/issues/1663)
+- [Influx](https://github.com/prisma/prisma/issues/1857)
 
 Join the discussion or contribute to influence which we'll work on next!
 
-## GraphQL API
-
-The most important component in Prisma is the GraphQL API:
-
-- Query, mutate & stream data via a auto-generated GraphQL CRUD API
-- Define your data model and perform migrations using GraphQL SDL
-
-Prisma's auto-generated GraphQL APIs are fully compatible with the [OpenCRUD](https://www.opencrud.org/) standard.
-
-> [Try the online demo!](https://www.prisma.io/features/graphql-api/)
-
 ## Community
 
-Prisma has a community of thousands of amazing developers and contributors. Welcome, please join us! 👋
+Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
+
+### Channels
 
 - [Forum](https://www.prisma.io/forum)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
 - [Meetup](https://www.meetup.com/graphql-berlin)
-- [GraphQL Europe](https://www.graphql-europe.org/) (June 15, Berlin)
-- [GraphQL Day](https://www.graphqlday.org/)
+- [GraphQL Conf](https://www.graphqlconf.org/)
 - [Email](mailto:hello@prisma.io)
+
+### Resources
+
+- [Chinese translation of the Prisma docs](https://prisma.1wire.com/) (Thanks to [Victor Kang](https://github.com/Victorkangsh))
+- [Awesome Prisma](https://github.com/catalinmiron/awesome-prisma) (Thanks to [Catalin Miron](https://github.com/catalinmiron))
 
 ## Contributing
 
 Contributions are **welcome and extremely helpful** 🙌
-Please refer [to the contribution guide](https://github.com/prismagraphql/prisma/blob/master/CONTRIBUTING.md) for more information.
+Please refer [to the contribution guide](https://github.com/prisma/prisma/blob/master/CONTRIBUTING.md) for more information.
 
 Releases are separated into three _channels_: **alpha**, **beta** and **stable**. You can learn more about these three channels and Prisma's release process [here](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/).
 

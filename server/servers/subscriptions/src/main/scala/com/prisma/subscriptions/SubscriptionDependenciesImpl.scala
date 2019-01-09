@@ -6,10 +6,6 @@ import com.prisma.api.ApiDependencies
 import com.prisma.messagebus._
 import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.ProjectIdEncoder
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV05.Responses.SubscriptionSessionResponseV05
-import com.prisma.subscriptions.protocol.SubscriptionProtocolV07.Responses.SubscriptionSessionResponse
-import com.prisma.subscriptions.protocol.SubscriptionRequest
-import com.prisma.websocket.protocol.Request
 
 trait SubscriptionDependencies extends ApiDependencies {
   implicit val system: ActorSystem
@@ -17,11 +13,6 @@ trait SubscriptionDependencies extends ApiDependencies {
 
   def invalidationSubscriber: PubSubSubscriber[SchemaInvalidatedMessage]
   def sssEventsSubscriber: PubSubSubscriber[String]
-  def responsePubSubPublisherV05: PubSubPublisher[SubscriptionSessionResponseV05]
-  def responsePubSubPublisherV07: PubSubPublisher[SubscriptionSessionResponse]
-  def requestsQueueConsumer: QueueConsumer[SubscriptionRequest]
-  def requestsQueuePublisher: QueuePublisher[Request]
-  def responsePubSubSubscriber: PubSubSubscriber[String]
   def keepAliveIntervalSeconds: Long
 
   override def projectIdEncoder: ProjectIdEncoder

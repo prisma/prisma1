@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector test schema - 2504 1`] = `
+"type Employee @pgTable(name: \\"Employee\\") {
+  Title: String
+  State: String
+  ReportsTo: Employee @relation(name: employees_ReportsToes) @pgRelation(column: \\"ReportsTo\\")
+  PostalCode: String
+  Phone: String
+  LastName: String!
+  id: Int! @unique @pgColumn(name: \\"EmployeeId\\")
+  HireDate: DateTime
+  FirstName: String!
+  Fax: String
+  Employees: [Employee!]! @relation(name: employees)
+  Email: String
+  Country: String
+  City: String
+  BirthDate: DateTime
+  Address: String
+}"
+`;

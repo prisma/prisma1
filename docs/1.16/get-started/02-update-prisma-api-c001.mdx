@@ -1,0 +1,90 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+
+export const meta = {
+  title: 'Update Prisma API',
+  position: 2,
+  
+  nextText: 'Fantastic! 🎉 You are now able to make changes to your Prisma API. Learn how to consume the API using Prisma bindings next.'
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Change the data model of your Prisma service
+- Deploy the adjusted data model to update your Prisma API
+- Send _nested_ queries and mutations
+
+## Adjust your data model
+
+Update the data model in `datamodel.graphql` as follows. You are adding a new `Post` type to the data model as well as a _relation_ between `User` and `Post` (via the `posts` and `author` fields):
+
+```graphql copy
+type User {
+  id: ID! @unique
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @unique
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
+}
+```
+
+## (Re-)Deploy your Prisma service
+
+To apply the changes you just made to your data model, you need to (re-)deploy your Prisma service:
+
+```bash copy
+prisma deploy
+```
+
+## Explore the Prisma API in a Playground
+
+Open a [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) using the following command:
+
+```bash copy
+prisma playground
+```
+
+Because of the relation that was added to the data model, you can now send _nested_ queries and mutations to read and modify _connected_ nodes.
+
+<QueryChooser titles={["Create post & user","Query users & posts"]}>
+
+```graphql lineNumbers,copy
+mutation {
+  createPost(data: {
+    title: "GraphQL is great"
+    author: {
+      create: {
+        name: "Bob"
+      }
+    }
+  }) {
+    id
+    published
+    author {
+      id
+    }
+  }
+}
+```
+
+```graphql lineNumbers,copy
+query {
+  users {
+    id
+    name
+    posts {
+      id
+      title
+      published
+    }
+  }
+}
+```
+
+</QueryChooser>

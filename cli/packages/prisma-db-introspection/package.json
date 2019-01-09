@@ -1,6 +1,6 @@
 {
   "name": "prisma-db-introspection",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
@@ -12,62 +12,54 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/fs-extra": "^5.0.0",
-    "@types/jest": "^21.1.8",
+    "@types/jest": "^23.3.9",
     "@types/node": "^8.0.57",
     "@types/pg": "^7.4.6",
-    "jest": "^21.2.1",
+    "jest": "23.6.0",
     "prettier": "^1.10.2",
-    "ts-jest": "^21.2.4",
+    "ts-jest": "^23.10.5",
     "tslint": "^5.6.0",
-    "typescript": "^2.6.2"
+    "typescript": "^3.2.2"
   },
   "dependencies": {
-    "ajv": "5",
-    "bluebird": "^3.5.1",
-    "chalk": "^2.3.0",
-    "debug": "^3.1.0",
-    "dotenv": "^4.0.0",
-    "fs-extra": "^5.0.0",
+    "@types/mongodb": "^3.1.14",
     "graphql-request": "^1.5.0",
-    "isomorphic-fetch": "^2.2.1",
-    "js-yaml": "^3.10.0",
-    "json-stable-stringify": "^1.0.1",
-    "jsonwebtoken": "^8.1.0",
     "lodash": "^4.17.4",
+    "mongodb": "^3.1.10",
     "pg": "^7.4.1",
     "pluralize": "^7.0.0",
-    "prisma-json-schema": "^0.0.1",
-    "replaceall": "^0.1.6",
+    "prisma-datamodel": "1.23.0-alpha.1",
+    "prisma-yml": "^1.0.88",
     "scuid": "^1.0.2",
-    "uppercamelcase": "^3.0.0",
-    "yaml-ast-parser": "^0.0.40"
+    "uppercamelcase": "^3.0.0"
   },
   "scripts": {
-    "test": "jest --runInBand --forceExit",
+    "test": "jest --runInBand --verbose=false",
     "build": "tsc -d",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
     "prepublishOnly": "yarn lint && yarn test && yarn build"
   },
   "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(src/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "helpers.ts",
+      "connectionDetails.ts",
+      "/postgres/",
+      "/data/",
+      "dist"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",
       "js",
       "jsx",
-      "json"
-    ],
-    "rootDir": "./src",
-    "transform": {
-      "^.+\\.(ts|tsx)$": "../../../node_modules/ts-jest/preprocessor.js"
-    },
-    "testMatch": [
-      "**/*.test.(ts|js)"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsConfigFile": "./tsconfig.json"
-      }
-    }
+      "json",
+      "node"
+    ]
   }
 }

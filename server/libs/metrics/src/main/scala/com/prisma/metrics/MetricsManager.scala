@@ -32,7 +32,7 @@ object MetricsRegistry {
         as.scheduler.schedule(30.seconds, 30.seconds) {
           secretLoader.loadCloudSecret().onComplete {
             case Success(Some(secret)) => pushGateway.pushAdd(meterRegistry.getPrometheusRegistry, job, instanceKey, secret)
-            case Success(None)         => log("No Prisma Cloud secret is set. Metrics collection is disabled.")
+            case Success(None)         => // NO-OP
             case Failure(e)            => e.printStackTrace()
           }
         }

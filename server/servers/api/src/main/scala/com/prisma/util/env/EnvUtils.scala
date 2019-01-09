@@ -10,4 +10,11 @@ object EnvUtils {
     } yield converted
   }
 
+  def asBoolean(name: String): Option[Boolean] = {
+    for {
+      value     <- sys.env.get(name)
+      converted <- Try(value.toBoolean).toOption
+    } yield converted
+  }
+
 }

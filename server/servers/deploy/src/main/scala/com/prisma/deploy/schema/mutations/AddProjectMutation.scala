@@ -1,7 +1,8 @@
 package com.prisma.deploy.schema.mutations
 
 import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.schema._
 import com.prisma.deploy.validation.NameConstraints
 import com.prisma.shared.models._
@@ -27,7 +28,6 @@ case class AddProjectMutation(
 
     val newProject = Project(
       id = projectId,
-      ownerId = args.ownerId.getOrElse(""),
       secrets = args.secrets,
       schema = Schema()
     )
@@ -40,8 +40,10 @@ case class AddProjectMutation(
       status = MigrationStatus.Success,
       steps = Vector.empty,
       errors = Vector.empty,
-      schema = Schema(),
-      functions = Vector.empty
+      schema = Schema.empty,
+      functions = Vector.empty,
+      previousSchema = Schema.empty,
+      rawDataModel = ""
     )
 
     for {

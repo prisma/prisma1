@@ -18,26 +18,10 @@ case class UpdateMany(
 )(implicit apiDependencies: ApiDependencies)
     extends ClientMutation[BatchPayload] {
 
-  import apiDependencies.system.dispatcher
+  val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
 
-  val coolArgs   = CoolArgs.fromSchemaArgs(args.raw)
-  lazy val count = dataResolver.countByModel(model, whereFilter)
+  def prepareMutactions(): Future[TopLevelDatabaseMutaction] =
+    Future.successful(DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs))
 
-  def prepareMutactions(): Future[TopLevelDatabaseMutaction] = {
-    count map { _ =>
-//      val sqlMutactions          = DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs)
-//      val subscriptionMutactions = Vector.empty
-//      val sssActions             = Vector.empty
-//
-//      PreparedMutactions(
-//        databaseMutactions = sqlMutactions,
-//        sideEffectMutactions = sssActions ++ subscriptionMutactions
-//      )
-
-      DatabaseMutactions(project).getMutactionsForUpdateMany(model, whereFilter, coolArgs)
-    }
-  }
-
-  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = count.map(value => BatchPayload(count = value))
-
+  override def getReturnValue(results: MutactionResults): Future[BatchPayload] = Future.successful(BatchPayload(count = ManyHelper.getManyCount(results)))
 }

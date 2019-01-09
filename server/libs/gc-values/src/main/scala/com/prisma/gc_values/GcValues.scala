@@ -21,17 +21,24 @@ sealed trait GCValue {
 object RootGCValue {
   def apply(elements: (String, GCValue)*): RootGCValue = RootGCValue(Map(elements: _*))
   def empty: RootGCValue = {
-    val empty: SortedMap[String, GCValue] = SortedMap.empty
+    val empty: Map[String, GCValue] = Map.empty
     RootGCValue(empty)
   }
 }
+
 case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def idField = map.get("id") match {
     case Some(id) => id.asInstanceOf[IdGCValue]
     case None     => sys.error("There was no field with name 'id'.")
   }
 
+  def idFieldByName(name: String) = map.get(name) match {
+    case Some(id) => id.asInstanceOf[IdGCValue]
+    case None     => sys.error(s"There was no id field with name '$name'.")
+  }
+
   def filterValues(p: GCValue => Boolean) = copy(map = map.filter(t => p(t._2)))
+  def filterKeys(p: String => Boolean)    = copy(map = map.filter(t => p(t._1)))
 
   def toMapStringAny: Map[String, Any] = map.collect {
     case (key, value) =>
@@ -50,10 +57,14 @@ case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
   def value = sys.error("RootGCValues not implemented yet in GCValueExtractor")
 }
 
+object ListGCValue {
+  def empty: ListGCValue = ListGCValue(Vector.empty)
+}
+
 case class ListGCValue(values: Vector[GCValue]) extends GCValue {
   def isEmpty: Boolean   = values.isEmpty
   def size: Int          = values.size
-  def value: Vector[Any] = values.map(_.value)
+  def value: Vector[Any] = values.collect { case x if !x.isInstanceOf[RootGCValue] => x.value }
 
   def ++(other: ListGCValue) = ListGCValue(this.values ++ other.values)
 }
@@ -68,18 +79,19 @@ case class DateTimeGCValue(value: DateTime) extends LeafGCValue
 case class EnumGCValue(value: String)       extends LeafGCValue
 case class JsonGCValue(value: JsValue)      extends LeafGCValue
 
-sealed trait IdGCValue                extends LeafGCValue
-case class CuidGCValue(value: String) extends IdGCValue
-case class UuidGCValue(value: UUID)   extends IdGCValue
-case class IntGCValue(value: Int)     extends IdGCValue
+sealed trait IdGCValue                    extends LeafGCValue
+case class StringIdGCValue(value: String) extends IdGCValue
+case class UuidGCValue(value: UUID)       extends IdGCValue
+case class IntGCValue(value: Int)         extends IdGCValue
 
 object UuidGCValue {
   def parse_!(s: String): UuidGCValue    = parse(s).get
   def parse(s: String): Try[UuidGCValue] = Try { UuidGCValue(UUID.fromString(s)) }
 
-  def random(): UuidGCValue = UuidGCValue(UUID.randomUUID())
+  def random: UuidGCValue = UuidGCValue(UUID.randomUUID())
 }
 
-object CuidGCValue {
-  def random(): CuidGCValue = CuidGCValue(Cuid.createCuid())
+object StringIdGCValue {
+  def random: StringIdGCValue = StringIdGCValue(Cuid.createCuid())
+  def dummy: StringIdGCValue  = StringIdGCValue("")
 }

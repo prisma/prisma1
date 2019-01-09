@@ -26,15 +26,16 @@ case class Upsert(
   val outerWhere: NodeSelector = coolArgs.extractNodeSelectorFromWhereField(model)
 
   val updateArgs: CoolArgs = coolArgs.updateArgumentsAsCoolArgs
+  val upsertMutaction      = DatabaseMutactions(project).getMutactionsForUpsert(outerWhere, coolArgs)
 
-  override def prepareMutactions: Future[TopLevelDatabaseMutaction] = {
-    Future.successful(DatabaseMutactions(project).getMutactionsForUpsert(outerWhere, coolArgs))
-  }
+  override def prepareMutactions: Future[TopLevelDatabaseMutaction] = Future.successful(upsertMutaction)
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val firstResult = results.allResults.collectFirst { case m: FurtherNestedMutactionResult => m }.get
-    val selector    = NodeSelector.forIdGCValue(model, firstResult.id)
-    val itemFuture  = dataResolver.getNodeByWhere(selector, selectedFields)
+    val firstResult = results.results.collectFirst {
+      case r: FurtherNestedMutactionResult if r.mutaction.id == upsertMutaction.create.id || r.mutaction.id == upsertMutaction.update.id => r
+    }.get
+    val selector   = NodeSelector.forId(model, firstResult.id)
+    val itemFuture = dataResolver.getNodeByWhere(selector, selectedFields)
     itemFuture.map {
       case Some(prismaNode) => ReturnValue(prismaNode)
       case None             => sys.error("Could not find an item after an Upsert. This should not be possible.")

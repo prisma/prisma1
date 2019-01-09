@@ -7,8 +7,7 @@ class CountManyModelDeferredResolver(dataResolver: DataResolver) {
   def resolve(orderedDeferreds: Vector[OrderedDeferred[CountManyModelDeferred]]): Vector[OrderedDeferredFutureResult[Int]] = {
     val deferreds    = orderedDeferreds.map(_.deferred)
     val headDeferred = deferreds.head
-    val whereFilter  = headDeferred.args.flatMap(_.filter)
-    val countFuture  = dataResolver.countByModel(headDeferred.model, whereFilter)
+    val countFuture  = dataResolver.countByModel(headDeferred.model, headDeferred.args)
 
     orderedDeferreds.map { case OrderedDeferred(_, order) => OrderedDeferredFutureResult[Int](countFuture, order) }
   }

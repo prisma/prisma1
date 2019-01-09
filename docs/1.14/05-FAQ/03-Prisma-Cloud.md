@@ -50,3 +50,4 @@ Every Prisma server is backed by one database. In the future, it will be possibl
 Because Prisma is only a layer _on top of your database_, you still have full control over the database itself. This means you have the full power and flexibility regarding your own backup strategy.
 
 In the future Prisma Cloud is going to simplify backup workflows and, for example, enable automatic point-in-time restores.
+

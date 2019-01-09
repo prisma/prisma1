@@ -1,0 +1,82 @@
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Server-side Subscriptions",
+  position: 230,
+}
+
+## Overview
+
+Server-side subscriptions enable you to invoke webhooks whenever a _subscription event_ fires in your Prisma API. They are configured in your service's prisma.yml and are using the same subscription API that's defined by your Prisma GraphQL schema (learn more [here](qwe3)).
+
+Subscriptions events include:
+
+- New nodes being **created**
+- Existing nodes being **updated**
+- Existing nodes being **deleted**
+
+<Warning>
+
+Note that [batch mutations](vw4d#batch-mutations) are not triggering subscription events.
+
+</Warning>
+
+A server-side subscription needs (at least) two pieces of information:
+
+- a _subscription query_ defining upon which **event** a function should be invoked and what the **payload** looks like
+- the **URL of a webhook** which is invoked via HTTP once the event happens
+- (optionally) a number of **HTTP headers** to be attached to the request that's sent to the URL
+
+> In the future, it is planned to extend server-side subscriptions to directly stream events into various event targets, such as AWS Kinesis, Kafka, etc. Join the discussion on [GitHub](https://github.com/prisma/prisma/issues/585) to learn more.
+
+## Configuration in prisma.yml
+
+Server-side subscriptions are configured via the [`subscriptions`](5cy7#subscriptions-optional) property in your service's prisma.yml.
+
+### Type
+
+The `subscriptions` property expects an **object** with the following properties:
+
+- `query` (required): The file path to the _subscription query_ (stored in a `.graphql`-file).
+- `webhook` (required): Information (URL and optionally HTTP headers) about the webhook to be invoked. If there are no headers, you can provide the URL to this property directly (see first example below). Otherwise, `webhook` takes another object with properties `url` and `headers` (see second example below).
+
+### Examples
+
+**Specify one subscription without HTTP headers**
+
+```yml
+subscriptions:
+  sendWelcomeEmail:
+    query: sendWelcomeEmail.graphql
+    webhook: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev/sendWelcomeEmail
+```
+
+**Specify one event subscription with two HTTP headers**
+
+```yml
+subscriptions:
+  sendWelcomeEmail:
+    query: sendWelcomeEmail.graphql
+    webhook:
+      url: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev/sendWelcomeEmail
+      headers:
+        Authorization: ${env:MY_SECRET}
+        Content-Type: application/json
+```
+
+Note that both examples expect that there is a file called `sendWelcomeEmail.graphql` available. This file contains the subscription defining the _subscription event_ as well as the _event payload_. It could look similar to this:
+
+```graphql
+subscription {
+  user(where: {
+    mutation_in: [CREATED]
+  }) {
+    node {
+      id
+      name
+      email
+    }
+  }
+}
+```
+

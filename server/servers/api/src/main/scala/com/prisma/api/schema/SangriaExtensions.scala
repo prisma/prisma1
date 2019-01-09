@@ -1,8 +1,8 @@
 package com.prisma.api.schema
 
-import com.prisma.api.connector.SelectedFields
+import com.prisma.api.connector.{SelectedField, SelectedFields, SelectedRelationField, SelectedScalarField}
 import com.prisma.api.schema.SangriaExtensions.ContextExtensions
-import com.prisma.shared.models.Model
+import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import sangria.ast.Selection
 import sangria.schema.Context
 
@@ -13,14 +13,18 @@ trait SangriaExtensions {
 object SangriaExtensions {
   class ContextExtensions(val ctx: Context[_, _]) extends AnyVal {
     def getSelectedFields(model: Model): SelectedFields = {
-      val currentField   = ctx.astFields.find(_.name == ctx.field.name).get
-      val selectedFields = recurse(model, currentField.selections) ++ model.idField
+      val currentFields  = ctx.astFields.filter(_.name == ctx.field.name)
+      val selectedFields = recurse(model, currentFields.flatMap(_.selections)) ++ model.idField.map(SelectedScalarField)
       SelectedFields(selectedFields.toSet)
     }
 
-    private def recurse(model: Model, selections: Vector[Selection]): Vector[com.prisma.shared.models.Field] = selections.flatMap {
+    private def recurse(model: Model, selections: Vector[Selection]): Vector[SelectedField] = selections.flatMap {
       case astField: sangria.ast.Field =>
-        model.getFieldByName(astField.name) ++ recurse(model, astField.selections)
+        model.getFieldByName(astField.name) match {
+          case Some(sf: ScalarField)   => Some(SelectedScalarField(sf))
+          case Some(rf: RelationField) => Some(SelectedRelationField(rf, SelectedFields(recurse(rf.relatedModel_!, astField.selections).toSet)))
+          case None                    => recurse(model, astField.selections)
+        }
 
       case fragmentSpread: sangria.ast.FragmentSpread =>
         val fragment = ctx.query.fragments(fragmentSpread.name)

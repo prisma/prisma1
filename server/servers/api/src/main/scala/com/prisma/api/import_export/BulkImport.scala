@@ -2,10 +2,10 @@ package com.prisma.api.import_export
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
-import com.prisma.api.import_export.GCValueJsonFormatter.UnknownFieldException
+import com.prisma.api.import_export.GCValueJsonFormatter.{InvalidFieldValueException, UnknownFieldException}
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport._
-import com.prisma.gc_values.{CuidGCValue, IdGCValue, ListGCValue, UuidGCValue}
+import com.prisma.gc_values.{IdGCValue, ListGCValue, StringIdGCValue, UuidGCValue}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 import play.api.libs.json._
@@ -59,9 +59,10 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     Try {
       GCValueJsonFormatter.readModelAwareGcValue(model)(newJsObject).get
     } match {
-      case Success(x)                        => Good(ImportNode(id, model, x))
-      case Failure(e: UnknownFieldException) => Bad(new Exception(s"The model ${model.name} with id $idStr has an unknown field '${e.field}' in field list."))
-      case Failure(e)                        => throw e
+      case Success(x)                             => Good(ImportNode(id, model, x))
+      case Failure(e: UnknownFieldException)      => Bad(new Exception(s"The model ${model.name} with id $idStr has an unknown field '${e.field}' in field list."))
+      case Failure(e: InvalidFieldValueException) => Bad(new Exception(s"The model ${model.name} with id $idStr has an invalid value for field' ${e.field}'."))
+      case Failure(e)                             => Bad(new Exception(s"The model ${model.name} with id $idStr produced an exception during import: $e."))
     }
   }
 
@@ -79,7 +80,7 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   def parseIdGCValue(input: JsObject, model: Model): IdGCValue = model.idField_!.typeIdentifier match {
     case TypeIdentifier.UUID => UuidGCValue.parse_!(input.value("id").as[String])
-    case TypeIdentifier.Cuid => CuidGCValue(input.value("id").as[String])
+    case TypeIdentifier.Cuid => StringIdGCValue(input.value("id").as[String])
     case x                   => sys.error("TypeIdentifier not yet supported in Import as ID. " + x)
   }
 

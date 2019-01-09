@@ -1,0 +1,207 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Collapse from 'components/Markdown/Collapse'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Set up Prisma',
+  position: 1,
+  gettingStartedOrder: 3,
+  gettingStartedTitle: 'Demo database',
+  nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and regenerate your Prisma client.',
+  technology: 'typescript',
+  technologyOrder: 2,
+  articleGroup: 'Set up Prisma',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Set up a Prisma Demo server with a sandboxed database
+- Read and write data using the Prisma client
+
+## Install the Prisma CLI
+
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew tap prisma/prisma
+brew install prisma
+```
+
+```bash copy
+npm install -g prisma
+```
+
+</Code>
+
+## Set up Prisma
+
+To bootstrap the configuration files for your Prisma setup, create a new directory and initalize it using the `prisma init` command:
+
+```bash copy
+mkdir hello-world
+cd hello-world
+prisma init
+```
+
+After running `prisma init`, the Prisma CLI prompts you to select _how_ you want to deploy Prisma:
+
+1. Select **Demo server** from the list.
+1. When your browser opens, register with [Prisma Cloud](https://www.prisma.io/cloud/). This is needed because that's where the Demo server is hosted.
+1. Go back to your terminal.
+1. Confirm the suggested values for the following questions by hitting **Return**:
+    1. The **region** where Prisma service should be hosted
+    1. The **name** for Prisma service
+    1. The **stage** for Prisma service
+1. Select **Prisma TypeScript Client** to generate Prisma client for TypeScript.
+
+<Collapse title="Learn about the generated files">
+
+- `prisma.yml`: The root configuration file for your Prisma setup.
+- `datamodel.prisma`: Specifies the datamodel for your application that will be mapped to the database (it basically defines your database schema).
+- `generated/`: Contains the generated source files for the Prisma TypeScript client.
+
+</Collapse>
+
+## Deploy Prisma
+
+The interactive wizard created the _minimal_ Prisma configuration based on a hosted demo database: `prisma.yml` and `datamodel.prisma`. Prisma now needs to be _deployed_ so you can [use the Prisma API](nms2):
+
+```bash copy
+prisma deploy
+```
+
+Congratulations, you have successfully deployed Prisma. You now have a free and hosted demo database ([AWS Aurora](https://aws.amazon.com/rds/aurora)) available in Prisma Cloud and are ready to use the Prisma client to read and write to it from your code.
+
+## Prepare TypeScript application
+
+Create your [`tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) with the following command:
+
+```bash copy
+touch tsconfig.json
+```
+
+Add the following configuration to the `tsconfig.json` file:
+
+```json copy
+{
+  "compilerOptions": {
+    "lib": ["es2016", "esnext.asynciterable"]
+  }
+}
+```
+
+Next, initialize an empty NPM project in the current directory and install the required dependencies:
+
+```bash copy
+npm init -y
+npm install --save prisma-client-lib
+npm install --save-dev typescript ts-node
+```
+
+Almost done! Run the following command to create an empty TypeScript script:
+
+```bash copy
+touch index.ts
+```
+
+Great, you're now ready to write some code and talk to your database programmatically!
+
+## Read and write data using the Prisma client
+
+Add the following code in `index.ts`:
+
+```ts copy
+import { prisma } from './generated/prisma-client'
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user called `Alice`
+  const newUser = await prisma.createUser({ name: 'Alice' })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+}
+
+main().catch(e => console.error(e))
+```
+
+Before executing the code, go ahead and add a `start` script to `package.json` so you can comfortably run the code:
+
+<Code lines="8">
+
+```json copy
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "^14.0.2",
+    "prisma-client-lib": "^1.20.0"
+  },
+  "devDependencies": {
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.6"
+  }
+}
+```
+
+</Code>
+
+Now execute the script with the following command:
+
+```bash copy
+npm run start
+```
+
+Whenever you run the script with that command, a new user record is created in the demo database (because of the call to `createUser`).
+
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+
+<QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
+
+```ts lineNumbers,copy
+const user = await prisma
+  .user({ id: '__USER_ID__' })
+```
+
+```ts lineNumbers,copy
+const usersCalledAlice = await prisma
+  .users({
+    where: {
+      name: 'Alice'
+    }
+  })
+```
+
+```ts lineNumbers,copy
+ const updatedUser = await prisma
+  .updateUser({
+    where: { id: '__USER_ID__' },
+    data: { name: 'Bob' }
+  })
+```
+
+```ts lineNumbers,copy
+ const deletedUser = await prisma
+  .deleteUser({ id: '__USER_ID__' })
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.

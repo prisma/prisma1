@@ -62,7 +62,7 @@ You`ll see an output like that, once your server was created:
 =====> Container Information
        Config dir:          /var/lib/dokku/services/postgres/tst/config
        Data dir:            /var/lib/dokku/services/postgres/tst/data
-       <b>Dsn:                 postgres://postgres:bd793d8a330715891698434697a0345b@dokku-postgres-prisma-server-db:5432/prisma-server-db</b>
+       Dsn:                 postgres://postgres:bd793d8a330715891698434697a0345b@dokku-postgres-prisma-server-db:5432/prisma-server-db
        Exposed ports:       -
        Id:                  df03bfa7ca9ae3d42857dc5db2d98542542c5f4482fd2d269cf86ad663bcb2fe
        Internal ip:         172.17.0.5
@@ -103,13 +103,13 @@ EXPOSE 4466
 ```yml
 port: 4466
 databases:
-    default:
-        connector: postgres
-        host: dokku-postgres-prisma-server-db
-        port: 5432
-        user: postgres
-        password: bd793d8a330715891698434697a0345b
-        migrations: true
+  default:
+    connector: postgres
+    host: dokku-postgres-prisma-server-db
+    port: 5432
+    user: postgres
+    password: bd793d8a330715891698434697a0345b
+    migrations: true
 ```
 
 ### Deploy the Prisma server

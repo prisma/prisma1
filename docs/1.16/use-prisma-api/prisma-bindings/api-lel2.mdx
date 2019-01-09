@@ -1,0 +1,115 @@
+export const meta = {
+  title: 'API',
+  position: 20,
+}
+
+## Overview
+
+This page explains the functions exposed by a `Prisma` binding in detail.
+
+## constructor
+
+The `Prisma` constructor has the following interface:
+
+```ts
+constructor(options: PrismaOptions): Prisma
+```
+
+The `PrismaOptions` type has the following fields:
+
+- `typeDefs: string` (**required**): File path to the schema definition of your Prisma GraphQL schema (typically a file called `prisma.graphql`).
+- `endpoint: string` (**required**): Endpoint of your Prisma API.
+- `secret: secret`: The service secret of your Prisma service (specified in prisma.yml).
+- `fragmentReplacements: FragmentReplacement[]`: A list of GraphQL fragment definitions, specifying fields that are required for the resolver to function correctly.
+- `debug: boolean`: Log all queries/mutations to stdout.
+
+**Example**:
+
+```js
+const prisma = new Prisma({
+  typeDefs: 'prisma.graphql',
+  endpoint: 'http://localhost:4466'
+  secret: 'my-secret-42'
+})
+```
+
+## query & mutation
+
+`query` and `mutation` are public properties on the `Prisma` binding instance. They both are of type `QueryMap` and expose a number of auto-generated binding functions that are named after the root fields on the `Query` and `Mutation` types in your Prisma GraphQL schema.
+
+Each of these binding functions provides a convenience API for sending queries/mutations to your Prisma service, so you don't have to spell out the full query/mutation nor worry about sending it over the network. This is all handled by the binding function.
+
+`query` and `mutation` binding functions have the following interface:
+
+```ts
+query(args?: { [key: string]: any }, info?: GraphQLResolveInfo | string,) => Promise<any>
+mutation(args?: { [key: string]: any }, info?: GraphQLResolveInfo | string,) => Promise<any>
+```
+
+The input arguments are used as follows:
+
+- `args`: An object carrying the arguments for the query/mutation.
+- `info`: An object representing the _selection set_ of the query/mutation, either expressed directly as a string (as a GraphQL fragment) or in the form of the `info` object which is of type `GraphQLResolveInfo` (you can find more info about the `GraphQLResolveInfo` type [here](http://graphql.org/graphql-js/type/#graphqlobjecttype)).
+
+**Example**:
+
+```js
+prisma.query.user({ where { id: 'cjcdi63j80adw0146z7r59bn5' } }, '{ name }')
+  .then(data => console.log(data))
+
+prisma.mutation.createUser({ data: { name: 'Sarah' } }, '{ id }')
+  .then(data => console.log(data))
+```
+
+## subscription
+
+`subscription` is a public property on the `Prisma` binding instance. It is of type `SubscriptionMap`
+
+
+## exists
+
+`exists` is a public property on the `Prisma` binding instance. It exposes one function per type in your data model, named exactly after that type. These functions enables you to easily check whether a node of the respective type exists in your database.
+
+`exists` binding functions have the following interface:
+
+```ts
+exists(filter: Filter) => Promise<boolean>
+```
+
+The `filter` is derived from the `where` argument which lets you specify filters in the Prisma API.
+
+**Example**:
+
+```js
+prisma.exists.User({ id: 'cjcdi63j80adw0146z7r59bn5' })
+```
+
+## request
+
+The `request` method lets you send GraphQL queries/mutations to your Prisma service. The functionality is similar to the auto-generated binding function, but the API is more verbose as you need to spell out the full query/mutation.
+
+The `request` function has the following interface: 
+
+```ts
+request<T = any>(query: string, variables?: { [key: string]: any }): Promise<T>
+```
+
+**Example**:
+
+```js
+const query = `
+  query ($userId: ID!){
+    user(id: $userId) {
+        id
+      name
+    }
+  }
+`
+
+const variables = { userId: 'cjcdi63j80adw0146z7r59bn5' }
+
+prisma.request(query, variables)
+  .then(result => console.log(result))
+// sample result:
+// {"data": { "user": { "id": "cjcdi63j80adw0146z7r59bn5", "name": "Sarah" } } }
+```

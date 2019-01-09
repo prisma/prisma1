@@ -2,14 +2,14 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.import_export.BulkImport
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
-
-  override def runSuiteOnlyForActiveConnectors = true
+  override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     val model1: SchemaDsl.ModelBuilder = schema

@@ -1,0 +1,136 @@
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+import Collapse from 'components/Markdown/Collapse'
+import Playground from 'components/Markdown/Playground'
+import Step from 'components/Markdown/Step'
+import Info from 'components/Markdown/Info'
+
+export const meta = {
+  title: "Available MDX and Markdown Components",
+  position: 5,
+  technology: "node",
+  articleGroup: 'test-article',
+  technologyOrder: 1
+}
+
+## Playground
+
+<Playground playgroundLink="https://api.graph.cool/simple/v1/asdf">
+
+```graphql
+query {
+  users(where: { age_gt: 17 }) {
+    id
+  }
+}
+```
+```js
+{
+  "users": [
+    {
+      "id": 1
+    },
+    {
+      "id": 2
+    }
+  ]
+}
+```
+
+</Playground>
+
+## Quotes
+
+> You can write a quote like this!
+
+## Code
+
+```jsx
+const x = 100
+"$highlightedVariable$"
+```
+
+## Step
+<Step title="Here is how you can label individual steps">
+
+this is a test
+</Step>
+
+## Table
+
+
+|                 | javascript                             | typescript                                          |
+|-----------------|----------------------------------------|-----------------------------------------------------|
+| `graphql-binding` | imports schema                         | imports schema + adds types                         |
+| `prisma-binding`  | has typeDefs const, only secret needed | has typeDefs const, only secret needed + adds types |
+
+## Code Block
+export const content = `
+  ## This is tooltip content
+  \`\`\`bash
+  $ prisma deploy --new
+  \`\`\`
+  *You can use this to give explanations on how to substitute a variable*
+`
+
+
+<Code lines="2,4,6,8,10,12,14,16,18,20,22,24,26" source="https://github.com/prisma/prisma" tooltips={[content]} languages={["Javascript"]}>
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom";
+import { ApolloProvider } from "react-apollo";
+import ApolloClient from "apollo-boost";
+import {
+  Container, CreateUser,
+  Posts, NewPost } from "components";
+
+const client = new ApolloClient({
+  uri: "$YOUR_PRISMA_ENDPOINT$"
+});
+
+//placeholders can only be added if they are a string. (report as a bug)
+//if any of the tool tips are missing, all of them break within the code. Every tool tip needs to have its content in the form of a javascript variable and mentioned in the tooltip array. 
+const x = "$INFO$"
+
+class App extends React.Component {
+  render() {
+    return (
+      <ApolloProvider client={client}>
+        <Container user={this.state.user}>
+          <CreateUser createUser={this.createUser} />
+          <NewPost
+            user={this.state.user}
+            createPost={this.createPost} />
+          <Posts posts={this.state.posts} />
+        </Container>
+      </ApolloProvider>
+    );
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+</Code>
+
+## Warning
+<Warning>
+
+This is where you can caution people!
+
+</Warning>
+
+## Info 
+<Info>
+Here is where you can make a note informing people of something
+</Info> 
+
+
+## Collapsable Componenent
+<Collapse title="Common issues with this command">
+
+You can use this section to help people troubleshoot
+</Collapse>
+
+

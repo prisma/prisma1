@@ -4,17 +4,15 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, WSProbe}
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.akkautil.http.ServerExecutor
 import com.prisma.api.ApiTestDatabase
-import com.prisma.shared.models.{Project, ProjectId, ProjectWithClientId}
+import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
-import com.prisma.websocket.WebsocketServer
+import com.prisma.websocket.WebSocketHandler
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.ExecutionContextExecutor
 
 trait SubscriptionSpecBase
     extends ConnectorAwareTest
@@ -23,8 +21,8 @@ trait SubscriptionSpecBase
     with BeforeAndAfterEach
     with BeforeAndAfterAll
     with ScalatestRouteTest {
-
   this: Suite =>
+
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val dependencies                 = new TestSubscriptionDependencies()
   implicit lazy val implicitSuite           = this
@@ -34,42 +32,32 @@ trait SubscriptionSpecBase
   implicit val mat                          = ActorMaterializer()
   val sssEventsTestKit                      = dependencies.sssEventsTestKit
   val invalidationTestKit                   = dependencies.invalidationTestKit
-  val requestsTestKit                       = dependencies.requestsQueueTestKit
-  val responsesTestKit                      = dependencies.responsePubSubTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
+
+  override def capabilities = dependencies.apiConnector.capabilities
 
   override def prismaConfig = dependencies.config
 
-  val wsServer            = WebsocketServer(dependencies)
-  val simpleSubServer     = SimpleSubscriptionsServer()
-  val subscriptionServers = ServerExecutor(port = 8085, wsServer, simpleSubServer)
-
-  Await.result(subscriptionServers.start, 15.seconds)
+  val wsServer = WebSocketHandler(dependencies)
 
   var caseNumber = 1
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     deployConnector.initialize().await()
-//    testDatabase.beforeAllPublic()
   }
 
   override def beforeEach(): Unit = {
     println((">" * 25) + s" starting test $caseNumber")
     caseNumber += 1
     super.beforeEach()
-//    testDatabase.beforeEach()
     sssEventsTestKit.reset
     invalidationTestKit.reset
-    responsesTestKit.reset
-    requestsTestKit.reset
   }
 
   override def afterAll(): Unit = {
     println("finished spec " + (">" * 50))
     super.afterAll()
-    subscriptionServers.stopBlocking()
-//    testDatabase.afterAll()
   }
 
   def sleep(millis: Long = 2000): Unit = {
@@ -77,28 +65,24 @@ trait SubscriptionSpecBase
   }
 
   def testInitializedWebsocket(project: Project)(checkFn: WSProbe => Unit): Unit = {
-    testWebsocket(project) { wsClient =>
+    testWebsocketV07(project) { wsClient =>
       wsClient.sendMessage(connectionInit)
       wsClient.expectMessage(connectionAck)
       checkFn(wsClient)
     }
   }
 
-  def testWebsocket(project: Project)(checkFn: WSProbe => Unit): Unit = {
-    val wsClient = WSProbe()
-    import com.prisma.shared.models.ProjectJsonFormatter._
-    import com.prisma.stub.Import._
+  def testWebsocketV07(project: Project)(checkFn: WSProbe => Unit): Unit = testWebsocket(project, wsServer.v7ProtocolName)(checkFn)
+  def testWebsocketV05(project: Project)(checkFn: WSProbe => Unit): Unit = testWebsocket(project, wsServer.v5ProtocolName)(checkFn)
 
-    val projectWithClientId   = ProjectWithClientId(project, "clientId")
+  private def testWebsocket(project: Project, wsSubProtocol: String)(checkFn: WSProbe => Unit): Unit = {
+    val wsClient              = WSProbe()
     val dummyStage            = "test"
     val projectIdInFetcherUrl = projectIdEncoder.toEncodedString(project.id, dummyStage)
-    val stubs = List(
-      com.prisma.stub.Import.Request("GET", s"/${dependencies.projectFetcherPath}/$projectIdInFetcherUrl").stub(200, Json.toJson(projectWithClientId).toString)
-    )
-    withStubServer(stubs, port = dependencies.projectFetcherPort) {
-      WS(s"/${project.id}/$dummyStage", wsClient.flow, Seq(wsServer.v7ProtocolName)) ~> wsServer.routes ~> check {
-        checkFn(wsClient)
-      }
+    dependencies.projectFetcher.put(projectIdInFetcherUrl, project)
+
+    WS(s"/${project.id}/$dummyStage", wsClient.flow, Seq(wsSubProtocol)) ~> wsServer.routes ~> check {
+      checkFn(wsClient)
     }
   }
 

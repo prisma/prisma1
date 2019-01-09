@@ -1,7 +1,7 @@
 package com.prisma.api.mutactions
 
 import com.prisma.api.ApiDependencies
-import com.prisma.api.connector.{PublishSubscriptionEvent, ExecuteServerSideSubscription, SideEffectMutaction}
+import com.prisma.api.connector.{ExecuteServerSideSubscription, PublishSubscriptionEvent, SideEffectMutaction}
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.WebhookDelivery

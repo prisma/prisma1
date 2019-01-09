@@ -5,7 +5,6 @@ import akka.testkit.TestProbe
 import com.prisma.messagebus.testkits.spechelpers.InMemoryMessageBusTestKits
 import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.websocket.WebsocketSession
-import com.prisma.websocket.protocol.Request
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -19,23 +18,20 @@ class WebsocketSessionSpec
   override def afterAll = shutdown()
 
   "The WebsocketSession" should {
-    "send a message with the body STOP to the requests queue AND a Poison Pill to the outActor when it is stopped" in {
-      withQueueTestKit[Request] { testKit =>
-        val projectId                 = "projectId"
-        val sessionId                 = "sessionId"
-        val outgoing                  = TestProbe().ref
-        val manager                   = TestProbe().ref
-        val probe                     = TestProbe()
-        implicit val testDependencies = new TestSubscriptionDependencies()
+    "send a Poison Pill to the outActor when it is stopped" in {
+      val projectId                 = "projectId"
+      val sessionId                 = "sessionId"
+      val outgoing                  = TestProbe().ref
+      val subscriptionsManager      = TestProbe().ref
+      val probe                     = TestProbe()
+      implicit val testDependencies = new TestSubscriptionDependencies()
 
-        probe.watch(outgoing)
+      probe.watch(outgoing)
 
-        val session = system.actorOf(Props(WebsocketSession(projectId, sessionId, outgoing, manager, testKit, isV7protocol = true)))
+      val session = system.actorOf(Props(WebsocketSession(projectId, sessionId, outgoing, isV7protocol = true, subscriptionsManager)))
 
-        system.stop(session)
-        probe.expectTerminated(outgoing)
-        testKit.expectPublishedMsg(Request(sessionId, projectId, "STOP"))
-      }
+      system.stop(session)
+      probe.expectTerminated(outgoing)
     }
   }
 }
