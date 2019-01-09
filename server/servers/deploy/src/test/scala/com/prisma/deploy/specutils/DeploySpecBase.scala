@@ -3,7 +3,7 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, Tables}
+import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, DatabaseSchema}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
@@ -105,7 +105,7 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
 
   val project = Project(id = projectId, schema = Schema.empty)
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): DatabaseSchema = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = projectName,
@@ -148,7 +148,7 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
     }
   }
 
-  def inspect: Tables = {
+  def inspect: DatabaseSchema = {
     deployConnector.testFacilities.inspector.inspect(projectId).await()
   }
 }

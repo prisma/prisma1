@@ -12,9 +12,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends DatabaseInspector {
 
-  override def inspect(schema: String): Future[Tables] = db.run(action(schema))
+  override def inspect(schema: String): Future[DatabaseSchema] = db.run(action(schema))
 
-  def action(schema: String): DBIO[Tables] = {
+  def action(schema: String): DBIO[DatabaseSchema] = {
     for {
       // the line below does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
       // we therefore have one additional filter step
@@ -22,7 +22,7 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
       mTables         = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
       tables          <- DBIO.sequence(mTables.map(mTableToModel))
     } yield {
-      Tables(tables)
+      DatabaseSchema(tables)
     }
   }
 

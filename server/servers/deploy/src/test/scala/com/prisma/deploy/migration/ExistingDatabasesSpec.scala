@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
-import com.prisma.deploy.connector.Tables
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.specutils.{DataModelV2Base, DeploySpecBase, PassiveDeploySpecBase}
 import com.prisma.shared.models.ConnectorCapability.IntIdCapability

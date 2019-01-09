@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, Tables}
+import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, DatabaseSchema}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.deploy.specutils.DeploySpecBase
@@ -753,7 +753,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     project = testDependencies.projectPersistence.load(serviceId).await.get
   }
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): DatabaseSchema = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = name,
@@ -796,7 +796,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     }
   }
 
-  def inspect: Tables = {
+  def inspect: DatabaseSchema = {
     deployConnector.testFacilities.inspector.inspect(serviceId).await()
   }
 }

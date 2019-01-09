@@ -7,21 +7,21 @@ import scala.concurrent.Future
 case class DeployTestFacilites(inspector: DatabaseInspector)
 
 trait DatabaseInspector {
-  def inspect(schema: String): Future[Tables]
+  def inspect(schema: String): Future[DatabaseSchema]
 }
 
 object DatabaseInspector {
   val empty = new DatabaseInspector {
-    override def inspect(schema: String) = Future.successful(Tables(Vector.empty))
+    override def inspect(schema: String) = Future.successful(DatabaseSchema(Vector.empty))
   }
 }
 
-case class Tables(tables: Vector[Table]) {
+case class DatabaseSchema(tables: Vector[Table]) {
   def table_!(name: String): Table       = table(name).getOrElse(sys.error(s"Table $name was not found."))
   def table(name: String): Option[Table] = tables.find(_.name == name)
 }
-object Tables {
-  val empty = Tables(Vector.empty)
+object DatabaseSchema {
+  val empty = DatabaseSchema(Vector.empty)
 }
 
 case class Table(name: String, columns: Vector[Column], indexes: Vector[Index]) {

@@ -1,10 +1,10 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.deploy.connector.{CreateScalarListTable, DeleteScalarListTable, Tables, UpdateScalarListTable}
+import com.prisma.deploy.connector.{CreateScalarListTable, DeleteScalarListTable, DatabaseSchema, UpdateScalarListTable}
 import slick.jdbc.PostgresProfile.api._
 
 case class CreateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateScalarListTable] {
-  override def execute(mutaction: CreateScalarListTable, schemaBeforeMigration: Tables) = {
+  override def execute(mutaction: CreateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     builder.createScalarListTable(
       projectId = mutaction.projectId,
       model = mutaction.model,
@@ -13,7 +13,7 @@ case class CreateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
     )
   }
 
-  override def rollback(mutaction: CreateScalarListTable, schemaBeforeMigration: Tables) = {
+  override def rollback(mutaction: CreateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     DBIO.seq(
       builder
         .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.dbName, fieldName = mutaction.field.dbName))
@@ -21,13 +21,13 @@ case class CreateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
 }
 
 case class DeleteScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteScalarListTable] {
-  override def execute(mutaction: DeleteScalarListTable, schemaBeforeMigration: Tables) = {
+  override def execute(mutaction: DeleteScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     DBIO.seq(
       builder
         .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.dbName, fieldName = mutaction.field.dbName))
   }
 
-  override def rollback(mutaction: DeleteScalarListTable, schemaBeforeMigration: Tables) = {
+  override def rollback(mutaction: DeleteScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     builder.createScalarListTable(
       projectId = mutaction.projectId,
       model = mutaction.model,
@@ -38,7 +38,7 @@ case class DeleteScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
 }
 
 case class UpdateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateScalarListTable] {
-  override def execute(mutaction: UpdateScalarListTable, schemaBeforeMigration: Tables) = {
+  override def execute(mutaction: UpdateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     val oldField  = mutaction.oldField
     val newField  = mutaction.newField
     val projectId = mutaction.projectId
@@ -66,7 +66,7 @@ case class UpdateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
     }
   }
 
-  override def rollback(mutaction: UpdateScalarListTable, schemaBeforeMigration: Tables) = {
+  override def rollback(mutaction: UpdateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     val oppositeMutaction = UpdateScalarListTable(
       projectId = mutaction.projectId,
       oldModel = mutaction.newModel,

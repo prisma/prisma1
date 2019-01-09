@@ -154,9 +154,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     val rollbackPf = rollback
 
     new DeployMutactionExecutor {
-      override def execute(mutaction: DeployMutaction, schemaBeforeMigration: Tables) = doit(executePf, mutaction)
+      override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema) = doit(executePf, mutaction)
 
-      override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: Tables) = doit(rollbackPf, mutaction)
+      override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema) = doit(rollbackPf, mutaction)
 
       def doit(pf: PartialFunction[DeployMutaction, Option[Throwable]], mutaction: DeployMutaction) = {
         pf.lift.apply(mutaction).flatten match {

@@ -43,7 +43,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     runMutaction(mutaction)
   }
 
-  private def runMutaction(mutaction: DeployMutaction)                     = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction, Tables.empty).await
+  private def runMutaction(mutaction: DeployMutaction)                     = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction, DatabaseSchema.empty).await
   def runDatabaseMutactionOnClientDb(mutaction: TopLevelDatabaseMutaction) = dependencies.databaseMutactionExecutor.executeTransactionally(mutaction).await
 
   private def createModelTable(project: Project, model: Model) = {

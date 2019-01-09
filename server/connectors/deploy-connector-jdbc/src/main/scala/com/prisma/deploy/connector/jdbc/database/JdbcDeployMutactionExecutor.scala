@@ -11,7 +11,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
 
   val slickDatabase = builder.slickDatabase
 
-  override def execute(mutaction: DeployMutaction, schemaBeforeMigration: Tables): Future[Unit] = {
+  override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = mutaction match {
       case x: CreateProject         => CreateProjectInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: TruncateProject       => TruncateProjectInterpreter(builder).execute(x, schemaBeforeMigration)
@@ -35,7 +35,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
     database.run(action).map(_ => ())
   }
 
-  override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: Tables): Future[Unit] = {
+  override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = mutaction match {
       case x: CreateProject         => CreateProjectInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: TruncateProject       => TruncateProjectInterpreter(builder).rollback(x, schemaBeforeMigration)

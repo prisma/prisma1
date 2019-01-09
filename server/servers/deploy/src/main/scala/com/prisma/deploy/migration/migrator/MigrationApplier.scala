@@ -33,7 +33,7 @@ case class MigrationApplierImpl(
     } yield result
   }
 
-  def startRecurse(previousSchema: Schema, migration: Migration, tables: Tables): Future[MigrationApplierResult] = {
+  def startRecurse(previousSchema: Schema, migration: Migration, tables: DatabaseSchema): Future[MigrationApplierResult] = {
     if (!migration.isRollingBack) {
       recurseForward(previousSchema, migration, tables)
     } else {
@@ -41,7 +41,7 @@ case class MigrationApplierImpl(
     }
   }
 
-  def recurseForward(previousSchema: Schema, migration: Migration, tables: Tables): Future[MigrationApplierResult] = {
+  def recurseForward(previousSchema: Schema, migration: Migration, tables: DatabaseSchema): Future[MigrationApplierResult] = {
     if (migration.pendingSteps.nonEmpty) {
       val result = for {
         _             <- applyStep(previousSchema, migration, migration.currentStep, tables)
@@ -66,7 +66,7 @@ case class MigrationApplierImpl(
     }
   }
 
-  def recurseForRollback(previousSchema: Schema, migration: Migration, tables: Tables): Future[MigrationApplierResult] = {
+  def recurseForRollback(previousSchema: Schema, migration: Migration, tables: DatabaseSchema): Future[MigrationApplierResult] = {
     def continueRollback = {
       val nextMigration = migration.incRolledBack
       for {
@@ -93,7 +93,7 @@ case class MigrationApplierImpl(
     }
   }
 
-  def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep, tables: Tables): Future[Unit] = {
+  def applyStep(previousSchema: Schema, migration: Migration, step: MigrationStep, tables: DatabaseSchema): Future[Unit] = {
     migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
       case x if x.isEmpty =>
         Future.unit
@@ -108,14 +108,14 @@ case class MigrationApplierImpl(
     }
   }
 
-  def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep, tables: Tables): Future[Unit] = {
+  def unapplyStep(previousSchema: Schema, migration: Migration, step: MigrationStep, tables: DatabaseSchema): Future[Unit] = {
     migrationStepMapper.mutactionFor(previousSchema, migration.schema, step) match {
       case x if x.isEmpty => Future.unit
       case list           => Future.sequence(list.map(executeClientMutactionRollback(_, tables))).map(_ => ())
     }
   }
 
-  def executeClientMutaction(mutaction: DeployMutaction, tables: Tables): Future[Unit] = mutactionExecutor.execute(mutaction, tables)
+  def executeClientMutaction(mutaction: DeployMutaction, tables: DatabaseSchema): Future[Unit] = mutactionExecutor.execute(mutaction, tables)
 
-  def executeClientMutactionRollback(mutaction: DeployMutaction, tables: Tables): Future[Unit] = mutactionExecutor.rollback(mutaction, tables)
+  def executeClientMutactionRollback(mutaction: DeployMutaction, tables: DatabaseSchema): Future[Unit] = mutactionExecutor.rollback(mutaction, tables)
 }
