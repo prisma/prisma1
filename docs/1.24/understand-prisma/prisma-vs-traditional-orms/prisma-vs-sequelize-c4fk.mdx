@@ -6,6 +6,8 @@ export const meta = {
   description: "Learn how Prisma compares to Sequelize"
 }
 
+## Overview
+
 ## Reading data
 
 ### Fetching single objects
@@ -54,7 +56,7 @@ const user = await User.findByPk(id, {
 
 Prisma
 
-<Code languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
+<Code hideCopy={true} languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
 
 ```ts
 const postsByUser = await prisma
@@ -102,7 +104,7 @@ const user = User.findAll({
 Prisma
 
 ```ts
-const user = await prisma.users({
+const users = await prisma.users({
   where: {
     name: "Alice"
   }
@@ -182,7 +184,7 @@ In addition to `skip` and `first`, the Prisma API also offers:
 
 Sequelize
 
-<Code languages={["Using `save`", "Using `create`"]}>
+<Code hideCopy={true} languages={["Using `save`", "Using `create`"]}>
 
 ```ts
 const user = await User.build({
@@ -204,7 +206,7 @@ const user = await User.create({
 Prisma
 
 ```ts
-const user = await new User({
+const user = await prisma.createUser({
   name: "Alice",
   email: "alice@prisma.io"
 })
@@ -214,7 +216,7 @@ const user = await new User({
 
 Sequelize
 
-<Code languages={["Using `save`", "Using `update`"]}>
+<Code hideCopy={true} languages={["Using `save`", "Using `update`"]}>
 
 ```ts
 user.name = "James"
@@ -310,7 +312,7 @@ await prisma.deleteManyUsers({
 
 Sequelize
 
-<Code languages={["Manual", "Automatic"]}>
+<Code hideCopy={true} languages={["Manual", "Automatic"]}>
 
 ```ts
 return sequelize.transaction(async t => {
@@ -359,17 +361,13 @@ return sequelize.transaction(async transaction => {
 Prisma
 
 ```ts
-const newUser: User = await prisma.createUser({
+const newUser = await prisma.createUser({
   name: "Bob",
   email: "bob@prisma.io",
   posts: {
     create: [
-      {
-        title: "Join us for GraphQL Conf in 2018"
-      },
-      {
-        title: "Subscribe to GraphQL Weekly for GraphQL news"
-      }
+      { title: "Join us for GraphQL Conf in 2019" },
+      { title: "Subscribe to GraphQL Weekly for GraphQL news" }
     ]
   }
 })
