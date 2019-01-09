@@ -23,25 +23,55 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
     migration0Project2.revision shouldEqual 1
   }
 
-  ".create()" should "store the migration in the db and increment the revision accordingly" in {
+  ".byId()" should "load a migration by project ID and revision with the previous schema" in {
+    val (project1, initialMigration) = setupProject(basicTypesGql)
+    val newMigration                 = migrationPersistence.create(migrationWithRandomSchema(project1.id)).await()
+
+    val loadedMigration = migrationPersistence.byId(MigrationId(newMigration.projectId, newMigration.revision)).await.get
+    loadedMigration.previousSchema should equal(initialMigration.schema)
+  }
+
+  ".byId()" should "put always the schema of the last successful migration as a previous schema" in {
+    val (project, initialMigration) = setupProject(basicTypesGql)
+    initialMigration.revision should be(2)
+    migrationPersistence.create(migrationWithRandomSchema(project.id)).await
+    migrationPersistence.create(migrationWithRandomSchema(project.id)).await
+    migrationPersistence.create(migrationWithRandomSchema(project.id).copy(status = MigrationStatus.Success)).await
+    migrationPersistence.create(migrationWithRandomSchema(project.id)).await
+
+    val migration3 = migrationPersistence.byId(MigrationId(project.id, 3)).await.get
+    val migration4 = migrationPersistence.byId(MigrationId(project.id, 4)).await.get
+    val migration5 = migrationPersistence.byId(MigrationId(project.id, 5)).await.get
+    val migration6 = migrationPersistence.byId(MigrationId(project.id, 6)).await.get
+
+    migration3.previousSchema should be(initialMigration.schema)
+    migration4.previousSchema should be(initialMigration.schema)
+    migration5.previousSchema should be(initialMigration.schema)
+    migration6.previousSchema should be(migration5.schema)
+  }
+
+  ".create()" should "store the migration in the db, increment the revision accordingly and return the previous schema" in {
     val (project, _) = setupProject(basicTypesGql)
     migrationPersistence.loadAll(project.id).await should have(size(2))
 
-    val savedMigration = migrationPersistence.create(Migration.empty(project.id)).await()
+    val savedMigration    = migrationPersistence.create(migrationWithRandomSchema(project.id)).await()
+    val previousMigration = migrationPersistence.loadAll(project.id).await.apply(1)
     savedMigration.revision shouldEqual 3
+    savedMigration.previousSchema should equal(previousMigration.schema)
     migrationPersistence.loadAll(project.id).await should have(size(3))
   }
 
   ".create()" should "store the migration with its function in the db" in {
-    val (project, _) = setupProject(basicTypesGql)
+    val (project, initialMigration) = setupProject(basicTypesGql)
     val function = ServerSideSubscriptionFunction(
       name = "my-function",
       isActive = true,
       delivery = WebhookDelivery("https://mywebhook.com", Vector("header1" -> "value1")),
       query = "query"
     )
-    val migration = Migration.empty(project.id).copy(functions = Vector(function), status = MigrationStatus.Success)
-    migrationPersistence.create(migration).await()
+    val migration        = Migration.empty(project.id).copy(functions = Vector(function), status = MigrationStatus.Success)
+    val createdMigration = migrationPersistence.create(migration).await()
+    createdMigration.previousSchema should equal(initialMigration.schema)
 
     val inDb = migrationPersistence.getLastMigration(project.id).await().get
     inDb.functions should equal(Vector(function))
@@ -50,13 +80,21 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
   ".loadAll()" should "return all migrations for a project" in {
     val (project, _) = setupProject(basicTypesGql)
 
-    // 1 successful, 2 pending migrations (+ 1 from setup)
-    migrationPersistence.create(Migration.empty(project.id).copy(status = MigrationStatus.Success)).await
-    migrationPersistence.create(Migration.empty(project.id)).await
-    migrationPersistence.create(Migration.empty(project.id)).await
+    // 2 successful, 2 pending migrations (+ 1 from setup)
+    migrationPersistence.create(migrationWithRandomSchema(project.id).copy(status = MigrationStatus.Success)).await
+    migrationPersistence.create(migrationWithRandomSchema(project.id)).await
+    migrationPersistence.create(migrationWithRandomSchema(project.id)).await
+    migrationPersistence.create(migrationWithRandomSchema(project.id).copy(status = MigrationStatus.Success)).await
 
     val migrations = migrationPersistence.loadAll(project.id).await
-    migrations should have(size(5))
+    migrations should have(size(6))
+    val successfulMigration1 = migrations.find(_.revision == 3).get
+    val pendingMigration1    = migrations.find(_.revision == 4).get
+    val pendingMigration2    = migrations.find(_.revision == 5).get
+    val successfulMigration2 = migrations.find(_.revision == 6).get
+    pendingMigration1.previousSchema should equal(successfulMigration1.schema)
+    pendingMigration2.previousSchema should equal(successfulMigration1.schema)
+    successfulMigration2.previousSchema should equal(successfulMigration1.schema)
   }
 
   ".updateMigrationStatus()" should "update a migration status correctly" in {
@@ -124,17 +162,21 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
   }
 
   ".getLastMigration()" should "get the last migration applied to a project" in {
-    val (project, _)     = setupProject(basicTypesGql)
-    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+    val (project, initialSchema) = setupProject(basicTypesGql)
+    val createdMigration         = migrationPersistence.create(Migration.empty(project.id)).await
     migrationPersistence.updateMigrationStatus(createdMigration.id, MigrationStatus.Success).await
-    migrationPersistence.getLastMigration(project.id).await.get.revision shouldEqual 3
+    val lastMigration = migrationPersistence.getLastMigration(project.id).await.get
+    lastMigration.revision should equal(3)
+    lastMigration.previousSchema should equal(initialSchema.schema)
   }
 
   ".getNextMigration()" should "get the next migration to be applied to a project" in {
-    val (project, _)     = setupProject(basicTypesGql)
-    val createdMigration = migrationPersistence.create(Migration.empty(project.id)).await
+    val (project, initialMigration) = setupProject(basicTypesGql)
+    val createdMigration            = migrationPersistence.create(Migration.empty(project.id)).await
 
-    migrationPersistence.getNextMigration(project.id).await.get.revision shouldEqual createdMigration.revision
+    val nextMigration = migrationPersistence.getNextMigration(project.id).await.get
+    nextMigration.revision shouldEqual createdMigration.revision
+    nextMigration.previousSchema should equal(initialMigration.schema)
   }
 
   "loadDistinctUnmigratedProjectIds()" should "load all distinct project ids that have open migrations" in {
@@ -155,4 +197,32 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
     val projectIds = migrationPersistence.loadDistinctUnmigratedProjectIds().await
     projectIds should have(size(2))
   }
+
+  def migrationWithRandomSchema(projectId: String): Migration = {
+    Migration(
+      projectId = projectId,
+      schema = randomSchema(),
+      steps = Vector.empty,
+      functions = Vector.empty
+    )
+  }
+
+  def randomSchema(): Schema = {
+    def randomName = cool.graph.cuid.Cuid.createCuid()
+    val model = ModelTemplate(
+      name = randomName,
+      stableIdentifier = "don't care",
+      isEmbedded = false,
+      fieldTemplates = List.empty,
+      manifestation = None
+    )
+
+    Schema(
+      modelTemplates = List(model),
+      relationTemplates = List.empty,
+      enums = List.empty,
+      version = None
+    )
+  }
+
 }

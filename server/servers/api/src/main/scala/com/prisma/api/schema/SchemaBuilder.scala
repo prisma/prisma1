@@ -294,7 +294,7 @@ case class SchemaBuilderImpl(
     Field(
       camelCase(model.name),
       fieldType = OptionType(outputTypesBuilder.mapSubscriptionOutputType(model, objectType)),
-      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project)),
+      arguments = List(SangriaQueryArguments.whereSubscriptionArgument(model = model, project = project, capabilities = capabilities)),
       resolve = _ => None
     )
   }

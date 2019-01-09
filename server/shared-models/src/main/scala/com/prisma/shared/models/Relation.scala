@@ -18,8 +18,9 @@ case class RelationTemplate(
 ) {
   def build(schema: Schema) = new Relation(this, schema)
 
-  def connectsTheModels(model1: String, model2: String): Boolean =
+  def connectsTheModels(model1: String, model2: String): Boolean = {
     (modelAName == model1 && modelBName == model2) || (modelAName == model2 && modelBName == model1)
+  }
 
   def isSelfRelation: Boolean = modelAName == modelBName
 }
@@ -68,6 +69,8 @@ class Relation(
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
+
+  def containsTheModel(model: Model): Boolean = modelA == model || modelB == model
 
   def getFieldOnModel(modelId: String): RelationField = {
     modelId match {
