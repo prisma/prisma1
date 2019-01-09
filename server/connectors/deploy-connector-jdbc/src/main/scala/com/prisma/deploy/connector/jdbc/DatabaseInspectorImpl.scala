@@ -55,7 +55,7 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
     }.toVector
   }
 
-  def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey]): Column = {
+  def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey]): Table => Column = {
     val isRequired = !mColumn.nullable.getOrElse(true) // sometimes the metadata can't definitely say if something is nullable. We treat those as not required.
     // this needs to be extended further in the future if we support arbitrary SQL types
     import java.sql.Types._

@@ -24,11 +24,14 @@ object DatabaseSchema {
   val empty = DatabaseSchema(Vector.empty)
 }
 
-case class Table(name: String, columns: Vector[Column], indexes: Vector[Index]) {
-  def column_!(name: String): Column       = column(name).getOrElse(sys.error(s"Column $name was not found."))
-  def column(name: String): Option[Column] = columns.find(_.name == name)
+case class Table(name: String, columnFns: Vector[Table => Column], indexes: Vector[Index]) {
+  val columns: Vector[Column]                         = columnFns.map(_.apply(this))
+  def column_!(name: String): Column                  = column(name).getOrElse(sys.error(s"Column $name was not found."))
+  def column(name: String): Option[Column]            = columns.find(_.name == name)
+  def indexByColumns_!(columns: String*): Index       = indexByColumns(columns: _*).getOrElse(sys.error(s"Did not find an index for the columns: $columns"))
+  def indexByColumns(columns: String*): Option[Index] = indexes.find(_.columns == columns.toVector)
 }
 
 case class Index(name: String, columns: Vector[String], unique: Boolean)
-case class Column(name: String, tpe: String, typeIdentifier: TypeIdentifier, isRequired: Boolean, foreignKey: Option[ForeignKey])
+case class Column(name: String, tpe: String, typeIdentifier: TypeIdentifier, isRequired: Boolean, foreignKey: Option[ForeignKey])(val table: Table)
 case class ForeignKey(table: String, column: String)
