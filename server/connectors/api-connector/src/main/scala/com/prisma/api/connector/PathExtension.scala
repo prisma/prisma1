@@ -16,6 +16,7 @@ case class Path(segments: List[PathSegment]) {
   def operatorName(field: RelationField, whereFilter: Option[Filter]): String = sanitize(s"${field.name}X${whereFilter.hashCode().toString}")
   def dropLast: Path                                                          = this.copy(segments = this.segments.dropRight(1))
 
+  def combinedNames = this.segments.map(_.rf.name).mkString(".")
   private def sanitize(input: String): String = {
     //Mongo only allows alphanumeric characters in arrayfilter names and they have to start with lowercase
     val alphanumeric = input

@@ -22,7 +22,6 @@ trait FilterConditionBuilder extends BuilderBase {
         case AndFilter(filters)              => AndFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
         case OrFilter(filters)               => OrFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
         case NotFilter(filters)              => NotFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
-        case NodeFilter(filters)             => NodeFilter(filters.map(stripLogicalFiltersWithOnlyOneFilterContained))
         case x: RelationFilter               => x.copy(nestedFilter = stripLogicalFiltersWithOnlyOneFilterContained(x.nestedFilter))
         case x                               => x
       }
@@ -44,7 +43,6 @@ trait FilterConditionBuilder extends BuilderBase {
       case AndFilter(filters)     => nonEmptyConditions(filters).reduceLeft(_ and _)
       case OrFilter(filters)      => nonEmptyConditions(filters).reduceLeft(_ or _)
       case NotFilter(filters)     => filters.map(buildConditionForFilter(_, alias)).foldLeft(and(trueCondition()))(_ andNot _)
-      case NodeFilter(filters)    => buildConditionForFilter(OrFilter(filters), alias)
       case relationFilter: RelationFilter =>
         inStatementForRelationCondition(
           jooqField = modelIdColumn(alias, relationFilter.field.model),

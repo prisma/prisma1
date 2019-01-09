@@ -1,6 +1,5 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
@@ -988,6 +987,315 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     val result3 = server.query("""query{users{name, following{name}}}""", project)
 
     result3.toString should be("""{"data":{"users":[{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
+  }
+
+  "Deleting toOne relations" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:{
+         |      unique: 11,
+         |      name: "Middle"
+         |   }
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11}}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {delete: true}
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":null}}}""")
+  }
+
+  "To many and toOne mixed relations deleting over two levels" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle @embedded {
+        |   unique: Int! @unique
+        |   name: String!
+        |   bottom: [Bottom]
+        |}
+        |
+        |type Bottom @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:{
+         |      unique: 11,
+         |      name: "Middle"
+         |      bottom: {create:[
+         |        {
+         |          unique: 111,
+         |          name: "Bottom"
+         |        },
+         |        {
+         |          unique: 112,
+         |          name: "Bottom"
+         |        }
+         |      ]
+         |      }}
+         |    }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique,
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":111},{"unique":112}]}}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {update:
+         |      {bottom: {delete:{unique:111}} }}
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":112}]}}}}""")
+  }
+
+  "To many and toOne mixedrelations deleting over two levels" should "error correctly" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle @embedded {
+        |   unique: Int! @unique
+        |   name: String!
+        |   bottom: [Bottom]
+        |}
+        |
+        |type Bottom @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:{
+         |      unique: 11,
+         |      name: "Middle"
+         |      bottom: {create:[
+         |        {
+         |          unique: 111,
+         |          name: "Bottom"
+         |        },
+         |        {
+         |          unique: 112,
+         |          name: "Bottom"
+         |        }
+         |      ]
+         |      }}
+         |    }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique,
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11,"bottom":[{"unique":111},{"unique":112}]}}}}""")
+
+    server.queryThatMustFail(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {update:
+         |      {bottom: {delete:{unique:113}} }}
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project,
+      errorCode = 3041,
+      errorContains =
+        """The relation BottomToMiddle has no node for the model Middle connected to a Node for the model Bottom with the value '113' for the field 'unique'"""
+    )
+  }
+
+  "To many relations deleting over two levels" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: [Middle]
+        |}
+        |
+        |type Middle @embedded {
+        |   unique: Int! @unique
+        |   name: String!
+        |   bottom: [Bottom]
+        |}
+        |
+        |type Bottom @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:[{
+         |      unique: 11,
+         |      name: "Middle"
+         |      bottom: {create:{
+         |          unique: 111,
+         |          name: "Bottom"
+         |      }}},
+         |      {
+         |      unique: 12,
+         |      name: "Middle2"
+         |      bottom: {create:{
+         |          unique: 112,
+         |          name: "Bottom2"
+         |      }}
+         |    }]
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique,
+         |    bottom{
+         |      unique
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11,"bottom":[{"unique":111}]},{"unique":12,"bottom":[{"unique":112}]}]}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {update:{
+         |                where:{unique:11}
+         |                data: {
+         |                  name: "MiddleNew"
+         |                  bottom: {delete:{unique:111}} }}
+         |                  }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique,
+         |    name,
+         |    bottom{
+         |      unique,
+         |    }
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res2.toString should be(
+      """{"data":{"updateTop":{"unique":1,"middle":[{"unique":11,"name":"MiddleNew","bottom":[]},{"unique":12,"name":"Middle2","bottom":[{"unique":112}]}]}}}""")
   }
 
 }
