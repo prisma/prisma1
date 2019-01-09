@@ -1,25 +1,25 @@
 package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   val project = SchemaDsl.fromString() {
     """
       |type List {
       |  id: ID! @unique
       |  name: String! @unique
-      |  todos: [Todo!]!
+      |  todos: [Todo]
       |}
       |
       |type Todo {
       |  id: ID! @unique
       |  title: String! @unique
-      |  lists: [List!]!
+      |  lists: [List]
       |}
     """
   }

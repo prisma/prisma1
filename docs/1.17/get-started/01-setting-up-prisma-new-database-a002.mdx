@@ -3,8 +3,8 @@ import Code from 'components/Markdown/Code'
 
 export const meta = {
   title: 'Setting up Prisma',
-  step: 1,
   position: 1,
+  gettingStartedOrder: 1,
   gettingStartedTitle: 'New database',
   nextText: 'Great work! 👏  Move on to learn how you can change your datamodel and (re-)generate your Prisma client.',
   technology: 'node',
@@ -34,7 +34,7 @@ brew install prisma
 ```
 
 ```bash copy
-npm install -g prisma@beta
+npm install -g prisma
 ```
 
 </Code>
@@ -72,7 +72,7 @@ Paste the following contents into the Docker Compose file you just created:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.16
+    image: prismagraphql/prisma:1.17
     restart: always
     ports:
     - "4466:4466"
@@ -102,7 +102,7 @@ volumes:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.16
+    image: prismagraphql/prisma:1.17
     restart: always
     ports:
     - "4466:4466"
@@ -172,16 +172,16 @@ The Prisma client is a custom, auto-generated library that connects to your Pris
 ```yml copy
 generate:
   - generator: javascript-client
-    output: ./prisma-client/
+    output: ./generated/prisma-client/
 ```
 
 Now generate the client with this command:
 
-``` copy
+```bash copy
 prisma generate
 ```
 
-The CLI now stored your Prisma client inside the `prisma-client` folder as specified in `prisma.yml`.
+The CLI now stored your Prisma client inside the `prisma-client` directory as specified in `prisma.yml`.
 
 ## Prepare Node application
 
@@ -203,7 +203,7 @@ npm install --save prisma-client-lib graphql@0.13
 Now add the following code to `index.js` and save it afterwards:
 
 ```js copy
-const { prisma } = require('./prisma-client')
+const { prisma } = require('./generated/prisma-client')
 
 // A `main` function so that we can use async/await
 async function main() {

@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.TransactionalExecutionCapability
+import com.prisma.shared.models.ConnectorCapability.TransactionalExecutionCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.joda.time.{DateTime, DateTimeZone}

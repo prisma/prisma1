@@ -1,14 +1,15 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
-import com.prisma.shared.models.{OnDelete, Schema}
+import com.prisma.deploy.migration.validation.DataModelValidatorImpl
+import com.prisma.deploy.specutils.DeploySpecBase
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
-class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
-
-  val inferer      = SchemaInferrer()
+class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBase {
   val emptyProject = TestProject.empty
 
   "Inferring embedded typeDirectives" should {
@@ -16,14 +17,15 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
       val types =
         """
           |type Todo {
-          |  comments: [Comment!]! @relation(name:"MyRelationName")
+          |  id: ID! @id
+          |  comments: [Comment] @relation(name: "MyRelationName")
           |}
           |
           |type Comment @embedded {
-          |  todo: Todo!
+          |  test: String
           |}
         """.stripMargin.trim()
-      val schema = infer(emptyProject.schema, types)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("MyRelationName")
@@ -34,7 +36,124 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
       todo.isEmbedded should be(false)
       val comment = schema.getModelByName_!("Comment")
       comment.isEmbedded should be(true)
+      relation.manifestation should be(None)
     }
+
+    "work if one with a relation from embedded to non-parent non embedded type" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment] @relation(name: "MyRelationName")
+          |}
+          |
+          |type Comment @embedded {
+          |  test: String
+          |  other: Other @relation(name: "MyOtherRelationName")
+          |}
+          |
+          |type Other {
+          |  id: ID! @id
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
+
+      schema.relations should have(size(2))
+      val relation = schema.getRelationByName_!("MyRelationName")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
+      relation.manifestation should be(None)
+
+      val relation2 = schema.getRelationByName_!("MyOtherRelationName")
+      relation2.modelAName should equal("Comment")
+      relation2.modelBName should equal("Other")
+      relation2.manifestation should be(Some(EmbeddedRelationLink("Comment", "other")))
+
+      schema.models should have(size(3))
+      val todo = schema.getModelByName_!("Todo")
+      todo.isEmbedded should be(false)
+      val comment = schema.getModelByName_!("Comment")
+      comment.isEmbedded should be(true)
+      val other = schema.getModelByName_!("Other")
+      other.isEmbedded should be(false)
+    }
+
+    "work if one with a relation from embedded to embedded type" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment] @relation(name: "MyRelationName")
+          |}
+          |
+          |type Comment @embedded {
+          |  test: String
+          |  other: Other @relation(name: "MyOtherRelationName")
+          |}
+          |
+          |type Other @embedded{
+          |  test: String
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
+
+      schema.relations should have(size(2))
+      val relation = schema.getRelationByName_!("MyRelationName")
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Todo")
+      relation.manifestation should be(None)
+
+      val relation2 = schema.getRelationByName_!("MyOtherRelationName")
+      relation2.modelAName should equal("Comment")
+      relation2.modelBName should equal("Other")
+      relation2.manifestation should be(None)
+
+      schema.models should have(size(3))
+      val todo = schema.getModelByName_!("Todo")
+      todo.isEmbedded should be(false)
+      val comment = schema.getModelByName_!("Comment")
+      comment.isEmbedded should be(true)
+      val other = schema.getModelByName_!("Other")
+      other.isEmbedded should be(true)
+    }
+
+    "work with a relation from embedded to embedded type even when the relations are not named" in {
+      val types =
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  comments: [Comment]
+          |}
+          |
+          |type Comment @embedded {
+          |  test: String
+          |  other: Other
+          |}
+          |
+          |type Other @embedded{
+          |  test: String
+          |}""".stripMargin.trim()
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, RelationLinkListCapability))
+
+      schema.relations should have(size(2))
+      val relation = schema.relations.head
+      relation.modelAName should equal("Comment")
+      relation.modelBName should equal("Other")
+      relation.manifestation should be(None)
+
+      val relation2 = schema.relations.reverse.head
+      relation2.modelAName should equal("Comment")
+      relation2.modelBName should equal("Todo")
+      relation2.manifestation should be(None)
+
+      schema.models should have(size(3))
+      val todo = schema.getModelByName_!("Todo")
+      todo.isEmbedded should be(false)
+      val comment = schema.getModelByName_!("Comment")
+      comment.isEmbedded should be(true)
+      val other = schema.getModelByName_!("Other")
+      other.isEmbedded should be(true)
+
+    }
+
   }
 
   //Fixme more ideas for test cases / spec work
@@ -44,17 +163,8 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers {
 //  self relations between embedded types
 //  embedded types on connector without embedded types capability
 
-  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Schema = {
-    val validator = SchemaSyntaxValidator(
-      types,
-      SchemaSyntaxValidator.directiveRequirements,
-      SchemaSyntaxValidator.reservedFieldsRequirementsForAllConnectors,
-      SchemaSyntaxValidator.requiredReservedFields,
-      true
-    )
-
-    val prismaSdl = validator.generateSDL
-
-    SchemaInferrer().infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+  def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
+    val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get
+    SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
   }
 }

@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.InferredTables
-import com.prisma.shared.models.Manifestations.{InlineRelationManifestation, RelationTableManifestation}
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models.Schema
 
 object InferredTablesValidator {
@@ -14,8 +14,8 @@ object InferredTablesValidator {
           val modelB = relation.modelB
           Some(DeployError.global(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the database"))
 
-        case Some(m: InlineRelationManifestation) =>
-          val model = schema.getModelByName_!(m.inTableOfModelId)
+        case Some(m: EmbeddedRelationLink) =>
+          val model = schema.getModelByName_!(m.inTableOfModelName)
           inferredTables.modelTables.find(_.name == model.dbName) match {
             case None =>
               Some(DeployError.global(s"Could not find the model table ${model.dbName} in the database"))
@@ -27,7 +27,7 @@ object InferredTablesValidator {
               }
           }
 
-        case Some(m: RelationTableManifestation) =>
+        case Some(m: RelationTable) =>
           inferredTables.relationTables.find(_.name == m.table) match {
             case None =>
               Some(DeployError.global(s"Could not find the relation table ${m.table}"))

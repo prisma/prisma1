@@ -8,7 +8,7 @@ import org.jooq.{Field, SortField}
 trait OrderByClauseBuilder extends QueryBuilderConstants {
   import org.jooq.impl.DSL._
 
-  def orderByForModel(model: Model, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+  def orderByForModel(model: Model, alias: String, args: QueryArguments): Vector[SortField[AnyRef]] = {
     orderByInternalWithAliases(
       alias = alias,
       secondaryAlias = alias,
@@ -17,8 +17,8 @@ trait OrderByClauseBuilder extends QueryBuilderConstants {
     )
   }
 
-  def orderByForScalarListField(alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
-    val (first, last)  = (args.flatMap(_.first), args.flatMap(_.last))
+  def orderByForScalarListField(alias: String, args: QueryArguments): Vector[SortField[AnyRef]] = {
+    val (first, last)  = (args.first, args.last)
     val isReverseOrder = last.isDefined
 
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
@@ -33,7 +33,7 @@ trait OrderByClauseBuilder extends QueryBuilderConstants {
     }
   }
 
-  def orderByForRelation(relation: Relation, alias: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+  def orderByForRelation(relation: Relation, alias: String, args: QueryArguments): Vector[SortField[AnyRef]] = {
     orderByInternalWithAliases(
       alias = alias,
       secondaryAlias = alias,
@@ -42,22 +42,22 @@ trait OrderByClauseBuilder extends QueryBuilderConstants {
     )
   }
 
-  def orderByInternalWithAliases(alias: String, secondaryAlias: String, secondOrderField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+  def orderByInternalWithAliases(alias: String, secondaryAlias: String, secondOrderField: String, args: QueryArguments): Vector[SortField[AnyRef]] = {
     val firstField  = (orderBy: OrderBy) => field(name(alias, orderBy.field.dbName))
     val secondField = field(name(secondaryAlias, secondOrderField))
 
     orderByFields(firstField, secondField, args)
   }
 
-  def orderByInternal(secondOrderField: String, args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
+  def orderByInternal(secondOrderField: String, args: QueryArguments): Vector[SortField[AnyRef]] = {
     val firstField                 = (orderBy: OrderBy) => field(name(orderBy.field.dbName))
     val secondField: Field[AnyRef] = field(name(secondOrderField))
 
     orderByFields(firstField, secondField, args)
   }
 
-  private def orderByFields(firstField: OrderBy => Field[AnyRef], secondField: Field[AnyRef], args: Option[QueryArguments]): Vector[SortField[AnyRef]] = {
-    val (first, last, orderBy) = (args.flatMap(_.first), args.flatMap(_.last), args.flatMap(_.orderBy))
+  private def orderByFields(firstField: OrderBy => Field[AnyRef], secondField: Field[AnyRef], args: QueryArguments): Vector[SortField[AnyRef]] = {
+    val (first, last, orderBy) = (args.first, args.last, args.orderBy)
     val isReverseOrder         = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.

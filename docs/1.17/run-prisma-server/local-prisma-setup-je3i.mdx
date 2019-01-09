@@ -24,7 +24,7 @@ The following Docker Compose file configures two Docker containers:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.16
+    image: prismagraphql/prisma:1.17
     restart: always
     ports:
     - "4466:4466"
@@ -56,7 +56,7 @@ volumes:
 The following Docker Compose file configures two Docker containers:
 
 - `prisma`: The container running your Prisma server.
-- `postgres-db`: The container running a local MySQL instance, based on the [MySQL Docker image](https://hub.docker.com/_/postgres/).
+- `postgres-db`: The container running a local Postgres instance, based on the [Postgres Docker image](https://hub.docker.com/_/postgres/).
 
 `prisma` is using the `postgres-db` container as its database. Instead of referencing the database `host` via an IP address or URL, it simply references the `postgres-db` image as the database `host`:
 
@@ -64,7 +64,7 @@ The following Docker Compose file configures two Docker containers:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.16
+    image: prismagraphql/prisma:1.17
     restart: always
     ports:
     - "4466:4466"

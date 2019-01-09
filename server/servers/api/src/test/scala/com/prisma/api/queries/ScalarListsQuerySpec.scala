@@ -1,7 +1,7 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -13,8 +13,8 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Model{
         |   id: ID! @unique
-        |   ints: [Int!]!
-        |   strings: [String!]!
+        |   ints: [Int]
+        |   strings: [String]
         |}"""
     }
 
@@ -50,8 +50,8 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Model{
         |   id: ID! @unique
-        |   ints: [Int!]!
-        |   strings: [String!]!
+        |   ints: [Int]
+        |   strings: [String]
         |}"""
     }
 
@@ -88,8 +88,8 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Model{
         |   id: ID! @unique
-        |   ints: [Int!]!
-        |   strings: [String!]!
+        |   ints: [Int]
+        |   strings: [String]
         |}"""
     }
     database.setup(project)
@@ -139,7 +139,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
         |   id: ID! @unique
-        |   $fieldName: [String!]!
+        |   $fieldName: [String]
         |}"""
     }
 
@@ -155,7 +155,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [Int!]!
+         |   $fieldName: [Int]
          |}"""
     }
 
@@ -171,7 +171,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [Float!]!
+         |   $fieldName: [Float]
          |}"""
     }
 
@@ -187,7 +187,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [Boolean!]!
+         |   $fieldName: [Boolean]
          |}"""
     }
 
@@ -197,13 +197,13 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   "full scalar list" should "return full list for GraphQLIds" in {
 
     val fieldName   = "graphqlids"
-    val inputValue  = """"someID123""""
-    val outputValue = """"someID123""""
+    val inputValue  = """"5beea4aa6183dd734b2dbd9b""""
+    val outputValue = """"5beea4aa6183dd734b2dbd9b""""
 
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [ID!]!
+         |   $fieldName: [ID]
          |}"""
     }
 
@@ -219,7 +219,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [Json!]!
+         |   $fieldName: [Json]
          |}"""
     }
 
@@ -235,7 +235,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [DateTime!]!
+         |   $fieldName: [DateTime]
          |}"""
     }
 
@@ -251,7 +251,7 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       s"""type Model{
          |   id: ID! @unique
-         |   $fieldName: [Ha!]!
+         |   $fieldName: [Ha]
          |}
          |
          |enum Ha{
@@ -268,8 +268,8 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Model{
          |   id: ID! @unique
-         |   ints: [Int!]!
-         |   strings: [String!]!
+         |   ints: [Int]
+         |   strings: [String]
          |}"""
     }
 
@@ -332,8 +332,8 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Model{
         |   id: ID! @unique
-        |   ints: [Int!]!
-        |   strings: [String!]!
+        |   ints: [Int]
+        |   strings: [String]
         |}"""
     }
 

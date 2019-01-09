@@ -1,10 +1,11 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, SlickDatabase}
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
-import play.api.libs.json.{JsNumber, JsObject, JsValue}
+import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -115,11 +116,14 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
-    case m: NestedUpdateNode => NestedUpdateNodeInterpreter(m)
-    case m: NestedUpsertNode => NestedUpsertNodeInterpreter(m)
-    case m: NestedDeleteNode => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
-    case m: NestedConnect    => NestedConnectInterpreter(m)
-    case m: NestedDisconnect => NestedDisconnectInterpreter(m)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
+    case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
+    case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: NestedConnect     => NestedConnectInterpreter(m)
+    case m: NestedSet         => NestedSetInterpreter(m)
+    case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
+    case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
   }
 }

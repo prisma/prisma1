@@ -1,7 +1,8 @@
 package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
-import com.prisma.deploy.connector.{DeployMutactionExecutor, MigrationPersistence, MigrationStepMapperImpl}
+import com.prisma.deploy.connector.persistence.MigrationPersistence
+import com.prisma.deploy.connector.{DeployMutactionExecutor, MigrationStepMapperImpl}
 import com.prisma.deploy.migration.migrator.{MigrationApplierImpl, Migrator}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -17,12 +18,18 @@ case class TestMigrator(
   import system.dispatcher
 
   // For tests, the schedule directly does all the migration work to remove the asynchronous component
-  override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration] = {
+  override def schedule(
+      projectId: String,
+      nextSchema: Schema,
+      steps: Vector[MigrationStep],
+      functions: Vector[Function],
+      rawDataModel: String
+  ): Future[Migration] = {
     val stepMapper = MigrationStepMapperImpl(projectId)
     val applier    = MigrationApplierImpl(migrationPersistence, stepMapper, mutactionExecutor)
 
     val result: Future[Migration] = for {
-      savedMigration <- migrationPersistence.create(Migration(projectId, nextSchema, steps, functions))
+      savedMigration <- migrationPersistence.create(Migration(projectId, nextSchema, steps, functions, rawDataModel))
       lastMigration  <- migrationPersistence.getLastMigration(projectId)
       applied <- applier.apply(lastMigration.get.schema, savedMigration).flatMap { result =>
                   if (result.succeeded) {
@@ -30,6 +37,7 @@ case class TestMigrator(
                       savedMigration.copy(status = MigrationStatus.Success)
                     }
                   } else {
+
                     Future.failed(new Exception("Fatal: apply resulted in an error"))
                   }
                 }

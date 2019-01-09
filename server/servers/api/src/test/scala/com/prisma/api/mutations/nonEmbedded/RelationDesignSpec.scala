@@ -1,21 +1,30 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
+
+  val schema =
+    """type List{
+        |   id: ID! @unique
+        |   uList: String @unique
+        |   todo: Todo
+        |}
+        |
+        |type Todo{
+        |   id: ID! @unique
+        |   uTodo: String @unique
+        |   list: List
+        |}"""
 
   "Deleting a parent node" should "remove it from the relation and delete the relay id" in {
-
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field("uList", _.String, isUnique = true)
-      val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
-    }
+    val project = SchemaDsl.fromString() { schema }
 
     database.setup(project)
 
@@ -36,11 +45,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Deleting a child node" should "remove it from the relation and delete the relay id" in {
-
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field("uList", _.String, isUnique = true)
-      val todo = schema.model("Todo").field("uTodo", _.String, isUnique = true).oneToOneRelation("list", "todo", list)
-    }
+    val project = SchemaDsl.fromString() { schema }
 
     database.setup(project)
 

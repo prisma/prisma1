@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -21,7 +21,7 @@ class EmbeddedQueriesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSp
         """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set.empty)(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project)(testDependencies, system)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
     schema should not(include("type Query {"))

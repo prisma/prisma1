@@ -29,6 +29,10 @@ if [[ -z "$CIRCLE_BRANCH" ]]; then
   fi
 fi
 
+if [[ -z "$CIRCLE_BRANCH" ]]; then
+  export CIRCLE_BRANCH=master
+fi
+
 if [ -z "$CIRCLE_TAG" ] && [ $CIRCLE_BRANCH == "master" ]; then
   echo "Builds on master are only executed when a tag is provided"
   exit 0
@@ -62,6 +66,7 @@ coreChanged=false
 engineChanged=false
 clientChanged=false
 generateSchemaChanged=false
+datamodelChanged=false
 
 if [[ "$changedFiles" = *"cli/packages/prisma-yml"* ]]; then
   ymlChanged=true
@@ -79,7 +84,7 @@ if [[ "$changedFiles" = *"cli/packages/prisma-cli-engine"* ]]; then
   engineChanged=true
 fi
 
-if [[ "$changedFiles" = *"client"* ]]; then
+if [[ "$changedFiles" = *"cli/packages/prisma-client-lib"* ]]; then
   clientChanged=true
 fi
 
@@ -87,9 +92,13 @@ if [[ "$changedFiles" = *"cli/packages/prisma-generate-schema"* ]]; then
   generateSchemaChanged=true
 fi
 
+if [[ "$changedFiles" = *"cli/packages/prisma-datamodel"* ]]; then
+  datamodelChanged=true
+fi
+
 echo "introspection changed: $introspectionChanged yml changed: $ymlChanged. core changed: $coreChanged. engine changed: $engineChanged"
 
-if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ]; then
+if [ $introspectionChanged == false ] && [ $ymlChanged == false ] && [ $coreChanged == false ] && [ $engineChanged == false ] && [ $clientChanged == false ] && [ $generateSchemaChanged == false ] && [ -z "$CIRCLE_TAG" ] && [ $datamodelChanged == false ]; then
   echo "There are no changes in the CLI."
   exit 0;
 fi
@@ -109,6 +118,10 @@ else
   if [ $CIRCLE_BRANCH == "alpha" ]; then
     step=2
   fi
+  if [[ -n "$CIRCLE_TAG" ]]; then
+    echo "Setting Step to 0"
+    step=0
+  fi
   nextDockerMinor=$((nextDockerMinor + step))
   nextDockerTag="${tagElements[0]}.${nextDockerMinor}-${CIRCLE_BRANCH}"
 fi
@@ -119,54 +132,75 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 # Get new version
 #
 
+# If CIRCLE_TAG doesnt exist, generate the version with our node script
 if [ -z "$CIRCLE_TAG" ]; then
-  latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
-  latestVersionElements=(${latestVersion//./ })
-  latestBetaVersionElements=(${latestBetaVersion//./ })
-
-  betaMinor=${latestBetaVersionElements[1]}
-  latestMinor=${latestVersionElements[1]}
-  latestMajor=${latestVersionElements[0]}
-
-  betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
-
-  echo "betaLastNumber $betaLastNumber"
-
-  # calc next minor
-  step=1
-  if [ $CIRCLE_BRANCH == "alpha" ]; then
-    step=2
-  fi
-  nextMinor=$((latestMinor + step))
-
-  nextLastNumber=0
-
-  echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
-
-  # calc next last number
-  if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
-    echo "$betaMinor is greater than $latestMinor"
-    nextLastNumber=$((betaLastNumber + step + 1))
-  fi
-
-  export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
-  echo "new version: $newVersion"
+  export newVersion=$(eval node ./cli/scripts/get-version.js $CIRCLE_BRANCH)
+  echo "New version: $newVersion"
+  echo "Waiting 10 seconds so you can stop the script if this is not correct"
+  sleep 10
 else
   export newVersion=$CIRCLE_TAG
 fi
 
 
+
+######################
+# Build cli/packages #
+######################
+
+cd cli/packages/
+#
+# Build prisma-datamodel
+#
+
+if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $datamodelChanged ]; then
+  cd prisma-datamodel
+  sleep 3.0
+  ../../scripts/doubleInstall.sh
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
+
+#
+# Build prisma-generate-schema
+#
+
+if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
+  cd prisma-generate-schema
+  sleep 3.0
+  ../../scripts/doubleInstall.sh
+  yarn add prisma-datamodel@$newVersion
+  yarn build
+  npm version $newVersion
+
+  if [[ $CIRCLE_TAG ]]; then
+    npm publish
+  else
+    npm publish --tag $CIRCLE_BRANCH
+  fi
+  cd ..
+fi
+export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
+
 #
 # Build prisma-client-lib
 #
 
-cd client
+cd prisma-client-lib
 export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
   yarn install
   yarn build
   npm version $newVersion
+  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
@@ -180,11 +214,10 @@ export clientVersion=$(cat package.json | jq -r '.version')
 cd ..
 
 
-######################
-# Build cli/packages #
-######################
 
-cd cli/packages/
+########################
+# Back to cli/packages #
+########################
 
 #
 # Build prisma-yml
@@ -194,7 +227,7 @@ export ymlVersionBefore=$(cat prisma-yml/package.json | jq -r '.version')
 if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish yml"
   cd prisma-yml
-  yarn install
+  ../../scripts/doubleInstall.sh
   yarn build
   npm version $newVersion
 
@@ -203,7 +236,7 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   else
     npm publish --tag $CIRCLE_BRANCH
   fi
-  yarn install
+  ../../scripts/doubleInstall.sh
   cd ..
 fi
 export ymlVersion=$(cat prisma-yml/package.json | jq -r '.version')
@@ -240,7 +273,7 @@ export introspectionVersionBefore=$(cat prisma-db-introspection/package.json | j
 if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCLE_TAG ]; then
   cd prisma-db-introspection
   sleep 0.5
-  yarn add prisma-yml@$ymlVersion
+  yarn add prisma-datamodel@$ymlVersion prisma-yml@$ymlVersion
   sleep 0.2
   ../../scripts/doubleInstall.sh
   yarn build
@@ -257,33 +290,14 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 
 
 #
-# Build prisma-generate-schema
-#
-
-if [ $generateSchemaChanged ]; then
-  cd prisma-generate-schema
-  sleep 3.0
-  ../../scripts/doubleInstall.sh
-  yarn build
-  npm version $newVersion
-
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
-  else
-    npm publish --tag $CIRCLE_BRANCH
-  fi
-  cd ..
-fi
-export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '.version')
-
-
-#
 # Build prisma-cli-core
 #
 
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
+  yarn add prisma-datamodel@$newVersion
+  sleep 0.2
   yarn add prisma-yml@$ymlVersion
   sleep 0.2
   yarn add prisma-db-introspection@$introspectionVersion
@@ -292,7 +306,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   sleep 0.2
   yarn add prisma-client-lib@$clientVersion
   sleep 0.3
-  yarn install
+  ../../scripts/doubleInstall.sh
 
   # new docker tag
   sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
@@ -320,17 +334,55 @@ cd prisma-cli
 cp ../../../README.md ./
 sleep 0.5
 yarn add prisma-cli-engine@$engineVersion prisma-cli-core@$coreVersion
-yarn install
+../../scripts/doubleInstall.sh
 yarn build
 
-if [ -z "$CIRCLE_TAG" ]; then
-
-  npm version $newVersion
-  npm publish --tag $CIRCLE_BRANCH
-else
+if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
   newVersion=$CIRCLE_TAG
 
   echo "new version: $newVersion"
   npm version $newVersion
   npm publish
+else
+  npm version $newVersion
+  npm publish --tag $CIRCLE_BRANCH
+fi
+
+############################################
+# Run integration tests on prisma-examples #
+############################################
+
+languages=( typescript flow )
+
+# Clone
+
+git clone git@github.com:prisma/prisma-examples.git
+cd prisma-examples
+branch="client-$CIRCLE_BRANCH"
+
+if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
+  # Setup branch
+  git checkout $branch
+
+  # Bump prisma-client-lib version
+  for language in "${languages[@]}"; do
+    cd $language
+
+    for example in */; do
+      cd $example
+
+      yarn add prisma-client-lib@$CIRCLE_BRANCH 
+
+      cd ..
+    done 
+
+    cd ..
+  done
+
+  # Push changes
+  git config --global user.email "tim.suchanek@gmail.com"
+  git config --global user.name "Tim Suchanek"
+  git commit -a -m "bump prisma-client-lib versions to ${newVersion}"
+  git remote add origin-push https://${GH_TOKEN}@github.com/prisma/prisma-examples.git > /dev/null 2>&1
+  git push --quiet --set-upstream origin-push $branch
 fi

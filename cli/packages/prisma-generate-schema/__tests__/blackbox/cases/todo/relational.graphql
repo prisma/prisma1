@@ -1,0 +1,591 @@
+type AggregateTodo {
+  count: Int!
+}
+
+type AggregateUser {
+  count: Int!
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+"""
+Raw JSON value
+"""
+scalar Json
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createTodo(data: TodoCreateInput!): Todo!
+  createUser(data: UserCreateInput!): User!
+  updateTodo(data: TodoUpdateInput!, where: TodoWhereUniqueInput!): Todo
+  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
+  deleteTodo(where: TodoWhereUniqueInput!): Todo
+  deleteUser(where: UserWhereUniqueInput!): User
+  upsertTodo(where: TodoWhereUniqueInput!, create: TodoCreateInput!, update: TodoUpdateInput!): Todo!
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  updateManyTodoes(data: TodoUpdateManyMutationInput!, where: TodoWhereInput): BatchPayload!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
+  deleteManyTodoes(where: TodoWhereInput): BatchPayload!
+  deleteManyUsers(where: UserWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  todoes(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Todo]!
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
+  todo(where: TodoWhereUniqueInput!): Todo
+  user(where: UserWhereUniqueInput!): User
+  todoesConnection(where: TodoWhereInput, orderBy: TodoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TodoConnection!
+  usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  todo(where: TodoSubscriptionWhereInput): TodoSubscriptionPayload
+  user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
+}
+
+type Todo implements Node {
+  id: ID!
+  text: String!
+  done: Boolean!
+  user: User!
+}
+
+"""
+A connection to a list of items.
+"""
+type TodoConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [TodoEdge]!
+  aggregate: AggregateTodo!
+}
+
+input TodoCreateInput {
+  text: String!
+  done: Boolean!
+  user: UserCreateOneInput!
+}
+
+"""
+An edge in a connection.
+"""
+type TodoEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: Todo!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum TodoOrderByInput {
+  id_ASC
+  id_DESC
+  text_ASC
+  text_DESC
+  done_ASC
+  done_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type TodoPreviousValues {
+  id: ID!
+  text: String!
+  done: Boolean!
+}
+
+type TodoSubscriptionPayload {
+  mutation: MutationType!
+  node: Todo
+  updatedFields: [String!]
+  previousValues: TodoPreviousValues
+}
+
+input TodoSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [TodoSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TodoSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TodoSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: TodoWhereInput
+}
+
+input TodoUpdateInput {
+  text: String
+  done: Boolean
+  user: UserUpdateOneRequiredInput
+}
+
+input TodoUpdateManyMutationInput {
+  text: String
+  done: Boolean
+}
+
+input TodoWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [TodoWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TodoWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TodoWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  text: String
+  """
+  All values that are not equal to given value.
+  """
+  text_not: String
+  """
+  All values that are contained in given list.
+  """
+  text_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  text_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  text_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  text_lte: String
+  """
+  All values greater than the given value.
+  """
+  text_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  text_gte: String
+  """
+  All values containing the given string.
+  """
+  text_contains: String
+  """
+  All values not containing the given string.
+  """
+  text_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  text_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  text_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  text_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  text_not_ends_with: String
+  done: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  done_not: Boolean
+  user: UserWhereInput
+}
+
+input TodoWhereUniqueInput {
+  id: ID
+}
+
+type User implements Node {
+  id: ID!
+  name: String!
+}
+
+"""
+A connection to a list of items.
+"""
+type UserConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [UserEdge]!
+  aggregate: AggregateUser!
+}
+
+input UserCreateInput {
+  name: String!
+}
+
+input UserCreateOneInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+}
+
+"""
+An edge in a connection.
+"""
+type UserEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: User!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum UserOrderByInput {
+  id_ASC
+  id_DESC
+  name_ASC
+  name_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type UserPreviousValues {
+  id: ID!
+  name: String!
+}
+
+type UserSubscriptionPayload {
+  mutation: MutationType!
+  node: User
+  updatedFields: [String!]
+  previousValues: UserPreviousValues
+}
+
+input UserSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [UserSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: UserWhereInput
+}
+
+input UserUpdateDataInput {
+  name: String
+}
+
+input UserUpdateInput {
+  name: String
+}
+
+input UserUpdateManyMutationInput {
+  name: String
+}
+
+input UserUpdateOneRequiredInput {
+  create: UserCreateInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateDataInput
+  upsert: UserUpsertNestedInput
+}
+
+input UserUpsertNestedInput {
+  update: UserUpdateDataInput!
+  create: UserCreateInput!
+}
+
+input UserWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [UserWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+}
+
+input UserWhereUniqueInput {
+  id: ID
+}
+

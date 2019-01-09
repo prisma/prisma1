@@ -1,7 +1,8 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.NodeQueryCapability
+import com.prisma.shared.models.ConnectorCapabilities
+import com.prisma.shared.models.ConnectorCapability.NodeQueryCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{Matchers, WordSpec}
@@ -80,7 +81,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
         schema.model("Todo")
       }
 
-      val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set(NodeQueryCapability))(testDependencies, system)
+      val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(NodeQueryCapability))(testDependencies, system)
       val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
       schema should include("node(")
       schema should include("id: ID!): Node")
@@ -91,7 +92,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
         schema.model("Todo")
       }
 
-      val schemaBuilder = SchemaBuilderImpl(project, capabilities = Set.empty)(testDependencies, system)
+      val schemaBuilder = SchemaBuilderImpl(project)(testDependencies, system)
       val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
       schema should not(include("node("))

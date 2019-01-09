@@ -1,26 +1,26 @@
 package com.prisma.api.queries.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationLinksCapability)
 
   "Nested scalar lists" should "work in creates " in {
 
     val project = SchemaDsl.fromString() {
       s"""type List{
          |   id: ID! @unique
-         |   todos: [Todo!]!
-         |   listInts: [Int!]!
+         |   todos: [Todo]
+         |   listInts: [Int]
          |}
          |
          |type Todo{
          |   id: ID! @unique
-         |   lists: [List!]!
-         |   todoInts: [Int!]!
+         |   lists: [List]
+         |   todoInts: [Int]
          |}"""
     }
 
@@ -42,20 +42,20 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
       s"""type List{
          |   id: ID! @unique
          |   todo: Todo
-         |   listInts: [Int!]!
+         |   listInts: [Int]
          |}
          |
          |type Todo{
          |   id: ID! @unique
          |   list: List
          |   tag: Tag
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}
          |
          |type Tag{
          |   id: ID! @unique
          |   todo: Todo
-         |   tagInts: [Int!]!
+         |   tagInts: [Int]
          |}
          |"""
     }
@@ -79,7 +79,7 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
          |   id: ID! @unique
          |   todo: Todo
          |   uList: String! @unique
-         |   listInts: [Int!]!
+         |   listInts: [Int]
          |}
          |
          |type Todo{
@@ -87,14 +87,14 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
          |   uTodo: String! @unique
          |   list: List
          |   tag: Tag
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}
          |
          |type Tag{
          |   id: ID! @unique
          |   uTag: String! @unique
          |   todo: Todo
-         |   tagInts: [Int!]!
+         |   tagInts: [Int]
          |}
          |"""
     }
@@ -126,14 +126,14 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
          |   id: ID! @unique
          |   todo: Todo
          |   uList: String! @unique
-         |   listInts: [Int!]!
+         |   listInts: [Int]
          |}
          |
          |type Todo{
          |   id: ID! @unique
          |   uTodo: String! @unique
          |   list: List
-         |   todoInts: [Int!]!
+         |   todoInts: [Int]
          |}
          |"""
     }

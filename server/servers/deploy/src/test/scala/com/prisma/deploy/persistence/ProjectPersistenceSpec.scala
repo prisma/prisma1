@@ -64,4 +64,12 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
       "secrets"
     )
   }
+
+  ".delete()" should "delete a project" in {
+    val (project, _) = setupProject(basicTypesGql)
+    println(project.id)
+
+    projectPersistence.delete(project.id).await()
+    projectPersistence.load(project.id).await should be(None)
+  }
 }

@@ -1,13 +1,13 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, NodeQueryCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, NodeQueryCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationLinksCapability)
 
   "the node query" should "return null if the id does not exist" in {
     val project = SchemaDsl.fromString() {
@@ -22,7 +22,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val result = server.query(
       s"""{
-         |  node(id: "non-existent-id"){
+         |  node(id: "5bedb10fe11dc97034b2390c"){
          |    id
          |    ... on Todo {
          |      title

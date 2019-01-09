@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.time.{Seconds, Span}
@@ -28,7 +28,7 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment @embedded{
@@ -86,8 +86,8 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -147,8 +147,8 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment @embedded{
@@ -210,8 +210,8 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   tags: [String!]!
-        |   comments: [Comment!]!
+        |   tags: [String]
+        |   comments: [Comment]
         |}
         |
         |type Comment {
@@ -246,13 +246,13 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
     Future.traverse(0 to 50)(i => exec(i)).await(seconds = 30)
   }
 
-  "deleting many items" should "not cause deadlocks" taggedAs (IgnoreMongo) in {
+  "deleting many items" should "not cause deadlocks" in {
     val project = SchemaDsl.fromString() {
       """
         |type Todo {
         |   id: ID! @unique
         |   a: String
-        |   comments: [Comment!]!
+        |   comments: [Comment]
         |}
         |
         |type Comment @embedded{

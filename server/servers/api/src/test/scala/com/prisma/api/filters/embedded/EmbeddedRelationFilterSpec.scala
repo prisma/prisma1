@@ -1,7 +1,7 @@
 package com.prisma.api.filters.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
 
@@ -14,13 +14,13 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       |type Blog {
       |   id: ID! @unique
       |   name: String!
-      |   posts: [Post!]!
+      |   posts: [Post]
       |}
       |
       |type Post @embedded {
       |   title: String!
       |   popularity: Int!
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |   author: Author
       |}
       |
@@ -89,19 +89,25 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
     )
   }
 
-  "1 level m-relation filter" should "work for _every, _some and _none" in {
+  "1 level m-relation filter" should "work for _some" in {
 
     server.query(query = """{blogs(where:{posts_some:{popularity_gte: 5}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
 
     server.query(query = """{blogs(where:{posts_some:{popularity_gte: 50}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+  }
+
+  "1 level m-relation filter" should "work for _every" in {
 
     server.query(query = """{blogs(where:{posts_every:{popularity_gte: 2}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"},{"name":"blog 2"}]}}""")
 
     server.query(query = """{blogs(where:{posts_every:{popularity_gte: 3}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+  }
+
+  "1 level m-relation filter" should "work for _none" in {
 
     server.query(query = """{blogs(where:{posts_none:{popularity_gte: 50}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
@@ -109,13 +115,16 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
     server.query(query = """{blogs(where:{posts_none:{popularity_gte: 5}}){name}}""", project = project).toString should be("""{"data":{"blogs":[]}}""")
   }
 
-  "2 level m-relation filter" should "work for _every, _some and _none" in {
+  "2 level m-relation filter" should "work for _some" in {
 
     // some|some
     server.query(query = """{blogs(where:{posts_some:{comments_some: {likes: 0}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
 
     server.query(query = """{blogs(where:{posts_some:{comments_some: {likes: 1}}}){name}}""", project = project).toString should be("""{"data":{"blogs":[]}}""")
+  }
+
+  "2 level m-relation filter" should "work for _every, _some and _none" in {
 
     // some|every
     server.query(query = """{blogs(where:{posts_some:{comments_every: {likes_gte: 0}}}){name}}""", project = project).toString should be(
@@ -174,19 +183,214 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
-  "2 level m- and 1-relation filter" should "work for _every, _some and _none" in {
+  "2 level m- and 1-relation filter" should "work for _some" in {
 
     // some|one
     server.query(query = """{blogs(where:{posts_some:{author: {name: "Author1"}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 1"}]}}""")
+  }
+
+  "2 level m- and 1-relation filter" should "work for _every" in {
 
     // every|one
     server.query(query = """{blogs(where:{posts_every:{author: {name_ends_with: "3"}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+  }
+
+  "2 level m- and 1-relation filter" should "work for _none" in {
 
     // none|one
     server.query(query = """{blogs(where:{posts_none:{author: {name: "Author2"}}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+  }
+
+  "Fancy filter" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |  posts: [Post]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val query = """mutation create {
+                  |  createUser(
+                  |    data: {
+                  |      name: "User"
+                  |      pets: {
+                  |        create: [
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |        ]
+                  |      }
+                  |    }
+                  |  ) {
+                  |    name
+                  |    pets {
+                  |      breed
+                  |      walker {
+                  |        name
+                  |      }
+                  |    }
+                  |  }
+                  |}"""
+
+    server.query(query, project).toString should be(
+      """{"data":{"createUser":{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+
+    val query2 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 2" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query2, project).toString should be("""{"data":{"users":[]}}""")
+
+    val query3 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 1" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query3, project).toString should be(
+      """{"data":{"users":[{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}]}}""")
+  }
+
+  "Self relations bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  updatedAt: DateTime!
+        |  nick: String! @unique
+        |}
+        |
+        |type Todo {
+        |  id: ID! @unique
+        |  title: String! @unique
+        |  comments: [Comment]
+        |}
+        |
+        |type Comment @embedded {
+        |  text: String!
+        |  user: User! @mongoRelation(field: "user")
+        |  snarkyRemark: Comment
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query("""mutation{createTodo(data:{title:"todoTitle"}){title}}""", project)
+    create.toString should be("""{"data":{"createTodo":{"title":"todoTitle"}}}""")
+
+    val create2 = server.query("""mutation{createUser(data:{nick:"Marcus"}){nick}}""", project)
+    create2.toString should be("""{"data":{"createUser":{"nick":"Marcus"}}}""")
+
+    val update = server.query(
+      s"""mutation c{
+  updateTodo(
+    where: { title: "todoTitle" }
+    data: {
+      comments: {
+        create: [
+          {
+            text:"This is very important"
+            user: {
+              connect: {
+                nick: "Marcus"
+              }
+            }
+            snarkyRemark: {
+              create: {
+                text:"This is very very imporanto!"
+                user: {
+                  connect: {nick:"Marcus"}
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ){
+    title
+  }
+}""",
+      project
+    )
+
+    update.toString should be("""{"data":{"updateTodo":{"title":"todoTitle"}}}""")
+
+    val result = server.query(
+      s"""query commentsOfAUser {
+         |  todoes(where: {
+         |    comments_some: {
+         |      text_contains: "This"
+         |    }
+         |  }) {
+         |    title
+         |    comments {
+         |      text
+         |      snarkyRemark{
+         |         text
+         |         user{
+         |            nick
+         |         }
+         |      }
+         |    }
+         |  }
+         |} """,
+      project
+    )
+
+    result.toString should be(
+      """{"data":{"todoes":[{"title":"todoTitle","comments":[{"text":"This is very important","snarkyRemark":{"text":"This is very very imporanto!","user":{"nick":"Marcus"}}}]}]}}""")
   }
 
 }

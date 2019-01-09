@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.SupportsExistingDatabasesCapability
+import com.prisma.shared.models.ConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -152,7 +152,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |type C {
-        |  name: String!
+        |  name: String! @unique
         |  b: B
         |}""".stripMargin
     }
@@ -172,11 +172,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input BCreateWithoutCInput {
         |  rel: UserCreateOneInput
-        |}
-        |
-        |input BUpdateInput {
-        |  rel: UserUpdateOneInput
-        |  c: CUpdateOneWithoutBInput
         |}
         |
         |input BUpdateOneWithoutCInput {
@@ -203,6 +198,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input CCreateOneWithoutBInput {
         |  create: CCreateWithoutBInput
+        |  connect: CWhereUniqueInput
         |}
         |
         |input CCreateWithoutBInput {
@@ -214,21 +210,8 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |  b: BUpdateOneWithoutCInput
         |}
         |
-        |input CUpdateOneWithoutBInput {
-        |  create: CCreateWithoutBInput
-        |  disconnect: Boolean
-        |  delete: Boolean
-        |  update: CUpdateWithoutBDataInput
-        |  upsert: CUpsertWithoutBInput
-        |}
-        |
-        |input CUpdateWithoutBDataInput {
+        |input CUpdateManyMutationInput {
         |  name: String
-        |}
-        |
-        |input CUpsertWithoutBInput {
-        |  update: CUpdateWithoutBDataInput!
-        |  create: CCreateWithoutBInput!
         |}
         |
         |input UserCreateInput {
@@ -245,6 +228,10 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input UserUpdateInput {
+        |  name: String
+        |}
+        |
+        |input UserUpdateManyMutationInput {
         |  name: String
         |}
         |
@@ -412,7 +399,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val project = SchemaDsl.fromString() {
       """type Parent{
         |   name: String! @unique
-        |   child: [Child!]!
+        |   child: [Child]
         |}
         |
         |type Child{
@@ -445,9 +432,12 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input ChildUpdateManyWithoutParentInput {
                        |  create: [ChildCreateWithoutParentInput!]
                        |  connect: [ChildWhereUniqueInput!]
+                       |  set: [ChildWhereUniqueInput!]
                        |  disconnect: [ChildWhereUniqueInput!]
                        |  delete: [ChildWhereUniqueInput!]
                        |  update: [ChildUpdateWithWhereUniqueWithoutParentInput!]
+                       |  updateMany: [ChildUpdateManyWithWhereNestedInput!]
+                       |  deleteMany: [ChildScalarWhereInput!]
                        |  upsert: [ChildUpsertWithWhereUniqueWithoutParentInput!]
                        |}
                        |
@@ -516,16 +506,16 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val project = SchemaDsl.fromString() {
       """type A {
-        |    field: Int
+        |    field: Int @unique
         |}
         |
         |type B {
-        |    field: Int
+        |    field: Int @unique
         |    a: A!
         |}
         |
         |type C {
-        |    field: Int
+        |    field: Int @unique
         |    a: A
         |}"""
     }
@@ -538,6 +528,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input ACreateOneInput {
                        |  create: ACreateInput
+                       |  connect: AWhereUniqueInput
                        |}
                        |
                        |input AUpdateDataInput {
@@ -548,8 +539,13 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |  field: Int
                        |}
                        |
+                       |input AUpdateManyMutationInput {
+                       |  field: Int
+                       |}
+                       |
                        |input AUpdateOneInput {
                        |  create: ACreateInput
+                       |  connect: AWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
                        |  update: AUpdateDataInput
@@ -558,6 +554,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input AUpdateOneRequiredInput {
                        |  create: ACreateInput
+                       |  connect: AWhereUniqueInput
                        |  update: AUpdateDataInput
                        |  upsert: AUpsertNestedInput
                        |}
@@ -577,6 +574,10 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |  a: AUpdateOneRequiredInput
                        |}
                        |
+                       |input BUpdateManyMutationInput {
+                       |  field: Int
+                       |}
+                       |
                        |input CCreateInput {
                        |  field: Int
                        |  a: ACreateOneInput
@@ -594,16 +595,16 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val project = SchemaDsl.fromString() {
       """type A {
-        |    field: Int
+        |    field: Int @unique
         |}
         |
         |type B {
-        |    field: Int
+        |    field: Int @unique
         |    a: A
         |}
         |
         |type C {
-        |    field: Int
+        |    field: Int @unique
         |    a: A!
         |}"""
     }
@@ -617,6 +618,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input ACreateOneInput {
         |  create: ACreateInput
+        |  connect: AWhereUniqueInput
         |}
         |
         |input AUpdateDataInput {
@@ -629,6 +631,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input AUpdateOneInput {
         |  create: ACreateInput
+        |  connect: AWhereUniqueInput
         |  disconnect: Boolean
         |  delete: Boolean
         |  update: AUpdateDataInput
@@ -637,6 +640,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input AUpdateOneRequiredInput {
         |  create: ACreateInput
+        |  connect: AWhereUniqueInput
         |  update: AUpdateDataInput
         |  upsert: AUpsertNestedInput
         |}

@@ -194,7 +194,7 @@ project:
       prisma: prisma.yml
 ```
 
-Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prima.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
+Now, after `prisma deploy` is executed, the Prisma CLI invokes the `post-deploy` hook and runs the specified `graphql get-schema --project db` command. This looks up the `db` project in `.graphqlconfig.yml` (which is the API of the Prisma service), downloads its schema and stores it in `prisma.graphql` (as specified in the `schemaPath` property in `.graphqlconfig`).
 
 ### A note on the application schema
 
@@ -397,7 +397,7 @@ When used as arguments in an operation, `DateTime` fields have to be specified i
 
 ```graphql
 query {
-  user(birthday: "2015-11-22) { # November 22, 2015
+  user(birthday: "2015-11-22") { # November 22, 2015
     id
   }
 }
@@ -454,7 +454,7 @@ type Item {
 }
 ```
 
-When used as arguments in an operation, , `Json` fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
+When used as arguments in an operation, `Json` fields have to be specified with enclosing double quotes. Special characters have to be escaped: `json: "{\"int\": 1, \"string\": \"value\"}"`.
 
 ```graphql
 mutation {
@@ -626,8 +626,6 @@ Fields in the datamodel affect the available [query arguments](tbd).
 
 ### Changing the value of multiple scalar fields
 
-> TODO: Better as FAQ?
-
 You can use the `updateManyXs` mutation to migrate the value of a scalar field for all nodes, or only a specific subset.
 
 ```graphql
@@ -645,8 +643,6 @@ mutation {
 ```
 
 ### Adding a required field to the datamodel
-
-> TODO: Better as FAQ?
 
 When adding a required field to a model that already contains nodes, you receive this error message: "You are creating a required field but there are already nodes present that would violate that constraint."
 
@@ -743,7 +739,7 @@ Note that a _to-many_ relation field is always set to required. For example, a f
 
 ### The `@relation` directive
 
-When defining relations between types, you _can_ the `@relation` directive which provides meta-information about the relation. If a relation is ambiguous, you _must_ use the `@relation` directive to disambiguate it.
+When defining relations between types, you _can_ use the `@relation` directive which provides meta-information about the relation. If a relation is ambiguous, you _must_ use the `@relation` directive to disambiguate it.
 
 It can take two arguments:
 
@@ -888,7 +884,7 @@ Find more info about the `@unique` directive [above](#unique).
 
 #### Relation fields
 
-The directive `@relation(name: String, onDelete: ON_DELETE! = NO_ACTION)` can be attached to a relation field.
+The directive `@relation(name: String, onDelete: ON_DELETE! = SET_NULL)` can be attached to a relation field.
 
 [See above](#the-relation-directive) for more information.
 

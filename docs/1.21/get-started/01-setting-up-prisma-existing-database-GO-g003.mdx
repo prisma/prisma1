@@ -1,0 +1,320 @@
+import Warning from 'components/Markdown/Warning'
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Set up Prisma',
+  position: 1,
+  gettingStartedOrder: 2,
+  gettingStartedTitle: 'Existing database',
+  nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
+  technology: 'go',
+  technologyOrder: 4,
+  articleGroup: 'Set up Prisma',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Set up Prisma using Docker
+- Introspect your existing database and derive a datamodel
+- Use the datamodel to configure your Prisma API
+- Generate a Prisma client
+- Read and write data using the Prisma client
+
+<Warning>
+
+Using your existing database with Prisma currently only works when using **PostgreSQL** databases.
+
+</Warning>
+
+## Prerequisites
+
+Make sure to have connection details for your database at hand. This includes the following pieces of information:
+
+- **Host**: The host of your Postgres server, e.g. `localhost`.
+- **Port**: The port where your Postgres server listens, e.g. `5432`.
+- **User & Password**: The credentials for your Postgres server.
+- **Name of existing _database_**: The name of the Postgres _database_.
+- **Name of existing _schema_**: The name of the Postgres _schema_, e.g. `public`.
+
+You also need to know whether your database server uses **SSL**.
+
+## Install the Prisma CLI
+
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew tap prisma/prisma
+brew install prisma
+```
+
+```bash copy
+npm install -g prisma
+```
+
+</Code>
+
+## Install Docker
+
+To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
+
+## Set up Prisma server
+
+### Create new directory
+
+```bash copy
+mkdir hello-world
+cd hello-world
+```
+
+### Create Docker Compose file
+
+To launch Prisma on your machine, you need a [Docker Compose file](https://docs.docker.com/compose/compose-file/) that configures Prisma and specifies to which database it can connect:
+
+```bash copy
+touch docker-compose.yml
+```
+
+### Add Prisma Docker image
+
+Paste the following contents into the Docker Compose file you just created:
+
+<Code languages={["PostgreSQL", "MySQL"]}>
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.21
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: postgres
+            host: __YOUR_POSTGRES_HOST__
+            port: __YOUR_POSTGRES_PORT__
+            database: __YOUR_POSTGRES_DB__
+            schema: __YOUR_POSTGRES_SCHEMA__
+            user: __YOUR_POSTGRES_USER__
+            password: __YOUR_POSTGRES_PASSWORD__
+            migrations: false
+            ssl: __SSL_CONNECTION__
+```
+
+```yml copy
+# Coming soon. See https://github.com/prisma/prisma/issues/2506
+```
+
+</Code>
+
+### Specify database connection
+
+To specify the database to which Prisma should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
+
+- `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`. (When connecting to a local database, you might need to use `host.docker.internal`.)
+- `__YOUR_POSTGRES_PORT__`: The port where your Postgres server listens, e.g. `5432`.
+- `__YOUR_POSTGRES_DB__`: The name of your Postgres database.
+- `__YOUR_POSTGRES_SCHEMA__`: The name of your Postgres schema, e.g. `public`.
+- `__YOUR_POSTGRES_USER__`: The database user.
+- `__YOUR_POSTGRES_PASSWORD__`: The password for the database user.
+- `__SSL_CONNECTION__`: Whether your database server uses SSL, possible values are `true` and `false`.
+
+### Launch Prisma
+
+To start Prisma and connect it to your database, run the following command:
+
+```bash copy
+docker-compose up -d
+```
+
+Prisma is now connected to your database and runs on `http://localhost:4466`.
+
+## Derive Prisma datamodel from database schema
+
+### Create prisma.yml
+
+Next, you need to create a `prisma.yml`:
+
+```bash copy
+touch prisma.yml
+```
+
+Now add the following contents to it:
+
+```yml copy
+endpoint: http://localhost:4466
+```
+
+> The `endpoint` needs to match the URL of a running Prisma server.
+
+### Introspect database
+
+You now need to introspect your database schema to generate the datamodel which is the foundation for the API of your Prisma client:
+
+```bash copy
+prisma introspect
+```
+
+The CLI generates the `datamodel-[TIMESTAMP].prisma` (e.g. `datamodel-1533886167692.prisma`) file containing the SDL version of your database schema. On the first run, it also writes the `datamodel` property into the `prisma.yml`.
+
+Finally, you need to rename the file to `datamodel.prisma` because that's the file name you specifed in `prisma.yml`.
+
+## Deploy the Prisma API
+
+You now have the _minimal_ setup ready to deploy your Prisma API. Run the following command (this does **not** change anything in your database):
+
+```bash copy
+prisma deploy
+```
+
+<Warning>
+
+Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Docker container is actually running.
+
+</Warning>
+
+## Generate your Prisma client
+
+The Prisma client is a custom, auto-generated library that connects to your Prisma API. Append the following lines to the end of your `prisma.yml`:
+
+```yml copy
+generate:
+  - generator: go-client
+    output: ./generated/prisma-client/
+```
+
+Now generate the client with this command:
+
+```bash copy
+prisma generate
+```
+
+The CLI now stored your Prisma client inside the `./generated/prisma-client/` directory as specified in `prisma.yml`.
+
+## Prepare Go application
+
+```bash copy
+touch index.go
+```
+
+You'll be using [dep](https://golang.github.io/dep/) for dependency management in this tutorial. Run the following command to create the required setup:
+
+```bash copy
+dep init
+```
+
+Great, you're now ready to write some code and talk to your database programmatically!
+
+## Read and write data using the Prisma client
+
+The API operations of the Prisma client depend on the datamodel that was generated from the database introspection. The following sample queries assume there is a `User` type in the datamodel defined as follows:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+If you don't have such a `User` type, you need to adjust the following code snippets with a type that matches your datamodel.
+
+Add the following code in `index.go`:
+
+```go copy
+package main
+
+import (
+	"context"
+	"fmt"
+	prisma "hello-prisma/generated/prisma-client"
+)
+
+func main() {
+	client := prisma.New(nil)
+	ctx := context.TODO()
+
+	// Create a new user
+	name := "Alice"
+	newUser, err := client.CreateUser(prisma.UserCreateInput{
+		Name: name,
+	}).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Created new user: %+v\\n", newUser)
+
+	users, err := client.Users(nil).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\\n", users)
+}
+```
+
+Before executing the script, you need to _ensure_ all dependencies are available. Run the following command:
+
+```bash copy
+dep ensure
+```
+
+Now execute the script with the following command:
+
+```bash copy
+go run index.go
+```
+
+Whenever you run the script with that command, a new user record is created in the database (because of the call to `createUser`).
+
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+
+<QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
+
+```go lineNumbers,copy
+id := "__USER_ID__"
+userById, err := client.User(prisma.UserWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
+```
+
+```go lineNumbers,copy
+filter := "Alice"
+posts, err := client.Users(&prisma.UsersParams{
+  Where: &prisma.UserWhereInput{
+    Name: &filter,
+  },
+}).Exec(ctx)
+```
+
+```go lineNumbers,copy
+id := "__USER_ID__"
+newName := "Bob"
+updatedUser, err := client.UpdateUser(prisma.UserUpdateParams{
+  Where: prisma.UserWhereUniqueInput{
+    ID: &id,
+  },
+  Data: prisma.UserUpdateInput{
+    Name: &newName,
+  },
+}).Exec(ctx)
+```
+
+```go lineNumbers,copy
+id := "__USER_ID__"
+deletedUser, err := client.DeleteUser(prisma.UserWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
+```
+
+</QueryChooser>
+
+
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.

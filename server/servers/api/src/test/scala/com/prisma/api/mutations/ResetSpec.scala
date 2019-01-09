@@ -1,8 +1,8 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.ImportExportCapability
 import com.prisma.api.import_export.BulkImport
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils

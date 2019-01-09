@@ -2,7 +2,7 @@ package com.prisma.api.mutations.embedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -54,7 +54,7 @@ class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiS
     updatedAt should not equal changedUpdatedAt
   }
 
-  "Upserting a nested data item" should "change it's updatedAt value" taggedAs (IgnoreMongo) in {
+  "Upserting a nested data item" should "change it's updatedAt value" in {
     database.setup(project)
 
     val updatedAt = server

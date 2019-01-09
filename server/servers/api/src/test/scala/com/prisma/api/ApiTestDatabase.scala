@@ -5,7 +5,8 @@ import akka.stream.ActorMaterializer
 import com.prisma.api.connector.TopLevelDatabaseMutaction
 import com.prisma.deploy.connector._
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
+import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
+import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 
@@ -14,7 +15,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
 
   def setup(project: Project): Unit = {
-    deleteProjectDatabase(project)
+    dependencies.deployConnector.deleteProjectDatabase(project.id).await
     dependencies.invalidationTestKit.publish(Only(project.id), project.id)
     createProjectDatabase(project)
 
@@ -27,26 +28,22 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def deleteProjectDatabase(project: Project): Unit   = runMutaction(DeleteProject(project.id))
   private def createProjectDatabase(project: Project) = runMutaction(CreateProject(project.id))
 
+  //Fixme how does this work with self relations?
   private def createRelationTable(project: Project, relation: Relation) = {
     val mutaction = relation.manifestation match {
-      case Some(m: InlineRelationManifestation) =>
-        val modelA = relation.modelA
-        val modelB = relation.modelB
+      case Some(m: EmbeddedRelationLink) if dependencies.deployConnector.capabilities.hasNot(RelationLinkListCapability) =>
+        val modelA              = relation.modelA
+        val modelB              = relation.modelB
+        val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
 
-        val (model, references) = if (m.inTableOfModelId == modelA.name) {
-          (modelA, modelB)
-        } else {
-          (modelB, modelA)
-        }
-        val field = relation.getFieldOnModel(m.inTableOfModelId)
-        CreateInlineRelation(project.id, model, field, references, m.referencingColumn)
+        CreateInlineRelation(project.id, relation, model, references, m.referencingColumn)
       case _ =>
-        CreateRelationTable(project.id, project.schema, relation = relation)
+        CreateRelationTable(project.id, relation = relation)
     }
     runMutaction(mutaction)
   }
 
-  def runMutaction(mutaction: DeployMutaction)                             = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction).await
+  private def runMutaction(mutaction: DeployMutaction)                     = dependencies.deployConnector.deployMutactionExecutor.execute(mutaction).await
   def runDatabaseMutactionOnClientDb(mutaction: TopLevelDatabaseMutaction) = dependencies.databaseMutactionExecutor.executeTransactionally(mutaction).await
 
   private def createModelTable(project: Project, model: Model) = {

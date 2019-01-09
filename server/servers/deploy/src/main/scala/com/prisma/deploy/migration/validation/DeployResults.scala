@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.validation
 
-import sangria.ast.{EnumTypeDefinition, ObjectTypeDefinition, TypeDefinition}
+import com.prisma.deploy.connector.FieldRequirement
+import sangria.ast.{EnumTypeDefinition, FieldDefinition, ObjectTypeDefinition, TypeDefinition}
 
 object DeployWarnings {
   def dataLossModel(`type`: String): DeployWarning = {
@@ -27,8 +28,43 @@ object DeployErrors {
     error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
   }
 
+  def uniqueDisallowedOnEmbeddedTyps(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
+    error(objectType, fieldDef, s"The field `${fieldDef.name}` is marked as unique but its type `${objectType.name}` is embedded. This is disallowed.")
+  }
+
   def missingRelationDirective(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
+  }
+
+  def missingRelationStrategy(relationField: RelationalPrismaField, validModes: Vector[String]): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The field `${relationField.name}` must provide a relation link mode. Either specify it on this field or the opposite field. Valid values are: ${validModes
+        .mkString(",")}"
+    )
+  }
+  def moreThanOneRelationStrategy(relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The `link` argument must be specified only on one side of a relation. The field `${relationField.name}` provides a link mode and the opposite field `${relationField.relatedField.get.name}` as well.}"
+    )
+  }
+
+  def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      tpe.name,
+      s"The type `${tpe.name}` does not specify a back relation field. It is referenced from the type `${relationField.tpe.name}` in the field `${relationField.name}`."
+    )
+  }
+
+  def disallowedBackRelationFieldOnEmbeddedType(relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The type `${relationField.tpe.name}` specifies the back relation field `${relationField.name}`, which is disallowed for embedded types."
+    )
   }
 
   def relationDirectiveNotAllowedOnScalarFields(fieldAndType: FieldAndType): DeployError = {
@@ -45,6 +81,17 @@ object DeployErrors {
         s"Since there is also a relation field without a relation directive on `$nameB` pointing towards `$nameA` that is ambiguous. " +
         s"Please provide the same relation directive on `$nameB` if this is supposed to be the same relation. " +
         s"If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `$nameB`."
+    )
+  }
+
+  def relationDirectiveWithNameArgumentMustAppearTwice(fieldAndType: FieldAndType): DeployError = {
+    val relationName = fieldAndType.fieldDef.previousRelationName.get
+    val nameA        = fieldAndType.objectType.name
+    val nameB        = fieldAndType.fieldDef.fieldType.namedType.name
+    error(
+      fieldAndType,
+      s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive with a name on `$nameA`. " +
+        s"Please also provide the same named relation directive on the relation field on `$nameB` pointing towards `$nameA`. "
     )
   }
 
@@ -65,10 +112,12 @@ object DeployErrors {
     )
   }
 
-  def missingType(fieldAndType: FieldAndType) = {
+  def missingType(fieldAndType: FieldAndType): DeployError = missingType(fieldAndType.objectType, fieldAndType.fieldDef)
+  def missingType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(
-      fieldAndType,
-      s"The field `${fieldAndType.fieldDef.name}` has the type `${fieldAndType.fieldDef.typeString}` but there's no type or enum declaration with that name."
+      objectType,
+      fieldDef,
+      s"The field `${fieldDef.name}` has the type `${fieldDef.typeString}` but there's no type or enum declaration with that name."
     )
   }
 
@@ -114,14 +163,14 @@ object DeployErrors {
   def duplicateFieldName(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
-      s"The type `${fieldAndType.objectType.name}` has a duplicate fieldName."
+      s"The type `${fieldAndType.objectType.name}` has a duplicate fieldName. The detection of duplicates is performed case insensitive. "
     )
   }
 
-  def duplicateTypeName(fieldAndType: FieldAndType) = {
+  def duplicateTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
     error(
-      fieldAndType,
-      s"The name of the type `${fieldAndType.objectType.name}` occurs more than once."
+      objectTypeDefinition,
+      s"The name of the type `${objectTypeDefinition.name}` occurs more than once. The detection of duplicates is performed case insensitive."
     )
   }
 
@@ -134,6 +183,10 @@ object DeployErrors {
 
   def directivesMustAppearExactlyOnce(fieldAndType: FieldAndType) = {
     error(fieldAndType, s"The field `${fieldAndType.fieldDef.name}` specifies a directive more than once. Directives must appear exactly once on a field.")
+  }
+
+  def directivesMustAppearExactlyOnce(objectType: ObjectTypeDefinition) = {
+    error(objectType, s"The type `${objectType.name}` specifies a directive more than once. Directives must appear exactly once on a type.")
   }
 
   def manyRelationFieldsMustBeRequired(fieldAndType: FieldAndType) = {
@@ -157,14 +210,6 @@ object DeployErrors {
 
   def invalidSyntaxForDefaultValue(fieldAndType: FieldAndType) = {
     error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
-  }
-
-  def relationFieldTypeWrong(fieldAndType: FieldAndType): DeployError = {
-    val oppositeType = fieldAndType.fieldDef.fieldType.namedType.name
-    error(
-      fieldAndType,
-      s"""The relation field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: `$oppositeType`, `$oppositeType!`, `[$oppositeType!]!`"""
-    ) //todo
   }
 
   def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
@@ -211,11 +256,35 @@ object DeployErrors {
     DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
   }
 
-  def error(fieldAndType: FieldAndType, description: String) = {
-    DeployError(fieldAndType.objectType.name, fieldAndType.fieldDef.name, description)
+  def embeddedTypesAreNotSupported(typeName: String) = {
+    DeployError(typeName, s"The type `$typeName` is marked as embedded but this connector does not support embedded types.")
   }
 
-  def error(typeDef: TypeDefinition, description: String) = {
+  def embeddedTypesMustNotSpecifyDbName(typeName: String) = {
+    DeployError(typeName, s"The type `$typeName` is specifies the `@db` directive. Embedded types must not specify this directive.")
+  }
+
+  def relationFieldsMustNotSpecifyDbName(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+    DeployError(typeDef, fieldDef, s"The field `${fieldDef.name}` specifies the `@db` directive. Relation fields must not specify this directive.")
+  }
+
+  def sequenceDirectiveMisplaced(typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition) = {
+    DeployError(
+      typeDef,
+      fieldDef,
+      s"The directive `@sequence` must only be specified for fields that are marked as id, are of type `Int` and use the sequence strategy. E.g. `id: Int! @id(strategy: SEQUENCE)`."
+    )
+  }
+
+  def error(fieldAndType: FieldAndType, description: String): DeployError = {
+    error(fieldAndType.objectType, fieldAndType.fieldDef, description)
+  }
+
+  def error(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition, description: String): DeployError = {
+    DeployError(objectType.name, fieldDef.name, description)
+  }
+
+  def error(typeDef: TypeDefinition, description: String): DeployError = {
     DeployError(typeDef.name, description)
   }
 

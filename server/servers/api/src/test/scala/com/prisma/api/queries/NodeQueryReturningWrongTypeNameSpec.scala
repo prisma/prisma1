@@ -1,12 +1,12 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.{JoinRelationsCapability, NodeQueryCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, NodeQueryCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationLinksCapability)
 
   "the node query" should "return the correct typename" in {
     val project = SchemaDsl.fromString() {
@@ -21,9 +21,9 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |  email: String
         |  firstName: String
         |  lastName: String
-        |  phoneNumbers: [PhoneNumber!]!
-        |  scheduledTransactions: [FinancialScheduledTransaction!]!
-        |  transactions: [FinancialTransaction!]!
+        |  phoneNumbers: [PhoneNumber]
+        |  scheduledTransactions: [FinancialScheduledTransaction]
+        |  transactions: [FinancialTransaction]
         |  user: User
         |}
         |
@@ -35,7 +35,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |type FinancialAccount {
         |  id: ID! @unique
         |  key: String @unique
-        |  campuses: [Campus!]!
+        |  campuses: [Campus]
         |  description: String!
         |  isActive: Boolean!
         |  name: String
@@ -84,7 +84,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |  isActive: Boolean!
         |  startDate: DateTime
         |  frequency: TRANSACTION_FREQUENCY
-        |  transactions: [FinancialTransaction!]!
+        |  transactions: [FinancialTransaction]
         |  account: FinancialAccount
         |  amount: Float!
         |}
@@ -148,9 +148,9 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |type GroupType {
         |  id: ID! @unique
         |  description: String
-        |  groups: [Group!]!
+        |  groups: [Group]
         |  name: String! @unique
-        |  roles: [GroupRole!]!
+        |  roles: [GroupRole]
         |}
         |
         |type Group {
@@ -158,22 +158,22 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |  key: String @unique
         |  description: String
         |  type: GroupType!
-        |  invites: [GroupInvite!]!
+        |  invites: [GroupInvite]
         |  isActive: Boolean!
-        |  members: [GroupMember!]!
+        |  members: [GroupMember]
         |  name: String!
         |  organization: Group
         |}
         |
         |type Campus {
         |  id: ID! @unique
-        |  accounts: [FinancialAccount!]!
+        |  accounts: [FinancialAccount]
         |  description: String
         |  isActive: Boolean
         |  organization: Group
         |  location: Location
         |  name: String!
-        |  phoneNumbers: [PhoneNumber!]!
+        |  phoneNumbers: [PhoneNumber]
         |}
         |
         |enum LOCATION_TYPE {

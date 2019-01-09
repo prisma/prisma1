@@ -1,12 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a one to many relation" should "be connectable by id within an upsert in the create case" in {
     val project = SchemaDsl.fromString() {
@@ -19,7 +19,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String!
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -28,7 +28,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
     val tenantId = server.query("""mutation { createTenant(data: {name:"Gustav G"}){ id } }""", project).pathAsString("data.createTenant.id")
 
     val result = server.query(
-      s"""mutation{upsertCustomer(where: {id: "DOESNOTEXIST"}, create: {name: "Paul P", tenant:{connect:{id:"$tenantId"}}}, update: {name: "Paul P"}) {
+      s"""mutation{upsertCustomer(where: {id: "5beea4aa6183dd734b2dbd9b"}, create: {name: "Paul P", tenant:{connect:{id:"$tenantId"}}}, update: {name: "Paul P"}) {
            |    tenant{name}
            |  }
            |}
@@ -50,7 +50,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String!
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -82,7 +82,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String! @unique
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }
@@ -114,7 +114,7 @@ class NestedConnectMutationInsideUpsertSpec extends FlatSpec with Matchers with 
           |type Tenant {
           | id: ID! @unique
           | name: String! @unique
-          | customers: [Customer!]!
+          | customers: [Customer]
           |}
         """.stripMargin
     }

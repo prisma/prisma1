@@ -1,18 +1,15 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.connector.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1 to C1  relation " should "be disconnectable through a nested mutation by id" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val res = server
@@ -36,7 +33,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
     val childId  = res.pathAsString("data.createParent.childOpt.id")
     val parentId = res.pathAsString("data.createParent.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     val res2 = server.query(
       s"""
@@ -60,14 +57,11 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
 
     res2.toString should be("""{"data":{"upsertParent":{"childOpt":null}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a P1 to C1  relation with the child and the parent without a relation" should "not be disconnectable through a nested mutation by id" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToOneRelation("childOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
     database.setup(project)
 
     val child1Id = server
@@ -94,7 +88,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       )
       .pathAsString("data.createParent.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
     val res = server.queryThatMustFail(
       s"""
@@ -119,14 +113,11 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       errorCode = 3041
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(0) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
   "a PM to C1!  relation with the child already in a relation" should "not be disconnectable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation_!("childrenOpt", "parentReq", child)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToC1req }
     database.setup(project)
 
     server.query(
@@ -145,7 +136,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       project
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
       s"""
@@ -167,14 +158,11 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       errorCode = 3042
     )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to C1!  relation with the child and the parent already in a relation" should "should error in a nested mutation by unique" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      schema.model("Child").field_!("c", _.String, isUnique = true).oneToOneRelation_!("parentReq", "childOpt", parent, isRequiredOnFieldB = false)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToC1req }
     database.setup(project)
 
     server.query(
@@ -220,10 +208,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a PM to C1  relation with the child already in a relation" should "be disconnectable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val child = schema.model("Child").field_!("c", _.String, isUnique = true)
-      schema.model("Parent").field_!("p", _.String, isUnique = true).oneToManyRelation("childrenOpt", "parentOpt", child)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToC1opt }
     database.setup(project)
 
     server
@@ -243,7 +228,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
         project
       )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(2) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
     val res = server.query(
       s"""
@@ -266,14 +251,11 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
 
     res.toString should be("""{"data":{"upsertParent":{"childrenOpt":[{"c":"c1"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToChild").await should be(1) }
+    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
   "a P1 to CM  relation with the child already in a relation" should "be disconnectable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).oneToManyRelation("parentsOpt", "childOpt", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaP1optToCM }
     database.setup(project)
 
     server.query(
@@ -321,10 +303,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val parent = schema.model("Parent").field_!("p", _.String, isUnique = true)
-      val child  = schema.model("Child").field_!("c", _.String, isUnique = true).manyToManyRelation("parentsOpt", "childrenOpt", parent)
-    }
+    val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 
     server.query(
@@ -373,10 +352,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -427,10 +415,20 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String).field_!("alias", _.String, isUnique = true)
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            alias: String! @unique
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -480,10 +478,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a many to one relation" should "be disconnectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String)
-      schema.model("Todo").field("text", _.String).oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            text: String
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -531,10 +538,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to one relation" should "be disconnectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("text", _.String)
-      schema.model("Todo").field_!("title", _.String).oneToOneRelation("note", "todo", note)
-    }
+    val schema = """type Note{
+                            id: ID! @unique
+                            text: String
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String!
+                            note: Note
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     val createResult = server.query(
@@ -580,10 +596,19 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   }
 
   "a one to many relation" should "be disconnectable by unique through a nested mutation" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field("text", _.String, isUnique = true)
-      schema.model("Todo").field("title", _.String, isUnique = true).oneToManyRelation("comments", "todo", comment)
-    }
+    val schema = """type Comment{
+                            id: ID! @unique
+                            text: String @unique
+                            todo: Todo
+                        }
+
+                        type Todo{
+                            id: ID! @unique
+                            title: String @unique
+                            comments: [Comment]
+                        }"""
+
+    val project = SchemaDsl.fromString() { schema }
     database.setup(project)
 
     server.query("""mutation { createTodo(data: {title: "todo"}){ id } }""", project).pathAsString("data.createTodo.id")
@@ -649,8 +674,8 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
                                               |  username: String! @unique
                                               |  password: String!
                                               |  salt: String!
-                                              |  followers: [User!]! @relation(name: "UserFollowers")
-                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |  followers: [User] @relation(name: "UserFollowers")
+                                              |  follows: [User] @relation(name: "UserFollows")
                                               |}""" }
     database.setup(project)
 
@@ -722,8 +747,8 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
                                               |  username: String! @unique
                                               |  password: String!
                                               |  salt: String!
-                                              |  followers: [User!]! @relation(name: "UserFollowers")
-                                              |  follows: [User!]! @relation(name: "UserFollows")
+                                              |  followers: [User] @relation(name: "UserFollowers")
+                                              |  follows: [User] @relation(name: "UserFollows")
                                               |}""" }
     database.setup(project)
 
@@ -791,20 +816,20 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""" }
     database.setup(project)
 
@@ -876,13 +901,13 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -958,13 +983,13 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -1050,7 +1075,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {
