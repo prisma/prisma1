@@ -1,4 +1,5 @@
 import Code from "components/Markdown/Code"
+import Icon from 'components/Markdown/Icon'
 
 export const meta = {
   title: "Prisma & Mongoose",
@@ -12,14 +13,16 @@ This page compares Prisma with [Mongoose](https://mongoosejs.com/). Here is a hi
 
 |  | Prisma | Mongoose |
 | --- | --- | --- |
-| Auto-generated DB client | ✅ | ❌ |
-| Type-safe | ✅ | ❌ |
-| Declarative data modelling & migrations | ✅ | ❌ |
-| Connection pooling | ✅ | ✅ |
+| Auto-generated DB client | <Icon type="check" /> | <Icon type="cross" /> |
+| Type-safe | <Icon type="check" /> | <Icon type="cross" /> |
+| Declarative data modelling & migrations | <Icon type="check" /> | <Icon type="cross" /> |
+| Connection pooling | <Icon type="check" /> | <Icon type="check" /> |
 | Supported DB types | Document & Relational |  Document |
-| Supported ORM patterns | DataMapper & [ActiveRecord (soon)](https://github.com/prisma/prisma/issues/3830) | ActiveRecord |
-| [Fluent API for relations](#fetching-relations) | ✅ | ❌ |
-| [Relation filters](#relation-filters) | ✅ | ❌ |
+| Supported ORM patterns | DataMapper | Actice Record | 
+| [Fluent API for relations](#fetching-relations) | <Icon type="check" /> | <Icon type="cross" /> |
+| [Relation filters](#relation-filters) | <Icon type="check" /> | <Icon type="cross" /> |
+
+In the following, you find a detailled comparison of the Mongoose and Prisma APIs.
 
 ## Fetching single objects
 

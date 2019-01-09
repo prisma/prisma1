@@ -1,4 +1,5 @@
 import Code from "components/Markdown/Code"
+import Icon from 'components/Markdown/Icon'
 
 export const meta = {
   title: "Prisma & TypeORM",
@@ -12,16 +13,17 @@ This page compares Prisma with [TypeORM](http://typeorm.io/#/). Here is a high-l
 
 |  | Prisma | TypeORM |
 | --- | --- | --- |
-| Auto-generated DB client | ✅ | ❌ |
-| Type-safe | ✅ | ✅ | 
-| Declarative data modelling & migrations | ✅ | ❌ |
-| Connection pooling | ✅ | ✅ |
+| Auto-generated DB client | <Icon type="check" /> | <Icon type="cross" /> |
+| Type-safe | <Icon type="check" /> | <Icon type="check" /> | 
+| Declarative data modelling & migrations | <Icon type="check" /> | <Icon type="cross" /> |
+| Connection pooling | <Icon type="check" /> | <Icon type="check" /> |
 | Supported DB types | Document & Relational |  Document & Relational |
-| Supported ORM patterns | DataMapper & [ActiveRecord (soon)](https://github.com/prisma/prisma/issues/3830) |  DataMapper & ActiveRecord |
-| [Fluent API for relations](#fetching-relations) | ✅ | ❌ |
-| [Relation filters](#relation-filters) | ✅ | ❌ |
-| Raw database access | ✅ | ✅ |
-| Transactions | ✅ | ✅ |
+| Supported ORM patterns | DataMapper |  DataMapper & ActiveRecord |
+| [Fluent API for relations](#fetching-relations) | <Icon type="check" /> | <Icon type="cross" /> |
+| [Relation filters](#relation-filters) | <Icon type="check" /> | <Icon type="cross" /> |
+| Raw database access | <Icon type="check" /> | <Icon type="check" /> |
+| Transactional nested writes | <Icon type="check" /> | <Icon type="check" /> |
+| Manual transactions | <Icon type="cross" /> | <Icon type="check" /> |
 
 In the following, you find a detailled comparison of the TypeORM and Prisma APIs.
 
