@@ -34,7 +34,8 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           builder.addUniqueConstraint(mutaction.projectId, mutaction.model.dbName, mutaction.field.dbName, mutaction.field.typeIdentifier)
         }
         val removeUniqueConstraint = mustRemoveUniqueConstraint(c, mutaction).toOption {
-          builder.removeUniqueConstraint(mutaction.projectId, mutaction.model.dbName, mutaction.field.dbName)
+          val index = c.table.indexByColumns_!(c.name)
+          builder.removeUniqueConstraint(mutaction.projectId, mutaction.model.dbName, indexName = index.name)
         }
         val allActions = updateColumn ++ addUniqueConstraint ++ removeUniqueConstraint
 
@@ -99,7 +100,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       // when type changes to/from String we need to change the subpart
       // when fieldName changes we need to update index name
       // recreating an index is expensive, so we might need to make this smarter in the future
-      updateFromBeforeStateToAfterState(mutaction)
+      updateFromBeforeStateToAfterState(mutaction, schemaBeforeMigration)
     } else {
       DBIO.successful(())
     }
@@ -124,7 +125,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     }
   }
 
-  private def updateFromBeforeStateToAfterState(mutaction: UpdateColumn): DBIOAction[Any, NoStream, Effect.All] = {
+  private def updateFromBeforeStateToAfterState(mutaction: UpdateColumn, schemaBeforeMigration: DatabaseSchema): DBIO[_] = {
     val before               = mutaction.oldField
     val after                = mutaction.newField
     val indexMustBeRecreated = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
@@ -139,13 +140,13 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       newTypeIdentifier = after.typeIdentifier
     )
 
-    val removeUniqueConstraint = builder.removeUniqueConstraint(
+    def removeUniqueConstraint = builder.removeUniqueConstraint(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
-      columnName = before.dbName
+      indexName = schemaBeforeMigration.table_!(mutaction.model.dbName).indexByColumns_!(after.dbName).name
     )
 
-    val addUniqueConstraint = builder.addUniqueConstraint(
+    def addUniqueConstraint = builder.addUniqueConstraint(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
       columnName = after.dbName,

@@ -171,7 +171,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     sqlu"""CREATE UNIQUE INDEX #${qualify(s"$projectId.$tableName.$columnName._UNIQUE")} ON #${qualify(projectId, tableName)}(#${qualify(columnName)} ASC);"""
   }
 
-  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_] = {
-    sqlu"""DROP INDEX #${qualify(projectId, s"$projectId.$tableName.$columnName._UNIQUE")}"""
+  override def removeUniqueConstraint(projectId: String, tableName: String, indexName: String): DBIO[_] = {
+    sqlu"""DROP INDEX #${qualify(projectId, indexName)}"""
   }
 }
