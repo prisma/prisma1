@@ -1,5 +1,5 @@
 {
-  "version": "1.17.0-alpha.2",
+  "version": "1.21.1",
   "name": "prisma",
   "description": "Prisma is a realtime GraphQL database layer. Connect directly from the frontend or build your own GraphQL server.",
   "keywords": [
@@ -53,7 +53,8 @@
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build",
-    "package": "./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64"
+    "package": "./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64",
+    "package-linux": "./scripts/cp-assets.sh && pkg package.json --targets node10-linux-x64"
   },
   "cli-engine": {
     "bin": "prisma",
