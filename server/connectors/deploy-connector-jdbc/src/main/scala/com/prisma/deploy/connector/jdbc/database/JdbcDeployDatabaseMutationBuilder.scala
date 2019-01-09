@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
-import com.prisma.deploy.connector.DatabaseInspector
+import com.prisma.deploy.connector.{DatabaseInspector, DatabaseSchema}
 import com.prisma.deploy.connector.jdbc.{DatabaseInspectorImpl, JdbcBase}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
@@ -75,9 +75,15 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     changeDatabaseQueryToDBIO(query)()
   }
 
-  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = {
-    val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
-    changeDatabaseQueryToDBIO(query)()
+  def dropScalarListTable(projectId: String, modelName: String, fieldName: String, dbSchema: DatabaseSchema) = {
+    val tableName = s"${modelName}_$fieldName"
+    dbSchema.table(tableName) match {
+      case Some(_) =>
+        val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
+        changeDatabaseQueryToDBIO(query)()
+      case None =>
+        DBIO.successful(())
+    }
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {

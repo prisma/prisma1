@@ -27,8 +27,16 @@ case class DeleteModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) ex
   // TODO: this is not symmetric
 
   override def execute(mutaction: DeleteModelTable, schemaBeforeMigration: DatabaseSchema) = {
-    val droppingTable        = builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
-    val dropScalarListFields = mutaction.scalarListFields.map(field => builder.dropScalarListTable(mutaction.projectId, mutaction.model.dbName, field))
+    val droppingTable = schemaBeforeMigration.table(mutaction.model.dbName) match {
+      case Some(_) =>
+        builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
+      case None =>
+        DBIO.successful(())
+    }
+
+    val dropScalarListFields = mutaction.scalarListFields.map { field =>
+      builder.dropScalarListTable(mutaction.projectId, mutaction.model.dbName, field, schemaBeforeMigration)
+    }
 
     DBIO.seq(dropScalarListFields :+ droppingTable: _*)
   }

@@ -3,7 +3,8 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, DatabaseSchema}
+import com.prisma.deploy.connector.mysql.MySqlDeployConnector
+import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
@@ -76,25 +77,57 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
 trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
+  private val stageSeparator           = this.deployConnector.projectIdEncoder.stageSeparator
   val projectName                      = this.getClass.getSimpleName
   val projectStage                     = "default"
-  val projectId                        = s"$projectName$$$projectStage"
+  val projectId                        = s"$projectName$stageSeparator$projectStage"
   override def doNotRunForCapabilities = Set(MigrationsCapability)
+
+  def addProject() = {
+    deployConnector.deleteProjectDatabase(projectId).await()
+    server.addProject(projectName, projectStage)
+  }
 
   def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
     setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
   }
 
+  def executeSql(sql: String*): Unit = {
+    val isPostgres = deployConnector.isInstanceOf[PostgresDeployConnector]
+    val session = deployConnector match {
+      case c: PostgresDeployConnector => c.managementDatabase.createSession()
+      case c: MySqlDeployConnector    => c.managementDatabase.database.createSession()
+      case x                          => sys.error(s"$x is not supported here")
+    }
+    val statement        = session.createStatement()
+    val setDefaultSchema = if (isPostgres) s"""SET search_path TO "$projectId";""" else s"USE `$projectId`;"
+    statement.execute(setDefaultSchema)
+    sql.foreach(statement.execute)
+    session.close()
+  }
+
   private def setupProjectDatabaseForProject(schemaName: String, name: String, stage: String, sql: String): Unit = {
-    val connector = deployConnector.asInstanceOf[PostgresDeployConnector]
-    val session   = connector.managementDatabase.createSession()
+    val (session, isPostgres) = deployConnector match {
+      case c: PostgresDeployConnector => (c.managementDatabase.createSession(), true)
+      case c: MySqlDeployConnector    => (c.managementDatabase.database.createSession(), false)
+      case x                          => sys.error(s"$x is not supported here")
+    }
     val statement = session.createStatement()
-    statement.execute(s"""drop schema if exists "$schemaName" cascade;""")
 
-    server.addProject(name, stage)
-    statement.execute(s"""create schema if not exists "$schemaName";""")
+    val dropSchema = if (isPostgres) {
+      s"""drop schema if exists "$schemaName" cascade;"""
+    } else {
+      s"""drop database if exists `$schemaName`;"""
+    }
 
-    statement.execute(s"""SET search_path TO "$schemaName";""")
+    statement.execute(dropSchema)
+    addProject()
+
+    val createSchema = if (isPostgres) s"""create schema if not exists "$schemaName";""" else s"create database if not exists `$schemaName`;"
+    statement.execute(createSchema)
+
+    val setDefaultSchema = if (isPostgres) s"""SET search_path TO "$schemaName";""" else s"USE `$schemaName`;"
+    statement.execute(setDefaultSchema)
     statement.execute(sql)
     session.close()
   }
@@ -116,7 +149,7 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
       secrets = Vector.empty,
       functions = Vector.empty
     )
-    val refreshedProject = testDependencies.projectPersistence.load(projectId).await.get
+    val refreshedProject = testDependencies.projectPersistence.load(projectId).await.getOrElse(sys.error(s"No project found for id $projectId"))
     val mutation = DeployMutation(
       args = input,
       project = refreshedProject,

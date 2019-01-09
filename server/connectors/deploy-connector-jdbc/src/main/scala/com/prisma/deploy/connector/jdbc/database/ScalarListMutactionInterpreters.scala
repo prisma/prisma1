@@ -16,7 +16,7 @@ case class CreateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
   override def rollback(mutaction: CreateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     DBIO.seq(
       builder
-        .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.dbName, fieldName = mutaction.field.dbName))
+        .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.dbName, fieldName = mutaction.field.dbName, schemaBeforeMigration))
   }
 }
 
@@ -24,7 +24,7 @@ case class DeleteScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
   override def execute(mutaction: DeleteScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
     DBIO.seq(
       builder
-        .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.dbName, fieldName = mutaction.field.dbName))
+        .dropScalarListTable(projectId = mutaction.projectId, modelName = mutaction.model.dbName, fieldName = mutaction.field.dbName, schemaBeforeMigration))
   }
 
   override def rollback(mutaction: DeleteScalarListTable, schemaBeforeMigration: DatabaseSchema) = {

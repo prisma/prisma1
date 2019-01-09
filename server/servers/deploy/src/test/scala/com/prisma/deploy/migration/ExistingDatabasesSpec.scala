@@ -8,7 +8,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase with DataModelV2Base {
-  case class ExistingSchema(postgres: String, mysql: String)
+  case class SQLs(postgres: String, mysql: String)
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
   lazy val slickDatabase                                         = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
@@ -27,8 +27,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
-    setup(ExistingSchema(postgres = postgres, mysql = mysql))
-    val initialResult = inspect
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
 
     val dataModel =
       s"""
@@ -42,14 +41,60 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     result should equal(initialResult)
   }
 
-  def setup(existingSchema: ExistingSchema): Unit = {
+  "removing a type for a table that is already deleted should work" in {
+    addProject()
+
+    val initialDataModel =
+      s"""
+        |type Blog @db(name: "blog"){
+        |  id: Int! @id
+        |}
+        |
+        |type Post @db(name: "post"){
+        |  id: ID! @id
+        |}
+       """.stripMargin
+
+    val initialResult = deploy(initialDataModel, ConnectorCapabilities(IntIdCapability))
+    initialResult.table("post").isDefined should be(true)
+
+    //
+    val dropPostTable = "DROP TABLE post;"
+    val result        = executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+    result.table("post").isDefined should be(false)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |}
+       """.stripMargin
+
+    val finalResult = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+
+    finalResult should equal(result)
+  }
+
+  def setup(sqls: SQLs): DatabaseSchema = {
     deployConnector.deleteProjectDatabase(projectId).await()
     if (slickDatabase.isMySql) {
-      setupProjectDatabaseForProject(existingSchema.mysql)
+      setupProjectDatabaseForProject(sqls.mysql)
     } else if (slickDatabase.isPostgres) {
-      setupProjectDatabaseForProject(existingSchema.postgres)
+      setupProjectDatabaseForProject(sqls.postgres)
     } else {
       sys.error("This is neither Postgres nor MySQL")
     }
+    inspect
+  }
+
+  def executeSql(sqls: SQLs): DatabaseSchema = {
+    if (slickDatabase.isMySql) {
+      executeSql(sqls.mysql)
+    } else if (slickDatabase.isPostgres) {
+      executeSql(sqls.postgres)
+    } else {
+      sys.error("This is neither Postgres nor MySQL")
+    }
+    inspect
   }
 }
