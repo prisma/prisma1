@@ -44,10 +44,16 @@ case class DeleteModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) ex
     DBIO.seq(dropScalarListFields :+ droppingTable: _*)
   }
 
-  override def rollback(mutaction: DeleteModelTable, schemaBeforeMigration: DatabaseSchema) = builder.createModelTable(
-    projectId = mutaction.projectId,
-    model = mutaction.model
-  )
+  override def rollback(mutaction: DeleteModelTable, schemaBeforeMigration: DatabaseSchema) = {
+    // only recreate the table if it was actually deleted in the step before
+    val recreatingTable = schemaBeforeMigration.table(mutaction.model.dbName) match {
+      case Some(_) =>
+        builder.createModelTable(projectId = mutaction.projectId, model = mutaction.model)
+      case None =>
+        DBIO.successful(())
+    }
+    recreatingTable
+  }
 }
 
 case class RenameModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[RenameTable] {
