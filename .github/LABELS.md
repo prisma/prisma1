@@ -42,11 +42,11 @@ From this moment on, it's officially a bug. This bug can now be added to the Pro
 If a new feature or idea has been posted in an issue, it has to go through the RFC (Request for Comments) process.
 The first level of the RFC process is to provide a discussion platform, in other words a straw man, which can be used by people to discuss the matter at hand.
 If this description of the feature already contains enough information to start with the implementation, the label `rfx/1-draft`, which stands for “RFC Spec Draft” can be applied immediately.
-Most of the time, however, the `rfc/0-proposal` label is more appropriate in the beginning, as often times possible solutions need to be discussed before one concrete solution has been narrowed down.
+Most of the time, however, the `rfc/0-needs-spec` label is more appropriate in the beginning, as often times possible solutions need to be discussed before one concrete solution has been narrowed down.
 As soon as consensus has been reached about a spec draft, the `rfc/2-accepted` label can be applied. At least 2 members of the team are needed to reach consensus.
 From this point on, the task of implementing this feature can be planned in the sprint process of the team.
 
-- `rfc/0-proposal`
+- `rfc/0-needs-spec`
 - `rfc/1-draft`
 - `rfc/2-accepted`
 - `rfc/x-rejected`
@@ -70,7 +70,7 @@ The following states are possible:
 - `status/stale` In order to keep hygiene in our issues, we are leveraging the [Stale Bot](https://github.com/probot/stale) The specific configuration can be looked up in the [.github/stale.yml](https://github.com/prisma/prisma/blob/master/.github/stale.yml) file. The configuration of time of writing this document looks like this:
 	- If there hasn’t been any activity in an issue for 45 days, the stale bot applies the `status/stale` label. If there was no further activity for 10 more days, the issue will be closed. Issues with the following labels are excluded by the Stale Bot:
 		  - `kind/feature`
-		  - `rfc/0-proposal`
+		  - `rfc/0-needs-spec`
 		  - `rfc/1-draft`
 		  - `rfc/2-accepted`
 		  - `bug/1-repro-available`

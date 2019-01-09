@@ -77,7 +77,7 @@ case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit e
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
                          for {
-                           optionRes <- getNodeByWhere(parent.where)
+                           optionRes <- getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(relationField, parent))
                            filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))

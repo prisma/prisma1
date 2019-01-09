@@ -408,3 +408,4 @@ lazy val root = (project in file("."))
   .settings(
     publish := { } // do not publish a JAR for the root project
   )
+
