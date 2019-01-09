@@ -8,33 +8,40 @@ export const meta = {
 
 ## Overview
 
-## Reading data
+This page compares Prisma with [Sequelize](http://docs.sequelizejs.com/). Here is a high-level overview:
 
-### Fetching single objects
+|  | Prisma | Sequelize |
+| --- | --- | --- |
+| Auto-generated DB client | ✅ | ❌ |
+| Type-safe | ✅ | ❌ |
+| Declarative data modelling & migrations | ✅ | ❌ |
+| Connection pooling | ✅ | ✅ |
+| Supported DB types | Document & Relational |  Relational |
+| Supported ORM patterns | DataMapper & [ActiveRecord (soon)](https://github.com/prisma/prisma/issues/3830) |  ActiveRecord |
+| [Fluent API for relations](#fetching-relations) | ✅ | ❌ |
+| [Relation filters](#relation-filters) | ✅ | ❌ |
+| Raw database access | ✅ | ✅ |
+| Transactions | ✅ | ✅ |
 
-Sequelize
+In the following, you find a detailled comparison of the TypeORM and Prisma APIs.
 
-```ts
-const user = await User.findByPk(id)
-```
+## Fetching single objects
 
-Prisma
+**Prisma**
 
 ```ts
 const user = await prisma.user({ id })
 ```
 
-### Fetching selected scalars of single objects
-
-Sequelize
+**Sequelize**
 
 ```ts
-const user = await User.findByPk(id, attributes: {
-  ["name", "email"]
-})
+const user = await User.findByPk(id)
 ```
 
-Prisma
+## Fetching selected scalars of single objects
+
+**Prisma**
 
 ```ts
 const userFragment = await prisma.user({ id }).$fragment(`
@@ -42,19 +49,17 @@ const userFragment = await prisma.user({ id }).$fragment(`
 `)
 ```
 
-### Fetching relations
-
-Sequelize
+**Sequelize**
 
 ```ts
-const user = await User.findByPk(id, {
-  include: [{
-    model: Post
-  }]
+const user = await User.findByPk(id, attributes: {
+  ["name", "email"]
 })
 ```
 
-Prisma
+## Fetching relations
+
+**Prisma**
 
 <Code hideCopy={true} languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
 
@@ -89,19 +94,19 @@ const userWithPosts = await prisma
 
 </Code>
 
-### Filtering for concrete values
-
-Sequelize
+**Sequelize**
 
 ```ts
-const user = User.findAll({
-  where: {
-    name: "Alice"
-  }
+const user = await User.findByPk(id, {
+  include: [{
+    model: Post
+  }]
 })
 ```
 
-Prisma
+## Filtering for concrete values
+
+**Prisma**
 
 ```ts
 const users = await prisma.users({
@@ -111,13 +116,19 @@ const users = await prisma.users({
 })
 ```
 
-### Other filter criteria
+**Sequelize**
 
-Sequelize
+```ts
+const user = User.findAll({
+  where: {
+    name: "Alice"
+  }
+})
+```
 
-Sequelize has an extensive set of operators to be found [here](http://docs.sequelizejs.com/manual/tutorial/querying.html#operators).
+## Other filter criteria
 
-Prisma
+**Prisma**
 
 Prisma generates many additional filters that are commonly used in modern application development:
 
@@ -128,17 +139,17 @@ Prisma generates many additional filters that are commonly used in modern applic
 - `<field>_contains` & `<field>_not_contains`
 - `<field>_in` & `<field>_not_in`
 
-### Relation filters
+**Sequelize**
 
-Sequelize
+Sequelize has an extensive set of operators to be found [here](http://docs.sequelizejs.com/manual/tutorial/querying.html#operators).
 
-Sequelize doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
+## Relation filters
 
-Prisma
+**Prisma**
 
 Prisma lets you filter a list based on a criteria that applies not only to the models of the list being retrieved, but to a _relation_ of that model. 
 
-For example, you want to fetch only those users that wrote a post with the title "Hello World". The filter criteria is therefore not referencing the user model, but the post model that's related to the user model:
+For example, you want to fetch only those users that wrote a post with the title "Hello World":
 
 ```ts
 query {
@@ -152,18 +163,13 @@ query {
 }
 ```
 
-### Pagination
+**Sequelize**
 
-Sequelize
+Sequelize doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
 
-```ts
-const posts = await Post.findAll({ 
-  offset: 5, 
-  limit: 10 
-})
-```
+## Pagination
 
-Prisma
+**Prisma**
 
 ```ts
 const posts = await prisma.posts({
@@ -178,16 +184,32 @@ In addition to `skip` and `first`, the Prisma API also offers:
 - `before` & `after` for cursor based pagination
 - Relay-style pagination
 
-## Writing data
+**Sequelize**
 
-### Creating objects
+```ts
+const posts = await Post.findAll({ 
+  offset: 5, 
+  limit: 10 
+})
+```
 
-Sequelize
+## Creating objects
+
+**Prisma**
+
+```ts
+const user = await prisma.createUser({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+```
+
+**Sequelize**
 
 <Code hideCopy={true} languages={["Using `save`", "Using `create`"]}>
 
 ```ts
-const user = await User.build({
+const user = User.build({
   name: "Alice",
   email: "alice@prisma,io"
 })
@@ -203,18 +225,21 @@ const user = await User.create({
 
 </Code>
 
-Prisma
+## Updating objects
+
+**Prisma**
 
 ```ts
-const user = await prisma.createUser({
-  name: "Alice",
-  email: "alice@prisma.io"
+const updatedUser = await prisma.updateUser({
+  where: { id },
+  data: {
+    name: "James",
+    email: "james@prisma.io"
+  }
 })
 ```
 
-### Updating objects
-
-Sequelize
+**Sequelize**
 
 <Code hideCopy={true} languages={["Using `save`", "Using `update`"]}>
 
@@ -233,35 +258,35 @@ await user.update({
 
 </Code>
 
-Prisma
+## Deleting objects
 
-```ts
-const updatedUser = await prisma.updateUser({
-  where: { id },
-  data: {
-    name: "James",
-    email: "james@prisma.io"
-  }
-})
-```
-
-### Deleting objects
-
-Sequelize
-
-```ts
-await user.destroy()
-```
-
-Prisma
+**Prisma**
 
 ```ts
 const deletedUser = await prisma.deleteUser({ id })
 ```
 
-### Batch updates
+**Sequelize**
 
-Sequelize
+```ts
+await user.destroy()
+```
+
+## Batch updates
+
+**Prisma**
+
+```ts
+const updatedUsers = await prisma
+  .updateManyUsers({
+    data: { role: "ADMIN" },
+    where: {
+      email_ends_with: "@prisma.io"
+    }
+  })
+```
+
+**Sequelize**
 
 ```ts
 const updatedUsers = await User.update({ 
@@ -274,21 +299,17 @@ const updatedUsers = await User.update({
 })
 ```
 
-Prisma
+## Batch deletes
+
+**Prisma**
 
 ```ts
-const updatedUsers = await prisma
-  .updateManyUsers({
-    data: { role: "ADMIN" },
-    where: {
-      email_ends_with: "@prisma.io"
-    }
-  })
+await prisma.deleteManyUsers({
+  id_in: [id1, id2, id3]
+})
 ```
 
-### Batch deletes
-
-Sequelize
+**Sequelize**
 
 ```ts
 await User.destroy({
@@ -300,17 +321,25 @@ await User.destroy({
 })
 ```
 
-Prisma
+## Transactions
+
+**Prisma**
 
 ```ts
-await prisma.deleteManyUsers({
-  id_in: [id1, id2, id3]
+const newUser = await prisma.createUser({
+  name: "Bob",
+  email: "bob@prisma.io",
+  posts: {
+    create: [
+      { title: "Join us for GraphQL Conf in 2019" },
+      { title: "Subscribe to GraphQL Weekly for GraphQL news" }
+    ]
+  }
 })
 ```
 
-### Transactions
 
-Sequelize
+**Sequelize**
 
 <Code hideCopy={true} languages={["Manual", "Automatic"]}>
 
@@ -358,17 +387,3 @@ return sequelize.transaction(async transaction => {
 
 </Code>
 
-Prisma
-
-```ts
-const newUser = await prisma.createUser({
-  name: "Bob",
-  email: "bob@prisma.io",
-  posts: {
-    create: [
-      { title: "Join us for GraphQL Conf in 2019" },
-      { title: "Subscribe to GraphQL Weekly for GraphQL news" }
-    ]
-  }
-})
-```
