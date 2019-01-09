@@ -6,6 +6,8 @@ export const meta = {
   description: "Learn how Prisma compares to Mongoose"
 }
 
+## Overview
+
 ## Reading data
 
 ### Fetching single objects
@@ -51,7 +53,7 @@ const userWithPosts = await User
 
 Prisma
 
-<Code languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
+<Code hideCopy={true} languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
 
 ```ts
 const postsByUser = await prisma
@@ -97,7 +99,7 @@ const user = await User.find({
 Prisma
 
 ```ts
-const user = await prisma.users({
+const users = await prisma.users({
   where: {
     name: "Alice"
   }
@@ -177,7 +179,7 @@ In addition to `skip` and `first`, the Prisma API also offers:
 
 Mongoose
 
-<Code languages={["Using `create`", "Using `save`"]}>
+<Code hideCopy={true} languages={["Using `create`", "Using `save`"]}>
 
 ```ts
 const user = await User.create({
@@ -199,7 +201,7 @@ await user.save()
 Prisma
 
 ```ts
-const user = await new User({
+const user = await prisma.createUser({
   name: "Alice",
   email: "alice@prisma.io"
 })
@@ -209,7 +211,7 @@ const user = await new User({
 
 Mongoose
 
-<Code languages={["Using `findOneAndUpdate`", "Using `save`"]}>
+<Code hideCopy={true} languages={["Using `findOneAndUpdate`", "Using `save`"]}>
 
 ```ts
 const updatedUser = await User.findOneAndUpdate(
