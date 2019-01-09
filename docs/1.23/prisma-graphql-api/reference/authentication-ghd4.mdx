@@ -25,7 +25,7 @@ $ prisma token
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InNlcnZpY2UiOiJkZW1vQGRldiIsInJvbGVzIjpbImFkbWluIl19LCJpYXQiOjE1MzI1ODgzNzAsImV4cCI6MTUzMzE5MzE3MH0.Nv8coqsiwdwoSfWCBJHYfnr0WK2GRyqO5xTN6Q3IVkw
 ```
 
-The generated token needs to be attached to the `Autorization` header of the HTTP requests made to the Prisma API. Note that it needs to prefixed with the token _type_ (and a separating _space_ character), which in this case `Bearer` because it's a [bearer token](https://tools.ietf.org/html/rfc6750):
+The generated token needs to be attached to the `Authorization` header of the HTTP requests made to the Prisma API. Note that it needs to prefixed with the token _type_ (and a separating _space_ character), which in this case `Bearer` because it's a [bearer token](https://tools.ietf.org/html/rfc6750):
 
 ```bash
 curl '__YOUR_PRISMA_ENDPOINT__' \\
