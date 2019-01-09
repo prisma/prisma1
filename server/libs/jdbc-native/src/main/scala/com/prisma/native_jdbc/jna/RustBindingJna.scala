@@ -26,7 +26,6 @@ object RustBindingJna extends RustBinding {
 
   override def prepareStatement(connection: RustConnectionJna, query: String): RustPreparedStatementJna = {
     val ptrAndErr: PointerAndError = library.prepareStatement(connection.conn, query)
-    println(s"[Jna] Prepare result: ${ptrAndErr.error}")
     RustCallResult.fromString(ptrAndErr.error)
     val result = new RustPreparedStatementJna(ptrAndErr.pointer)
 
@@ -51,36 +50,27 @@ object RustBindingJna extends RustBinding {
   }
 
   override def closeConnection(connection: RustConnectionJna): RustCallResult = {
-    println(s"[BRIDGE] Closing connection ${connection.hashCode()}")
     val ptr = library.closeConnection(connection.conn)
     processCallResult(ptr)
   }
 
   override def sqlExecute(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
-    println(s"[JNA] Execute: '$query' with params: $params")
     val ptr = library.sqlExecute(connection.conn, query, params)
-    println(s"[JNA] Result: $ptr")
     processCallResult(ptr)
   }
 
   override def sqlQuery(connection: RustConnectionJna, query: String, params: String): RustCallResult = {
-    println(s"[JNA] Query: '$query' with params: $params")
     val ptr = library.sqlQuery(connection.conn, query, params)
-    println(s"[JNA] Result: $ptr")
     processCallResult(ptr)
   }
 
   override def executePreparedstatement(stmt: RustPreparedStatementJna, params: String): RustCallResult = {
-    println(s"[JNA] PreparedStatement: Executing with params: $params")
     val ptr = library.executePreparedstatement(stmt.stmt, params)
-    println(s"[JNA] Result: $ptr")
     processCallResult(ptr)
   }
 
   override def queryPreparedstatement(stmt: RustPreparedStatementJna, params: String): RustCallResult = {
-    println(s"[JNA] PreparedStatement: Querying with params: $params")
     val ptr = library.queryPreparedstatement(stmt.stmt, params)
-    println(s"[JNA] Result: $ptr")
     processCallResult(ptr)
   }
 

@@ -8,6 +8,7 @@ import java.util.regex.Pattern
 import java.util.{Calendar, UUID}
 
 import org.joda.time.DateTime
+import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
 import play.api.libs.json.{JsArray, JsNull, JsValue, Json}
@@ -19,6 +20,8 @@ object CustomPreparedStatement {
 
   implicit val magicDateTimeFormat = Json.format[MagicDateTime]
   case class MagicDateTime(year: Int, month: Int, day: Int, hour: Int, minute: Int, seconds: Int, millis: Int)
+
+  val logger = LoggerFactory.getLogger("prisma")
 }
 
 abstract class BindingAndConnection {
@@ -78,8 +81,6 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
       val params = renderParams(asArray = false)
       clearParams()
 
-      println("CustomPreparedStatement IS RETURNING ROWS")
-
       binding.queryPreparedstatement(
         stmt,
         params
@@ -87,9 +88,6 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
     } else {
       val params = renderParams(asArray = true)
       clearParams()
-
-      println("CustomPreparedStatement IS NOT RETURNING ROWS")
-
       binding.executePreparedstatement(
         stmt,
         params
@@ -156,18 +154,17 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   }
 
   override def addBatch() = {
-    println("Adding batch")
     paramList += currentParams
     currentParams = new Params
   }
 
   override def close() = {
+    logger.trace(s"Closing prepared statement with hash ${this.hashCode()}")
     this.synchronized {
       if (!closed) {
         binding.closeStatement(stmt)
       } else {
-        println(s"[JDBC Prepared Statement] Calling close on already closed statement ${this.hashCode()}")
-        Thread.dumpStack()
+        logger.trace(s"Closing already closed prepared statement with hash ${this.hashCode()}")
       }
     }
   }
@@ -330,7 +327,7 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   override def setFetchDirection(direction: Int) = ???
 
   override def setMaxRows(max: Int) = {
-    println(s"[CustomJdbcDriver] [NOT IMPLEMENTED] Calling setMaxRows: $max")
+    logger.debug(s"[CustomJdbcDriver] Not implemented but called: setMaxRows $max")
   }
 
   override def setCursorName(name: String) = ???

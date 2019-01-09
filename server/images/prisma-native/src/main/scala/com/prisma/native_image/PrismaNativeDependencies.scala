@@ -31,6 +31,7 @@ import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{Webhook => WorkerWebhook}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
@@ -39,10 +40,12 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
     with ApiDependencies
     with WorkerDependencies
     with SubscriptionDependencies {
+
   // Todo this is a temporary workaround for initializing native dependencies
   GraalAuth.initialize
 
   val config: PrismaConfig = ConfigLoader.load()
+  val logger               = LoggerFactory.getLogger("prisma")
 
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
     SupportedDrivers.POSTGRES -> CustomJdbcDriver.graal
@@ -66,7 +69,7 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
         GraalAuth(Algorithm.HS256)
 
       case _ =>
-        println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server.")
+        logger.info("Management authentication is disabled. Enable it in your Prisma config to secure your server.")
         NoAuth
     }
   }

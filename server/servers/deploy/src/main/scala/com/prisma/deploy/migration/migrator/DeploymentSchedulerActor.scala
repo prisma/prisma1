@@ -3,6 +3,7 @@ package com.prisma.deploy.migration.migrator
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -18,6 +19,7 @@ case class DeploymentSchedulerActor(
 
   implicit val dispatcher = context.system.dispatcher
   val projectWorkers      = new mutable.HashMap[String, ActorRef]()
+  val logger              = LoggerFactory.getLogger("prisma")
 
   // Enhancement(s):
   //    - In the shared cluster we might face issues with too many project actors / high overhead during bootup
@@ -49,9 +51,9 @@ case class DeploymentSchedulerActor(
 
   def initialize(): Future[Unit] = {
     // Ensure that we're the only deploy agent running on the db, then resume init.
-    println("Obtaining exclusive agent lock...")
+    logger.info("Obtaining exclusive agent lock...")
     deployConnector.managementLock().flatMap { _ =>
-      println("Obtaining exclusive agent lock... Successful.")
+      logger.info("Obtaining exclusive agent lock... Successful.")
       migrationPersistence.loadDistinctUnmigratedProjectIds().transformWith {
         case Success(projectIds) => Future { projectIds.foreach(workerForProject) }
         case Failure(err)        => Future.failed(err)
@@ -79,11 +81,11 @@ case class DeploymentSchedulerActor(
   def handleTerminated(watched: ActorRef) = {
     projectWorkers.find(_._2 == watched) match {
       case Some((pid, _)) =>
-        println(s"[Warning] Worker for project $pid terminated abnormally. Recreating...")
+        logger.warn(s"Worker for project $pid terminated abnormally. Recreating...")
         workerForProject(pid)
 
       case None =>
-        println(s"[Warning] Terminated child actor $watched has never been mapped to a project.")
+        logger.warn(s"Terminated child actor $watched has never been mapped to a project.")
     }
   }
 }

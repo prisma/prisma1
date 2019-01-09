@@ -10,6 +10,7 @@ import scala.concurrent.Future
 
 object Version {
 
+  // todo overhaul
   def check()(implicit system: ActorSystem, materializer: ActorMaterializer): Future[_] = {
     import system.dispatcher
     val client = GraphQlClientImpl("https://check-update.graph.cool", Map.empty, Http()(system))
@@ -25,20 +26,15 @@ object Version {
       """.stripMargin)
       .flatMap { resp =>
         if (resp.is200) {
-          val json         = Json.parse(resp.body)
-          val updateStatus = (json \ "data" \ "checkUpdate" \ "isUpToDate").as[Boolean]
-
-          if (updateStatus) println("Version is up to date.")
-          else println("Update available.")
-        } else {
-          println("Unable to fetch version info.")
-        }
+//          val json         = Json.parse(resp.body)
+//          val updateStatus = (json \ "data" \ "checkUpdate" \ "isUpToDate").as[Boolean]
+        } else {}
 
         Future.successful(())
       }
       .recoverWith {
         case _ =>
-          println("Unable to fetch version info.")
+//          println("Unable to fetch version info.")
           Future.successful(())
       }
   }

@@ -305,6 +305,7 @@ lazy val prismaConfig = libProject("prisma-config").settings(libraryDependencies
 lazy val mongoUtils = libProject("mongo-utils").settings(libraryDependencies ++= Seq(mongoClient)).dependsOn(jsonUtils)
 
 lazy val jdbcNative = libProject("jdbc-native")
+  .dependsOn(logging)
   .settings(libraryDependencies ++= Seq(
     jna,
     scalaTest,

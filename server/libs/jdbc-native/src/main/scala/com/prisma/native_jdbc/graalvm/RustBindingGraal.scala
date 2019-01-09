@@ -19,25 +19,27 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def newConnection(url: String): RustConnectionGraal = {
-    val conn = new RustConnectionGraal(RustInterfaceGraal.newConnection(toCString(url)))
-    println(s"Connected: ${conn.hashCode()}")
-    conn
+    new RustConnectionGraal(RustInterfaceGraal.newConnection(toCString(url)))
+  }
+
+  override def closeConnection(connection: RustConnectionGraal): RustCallResult = {
+    val raw    = RustInterfaceGraal.closeConnection(connection.conn)
+    val result = RustCallResult.fromString(toJavaString(raw))
+
+    RustInterfaceGraal.destroy_string(raw)
+    result
   }
 
   override def prepareStatement(connection: RustConnectionGraal, query: String): RustPreparedStatementGraal = {
     val ptrAndErr: CIntegration.PointerAndError = RustInterfaceGraal.prepareStatement(connection.conn, toCString(query))
-    if (ptrAndErr.error().isNonNull) println(s"[Graal] Prepare result: ${toJavaString(ptrAndErr.error)}")
     RustCallResult.fromString(toJavaString(ptrAndErr.error))
-    val result = new RustPreparedStatementGraal(ptrAndErr.pointer.asInstanceOf[CIntegration.RustStatement])
 
-    println(s"Prepared statement: ${result.hashCode()}")
-    // The pointer will still be valid after dropping the envelope
-    RustInterfaceGraal.destroy(ptrAndErr)
+    val result = new RustPreparedStatementGraal(ptrAndErr.pointer.asInstanceOf[CIntegration.RustStatement])
+    RustInterfaceGraal.destroy(ptrAndErr) // The pointer will still be valid after dropping the envelope
     result
   }
 
   override def closeStatement(stmt: RustPreparedStatementGraal): RustCallResult = {
-    println(s"Closing statement: ${stmt.hashCode()}")
     val raw    = RustInterfaceGraal.closeStatement(stmt.stmt)
     val result = RustCallResult.fromString(toJavaString(raw))
 
@@ -46,7 +48,6 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def startTransaction(connection: RustConnectionGraal): RustCallResult = {
-    println(s"Starting transaction")
     val raw    = RustInterfaceGraal.startTransaction(connection.conn)
     val result = RustCallResult.fromString(toJavaString(raw))
 
@@ -55,7 +56,6 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def commitTransaction(connection: RustConnectionGraal): RustCallResult = {
-    println(s"Committing transaction")
     val raw    = RustInterfaceGraal.commitTransaction(connection.conn)
     val result = RustCallResult.fromString(toJavaString(raw))
 
@@ -64,7 +64,6 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def rollbackTransaction(connection: RustConnectionGraal): RustCallResult = {
-    println(s"Rolling back transaction")
     val raw    = RustInterfaceGraal.rollbackTransaction(connection.conn)
     val result = RustCallResult.fromString(toJavaString(raw))
 
@@ -72,19 +71,8 @@ object RustBindingGraal extends RustBinding {
     result
   }
 
-  override def closeConnection(connection: RustConnectionGraal): RustCallResult = {
-    println(s"Closing connection ${connection.hashCode()}")
-    val raw    = RustInterfaceGraal.closeConnection(connection.conn)
-    val result = RustCallResult.fromString(toJavaString(raw))
-
-    RustInterfaceGraal.destroy_string(raw)
-    result
-  }
-
   override def sqlExecute(connection: RustConnectionGraal, query: String, params: String): RustCallResult = {
-    println(s"[Graal] Execute: '$query' with params: $params")
-    val raw = RustInterfaceGraal.sqlExecute(connection.conn, toCString(query), toCString(params))
-    println(s"[Graal] Result: $raw")
+    val raw    = RustInterfaceGraal.sqlExecute(connection.conn, toCString(query), toCString(params))
     val result = RustCallResult.fromString(toJavaString(raw))
 
     RustInterfaceGraal.destroy_string(raw)
@@ -92,9 +80,7 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def sqlQuery(connection: RustConnectionGraal, query: String, params: String): RustCallResult = {
-    println(s"[Graal] Query: '$query' with params: $params")
-    val raw = RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params))
-    println(s"[Graal] Result: ${toJavaString(raw)}")
+    val raw    = RustInterfaceGraal.sqlQuery(connection.conn, toCString(query), toCString(params))
     val result = RustCallResult.fromString(toJavaString(raw))
 
     RustInterfaceGraal.destroy_string(raw)
@@ -102,9 +88,7 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def executePreparedstatement(stmt: RustPreparedStatementGraal, params: String): RustCallResult = {
-    println(s"[Graal] PreparedStatement: Executing with params: $params")
-    val raw = RustInterfaceGraal.executePreparedstatement(stmt.stmt, toCString(params))
-    println(s"[Graal] Result: ${toJavaString(raw)}")
+    val raw    = RustInterfaceGraal.executePreparedstatement(stmt.stmt, toCString(params))
     val result = RustCallResult.fromString(toJavaString(raw))
 
     RustInterfaceGraal.destroy_string(raw)
@@ -112,9 +96,7 @@ object RustBindingGraal extends RustBinding {
   }
 
   override def queryPreparedstatement(stmt: RustPreparedStatementGraal, params: String): RustCallResult = {
-    println(s"[Graal] PreparedStatement: Executing with params: $params")
-    val raw = RustInterfaceGraal.queryPreparedstatement(stmt.stmt, toCString(params))
-    println(s"[Graal] Result: ${toJavaString(raw)}")
+    val raw    = RustInterfaceGraal.queryPreparedstatement(stmt.stmt, toCString(params))
     val result = RustCallResult.fromString(toJavaString(raw))
 
     RustInterfaceGraal.destroy_string(raw)
