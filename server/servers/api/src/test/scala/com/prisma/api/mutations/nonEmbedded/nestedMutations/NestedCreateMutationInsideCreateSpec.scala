@@ -770,4 +770,72 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     UUID.fromString(theUuid) // should now blow up
   }
 
+  "Backrelation bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  nick: String! @unique
+        |  memberships: [ListMembership]
+        |}
+        |
+        |type List {
+        |  id: ID! @unique
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |  name: String!
+        |  memberships: [ListMembership]
+        |}
+        |
+        |type ListMembership {
+        |  id: ID! @unique
+        |  user: User! @mongoRelation(field: "user")
+        |  list: List! @mongoRelation(field: "list")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s"""mutation createUser {
+  createUser(data: {
+    nick: "marcus"
+    memberships: {
+      create: [
+        {
+          list: {
+            create: {
+              name: "Personal Inbox"
+            }
+          }
+        }
+      ]
+    }
+  }){
+    nick
+  }
+}""",
+      project
+    )
+
+    create.toString should be("""{"data":{"createUser":{"nick":"marcus"}}}""")
+
+    val result = server.query(
+      s"""query users {
+  users{
+    nick
+    memberships {
+      list {
+        name
+      }
+    }
+  }
+}""",
+      project
+    )
+
+    result.toString should be("""{"data":{"users":[{"nick":"marcus","memberships":[{"list":{"name":"Personal Inbox"}}]}]}}""")
+  }
+
 }

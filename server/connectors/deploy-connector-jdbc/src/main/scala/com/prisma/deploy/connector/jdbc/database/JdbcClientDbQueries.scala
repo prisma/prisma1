@@ -11,21 +11,20 @@ import scala.concurrent.{ExecutionContext, Future}
 case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcBase with ClientDbQueries {
   val queryBuilder = JdbcDeployDatabaseQueryBuilder(slickDatabase)
 
-  def existsByModel(modelName: String): Future[Boolean] = {
-    val model = project.schema.getModelByName_!(modelName)
+  def existsByModel(model: Model): Future[Boolean] = {
     val query = queryBuilder.existsByModel(project.id, model)
 
     database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
-  def existsDuplicateByRelationAndSide(relationId: String, relationSide: RelationSide): Future[Boolean] = {
-    val query = queryBuilder.existsDuplicateByRelationAndSide(project.id, relationId, relationSide)
+  def existsDuplicateByRelationAndSide(relation: Relation, relationSide: RelationSide): Future[Boolean] = {
+    val query = queryBuilder.existsDuplicateByRelationAndSide(project.id, relation, relationSide)
 
     database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }
 
-  def existsByRelation(relationId: String): Future[Boolean] = {
-    val query = queryBuilder.existsByRelation(project.id, relationId)
+  def existsByRelation(relation: Relation): Future[Boolean] = {
+    val query = queryBuilder.existsByRelation(project.id, relation)
 
     database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
   }

@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnorePostgres
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
@@ -1609,7 +1610,35 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     )
 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+  }
 
+  "Connecting several times" should "not error and only connect the item once" taggedAs (IgnorePostgres) in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type Post {
+        |  id: ID! @unique
+        |  authors: [AUser]
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @unique
+        |  name: String! @unique
+        |  posts: [Post] @mongoRelation(field: "posts")
+        |}"""
+    }
+
+    database.setup(project)
+
+    server.query(s""" mutation {createPost(data: {title:"Title"}) {title}} """, project)
+    server.query(s""" mutation {createAUser(data: {name:"Author"}) {name}} """, project)
+
+    server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+    server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+    server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
+
+    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
   }
 
 }

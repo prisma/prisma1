@@ -52,7 +52,6 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
       case AndFilter(filters)                 => filters.foreach(setFilter(pp, _))
       case OrFilter(filters)                  => filters.foreach(setFilter(pp, _))
       case NotFilter(filters)                 => filters.foreach(setFilter(pp, _))
-      case NodeFilter(filters)                => setFilter(pp, OrFilter(filters))
       case RelationFilter(_, nestedFilter, _) => setFilter(pp, nestedFilter)
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                  => // NOOP

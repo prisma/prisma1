@@ -6,20 +6,20 @@ import com.prisma.api.connector.mongo.extensions.NodeSelectorBsonTransformer.whe
 import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Project, RelationField}
+import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Projections._
-import org.mongodb.scala.{Document, MongoCollection}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
+trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with ProjectionBuilder {
 
   def getModelForGlobalId(project: Project, globalId: StringIdGCValue) = SimpleMongoAction { database =>
     val outer = project.models.map { model =>
-      database.getCollection(model.dbName).find(Filters.eq("_id", GCToBson(globalId))).collect().toFuture.map { results: Seq[Document] =>
-        if (results.nonEmpty) Vector(model) else Vector.empty
+      database.getCollection(model.dbName).find(Filters.eq("_id", GCToBson(globalId))).projection(idProjection).collect().toFuture.map {
+        results: Seq[Document] =>
+          if (results.nonEmpty) Vector(model) else Vector.empty
       }
     }
 
@@ -28,7 +28,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
   def getNodeByWhere(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
 
-  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database =>
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database => //Fixme use projection here
     database.getCollection(where.model.dbName).find(where).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map { result =>
         val root = DocumentToRoot(where.model, result)
@@ -37,11 +37,11 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
     }
   }
 
-  def getNodeIdByWhere(where: NodeSelector) = SimpleMongoAction { database =>
+  def getNodeIdByWhere(where: NodeSelector): SimpleMongoAction[Option[IdGCValue]] = SimpleMongoAction { database =>
     database
       .getCollection(where.model.dbName)
       .find(where)
-      .projection(include("_id"))
+      .projection(idProjection)
       .collect()
       .toFuture
       .map(res => res.headOption.map(DocumentToId.toCUIDGCValue))
@@ -52,7 +52,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where).map {
+        getNodeByWhere(parent.where).map { //Fixme limit the selection set
           case None    => None
           case Some(n) => n.getIDAtPath(parentField, parent.path)
         }
@@ -69,7 +69,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
 
     parentField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where).flatMap {
+        getNodeByWhere(parent.where).flatMap { //Fixme limit the selection set
           case None =>
             noneHelper
           case Some(n) =>
@@ -80,15 +80,15 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries {
               case Some(node) =>
                 (parentField.isList, node.data.map(parentField.name)) match {
                   case (false, idInParent: StringIdGCValue) =>
-                    getNodeByWhere(where).map {
-                      case Some(childForWhere) if idInParent == childForWhere.id => Some(idInParent)
-                      case _                                                     => None
+                    getNodeIdByWhere(where).map {
+                      case Some(childForWhere) if idInParent == childForWhere => Some(idInParent)
+                      case _                                                  => None
                     }
 
                   case (true, ListGCValue(values)) =>
-                    getNodeByWhere(where).map {
-                      case Some(childForWhere) if values.contains(childForWhere.id) => Some(childForWhere.id)
-                      case _                                                        => None
+                    getNodeIdByWhere(where).map {
+                      case Some(childForWhere) if values.contains(childForWhere) => Some(childForWhere)
+                      case _                                                     => None
                     }
 
                   case _ =>
