@@ -9,18 +9,21 @@ case class CreateModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) ex
   override def execute(mutaction: CreateModelTable, schemaBeforeMigration: DatabaseSchema): DBIOAction[Any, NoStream, Effect.All] = {
     schemaBeforeMigration.table(mutaction.model.dbName) match {
       case None =>
-        builder.createModelTable(
-          projectId = mutaction.projectId,
-          model = mutaction.model
-        )
+        builder.createModelTable(projectId = mutaction.projectId, model = mutaction.model)
       case Some(_) =>
         DBIO.successful(())
     }
   }
 
-  // TODO: how do we ensure no rollback occurs if the table did not originally exist?
-  override def rollback(mutaction: CreateModelTable, schemaBeforeMigration: DatabaseSchema) =
-    builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
+  override def rollback(mutaction: CreateModelTable, schemaBeforeMigration: DatabaseSchema) = {
+    // only drop the table if it was created in the step before
+    schemaBeforeMigration.table(mutaction.model.dbName) match {
+      case None =>
+        builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
+      case Some(_) =>
+        DBIO.successful(())
+    }
+  }
 }
 
 case class DeleteModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteModelTable] {
