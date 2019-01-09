@@ -5,23 +5,33 @@ import slick.jdbc.PostgresProfile.api._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
-    builder.createColumn(
-      projectId = mutaction.projectId,
-      tableName = mutaction.model.dbName,
-      columnName = mutaction.field.dbName,
-      isRequired = mutaction.field.isRequired,
-      isUnique = mutaction.field.isUnique,
-      isList = mutaction.field.isList,
-      typeIdentifier = mutaction.field.typeIdentifier
-    )
+    schemaBeforeMigration.table_!(mutaction.model.dbName).column(mutaction.field.dbName) match {
+      case None =>
+        builder.createColumn(
+          projectId = mutaction.projectId,
+          tableName = mutaction.model.dbName,
+          columnName = mutaction.field.dbName,
+          isRequired = mutaction.field.isRequired,
+          isUnique = mutaction.field.isUnique,
+          isList = mutaction.field.isList,
+          typeIdentifier = mutaction.field.typeIdentifier
+        )
+      case Some(_) =>
+        DBIO.successful(())
+    }
   }
 
   override def rollback(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
-    builder.deleteColumn(
-      projectId = mutaction.projectId,
-      tableName = mutaction.model.dbName,
-      columnName = mutaction.field.dbName
-    )
+    schemaBeforeMigration.table_!(mutaction.model.dbName).column(mutaction.field.dbName) match {
+      case None =>
+        builder.deleteColumn(
+          projectId = mutaction.projectId,
+          tableName = mutaction.model.dbName,
+          columnName = mutaction.field.dbName
+        )
+      case Some(_) =>
+        DBIO.successful(())
+    }
   }
 }
 

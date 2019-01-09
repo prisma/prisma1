@@ -75,6 +75,36 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     finalResult should equal(result)
   }
 
+  "creating a field for an existing column should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title text
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL,
+         |   title mediumtext,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |}
+       """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    result should equal(initialResult)
+  }
+
   def setup(sqls: SQLs): DatabaseSchema = {
     deployConnector.deleteProjectDatabase(projectId).await()
     if (slickDatabase.isMySql) {
