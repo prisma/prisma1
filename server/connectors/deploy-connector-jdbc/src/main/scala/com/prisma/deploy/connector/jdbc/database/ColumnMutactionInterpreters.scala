@@ -51,7 +51,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           val index = c.table.indexByColumns_!(c.name)
           builder.removeIndex(mutaction.projectId, mutaction.model.dbName, indexName = index.name)
         }
-        val allActions = updateColumn ++ addUniqueConstraint ++ removeUniqueConstraint
+        val allActions = removeUniqueConstraint ++ updateColumn ++ addUniqueConstraint
 
         DBIO.seq(allActions.toVector: _*)
     }

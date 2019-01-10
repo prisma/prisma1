@@ -186,14 +186,15 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   id SERIAL PRIMARY KEY,
          |   title int
          |);
-         |CREATE UNIQUE INDEX "title_index" ON blog(title ASC);
+         |CREATE UNIQUE INDEX title_index ON blog(title ASC);
        """.stripMargin
     val mysql =
       s"""
          | CREATE TABLE blog (
          |   id int NOT NULL,
          |   title int,
-         |   PRIMARY KEY(id)
+         |   PRIMARY KEY(id),
+         |   UNIQUE INDEX (title ASC)
          | );
        """.stripMargin
     val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
