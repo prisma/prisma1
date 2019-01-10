@@ -177,7 +177,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     def removeUniqueConstraint = builder.removeIndex(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
-      indexName = schemaBeforeMigration.table_!(mutaction.model.dbName).indexByColumns_!(after.dbName).name
+      indexName = schemaBeforeMigration.table_!(mutaction.model.dbName).indexByColumns_!(before.dbName).name
     )
 
     def addUniqueConstraint = builder.addUniqueConstraint(
