@@ -242,6 +242,39 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     finalResult should equal(result)
   }
 
+  "updating a field for non existing column should work" in {
+    addProject()
+
+    val initialDataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |}
+       """.stripMargin
+
+    deploy(initialDataModel, ConnectorCapabilities(IntIdCapability))
+
+    val dropPostTable = "ALTER TABLE blog DROP COLUMN title;"
+    executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: Int @unique
+         |}
+       """.stripMargin
+
+    val finalResult = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val column      = finalResult.table_!("blog").column_!("title")
+    val index       = finalResult.table_!("blog").indexByColumns("title")
+    column.typeIdentifier should be(TI.Int)
+    column.isRequired should be(false)
+    index.isDefined should be(true)
+    index.get.unique should be(true)
+  }
+
   def setup(sqls: SQLs): DatabaseSchema = {
     deployConnector.deleteProjectDatabase(projectId).await()
     if (slickDatabase.isMySql) {

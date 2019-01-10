@@ -140,7 +140,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     val after                = mutaction.newField
     val indexMustBeRecreated = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
 
-    val updateColumn = builder.updateColumn(
+    def updateColumn = builder.updateColumn(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
       oldColumnName = before.dbName,
@@ -148,6 +148,16 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       newIsRequired = after.isRequired,
       newIsList = after.isList,
       newTypeIdentifier = after.typeIdentifier
+    )
+
+    def createColumn = builder.createColumn(
+      projectId = mutaction.projectId,
+      tableName = mutaction.model.dbName,
+      columnName = after.dbName,
+      isRequired = after.isRequired,
+      isUnique = after.isUnique,
+      isList = after.isList,
+      typeIdentifier = after.typeIdentifier
     )
 
     def removeUniqueConstraint = builder.removeUniqueConstraint(
@@ -163,14 +173,17 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       typeIdentifier = after.typeIdentifier
     )
 
-    val updateColumnActions = (before.isUnique, indexMustBeRecreated, after.isUnique) match {
-      case (true, true, true)  => List(removeUniqueConstraint, updateColumn, addUniqueConstraint)
-      case (true, _, false)    => List(removeUniqueConstraint, updateColumn)
-      case (true, false, true) => List(updateColumn)
-      case (false, _, false)   => List(updateColumn)
-      case (false, _, true)    => List(updateColumn, addUniqueConstraint)
+    def updateColumnActions = (before.isUnique, indexMustBeRecreated, after.isUnique) match {
+      case (true, true, true)  => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
+      case (true, _, false)    => Vector(removeUniqueConstraint, updateColumn)
+      case (true, false, true) => Vector(updateColumn)
+      case (false, _, false)   => Vector(updateColumn)
+      case (false, _, true)    => Vector(updateColumn, addUniqueConstraint)
     }
 
-    DBIO.seq(updateColumnActions: _*)
+    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(before.dbName)) match {
+      case Some(_) => DBIO.seq(updateColumnActions: _*)
+      case None    => createColumn
+    }
   }
 }
