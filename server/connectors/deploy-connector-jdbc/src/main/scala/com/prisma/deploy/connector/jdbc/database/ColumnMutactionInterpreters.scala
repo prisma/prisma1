@@ -18,6 +18,20 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           isList = mutaction.field.isList,
           typeIdentifier = mutaction.field.typeIdentifier
         )
+
+      // This can only happen if an inline relation field has been converted into a scalar field. The foreign key indicates it is a relation column.
+      // Our step order ensures that this relation column already has been deleted. So we just create the scalar column.
+      case Some(c) if c.foreignKey.isDefined =>
+        builder.createColumn(
+          projectId = mutaction.projectId,
+          tableName = mutaction.model.dbName,
+          columnName = mutaction.field.dbName,
+          isRequired = mutaction.field.isRequired,
+          isUnique = mutaction.field.isUnique,
+          isList = mutaction.field.isList,
+          typeIdentifier = mutaction.field.typeIdentifier
+        )
+
       case Some(c) =>
         val updateColumn = mustUpdateColumn(c, mutaction).toOption {
           builder.updateColumn(
