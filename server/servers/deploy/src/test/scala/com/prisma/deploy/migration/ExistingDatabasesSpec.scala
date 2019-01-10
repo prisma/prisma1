@@ -3,7 +3,7 @@ import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
 import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.specutils.{DataModelV2Base, DeploySpecBase, PassiveDeploySpecBase}
-import com.prisma.shared.models.ConnectorCapability.IntIdCapability
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -12,6 +12,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
   case class SQLs(postgres: String, mysql: String)
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
+  override def runOnlyForCapabilities                            = Set(MigrationsCapability)
   lazy val slickDatabase                                         = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
 
   "adding a type for an existing table should work" in {
