@@ -22,15 +22,15 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
+//https://www.sqlite.org/lang_attach.html  -> multiple schemas
+
 case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
 
   lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config)
-  lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
-  lazy val databases            = internalDatabaseDefs.managementDatabases
-  lazy val managementDatabase   = databases.primary
-  lazy val projectDatabase      = databases.primary.database
+  lazy val projectDatabase      = internalDatabaseDefs.projectDatabase.primary
+  lazy val managementDatabase   = internalDatabaseDefs.managementDatabase.primary
   lazy val mySqlTypeMapper      = SQLiteTypeMapper()
   lazy val mutationBuilder      = SQLiteJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
@@ -44,12 +44,14 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
-    projectDatabase.run(action)
+    projectDatabase.database.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-    projectDatabase.run(action)
+//    val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+//    projectDatabase.database.run(action)
+
+    Future.successful(())
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
@@ -62,24 +64,24 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
       }
     }
 
-    projectDatabase.run(action)
+    projectDatabase.database.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, databases.primary)
+  override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, managementDatabase)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
-    setupDatabase.primary.database
+    managementDatabase.database
       .run(SQLiteInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
-      .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
+      .flatMap(_ => managementDatabase.database.shutdown)
   }
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
 
   override def shutdown() = {
-    databases.shutdown
+    managementDatabase.database.shutdown
   }
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer

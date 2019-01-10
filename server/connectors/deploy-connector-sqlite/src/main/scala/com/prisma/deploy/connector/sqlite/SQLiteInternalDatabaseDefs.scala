@@ -9,14 +9,21 @@ case class SQLiteInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   val managementSchemaName = dbConfig.managementSchema.getOrElse("prisma")
 
-  lazy val setupDatabases      = databases(root = true)
-  lazy val managementDatabases = databases(root = false)
-
-  private lazy val dbDriver = new org.sqlite.JDBC
+  lazy val projectDatabase    = databases(root = true)
+  lazy val managementDatabase = databases2(root = false)
 
   def databases(root: Boolean): Databases = {
 //    val config        = typeSafeConfigFromDatabaseConfig(dbConfig, root)
     val masterDb = Database.forURL("jdbc:sqlite:database.db", driver = "org.sqlite.JDBC")
+
+    val slickDatabase = SlickDatabase(SQLiteProfile, masterDb)
+
+    Databases(primary = slickDatabase, replica = slickDatabase)
+  }
+
+  def databases2(root: Boolean): Databases = {
+    //    val config        = typeSafeConfigFromDatabaseConfig(dbConfig, root)
+    val masterDb = Database.forURL("jdbc:sqlite:management.db", driver = "org.sqlite.JDBC")
 
     val slickDatabase = SlickDatabase(SQLiteProfile, masterDb)
 
