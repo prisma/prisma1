@@ -30,6 +30,13 @@ case class Table(name: String, columnFns: Vector[Table => Column], indexes: Vect
   def column(name: String): Option[Column]            = columns.find(_.name == name)
   def indexByColumns_!(columns: String*): Index       = indexByColumns(columns: _*).getOrElse(sys.error(s"Did not find an index for the columns: $columns"))
   def indexByColumns(columns: String*): Option[Index] = indexes.find(_.columns == columns.toVector)
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case other: Table => name == other.name && columns == other.columns && indexes == other.indexes
+      case _            => false
+    }
+  }
 }
 
 case class Index(name: String, columns: Vector[String], unique: Boolean)
