@@ -151,7 +151,12 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    const folderName = path.basename(this.config.definitionDir)
+    let folderName = path.basename(this.config.definitionDir);
+    folderName =
+      folderName === "prisma"
+        ? path.basename(path.join(this.config.definitionDir, "../"))
+        : folderName;
+
     const authenticationPayload = await this.client.isAuthenticated()
     const loggedIn = authenticationPayload.isAuthenticated
     const clusters = this.getCloudClusters()
