@@ -453,7 +453,7 @@ export class Client {
       this.env.globalRC.cloudSessionKey = key
     }
     let authenticationPayload = await this.isAuthenticated()
-    let authenticated = authenticationPayload.isAuthenticated
+    const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
       this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)

@@ -152,14 +152,17 @@ export class EndpointDialog {
       'http://localhost:4466',
     )
     const folderName = path.basename(this.config.definitionDir)
-    const loggedIn = await this.client.isAuthenticated()
+    const authenticationPayload = await this.client.isAuthenticated()
+    const loggedIn = authenticationPayload.isAuthenticated
     const clusters = this.getCloudClusters()
     const files = this.listFiles()
     const hasDockerComposeYml = files.includes('docker-compose.yml')
+
     const question = this.getClusterQuestion(
       !loggedIn && !localClusterRunning,
       hasDockerComposeYml,
       clusters,
+      loggedIn
     )
 
     const { choice } = await this.out.prompt(question)
@@ -647,6 +650,7 @@ export class EndpointDialog {
     fromScratch: boolean,
     hasDockerComposeYml: boolean,
     clusters: Cluster[],
+    isAuthenticated: boolean,
   ) {
     const sandboxChoices = [
       [
@@ -692,13 +696,14 @@ export class EndpointDialog {
         clusters.length > 0
           ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
           : sandboxChoices
+  
       const rawChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
         ...clusterChoices,
         [
           'Demo server',
-          'Hosted demo environment incl. database (requires login)',
+          `Hosted demo environment incl. database${!isAuthenticated ? ` (requires login)` : `` }`,
         ],
         [
           'Use other server',
@@ -746,7 +751,8 @@ export class EndpointDialog {
   }
 
   private async getDemoCluster(): Promise<Cluster | null> {
-    const isAuthenticated = await this.client.isAuthenticated()
+    const authenticationPayload = await this.client.isAuthenticated()
+    const isAuthenticated = authenticationPayload.isAuthenticated
     if (!isAuthenticated) {
       await this.client.login()
     }
