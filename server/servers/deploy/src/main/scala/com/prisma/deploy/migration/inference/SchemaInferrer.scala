@@ -367,8 +367,8 @@ case class SchemaInferrerImpl(
 
       case Some(tableDirective: RelationTableDirective) =>
         val inferredTable        = inferredTables.relationTables.find(_.name == tableDirective.table)
-        def columnForThisType    = tableDirective.thisColumn.orElse(inferredTable.flatMap(table => table.columnForTable(tableForThisType)))
-        def columnForRelatedType = tableDirective.otherColumn.orElse(inferredTable.flatMap(table => table.columnForTable(tableForRelatedType)))
+        val columnForThisType    = tableDirective.thisColumn.orElse(inferredTable.flatMap(table => table.columnForTable(tableForThisType)))
+        val columnForRelatedType = tableDirective.otherColumn.orElse(inferredTable.flatMap(table => table.columnForTable(tableForRelatedType)))
 
         for {
           modelAColumn <- if (isThisModelA) columnForThisType else columnForRelatedType
