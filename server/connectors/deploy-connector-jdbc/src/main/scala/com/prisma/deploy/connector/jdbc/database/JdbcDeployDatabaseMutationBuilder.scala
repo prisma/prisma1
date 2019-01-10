@@ -24,7 +24,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def deleteProjectDatabase(projectId: String): DBIO[_]
   def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
   def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
-  def removeUniqueConstraint(projectId: String, tableName: String, indexName: String): DBIO[_]
+  def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_]
 
   def createModelTable(projectId: String, model: Model): DBIO[_]
   def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]

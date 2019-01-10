@@ -35,7 +35,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
         }
         val removeUniqueConstraint = mustRemoveUniqueConstraint(c, mutaction).toOption {
           val index = c.table.indexByColumns_!(c.name)
-          builder.removeUniqueConstraint(mutaction.projectId, mutaction.model.dbName, indexName = index.name)
+          builder.removeIndex(mutaction.projectId, mutaction.model.dbName, indexName = index.name)
         }
         val allActions = updateColumn ++ addUniqueConstraint ++ removeUniqueConstraint
 
@@ -160,7 +160,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       typeIdentifier = after.typeIdentifier
     )
 
-    def removeUniqueConstraint = builder.removeUniqueConstraint(
+    def removeUniqueConstraint = builder.removeIndex(
       projectId = mutaction.projectId,
       tableName = mutaction.model.dbName,
       indexName = schemaBeforeMigration.table_!(mutaction.model.dbName).indexByColumns_!(after.dbName).name

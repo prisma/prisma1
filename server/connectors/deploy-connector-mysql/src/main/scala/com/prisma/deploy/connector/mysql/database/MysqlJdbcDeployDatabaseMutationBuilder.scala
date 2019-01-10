@@ -197,7 +197,7 @@ case class MysqlJdbcDeployDatabaseMutationBuilder(
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
   }
 
-  override def removeUniqueConstraint(projectId: String, tableName: String, indexName: String): DBIO[_] = {
+  override def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_] = {
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(indexName)}"
   }
 }
