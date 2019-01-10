@@ -242,7 +242,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     finalResult should equal(result)
   }
 
-  "updating a field for non existing column should work" in {
+  "updating a field for a non existing column should work" in {
     addProject()
 
     val initialDataModel =
@@ -273,6 +273,38 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     column.isRequired should be(false)
     index.isDefined should be(true)
     index.get.unique should be(true)
+  }
+
+  // TODO: this is probably really hard to achieve
+  "renaming a field where the column was already renamed should work" ignore {
+    addProject()
+
+    val initialDataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: Int!
+         |}
+       """.stripMargin
+
+    deploy(initialDataModel, ConnectorCapabilities(IntIdCapability))
+
+    val dropPostTable = "ALTER TABLE blog RENAME COLUMN title TO new_title;"
+    val result        = executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+    result.table_!("blog").column("title") should be(empty)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: Float @db(name: "new_title")
+         |}
+       """.stripMargin
+
+    val finalResult = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val column      = finalResult.table_!("blog").column_!("new_title")
+    column.typeIdentifier should be(TI.Float)
+    column.isRequired should be(false)
   }
 
   def setup(sqls: SQLs): DatabaseSchema = {
