@@ -12,7 +12,7 @@ import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace, Service } from './types'
+import { User, Migration, DeployPayload, Workspace, Service, AuthenticationPayload } from './types'
 import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 
@@ -439,9 +439,9 @@ export class Client {
   }
 
   async ensureAuth(): Promise<void> {
-    const authenticated = await this.isAuthenticated()
+    const authenticationPayload = await this.isAuthenticated()
 
-    if (!authenticated) {
+    if (!authenticationPayload.isAuthenticated) {
       await this.login()
     }
   }
@@ -452,9 +452,11 @@ export class Client {
     if (key) {
       this.env.globalRC.cloudSessionKey = key
     }
-    const authenticated = await this.isAuthenticated()
+    let authenticationPayload = await this.isAuthenticated()
+    let authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
+      this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -480,8 +482,10 @@ export class Client {
       await new Promise(r => setTimeout(r, 500))
     }
     this.env.globalRC.cloudSessionKey = token
-
     this.out.action.stop()
+    
+    authenticationPayload = await this.isAuthenticated()
+    await this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
@@ -575,10 +579,11 @@ export class Client {
     return clusterToken
   }
 
-  async isAuthenticated(): Promise<boolean> {
+  async isAuthenticated(): Promise<AuthenticationPayload> {
     let authenticated = false
+    let account: User | null = null
     try {
-      const account = await this.getAccount()
+      account = await this.getAccount()
       if (account) {
         authenticated = Boolean(account)
       }
@@ -586,7 +591,10 @@ export class Client {
       //
     }
 
-    return authenticated
+    return {
+      isAuthenticated: authenticated,
+      account
+    }
   }
 
   async getWorkspaces(): Promise<Workspace[]> {
