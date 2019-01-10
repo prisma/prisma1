@@ -7,7 +7,7 @@ import com.prisma.utils.boolean.BooleanUtils._
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
   // todo: that does not consider unique constraints yet
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
-    schemaBeforeMigration.table_!(mutaction.model.dbName).column(mutaction.field.dbName) match {
+    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
       case None =>
         builder.createColumn(
           projectId = mutaction.projectId,
@@ -59,7 +59,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
   }
 
   override def rollback(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
-    schemaBeforeMigration.table_!(mutaction.model.dbName).column(mutaction.field.dbName) match {
+    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
       case None =>
         builder.deleteColumn(
           projectId = mutaction.projectId,
@@ -74,23 +74,33 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
 case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
-    builder.deleteColumn(
-      projectId = mutaction.projectId,
-      tableName = mutaction.model.dbName,
-      columnName = mutaction.field.dbName
-    )
+    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
+      case Some(_) =>
+        builder.deleteColumn(
+          projectId = mutaction.projectId,
+          tableName = mutaction.model.dbName,
+          columnName = mutaction.field.dbName
+        )
+      case None =>
+        DBIO.successful(())
+    }
   }
 
   override def rollback(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
-    builder.createColumn(
-      projectId = mutaction.projectId,
-      tableName = mutaction.model.dbName,
-      columnName = mutaction.field.dbName,
-      isRequired = mutaction.field.isRequired,
-      isUnique = mutaction.field.isUnique,
-      isList = mutaction.field.isList,
-      typeIdentifier = mutaction.field.typeIdentifier
-    )
+    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
+      case Some(_) =>
+        builder.createColumn(
+          projectId = mutaction.projectId,
+          tableName = mutaction.model.dbName,
+          columnName = mutaction.field.dbName,
+          isRequired = mutaction.field.isRequired,
+          isUnique = mutaction.field.isUnique,
+          isList = mutaction.field.isList,
+          typeIdentifier = mutaction.field.typeIdentifier
+        )
+      case None =>
+        DBIO.successful(())
+    }
   }
 }
 
