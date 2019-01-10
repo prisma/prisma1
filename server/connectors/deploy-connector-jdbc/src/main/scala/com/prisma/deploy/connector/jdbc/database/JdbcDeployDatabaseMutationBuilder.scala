@@ -20,6 +20,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   /*
    * Connector-specific functions
    */
+  def createSchema(projectId: String): DBIO[_]
   def truncateProjectTables(project: Project): DBIO[_]
   def deleteProjectDatabase(projectId: String): DBIO[_]
   def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
@@ -59,7 +60,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
    * Connector-agnostic functions
    */
   def createClientDatabaseForProject(projectId: String) = {
-    val schema = changeDatabaseQueryToDBIO(sql.createSchema(projectId))()
+    val schema = createSchema(projectId)
     val table = changeDatabaseQueryToDBIO(
       sql
         .createTable(name(projectId, "_RelayId"))

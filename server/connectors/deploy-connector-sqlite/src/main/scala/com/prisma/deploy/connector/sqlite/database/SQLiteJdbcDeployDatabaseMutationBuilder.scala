@@ -19,6 +19,12 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
   import slickDatabase.profile.api._
 
+  override def createSchema(projectId: String): DBIO[_] = {
+    //create and attach db
+
+    sqlu"ATTACH DATABASE file_name AS #${qualify(projectId)};"
+  }
+
   override def truncateProjectTables(project: Project): DBIO[_] = {
     val listTableNames: List[String] = project.models.flatMap { model =>
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }

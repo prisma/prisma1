@@ -19,6 +19,10 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   import slickDatabase.profile.api._
 
+  override def createSchema(projectId: String): DBIO[_] = {
+    sqlu"CREATE SCHEMA #${qualify(projectId)}"
+  }
+
   override def truncateProjectTables(project: Project): DBIO[_] = {
     val listTableNames: List[String] = project.models.flatMap { model =>
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
