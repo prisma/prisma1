@@ -352,7 +352,9 @@ case class PrismaConfig(
     managmentApiEnabled: Option[Boolean],
     prototype: Option[Boolean],
     databases: Seq[DatabaseConfig]
-)
+) {
+  def isPrototype = prototype.getOrElse(false)
+}
 
 case class DatabaseConfig(
     name: String,

@@ -7,7 +7,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Pro
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+case class MySqlApiConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = MySqlDatabasesFactory.initialize(config)
 
   override def initialize() = {
@@ -28,6 +28,12 @@ case class MySqlApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 
-  override val capabilities = ConnectorCapabilities.mysql
+  override val capabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.mysqlPrototype
+    } else {
+      ConnectorCapabilities.mysql
+    }
+  }
 
 }

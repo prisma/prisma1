@@ -17,7 +17,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
 
@@ -35,7 +35,13 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
 
-  override def capabilities = ConnectorCapabilities.mysql
+  override def capabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.mysqlPrototype
+    } else {
+      ConnectorCapabilities.mysql
+    }
+  }
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createClientDatabaseForProject(projectId = id)

@@ -18,12 +18,19 @@ import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
-    isActive: Boolean
+    isActive: Boolean,
+    isPrototype: Boolean
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: ConnectorCapabilities           = ConnectorCapabilities.postgres(isActive)
+  override def capabilities: ConnectorCapabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.postgresPrototype
+    } else {
+      ConnectorCapabilities.postgres(isActive = isActive)
+    }
+  }
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
   lazy val setupDatabases      = internalDatabases.setupDatabase
