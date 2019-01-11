@@ -23,7 +23,11 @@ object PrismaNativeMain {
 
     val sangriaHandler = SangriaHandlerImpl(managementApiEnabled = true)
     val executor       = BlazeSangriaServer
-    val server         = executor.create(handler = sangriaHandler, port = dependencies.config.port.getOrElse(4466), requestPrefix = sys.env.getOrElse("ENV", "local"))
+    val server = executor.create(
+      handler = sangriaHandler,
+      port = dependencies.config.port.getOrElse(4466),
+      requestPrefix = sys.env.getOrElse("ENV", "local")
+    )
 
     server.startBlocking()
   }

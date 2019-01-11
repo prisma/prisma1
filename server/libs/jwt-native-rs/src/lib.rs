@@ -74,8 +74,8 @@ pub extern "C" fn create_token(algorithm: *const c_char, secret: *const c_char, 
 
     let header = Header::new(use_algorithm);
     let token = encode( &header, &claims, secret_str.as_ref()).unwrap();
-
     let ptr = ProtocolBuffer::from(token).into_boxed_ptr();
+
     trace!("Create - handing out: {:?}", ptr);
     ptr
 }
@@ -102,6 +102,7 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const *const c_ch
     }
 
     let ptr = ProtocolBuffer::from(ProtocolError::GenericError(String::from(last_error))).into_boxed_ptr();
+
     trace!("Verify - handing out: {:?}", ptr);
     ptr
 }
@@ -126,13 +127,9 @@ fn validate_claims(claims: Claims, grant: Option<Grant>) -> ProtocolBuffer {
     }
 
     match contains_valid_grant(&grant, &claims.grants) {
-        Ok(valid) if !valid => {
-            return ProtocolBuffer::from(ProtocolError::GenericError(format!("Token grants do not satisfy the request. Got: {:?} Required: {:?}", claims.grants, grant)))
-        }
-        Err(e) =>
-            return ProtocolBuffer::from(e),
-
-        _ => (),
+        Ok(valid) if !valid => return ProtocolBuffer::from(ProtocolError::GenericError(format!("Token grants do not satisfy the request. Got: {:?} Required: {:?}", claims.grants, grant))),
+        Err(e)              => return ProtocolBuffer::from(e),
+        _                   => (),
     }
 
     return ProtocolBuffer::from(true)
@@ -147,7 +144,7 @@ fn is_expired(exp_claim: Option<i64>) -> bool {
 
 fn is_used_before_validity(nbf_claim: Option<i64>) -> bool{
     match nbf_claim {
-        Some(iat) => iat < Utc::now().timestamp(),
+        Some(nbf) => nbf > Utc::now().timestamp(),
         None      => false,
     }
 }

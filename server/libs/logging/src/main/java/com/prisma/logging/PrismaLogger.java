@@ -69,35 +69,35 @@ public class PrismaLogger implements org.slf4j.Logger {
         t.printStackTrace();
     }
 
-    @Override public void info(String msg) { if (isInfoEnabled()) log("Info", msg); }
-    @Override public void info(String format, Object arg) { if (isInfoEnabled()) log("Info", format, arg); }
-    @Override public void info(String format, Object arg1, Object arg2) { if (isInfoEnabled()) log("Info", format, arg1, arg2); }
-    @Override public void info(String format, Object... arguments) { if (isInfoEnabled()) log("Info", format, arguments); }
-    @Override public void info(String msg, Throwable t) { if (isInfoEnabled()) log("Info", msg, t); }
+    @Override public void info(String msg) { if (isInfoEnabled()) log("INFO", msg); }
+    @Override public void info(String format, Object arg) { if (isInfoEnabled()) log("INFO", format, arg); }
+    @Override public void info(String format, Object arg1, Object arg2) { if (isInfoEnabled()) log("INFO", format, arg1, arg2); }
+    @Override public void info(String format, Object... arguments) { if (isInfoEnabled()) log("INFO", format, arguments); }
+    @Override public void info(String msg, Throwable t) { if (isInfoEnabled()) log("INFO", msg, t); }
 
-    @Override public void debug(String msg) { if (isDebugEnabled()) log("Debug", msg); }
-    @Override public void debug(String format, Object arg) { if (isDebugEnabled()) log("Debug", format, arg); }
-    @Override public void debug(String format, Object arg1, Object arg2) { if (isDebugEnabled()) log("Debug", format, arg1, arg2); }
-    @Override public void debug(String format, Object... arguments) { if (isDebugEnabled()) log("Debug", format, arguments); }
-    @Override public void debug(String msg, Throwable t) { if (isDebugEnabled()) log("Debug", msg, t); }
+    @Override public void debug(String msg) { if (isDebugEnabled()) log("DEBUG", msg); }
+    @Override public void debug(String format, Object arg) { if (isDebugEnabled()) log("DEBUG", format, arg); }
+    @Override public void debug(String format, Object arg1, Object arg2) { if (isDebugEnabled()) log("DEBUG", format, arg1, arg2); }
+    @Override public void debug(String format, Object... arguments) { if (isDebugEnabled()) log("DEBUG", format, arguments); }
+    @Override public void debug(String msg, Throwable t) { if (isDebugEnabled()) log("DEBUG", msg, t); }
 
-    @Override public void warn(String msg) { if (isWarnEnabled()) log("Warning", msg); }
-    @Override public void warn(String format, Object arg) { if (isWarnEnabled()) log("Warning", format, arg); }
-    @Override public void warn(String format, Object arg1, Object arg2) { if (isWarnEnabled()) log("Warning", format, arg1, arg2); }
-    @Override public void warn(String format, Object... arguments) { if (isWarnEnabled()) log("Warning", format, arguments); }
-    @Override public void warn(String msg, Throwable t) { if (isWarnEnabled()) log("Warning", msg, t); }
+    @Override public void warn(String msg) { if (isWarnEnabled()) log("WARNING", msg); }
+    @Override public void warn(String format, Object arg) { if (isWarnEnabled()) log("WARNING", format, arg); }
+    @Override public void warn(String format, Object arg1, Object arg2) { if (isWarnEnabled()) log("WARNING", format, arg1, arg2); }
+    @Override public void warn(String format, Object... arguments) { if (isWarnEnabled()) log("WARNING", format, arguments); }
+    @Override public void warn(String msg, Throwable t) { if (isWarnEnabled()) log("WARNING", msg, t); }
 
-    @Override public void error(String msg) { if (isErrorEnabled()) log("Error", msg); }
-    @Override public void error(String format, Object arg) { if (isErrorEnabled()) log("Error", format, arg); }
-    @Override public void error(String format, Object arg1, Object arg2) { if (isErrorEnabled()) log("Error", format, arg1, arg2); }
-    @Override public void error(String format, Object... arguments) { if (isErrorEnabled()) log("Error", format, arguments); }
-    @Override public void error(String msg, Throwable t) { if (isErrorEnabled()) log("Error", msg, t); }
+    @Override public void error(String msg) { if (isErrorEnabled()) log("ERROR", msg); }
+    @Override public void error(String format, Object arg) { if (isErrorEnabled()) log("ERROR", format, arg); }
+    @Override public void error(String format, Object arg1, Object arg2) { if (isErrorEnabled()) log("ERROR", format, arg1, arg2); }
+    @Override public void error(String format, Object... arguments) { if (isErrorEnabled()) log("ERROR", format, arguments); }
+    @Override public void error(String msg, Throwable t) { if (isErrorEnabled()) log("ERROR", msg, t); }
 
-    @Override public void trace(String msg) { if (isTraceEnabled()) log("Trace", msg); }
-    @Override public void trace(String format, Object arg) { if (isTraceEnabled()) log("Trace", format, arg); }
-    @Override public void trace(String format, Object arg1, Object arg2) { if (isTraceEnabled()) log("Trace", format, arg1, arg2); }
-    @Override public void trace(String format, Object... arguments) { if (isTraceEnabled()) log("Trace", format, arguments); }
-    @Override public void trace(String msg, Throwable t) { if (isTraceEnabled()) log("Trace", msg, t); }
+    @Override public void trace(String msg) { if (isTraceEnabled()) log("TRACE", msg); }
+    @Override public void trace(String format, Object arg) { if (isTraceEnabled()) log("TRACE", format, arg); }
+    @Override public void trace(String format, Object arg1, Object arg2) { if (isTraceEnabled()) log("TRACE", format, arg1, arg2); }
+    @Override public void trace(String format, Object... arguments) { if (isTraceEnabled()) log("TRACE", format, arguments); }
+    @Override public void trace(String msg, Throwable t) { if (isTraceEnabled()) log("TRACE", msg, t); }
 
     // Todo Marker methods
     @Override public void debug(Marker marker, String msg) {}

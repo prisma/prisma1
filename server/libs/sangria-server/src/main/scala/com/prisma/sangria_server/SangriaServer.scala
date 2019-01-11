@@ -13,7 +13,6 @@ import scala.util.Try
 
 trait SangriaServerExecutor {
   def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer): SangriaServer
-
   def supportsWebsockets: Boolean
 }
 

@@ -1,7 +1,7 @@
 package com.prisma.jwt.graal
 
-import java.nio.charset.Charset
-
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import com.prisma.jwt.Algorithm.Algorithm
 import com.prisma.jwt.{Auth, AuthFailure, JwtGrant}
 import org.graalvm.nativeimage.c.`type`.CTypeConversion.CCharPointerPointerHolder
@@ -37,22 +37,20 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
       toCString(algorithm.toString),
       toCString(secret),
       expirationOffset
-        .map { e =>
-          DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000
-        }
+        .map(e => DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000)
         .getOrElse(NO_EXP),
       target,
       action
     )
 
-//    debug(buffer)
     throwOnError(buffer)
 
     if (buffer.getDataLen == 0) {
       throw AuthFailure("Native call returned no token")
     }
 
-    val dataString = new String(CTypeConversion.asByteBuffer(buffer.getData, buffer.getDataLen.toInt).array(), Charset.forName("UTF-8"))
+    val buf: ByteBuffer = CTypeConversion.asByteBuffer(buffer.getData, buffer.getDataLen.toInt - 1) // Cut null terminator
+    val dataString      = StandardCharsets.UTF_8.decode(buf).toString
 
     GraalRustBridge.destroy_buffer(buffer)
     dataString
@@ -71,7 +69,6 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
         action
       )
 
-      debug(buffer)
       throwOnError(buffer)
 
       if (buffer.getDataLen > 1) {
@@ -101,9 +98,5 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
 
       throw AuthFailure(errorString.capitalize)
     }
-  }
-
-  private def debug(buffer: CIntegration.ProtocolBuffer): Unit = {
-//    println(s"[Graal][Debug] ${buffer.toString}")
   }
 }

@@ -113,5 +113,4 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
 
   def circeJsonToPlayJson(json: Json): PlayJsValue  = CirceJson.transform(json, PlayJson)
   def playJsonToCircleJson(json: PlayJsValue): Json = PlayJson.transform(json, CirceJson)
-
 }

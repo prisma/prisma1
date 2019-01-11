@@ -110,19 +110,4 @@ class JnaAuthSpec extends WordSpec with Matchers {
       validation.isSuccess should be(true)
     }
   }
-
-  // todo currently unsupported
-//  "RS256 JWT auth" should {
-//    val auth    = Auth.jna(algorithm = Algorithm.RS256)
-//    val sSecret = TestKey.privateKey
-//    val vSecret = Vector(TestKey.publicKey)
-//
-//    "sign and validate a simple token" in {
-//      val token = auth.createToken(sSecret, None).get
-//      println(token)
-//      val validation = auth.verifyToken(token, vSecret)
-//
-//      validation.isSuccess should be(true)
-//    }
-//  }
 }
