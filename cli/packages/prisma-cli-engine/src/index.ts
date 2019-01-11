@@ -33,3 +33,5 @@ export { mockDefinition, mockEnv } from './mock'
 export { Client } from './Client/Client'
 
 export { DeployPayload } from './Client/types'
+
+export { AuthenticationPayload } from './Client/types'

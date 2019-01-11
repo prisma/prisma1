@@ -151,11 +151,15 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    let folderName = path.basename(this.config.definitionDir);
+    let folderName = path.basename(this.config.definitionDir)
     folderName =
-      folderName === "prisma"
-        ? path.basename(path.join(this.config.definitionDir, "../"))
-        : folderName;
+      folderName === 'prisma'
+        ? path.basename(path.join(this.config.definitionDir, '../'))
+        : folderName
+
+    if (/^\d+/.test(folderName)) {
+      folderName = `service-${folderName}`
+    }
 
     const authenticationPayload = await this.client.isAuthenticated()
     const loggedIn = authenticationPayload.isAuthenticated
@@ -167,7 +171,7 @@ export class EndpointDialog {
       !loggedIn && !localClusterRunning,
       hasDockerComposeYml,
       clusters,
-      loggedIn
+      loggedIn,
     )
 
     const { choice } = await this.out.prompt(question)
@@ -702,14 +706,16 @@ export class EndpointDialog {
         clusters.length > 0
           ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
           : sandboxChoices
-  
+
       const rawChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
         ...clusterChoices,
         [
           'Demo server',
-          `Hosted demo environment incl. database${!isAuthenticated ? ` (requires login)` : `` }`,
+          `Hosted demo environment incl. database${
+            !isAuthenticated ? ` (requires login)` : ``
+          }`,
         ],
         [
           'Use other server',
