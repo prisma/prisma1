@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    isActive: Boolean,
+    manageRelayIds: Boolean,
     schemaName: Option[String]
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
@@ -103,12 +103,12 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
-    case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = isActive)
+    case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = manageRelayIds)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(m)
     case m: TopLevelUpsertNode => UpsertNodeInterpreter(m)
-    case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: UpdateNodes        => UpdateNodesInterpreter(m)
-    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: ResetData          => ResetDataInterpreter(m)
     case m: ImportNodes        => ImportNodesInterpreter(m)
     case m: ImportRelations    => ImportRelationsInterpreter(m)
@@ -116,14 +116,14 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = manageRelayIds)
     case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
     case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
-    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: NestedConnect     => NestedConnectInterpreter(m)
     case m: NestedSet         => NestedSetInterpreter(m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
-    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
   }
 }
