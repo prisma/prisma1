@@ -578,7 +578,8 @@ export class EndpointDialog {
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
-      const alreadyData = await this.askForExistingDataMongo()
+      const alreadyData =
+        introspection || (await this.askForExistingDataMongo())
       if (alreadyData) {
         credentials.database = await this.ask({
           message: `Enter name of existing database`,
