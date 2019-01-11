@@ -327,31 +327,37 @@ export class EndpointDialog {
           const before = Date.now()
           this.out.action.start(`Connecting to database`)
           const client = await this.connectToMongo(credentials)
-          const connector = new MongoConnector(client)
-          const introspection = await connector.introspect(
-            credentials.database!,
-          )
-          const sdl = await introspection.getDatamodel()
-          const numCollections = sdl.types.length
-          const renderedSdl = introspection.renderer.render(sdl)
-          await client.close()
 
-          if (numCollections === 0) {
-            this.out.log(
-              chalk.red(
-                `\n${chalk.bold(
-                  'Error: ',
-                )}The provided database doesn't contain any collection. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
-              ),
+          // Only introspect, if there is already data
+          if (credentials.alreadyData) {
+            const connector = new MongoConnector(client)
+            const introspection = await connector.introspect(
+              credentials.database!,
             )
-            this.out.exit(1)
-          }
+            const sdl = await introspection.getDatamodel()
+            const numCollections = sdl.types.length
+            const renderedSdl = introspection.renderer.render(sdl)
+            await client.close()
 
-          this.out.action.stop(prettyTime(Date.now() - before))
-          this.out.log(
-            `Created datamodel definition based on ${numCollections} Mongo collections.`,
-          )
-          datamodel = renderedSdl
+            if (numCollections === 0) {
+              this.out.log(
+                chalk.red(
+                  `\n${chalk.bold(
+                    'Error: ',
+                  )}The provided database doesn't contain any collection. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+                ),
+              )
+              this.out.exit(1)
+            }
+
+            this.out.action.stop(prettyTime(Date.now() - before))
+            this.out.log(
+              `Created datamodel definition based on ${numCollections} Mongo collections.`,
+            )
+            datamodel = renderedSdl
+          } else {
+            this.out.action.stop(prettyTime(Date.now() - before))
+          }
           credentials.uri = this.replaceMongoHost(credentials.uri!)
           /**
            * All non-mongo databases
