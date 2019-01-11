@@ -1,21 +1,25 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
+
 object ReservedFields {
-  val idFieldName        = "id"
-  val updatedAtFieldName = "updatedAt"
-  val createdAtFieldName = "createdAt"
-  val reservedFieldNames = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
+  val idFieldName              = "id"
+  val embeddedIdFieldName      = "_id"
+  val mongoInternalIdfieldName = "_id"
+  val updatedAtFieldName       = "updatedAt"
+  val createdAtFieldName       = "createdAt"
+  val reservedFieldNames       = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
 
   def reservedFieldFor(name: String): FieldTemplate = {
     name match {
-      case x if x == idFieldName        => idField()
-      case x if x == createdAtFieldName => createdAtField()
-      case x if x == updatedAtFieldName => updatedAtField()
+      case x if x == idFieldName        => idField
+      case x if x == createdAtFieldName => createdAtField
+      case x if x == updatedAtFieldName => updatedAtField
       case _                            => throw new Exception(s"Unknown reserved field: $name")
     }
   }
 
-  private def createdAtField(): FieldTemplate = {
+  private val createdAtField: FieldTemplate = {
     FieldTemplate(
       name = createdAtFieldName,
       typeIdentifier = TypeIdentifier.DateTime,
@@ -28,11 +32,12 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
-  private def updatedAtField(): FieldTemplate = {
+  private val updatedAtField: FieldTemplate = {
     FieldTemplate(
       name = updatedAtFieldName,
       typeIdentifier = TypeIdentifier.DateTime,
@@ -45,11 +50,12 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
-  private def idField(): FieldTemplate = {
+  private val idField: FieldTemplate = {
     FieldTemplate(
       name = idFieldName,
       typeIdentifier = TypeIdentifier.Cuid,
@@ -62,7 +68,26 @@ object ReservedFields {
       defaultValue = None,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = Some(IdBehaviour(strategy = FieldBehaviour.IdStrategy.Auto))
+    )
+  }
+
+  val embeddedIdField: FieldTemplate = {
+    FieldTemplate(
+      name = embeddedIdFieldName,
+      typeIdentifier = TypeIdentifier.Cuid,
+      isRequired = true,
+      isList = false,
+      isUnique = true,
+      isHidden = true,
+      isReadonly = true,
+      enum = None,
+      defaultValue = None,
+      relationName = None,
+      relationSide = None,
+      manifestation = None,
+      behaviour = Some(IdBehaviour(strategy = FieldBehaviour.IdStrategy.Auto))
     )
   }
 }

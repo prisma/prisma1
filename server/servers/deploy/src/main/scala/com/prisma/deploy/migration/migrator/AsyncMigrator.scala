@@ -4,7 +4,8 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
@@ -25,8 +26,14 @@ case class AsyncMigrator(
   lazy val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, deployConnector)))
   implicit val timeout         = new Timeout(5.minutes)
 
-  override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration] = {
-    (deploymentScheduler ? Schedule(projectId, nextSchema, steps, functions)).mapTo[Migration]
+  override def schedule(
+      projectId: String,
+      nextSchema: Schema,
+      steps: Vector[MigrationStep],
+      functions: Vector[Function],
+      rawDataModel: String
+  ): Future[Migration] = {
+    (deploymentScheduler ? Schedule(projectId, nextSchema, steps, functions, rawDataModel)).mapTo[Migration]
   }
 
   override def initialize: Unit = {

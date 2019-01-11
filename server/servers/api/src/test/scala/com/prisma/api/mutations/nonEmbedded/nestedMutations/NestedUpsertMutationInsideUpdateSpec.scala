@@ -4,12 +4,12 @@ import java.util.UUID
 
 import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
     val project = SchemaDsl.fromString() { schemaPMToC1req }
@@ -337,7 +337,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
                         type Todo{
                             id: ID! @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }"""
 
     val project = SchemaDsl.fromString() { schema }
@@ -372,7 +372,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |      comments: {
          |        upsert: [
          |          {where: {id: "$comment1Id"}, update: {text: "update comment1"}, create: {text: "irrelevant"}},
-         |          {where: {id: "non-existent-id"}, update: {text: "irrelevant"}, create: {text: "new comment3"}},
+         |          {where: {id: "5beea4aa6183dd734b2dbd9b"}, update: {text: "irrelevant"}, create: {text: "new comment3"}},
          |        ]
          |      }
          |    }
@@ -400,7 +400,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
                         type Todo{
                             id: ID! @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }"""
 
     val project = SchemaDsl.fromString() { schema }
@@ -477,7 +477,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
                         type Todo{
                             id: ID! @unique
                             uniqueTodo: String! @unique
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }"""
 
     val project = SchemaDsl.fromString() { schema }
@@ -511,7 +511,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |    data:{
          |      comments: {
          |        upsert: [
-         |          {where: {id: "NotExistant"}, update: {text: "update comment1"}, create: {text: "irrelevant", uniqueComment: "comments"}},
+         |          {where: {id: "5beea4aa6183dd734b2dbd9b"}, update: {text: "update comment1"}, create: {text: "irrelevant", uniqueComment: "comments"}},
          |        ]
          |      }
          |    }
@@ -533,14 +533,14 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val schema = """     type List{
                             id: ID! @unique
                             name: String!
-                            todos: [Todo!]!
+                            todos: [Todo]
                         }
 
                         type Todo{
                             id: ID! @unique
                             title: String!
                             list: List
-                            tags: [Tag!]!
+                            tags: [Tag]
                         }
 
                         type Tag{
@@ -608,7 +608,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |                    create: { name: "irrelevant" }
          |                  },
          |                  {
-         |                    where: { id: "non-existent-id" }
+         |                    where: { id: "5beea4aa6183dd734b2dbd9b" }
          |                    update: { name: "irrelevant" }
          |                    create: { name: "new tag" }
          |                  },
@@ -640,14 +640,14 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val schema = """     type List{
                             id: ID! @unique
                             name: String!
-                            todos: [Todo!]!
+                            todos: [Todo]
                         }
 
                         type Todo{
                             id: ID! @unique
                             title: String!
                             list: List
-                            tags: [Tag!]!
+                            tags: [Tag]
                         }
 
                         type Tag{
@@ -704,7 +704,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |      todos: {
          |        upsert: [
          |          {
-         |            where: { id: "Does not Exist" }
+         |            where: { id: "5beea4aa6183dd734b2dbd9b" }
          |            create: { title: "new todo" tags: { create: [ {name: "the tag"}]}}
          |            update: { title: "updated todo"}
          |          }
@@ -731,20 +731,20 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""".stripMargin }
     database.setup(project)
 
@@ -818,20 +818,20 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""".stripMargin }
     database.setup(project)
 
@@ -905,13 +905,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -990,13 +990,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -1075,13 +1075,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -1156,13 +1156,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -1248,7 +1248,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {
@@ -1341,7 +1341,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {
@@ -1732,7 +1732,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       s"""
          |type List {
          |  id: ID! @unique
-         |  todos: [Todo!]!
+         |  todos: [Todo]
          |}
          |
          |type Todo {

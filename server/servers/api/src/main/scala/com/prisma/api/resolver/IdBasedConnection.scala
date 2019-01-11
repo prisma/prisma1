@@ -143,8 +143,7 @@ object IdBasedConnectionLike {
   }
 
   implicit def connectionIsConnectionLike[E, T[_]]: IdBasedConnectionLike[T, E] =
-    IdBasedConnectionIsIdBasedConnectionLike$
-      .asInstanceOf[IdBasedConnectionLike[T, E]]
+    IdBasedConnectionIsIdBasedConnectionLike$.asInstanceOf[IdBasedConnectionLike[T, E]]
 }
 
 case class IdBasedConnectionArgs(before: Option[String] = None, after: Option[String] = None, first: Option[Int] = None, last: Option[Int] = None)

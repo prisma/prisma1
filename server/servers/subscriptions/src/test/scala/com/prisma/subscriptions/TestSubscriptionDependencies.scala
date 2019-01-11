@@ -7,7 +7,7 @@ import com.prisma.api.schema.SchemaBuilder
 import com.prisma.api.{ApiDependencies, TestApiDependencies}
 import com.prisma.cache.Cache
 import com.prisma.config.ConfigLoader
-import com.prisma.connectors.utils.ConnectorUtils
+import com.prisma.connectors.utils.ConnectorLoader
 import com.prisma.messagebus.testkits.InMemoryPubSubTestKit
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
@@ -22,7 +22,7 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
 
   val config = ConfigLoader.load()
 
-  lazy val deployConnector = ConnectorUtils.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
+  lazy val deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
 
   override lazy val invalidationTestKit = InMemoryPubSubTestKit[String]()
   lazy val sssEventsTestKit             = InMemoryPubSubTestKit[String]()
@@ -42,7 +42,7 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
   override lazy val sssEventsPubSub                 = ???
   override lazy val webhookPublisher                = ???
 
-  override lazy val apiConnector = ConnectorUtils.loadApiConnector(config)
+  override lazy val apiConnector = ConnectorLoader.loadApiConnector(config)
 
   override def projectIdEncoder: ProjectIdEncoder = apiConnector.projectIdEncoder
 

@@ -23,6 +23,11 @@ export interface DeployPayload {
   migration: Migration
 }
 
+export interface AuthenticationPayload {
+  isAuthenticated: boolean,
+  account: User | null
+}
+
 export interface SchemaError {
   type: string
   field?: string

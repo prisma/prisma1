@@ -1,12 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "Nested Updates" should "work for models with missing backrelations " in {
     val project = SchemaDsl.fromString() {
@@ -58,7 +58,7 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat {
@@ -107,7 +107,7 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
         |type Owner {
         |  id: ID! @unique
         |  ownerName: String! @unique
-        |  cats: [Cat!]!
+        |  cats: [Cat]
         |}
         |
         |type Cat {

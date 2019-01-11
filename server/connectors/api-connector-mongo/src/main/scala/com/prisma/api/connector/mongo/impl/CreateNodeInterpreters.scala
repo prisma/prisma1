@@ -4,9 +4,8 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, SequenceAction, SimpleMongoAction}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.{IdGCValue, ListGCValue}
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
-import com.prisma.shared.models.Model
+import com.prisma.gc_values.ListGCValue
+import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.MongoWriteException
 
 import scala.concurrent.ExecutionContext
@@ -19,22 +18,29 @@ case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionCo
   override val errorMapper = {
     case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
-
   }
 }
 
 object MongoErrorMessageHelper {
 
+  def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+
+    unique match {
+      case false => shortenedName + "_R"
+      case true  => shortenedName + "_U"
+    }
+  }
+
   def getFieldOption(model: Model, e: MongoWriteException): Option[String] = {
     model.scalarFields.filter { field =>
-      val constraintName = field.name + "_U"
+      val constraintName = indexNameHelper(model.dbName, field.dbName, true)
       e.getMessage.contains(constraintName)
     } match {
       case x +: _ => Some("Field name = " + x.name)
       case _      => None
     }
   }
-
 }
 
 case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val ec: ExecutionContext)
@@ -43,23 +49,24 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
   override def relationField = mutaction.relationField
   val model                  = p.relatedModel_!
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     implicit val mb: MongoActionsBuilder = mutationBuilder
 
     for {
-      _       <- SequenceAction(Vector(requiredCheck(parentId), removalAction(parentId)))
-      results <- createNodeAndConnectToParent(mutationBuilder, parentId)
+      _       <- SequenceAction(Vector(requiredCheck(parent), removalAction(parent)))
+      results <- createNodeAndConnectToParent(mutaction.relationField, mutationBuilder, parent)
     } yield results
   }
-  private def createNodeAndConnectToParent(
-      mutationBuilder: MongoActionsBuilder,
-      parentId: IdGCValue
-  )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relation.manifestation match {
-    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
 
+  private def createNodeAndConnectToParent(
+      relationField: RelationField,
+      mutationBuilder: MongoActionsBuilder,
+      parent: NodeAddress
+  )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relationField.relatedField.relationIsInlinedInParent match {
+    case true => // ID is stored on this Node
       val inlineRelation = c.isList match {
-        case true  => List((m.referencingColumn, ListGCValue(Vector(parentId))))
-        case false => List((m.referencingColumn, parentId))
+        case true  => List((relationField.relatedField.dbName, ListGCValue(Vector(parent.idValue))))
+        case false => List((relationField.relatedField.dbName, parent.idValue))
       }
 
       for {
@@ -67,20 +74,20 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
       } yield mutactionResult
 
-    case _ => // ID is stored on other node, we need to update the parent with the inline relation id after creating the child.
+    case false => // ID is stored on other node, we need to update the parent with the inline relation id after creating the child.
       for {
         mutactionResult <- mutationBuilder.createNode(mutaction, List.empty)
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
-        _               <- mutationBuilder.createRelation(mutaction.relationField, parentId, id)
+        _               <- mutationBuilder.createRelation(relationField, parent, id)
       } yield mutactionResult
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = mutaction.topIsCreate match {
+  def requiredCheck(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = mutaction.topIsCreate match {
     case false =>
       (p.isList, p.isRequired, c.isList, c.isRequired) match {
         case (false, true, false, true)   => requiredRelationViolation
         case (false, true, false, false)  => noCheckRequired
-        case (false, false, false, true)  => checkForOldChild(parentId)
+        case (false, false, false, true)  => checkForOldChild(parent)
         case (false, false, false, false) => noCheckRequired
         case (true, false, false, true)   => noCheckRequired
         case (true, false, false, false)  => noCheckRequired
@@ -94,12 +101,12 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
       noCheckRequired
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = mutaction.topIsCreate match {
+  def removalAction(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = mutaction.topIsCreate match {
     case false =>
       (p.isList, c.isList) match {
-        case (false, false) => removalByParent(parentId)
+        case (false, false) => removalByParent(parent)
         case (true, false)  => noActionRequired
-        case (false, true)  => removalByParent(parentId)
+        case (false, true)  => removalByParent(parent)
         case (true, true)   => noActionRequired
       }
 

@@ -4,8 +4,8 @@ import java.sql.SQLIntegrityConstraintViolationException
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
-import com.prisma.api.schema.APIErrors
+import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, NodeSingleQueries}
+import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.Model
 import org.postgresql.util.PSQLException
@@ -30,25 +30,42 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
     } yield UpdateNodeResult(node.id, node, mutaction)
   }
 
-  override val errorMapper = {
-    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
+}
 
-    case e: PSQLException if e.getSQLState == "23503" =>
-      APIErrors.NodeNotFoundForWhereError(mutaction.where)
+case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter with SharedUpdateLogic {
+  val model       = mutaction.model
+  val nonListArgs = mutaction.nonListArgs
+  val listArgs    = mutaction.listArgs
 
-    case e: PSQLException if e.getSQLState == "23502" =>
-      APIErrors.FieldCannotBeNull()
+  def dbioAction(mutationBuilder: JdbcActionsBuilder) =
+    for {
+      ids        <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)
+      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
+    } yield ManyNodesResult(mutaction, ids.size)
 
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 &&
-          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
+}
 
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-      APIErrors.FieldCannotBeNull()
+case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
+    extends NestedDatabaseMutactionInterpreter
+    with SharedUpdateLogic {
+  val model       = mutaction.relationField.relatedModel_!
+  val nonListArgs = mutaction.nonListArgs
+  val listArgs    = mutaction.listArgs
+
+  override def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue) = {
+    for {
+      ids        <- mutationBuilder.getNodesIdsByParentIdAndWhereFilter(mutaction.relationField, parentId, mutaction.whereFilter)
+      groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateNodesByIds(mutaction.model, mutaction.nonListArgs, _)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.updateScalarListValuesForIds(mutaction.model, mutaction.listArgs, _)): _*)
+    } yield ManyNodesResult(mutaction, ids.size)
   }
+
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
 case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext)
@@ -80,22 +97,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
     } yield UpdateNodeResult(id, PrismaNode(id, RootGCValue.empty), mutaction)
   }
 
-  override val errorMapper = {
-    // https://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html#error_er_dup_entry
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
-
-    case e: PSQLException if e.getSQLState == "23502" =>
-      APIErrors.FieldCannotBeNull()
-
-    case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 &&
-          GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
-
-    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
-      APIErrors.FieldCannotBeNull()
-  }
+  override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
 trait SharedUpdateLogic {
@@ -121,5 +123,21 @@ trait SharedUpdateLogic {
       _ <- mutationBuilder.updateNodeById(model, id, nonListArgs)
       _ <- mutationBuilder.updateScalarListValuesForNodeId(model, id, listArgs)
     } yield id
+  }
+
+  def errorHandler(args: PrismaArgs): PartialFunction[Throwable, UserFacingError] = {
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+
+    case e: PSQLException if e.getSQLState == "23502" =>
+      APIErrors.FieldCannotBeNull()
+
+    case e: SQLIntegrityConstraintViolationException
+        if e.getErrorCode == 1062 &&
+          GetFieldFromSQLUniqueException.getFieldOptionMySql(args.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(args.keys, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
+      APIErrors.FieldCannotBeNull()
   }
 }

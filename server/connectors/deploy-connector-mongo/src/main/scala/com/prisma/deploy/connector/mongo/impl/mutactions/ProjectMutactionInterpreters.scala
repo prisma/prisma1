@@ -15,7 +15,7 @@ object CreateProjectInterpreter extends MongoMutactionInterpreter[CreateProject]
 
 object TruncateProjectInterpreter extends MongoMutactionInterpreter[TruncateProject] {
   override def execute(mutaction: TruncateProject) = {
-    MongoDeployDatabaseMutationBuilder.truncateProjectTables(project = mutaction.project)
+    MongoDeployDatabaseMutationBuilder.nonDestructiveTruncateProjectTables(project = mutaction.project)
   }
 
   override def rollback(mutaction: TruncateProject) = {

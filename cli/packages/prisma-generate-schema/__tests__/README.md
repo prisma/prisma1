@@ -1,18 +1,9 @@
 # Test
 
-## Inflector
-
-Unit tests ported from evo-inflector.
-
-## Parser
-
-Unit tests for the internal model parsing component.
-
 ## Blackbox Tests
 
 These tests load a datamodel, compute the CRUD schema, and then compare it with a ground-truth CRUD schema. 
-The ground-truth CRUD schema should be queried from an existing prisma endpoint. This can be done using the tool
-provided in the `scripts` folder. 
+The ground-truth CRUD schema should be kept up to date accoring to the latest prisma server version. This can be done using the tools provided in the `scripts` folder. 
 
 ### Blackbox Test Cases
 

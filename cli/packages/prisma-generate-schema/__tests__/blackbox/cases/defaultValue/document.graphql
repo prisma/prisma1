@@ -1,0 +1,1114 @@
+type A {
+  c: String!
+  removeThisIdd: ID!
+  d: String
+}
+
+"""
+A connection to a list of items.
+"""
+type AConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [AEdge]!
+  aggregate: AggregateA!
+}
+
+input ACreateInput {
+  c: String!
+  d: String
+}
+
+input ACreateManyInput {
+  create: [ACreateInput!]
+  connect: [AWhereUniqueInput!]
+}
+
+"""
+An edge in a connection.
+"""
+type AEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: A!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+type AggregateA {
+  count: Int!
+}
+
+type AggregateAWithId {
+  count: Int!
+}
+
+type AggregateB {
+  count: Int!
+}
+
+enum AOrderByInput {
+  c_ASC
+  c_DESC
+  removeThisIdd_ASC
+  removeThisIdd_DESC
+  d_ASC
+  d_DESC
+}
+
+type APreviousValues {
+  c: String!
+  removeThisIdd: ID!
+  d: String
+}
+
+input AScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AScalarWhereInput!]
+  c: String
+  """
+  All values that are not equal to given value.
+  """
+  c_not: String
+  """
+  All values that are contained in given list.
+  """
+  c_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  c_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  c_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  c_lte: String
+  """
+  All values greater than the given value.
+  """
+  c_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  c_gte: String
+  """
+  All values containing the given string.
+  """
+  c_contains: String
+  """
+  All values not containing the given string.
+  """
+  c_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  c_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  c_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  c_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  c_not_ends_with: String
+  removeThisIdd: ID
+  """
+  All values that are not equal to given value.
+  """
+  removeThisIdd_not: ID
+  """
+  All values that are contained in given list.
+  """
+  removeThisIdd_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisIdd_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  removeThisIdd_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  removeThisIdd_lte: ID
+  """
+  All values greater than the given value.
+  """
+  removeThisIdd_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisIdd_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisIdd_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisIdd_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisIdd_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisIdd_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisIdd_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisIdd_not_ends_with: ID
+  d: String
+  """
+  All values that are not equal to given value.
+  """
+  d_not: String
+  """
+  All values that are contained in given list.
+  """
+  d_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  d_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  d_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  d_lte: String
+  """
+  All values greater than the given value.
+  """
+  d_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  d_gte: String
+  """
+  All values containing the given string.
+  """
+  d_contains: String
+  """
+  All values not containing the given string.
+  """
+  d_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  d_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  d_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  d_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  d_not_ends_with: String
+}
+
+type ASubscriptionPayload {
+  mutation: MutationType!
+  node: A
+  updatedFields: [String!]
+  previousValues: APreviousValues
+}
+
+input ASubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ASubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: AWhereInput
+}
+
+input AUpdateDataInput {
+  c: String
+  d: String
+}
+
+input AUpdateInput {
+  c: String
+  d: String
+}
+
+input AUpdateManyDataInput {
+  c: String
+  d: String
+}
+
+input AUpdateManyInput {
+  create: [ACreateInput!]
+  connect: [AWhereUniqueInput!]
+  disconnect: [AWhereUniqueInput!]
+  delete: [AWhereUniqueInput!]
+  update: [AUpdateWithWhereUniqueNestedInput!]
+  updateMany: [AUpdateManyWithWhereNestedInput!]
+  deleteMany: [AScalarWhereInput!]
+  upsert: [AUpsertWithWhereUniqueNestedInput!]
+}
+
+input AUpdateManyMutationInput {
+  c: String
+  d: String
+}
+
+input AUpdateManyWithWhereNestedInput {
+  where: AScalarWhereInput!
+  data: AUpdateManyDataInput!
+}
+
+input AUpdateWithWhereUniqueNestedInput {
+  where: AWhereUniqueInput!
+  data: AUpdateDataInput!
+}
+
+input AUpsertWithWhereUniqueNestedInput {
+  where: AWhereUniqueInput!
+  update: AUpdateDataInput!
+  create: ACreateInput!
+}
+
+input AWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWhereInput!]
+  c: String
+  """
+  All values that are not equal to given value.
+  """
+  c_not: String
+  """
+  All values that are contained in given list.
+  """
+  c_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  c_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  c_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  c_lte: String
+  """
+  All values greater than the given value.
+  """
+  c_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  c_gte: String
+  """
+  All values containing the given string.
+  """
+  c_contains: String
+  """
+  All values not containing the given string.
+  """
+  c_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  c_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  c_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  c_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  c_not_ends_with: String
+  removeThisIdd: ID
+  """
+  All values that are not equal to given value.
+  """
+  removeThisIdd_not: ID
+  """
+  All values that are contained in given list.
+  """
+  removeThisIdd_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  removeThisIdd_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  removeThisIdd_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  removeThisIdd_lte: ID
+  """
+  All values greater than the given value.
+  """
+  removeThisIdd_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  removeThisIdd_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisIdd_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisIdd_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisIdd_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisIdd_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisIdd_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisIdd_not_ends_with: ID
+  d: String
+  """
+  All values that are not equal to given value.
+  """
+  d_not: String
+  """
+  All values that are contained in given list.
+  """
+  d_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  d_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  d_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  d_lte: String
+  """
+  All values greater than the given value.
+  """
+  d_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  d_gte: String
+  """
+  All values containing the given string.
+  """
+  d_contains: String
+  """
+  All values not containing the given string.
+  """
+  d_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  d_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  d_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  d_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  d_not_ends_with: String
+}
+
+input AWhereUniqueInput {
+  c: String
+  removeThisIdd: ID
+}
+
+type AWithId implements Node {
+  id: ID!
+  c: String!
+  d: String
+  b2: B!
+}
+
+"""
+A connection to a list of items.
+"""
+type AWithIdConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [AWithIdEdge]!
+  aggregate: AggregateAWithId!
+}
+
+input AWithIdCreateInput {
+  c: String!
+  d: String
+  b2: BCreateOneWithoutA2Input!
+}
+
+input AWithIdCreateOneWithoutB2Input {
+  create: AWithIdCreateWithoutB2Input
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdCreateWithoutB2Input {
+  c: String!
+  d: String
+}
+
+"""
+An edge in a connection.
+"""
+type AWithIdEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: AWithId!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum AWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  c_ASC
+  c_DESC
+  d_ASC
+  d_DESC
+}
+
+type AWithIdPreviousValues {
+  id: ID!
+  c: String!
+  d: String
+}
+
+type AWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: AWithId
+  updatedFields: [String!]
+  previousValues: AWithIdPreviousValues
+}
+
+input AWithIdSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: AWithIdWhereInput
+}
+
+input AWithIdUpdateInput {
+  c: String
+  d: String
+  b2: BUpdateOneRequiredWithoutA2Input
+}
+
+input AWithIdUpdateManyMutationInput {
+  c: String
+  d: String
+}
+
+input AWithIdUpdateOneWithoutB2Input {
+  create: AWithIdCreateWithoutB2Input
+  connect: AWithIdWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: AWithIdUpdateWithoutB2DataInput
+  upsert: AWithIdUpsertWithoutB2Input
+}
+
+input AWithIdUpdateWithoutB2DataInput {
+  c: String
+  d: String
+}
+
+input AWithIdUpsertWithoutB2Input {
+  update: AWithIdUpdateWithoutB2DataInput!
+  create: AWithIdCreateWithoutB2Input!
+}
+
+input AWithIdWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  c: String
+  """
+  All values that are not equal to given value.
+  """
+  c_not: String
+  """
+  All values that are contained in given list.
+  """
+  c_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  c_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  c_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  c_lte: String
+  """
+  All values greater than the given value.
+  """
+  c_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  c_gte: String
+  """
+  All values containing the given string.
+  """
+  c_contains: String
+  """
+  All values not containing the given string.
+  """
+  c_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  c_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  c_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  c_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  c_not_ends_with: String
+  d: String
+  """
+  All values that are not equal to given value.
+  """
+  d_not: String
+  """
+  All values that are contained in given list.
+  """
+  d_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  d_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  d_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  d_lte: String
+  """
+  All values greater than the given value.
+  """
+  d_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  d_gte: String
+  """
+  All values containing the given string.
+  """
+  d_contains: String
+  """
+  All values not containing the given string.
+  """
+  d_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  d_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  d_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  d_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  d_not_ends_with: String
+}
+
+input AWithIdWhereUniqueInput {
+  id: ID
+  c: String
+}
+
+type B implements Node {
+  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+  id: ID!
+  a2: AWithId
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+"""
+A connection to a list of items.
+"""
+type BConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [BEdge]!
+  aggregate: AggregateB!
+}
+
+input BCreateInput {
+  a: ACreateManyInput
+  a2: AWithIdCreateOneWithoutB2Input
+}
+
+input BCreateOneWithoutA2Input {
+  create: BCreateWithoutA2Input
+  connect: BWhereUniqueInput
+}
+
+input BCreateWithoutA2Input {
+  a: ACreateManyInput
+}
+
+"""
+An edge in a connection.
+"""
+type BEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: B!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum BOrderByInput {
+  id_ASC
+  id_DESC
+}
+
+type BPreviousValues {
+  id: ID!
+}
+
+type BSubscriptionPayload {
+  mutation: MutationType!
+  node: B
+  updatedFields: [String!]
+  previousValues: BPreviousValues
+}
+
+input BSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: BWhereInput
+}
+
+input BUpdateInput {
+  a: AUpdateManyInput
+  a2: AWithIdUpdateOneWithoutB2Input
+}
+
+input BUpdateOneRequiredWithoutA2Input {
+  create: BCreateWithoutA2Input
+  connect: BWhereUniqueInput
+  update: BUpdateWithoutA2DataInput
+  upsert: BUpsertWithoutA2Input
+}
+
+input BUpdateWithoutA2DataInput {
+  a: AUpdateManyInput
+}
+
+input BUpsertWithoutA2Input {
+  update: BUpdateWithoutA2DataInput!
+  create: BCreateWithoutA2Input!
+}
+
+input BWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+}
+
+input BWhereUniqueInput {
+  id: ID
+}
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createAWithId(data: AWithIdCreateInput!): AWithId!
+  createB(data: BCreateInput!): B!
+  createA(data: ACreateInput!): A!
+  updateAWithId(data: AWithIdUpdateInput!, where: AWithIdWhereUniqueInput!): AWithId
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
+  updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
+  deleteAWithId(where: AWithIdWhereUniqueInput!): AWithId
+  deleteB(where: BWhereUniqueInput!): B
+  deleteA(where: AWhereUniqueInput!): A
+  upsertAWithId(where: AWithIdWhereUniqueInput!, create: AWithIdCreateInput!, update: AWithIdUpdateInput!): AWithId!
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
+  upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
+  updateManyAWithIds(data: AWithIdUpdateManyMutationInput!, where: AWithIdWhereInput): BatchPayload!
+  updateManyAs(data: AUpdateManyMutationInput!, where: AWhereInput): BatchPayload!
+  deleteManyAWithIds(where: AWithIdWhereInput): BatchPayload!
+  deleteManyBs(where: BWhereInput): BatchPayload!
+  deleteManyAs(where: AWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  aWithIds(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithId]!
+  bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
+  as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
+  aWithId(where: AWithIdWhereUniqueInput!): AWithId
+  b(where: BWhereUniqueInput!): B
+  a(where: AWhereUniqueInput!): A
+  aWithIdsConnection(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AWithIdConnection!
+  bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
+  asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  aWithId(where: AWithIdSubscriptionWhereInput): AWithIdSubscriptionPayload
+  b(where: BSubscriptionWhereInput): BSubscriptionPayload
+  a(where: ASubscriptionWhereInput): ASubscriptionPayload
+}
+

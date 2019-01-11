@@ -2,7 +2,7 @@ package com.prisma.subscriptions.resolving
 
 import com.prisma.api.connector._
 import com.prisma.api.schema.ObjectTypeBuilder
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
 import com.prisma.shared.models.Model
 import sangria.schema.Context
 

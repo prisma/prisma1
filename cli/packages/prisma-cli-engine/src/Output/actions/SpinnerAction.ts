@@ -3,7 +3,7 @@ import { Output } from '../index'
 import * as stripAnsi from 'strip-ansi'
 
 export class SpinnerAction extends ActionBase {
-  spinner: number
+  spinner: any
   ansi: any
   frames: any
   frameIndex: number

@@ -1,10 +1,10 @@
 {
   "name": "prisma-generate-schema",
-  "version": "0.0.5",
+  "version": "1.20.4",
   "description": "Transform prisma datamodel SDL into graphql-js SDL",
   "main": "dist/src/index.js",
   "scripts": {
-    "test": "rm -rf dist && node_modules/jest-cli/bin/jest.js",
+    "test": "rm -rf dist && jest",
     "build": "tsc -d"
   },
   "files": [
@@ -16,21 +16,27 @@
   "devDependencies": {
     "@types/jest": "^23.3.1",
     "jest": "^23.5.0",
+    "jest-cli": "^23.6.0",
     "ts-jest": "^23.1.4",
-    "typescript": "^3.0.1"
+    "tslint-config-prettier": "^1.17.0",
+    "tslint-eslint-rules": "^5.4.0",
+    "typescript": "^3.2.2"
   },
   "dependencies": {
     "graphql": "^14.0.2",
     "pluralize": "^7.0.0",
-    "popsicle": "^10.0.1",
-    "tslint-config-prettier": "^1.15.0",
-    "tslint-eslint-rules": "^5.4.0"
+    "popsicle": "10",
+    "prisma-datamodel": "1.23.0-alpha.1"
   },
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "helpers.ts"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",

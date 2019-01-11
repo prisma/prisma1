@@ -3,19 +3,18 @@ package com.prisma.api.connector.mongo.impl
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoActionsBuilder, SequenceAction}
 import com.prisma.api.schema.APIErrors
-import com.prisma.gc_values.IdGCValue
 
 import scala.concurrent.ExecutionContext
 
 case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val ec: ExecutionContext) extends NestedRelationInterpreterBase {
   override def relationField = mutaction.relationField
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     implicit val implicitMb = mutationBuilder
-    SequenceAction(Vector(requiredCheck(parentId), removalAction(parentId))).map(_ => MutactionResults(Vector.empty))
+    SequenceAction(Vector(requiredCheck(parent), removalAction(parent))).map(_ => MutactionResults(Vector.empty))
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
+  def requiredCheck(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = {
     (p.isList, p.isRequired, c.isList, c.isRequired) match {
       case (false, true, false, true)   => requiredRelationViolation
       case (false, true, false, false)  => requiredRelationViolation
@@ -30,12 +29,12 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
     }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
+  def removalAction(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = {
     mutaction.where match {
       case None =>
         for {
-          _ <- mutationBuilder.ensureThatParentIsConnected(mutaction.relationField, parentId)
-          _ <- mutationBuilder.deleteRelationRowByParentId(mutaction.relationField, parentId)
+          _ <- mutationBuilder.ensureThatParentIsConnected(mutaction.relationField, parent)
+          _ <- mutationBuilder.deleteRelationRowByParent(mutaction.relationField, parent)
         } yield ()
 
       case Some(where) =>
@@ -45,8 +44,8 @@ case class NestedDisconnectInterpreter(mutaction: NestedDisconnect)(implicit val
                 case None => throw APIErrors.NodeNotFoundForWhereError(where)
                 case Some(childId) =>
                   for {
-                    _ <- mutationBuilder.ensureThatNodesAreConnected(mutaction.relationField, childId, parentId)
-                    _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(mutaction.relationField, childId, parentId)
+                    _ <- mutationBuilder.ensureThatNodesAreConnected(mutaction.relationField, childId, parent)
+                    _ <- mutationBuilder.deleteRelationRowByChildIdAndParentId(mutaction.relationField, childId, parent)
                   } yield ()
               }
         } yield ()

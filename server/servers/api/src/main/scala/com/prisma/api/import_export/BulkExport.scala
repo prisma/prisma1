@@ -94,9 +94,9 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
     import GCValueJsonFormatter.RootGcValueWritesWithoutNulls
     val jsonForNode = Json.toJsObject(item.data)
     val id = item.id match {
-      case CuidGCValue(id) => JsString(id)
-      case UuidGCValue(id) => JsString(id.toString)
-      case IntGCValue(id)  => JsNumber(id)
+      case StringIdGCValue(id) => JsString(id)
+      case UuidGCValue(id)     => JsString(id.toString)
+      case IntGCValue(id)      => JsNumber(id)
     }
     Json.obj("_typeName" -> info.current.name, "id" -> id) ++ jsonForNode
   }

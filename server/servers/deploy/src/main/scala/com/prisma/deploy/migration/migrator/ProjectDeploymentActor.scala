@@ -1,7 +1,8 @@
 package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, Stash}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, MigrationStepMapperImpl}
+import com.prisma.deploy.connector.persistence.MigrationPersistence
+import com.prisma.deploy.connector.{DeployConnector, MigrationStepMapperImpl}
 import com.prisma.deploy.schema.DeploymentInProgress
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
@@ -10,7 +11,7 @@ import scala.util.{Failure, Success}
 
 object DeploymentProtocol {
   object Initialize
-  case class Schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function])
+  case class Schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function], rawDataModel: String)
   object ResumeMessageProcessing
   object Ready
   object Deploy
@@ -138,7 +139,7 @@ case class ProjectDeploymentActor(
           Future.failed(err)
       }
       .flatMap { _ =>
-        migrationPersistence.create(Migration(projectId, msg.nextSchema, msg.steps, msg.functions))
+        migrationPersistence.create(Migration(projectId, msg.nextSchema, msg.steps, msg.functions, msg.rawDataModel))
       }
   }
 

@@ -2,13 +2,13 @@ package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation " should "error when deleting the parent2" in {
     val project = SchemaDsl.fromString() {
@@ -667,14 +667,14 @@ class DeleteMutationRelationsSpec extends FlatSpec with Matchers with ApiSpecBas
       """type Parent {
         | id: ID! @unique
         | p: String! @unique
-        | childrenOpt: [Child!]!
+        | childrenOpt: [Child]
         | stepChildOpt: StepChild
         |}
         |
         |type Child {
         | id: ID! @unique
         | c: String! @unique
-        | parentsOpt: [Parent!]!
+        | parentsOpt: [Parent]
         |}
         |
         |type StepChild {

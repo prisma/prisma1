@@ -1,12 +1,12 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a P1! to C1! relation " should "error when deleting the child" in {
     val project = SchemaDsl.fromString() { schemaP1reqToC1req }
@@ -505,13 +505,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val schema = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                         }
 
                         type Child{
                             id: ID! @unique
                             c: String! @unique
-                            parentsOpt: [Parent!]!
+                            parentsOpt: [Parent]
                             otherReq: ReqOther!
                         }
                        
@@ -587,13 +587,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val schema = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                         }
 
                         type Child{
                             id: ID! @unique
                             c: String! @unique
-                            parentsOpt: [Parent!]!
+                            parentsOpt: [Parent]
                             otherOpt: OptOther
                         }
 
@@ -675,7 +675,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
                         type Todo{
                             id: ID! @unique
                             text: String
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }"""
 
     val project = SchemaDsl.fromString() { schema }
@@ -742,7 +742,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
                         type Todo{
                             id: ID! @unique
                             text: String
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }"""
 
     val project = SchemaDsl.fromString() { schema }
@@ -804,7 +804,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
                         type Todo{
                             id: ID! @unique
                             text: String
-                            comments: [Comment!]!
+                            comments: [Comment]
                         }"""
 
     val project = SchemaDsl.fromString() { schema }
@@ -1050,20 +1050,20 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
-                                             |  bottoms: [Bottom!]!
+                                             |  tops: [Top]
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}""" }
     database.setup(project)
 
@@ -1131,13 +1131,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom {
@@ -1210,13 +1210,13 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle {
                                              |  id: ID! @unique
                                              |  nameMiddle: String! @unique
-                                             |  tops: [Top!]!
+                                             |  tops: [Top]
                                              |  bottom: Bottom
                                              |}
                                              |
@@ -1299,7 +1299,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
                                              |type Bottom {
                                              |  id: ID! @unique
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below {

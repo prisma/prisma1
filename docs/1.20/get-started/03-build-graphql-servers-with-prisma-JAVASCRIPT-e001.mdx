@@ -1,0 +1,234 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Collapse from 'components/Markdown/Collapse'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: 'Build an App',
+  gettingStartedTitle: 'GraphQL API',
+  position: 3,
+  gettingStartedOrder: 1,
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a GraphQL server.',
+  technology: 'node',
+  technologyOrder: 2,
+  articleGroup: 'Build an App',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Define a GraphQL schema for your GraphQL server
+- Implement resolver functions using the Prisma client
+- Use the GraphQL Playground to try out your GraphQL API
+
+## Configure Project
+
+[`grahpql-yoga`](https://github.com/prisma/graphql-yoga) is a GraphQL server library based on [Express.js](https://expressjs.com/). Add it to your project with the following command:
+
+```bash copy
+npm install --save graphql-yoga
+```
+
+## Define GraphQL API
+
+Every GraphQL API is based on a [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) that specifies all API operations and data structures. The schema is as a _contract_ between client and server.
+
+Create a new file called `schema.graphql`:
+
+```bash copy
+touch schema.graphql
+```
+
+To define the API operations, you need to specify the `Query` and `Mutation` types in your GraphQL schema - the following operations are examples for a simple blogging application:
+
+```graphql copy
+type Query {
+  publishedPosts: [Post!]!
+  post(postId: ID!): Post
+  postsByUser(userId: ID!): [Post!]!
+}
+
+type Mutation {
+  createUser(name: String!): User
+  createDraft(title: String!, userId: ID!): Post
+  publish(postId: ID!): Post
+}
+
+type User {
+  id: ID!
+  email: String
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  published: Boolean!
+  author: User
+}
+```
+
+> The `Post` and `User` types are straightforward re-definitions of the models specified in `datamodel.prisma`, except that the Prisma-specific directives have been removed.
+
+## Implement resolver functions
+
+Here is how you implement the resolver functions for the six API operations defined in the GraphQL schema. Replace the current contents of `index.js` entirely with the following code snippet:
+
+```js lineNumbers,copy
+const { prisma } = require('./generated/prisma-client')
+const { GraphQLServer } = require('graphql-yoga')
+
+const resolvers = {
+  Query: {
+    publishedPosts(root, args, context) {
+      return context.prisma.posts({ where: { published: true } })
+    },
+    post(root, args, context) {
+      return context.prisma.post({ id: args.postId })
+    },
+    postsByUser(root, args, context) {
+      return context.prisma.user({
+        id: args.userId
+      }).posts()
+    }
+  },
+  Mutation: {
+    createDraft(root, args, context) {
+      return context.prisma.createPost(
+        {
+          title: args.title,
+          author: {
+            connect: { id: args.userId }
+          }
+        },
+
+      )
+    },
+    publish(root, args, context) {
+      return context.prisma.updatePost(
+        {
+          where: { id: args.postId },
+          data: { published: true },
+        },
+
+      )
+    },
+    createUser(root, args, context) {
+      return context.prisma.createUser(
+        { name: args.name },
+      )
+    }
+  },
+  User: {
+    posts(root, args, context) {
+      return context.prisma.user({
+        id: root.id
+      }).posts()
+    }
+  },
+  Post: {
+    author(root, args, context) {
+      return context.prisma.post({
+        id: root.id
+      }).author()
+    }
+  }
+}
+```
+
+Each resolver invokes a method on the Prisma client instance which is called `prisma` and attached to the `context` object.
+
+## Configure your GraphQL server
+
+Now you need to instantiate the `GraphQLServer` from the `graphql-yoga` library and pass the GraphQL schema along with its resolver functions. You're also attaching the imported `prisma` client instance to the `context` so that the resolvers can access it.
+
+Add the following code snippet to the bottom of `index.js`:
+
+```js lineNumbers,copy
+const server = new GraphQLServer({
+  typeDefs: './schema.graphql',
+  resolvers,
+  context: {
+    prisma
+  },
+})
+server.start(() => console.log('Server is running on http://localhost:4000'))
+```
+
+## Start the GraphQL server
+
+To start the GraphQL server, run the following command:
+
+```bash copy
+node index.js
+```
+
+## Explore the GraphQL API of the application layer in a Playground
+
+The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`.
+
+To test these operations, navigate your browser to `http://localhost:4000` where a [GraphQL Playground](https://github.com/prisma/graphql-playground) is running.
+
+<Collapse title="Learn more about the GraphQL Playground">
+
+A GraphQL Playground is an interactive GraphQL IDE that lets you explore the operations of GraphQL API. You can click the green **SCHEMA**-button at the right edge of the Playground window to view the auto-generated documentation for your GraphQL API.
+
+![](https://imgur.com/7vJGm8a.png)
+
+</Collapse>
+
+
+Here are a few sample queries and mutations you can send to explore the API.
+
+<QueryChooser titles={["Create a new User", "Create new draft", "Publish a Post", "Fetch published Posts"]}>
+
+```graphql lineNumbers,copy
+mutation {
+  createUser(name: "Bob") {
+    id
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  createDraft(
+    title: "GraphQL is great"
+    userId: "__USER_ID__"
+  ) {
+    id
+    published
+    author {
+      id
+    }
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  publish(postId: "__POST_ID__") {
+    id
+    title
+    published
+  }
+}
+```
+
+```graphql lineNumbers,copy
+query {
+  publishedPosts {
+    id
+    title
+    author {
+      id
+      name
+    }
+  }
+}
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.

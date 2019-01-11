@@ -8,14 +8,14 @@ import com.prisma.api.ApiTestDatabase
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
-import com.prisma.websocket.WebsocketServer
+import com.prisma.websocket.WebSocketHandler
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 import scala.concurrent.ExecutionContextExecutor
 
 trait SubscriptionSpecBase
-    extends ConnectorAwareTest[ConnectorCapability]
+    extends ConnectorAwareTest
     with AwaitUtils
     with TestFrameworkInterface
     with BeforeAndAfterEach
@@ -34,12 +34,11 @@ trait SubscriptionSpecBase
   val invalidationTestKit                   = dependencies.invalidationTestKit
   val projectIdEncoder                      = dependencies.projectIdEncoder
 
-  override def capabilities                                            = dependencies.apiConnector.capabilities
-  override def connectorHasCapability(capability: ConnectorCapability) = dependencies.apiConnector.hasCapability(capability)
+  override def capabilities = dependencies.apiConnector.capabilities
 
   override def prismaConfig = dependencies.config
 
-  val wsServer = WebsocketServer(dependencies)
+  val wsServer = WebSocketHandler(dependencies)
 
   var caseNumber = 1
 

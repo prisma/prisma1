@@ -12,17 +12,17 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
   val where                  = mutaction.where
   override def relationField = mutaction.relationField
 
-  override def mongoAction(mutationBuilder: MongoActionsBuilder, parentId: IdGCValue) = {
+  override def mongoAction(mutationBuilder: MongoActionsBuilder, parent: NodeAddress) = {
     implicit val implicitMb = mutationBuilder
-    SequenceAction(Vector(requiredCheck(parentId), removalAction(parentId), addAction(parentId))).map(_ => MutactionResults(Vector.empty))
+    SequenceAction(Vector(requiredCheck(parent), removalAction(parent), addAction(parent))).map(_ => MutactionResults(Vector.empty))
   }
 
-  def requiredCheck(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = topIsCreate match {
+  def requiredCheck(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = topIsCreate match {
     case false =>
       (p.isList, p.isRequired, c.isList, c.isRequired) match {
         case (false, true, false, true)   => requiredRelationViolation
         case (false, true, false, false)  => checkForOldParentByChildWhere(where)
-        case (false, false, false, true)  => checkForOldChild(parentId)
+        case (false, false, false, true)  => checkForOldChild(parent)
         case (false, false, false, false) => noCheckRequired
         case (true, false, false, true)   => noCheckRequired
         case (true, false, false, false)  => noCheckRequired
@@ -46,12 +46,12 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
       }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = topIsCreate match {
+  def removalAction(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = topIsCreate match {
     case false =>
       (p.isList, c.isList) match {
-        case (false, false) => SequenceAction(Vector(removalByParent(parentId), removalByChild))
+        case (false, false) => SequenceAction(Vector(removalByParent(parent), removalByChild))
         case (true, false)  => removalByChild
-        case (false, true)  => removalByParent(parentId)
+        case (false, true)  => removalByParent(parent)
         case (true, true)   => noActionRequired
       }
     case true =>
@@ -78,17 +78,17 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
       id <- mutationBuilder.getNodeIdByWhere(childWhere)
       _ <- id match {
             case None          => throw APIErrors.NodeNotFoundForWhereError(childWhere)
-            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(relationField.relatedField, childId) //switch this around again?
+            case Some(childId) => mutationBuilder.ensureThatNodeIsNotConnected(relationField.relatedField, NodeSelector.forId(childWhere.model, childId))
           }
     } yield ()
   }
 
-  def addAction(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
+  def addAction(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = {
     for {
       id <- mutationBuilder.getNodeIdByWhere(mutaction.where)
       _ <- id match {
             case None          => throw APIErrors.NodeNotFoundForWhereError(mutaction.where)
-            case Some(childId) => mutationBuilder.createRelation(mutaction.relationField, parentId, childId)
+            case Some(childId) => mutationBuilder.createRelation(mutaction.relationField, parent, childId)
           }
     } yield ()
   }

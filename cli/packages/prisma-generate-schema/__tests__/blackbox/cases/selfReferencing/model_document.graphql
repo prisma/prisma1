@@ -1,0 +1,76 @@
+type SelfReferencingAWithId {
+    id: ID! @id
+    a: SelfReferencingAWithId! @relation(link: INLINE)
+    field: Int!
+}
+
+type SelfReferencingBWithId {
+    id: ID! @id
+    a: SelfReferencingBWithId @relation(link: INLINE)
+    field: Int!
+}
+
+type SelfReferencingCWithId {
+    id: ID! @id
+    a: [SelfReferencingBWithId!]! @relation(link: INLINE)
+    field: Int!
+}
+
+type SelfReferencingA {
+    removeThisId: ID! @id
+    a: SelfReferencingAWithId! @relation(link: INLINE)
+    field: Int!
+}
+
+type SelfReferencingB {
+    removeThisId: ID! @id
+    a: SelfReferencingB @relation(link: INLINE)
+    field: Int!
+}
+
+# TODO: Remove all id fields that jeopardize the unit test.
+
+type SelfReferencingC {
+    removeThisId: ID! @id
+    a: [SelfReferencingC!]! @relation(link: INLINE)
+    field: Int!
+}
+
+# TODO: Put these back in.
+
+#type MultiSelfReferencingCWithId {
+#    id: ID! @id
+#    a: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", link: INLINE)
+#    b: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", link: INLINE)
+#}
+
+#type MultiSelfReferencingBWithId {
+#    id: ID! @id
+#    a: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", link: INLINE)
+#    b: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", link: INLINE)
+#}
+
+# Prisma does not allow this
+#type MultiSelfReferencingCWithId {
+#    id: ID! @id
+#    a: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", link: INLINE)
+#    b: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", link: INLINE)
+#}
+
+#type MultiSelfReferencingC {
+#    removeThisId: ID! @id
+#    a: [MultiSelfReferencingC!]! @relation(name: "AToA", link: INLINE)
+#    b: [MultiSelfReferencingC!]! @relation(name: "AToA", link: INLINE)
+#}
+
+#type MultiSelfReferencingB {
+#    removeThisId: ID! @id
+#    a: MultiSelfReferencingB @relation(name: "AToA2", link: INLINE)
+#    b: MultiSelfReferencingB @relation(name: "AToA2", link: INLINE)
+#}
+
+# Prisma does not allow this
+#type MultiSelfReferencingC {
+#    a: MultiSelfReferencingC! @relation(name: "AToA3", link: INLINE)
+#    b: MultiSelfReferencingC! @relation(name: "AToA3", link: INLINE)
+#}

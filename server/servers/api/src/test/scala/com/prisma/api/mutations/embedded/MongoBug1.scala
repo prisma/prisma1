@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -13,7 +13,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Top {
         |  top: String @unique
-        |  otherTops: [OtherTop!]! @mongoRelation(field: "otherTops")
+        |  otherTops: [OtherTop] @mongoRelation(field: "otherTops")
         |}
         |
         |
@@ -73,7 +73,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Top {
         |  top: String @unique
-        |  otherTops: [OtherTop!]! @mongoRelation(field: "otherTops")
+        |  otherTops: [OtherTop] @mongoRelation(field: "otherTops")
         |}
         |
         |
@@ -121,7 +121,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
     val project = SchemaDsl.fromString() {
       """type Top {
         |  top: String @unique
-        |  otherTops: [OtherTop!]! @mongoRelation(field: "otherTops")
+        |  otherTops: [OtherTop] @mongoRelation(field: "otherTops")
         |}
         |
         |
@@ -171,7 +171,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
 
     val project = SchemaDsl.fromString() {
       """type Item {
-        |  subItems: [SubItem!]!
+        |  subItems: [SubItem]
         |}
         |
         |type SubItem @embedded {
@@ -245,7 +245,7 @@ class MongoBug1 extends FlatSpec with Matchers with ApiSpecBase {
 
     val project = SchemaDsl.fromString() {
       """type Item {
-        |  subItems: [SubItem!]! @mongoRelation(field: "subItems")
+        |  subItems: [SubItem] @mongoRelation(field: "subItems")
         |}
         |
         |type SubItem {

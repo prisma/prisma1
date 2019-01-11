@@ -1,6 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
-import * as ncp from 'copy-paste'
+import * as clipboardy from 'clipboardy'
 
 export default class ClusterToken extends Command {
   static topic = 'cluster-token'
@@ -28,9 +28,14 @@ export default class ClusterToken extends Command {
       stage,
     )
 
+    if (!token) {
+      throw new Error(`Couldn't generate token`)
+    }
+
     if (copy) {
       await new Promise(r => {
-        ncp.copy(token, () => r())
+        clipboardy.writeSync(token)
+        r()
       })
       this.out.log(`Token copied to clipboard`)
     } else {

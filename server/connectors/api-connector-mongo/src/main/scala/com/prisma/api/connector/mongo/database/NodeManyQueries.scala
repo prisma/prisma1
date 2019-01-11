@@ -1,105 +1,114 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
+import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{CuidGCValue, IdGCValue}
+import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
-import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Projections.include
-import org.mongodb.scala.{Document, FindObservable, MongoCollection, MongoDatabase}
+import org.mongodb.scala.{Document, FindObservable, MongoDatabase}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeManyQueries extends FilterConditionBuilder {
-  // Fixme this does not use selected fields
-  def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    val nodes = helper(model, queryArguments, None, database).map { results: Seq[Document] =>
-      results.map { result =>
-        val root = DocumentToRoot(model, result)
-        PrismaNode(root.idField, root, Some(model.name))
-      }
-    }
+trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder with MongoResultReader {
 
-    nodes.map(n => ResolverResult[PrismaNode](queryArguments, n.toVector))
+  def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
+    manyQueryHelper(model, queryArguments, None, database, false, selectedFields).map { results: Seq[Document] =>
+      val nodes = results.map(readsPrismaNode(_, model, selectedFields))
+      ResolverResult[PrismaNode](queryArguments, nodes.toVector)
+    }
   }
 
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).projection(include("_id")).collect().toFuture.map(res => res.map(DocumentToId.toCUIDGCValue))
+    if (needsAggregation(filter)) {
+      aggregationQueryForId(database, model, QueryArguments.withFilter(filter))
+    } else {
+      database
+        .getCollection(model.dbName)
+        .find(buildConditionForFilter(filter))
+        .projection(idProjection)
+        .collect()
+        .toFuture
+        .map(_.map(readsId))
+    }
   }
 
-  def getNodesByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[Document]] = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val bsonFilter: Bson                      = buildConditionForFilter(filter)
-    collection.find(bsonFilter).collect().toFuture
-  }
+  def manyQueryHelper(model: Model,
+                      queryArguments: QueryArguments,
+                      extraFilter: Option[Filter] = None,
+                      database: MongoDatabase,
+                      idOnly: Boolean = false,
+                      selectedFields: SelectedFields): Future[Seq[Document]] = {
 
-  def helper(model: Model, queryArguments: QueryArguments, extraFilter: Option[Filter] = None, database: MongoDatabase) = {
-
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-    val skipAndLimit                          = LimitClauseHelper.skipAndLimitValues(queryArguments)
-
-    val mongoFilter = extraFilter match {
-      case Some(inFilter) => buildConditionForFilter(Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
-      case None           => buildConditionForFilter(queryArguments.filter)
+    val updatedQueryArgs = extraFilter match {
+      case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
+      case None           => queryArguments
     }
 
-    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
+    if (needsAggregation(updatedQueryArgs.filter)) {
+      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model))
+    } else {
 
-    val baseQuery: FindObservable[Document]      = collection.find(Filters.and(mongoFilter, cursorCondition))
-    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
-    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
+      val mongoFilter  = buildConditionForFilter(updatedQueryArgs.filter)
 
-    val queryWithLimit = skipAndLimit.limit match {
-      case Some(limit) => queryWithSkip.limit(limit)
-      case None        => queryWithSkip
+      val combinedFilter = CursorConditionBuilder.buildCursorCondition(updatedQueryArgs) match {
+        case None         => mongoFilter
+        case Some(filter) => Filters.and(mongoFilter, filter)
+      }
+
+      val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
+      val queryWithOrder: FindObservable[Document] = baseQuery.sort(OrderByClauseBuilder.sortBson(queryArguments))
+      val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+
+      val queryWithLimit = skipAndLimit.limit match {
+        case Some(limit) => queryWithSkip.limit(limit)
+        case None        => queryWithSkip
+      }
+
+      idOnly match {
+        case true  => queryWithLimit.projection(idProjection).collect().toFuture
+        case false => queryWithLimit.projection(projectSelected(selectedFields)).collect().toFuture
+      }
     }
-
-    queryWithLimit.collect().toFuture
   }
 
-  //these are only used for relations between non-embedded types
   def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: QueryArguments, selectedFields: SelectedFields) =
     SimpleMongoAction { database =>
-      val manifestation = fromField.relation.inlineManifestation.get
-      val model         = fromField.relatedModel_!
+      val relatedField = fromField.relatedField
+      val model        = fromField.relatedModel_!
 
-      val inFilter: Filter = ScalarListFilter(model.idField_!.copy(name = manifestation.referencingColumn, isList = true), ListContainsSome(fromNodeIds))
-      helper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
-        val groups: Map[CuidGCValue, Seq[Document]] = fromField.relatedField.isList match {
-          case true =>
-            val tuples = for {
-              result <- results
-              id     <- result(manifestation.referencingColumn).asArray().getValues.asScala.map(_.asString()).map(x => CuidGCValue(x.getValue))
-            } yield (id, result)
-            tuples.groupBy(_._1).mapValues(_.map(_._2))
+      val inFilter: Filter      = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
+      val updatedSelectedFields = selectedFields ++ SelectedFields.forRelationField(relatedField)
+      manyQueryHelper(model, queryArguments, Some(inFilter), database, false, updatedSelectedFields)
+        .map { results: Seq[Document] =>
+          val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
+            case true =>
+              val tuples = for {
+                result <- results
+                id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
+              } yield (id, result)
 
-          case false => results.groupBy(x => CuidGCValue(x(manifestation.referencingColumn).asString().getValue))
-        }
+              tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-        fromNodeIds.map { id =>
-          groups.get(id.asInstanceOf[CuidGCValue]) match {
-            case Some(group) =>
-              val roots                                     = group.map(DocumentToRoot(model, _))
-              val prismaNodes: Vector[PrismaNodeWithParent] = roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idField, r, Some(model.name)))).toVector
-              ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
+            case false =>
+              results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
+          }
 
-            case None =>
-              ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          fromNodeIds.map { id =>
+            groups.get(id.asInstanceOf[StringIdGCValue]) match {
+              case Some(group) => ResolverResult(queryArguments, group.map(readsPrismaNodeWithParent(_, model, selectedFields, id)).toVector, Some(id))
+              case None        => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+            }
           }
         }
-      }
     }
 
   //Fixme this does not use all queryarguments
   def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { database =>
-    val collection: MongoCollection[Document] = database.getCollection(model.dbName)
-
     //    val queryArgFilter = queryArguments match {
 //      case Some(arg) => arg.filter
 //      case None      => None
@@ -122,8 +131,7 @@ trait NodeManyQueries extends FilterConditionBuilder {
 //
 //    queryWithLimit.collect().toFuture
 
-    collection.countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
-
+    database.getCollection(model.dbName).countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
   }
 
   def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { database =>

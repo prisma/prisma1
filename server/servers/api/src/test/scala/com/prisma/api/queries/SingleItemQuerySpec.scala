@@ -14,7 +14,7 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
     val result = server.query(
       s"""{
-         |  todo(where: {id: "non-existent-id"}){
+         |  todo(where: {id: "5beea4aa6183dd734b2dbd9b"}){
          |    ...todoFields
          |  }
          |}

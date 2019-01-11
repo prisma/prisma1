@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -13,13 +13,13 @@ class UpdateManyListSpec extends FlatSpec with Matchers with ApiSpecBase {
                                                   |type MyObject {
                                                   |  id: ID! @unique
                                                   |  name: String! @unique
-                                                  |  strings: [String!]!
-                                                  |  ints: [Int!]!
-                                                  |  floats: [Float!]!
-                                                  |  booleans: [Boolean!]!
-                                                  |  datetimes: [DateTime!]!
-                                                  |  jsons: [Json!]!
-                                                  |  enums: [Tag!]!
+                                                  |  strings: [String]
+                                                  |  ints: [Int]
+                                                  |  floats: [Float]
+                                                  |  booleans: [Boolean]
+                                                  |  datetimes: [DateTime]
+                                                  |  jsons: [Json]
+                                                  |  enums: [Tag]
                                                   |}
                                                   |
                                                   |enum Tag{

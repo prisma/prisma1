@@ -1,7 +1,7 @@
 package com.prisma.image
 
 import com.prisma.api.project.RefreshableProjectFetcher
-import com.prisma.deploy.connector.ProjectPersistence
+import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.shared.models.Project
 
 import scala.concurrent.{ExecutionContext, Future}
