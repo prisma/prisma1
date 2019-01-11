@@ -1,19 +1,19 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "A Many to Many Self Relation" should "be accessible from only one side" in {
     val project: Project = SchemaDsl.fromString() { """type Post {
                                                       |  id: ID! @unique
                                                       |  identifier: Int @unique
-                                                      |  related: [Post!]! @relation(name: "RelatedPosts")
+                                                      |  related: [Post] @relation(name: "RelatedPosts")
                                                       |}""" }
 
     database.setup(project)

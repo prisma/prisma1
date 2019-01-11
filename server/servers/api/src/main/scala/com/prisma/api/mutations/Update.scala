@@ -33,7 +33,7 @@ case class Update(
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful { updateMutaction }
 
   override def getReturnValue(results: MutactionResults): Future[ReturnValueResult] = {
-    val updateResult = results.results.collectFirst { case r: UpdateNodeResult if r.mutaction == updateMutaction => r }.head
+    val updateResult = results.results.collectFirst { case r: UpdateNodeResult if r.mutaction.id == updateMutaction.id => r }.head
     returnValueByUnique(NodeSelector.forId(model, updateResult.id), selectedFields)
   }
 

@@ -1,0 +1,24 @@
+# TODO: Put default values back in. 
+type A {
+    #a: Int @default(value: 10) @unique
+    #b: Int! @default(value: 10)
+    c: String! @unique 
+    removeThisIdd: ID! @id
+    d: String @default(value: "Hello")
+}
+
+type AWithId {
+    id: ID! @id
+    #a: Int @default(value: 10) @unique
+    #b: Int! @default(value: 10)
+    c: String! @unique
+    d: String @default(value: "Hello")
+    
+    b2: B! @relation(link: INLINE)
+}
+
+type B {
+    a: [A!]! @relation(link: INLINE) 
+    id: ID! @id
+    a2: AWithId
+}

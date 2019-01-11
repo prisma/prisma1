@@ -1,0 +1,1111 @@
+type A {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+  b: B!
+}
+
+"""
+A connection to a list of items.
+"""
+type AConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [AEdge]!
+  aggregate: AggregateA!
+}
+
+input ACreatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input ACreateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: ACreatefieldCInput
+  b: BCreateOneWithoutAInput!
+}
+
+input ACreateManyInput {
+  create: [ACreateInput!]
+}
+
+input ACreateManyWithoutBInput {
+  create: [ACreateWithoutBInput!]
+}
+
+input ACreateWithoutBInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: ACreatefieldCInput
+}
+
+"""
+An edge in a connection.
+"""
+type AEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: A!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+type AggregateA {
+  count: Int!
+}
+
+type AggregateAWithId {
+  count: Int!
+}
+
+type AggregateB {
+  count: Int!
+}
+
+type AggregateC {
+  count: Int!
+}
+
+type AggregateD {
+  count: Int!
+}
+
+type AggregateE {
+  count: Int!
+}
+
+enum AOrderByInput {
+  fieldA_ASC
+  fieldA_DESC
+  fieldB_ASC
+  fieldB_DESC
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type APreviousValues {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+}
+
+type ASubscriptionPayload {
+  mutation: MutationType!
+  node: A
+  updatedFields: [String!]
+  previousValues: APreviousValues
+}
+
+input ASubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ASubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: AWhereInput
+}
+
+input AUpdatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input AUpdateManyMutationInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AUpdatefieldCInput
+}
+
+input AWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWhereInput!]
+  fieldA: UsedEnum
+  """
+  All values that are not equal to given value.
+  """
+  fieldA_not: UsedEnum
+  """
+  All values that are contained in given list.
+  """
+  fieldA_in: [UsedEnum!]
+  """
+  All values that are not contained in given list.
+  """
+  fieldA_not_in: [UsedEnum!]
+  fieldB: UsedEnum
+  """
+  All values that are not equal to given value.
+  """
+  fieldB_not: UsedEnum
+  """
+  All values that are contained in given list.
+  """
+  fieldB_in: [UsedEnum!]
+  """
+  All values that are not contained in given list.
+  """
+  fieldB_not_in: [UsedEnum!]
+  b: BWhereInput
+}
+
+type AWithId implements Node {
+  id: ID!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+  c: C
+}
+
+"""
+A connection to a list of items.
+"""
+type AWithIdConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [AWithIdEdge]!
+  aggregate: AggregateAWithId!
+}
+
+input AWithIdCreatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input AWithIdCreateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: AWithIdCreatefieldCInput
+  c: CCreateOneWithoutAInput
+}
+
+input AWithIdCreateOneInput {
+  create: AWithIdCreateInput
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdCreateOneWithoutCInput {
+  create: AWithIdCreateWithoutCInput
+  connect: AWithIdWhereUniqueInput
+}
+
+input AWithIdCreateWithoutCInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: AWithIdCreatefieldCInput
+}
+
+"""
+An edge in a connection.
+"""
+type AWithIdEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: AWithId!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum AWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  fieldA_ASC
+  fieldA_DESC
+  fieldB_ASC
+  fieldB_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type AWithIdPreviousValues {
+  id: ID!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum!]!
+}
+
+type AWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: AWithId
+  updatedFields: [String!]
+  previousValues: AWithIdPreviousValues
+}
+
+input AWithIdSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: AWithIdWhereInput
+}
+
+input AWithIdUpdatefieldCInput {
+  set: [UsedEnum!]
+}
+
+input AWithIdUpdateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+  c: CUpdateOneWithoutAInput
+}
+
+input AWithIdUpdateManyMutationInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+}
+
+input AWithIdWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  fieldA: UsedEnum
+  """
+  All values that are not equal to given value.
+  """
+  fieldA_not: UsedEnum
+  """
+  All values that are contained in given list.
+  """
+  fieldA_in: [UsedEnum!]
+  """
+  All values that are not contained in given list.
+  """
+  fieldA_not_in: [UsedEnum!]
+  fieldB: UsedEnum
+  """
+  All values that are not equal to given value.
+  """
+  fieldB_not: UsedEnum
+  """
+  All values that are contained in given list.
+  """
+  fieldB_in: [UsedEnum!]
+  """
+  All values that are not contained in given list.
+  """
+  fieldB_not_in: [UsedEnum!]
+  c: CWhereInput
+}
+
+input AWithIdWhereUniqueInput {
+  id: ID
+}
+
+type B {
+  field: String!
+  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+"""
+A connection to a list of items.
+"""
+type BConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [BEdge]!
+  aggregate: AggregateB!
+}
+
+input BCreateInput {
+  field: String!
+  a: ACreateManyWithoutBInput
+}
+
+input BCreateOneWithoutAInput {
+  create: BCreateWithoutAInput
+}
+
+input BCreateWithoutAInput {
+  field: String!
+}
+
+"""
+An edge in a connection.
+"""
+type BEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: B!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum BOrderByInput {
+  field_ASC
+  field_DESC
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type BPreviousValues {
+  field: String!
+}
+
+type BSubscriptionPayload {
+  mutation: MutationType!
+  node: B
+  updatedFields: [String!]
+  previousValues: BPreviousValues
+}
+
+input BSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: BWhereInput
+}
+
+input BUpdateManyMutationInput {
+  field: String
+}
+
+input BWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BWhereInput!]
+  field: String
+  """
+  All values that are not equal to given value.
+  """
+  field_not: String
+  """
+  All values that are contained in given list.
+  """
+  field_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  field_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: String
+  """
+  All values greater than the given value.
+  """
+  field_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: String
+  """
+  All values containing the given string.
+  """
+  field_contains: String
+  """
+  All values not containing the given string.
+  """
+  field_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  field_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  field_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  field_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  field_not_ends_with: String
+  a_every: AWhereInput
+  a_some: AWhereInput
+  a_none: AWhereInput
+}
+
+type C {
+  field: [Int!]!
+  a: AWithId!
+}
+
+"""
+A connection to a list of items.
+"""
+type CConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [CEdge]!
+  aggregate: AggregateC!
+}
+
+input CCreatefieldInput {
+  set: [Int!]
+}
+
+input CCreateInput {
+  field: CCreatefieldInput
+  a: AWithIdCreateOneWithoutCInput!
+}
+
+input CCreateOneWithoutAInput {
+  create: CCreateWithoutAInput
+}
+
+input CCreateWithoutAInput {
+  field: CCreatefieldInput
+}
+
+"""
+An edge in a connection.
+"""
+type CEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: C!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum COrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type CPreviousValues {
+  field: [Int!]!
+}
+
+type CSubscriptionPayload {
+  mutation: MutationType!
+  node: C
+  updatedFields: [String!]
+  previousValues: CPreviousValues
+}
+
+input CSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: CWhereInput
+}
+
+input CUpdatefieldInput {
+  set: [Int!]
+}
+
+input CUpdateManyMutationInput {
+  field: CUpdatefieldInput
+}
+
+input CUpdateOneWithoutAInput {
+  create: CCreateWithoutAInput
+  disconnect: Boolean
+  delete: Boolean
+  update: CUpdateWithoutADataInput
+  upsert: CUpsertWithoutAInput
+}
+
+input CUpdateWithoutADataInput {
+  field: CUpdatefieldInput
+}
+
+input CUpsertWithoutAInput {
+  update: CUpdateWithoutADataInput!
+  create: CCreateWithoutAInput!
+}
+
+input CWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CWhereInput!]
+  a: AWithIdWhereInput
+}
+
+type D {
+  field: [DateTime!]!
+  a: AWithId!
+}
+
+scalar DateTime
+
+"""
+A connection to a list of items.
+"""
+type DConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [DEdge]!
+  aggregate: AggregateD!
+}
+
+input DCreatefieldInput {
+  set: [DateTime!]
+}
+
+input DCreateInput {
+  field: DCreatefieldInput
+  a: AWithIdCreateOneInput!
+}
+
+"""
+An edge in a connection.
+"""
+type DEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: D!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum DOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type DPreviousValues {
+  field: [DateTime!]!
+}
+
+type DSubscriptionPayload {
+  mutation: MutationType!
+  node: D
+  updatedFields: [String!]
+  previousValues: DPreviousValues
+}
+
+input DSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [DSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: DWhereInput
+}
+
+input DUpdatefieldInput {
+  set: [DateTime!]
+}
+
+input DUpdateManyMutationInput {
+  field: DUpdatefieldInput
+}
+
+input DWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [DWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DWhereInput!]
+  a: AWithIdWhereInput
+}
+
+type E {
+  field: Json
+  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+}
+
+"""
+A connection to a list of items.
+"""
+type EConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [EEdge]!
+  aggregate: AggregateE!
+}
+
+input ECreateInput {
+  field: Json
+  a: ACreateManyInput
+}
+
+"""
+An edge in a connection.
+"""
+type EEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: E!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum EOrderByInput {
+  field_ASC
+  field_DESC
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type EPreviousValues {
+  field: Json
+}
+
+type ESubscriptionPayload {
+  mutation: MutationType!
+  node: E
+  updatedFields: [String!]
+  previousValues: EPreviousValues
+}
+
+input ESubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ESubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ESubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ESubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: EWhereInput
+}
+
+input EUpdateManyMutationInput {
+  field: Json
+}
+
+input EWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [EWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [EWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [EWhereInput!]
+  a_every: AWhereInput
+  a_some: AWhereInput
+  a_none: AWhereInput
+}
+
+"""
+Raw JSON value
+"""
+scalar Json
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createB(data: BCreateInput!): B!
+  createC(data: CCreateInput!): C!
+  createD(data: DCreateInput!): D!
+  createE(data: ECreateInput!): E!
+  createA(data: ACreateInput!): A!
+  createAWithId(data: AWithIdCreateInput!): AWithId!
+  updateAWithId(data: AWithIdUpdateInput!, where: AWithIdWhereUniqueInput!): AWithId
+  deleteAWithId(where: AWithIdWhereUniqueInput!): AWithId
+  upsertAWithId(where: AWithIdWhereUniqueInput!, create: AWithIdCreateInput!, update: AWithIdUpdateInput!): AWithId!
+  updateManyBs(data: BUpdateManyMutationInput!, where: BWhereInput): BatchPayload!
+  updateManyCs(data: CUpdateManyMutationInput!, where: CWhereInput): BatchPayload!
+  updateManyDs(data: DUpdateManyMutationInput!, where: DWhereInput): BatchPayload!
+  updateManyEs(data: EUpdateManyMutationInput!, where: EWhereInput): BatchPayload!
+  updateManyAs(data: AUpdateManyMutationInput!, where: AWhereInput): BatchPayload!
+  updateManyAWithIds(data: AWithIdUpdateManyMutationInput!, where: AWithIdWhereInput): BatchPayload!
+  deleteManyBs(where: BWhereInput): BatchPayload!
+  deleteManyCs(where: CWhereInput): BatchPayload!
+  deleteManyDs(where: DWhereInput): BatchPayload!
+  deleteManyEs(where: EWhereInput): BatchPayload!
+  deleteManyAs(where: AWhereInput): BatchPayload!
+  deleteManyAWithIds(where: AWithIdWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
+  cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
+  ds(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D]!
+  es(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E]!
+  as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
+  aWithIds(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithId]!
+  aWithId(where: AWithIdWhereUniqueInput!): AWithId
+  bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
+  csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
+  dsConnection(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): DConnection!
+  esConnection(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): EConnection!
+  asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
+  aWithIdsConnection(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AWithIdConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  b(where: BSubscriptionWhereInput): BSubscriptionPayload
+  c(where: CSubscriptionWhereInput): CSubscriptionPayload
+  d(where: DSubscriptionWhereInput): DSubscriptionPayload
+  e(where: ESubscriptionWhereInput): ESubscriptionPayload
+  a(where: ASubscriptionWhereInput): ASubscriptionPayload
+  aWithId(where: AWithIdSubscriptionWhereInput): AWithIdSubscriptionPayload
+}
+
+enum UsedEnum {
+  A
+  B
+  C
+  D
+}
+

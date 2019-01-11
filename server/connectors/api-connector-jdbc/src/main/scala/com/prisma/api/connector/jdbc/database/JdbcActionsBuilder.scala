@@ -1,5 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
+import com.prisma.connector.shared.jdbc.SlickDatabase
+
 // format: off
 trait AllActions
   extends NodeActions

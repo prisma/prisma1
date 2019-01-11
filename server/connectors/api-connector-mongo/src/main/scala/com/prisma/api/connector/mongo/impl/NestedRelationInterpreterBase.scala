@@ -1,9 +1,9 @@
 package com.prisma.api.connector.mongo.impl
 
+import com.prisma.api.connector.NodeAddress
 import com.prisma.api.connector.mongo.NestedDatabaseMutactionInterpreter
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder}
 import com.prisma.api.schema.APIErrors.RequiredRelationWouldBeViolated
-import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.{Relation, RelationField}
 
 import scala.concurrent.ExecutionContext
@@ -21,11 +21,12 @@ trait NestedRelationInterpreterBase extends NestedDatabaseMutactionInterpreter {
   def requiredRelationViolation      = throw RequiredRelationWouldBeViolated(relation)
   def errorBecauseManySideIsRequired = sys.error("This should not happen, since it means a many side is required")
 
-  def removalByParent(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
-    mutationBuilder.deleteRelationRowByParentId(relationField, parentId)
+  def removalByParent(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = {
+    mutationBuilder.deleteRelationRowByParent(relationField, parent)
   }
 
-  def checkForOldChild(parentId: IdGCValue)(implicit mutationBuilder: MongoActionsBuilder) = {
-    mutationBuilder.ensureThatNodeIsNotConnected(relationField, parentId)
+  def checkForOldChild(parent: NodeAddress)(implicit mutationBuilder: MongoActionsBuilder) = {
+    assert(parent.path.segments.isEmpty)
+    mutationBuilder.ensureThatNodeIsNotConnected(relationField, parent.where)
   }
 }

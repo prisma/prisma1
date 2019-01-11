@@ -51,7 +51,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     }
   }
 
-  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[Unit] =
+  def removalAction(parentId: IdGCValue)(implicit mutationBuilder: JdbcActionsBuilder): DBIO[_] =
     topIsCreate match {
       case false =>
         (p.isList, c.isList) match {

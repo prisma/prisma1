@@ -24,7 +24,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   "an item" should "be created if it does not exist yet" in {
     todoCount should be(0)
 
-    val todoId = "non-existent-id"
+    val todoId = "5beea4aa6183dd734b2dbd9b"
     val result = server.query(
       s"""mutation {
         |  upsertTodo(
@@ -53,7 +53,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   "an item" should "be created with multiple fields of different types" in {
     todoCount should be(0)
 
-    val id = "non-existent-id"
+    val id = "5beea4aa6183dd734b2dbd9b"
     val result = server.query(
       s"""mutation {
          |  upsertMultipleFields(
@@ -89,7 +89,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "an item" should "be created if it does not exist yet and use the defaultValue if necessary" in {
-    val todoId = "non-existent-id"
+    val todoId = "5beea4aa6183dd734b2dbd9b"
     val result = server.query(
       s"""mutation {
          |  upsertWithDefaultValue(

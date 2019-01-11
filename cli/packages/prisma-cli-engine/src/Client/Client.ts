@@ -1,43 +1,22 @@
 import {
-  AccountInfo,
   AuthenticateCustomerPayload,
-  FunctionInfo,
-  FunctionLog,
-  PAT,
   Project,
-  ProjectDefinition,
-  ProjectInfo,
-  RemoteProject,
   SimpleProjectInfo,
   CloudTokenRequestPayload,
 } from '../types/common'
 
 import { GraphQLClient } from 'graphql-request'
-import { omit, flatMap, flatten } from 'lodash'
+import { flatten } from 'lodash'
 import { Config } from '../Config'
-import { getFastestRegion } from './ping'
 import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace, Service } from './types'
-import boolean from '../Flags/boolean'
+import { User, Migration, DeployPayload, Workspace, Service, AuthenticationPayload } from './types'
 import * as opn from 'opn'
-import { concatName } from '../../../prisma-yml/dist/PrismaDefinition'
+import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 
 const debug = require('debug')('client')
-
-const REMOTE_PROJECT_FRAGMENT = `
-  fragment RemoteProject on Project {
-    id
-    name
-    schema
-    alias
-    region
-    isEjected
-    projectDefinitionWithFileContent
-  }
-`
 
 const MIGRATION_FRAGMENT = `
 fragment MigrationFragment on Migration {
@@ -437,9 +416,9 @@ export class Client {
       }
     }
 
-    const { requestCloudToken: { secret } } = await this.cloudClient.request<
-      RequestCloudTokenPayload
-    >(mutation)
+    const {
+      requestCloudToken: { secret },
+    } = await this.cloudClient.request<RequestCloudTokenPayload>(mutation)
 
     return secret
   }
@@ -460,9 +439,9 @@ export class Client {
   }
 
   async ensureAuth(): Promise<void> {
-    const authenticated = await this.isAuthenticated()
+    const authenticationPayload = await this.isAuthenticated()
 
-    if (!authenticated) {
+    if (!authenticationPayload.isAuthenticated) {
       await this.login()
     }
   }
@@ -473,9 +452,11 @@ export class Client {
     if (key) {
       this.env.globalRC.cloudSessionKey = key
     }
-    const authenticated = await this.isAuthenticated()
+    let authenticationPayload = await this.isAuthenticated()
+    const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
+      this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -488,13 +469,10 @@ export class Client {
 
     this.out.log(`Opening ${url} in the browser\n`)
 
-    try {
-      opn(url).catch(e => {
-        throw e
-      })
-    } catch (e) {
-      this.out.log(`Could not open url. Please open ${url} manually`)
-    }
+    opn(url)
+    .catch(e => {
+      console.error(`Could not open the authentication link, maybe this is an environment without a browser. Please open this url in your browser to authenticate: ${url}`)
+    })
 
     while (!token) {
       const cloud = await this.cloudTokenRequest(secret)
@@ -504,8 +482,10 @@ export class Client {
       await new Promise(r => setTimeout(r, 500))
     }
     this.env.globalRC.cloudSessionKey = token
-
     this.out.action.stop()
+    
+    authenticationPayload = await this.isAuthenticated()
+    await this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
@@ -599,10 +579,11 @@ export class Client {
     return clusterToken
   }
 
-  async isAuthenticated(): Promise<boolean> {
+  async isAuthenticated(): Promise<AuthenticationPayload> {
     let authenticated = false
+    let account: User | null = null
     try {
-      const account = await this.getAccount()
+      account = await this.getAccount()
       if (account) {
         authenticated = Boolean(account)
       }
@@ -610,7 +591,10 @@ export class Client {
       //
     }
 
-    return authenticated
+    return {
+      isAuthenticated: authenticated,
+      account
+    }
   }
 
   async getWorkspaces(): Promise<Workspace[]> {
@@ -633,7 +617,9 @@ export class Client {
       }
     }`
 
-    const { me: { memberships } } = await this.cloudClient.request<{
+    const {
+      me: { memberships },
+    } = await this.cloudClient.request<{
       me: {
         memberships: Array<{ workspace: Workspace }>
       }
@@ -673,7 +659,9 @@ export class Client {
       throw new Error(`Could not create service ${name}`)
     }
 
-    const { addProject: { project } } = result
+    const {
+      addProject: { project },
+    } = result
 
     // TODO set project definition, should be possibility in the addProject mutation
 
@@ -697,7 +685,7 @@ export class Client {
 
       await this.client.request(mutation, {
         input: {
-          name: concatName(cluster, name, workspaceSlug),
+          name: concatName(cluster as any, name, workspaceSlug),
           stage,
         },
       })

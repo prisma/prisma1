@@ -1,0 +1,52 @@
+enum UsedEnum {
+    A,
+    B,
+    C,
+    D
+}
+
+enum UnusedEnum {
+    X, 
+    Y, 
+    Z
+}
+
+type A {
+    id: ID! @id
+    fieldA: UsedEnum
+    fieldB: UsedEnum!
+    fieldC: [UsedEnum!]!
+    b: B! @relation(link: INLINE)
+}
+
+type AWithId {
+    id: ID! @id
+    fieldA: UsedEnum
+    fieldB: UsedEnum!
+    fieldC: [UsedEnum!]!
+    c: C @relation(link: INLINE)
+}
+
+type B {
+    field: String! 
+    id: ID! @id
+    a: [A!]!
+}
+
+type C {
+    field: [Int!]! 
+    id: ID! @id
+    a: AWithId! 
+}
+
+type D {
+    field: [DateTime!]!
+    id: ID! @id
+    a: AWithId! @relation(link: INLINE)
+}
+
+type E {
+    field: Json
+    id: ID! @id
+    a: [A!]! @relation(link: INLINE)
+}

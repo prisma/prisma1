@@ -1,0 +1,57 @@
+{
+  "name": "prisma-client-lib",
+  "version": "1.23.0-test.3",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "license": "Apache-2.0",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "rm -rf dist && tsc -d",
+    "test-only": "npm run build && ava dist/**/*.test.js dist/*.test.js",
+    "test-compilation": "npm run build && ava dist/codegen/compilation.test.js",
+    "test-generator-only": "npm run build && ava dist/codegen/**/*.test.js dist/codegen/*.test.js",
+    "test-ts-generator-only": "npm run build && ava dist/codegen/typescript-client.test.js",
+    "test-ts-definitions-generator-only": "npm run build && ava dist/codegen/typescript-definitions.test.js",
+    "test-go-generator-only": "npm run build && ava dist/codegen/go-client.test.js",
+    "test-flow-generator-only": "npm run build && ava dist/codegen/flow-client.test.js",
+    "test": "tslint src/**/*.ts && npm run test-only"
+  },
+  "dependencies": {
+    "@types/node": "^10.12.0",
+    "@types/prettier": "^1.13.2",
+    "debug": "^4.1.0",
+    "flow-bin": "^0.87.0",
+    "graphql-tag": "^2.10.0",
+    "http-link-dataloader": "^0.1.6",
+    "jsonwebtoken": "^8.3.0",
+    "lodash.flatten": "^4.4.0",
+    "prettier": "^1.14.3",
+    "prisma-datamodel": "1.23.0-alpha.1",
+    "prisma-generate-schema": "1.23.0-alpha.173",
+    "subscriptions-transport-ws": "^0.9.15",
+    "uppercamelcase": "^3.0.0",
+    "ws": "^6.1.0",
+    "zen-observable": "^0.8.10"
+  },
+  "devDependencies": {
+    "@types/graphql": "14.0.3",
+    "ava": "^0.25.0",
+    "graphql": "^14.0.2",
+    "semantic-release": "^15.10.4",
+    "tslint": "5.11.0",
+    "tslint-config-standard": "8.0.1",
+    "typescript": "3.2.2"
+  },
+  "peerDependencies": {
+    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}

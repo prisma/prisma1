@@ -32,10 +32,10 @@ class DeleteMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     val id =
       server.query(s"""mutation {createScalarModel(data: {string: "test"}){id}}""", project = project).pathAsString("data.createScalarModel.id")
     server.queryThatMustFail(
-      s"""mutation {deleteScalarModel(where: {id: "DOES NOT EXIST"}){id}}""",
+      s"""mutation {deleteScalarModel(where: {id: "5beea4aa6183dd734b2dbd9b"}){id}}""",
       project = project,
       errorCode = 3039,
-      errorContains = "No Node for the model ScalarModel with value DOES NOT EXIST for id found"
+      errorContains = "No Node for the model ScalarModel with value 5beea4aa6183dd734b2dbd9b for id found"
     )
     server.query(s"""query {scalarModels{string}}""", project = project, dataContains = s"""{"scalarModels":[{"string":"test"}]}""")
   }

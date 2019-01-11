@@ -91,7 +91,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query.stripMargin, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
+    val errorHandler   = ErrorHandler(requestId, "", "", Vector.empty, query.stripMargin, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)

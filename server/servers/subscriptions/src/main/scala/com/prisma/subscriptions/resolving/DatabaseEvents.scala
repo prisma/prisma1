@@ -1,6 +1,6 @@
 package com.prisma.subscriptions.resolving
 
-import com.prisma.gc_values.{CuidGCValue, IdGCValue, IntGCValue, UuidGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue, IntGCValue, UuidGCValue}
 import play.api.libs.json._
 
 import scala.util.Success
@@ -29,7 +29,7 @@ object DatabaseEvents {
       private def stringToIdGcValue(str: String): IdGCValue = {
         UuidGCValue.parse(str) match {
           case Success(id) => id
-          case _           => CuidGCValue(str)
+          case _           => StringIdGCValue(str)
         }
       }
     }

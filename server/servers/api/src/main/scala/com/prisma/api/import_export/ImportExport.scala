@@ -93,9 +93,9 @@ package object ImportExport {
     }
     val idWrites = new Writes[IdGCValue] {
       override def writes(o: IdGCValue): JsValue = o match {
-        case id: UuidGCValue => JsString(id.value.toString)
-        case id: CuidGCValue => JsString(id.value)
-        case id: IntGCValue  => JsNumber(id.value)
+        case id: UuidGCValue     => JsString(id.value.toString)
+        case id: StringIdGCValue => JsString(id.value)
+        case id: IntGCValue      => JsNumber(id.value)
       }
     }
     val idReads = new Reads[IdGCValue] {
@@ -111,7 +111,7 @@ package object ImportExport {
       private def stringToIdGcValue(str: String): IdGCValue = {
         UuidGCValue.parse(str) match {
           case Success(id) => id
-          case _           => CuidGCValue(str)
+          case _           => StringIdGCValue(str)
         }
       }
     }

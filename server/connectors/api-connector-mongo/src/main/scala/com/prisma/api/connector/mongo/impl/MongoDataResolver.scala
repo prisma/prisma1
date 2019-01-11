@@ -9,13 +9,15 @@ import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver with FilterConditionBuilder {
+case class MongoDataResolver(project: Project, client: MongoClient, databaseOption: Option[String])(implicit ec: ExecutionContext)
+    extends DataResolver
+    with FilterConditionBuilder {
 
-  val queryBuilder = MongoActionsBuilder(project.id, client)
+  val queryBuilder = MongoActionsBuilder(databaseOption.getOrElse(project.id), client)
 
-  val database = client.getDatabase(project.id)
+  val database = client.getDatabase(databaseOption.getOrElse(project.id))
 
-  override def getModelForGlobalId(globalId: CuidGCValue): Future[Option[Model]] = {
+  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
     val query = queryBuilder.getModelForGlobalId(project, globalId)
     SlickReplacement.run(database, query)
   }

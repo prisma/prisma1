@@ -1,5 +1,6 @@
 package com.prisma.deploy.schema.types
 
+import com.prisma.deploy.schema.types.MigrationStepType.MigrationStepAndSchema
 import com.prisma.deploy.schema.{CustomScalarTypes, SystemUserContext}
 import com.prisma.shared.models
 import sangria.schema._
@@ -14,10 +15,15 @@ object MigrationType {
       Field("status", StringType, resolve = _.value.status.toString),
       Field("applied", IntType, resolve = _.value.applied),
       Field("rolledBack", IntType, resolve = _.value.rolledBack),
-      Field("steps", ListType(MigrationStepType.Type), resolve = _.value.steps),
       Field("errors", ListType(StringType), resolve = _.value.errors),
       Field("startedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.startedAt),
-      Field("finishedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.finishedAt)
+      Field("finishedAt", OptionType(CustomScalarTypes.DateTimeType), resolve = _.value.finishedAt),
+      Field("datamodel", StringType, resolve = _.value.rawDataModel),
+      Field(
+        "steps",
+        ListType(MigrationStepType.Type),
+        resolve = ctx => ctx.value.steps.map(MigrationStepAndSchema(_, ctx.value.schema, ctx.value.previousSchema))
+      ),
     )
   )
 }

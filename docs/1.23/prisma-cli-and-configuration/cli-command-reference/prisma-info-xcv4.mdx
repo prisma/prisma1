@@ -1,0 +1,48 @@
+export const meta = {
+  title: "prisma info",
+  position: 150,
+}
+
+## `$ prisma info`
+
+Display service information:
+
+- Service name
+- Service stage
+- API endpoints (HTTP and Websocket)
+
+### Usage
+
+```bash
+prisma info
+```
+
+### Flags
+
+```
+ -e, --env-file ENV-FILE    Path to .env file to inject env vars
+ -j, --json                 JSON Output
+ -s, --secret               Print secret in JSON output (requires --json option)
+```
+
+### Examples
+
+**Print information about current service**
+
+```bash
+prisma info
+```
+
+**Print information about current service in JSON**
+
+```bash
+prisma info --json
+```
+
+**Print information about current service in JSON and include service secret**
+
+```bash
+prisma info --json --secret
+```
+
+> The service secret is only printed if both the `--json` and `--secret` flags are provided.

@@ -1,7 +1,7 @@
 package com.prisma.subscriptions
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models._
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.concurrent.ScalaFutures
@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
 
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationsCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
   val webhookTestKit = testDependencies.webhookPublisher
 
@@ -30,7 +30,7 @@ class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with 
       |   id: ID! @unique
       |   title: String
       |   status: TodoStatus
-      |   comments: [Comment!]!
+      |   comments: [Comment]
       |}
       |
       |type Comment{

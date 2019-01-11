@@ -1,5 +1,6 @@
 package com.prisma.api.schema
 
+import com.prisma.{IgnoreMongo, IgnoreMySql, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import com.prisma.util.GraphQLSchemaMatchers
@@ -144,7 +145,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
                                    ))
   }
 
-  "the many update Mutation for a model" should "not be generated for an empty model" in {
+  "the many update Mutation for a model" should "not be generated for an empty model" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromBuilder { schema =>
       val model = schema.model("Todo")
       model.fields.clear()
@@ -157,7 +158,24 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
     schema should containInputType("TodoWhereInput",
                                    fields = Vector(
                                      "AND: [TodoWhereInput!]",
-                                     "OR: [TodoWhereInput!]"
+                                     "OR: [TodoWhereInput!]",
+                                     "NOT: [TodoWhereInput!]"
+                                   ))
+  }
+
+  "the many update Mutation for a model" should "not be generated for an empty model for Mongo" taggedAs (IgnoreMySql, IgnorePostgres) in {
+    val project = SchemaDsl.fromBuilder { schema =>
+      val model = schema.model("Todo")
+      model.fields.clear()
+      model.field_!("id", _.Cuid, isHidden = true)
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
+
+    schema shouldNot containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
+    schema should containInputType("TodoWhereInput",
+                                   fields = Vector(
+                                     "AND: [TodoWhereInput!]"
                                    ))
   }
 
@@ -336,7 +354,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
-    schema should containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput): BatchPayload!")
+    schema should containMutation("updateManyTodoes(data: TodoUpdateManyMutationInput!, where: TodoWhereInput): BatchPayload!")
     schema should containInputType("TodoWhereInput")
 
   }

@@ -31,6 +31,10 @@ popsicle
     body: {
       query: introspectionQuery,
     },
+    transport: popsicle.createTransport({
+      type: 'text',
+      maxBufferSize: 500 * 1024 * 1024, // 200 MB Max Buffer
+    }),
   })
   .then(response => {
     const schema = JSON.parse(response.body).data

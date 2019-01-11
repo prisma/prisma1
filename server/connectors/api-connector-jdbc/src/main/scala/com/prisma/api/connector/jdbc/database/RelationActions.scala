@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.gc_values.{IdGCValue, NullGCValue}
+import com.prisma.gc_values.{StringIdGCValue, IdGCValue, NullGCValue}
 import com.prisma.shared.models.{RelationField, RelationSide}
 import cool.graph.cuid.Cuid
 
@@ -62,7 +62,7 @@ trait RelationActions extends BuilderBase {
 
       insertToDBIO(query)(
         setParams = { pp =>
-          pp.setString(Cuid.createCuid())
+          pp.setGcValue(StringIdGCValue.random)
           pp.setGcValue(parentId)
           pp.setGcValue(childId)
         }
@@ -70,7 +70,7 @@ trait RelationActions extends BuilderBase {
     }
   }
 
-  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
+  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[_] = {
     assert(!relationField.relatedField.isList)
     val relation  = relationField.relation
     val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
@@ -98,7 +98,7 @@ trait RelationActions extends BuilderBase {
     }
   }
 
-  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[Unit] = {
+  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[_] = {
     val relation = relationField.relation
     val condition = relationColumn(relation, relationField.oppositeRelationSide)
       .equal(placeHolder)
@@ -131,8 +131,7 @@ trait RelationActions extends BuilderBase {
     }
   }
 
-  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
-    assert(!relationField.isList)
+  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[_] = {
     val relation  = relationField.relation
     val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
     relation.inlineManifestation match {
