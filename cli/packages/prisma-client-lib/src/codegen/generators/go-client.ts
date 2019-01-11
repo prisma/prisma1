@@ -112,8 +112,8 @@ export class GoGenerator extends Generator {
           .filter(key => {
             const field = fieldMap![key]
             return (
-              this.getDeepType(field.type).constructor.name ===
-              'GraphQLScalarType'
+              this.getDeepType(field.type).constructor.name === 'GraphQLScalarType' ||
+                this.getDeepType(field.type).constructor.name === 'GraphQLEnumType'
             )
           })
           .map(key => `"${fieldMap![key].name}"`)
@@ -325,10 +325,10 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .filter(key => {
               const field = fieldMap[key]
-              const { isScalar } = this.extractFieldLikeType(
+              const { isScalar, isEnum } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
-              return isScalar
+              return isScalar || isEnum
             })
             .map(key => {
               const field = fieldMap[key]
