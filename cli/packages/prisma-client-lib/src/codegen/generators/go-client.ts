@@ -865,4 +865,34 @@ ${typeNames
 
     return fixed + dynamic
   }
+
+  static replaceEnv(str: string): string {
+    const regex = /\${env:(.*?)}/
+    const match = regex.exec(str)
+    // tslint:disable-next-line:prefer-conditional-expression
+    if (match) {
+      let before = trimQuotes(str.slice(0, match.index))
+      before = before.length > 0 ? `"${before}" + ` : ''
+      let after = trimQuotes(str.slice(match[0].length + match.index))
+      after = after.length > 0 ? ` + "${after}"` : ''
+      return GoGenerator.replaceEnv(
+        `${before}os.Getenv("${match[1]}")${after}`.replace(/`/g, ''),
+      )
+    } else {
+      return `\`${str}\``
+    }
+  }
+}
+
+function trimQuotes(str) {
+  let copy = str
+  if (copy[0] === '"') {
+    copy = copy.slice(1)
+  }
+
+  if (copy.slice(-1)[0] === '"') {
+    copy = copy.slice(0, -1)
+  }
+
+  return copy
 }
