@@ -5,11 +5,7 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
 case class CreateModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateModelTable] {
-  override def execute(mutaction: CreateModelTable): DBIOAction[Any, NoStream, Effect.All] = builder.createModelTable(
-    projectId = mutaction.projectId,
-    model = mutaction.model
-  )
-
+  override def execute(mutaction: CreateModelTable)  = builder.createModelTable(projectId = mutaction.projectId, model = mutaction.model)
   override def rollback(mutaction: CreateModelTable) = builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.model.dbName)
 }
 

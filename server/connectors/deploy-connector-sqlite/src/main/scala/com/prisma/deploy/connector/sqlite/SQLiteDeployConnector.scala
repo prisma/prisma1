@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector.sqlite
 
+import java.io.File
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
@@ -22,15 +24,15 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-//https://www.sqlite.org/lang_attach.html  -> multiple schemas
-
 case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
 
   lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config)
-  lazy val projectDatabase      = internalDatabaseDefs.projectDatabase.primary
-  lazy val managementDatabase   = internalDatabaseDefs.managementDatabase.primary
+  lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
+  lazy val databases            = internalDatabaseDefs.managementDatabases
+  lazy val managementDatabase   = databases.primary
+  lazy val projectDatabase      = databases.primary.database
   lazy val mySqlTypeMapper      = SQLiteTypeMapper()
   lazy val mutationBuilder      = SQLiteJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
@@ -44,14 +46,27 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
-    projectDatabase.database.run(action)
+    projectDatabase.run(action)
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-//    val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-//    projectDatabase.database.run(action)
+    //check if file exists
+    //  yes ->  check if connected
+    //          yes -> detach, delete
+    //          no  -> delete
+    //http://www.sqlitetutorial.net/sqlite-attach-database/
+    val fileTemp = new File(id)
 
-    Future.successful(())
+    if (fileTemp.exists) {
+//      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+//      projectDatabase.run(action).map { x =>
+      fileTemp.delete()
+//        ()
+//      }
+      Future.successful(())
+    } else {
+      Future.successful(())
+    }
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {
@@ -64,24 +79,24 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
       }
     }
 
-    projectDatabase.database.run(action)
+    projectDatabase.run(action)
   }
 
-  override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, managementDatabase)
+  override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, databases.primary)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
-    managementDatabase.database
+    setupDatabase.primary.database
       .run(SQLiteInternalDatabaseSchema.createSchemaActions(internalDatabaseDefs.managementSchemaName, recreate = false))
-      .flatMap(_ => managementDatabase.database.shutdown)
+      .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
   }
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
 
   override def shutdown() = {
-    managementDatabase.database.shutdown
+    databases.shutdown
   }
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
@@ -107,11 +122,13 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
-      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
-        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-    )
+//    DBIO.seq(
+//      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
+//        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
+//        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
+//    )
+
+    DBIO.seq()
   }
 
   override def testFacilities() = {

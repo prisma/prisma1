@@ -7,6 +7,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
 import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
+import slick.sql.SqlAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,7 +29,8 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = JdbcActionsBuilder(schemaName = schemaName.getOrElse(mutaction.project.id), slickDatabase)
+    val projectId      = schemaName.getOrElse(mutaction.project.id)
+    val actionsBuilder = JdbcActionsBuilder(schemaName = projectId, slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)
@@ -38,6 +40,21 @@ case class JdbcDatabaseMutactionExecutor(
       slickDatabase.database.run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
     } else if (slickDatabase.isPostgres) {
       slickDatabase.database.run(singleAction)
+    } else if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+      val list   = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val attach = sqlu"ATTACH DATABASE #${projectId} AS #${projectId};"
+
+      val attachIfNecessary = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(projectId) match {
+              case true  => DBIO.successful(())
+              case false => attach
+            }
+        result <- singleAction
+      } yield result
+
+      slickDatabase.database.run(attachIfNecessary.withPinnedSession)
     } else {
       sys.error("No valid database profile given.")
     }

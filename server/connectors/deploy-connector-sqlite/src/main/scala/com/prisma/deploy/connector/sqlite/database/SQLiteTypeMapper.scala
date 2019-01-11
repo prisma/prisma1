@@ -31,15 +31,15 @@ case class SQLiteTypeMapper() extends TypeMapper {
   // allow the actual content to be much larger.
   // Key columns are utf8_general_ci as this collation is ~10% faster when sorting and requires less memory
   override def rawSqlTypeForScalarTypeIdentifier(isList: Boolean, t: TypeIdentifier.TypeIdentifier): String = t match {
-    case _ if isList             => "mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-    case TypeIdentifier.String   => "mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    case _ if isList             => "mediumtext "
+    case TypeIdentifier.String   => "mediumtext "
     case TypeIdentifier.Boolean  => "boolean"
     case TypeIdentifier.Int      => "int"
     case TypeIdentifier.Float    => "Decimal(65,30)"
-    case TypeIdentifier.Cuid     => "char(25) CHARACTER SET utf8 COLLATE utf8_general_ci"
-    case TypeIdentifier.UUID     => "char(36) CHARACTER SET utf8 COLLATE utf8_general_ci" // TODO: verify that this is the right thing to do
-    case TypeIdentifier.Enum     => "varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-    case TypeIdentifier.Json     => "mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    case TypeIdentifier.Cuid     => "char(25) "
+    case TypeIdentifier.UUID     => "char(36) "
+    case TypeIdentifier.Enum     => "varchar(191)"
+    case TypeIdentifier.Json     => "mediumtext"
     case TypeIdentifier.DateTime => "datetime(3)"
     case _                       => ???
   }

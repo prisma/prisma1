@@ -32,7 +32,21 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: DeleteInlineRelation  => DeleteInlineRelationInterpreter(builder).execute(x)
     }
 
-    database.run(action).map(_ => ())
+    if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+      val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val att  = sqlu"ATTACH DATABASE #${mutaction.projectId} AS #${mutaction.projectId};"
+      val attach = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(mutaction.projectId) match {
+              case true  => DBIO.successful(())
+              case false => att
+            }
+      } yield ()
+      database.run(DBIO.seq(attach, action).withPinnedSession).map(_ => ())
+    } else {
+      database.run(action).map(_ => ())
+    }
   }
 
   override def rollback(mutaction: DeployMutaction): Future[Unit] = {
@@ -56,6 +70,20 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: DeleteInlineRelation  => DeleteInlineRelationInterpreter(builder).rollback(x)
     }
 
-    database.run(action).map(_ => ())
+    if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+      val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val att  = sqlu"ATTACH DATABASE #${mutaction.projectId} AS #${mutaction.projectId};"
+      val attach = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(mutaction.projectId) match {
+              case true  => DBIO.successful(())
+              case false => att
+            }
+      } yield ()
+      database.run(DBIO.seq(attach, action).withPinnedSession).map(_ => ())
+    } else {
+      database.run(action).map(_ => ())
+    }
   }
 }
