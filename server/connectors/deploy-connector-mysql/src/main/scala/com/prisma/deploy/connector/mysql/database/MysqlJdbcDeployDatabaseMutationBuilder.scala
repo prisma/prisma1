@@ -10,7 +10,7 @@ import slick.dbio.{DBIOAction => DatabaseAction}
 
 import scala.concurrent.ExecutionContext
 
-case class MysqlJdbcDeployDatabaseMutationBuilder(
+case class MySqlJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)

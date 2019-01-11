@@ -15,9 +15,12 @@ export class FlowGenerator extends TypescriptGenerator {
   genericsDelimiter = ':'
   lineBreakDelimiter = ','
   partialType = '$Shape'
-  exportPrisma = false
+  exportPrisma = true
 
   prismaInterface = 'PrismaInterface'
+
+  typeObjectType = 'type'
+
   renderImports() {
     return `\
 /**
@@ -63,7 +66,7 @@ type NodePromise = Promise<Node>`
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
 
-    return `export const Prisma: ClientConstructor<PrismaInterface> = makePrismaClientClass(${args})
+    return `export const Prisma: ClientConstructor<${this.prismaInterface}> = makePrismaClientClass(${args})
 
 export const prisma = new Prisma()`
   }

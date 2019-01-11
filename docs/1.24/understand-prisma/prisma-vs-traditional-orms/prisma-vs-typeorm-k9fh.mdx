@@ -1,0 +1,399 @@
+import Code from "components/Markdown/Code"
+import Icon from 'components/Markdown/Icon'
+
+export const meta = {
+  title: "Prisma & TypeORM",
+  position: 60,
+  description: "Learn how Prisma compares to TypeORM"
+}
+
+## Overview
+
+This page compares Prisma with [TypeORM](http://typeorm.io/#/). Here is a high-level overview:
+
+|  | Prisma | TypeORM |
+| --- | --- | --- |
+| Auto-generated DB client | <Icon type="check" /> | <Icon type="cross" /> |
+| Type-safe | <Icon type="check" /> | <Icon type="check" /> | 
+| Declarative data modelling & migrations | <Icon type="check" /> | <Icon type="cross" /> |
+| Connection pooling | <Icon type="check" /> | <Icon type="check" /> |
+| Supported DB types | Document & Relational |  Document & Relational |
+| Supported ORM patterns | DataMapper |  DataMapper & ActiveRecord |
+| [Fluent API for relations](#fetching-relations) | <Icon type="check" /> | <Icon type="cross" /> |
+| [Relation filters](#relation-filters) | <Icon type="check" /> | <Icon type="cross" /> |
+| Raw database access | <Icon type="check" /> | <Icon type="check" /> |
+| Transactional nested writes | <Icon type="check" /> | <Icon type="check" /> |
+| Manual transactions | <Icon type="cross" /> | <Icon type="check" /> |
+
+In the following, you find a detailled comparison of the TypeORM and Prisma APIs.
+
+## Fetching single objects
+
+**Prisma**
+
+```ts
+const user = await prisma.user({ id })
+```
+
+**TypeORM**
+
+```ts
+const userRepository = getRepository(User)
+const user = await userRepository.findOne(id)
+```
+
+## Fetching selected scalars of single objects
+
+**Prisma**
+
+```ts
+const userFragment = await prisma.user({ id }).$fragment(`
+  fragment NameAndEmail on User { id email }`
+`)
+```
+
+**TypeORM**
+
+```ts
+const userRepository = getRepository(User) 
+const user = await userRepository.findOne(id, {
+  select: ["id", "email"]
+})
+```
+
+## Fetching relations
+
+**Prisma**
+
+<Code hideCopy={true} languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
+
+```ts
+const postsByUser = await prisma
+  .user({ id })
+  .posts()
+```
+
+```ts
+const userWithPosts = await prisma
+  .user({ id })
+  .$fragment(`
+    fragment UserPosts on User {
+      posts { id title content published }
+    }
+  `)
+```
+
+```ts
+const userWithPosts = await prisma
+  .$graphql(`
+    query ($id: ID!) {
+      user(id: $id) {
+        posts { id title content published }
+      }
+    }
+  `, 
+  { id }
+  )
+```
+
+</Code>
+
+See the following GitHub issues to learn more about planned iterations of the Prisma client relations API:
+
+- [Improved relational client API: `$nested` queries](https://github.com/prisma/prisma/issues/3668)
+- [Extend fluent API for relations](https://github.com/prisma/prisma/issues/3126)
+
+**TypeORM**
+
+<Code hideCopy={true} languages={["Using `relations`", "Using JOIN", "Eager relations"]}>
+
+```ts
+const userRepository = getRepository(User)
+const user = await userRepository.findOne(id, {
+  relations: ["posts"]
+})
+```
+
+```ts
+const userRepository = getRepository(User)
+const user = await userRepository.findOne(id, {
+  join: {
+    alias: "user",
+    leftJoinAndSelect: {
+      posts: "user.posts"
+    }
+  }
+})
+```
+
+```ts
+const userRepository = getRepository(User)
+const user = await userRepository.findOne(id)
+```
+
+</Code>
+
+## Filtering for concrete values
+
+**Prisma**
+
+```ts
+const users = await prisma.users({
+  where: {
+    name: "Alice"
+  }
+})
+```
+
+**TypeORM**
+
+```ts
+const userRepository = getRepository(User)
+const users = await userRepository.find({
+  where: {
+    name: "Alice"
+  }
+})
+```
+
+## Other filter criteria
+
+**Prisma**
+
+Prisma generates many additional filters that are commonly used in modern application development:
+
+- `<field>_ends_with` & `<field>_starts_with`
+- `<field>_not_ends_with` & `<field>_not_starts_with`
+- `<field>_gt` & `<field>_gte`
+- `<field>_lt` & `<field>_lte`
+- `<field>_contains` & `<field>_not_contains`
+- `<field>_in` & `<field>_not_in`
+
+**TypeORM**
+
+TypeORM doesn't expose other filter critera. But you can use the `QueryBuilder` API to send queries using `LIKE` and other SQL operators.
+
+## Relation filters
+
+**Prisma**
+
+Prisma lets you filter a list based on a criteria that applies not only to the models of the list being retrieved, but to a _relation_ of that model.
+
+For example, you want to fetch only those users that wrote a post with the title "Hello World":
+
+```ts
+query {
+  user(where: {
+    posts_some: {
+      title: "Hello World"
+    }
+  }) {
+    id
+  }
+}
+```
+
+**TypeORM**
+
+TypeORM doesn't offer a dedicated API for relation filters. You can get similar functionality by using the `QueryBuilder` or writing the queries by hand.
+
+## Pagination
+
+**Prisma**
+
+```ts
+const posts = await prisma.posts({
+  skip: 5,
+  first: 10
+})
+```
+
+In addition to `skip` and `first`, the Prisma API also offers:
+
+- `last`
+- `before` & `after` for cursor based pagination
+- Relay-style pagination
+
+**TypeORM**
+
+```ts
+const postRepository = getRepository(Post)
+const posts = await postRepository.find({
+  skip: 5,
+  take: 10
+})
+```
+
+## Creating objects
+
+**Prisma**
+
+```ts
+const user = await prisma.createUser({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+```
+
+**TypeORM**
+
+<Code hideCopy={true} languages={["Using `save`", "Using `create`", "Using `insert`"]}>
+
+```ts
+const user = new User()
+user.name = "Alice"
+user.email = "alice@prisma.io"
+await user.save()
+```
+
+```ts
+const userRepository = getRepository(User)
+const user = await userRepository.create({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+await user.save()
+```
+
+```ts
+const userRepository = getRepository(User)
+await userRepository.insert({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+```
+
+</Code>
+
+## Updating objects
+
+**Prisma**
+
+```ts
+const updatedUser = await prisma.updateUser({
+  where: { id },
+  data: {
+    name: "James",
+    email: "james@prisma.io"
+  }
+})
+```
+
+**TypeORM**
+
+```ts
+const userRepository = getRepository(User)
+const updatedUser = await userRepository.update(id, {
+  name: "James",
+  email: "james@prisma.io"
+})
+```
+
+## Deleting objects
+
+**Prisma**
+
+```ts
+const deletedUser = await prisma.deleteUser({ id })
+```
+
+**TypeORM**
+
+<Code hideCopy={true} languages={["Using `delete`", "Using `remove`"]}>
+
+```ts
+const userRepository = getRepository(User)
+await userRepository.delete(id)
+```
+
+```ts
+const userRepository = getRepository(User)
+const deletedUser = await userRepository.remove(user)
+```
+
+</Code>
+
+## Batch updates
+
+**Prisma**
+
+```ts
+const updatedUsers = await prisma
+  .updateManyUsers({
+    data: {
+      role: "ADMIN"
+    },
+    where: {
+      email_ends_with: "@prisma.io"
+    }
+  })
+```
+
+**TypeORM**
+
+TypeORM doesn't offer a dedicated API for batch updates, but you can use `save` on an array of entities which leads to similar functionality.
+
+## Batch deletes
+
+**Prisma**
+
+```ts
+await prisma.deleteManyUsers({
+  id_in: [id1, id2, id3]
+})
+```
+
+**TypeORM**
+
+<Code hideCopy={true} languages={["Using `delete`", "Using `remove`"]}>
+
+```ts
+const userRepository = getRepository(User)
+await userRepository.delete([id1, id2, id3])
+```
+
+```ts
+const userRepository = getRepository(User)
+const deleteUsers = await userRepository
+  .remove([user1, user2, user3])
+```
+
+</Code>
+
+## Transactions
+
+**Prisma**
+
+```ts
+const newUser = await prisma.createUser({
+  name: "Bob",
+  email: "bob@prisma.io",
+  posts: {
+    create: [
+      { title: "Join us for GraphQL Conf in 2019" },
+      { title: "Subscribe to GraphQL Weekly for GraphQL news" }
+    ]
+  }
+})
+```
+
+**TypeORM**
+
+```ts
+await getConnection().transaction(async transactionalEntityManager => {
+    const user = getRepository(User).create({
+      name: "Bob",
+      email: "bob@prisma.io"
+    })
+    const post1 = getRepository(Post).create({
+      title: "Join us for GraphQL Conf in 2019",
+    })
+    const post2 = getRepository(Post).create({
+      title: "Subscribe to GraphQL Weekly for GraphQL news",
+    })
+    user.posts = [post1, post2]
+    await transactionalEntityManager.save(post1)
+    await transactionalEntityManager.save(post2)
+    await transactionalEntityManager.save(user)
+  })
+```

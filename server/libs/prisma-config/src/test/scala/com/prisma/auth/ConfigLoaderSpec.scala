@@ -211,24 +211,20 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
     exception.getMessage should equal("The parameter connectionLimit must be set to at least 2.")
   }
 
-  // FIXME: right now we must run with true due to a bug
-  "fail if the mongo connector specifies `migrations: true`" in {
-    val invalidConfig = """
+  "succeed for a valid mongo connector config" in {
+    val uri           = "mongodb://myAdminUser:abc123@host.docker.internal:27017/admin"
+    val invalidConfig = s"""
                         |port: 4466
                         |databases:
                         |  default:
                         |    connector: mongo
-                        |    host: localhost
-                        |    port: 3306
-                        |    user: root
-                        |    password: prisma
-                        |    migrations: true
+                        |    uri: $uri
                       """.stripMargin
     val config        = ConfigLoader.tryLoadString(invalidConfig)
     println(config)
     config.isSuccess shouldBe true
-//    val exception = config.failed.get
-//    exception shouldBe a[InvalidConfiguration]
-//    exception.getMessage should equal("The mongo connector may not set the migrations setting to true.")
+    val db = config.get.databases.head
+    db.connector should be("mongo")
+    db.uri should be(uri)
   }
 }
