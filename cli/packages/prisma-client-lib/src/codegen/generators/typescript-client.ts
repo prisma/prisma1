@@ -21,12 +21,12 @@ import {
   printSchema,
 } from 'graphql'
 
-import { Generator } from './Generator'
-import { getExistsTypes } from '../utils'
+import { Generator } from '../Generator'
+import { getExistsTypes } from '../../utils'
 
 import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment'
+import { codeComment } from '../../utils/codeComment'
 
 export interface RenderOptions {
   endpoint?: string
@@ -115,7 +115,7 @@ export class TypescriptGenerator extends Generator {
         return this.renderTypeWrapper(
           type.name,
           type.description!,
-          fieldDefinition
+          fieldDefinition,
         )
       }
     },

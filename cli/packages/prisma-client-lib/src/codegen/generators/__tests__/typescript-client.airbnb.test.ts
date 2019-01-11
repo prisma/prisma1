@@ -1,11 +1,12 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from './typescript-client'
+import { TypescriptGenerator } from '../typescript-client'
 import { test } from 'ava'
+import { fixturesPath } from './fixtures'
 
 const typeDefs = fs.readFileSync(
-  path.join(__dirname, '../../src/codegen/fixtures/airbnb.graphql'),
+  path.join(fixturesPath, 'airbnb.graphql'),
   'utf-8',
 )
 test('typescript generator', t => {

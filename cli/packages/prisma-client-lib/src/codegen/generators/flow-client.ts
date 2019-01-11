@@ -1,8 +1,8 @@
 import { TypescriptGenerator } from './typescript-client'
-import { getExistsFlowTypes } from '../utils'
+import { getExistsFlowTypes } from '../../utils'
 
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment'
+import { codeComment } from '../../utils/codeComment'
 
 import * as os from 'os'
 
@@ -66,7 +66,9 @@ type NodePromise = Promise<Node>`
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
 
-    return `export const Prisma: ClientConstructor<${this.prismaInterface}> = makePrismaClientClass(${args})
+    return `export const Prisma: ClientConstructor<${
+      this.prismaInterface
+    }> = makePrismaClientClass(${args})
 
 export const prisma = new Prisma()`
   }
