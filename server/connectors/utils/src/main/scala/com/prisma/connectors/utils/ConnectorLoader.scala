@@ -19,9 +19,9 @@ object ConnectorLoader {
     val databaseConfig = config.databases.head
     (databaseConfig.connector, databaseConfig.active) match {
       case ("mysql", true)        => MySqlApiConnector(databaseConfig)
-      case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
+      case ("mysql", false)       => sys.error("There is no passive mysql deploy connector yet!")
       case ("sqlite", true)       => SQLiteApiConnector(databaseConfig)
-      case ("sqlite", false)      => sys.error("There is not passive sqlite deploy connector yet!")
+      case ("sqlite", false)      => sys.error("There is no passive sqlite deploy connector yet!")
       case ("postgres", isActive) => PostgresApiConnector(databaseConfig, isActive = isActive)
       case ("mongo", _)           => MongoApiConnector(databaseConfig)
       case (conn, _)              => sys.error(s"Unknown connector $conn")
@@ -32,9 +32,9 @@ object ConnectorLoader {
     val databaseConfig = config.databases.head
     (databaseConfig.connector, databaseConfig.active) match {
       case ("mysql", true)        => MySqlDeployConnector(databaseConfig)
-      case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
+      case ("mysql", false)       => sys.error("There is no passive mysql deploy connector yet!")
       case ("sqlite", true)       => SQLiteDeployConnector(databaseConfig)
-      case ("sqlite", false)      => sys.error("There is not passive mysql deploy connector yet!")
+      case ("sqlite", false)      => sys.error("There is no passive sqlite deploy connector yet!")
       case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, isActive)
       case ("mongo", _)           => MongoDeployConnector(databaseConfig, isActive = true, isTest = isTest)
       case (conn, _)              => sys.error(s"Unknown connector $conn")

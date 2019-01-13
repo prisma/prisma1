@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector.sqlite.database
 
+import java.io.File
+
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.gc_values.GCValue
@@ -9,7 +11,7 @@ import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 case class SQLiteJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
@@ -38,7 +40,21 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def deleteProjectDatabase(projectId: String) = {
-    sqlu"DETACH DATABASE #$projectId"
+    //check if db is attached
+    //  yes ->  check if connected
+    //          yes -> detach, delete
+    //          no  -> delete
+    //http://www.sqlitetutorial.net/sqlite-attach-database/
+    val fileTemp = new File(projectId)
+
+    if (fileTemp.exists) {
+      //      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+      //      projectDatabase.run(action).map { x =>
+      fileTemp.delete()
+      //        ()
+      //      }
+    }
+    DBIO.successful(())
   }
 
   override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
@@ -54,7 +70,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            PRIMARY KEY (#${qualify(idField.dbName)})
            );
            """
-    val index  = sqlu"""CREATE UNIQUE INDEX #${qualify(projectId, "id_UNIQUE")} ON #${model.dbName} (#${idField.dbName} ASC)"""
+    val index  = sqlu"""CREATE UNIQUE INDEX #${qualify(projectId, s"${model.dbName}_id_UNIQUE")} ON #${model.dbName} (#${idField.dbName} ASC)"""
 
     DBIO.seq(create, index)
   }
@@ -82,19 +98,22 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val modelBColumn      = relation.modelBColumn
     val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
     val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
-    val idSql             = typeMapper.rawSQLFromParts("id", isRequired = true, isList = false, TypeIdentifier.Cuid)
+    val tableCreate       = sqlu"""
+                        CREATE TABLE #${qualify(projectId, relationTableName)} (
+                            "id" CHAR(25) NOT NULL,
+                            #$aColSql,
+                            #$bColSql,
+                            PRIMARY KEY ("id"),
+                            FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                        );"""
 
-    sqlu"""
-         CREATE TABLE #${qualify(projectId, relationTableName)} (
-           #$idSql,
-           PRIMARY KEY (`id`),
-           UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-           #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
-           #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
-           UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
-           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
-           DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
+    val indexCreate =
+      sqlu"""CREATE UNIQUE INDEX #${qualify(projectId, s"${relationTableName}_AB_unique")} on #$relationTableName ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
+    val indexA = sqlu"""CREATE INDEX #${qualify(projectId, s"${relationTableName}_A")} on #$relationTableName ("#$modelAColumn" ASC)"""
+    val indexB = sqlu"""CREATE INDEX #${qualify(projectId, s"${relationTableName}_B")} on #$relationTableName ("#$modelBColumn" ASC)"""
+
+    DatabaseAction.seq(tableCreate, indexCreate, indexA, indexB)
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {

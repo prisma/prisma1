@@ -1,7 +1,5 @@
 package com.prisma.deploy.connector.sqlite
 
-import java.io.File
-
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
@@ -50,23 +48,8 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
   }
 
   override def deleteProjectDatabase(id: String): Future[Unit] = {
-    //check if file exists
-    //  yes ->  check if connected
-    //          yes -> detach, delete
-    //          no  -> delete
-    //http://www.sqlitetutorial.net/sqlite-attach-database/
-    val fileTemp = new File(id)
-
-    if (fileTemp.exists) {
-//      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
-//      projectDatabase.run(action).map { x =>
-      fileTemp.delete()
-//        ()
-//      }
-      Future.successful(())
-    } else {
-      Future.successful(())
-    }
+    val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
+    projectDatabase.run(action)
   }
 
   override def getAllDatabaseSizes(): Future[Vector[DatabaseSize]] = {

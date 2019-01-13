@@ -51,6 +51,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
             PRIMARY KEY (#${qualify(idField.dbName)})
          )
       """
+
+    //Fixme check why we dont create unique index on id
   }
 
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
