@@ -66,6 +66,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
               PRIMARY KEY ("nodeId", "position")
            )
       """
+
+    //Fixme index?
   }
 
   override def createRelationTable(

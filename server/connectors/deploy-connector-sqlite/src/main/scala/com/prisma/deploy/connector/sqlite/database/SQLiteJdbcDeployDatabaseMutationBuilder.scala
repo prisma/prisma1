@@ -85,9 +85,10 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            `position` INT(4) NOT NULL,
            #$valueSql,
            PRIMARY KEY (`nodeId`, `position`),
-           INDEX `value` (`value`#$indexSize ASC),
-           FOREIGN KEY (`nodeId`) REFERENCES #${qualify(projectId, model.dbName)} (#${qualify(model.idField_!.dbName)}) ON DELETE CASCADE)
+           FOREIGN KEY (`nodeId`) REFERENCES #${model.dbName} (#${qualify(model.idField_!.dbName)}) ON DELETE CASCADE)
            """
+
+    //Fixme index
   }
 
   override def createRelationTable(projectId: String, relation: Relation): DBIO[_] = {
