@@ -85,6 +85,18 @@ export class Seeder {
     }
   }
 
+  getOperations(query) {
+    const ast = parse(query)
+    return ast.definitions
+      .filter(d => d.kind === 'OperationDefinition')
+      .map(d => {
+        return print({
+          kind: 'Document',
+          definitions: [d],
+        })
+      })
+  }
+
   async executeQuery(
     filePath: string,
     serviceName: string,
@@ -97,30 +109,26 @@ export class Seeder {
     }
 
     const query = fs.readFileSync(filePath, 'utf-8')
-    let operations: string[] = []
     try {
-      const ast = parse(query)
-      operations = ast.definitions
-        .filter(d => d.kind === 'OperationDefinition')
-        .map(d => {
-          return print({
-            kind: 'Document',
-            definitions: [d],
-          })
-        })
+      const operations = this.getOperations(query)
+
+      try {
+        for (const operation of operations) {
+          await this.client.exec(
+            serviceName,
+            stageName,
+            operation,
+            token,
+            workspaceSlug,
+          )
+        }
+      } catch (e) {
+        throw new Error(`Error while executing operation:\n${e.message}`)
+      }
+
     } catch (e) {
       throw new Error(`Error while parsing ${filePath}:\n${e.message}`)
     }
-
-    operations.forEach(async operation => {
-      await this.client.exec(
-        serviceName,
-        stageName,
-        operation,
-        token,
-        workspaceSlug,
-      )
-    })
   }
 
   async reset(serviceName, stageName) {
