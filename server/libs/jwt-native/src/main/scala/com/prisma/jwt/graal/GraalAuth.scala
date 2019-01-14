@@ -16,33 +16,53 @@ object GraalAuth {
 }
 
 case class GraalAuth(algorithm: Algorithm) extends Auth {
-  def toJavaString(str: CCharPointer) = CTypeConversion.toJavaString(str)
-  def toCString(str: String)          = CTypeConversion.toCString(str).get()
+  def toJavaString(str: CCharPointer)                            = CTypeConversion.toJavaString(str)
+  def toCString(str: String): CTypeConversion.CCharPointerHolder = CTypeConversion.toCString(str)
 
-  def strOptToPointer(opt: Option[String]): CCharPointer = {
-    // The following code has to be this verbose to fight scala type inference / erasure and native image compiler code analysis.
-    if (opt.isDefined) {
-      val v: String = opt.get
-      toCString(v)
-    } else {
-      WordFactory.nullPointer[CCharPointer]()
+//  def strOptToPointer(opt: Option[String]) = {
+//    // The following code has to be this verbose to fight scala type inference / erasure and native image compiler code analysis.
+//    if (opt.isDefined) {
+//      val v: String = opt.get
+//      toCString(v)
+//    } else {
+//      WordFactory.nullPointer[CCharPointer]()
+//    }
+//  }
+
+  case class DeferredCCharPointerHolderClosable(holderOpt: Option[CTypeConversion.CCharPointerHolder]) {
+    def get(): CCharPointer = {
+      // The following code has to be this verbose to fight scala type inference / erasure not fully working with the native image compiler code analysis.
+      if (holderOpt.isDefined) {
+        holderOpt.get.get()
+      } else {
+        WordFactory.nullPointer[CCharPointer]()
+      }
     }
+
+    def close(): Unit = holderOpt.foreach(_.close())
   }
 
   // expirationOffset is the offset in seconds to the current timestamp. None is no expiration at all (todo: edge case: -1).
   def createToken(secret: String, expirationOffset: Option[Long], grant: Option[JwtGrant]): Try[String] = Try {
-    val target: CCharPointer = strOptToPointer(grant.map(_.target))
-    val action: CCharPointer = strOptToPointer(grant.map(_.action))
+    val target = DeferredCCharPointerHolderClosable(grant.map(x => toCString(x.target)))
+    val action = DeferredCCharPointerHolderClosable(grant.map(x => toCString(x.action)))
+
+    val alg = toCString(algorithm.toString)
+    val s   = toCString(secret)
     val buffer: CIntegration.ProtocolBuffer = GraalRustBridge.create_token(
-      toCString(algorithm.toString),
-      toCString(secret),
+      alg.get(),
+      s.get(),
       expirationOffset
         .map(e => DateTime.now(DateTimeZone.UTC).plusSeconds(e.toInt).getMillis / 1000)
         .getOrElse(NO_EXP),
-      target,
-      action
+      target.get(),
+      action.get()
     )
 
+    target.close()
+    action.close()
+    alg.close()
+    s.close()
     throwOnError(buffer)
 
     if (buffer.getDataLen == 0) {
@@ -59,16 +79,21 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
     if (secrets.nonEmpty) {
       val holder = iterableToNativeArray(secrets)
-      val target = strOptToPointer(expectedGrant.map(_.target))
-      val action = strOptToPointer(expectedGrant.map(_.action))
+      val target = DeferredCCharPointerHolderClosable(expectedGrant.map(x => toCString(x.target)))
+      val action = DeferredCCharPointerHolderClosable(expectedGrant.map(x => toCString(x.action)))
+      val tkn    = toCString(token)
       val buffer = GraalRustBridge.verify_token(
-        toCString(token),
+        tkn.get(),
         holder.get(),
         secrets.length,
-        target,
-        action
+        target.get(),
+        action.get()
       )
 
+      target.close()
+      action.close()
+      tkn.close()
+      holder.close()
       throwOnError(buffer)
 
       if (buffer.getDataLen > 1) {
