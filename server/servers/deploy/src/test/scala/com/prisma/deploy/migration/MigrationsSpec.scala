@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, DatabaseSchema}
+import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability, RelationLinkTableCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -743,6 +743,32 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val result = deploy(dataModel)
     val index  = result.table_!("A").indexes.find(_.columns == Vector("field"))
     index should be(empty)
+  }
+
+  "adding a custom sequence must work" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id(strategy: SEQUENCE) @sequence(name: "My_sequence_for_B" initialValue:101 allocationSize:100)
+        |}
+      """.stripMargin
+    val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
+    val sequence = result.table_!("B").column_!("id").sequence.get
+    sequence.name should be("My_sequence_for_B")
+    sequence.startValue should be(101)
+  }
+
+  "an id field of type Int implies a sequence" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id(strategy: AUTO)
+        |}
+      """.stripMargin
+    val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
+    val sequence = result.table_!("B").column_!("id").sequence.get
+    sequence.name should not(be(empty))
+    sequence.startValue should be(1)
   }
 
   def setup() = {
