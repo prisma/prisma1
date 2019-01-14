@@ -301,34 +301,7 @@ ${chalk.gray(
 
       this.out.action.stop(prettyTime(Date.now() - before))
     }
-    // TODO move up to if statement after testing done
-    if (migrationResult.migration) {
-      if (
-        this.definition.definition!.seed &&
-        !this.flags['no-seed'] &&
-        projectNew
-      ) {
-        this.printHooks()
-        await this.seed(
-          cluster,
-          projectNew,
-          serviceName,
-          stageName,
-          this.definition.getWorkspace(),
-        )
-      }
-
-      // no action required
-      this.deploying = false
-      if (migrationResult.migration) {
-        this.printEndpoints(
-          cluster,
-          serviceName,
-          stageName,
-          this.definition.getWorkspace() || undefined,
-        )
-      }
-    }
+    
     const hooks = this.definition.getHooks('post-deploy')
     if (hooks.length > 0) {
       this.out.log(`\n${chalk.bold('post-deploy')}:`)
@@ -355,6 +328,34 @@ ${chalk.gray(
         this.out.action.stop(chalk.red(figures.cross))
       } else {
         this.out.action.stop()
+      }
+    }
+
+    if (migrationResult.migration) {
+      if (
+        this.definition.definition!.seed &&
+        !this.flags['no-seed'] &&
+        projectNew
+      ) {
+        this.printHooks()
+        await this.seed(
+          cluster,
+          projectNew,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace(),
+        )
+      }
+
+      // no action required
+      this.deploying = false
+      if (migrationResult.migration) {
+        this.printEndpoints(
+          cluster,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace() || undefined,
+        )
       }
     }
   }
