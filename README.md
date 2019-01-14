@@ -6,13 +6,15 @@
 
 **Prisma replaces traditional ORMs** and custom data access layers with a universal database abstraction used via the **Prisma client**. It is used to build **GraphQL servers, REST APIs & more**.
 
-<!-- TODO: Try with CSB -->
-
 - **Prisma client for various languages** such as [JavaScript](https://www.prisma.io/client/client-javascript), [TypeScript](https://www.prisma.io/client/client-typescript), [Flow](https://www.prisma.io/client/client-flow), [Go](https://www.prisma.io/client/client-go).
 - **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
 - **Type-safe database access** including filters, aggregations, pagination and transactions.
 - **Realtime event systems for your database** to get notified about database events.
 - **Declarative data modeling & migrations (optional)** with simple SDL syntax.
+
+Try a Prisma example online with CodeSandbox:
+
+[![Prisma Client Demo](https://svgshare.com/i/AVY.svg)](https://codesandbox.io/s/github/prisma-csb/prisma-client-demo-ts) [![GraphQL API](https://svgshare.com/i/AVX.svg)](https://codesandbox.io/s/github/prisma-csb/graphql-example-ts) [![REST API](https://svgshare.com/i/AY0.svg)](https://codesandbox.io/s/github/prisma-csb/rest-example-ts)
 
 ## Contents
 
