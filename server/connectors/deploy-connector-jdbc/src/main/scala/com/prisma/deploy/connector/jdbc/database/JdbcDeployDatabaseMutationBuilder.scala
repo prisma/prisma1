@@ -60,12 +60,14 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
    * Connector-agnostic functions
    */
   def createClientDatabaseForProject(projectId: String) = {
-    changeDatabaseQueryToDBIO(
+    val table = changeDatabaseQueryToDBIO(
       sql
         .createTable(name(projectId, "_RelayId"))
         .column("id", SQLDataType.VARCHAR(36).nullable(false))
         .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
         .constraint(constraint("pk_RelayId").primaryKey(name(projectId, "_RelayId", "id"))))()
+
+    DBIO.seq(createSchema(projectId), table)
   }
 
   def dropTable(projectId: String, tableName: String) = {

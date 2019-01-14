@@ -50,8 +50,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
     sqlu"""CREATE TABLE #${qualify(projectId, model.dbName)} (
            #$idFieldSQL,
-           PRIMARY KEY (#${qualify(idField.dbName)}),
-           UNIQUE INDEX `id_UNIQUE` (#${qualify(idField.dbName)} ASC))
+           PRIMARY KEY (#${qualify(idField.dbName)}))
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
@@ -84,7 +83,6 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
          CREATE TABLE #${qualify(projectId, relationTableName)} (
            #$idSql,
            PRIMARY KEY (`id`),
-           UNIQUE INDEX `id_UNIQUE` (`id` ASC),
            #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
            #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
            UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),

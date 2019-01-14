@@ -69,7 +69,7 @@ object SQLiteInternalDatabaseSchema {
       .withPinnedSession // used pinned connection so that the USE statement is valid throughout all statements
 
   def addDataModelColumnToMigrationTable(internalSchema: String)(implicit ec: ExecutionContext) =
-    for {
+    for { // Fixme
       doesExist <- DBIO.successful(true) //doesColumnExist(internalSchema, "Migration", "datamodel")
       _ <- if (doesExist) DBIO.successful(())
           else sqlu"""ALTER TABLE `Migration` ADD COLUMN `datamodel` mediumtext DEFAULT NULL;"""
