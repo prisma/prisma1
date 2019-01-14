@@ -23,7 +23,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   import slickDatabase.profile.api._
 
   override def createSchema(projectId: String): DBIO[_] = {
-    sqlu"ATTACH DATABASE #$projectId AS #${qualify(projectId)};"
+    DBIO.successful(())
   }
 
   override def truncateProjectTables(project: Project): DBIO[_] = {
@@ -65,14 +65,10 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
 
-    val create = sqlu"""CREATE TABLE #${qualify(projectId, model.dbName)} (
+    sqlu"""CREATE TABLE #${qualify(projectId, model.dbName)} (
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)})
-           );
-           """
-    val index  = sqlu"""CREATE UNIQUE INDEX #${qualify(projectId, s"${model.dbName}_id_UNIQUE")} ON #${model.dbName} (#${idField.dbName} ASC)"""
-
-    DBIO.seq(create, index)
+           );"""
   }
 
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {

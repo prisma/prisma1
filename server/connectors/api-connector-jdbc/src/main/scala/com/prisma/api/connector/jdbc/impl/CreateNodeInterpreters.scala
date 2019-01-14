@@ -120,7 +120,7 @@ case class NestedCreateNodeInterpreter(
     case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).isDefined =>
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).get)
 
-    case e: PSQLException if e.getSQLState == "23503" =>
+    case e: PSQLException if e.getSQLState == "23503" => //Foreign Key Violation
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException
