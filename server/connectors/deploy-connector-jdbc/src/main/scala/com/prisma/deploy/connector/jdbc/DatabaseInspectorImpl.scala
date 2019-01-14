@@ -73,7 +73,14 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
            |  sequence_schema = '#$schema' and
            |  cols.table_name = '#$table';
          """.stripMargin
-    val mysql   = sql""
+    val mysql =
+      sql"""
+           |select "irrelevant", table_name,column_name,"irrelevant", 1
+           |from information_schema.COLUMNS
+           |where extra = 'auto_increment'
+           |and table_name = $table
+           |and table_schema = $schema;
+         """.stripMargin
 
     val action = if (db.isPostgres) {
       postges
