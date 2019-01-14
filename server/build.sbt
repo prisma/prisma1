@@ -315,6 +315,7 @@ lazy val jdbcNative = libProject("jdbc-native")
   unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar"))
 
 lazy val jwtNative = libProject("jwt-native")
+  .dependsOn(logging)
   .settings(libraryDependencies ++= Seq(
     jna,
     scalaTest,

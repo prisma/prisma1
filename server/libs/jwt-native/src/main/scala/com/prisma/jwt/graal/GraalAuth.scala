@@ -2,34 +2,58 @@ package com.prisma.jwt.graal
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+
 import com.prisma.jwt.Algorithm.Algorithm
 import com.prisma.jwt.{Auth, AuthFailure, JwtGrant}
 import org.graalvm.nativeimage.c.`type`.CTypeConversion.CCharPointerPointerHolder
 import org.graalvm.nativeimage.c.`type`.{CCharPointer, CTypeConversion}
 import org.graalvm.word.WordFactory
 import org.joda.time.{DateTime, DateTimeZone}
+import org.slf4j.LoggerFactory
 
 import scala.util.Try
+//import scala.util.control.NonFatal
 
 object GraalAuth {
   def initialize = GraalRustBridge.jwt_initialize()
 }
 
 case class GraalAuth(algorithm: Algorithm) extends Auth {
+  val logger = LoggerFactory.getLogger("prisma")
+
   def toJavaString(str: CCharPointer)                            = CTypeConversion.toJavaString(str)
   def toCString(str: String): CTypeConversion.CCharPointerHolder = CTypeConversion.toCString(str)
 
-//  def strOptToPointer(opt: Option[String]) = {
-//    // The following code has to be this verbose to fight scala type inference / erasure and native image compiler code analysis.
-//    if (opt.isDefined) {
-//      val v: String = opt.get
-//      toCString(v)
+// todo This doesn't work (yet) with the native image compiler (erasure and lambdas are a problem)
+// todo However, this is the best code to handle AutoClosable from Scala, so we definitely need it down the road.
+//  def withAutoclose[T <: AutoCloseable, V](resources: T*)(f: Seq[T] => V): V = {
+//    var exception: Throwable = null // We need to save the (nonfatal) exception if thrown for clean resource closing.
+//    try {
+//      f(resources)
+//    } catch {
+//      // Fatal errors will still propagate (eg. out-of-memory errors)
+//      case NonFatal(e) =>
+//        exception = e
+//        throw e
+//    } finally {
+//      resources.foreach(closeSilently(exception, _))
+//    }
+//  }
+//
+//  private def closeSilently(e: Throwable, resource: AutoCloseable): Unit = {
+//    if (e != null) {
+//      try {
+//        resource.close()
+//      } catch {
+//        // todo trace here
+//        case NonFatal(suppressed) => e.addSuppressed(suppressed)
+//      }
 //    } else {
-//      WordFactory.nullPointer[CCharPointer]()
+//      resource.close()
 //    }
 //  }
 
-  case class DeferredCCharPointerHolderClosable(holderOpt: Option[CTypeConversion.CCharPointerHolder]) {
+  case class NullableCCharPointerHolder(holderOpt: Option[CTypeConversion.CCharPointerHolder]) extends AutoCloseable {
     def get(): CCharPointer = {
       // The following code has to be this verbose to fight scala type inference / erasure not fully working with the native image compiler code analysis.
       if (holderOpt.isDefined) {
@@ -44,11 +68,12 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
 
   // expirationOffset is the offset in seconds to the current timestamp. None is no expiration at all (todo: edge case: -1).
   def createToken(secret: String, expirationOffset: Option[Long], grant: Option[JwtGrant]): Try[String] = Try {
-    val target = DeferredCCharPointerHolderClosable(grant.map(x => toCString(x.target)))
-    val action = DeferredCCharPointerHolderClosable(grant.map(x => toCString(x.action)))
+    // (See todo's above) On error we're leaking memory here.
+    val target = NullableCCharPointerHolder(grant.map(x => toCString(x.target)))
+    val action = NullableCCharPointerHolder(grant.map(x => toCString(x.action)))
+    val alg    = toCString(algorithm.toString)
+    val s      = toCString(secret)
 
-    val alg = toCString(algorithm.toString)
-    val s   = toCString(secret)
     val buffer: CIntegration.ProtocolBuffer = GraalRustBridge.create_token(
       alg.get(),
       s.get(),
@@ -63,6 +88,7 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
     action.close()
     alg.close()
     s.close()
+
     throwOnError(buffer)
 
     if (buffer.getDataLen == 0) {
@@ -79,10 +105,11 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
   override def verifyToken(token: String, secrets: Vector[String], expectedGrant: Option[JwtGrant]): Try[Unit] = Try {
     if (secrets.nonEmpty) {
       val holder = iterableToNativeArray(secrets)
-      val target = DeferredCCharPointerHolderClosable(expectedGrant.map(x => toCString(x.target)))
-      val action = DeferredCCharPointerHolderClosable(expectedGrant.map(x => toCString(x.action)))
+      val target = NullableCCharPointerHolder(expectedGrant.map(x => toCString(x.target)))
+      val action = NullableCCharPointerHolder(expectedGrant.map(x => toCString(x.action)))
       val tkn    = toCString(token)
-      val buffer = GraalRustBridge.verify_token(
+
+      val buffer: CIntegration.ProtocolBuffer = GraalRustBridge.verify_token(
         tkn.get(),
         holder.get(),
         secrets.length,
@@ -90,10 +117,11 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
         action.get()
       )
 
+      holder.close()
       target.close()
       action.close()
       tkn.close()
-      holder.close()
+
       throwOnError(buffer)
 
       if (buffer.getDataLen > 1) {

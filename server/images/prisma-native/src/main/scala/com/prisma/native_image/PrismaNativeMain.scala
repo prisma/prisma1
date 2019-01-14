@@ -12,7 +12,6 @@ object PrismaNativeMain {
   System.setProperty("org.jooq.no-logo", "true")
 
   def main(args: Array[String]): Unit = {
-
     implicit val system       = ActorSystem("prisma", StaticAkkaConfig.config)
     implicit val materializer = ActorMaterializer()
     implicit val dependencies = PrismaNativeDependencies()
