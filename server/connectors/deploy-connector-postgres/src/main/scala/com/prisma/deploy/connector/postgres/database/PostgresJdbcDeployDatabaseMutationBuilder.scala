@@ -171,9 +171,9 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     )
   }
 
-  override def renameTable(projectId: String, currentName: String, newName: String): DBIO[_] = {
-    sqlu"""ALTER TABLE #${qualify(projectId, currentName)} RENAME TO #${qualify(newName)}"""
-  }
+//  override def renameTable(projectId: String, currentName: String, newName: String): DBIO[_] = {
+//    sqlu"""ALTER TABLE #${qualify(projectId, currentName)} RENAME TO #${qualify(newName)}"""
+//  }
 
   override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     sqlu"""CREATE UNIQUE INDEX #${qualify(s"$projectId.$tableName.$columnName._UNIQUE")} ON #${qualify(projectId, tableName)}(#${qualify(columnName)} ASC);"""

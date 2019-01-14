@@ -40,9 +40,9 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"DROP DATABASE IF EXISTS #${qualify(projectId)}"
   }
 
-  override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
-    sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
-  }
+//  override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
+//    sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
+//  }
 
   override def createModelTable(projectId: String, model: Model): DBIO[_] = {
     val idField    = model.idField_!

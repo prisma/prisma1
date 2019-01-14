@@ -57,9 +57,9 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.successful(())
   }
 
-  override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
-    sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
-  }
+//  override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
+//    sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
+//  }
 
   override def createModelTable(projectId: String, model: Model): DBIO[_] = {
     val idField    = model.idField_!
@@ -114,31 +114,32 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    DBIO.seq(
-      updateColumn(
-        projectId = projectId,
-        tableName = previousRelation.relationTableName,
-        oldColumnName = previousRelation.modelAColumn,
-        newColumnName = nextRelation.modelAColumn,
-        newIsRequired = true,
-        newIsList = false,
-        newTypeIdentifier = nextRelation.modelA.idField_!.typeIdentifier
-      ),
-      updateColumn(
-        projectId = projectId,
-        tableName = previousRelation.relationTableName,
-        oldColumnName = previousRelation.modelBColumn,
-        newColumnName = nextRelation.modelBColumn,
-        newIsRequired = true,
-        newIsList = false,
-        newTypeIdentifier = nextRelation.modelB.idField_!.typeIdentifier
-      ),
-      if (previousRelation.relationTableName != nextRelation.relationTableName) {
-        renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
-      } else {
-        DBIO.successful(())
-      }
-    )
+    DBIO
+      .seq(
+        updateColumn(
+          projectId = projectId,
+          tableName = previousRelation.relationTableName,
+          oldColumnName = previousRelation.modelAColumn,
+          newColumnName = nextRelation.modelAColumn,
+          newIsRequired = true,
+          newIsList = false,
+          newTypeIdentifier = nextRelation.modelA.idField_!.typeIdentifier
+        ),
+        updateColumn(
+          projectId = projectId,
+          tableName = previousRelation.relationTableName,
+          oldColumnName = previousRelation.modelBColumn,
+          newColumnName = nextRelation.modelBColumn,
+          newIsRequired = true,
+          newIsList = false,
+          newTypeIdentifier = nextRelation.modelB.idField_!.typeIdentifier
+        ),
+        if (previousRelation.relationTableName != nextRelation.relationTableName) {
+          renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
+        } else {
+          DBIO.successful(())
+        }
+      )
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {

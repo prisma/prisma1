@@ -90,8 +90,8 @@ object Dependencies {
   val apacheCommons     = "commons-lang"               % "commons-lang"                   % "2.6"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"        % "3.11.0",
-    "org.jooq" %% "jooq-scala" % "3.11.0"
+    "org.jooq" % "jooq"        % "3.11.9",
+    "org.jooq" %% "jooq-scala" % "3.11.9"
   )
 
   val http4s = Seq(
