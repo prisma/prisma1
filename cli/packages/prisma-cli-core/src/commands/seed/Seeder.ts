@@ -5,7 +5,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as childProcess from 'child_process'
 import chalk from 'chalk'
-import { parse } from 'graphql'
+import { parse, print } from 'graphql'
 import * as crossSpawn from 'cross-spawn'
 const debug = require('debug')('Seeder')
 
@@ -97,13 +97,30 @@ export class Seeder {
     }
 
     const query = fs.readFileSync(filePath, 'utf-8')
+    let operations: string[] = []
     try {
-      parse(query)
+      const ast = parse(query)
+      operations = ast.definitions
+        .filter(d => d.kind === 'OperationDefinition')
+        .map(d => {
+          return print({
+            kind: 'Document',
+            definitions: [d],
+          })
+        })
     } catch (e) {
       throw new Error(`Error while parsing ${filePath}:\n${e.message}`)
     }
 
-    await this.client.exec(serviceName, stageName, query, token, workspaceSlug)
+    operations.forEach(async operation => {
+      await this.client.exec(
+        serviceName,
+        stageName,
+        operation,
+        token,
+        workspaceSlug,
+      )
+    })
   }
 
   async reset(serviceName, stageName) {
