@@ -22,7 +22,12 @@ dev-down:
 	docker-compose -f docker-compose/mongo/dev-mongo.yml down -v --remove-orphans
 
 local-image:
-	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root -w /root -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image sbt "project prisma-local" docker
+	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root/build -w /root/build -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image:debian sbt "project prisma-local" docker
 
 all-images:
-	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root -w /root/ -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image sbt docker
+	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root/build -w /root/build -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image:debian sbt docker
+
+native-docker:
+	# Produce linux native image and then produce a docker image of it in a second step
+	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root/build -w /root/build -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image:debian sbt "project prisma-native" prisma-native-image:packageBin
+	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root/build -w /root/build -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image:debian ./.buildkite/scripts/docker-native/build.sh

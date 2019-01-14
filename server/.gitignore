@@ -40,4 +40,5 @@ buildkite-script-*
 **/libjwt_native*
 .buildkite/scripts/docker-native/prisma-native
 
-svm-heapdump-*
+*svm-heapdump-*
+out

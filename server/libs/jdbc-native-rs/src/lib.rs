@@ -40,7 +40,7 @@ pub extern "C" fn jdbc_initialize() {
 pub extern "C" fn newConnection<'a>(url: *const c_char) -> *mut driver::PsqlConnection<'a> {
     let mut connection = driver::connect(to_string(url));
     let ptr = Box::into_raw(Box::new(connection));
-    trace!("New connection at: {:?}", ptr);
+    trace!("New connection - handing out: {:?}", ptr);
     return ptr;
 }
 
@@ -231,7 +231,7 @@ fn errorToCallResult(e: driver::DriverError) -> CallResult {
 
 #[no_mangle]
 pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c_char  {
-    trace!("Closing connection at {:?}", conn);
+    trace!("Closing connection: {:?}", conn);
     let connection = unsafe { Box::from_raw(conn) };
     connection.close();
 
@@ -240,7 +240,7 @@ pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c
 
 #[no_mangle]
 pub extern "C" fn destroy(pointerAndError: *mut PointerAndError) {
-    trace!("Destroying PointerAndError at: {:?}", pointerAndError);
+    trace!("Destroying PointerAndError: {:?}", pointerAndError);
     unsafe {
         Box::from_raw(pointerAndError)
     };
@@ -248,7 +248,7 @@ pub extern "C" fn destroy(pointerAndError: *mut PointerAndError) {
 
 #[no_mangle]
 pub extern "C" fn destroy_string(s: *mut c_char) {
-    trace!("Dropping string buffer at {:?}", s);
+    trace!("Dropping string buffer: {:?}", s);
     unsafe {
         String::from_utf8(CString::from_raw(s).into_bytes()).unwrap()
     };
