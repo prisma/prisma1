@@ -40,5 +40,13 @@ case class Table(name: String, columnFns: Vector[Table => Column], indexes: Vect
 }
 
 case class Index(name: String, columns: Vector[String], unique: Boolean)
-case class Column(name: String, tpe: String, typeIdentifier: TypeIdentifier, isRequired: Boolean, foreignKey: Option[ForeignKey])(val table: Table)
+case class Column(
+    name: String,
+    tpe: String,
+    typeIdentifier: TypeIdentifier,
+    isRequired: Boolean,
+    foreignKey: Option[ForeignKey],
+    sequence: Option[Sequence]
+)(val table: Table)
 case class ForeignKey(table: String, column: String)
+case class Sequence(name: String, startValue: Int)

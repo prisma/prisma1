@@ -130,5 +130,5 @@ case class PostgresDeployConnector(
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 
-  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabase))
+  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabases.primary))
 }

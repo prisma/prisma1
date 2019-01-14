@@ -115,6 +115,6 @@ case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(im
 
   override def testFacilities() = {
     val db = internalDatabaseDefs.databases(root = true)
-    DeployTestFacilites(DatabaseInspectorImpl(db.primary.database))
+    DeployTestFacilites(DatabaseInspectorImpl(db.primary))
   }
 }

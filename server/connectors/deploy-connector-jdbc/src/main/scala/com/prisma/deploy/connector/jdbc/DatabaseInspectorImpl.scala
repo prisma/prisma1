@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.jdbc
 
 import java.sql.Types
 
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
@@ -10,9 +11,10 @@ import slick.jdbc.meta.{MColumn, MForeignKey, MIndexInfo, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: ExecutionContext) extends DatabaseInspector {
+case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContext) extends DatabaseInspector {
+  import db.profile.api.actionBasedSQLInterpolation
 
-  override def inspect(schema: String): Future[DatabaseSchema] = db.run(action(schema))
+  override def inspect(schema: String): Future[DatabaseSchema] = db.database.run(action(schema))
 
   def action(schema: String): DBIO[DatabaseSchema] = {
     for {
@@ -31,10 +33,11 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
       mColumns     <- mTable.getColumns
       importedKeys <- mTable.getImportedKeys
       mIndexes     <- mTable.getIndexInfo()
+      sequences    <- getSequences(mTable.name.schema.orElse(mTable.name.catalog).get, mTable.name.name)
     } yield {
       val columns = mColumns.map { mColumn =>
         val importedKeyForColumn = importedKeys.find(_.fkColumn == mColumn.name)
-        mColumnToModel(mColumn, importedKeyForColumn)
+        mColumnToModel(mColumn, importedKeyForColumn, sequences)
       }
       val indexes = mIndexesToModels(mIndexes)
       Table(mTable.name.name, columns, indexes)
@@ -55,7 +58,40 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
     }.toVector
   }
 
-  def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey]): Table => Column = {
+  case class MSequence(column: String, name: String, start: Int)
+
+  def getSequences(schema: String, table: String): DBIO[Vector[MSequence]] = {
+    val postges = sql"""
+           |select 
+           |  cols.table_schema, cols.table_name, cols.column_name,
+           |  seq.sequence_name, seq.start_value
+           |from 
+           |	information_schema.columns as cols, 
+           |	information_schema.sequences as seq
+           |where
+           |  column_default LIKE '%' || seq.sequence_name || '%' and
+           |  sequence_schema = '#$schema' and
+           |  cols.table_name = '#$table';
+         """.stripMargin
+    val mysql   = sql""
+
+    val action = if (db.isPostgres) {
+      postges
+    } else if (db.isMySql) {
+      mysql
+    } else {
+      sys.error(s"${db.dialect} is not supported here")
+    }
+
+    action.as[(String, String, String, String, Int)].map { result =>
+      result.map {
+        case (schema, table, column, sequence, start) =>
+          MSequence(column = column, name = sequence, start = start)
+      }
+    }
+  }
+
+  def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey], mSequences: Vector[MSequence]): Table => Column = {
     val isRequired = !mColumn.nullable.getOrElse(true) // sometimes the metadata can't definitely say if something is nullable. We treat those as not required.
     // this needs to be extended further in the future if we support arbitrary SQL types
     import java.sql.Types._
@@ -72,8 +108,9 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
       name = mColumn.name,
       tpe = mColumn.typeName,
       typeIdentifier = typeIdentifier,
+      isRequired = isRequired,
       foreignKey = mForeignKey.map(mfk => ForeignKey(mfk.pkTable.name, mfk.pkColumn)),
-      isRequired = isRequired
+      sequence = mSequences.find(_.column == mColumn.name).map(mseq => Sequence(mseq.name, mseq.start))
     )
   }
 }
