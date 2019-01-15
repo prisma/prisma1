@@ -40,10 +40,6 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"DROP DATABASE IF EXISTS #${qualify(projectId)}"
   }
 
-//  override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
-//    sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
-//  }
-
   override def createModelTable(projectId: String, model: Model): DBIO[_] = {
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
@@ -52,6 +48,14 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)}))
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
+  }
+
+  override def renameTable(projectId: String, oldTableName: String, newTableName: String) = {
+    if (oldTableName != newTableName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(projectId, newTableName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
   }
 
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {

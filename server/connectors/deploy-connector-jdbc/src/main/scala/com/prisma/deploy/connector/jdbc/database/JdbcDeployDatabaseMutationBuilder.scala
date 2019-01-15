@@ -23,7 +23,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def createSchema(projectId: String): DBIO[_]
   def truncateProjectTables(project: Project): DBIO[_]
   def deleteProjectDatabase(projectId: String): DBIO[_]
-//  def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
+  def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
   def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
   def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_]
 
@@ -81,14 +81,13 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    val query = sql.alterTable(name(projectId, s"${modelName}_$fieldName")).renameTo(name(projectId, s"${newModelName}_$newFieldName"))
-    changeDatabaseQueryToDBIO(query)()
+    renameTable(projectId, s"${modelName}_$fieldName", s"${newModelName}_$newFieldName")
   }
 
-  def renameTable(projectId: String, currentName: String, newName: String) = {
-    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
-    changeDatabaseQueryToDBIO(query)()
-  }
+//  def renameTable(projectId: String, currentName: String, newName: String) = {
+//    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
+//    changeDatabaseQueryToDBIO(query)()
+//  }
 
   def deleteColumn(projectId: String, tableName: String, columnName: String) = {
     val query = sql.alterTable(name(projectId, tableName)).dropColumn(name(columnName))

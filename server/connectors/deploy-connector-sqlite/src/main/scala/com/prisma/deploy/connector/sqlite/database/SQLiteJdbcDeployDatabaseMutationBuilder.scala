@@ -57,10 +57,6 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.successful(())
   }
 
-//  override def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
-//    sqlu"""RENAME TABLE #${qualify(projectId, currentName)} TO #${qualify(projectId, newName)};"""
-//  }
-
   override def createModelTable(projectId: String, model: Model): DBIO[_] = {
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
@@ -69,6 +65,14 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)})
            );"""
+  }
+
+  override def renameTable(projectId: String, oldTableName: String, newTableName: String): DBIO[_] = {
+    if (oldTableName != newTableName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(newTableName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
   }
 
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
