@@ -69,7 +69,9 @@ pub extern "C" fn prepareStatement<'a>(conn: &'a driver::PsqlConnection<'a>, que
 pub extern "C" fn closeStatement(stmt: *mut driver::PsqlPreparedStatement) -> *const c_char  {
     trace!("Closing statement: {:?}", stmt);
     let boxedStmt = unsafe { Box::from_raw(stmt) };
-    serializeCallResult(Ok(CallResult::empty()))
+    let ptr = serializeCallResult(Ok(CallResult::empty()));
+    trace!("Close statement - handing out: {:?}", ptr);
+    ptr
 }
 
 
@@ -235,7 +237,9 @@ pub extern "C" fn closeConnection(conn: *mut driver::PsqlConnection) -> *const c
     let connection = unsafe { Box::from_raw(conn) };
     connection.close();
 
-    return serializeCallResult(Ok(CallResult::empty()));
+    let ptr = serializeCallResult(Ok(CallResult::empty()));
+    trace!("Close connection - handing out: {:?}", ptr);
+    ptr
 }
 
 #[no_mangle]

@@ -90,7 +90,9 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const *const c_ch
         let t = decode::<Claims>(parsed_token, secret.as_ref(), &Validation { validate_exp: false, ..Validation::default()});
         match t {
             Ok(x) => {
-                return validate_claims(x.claims, Grant::from(expect_target, expect_action)).into_boxed_ptr();
+                let ptr = validate_claims(x.claims, Grant::from(expect_target, expect_action)).into_boxed_ptr();
+                trace!("Verify - handing out: {:?}", ptr);
+                return ptr;
             },
             Err(e) => {
                 let err = format!("{}", e);
