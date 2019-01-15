@@ -61,40 +61,68 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   case class MSequence(column: String, name: String, current: Int)
 
   def getSequences(schema: String, table: String): DBIO[Vector[MSequence]] = {
-    val postges = sql"""
-           |select 
-           |  cols.table_schema, cols.table_name, cols.column_name,
-           |  seq.sequence_name, seq.start_value
-           |from 
-           |	information_schema.columns as cols, 
-           |	information_schema.sequences as seq
-           |where
-           |  column_default LIKE '%' || seq.sequence_name || '%' and
-           |  sequence_schema = '#$schema' and
-           |  cols.table_name = '#$table';
-         """.stripMargin
-    val mysql =
-      sql"""
-           |select "irrelevant", table_name,column_name,"irrelevant", 1
-           |from information_schema.COLUMNS
-           |where extra = 'auto_increment'
-           |and table_name = $table
-           |and table_schema = $schema;
-         """.stripMargin
-
-    val action = if (db.isPostgres) {
-      postges
+    if (db.isPostgres) {
+      getSequencesPostgres(schema, table)
     } else if (db.isMySql) {
-      mysql
+      getSequencesMySql(schema, table)
     } else {
       sys.error(s"${db.dialect} is not supported here")
     }
+  }
 
-    action.as[(String, String, String, String, Int)].map { result =>
-      result.map {
-        case (schema, table, column, sequence, start) =>
-          MSequence(column = column, name = sequence, start = start)
+  private def getSequencesPostgres(schema: String, table: String): DBIO[Vector[MSequence]] = {
+    val sequencesForTable = sql"""
+                              |select
+                              |  cols.column_name, seq.sequence_name, seq.start_value
+                              |from
+                              |	 information_schema.columns as cols,
+                              |	 information_schema.sequences as seq
+                              |where
+                              |  column_default LIKE '%' || seq.sequence_name || '%' and
+                              |  sequence_schema = '#$schema' and
+                              |  cols.table_name = '#$table';
+         """.stripMargin.as[(String, String, Int)]
+
+    def currentValue(sequence: String) = sql"""select last_value FROM "#$schema"."#$sequence";""".as[Int].head
+
+    val action = for {
+      sequences     <- sequencesForTable
+      currentValues <- DBIO.sequence(sequences.map(t => currentValue(t._2)))
+    } yield {
+      sequences.zip(currentValues).map {
+        case ((column, sequence, _), current) =>
+          MSequence(column, sequence, current)
       }
+    }
+    action.withPinnedSession
+  }
+
+  private def getSequencesMySql(schema: String, table: String): DBIO[Vector[MSequence]] = {
+    val sequencesForTable =
+      sql"""
+           |select column_name
+           |from information_schema.COLUMNS
+           |where extra = 'auto_increment'
+           |and table_name = '#$table'
+           |and table_schema = '#$schema';
+         """.stripMargin.as[String]
+    val currentValueForSequence =
+      sql"""
+           |select auto_increment
+           |from information_schema.TABLES
+           |where table_name = '#$table'
+           |and table_schema = '#$schema';
+         """.stripMargin.as[Int]
+
+    for {
+      sequences     <- sequencesForTable
+      currentValues <- currentValueForSequence
+    } yield {
+      val x = for {
+        column       <- sequences.headOption
+        currentValue <- currentValues.headOption
+      } yield MSequence(column = column, name = "sequences_are_not_named_in_mysql", current = currentValue)
+      x.toVector
     }
   }
 
@@ -117,7 +145,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
       typeIdentifier = typeIdentifier,
       isRequired = isRequired,
       foreignKey = mForeignKey.map(mfk => ForeignKey(mfk.pkTable.name, mfk.pkColumn)),
-      sequence = mSequences.find(_.column == mColumn.name).map(mseq => Sequence(mseq.name, mseq.start))
+      sequence = mSequences.find(_.column == mColumn.name).map(mseq => Sequence(mseq.name, mseq.current))
     )
   }
 }
