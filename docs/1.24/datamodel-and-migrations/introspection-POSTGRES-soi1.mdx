@@ -12,31 +12,31 @@ export const meta = {
 
 When connecting Prisma to an existing database that already has a database schema and/or contains some data, it can be tedious to manually write the datamodel from scratch while ensuring it matches the structure of the already existing data.
 
-To automate this process, you can use the [`prisma introspect`](xcv3) command from the [Prisma CLI](alx4) to generate the [datamodel](knul) based on the actual structure of the existing data.
+To automate this process, you can use the [`prisma introspect`](xcv3) command from the [Prisma CLI](alx4) to generate the [datamodel](knum) based on the actual structure of the existing data.
 
-The generated SDL serves as a foundation for your Prisma service, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the GraphQL API or giving a column to a different name.
+The generated SDL serves as a foundation for your Prisma API, but you can easily make modifications afterwards as you see fit. Some common modifications include hiding a table from the Prisma API or renaming a column to a different name.
 
-## Introspecting a Postgres database
+## Introspecting a PostgreSQL database
 
-Postgres uses the following model to organize databases internally:
+PostgreSQL uses the following model to organize databases internally:
 
 ![](https://i.imgur.com/0YJBgbW.png)
 
-**IMPORTANT**: When introspecting a Postgres database, you're actually introspecting a _schema_ and not a _database_ according to the illustrated model!
+**IMPORTANT**: When introspecting a PostgreSQL database, you're actually introspecting a _schema_ and not a _database_ according to the illustrated model. Learn more [here](https://www.postgresql.org/docs/8.1/ddl-schemas.html).
 
-There are two ways you can use the CLI to introspect a Postgres schema:
+There are two ways you can use the CLI to introspect a PostgreSQL schema:
 
 - Using the interactive `prisma init` wizard
 - Using the dedicated `prisma introspect` command
 
-In both cases, you need to provide the _connection details_ for the running Postgres database. This includes the following:
+In both cases, you need to provide the _connection details_ for the running PostgreSQL database. This includes the following:
 
-- **Host**: The host of your Postgres server, e.g. `localhost`.
-- **Port**: The port where your Postgres server listens, e.g. `5432`.
-- **User & Password**: The credentials for your Postgres server.
-- **Name of existing _database_**: The name of the Postgres _database_ (according to the illustrated model from above).
+- **Host**: The host of your PostgreSQL server, e.g. `localhost`.
+- **Port**: The port where your PostgreSQL server listens, e.g. `5432`.
+- **User & Password**: The credentials for your PostgreSQL server.
+- **Name of existing _database_**: The name of the PostgreSQL _database_ (according to the illustrated model from above).
 - **Use SSL (Yes/No)**: If your database connection is using SSL, you need to select `Yes`, otherwise `No`.
-- **Name of existing _schema_**: The name of the Postgres _schema_ (according to the illustrated model from above), e.g. `public`.
+- **Name of existing _schema_**: The name of the PostgreSQL _schema_ (according to the illustrated model from above), e.g. `public`.
 
 ### Using the `prisma init` wizard
 
@@ -52,7 +52,7 @@ When `prisma init` terminates, the CLI has created the following files for you w
 - `docker-compose.yml`: The Docker Compose file containing the configuration of your Prisma server, including details about how to connect to your database
 - prisma.yml: The root configuration file for your service
 
-To be able to query your Postgres database using GraphQL you now need to _deploy_ the service and open a GraphQL Playground:
+To be able to query your PostgreSQL database using GraphQL you now need to _deploy_ the service and open a GraphQL Playground:
 
 ```bash
 prisma deploy
@@ -84,7 +84,7 @@ PRISMA_CONFIG: |
       schema: public
 ```
 
-Setting `migrations` to `false` ensures that Prisma only updates the GraphQL API of the server based on the datamodel, but it does _not_ perform migrations of your underlying Postgres database.
+Setting `migrations` to `false` ensures that Prisma only updates the GraphQL API of the server based on the datamodel, but it does _not_ perform migrations of your underlying PostgreSQL database.
 
 ## Relations in the generated datamodel
 

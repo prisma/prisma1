@@ -1,0 +1,116 @@
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Migrations (MySQL)",
+  position: 240,
+  articleGroup: "Migrations",
+  technology: "mysql",
+  technologyOrder: 2,
+}
+
+## Overview
+
+When using Prisma with a MySQL database, _all_ your database migrations are performed using the [`prisma deploy`](xcv9) command of the Prisma CLI.
+
+## Database migrations with Prisma
+
+There are two steps to every database migration:
+
+1. Adjust the [datamodel](knul) file to reflect the new desired schema
+1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
+
+### Migration operations
+
+Prisma uses [temporary directives](knul#temporary-directives) to perform one-time migration operations. After deploying a service that contain a temporary directive, **a temporary directive needs to be manually removed from the type definitions file**.
+
+#### Renaming
+
+The temporary directive `@rename(oldName: String!)` is used to rename a _type_ or a _field of a type_.
+
+<Warning>
+
+If the `@rename` directive is not used, Prisma deletes old type/field before creating the new one, resulting in loss of data!
+
+</Warning>
+
+#### Renaming a type
+
+Here is an example scenario:
+
+**1. Before migration**
+
+```graphql
+type Post {
+  text: String
+}
+```
+
+**2. Goals**
+
+- Rename the `Post` type to `Story`
+
+**3. Adding the `@rename` directive**
+
+```graphql
+# renaming the `Post` type to `Story`
+type Story @rename(oldName: "Post") {
+  text: String
+}
+```
+
+**4. Migrating the database with `prisma deploy`**
+
+After having the saved the datamodel file with these changes, you need to run:
+
+```
+prisma deploy
+```
+
+**5. Removing the `@rename` directive manually**
+
+```graphql
+type Story {
+  text: String
+}
+```
+
+#### Renaming a field
+
+Here is an example scenario:
+
+**1. Before migration**
+
+```graphql
+type Post {
+  text: String
+}
+```
+
+**2. Goals**
+
+- Rename the `text` field to `content`
+
+**3. Adding the `@rename` directive**
+
+```graphql
+# renaming the `text` field to `content`
+type Post {
+  content: String @rename(oldName: "text")
+}
+```
+
+**4. Migrating the database with `prisma deploy`**
+
+After having the saved the datamodel file with these changes, you need to run:
+
+```
+prisma deploy
+```
+
+**5. Removing the `@rename` directive manually**
+
+```graphql
+type Post {
+  content: String
+}
+```

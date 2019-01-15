@@ -18,7 +18,7 @@ The Management API exposes a GraphQL API, that previously contained a top-level 
 
 ## Changes to the management database
 
-A Prisma server stores information about services and service migrations in a dedicated management schema in the connected database. Previously, this schema was called `graphcool`. In 1.8, `management` is used by default instead. Using the `managementSchema` setting in the Prisma server configuration allows you to use a different database. For the Postgres connector, both the `database` and the `managementSchema` setting can be adjusted.
+A Prisma server stores information about services and service migrations in a dedicated management schema in the connected database. Previously, this schema was called `graphcool`. In 1.8, `management` is used by default instead. Using the `managementSchema` setting in the Prisma server configuration allows you to use a different database. For the PostgreSQL connector, both the `database` and the `managementSchema` setting can be adjusted.
 
 Using MySQL:
 
@@ -43,7 +43,7 @@ services:
             managementSchema: graphcool # default: management
 ```
 
-Using Postgres:
+Using PostgreSQL:
 
 ```yml
 version: '3'
@@ -95,4 +95,4 @@ services:
 
 The setting `migrations: false` is typically used with existing databases that come with a preconfigured database schema and existing data. This is usually used in combination with the new introspection feature.
 
-With 1.8, we are introducing preliminary alpha support for the Postgres connector to connect to existing databases. The same will be possible with the MySQL connector further down the road.
+With 1.8, we are introducing preliminary alpha support for the PostgreSQL connector to connect to existing databases. The same will be possible with the MySQL connector further down the road.
