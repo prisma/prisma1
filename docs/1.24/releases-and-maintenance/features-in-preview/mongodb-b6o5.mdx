@@ -35,7 +35,7 @@ MongoDB doesn't have the concept of tables. It is a _schemaless_ database that s
 
 <Warning>
 
-While MongoDB is a **schemaless** database, using it with Prisma does effectively impose a schema on it (in the form of the Prisma [datamodel](knul)). When writing data to MongoDB only through the Prisma API, Prisma guarantees that the data is consistent with the defined schema. 
+While MongoDB is a **schemaless** database, using it with Prisma does effectively impose a schema on it (in the form of the Prisma [datamodel](knun)). When writing data to MongoDB only through the Prisma API, Prisma guarantees that the data is consistent with the defined schema. 
 
 **If you start writing to MongoDB directly, Prisma can not guarantee that the data in the database still adheres to the schema.**
 
@@ -53,22 +53,22 @@ Read [below](#data-modeling) to learn how relations in MongoDB can be modeled wi
 
 ### Migrations
 
-When updating the Prisma datamodel, Prisma will only ever make _additive_ structural changes to your MongoDB database(s).
+When you're updating the Prisma datamodel and run `prisma deploy` to apply the changes, Prisma will only ever make _additive_ structural changes to your underlying MongoDB database(s).
 
 During a migration, Prisma will never:
 
-- delete an existing collection
-- rename an existing collection
-- drop an existing database
-- delete or change any field names on existing documents
+- Delete an existing collection
+- Rename an existing collection
+- Drop an existing database
+- Delete or change any field names on existing documents
 
 Be aware that this approach leads to "dangling collections", i.e. collections that still exist in the underlying MongoDB database but that can't be accessed through the Prisma API.
 
 During a migration, Prisma might:
 
-- create new collections
-- create new documents
-- create new fields on existing documents
+- Create new collections
+- Create new documents
+- Create new fields on existing documents
 
 ## Data modeling
 
@@ -152,7 +152,7 @@ The MongoDB connector introduces a number of new directives and slight changes i
 
 #### `@id`
 
-In previous versions of the datamodel, there was only one way to assign a globally unique [ID](https://www.prisma.io/docs/data-model-and-migrations/data-model-knul/#id) to a model:
+In previous versions of the datamodel, there was only one way to assign a globally unique [ID](https://www.prisma.io/docs/data-model-and-migrations/data-model-knun/#id) to a model:
 
 ```graphql
 type User {
@@ -176,7 +176,7 @@ The `@id` directive always implies that the respective field is _unique_ (withou
 
 #### `@createdAt` & `@updatedAt`
 
-In previous versions of the datamodel, the [system fields](knul##system-fields:-createdat-and-updatedat) `createdAt` and `updatedAt` could be used to store when a record was created as well as when a record was las updated:
+In previous versions of the datamodel, the [system fields](knun##system-fields:-createdat-and-updatedat) `createdAt` and `updatedAt` could be used to store when a record was created as well as when a record was las updated:
 
 ```graphql
 type User {
@@ -356,16 +356,16 @@ prisma generate
 
 MongoDB is a _schemaless_ database, which means it is _possible_ to insert data of various structures into it. MongoDB never complains because a piece of inserted data doesn't adhere to some predefined, expected format. This is different from relational databases where data that's inserted needs to adhere to the predefined [database schema](https://en.wikipedia.org/wiki/Database_schema).
 
-This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Prisma [datamodel](knul)) on top of MongoDB.
+This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Prisma [datamodel](knun)) on top of MongoDB.
 
 Throughout your use of MongoDB with Prisma, when you're writing to the underlying MongoDB ...
 
-- ... **only through the Prisma API**, it is guaranteed that the data that's stored in the database always adheres to the schema.
+- ... **only through the Prisma API**, it is guaranteed that the data that's stored in the database always adheres to the schema. This holds as long as you're only performing _additive_ changes to your Prisma datamodel. Once you start changing existing types and/or fields in the datamodel, you are responsible to keep the underlying data in sync with the datamodel because Prisma will never make changes to your underlying data and only perform additive migrations.
 - ... **directly** (e.g. using the [Mongo shell](https://docs.mongodb.com/manual/mongo/)), it can not be guaranteed that the data that's stored in the database always adheres to the schema. In that case, you are responsible to ensure that the data that's written adheres to the schema.
 
 <Warning>
 
-Therefore, when starting out with an existing MongoDB, it is extremely important that the legacy data is consistent and that it can be modeled accurately as a Prisma datamodel. You can use the [`prisma introspect`](https://github.com/prisma/prisma/issues/3529) command to derive a datamodel from the data that's currently stored in your MongoDB.å
+Therefore, when starting out with an existing MongoDB, it is extremely important that the legacy data is consistent and that it can be modeled accurately as a Prisma datamodel. You can use the [`prisma introspect`](https://github.com/prisma/prisma/issues/3529) command to derive a datamodel from the data that's currently stored in your MongoDB.
 
 </Warning>
 
@@ -429,7 +429,7 @@ services:
             database: mydb
 ```
 
-> If you're running MongoDB on your local machine (without Docker but just by starting it manually using `mongod`), you need to set the [`host1`](https://docs.mongodb.com/manual/reference/connection-string/#standard-connection-string-format) part of the connection string to `host.docker.internal` instead of `localhost` or `127.0.0.1`.
+> If you're running MongoDB on your local machine (without Docker but just by starting it manually using `mongod`), you need to set the [`host`](https://docs.mongodb.com/manual/reference/connection-string/#standard-connection-string-format) part of the connection string to `host.docker.internal` instead of `localhost` or `127.0.0.1`.
 
 Once you're done, launch the Prisma server with the following command:
 
@@ -455,7 +455,7 @@ databaseType: document
 
 ### 2. Data modeling and ensuring data consistency
 
-This step is very important when you're starting out with an existing MongoDB! The goal is to create a [datamodel](knul) that represents the data that's currently stored in the collections of your MongoDB. Next to modeling the data properly, you need to ensure that _all_ data in the database adheres to the datamodel that you specify - otherwise the Prisma API might throw errors at runtime.
+This step is very important when you're starting out with an existing MongoDB! The goal is to create a [datamodel](knun) that represents the data that's currently stored in the collections of your MongoDB. Next to modeling the data properly, you need to ensure that _all_ data in the database adheres to the datamodel that you specify - otherwise the Prisma API might throw errors at runtime.
 
 Here are a few rules of thumb for modelling the data:
 
@@ -466,13 +466,13 @@ Here are a few rules of thumb for modelling the data:
 
 <Info>
 
-You can use [`prisma introspect`](https://github.com/prisma/prisma/issues/3529) to suggest a datamodel.å
+You can use [`prisma introspect`](https://github.com/prisma/prisma/issues/3529) to suggest a datamodel.
 
 </Info>
 
 ### 3. Deploy the Prisma datamodel and generate the Prisma client
 
-Once you are ready with defining your datamodel and have ensured that all currently stored data in the database adheres to the specified schema, you can start deploying the Prisma API.
+Once you are ready with defining your datamodel and have ensured that all currently stored data in the database adheres to the specified datamodel, you can start deploying the Prisma API.
 
 For that, you first need to adjust the contents of your `prisma.yml`:
 
@@ -498,11 +498,13 @@ prisma generate
 The API of the generated Prisma client depends on your datamodel. For this example, we're assuming that your datamodel has a type `User` that's defined as follows:
 
 ```graphql
-type User {
+type User @db(name: "users") {
   id: ID! @id
   name: String!
 }
 ```
+
+The `@db` directive expresses that the underlying collection inside your MongoDB is called `users`.
 
 Run the following commands to initialize a simple Node app:
 
@@ -538,11 +540,11 @@ You can run this script using the following command:
 node index.js
 ```
 
-This first creates a new document in the `User` collection and then retrieves all the documents from the `User` collection via the Prisma API.
+This first creates a new document in the `users` collection and then retrieves all the documents from the `users` collection via the Prisma API.
 
 ## Using the Mongo shell
 
-Yopu can always connect to your MongoDB server using the [Mongo shell](https://docs.mongodb.com/manual/mongo/). Be careful with performing write-operations through the Mongo shell when using MongoDB with Prisma since you're loosing the guarantee that the stored data continues to adhere to the schema of the defined Prisma [datamodel](knul). It it recommended to only perform write-operations through the Prisma API to ensure data integrity.
+Yopu can always connect to your MongoDB server using the [Mongo shell](https://docs.mongodb.com/manual/mongo/). Be careful with performing write-operations through the Mongo shell when using MongoDB with Prisma since you're loosing the guarantee that the stored data continues to adhere to the schema of the defined Prisma [datamodel](knun). It it recommended to only perform write-operations through the Prisma API to ensure data integrity.
 
 When using MongoDB with Prisma following the setup in the ["Get started with a new database"-section](#get-started-with-a-new-database), you can use the Mongo shell to connect to the MongoDB server that's running with Docker. The following steps explain how to do so.
 
@@ -605,10 +607,10 @@ Now you can list all available collections with this command:
 show collections
 ```
 
-If you have a `User` collection available, you can run the following command to retrieve a single document from it:
+If you have a `users` collection available, you can run the following command to retrieve a single document from it:
 
 ```js copy
-db.User.findOne()
+db.users.findOne()
 ```
 
 Learn more about the Mongo shell API [here](https://docs.mongodb.com/manual/reference/method/js-collection/).

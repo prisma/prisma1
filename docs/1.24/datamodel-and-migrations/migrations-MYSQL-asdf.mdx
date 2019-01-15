@@ -10,11 +10,20 @@ export const meta = {
 
 ## Overview
 
-If your [Prisma server](/prisma-sever/) is configured to allow database migrations, you can use SDL to define and migrate your database schema.
+When using Prisma with a MySQL database, _all_ your database migrations are performed using the [`prisma deploy`](xcv9) command of the Prisma CLI.
+
+## Database migrations with Prisma
+
+There are two steps to every database migration:
+
+1. Adjust the [datamodel](knul) file to reflect the new desired schema
+1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
+
+### Migration operations
 
 Prisma uses [temporary directives](knul#temporary-directives) to perform one-time migration operations. After deploying a service that contain a temporary directive, **a temporary directive needs to be manually removed from the type definitions file**.
 
-## Renaming
+#### Renaming
 
 The temporary directive `@rename(oldName: String!)` is used to rename a _type_ or a _field of a type_.
 
@@ -24,7 +33,7 @@ If the `@rename` directive is not used, Prisma deletes old type/field before cre
 
 </Warning>
 
-### Renaming a type
+#### Renaming a type
 
 Here is an example scenario:
 
@@ -65,7 +74,7 @@ type Story {
 }
 ```
 
-### Renaming a field
+#### Renaming a field
 
 Here is an example scenario:
 
