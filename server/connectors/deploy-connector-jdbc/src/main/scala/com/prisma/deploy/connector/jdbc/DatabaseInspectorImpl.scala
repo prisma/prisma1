@@ -58,7 +58,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
     }.toVector
   }
 
-  case class MSequence(column: String, name: String, start: Int)
+  case class MSequence(column: String, name: String, current: Int)
 
   def getSequences(schema: String, table: String): DBIO[Vector[MSequence]] = {
     val postges = sql"""

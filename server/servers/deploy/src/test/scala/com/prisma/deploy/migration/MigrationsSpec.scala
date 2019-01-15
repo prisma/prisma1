@@ -755,7 +755,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
     val sequence = result.table_!("B").column_!("id").sequence.get
     sequence.name should be("My_sequence_for_B")
-    sequence.startValue should be(101)
+    sequence.current should be(101)
   }
 
   "an id field of type Int implies a sequence" in {
@@ -768,7 +768,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
     val sequence = result.table_!("B").column_!("id").sequence.get
     sequence.name should not(be(empty))
-    sequence.startValue should be(1)
+    sequence.current should be(1)
   }
 
   def setup() = {

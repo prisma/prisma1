@@ -49,4 +49,4 @@ case class Column(
     sequence: Option[Sequence]
 )(val table: Table)
 case class ForeignKey(table: String, column: String)
-case class Sequence(name: String, startValue: Int)
+case class Sequence(name: String, current: Int)
