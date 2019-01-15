@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration
 
+import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
@@ -21,8 +22,11 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  val inspector        = deployConnector.testFacilities.inspector
-  var project: Project = Project(id = serviceId, schema = Schema.empty)
+  val inspector          = deployConnector.testFacilities.inspector
+  var project: Project   = Project(id = serviceId, schema = Schema.empty)
+  lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
+  def isMySql            = slickDatabase.isMySql
+  def isPostgres         = slickDatabase.isPostgres
 
   import system.dispatcher
 
@@ -754,7 +758,9 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
     val sequence = result.table_!("B").column_!("id").sequence.get
-    sequence.name should be("My_sequence_for_B")
+    if (isPostgres) { // mysql does not support named sequences
+      sequence.name should be("My_sequence_for_B")
+    }
     sequence.current should be(101)
   }
 
@@ -767,7 +773,9 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
     val sequence = result.table_!("B").column_!("id").sequence.get
-    sequence.name should not(be(empty))
+    if (isPostgres) { // mysql does not support named sequences
+      sequence.name should be("B_id_seq")
+    }
     sequence.current should be(1)
   }
 
