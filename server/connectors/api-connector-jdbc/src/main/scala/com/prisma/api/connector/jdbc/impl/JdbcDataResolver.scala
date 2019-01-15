@@ -101,5 +101,4 @@ case class JdbcDataResolver(
   }
 
   protected def performWithTiming[A](name: String, f: => Future[A]): Future[A] = Metrics.sqlQueryTimer.timeFuture(project.id, name) { f }
-
 }

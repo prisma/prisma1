@@ -53,13 +53,13 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     if (args.isEmpty || ids.isEmpty) {
       dbioUnit
     } else {
-      val aliasedTable = modelTable(model).as(topLevelAlias)
+      val aliasedTable = modelTable(model)
 
       val columns = args.rootGCMap.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
       val query = sql
         .update(aliasedTable)
         .setColumnsWithPlaceHolders(columns)
-        .where(aliasColumn(model.dbNameOfIdField_!).in(placeHolders(ids)))
+        .where(idField(model).in(placeHolders(ids)))
 
       updateToDBIO(query)(
         setParams = pp => {
