@@ -28,7 +28,8 @@ case class JdbcDataResolver(
       import slickDatabase.profile.api._
 
       val list   = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val attach = sqlu"ATTACH DATABASE #${projectId} AS #${projectId};"
+      val path   = s"""'db/$projectId'"""
+      val attach = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
 
       val attachIfNecessary = for {
         attachedDbs <- list

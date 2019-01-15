@@ -11,7 +11,7 @@ import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 case class SQLiteJdbcDeployDatabaseMutationBuilder(
     slickDatabase: SlickDatabase,
@@ -45,7 +45,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     //          yes -> detach, delete
     //          no  -> delete
     //http://www.sqlitetutorial.net/sqlite-attach-database/
-    val fileTemp = new File(projectId)
+    val fileTemp = new File(s"""db/$projectId""")
 
     if (fileTemp.exists) {
       //      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())

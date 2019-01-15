@@ -53,5 +53,4 @@ trait CursorConditionBuilder extends BuilderBase {
 
     afterCursorFilter.and(beforeCursorFilter)
   }
-
 }

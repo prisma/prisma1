@@ -35,7 +35,8 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
     if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
       val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val att  = sqlu"ATTACH DATABASE #${mutaction.projectId} AS #${mutaction.projectId};"
+      val path = s"""'db/${mutaction.projectId}'"""
+      val att  = sqlu"ATTACH DATABASE #${path} AS #${mutaction.projectId};"
       val attach = for {
         attachedDbs <- list
         _ <- attachedDbs.map(_._2).contains(mutaction.projectId) match {
@@ -73,7 +74,8 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
     if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
       val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val att  = sqlu"ATTACH DATABASE #${mutaction.projectId} AS #${mutaction.projectId};"
+      val path = s"""'db/${mutaction.projectId}'"""
+      val att  = sqlu"ATTACH DATABASE #${path} AS #${mutaction.projectId};"
       val attach = for {
         attachedDbs <- list
         _ <- attachedDbs.map(_._2).contains(mutaction.projectId) match {

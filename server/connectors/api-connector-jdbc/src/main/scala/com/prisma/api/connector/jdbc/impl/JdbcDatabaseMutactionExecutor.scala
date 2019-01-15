@@ -7,7 +7,6 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
 import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
-import slick.sql.SqlAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,7 +42,8 @@ case class JdbcDatabaseMutactionExecutor(
     } else if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
       val list   = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val attach = sqlu"ATTACH DATABASE #${projectId} AS #${projectId};"
+      val path   = s"""'db/$projectId'"""
+      val attach = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
 
       val attachIfNecessary = for {
         attachedDbs <- list
