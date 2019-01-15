@@ -1,13 +1,12 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
-import com.prisma.deploy.connector.DatabaseInspector
-import com.prisma.deploy.connector.jdbc.{DatabaseInspectorImpl, JdbcBase}
+import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import org.jooq.impl.DSL._
 import org.jooq.impl.SQLDataType
-import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
+import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
@@ -60,6 +59,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
    * Connector-agnostic functions
    */
   def createClientDatabaseForProject(projectId: String) = {
+    val schema = createSchema(projectId)
+
     val table = changeDatabaseQueryToDBIO(
       sql
         .createTable(name(projectId, "_RelayId"))
@@ -67,7 +68,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
         .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
         .constraint(constraint("pk_RelayId").primaryKey(name(projectId, "_RelayId", "id"))))()
 
-    DBIO.seq(createSchema(projectId), table)
+    DBIO.seq(schema, table)
   }
 
   def dropTable(projectId: String, tableName: String) = {

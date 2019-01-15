@@ -1,8 +1,10 @@
 package com.prisma.api.connector.jdbc.database
 
+import com.prisma.api.connector.SortOrder.SortOrder
 import com.prisma.api.connector._
 import com.prisma.shared.models._
-import org.jooq.Condition
+import org.jooq
+import org.jooq.{Condition, Record1, Record2, SelectConditionStep}
 import org.jooq.impl.DSL._
 
 trait CursorConditionBuilder extends BuilderBase {
@@ -15,33 +17,33 @@ trait CursorConditionBuilder extends BuilderBase {
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return noCondition()
 
-    val idFieldWithAlias = aliasColumn(model.dbNameOfIdField_!)
-    val idField          = modelIdColumn(model)
+    val idFieldWithAlias: jooq.Field[AnyRef] = aliasColumn(model.dbNameOfIdField_!)
+    val idField: jooq.Field[AnyRef]          = modelIdColumn(model)
 
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
-    val (orderByField, orderByFieldWithAlias, sortDirection) = orderBy match {
-      case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder.toString)
+    val (orderByField: jooq.Field[AnyRef], orderByFieldWithAlias: jooq.Field[AnyRef], sortOrder: SortOrder) = orderBy match {
+      case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder)
       case None        => (idField, idFieldWithAlias, "asc")
     }
 
-    val selectQuery = sql
-      .select(orderByField)
+    val selectQuery: SelectConditionStep[Record2[AnyRef, AnyRef]] = sql
+      .select(orderByField, param())
       .from(modelTable(model))
-      .where(idField.equal(stringDummy))
+      .where(idField.equal(param()))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
-    def cursorFor(cursorType: String): Condition = (cursorType, sortDirection.toLowerCase.trim) match {
-      case ("before", "asc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
-      case ("before", "desc") => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
-      case ("after", "asc")   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery, stringDummy)
-      case ("after", "desc")  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery, stringDummy)
-      case _                  => throw new IllegalArgumentException
+    def cursorFor(cursorType: String): Condition = (cursorType, sortOrder) match {
+      case ("before", SortOrder.Asc)  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery)
+      case ("before", SortOrder.Desc) => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery)
+      case ("after", SortOrder.Asc)   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery)
+      case ("after", SortOrder.Desc)  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery)
+      case _                          => throw new IllegalArgumentException
     }
 
-    val afterCursorFilter  = after.map(_ => cursorFor("after")).getOrElse(noCondition())
-    val beforeCursorFilter = before.map(_ => cursorFor("before")).getOrElse(noCondition())
+    val afterCursorFilter: Condition  = after.map(_ => cursorFor("after")).getOrElse(noCondition())
+    val beforeCursorFilter: Condition = before.map(_ => cursorFor("before")).getOrElse(noCondition())
 
     afterCursorFilter.and(beforeCursorFilter)
   }
