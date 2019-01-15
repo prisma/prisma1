@@ -542,6 +542,7 @@ export class EndpointDialog {
           `Existing MySQL databases with data are not yet supported.`,
         )
       }
+      credentials.alreadyData = alreadyData
       credentials.host = await this.ask({
         message: 'Enter database host',
         key: 'host',
@@ -563,9 +564,7 @@ export class EndpointDialog {
       credentials.database =
         type === 'postgres'
           ? await this.ask({
-              message: alreadyData
-                ? `Enter name of existing database`
-                : `Enter database name`,
+              message: `Enter database name (the database includes the schema)`,
               key: 'database',
             })
           : null
@@ -575,11 +574,13 @@ export class EndpointDialog {
               message: 'Use SSL?',
               inputType: 'confirm',
               key: 'ssl',
+              defaultValue: !credentials.host.includes('localhost'),
             })
           : undefined
+      // list all schemas at this point
       credentials.schema = askForSchema
         ? await this.ask({
-            message: `Enter name of existing schema`,
+            message: `Enter name of existing schema (e.g. default$default)`,
             key: 'schema',
           })
         : undefined
@@ -999,7 +1000,7 @@ export class EndpointDialog {
   }: {
     message: string
     key: string
-    defaultValue?: string
+    defaultValue?: string | boolean
     validate?: (value: string) => boolean | string
     required?: boolean
     inputType?: string
