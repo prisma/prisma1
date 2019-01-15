@@ -111,7 +111,7 @@ pub extern "C" fn verify_token(token: *const c_char, secrets: *const *const c_ch
 
 #[no_mangle]
 pub extern "C" fn destroy_buffer(buffer: *mut ProtocolBuffer) {
-    trace!("Dropping buffer at {:?}", buffer);
+    trace!("Dropping buffer at: {:?}", buffer);
     unsafe { Box::from_raw(buffer) };
 }
 

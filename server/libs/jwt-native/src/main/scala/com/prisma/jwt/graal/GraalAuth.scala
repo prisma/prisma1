@@ -92,6 +92,7 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
     throwOnError(buffer)
 
     if (buffer.getDataLen == 0) {
+      GraalRustBridge.destroy_buffer(buffer)
       throw AuthFailure("Native call returned no token")
     }
 
@@ -125,6 +126,7 @@ case class GraalAuth(algorithm: Algorithm) extends Auth {
       throwOnError(buffer)
 
       if (buffer.getDataLen > 1) {
+        GraalRustBridge.destroy_buffer(buffer)
         throw AuthFailure(s"Boolean with size ${buffer.getDataLen} found.")
       }
 
