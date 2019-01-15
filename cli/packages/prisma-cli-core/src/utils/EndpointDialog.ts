@@ -297,6 +297,9 @@ export class EndpointDialog {
           choice === 'Create new database'
             ? await this.askForDatabaseType()
             : 'mysql'
+        if (type === 'mongo') {
+          datamodel = defaultMongoDataModel
+        }
         const defaultHosts = {
           mysql: 'mysql',
           mongo: 'mongo',
