@@ -2,9 +2,10 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.SortOrder.SortOrder
 import com.prisma.api.connector._
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models._
 import org.jooq
-import org.jooq.{Condition, Record1, Record2, SelectConditionStep}
+import org.jooq.Condition
 import org.jooq.impl.DSL._
 
 trait CursorConditionBuilder extends BuilderBase {
@@ -27,10 +28,15 @@ trait CursorConditionBuilder extends BuilderBase {
       case None        => (idField, idFieldWithAlias, "asc")
     }
 
-    val selectQuery: SelectConditionStep[Record2[AnyRef, AnyRef]] = sql
-      .select(orderByField, param())
+    val value: IdGCValue = before match {
+      case None     => after.get
+      case Some(id) => id
+    }
+
+    val selectQuery = sql
+      .select(orderByField, `val`(value.value.asInstanceOf[AnyRef]))
       .from(modelTable(model))
-      .where(idField.equal(param()))
+      .where(idField.equal(stringDummy))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
