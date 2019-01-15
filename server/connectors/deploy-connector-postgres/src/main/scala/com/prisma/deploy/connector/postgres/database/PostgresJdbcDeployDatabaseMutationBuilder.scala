@@ -75,8 +75,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
     val tableCreate       = sqlu"""
                         CREATE TABLE #${qualify(projectId, relationTableName)} (
-                            "id" CHAR(25) NOT NULL,
-                            PRIMARY KEY ("id"),
                             #$aColSql,
                             #$bColSql,
                             FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,

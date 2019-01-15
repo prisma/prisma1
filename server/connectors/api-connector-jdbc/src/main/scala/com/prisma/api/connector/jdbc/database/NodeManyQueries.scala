@@ -74,12 +74,14 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
     if (isMySql && queryArguments.isWithPagination) {
       selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, queryArguments, selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))
     } else {
-      val builder = RelatedModelsQueryBuilder(slickDatabase,
-                                              schemaName,
-                                              fromField,
-                                              queryArguments,
-                                              fromNodeIds,
-                                              selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))
+      val builder = RelatedModelsQueryBuilder(
+        slickDatabase = slickDatabase,
+        schemaName = schemaName,
+        fromField = fromField,
+        queryArguments = queryArguments,
+        relatedNodeIds = fromNodeIds,
+        selectedFields = selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments)
+      )
       val query = if (queryArguments.isWithPagination) builder.queryWithPagination else builder.queryWithoutPagination
 
       queryToDBIO(query)(

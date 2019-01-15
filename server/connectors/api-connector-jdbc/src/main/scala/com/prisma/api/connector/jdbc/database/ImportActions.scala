@@ -107,16 +107,13 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
       val res = try {
         val query = sql
           .insertInto(relationTable(relation))
-          .columns(relationIdColumn(relation),
-                   relationColumn(relation, relation.modelAField.relationSide),
-                   relationColumn(relation, relation.modelBField.relationSide))
-          .values(placeHolder, placeHolder, placeHolder)
+          .columns(relationColumn(relation, relation.modelAField.relationSide), relationColumn(relation, relation.modelBField.relationSide))
+          .values(placeHolder, placeHolder)
 
         val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
         mutaction.args.foreach { arg =>
-          relationInsert.setString(1, Cuid.createCuid())
-          relationInsert.setGcValue(2, arg._1)
-          relationInsert.setGcValue(3, arg._2)
+          relationInsert.setGcValue(1, arg._1)
+          relationInsert.setGcValue(2, arg._2)
           relationInsert.addBatch()
         }
         relationInsert.executeBatch()
