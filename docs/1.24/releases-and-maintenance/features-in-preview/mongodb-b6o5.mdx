@@ -53,22 +53,7 @@ Read [below](#data-modeling) to learn how relations in MongoDB can be modeled wi
 
 ### Migrations
 
-When you're updating the Prisma datamodel and run `prisma deploy` to apply the changes, Prisma will only ever make _additive_ structural changes to your underlying MongoDB database(s).
-
-During a migration, Prisma will never:
-
-- Delete an existing collection
-- Rename an existing collection
-- Drop an existing database
-- Delete or change any field names on existing documents
-
-Be aware that this approach leads to "dangling collections", i.e. collections that still exist in the underlying MongoDB database but that can't be accessed through the Prisma API.
-
-During a migration, Prisma might:
-
-- Create new collections
-- Create new documents
-- Create new fields on existing documents
+Learn everything you need to know about migrations with MongoDB [here](asd1).
 
 ## Data modeling
 
