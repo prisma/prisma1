@@ -18,8 +18,8 @@ class BuildContext
 
   def get_last_git_tag
     last_tag = Command.new("git", "tag", "--sort=-version:refname").pipe_stdout_to(
-      Command.new("grep", "-v", "-e", "v", "-e", "beta").pipe_stdout_to(
-        Command.new("head", "-n", "1")
+      Command.new("grep", "-v", "-e", "v", "-e", "beta").puts!.pipe_stdout_to(
+        Command.new("head", "-n", "1").puts!
       )
     ).run!.raise!
 
