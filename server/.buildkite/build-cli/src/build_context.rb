@@ -17,13 +17,19 @@ class BuildContext
   end
 
   def get_last_git_tag
-    last_tag = Command.new("git", "tag", "--sort=-version:refname").pipe_stdout_to(
-      Command.new("grep", "-v", "-e", "v", "-e", "beta").puts!.pipe_stdout_to(
-        Command.new("head", "-n", "1").puts!
-      )
-    ).run!.raise!
+    last_tags = Command.new("git", "tag", "--sort=-version:refname").run!.raise!
+    puts last_tags.get_stdout
+    filtered = last_tags.get_stdout.lines.map(&:chomp).select { |tag| !tag.include?("beta") }
+    Tag.new(filtered.first)
 
-    Tag.new(last_tag.get_stdout.chomp)
+
+    # last_tag = Command.new("git", "tag", "--sort=-version:refname").pipe_stdout_to(
+    #   Command.new("grep", "-v", "-e", "v", "-e", "beta").puts!.pipe_stdout_to(
+    #     Command.new("head", "-n", "1").puts!
+    #   )
+    # ).run!.raise!
+
+    # Tag.new(last_tag.get_stdout.chomp)
   end
 
   def get_last_docker_tag_for(tag_prefix)
