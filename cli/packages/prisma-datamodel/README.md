@@ -1,3 +1,1 @@
 # prisma-datamodel
-
-

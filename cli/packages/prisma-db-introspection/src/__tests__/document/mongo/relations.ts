@@ -11,7 +11,7 @@ import {
 
 const env = new MongoTestEnvironment()
 
-describe.skip('Mongo Model Introspector', () => {
+describe('Mongo Model Introspector', () => {
   beforeAll(async () => await env.connect())
   afterAll(async () => await env.disconnect())
   afterEach(async () => await env.clear())
@@ -27,7 +27,7 @@ describe.skip('Mongo Model Introspector', () => {
 
     assertUserItemModel(sdl.types)
     expect(schema).toEqual(schemaString)
-  }, 10000)
+  }, 60000)
 
   it('Should infer a relation with random sampling correctly.', async () => {
     // Gen large number of items
@@ -52,5 +52,5 @@ describe.skip('Mongo Model Introspector', () => {
     const otherType = SdlExpect.type(sdl.types, 'Other', false, false)
 
     SdlExpect.field(itemType, 'other', false, false, otherType)
-  }, 10000)
+  }, 60000)
 })

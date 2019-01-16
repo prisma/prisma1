@@ -182,6 +182,7 @@ export class ModelMerger {
 
     // Check for inconsistent data type
     let typeCandidates = this.summarizeTypeList([...info.types])
+    let invalidTypes = info.invalidTypes
 
     if(typeCandidates.length > 1) {
       comments.push({
@@ -191,12 +192,26 @@ export class ModelMerger {
     }
 
     // Check for missing data type
+    // If we have a type error, let the type be ModelSampler.ErrorType, 
+    // so we have a constant to check for. 
     if(typeCandidates.length === 1) {
       type = typeCandidates[0]
-    } else {
+    } else if(invalidTypes.length === 0) {
+      // No type info at all. 
       comments.push({
         isError: true,
         text: 'No type information found for field.'
+      })
+    } else if(invalidTypes.length === 1) {
+      // No conflict, but an invalid type
+      comments.push({
+        isError: true,
+        text: 'Field type not supported: ' + invalidTypes[0]
+      })
+    } else {
+      comments.push({
+        isError: true,
+        text: 'Field type not found due to conflict. Candidates: ' + [...typeCandidates].join(', ')
       })
     }
 
@@ -257,7 +272,7 @@ export class ModelMerger {
 
       // Recursive embedding case. 
       if(typeInfo.type === ObjectTypeIdentifier) {
-        // Generate pretty embedded model name, which has no purpose outside of the schema. 
+        // Generate basic embedded model name, which has no purpose outside of the schema. 
         this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true, this.primitiveResolver)
         if(typeInfo.isArray) {
           // Embedded array. 
@@ -276,7 +291,7 @@ export class ModelMerger {
       // On error, register an invalid type.
       if(err.name === UnsupportedTypeErrorKey) {
         this.initField(name)
-        this.fields[name].invalidTypes.push(err.invalidType)
+        this.fields[name].invalidTypes = this.merge( this.fields[name].invalidTypes, err.invalidType)
       } else if(err.name == UnsupportedArrayTypeErrorKey) {
         this.initField(name)
         this.fields[name] = this.mergeField(this.fields[name], {
@@ -284,7 +299,7 @@ export class ModelMerger {
           type: null,
           isRelationCandidate: false
         })
-        this.fields[name].invalidTypes.push(err.invalidType)
+        this.fields[name].invalidTypes = this.merge( this.fields[name].invalidTypes, err.invalidType)
       } else {
         throw err
       }

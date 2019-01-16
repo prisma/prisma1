@@ -48,17 +48,11 @@ class MigrationStatusSpec extends FlatSpec with Matchers with ActiveDeploySpecBa
             CreateModel("TestModel"),
             CreateField(
               "TestModel",
-              "TestField",
-              "String",
-              isRequired = false,
-              isList = false,
-              isUnique = false,
-              None,
-              None,
-              None
+              "TestField"
             )
           ),
-          functions = Vector.empty
+          functions = Vector.empty,
+          rawDataModel = ""
         )
       )
       .await

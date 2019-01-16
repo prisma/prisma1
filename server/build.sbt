@@ -236,11 +236,8 @@ lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient),
-    scalacOptions := {
-      val oldOptions = scalacOptions.value
-      oldOptions.filterNot(_ == "-Xfatal-warnings")
-    })
+    libraryDependencies ++= Seq(mongoClient)
+  )
 
 lazy val apiConnector = connectorProject("api-connector")
   .dependsOn(sharedModels)
@@ -500,10 +497,11 @@ lazy val images = (project in file("images")).dependsOn(allDockerImageProjects)
 lazy val servers = (project in file("servers")).dependsOn(allServerProjects)
 lazy val connectors = (project in file("connectors")).dependsOn(allConnectorProjects)
 lazy val integrationTests = (project in file("integration-tests")).dependsOn(allIntegrationTestProjects)
-lazy val libs = (project in file("libs")).dependsOn(allLibProjects)
+lazy val libs = (project in file("libs")).dependsOn(allLibProjects).aggregate(allLibProjects.map(Project.projectToRef): _*)
 
 lazy val root = (project in file("."))
   .aggregate((allServerProjects ++ allDockerImageProjects ++ allConnectorProjects ++ allIntegrationTestProjects).map(Project.projectToRef): _*)
   .settings(
     publish := { } // do not publish a JAR for the root project
   )
+

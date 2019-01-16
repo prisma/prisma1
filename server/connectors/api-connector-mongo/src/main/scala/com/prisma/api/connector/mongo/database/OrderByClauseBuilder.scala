@@ -2,17 +2,17 @@ package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector.QueryArguments
 import com.prisma.api.schema.APIErrors
+import com.prisma.shared.models.ReservedFields
 import org.mongodb.scala.bson.conversions
-import org.mongodb.scala.model.Sorts._
-import org.mongodb.scala.{Document, FindObservable}
 import org.mongodb.scala.model.Aggregates._
+import org.mongodb.scala.model.Sorts._
 
 object OrderByClauseBuilder {
 
   def sortStage(args: QueryArguments): conversions.Bson = sort(sortBson(args))
   def sortBson(args: QueryArguments): conversions.Bson = {
 
-    val idField                   = "_id"
+    val idField                   = ReservedFields.mongoInternalIdfieldName
     val (first, last, orderByArg) = (args.first, args.last, args.orderBy)
     val isReverseOrder            = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()

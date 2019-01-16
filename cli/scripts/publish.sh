@@ -84,7 +84,7 @@ if [[ "$changedFiles" = *"cli/packages/prisma-cli-engine"* ]]; then
   engineChanged=true
 fi
 
-if [[ "$changedFiles" = *"client"* ]]; then
+if [[ "$changedFiles" = *"cli/packages/prisma-client-lib"* ]]; then
   clientChanged=true
 fi
 
@@ -134,40 +134,6 @@ node cli/scripts/waitUntilTagPublished.js $nextDockerTag
 
 # If CIRCLE_TAG doesnt exist, generate the version with our node script
 if [ -z "$CIRCLE_TAG" ]; then
-  # latestBetaVersion=$(npm info prisma-client-lib version --tag $CIRCLE_BRANCH)
-  # latestVersionElements=(${latestVersion//./ })
-  # latestBetaVersionElements=(${latestBetaVersion//./ })
-
-  # betaMinor=${latestBetaVersionElements[1]}
-  # latestMinor=${latestVersionElements[1]}
-  # latestMajor=${latestVersionElements[0]}
-
-  # betaLastNumber=`echo $latestBetaVersion | sed -n "s/.*$CIRCLE_BRANCH\.\([0-9]\{1,\}\)/\1/p"`
-
-  # echo "betaLastNumber $betaLastNumber"
-
-  # # calc next minor
-  # step=1
-  # if [ $CIRCLE_BRANCH == "alpha" ]; then
-  #   step=2
-  # fi
-  # nextMinor=$((latestMinor + step))
-
-  # nextLastNumber=0
-
-  # echo "beta minor $betaMinor latest minor $latestMinor next minor ${nextMinor}"
-
-  # # calc next last number
-  # if [ $betaMinor > $latestMinor ] && [ $betaMinor != $latestMinor ]; then
-  #   echo "$betaMinor is greater than $latestMinor"
-  #   nextLastNumber=$((betaLastNumber + step + 1))
-  # fi
-
-  # if [ $CIRCLE_BRANCH == "alpha" ]; then
-  #   nextLastNumber=$((nextLastNumber + 1))
-  # fi
-
-  # export newVersion="$latestMajor.$nextMinor.0-$CIRCLE_BRANCH.$nextLastNumber"
   export newVersion=$(eval node ./cli/scripts/get-version.js $CIRCLE_BRANCH)
   echo "New version: $newVersion"
   echo "Waiting 10 seconds so you can stop the script if this is not correct"
@@ -199,6 +165,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   else
     npm publish --tag $CIRCLE_BRANCH
   fi
+  sleep 20.0
   cd ..
 fi
 
@@ -227,7 +194,7 @@ export generateSchemaVersion=$(cat prisma-generate-schema/package.json | jq -r '
 # Build prisma-client-lib
 #
 
-cd ../../client
+cd prisma-client-lib
 export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
@@ -245,7 +212,7 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn install
 fi
 export clientVersion=$(cat package.json | jq -r '.version')
-cd ../cli/packages
+cd ..
 
 
 
@@ -382,6 +349,41 @@ else
   npm publish --tag $CIRCLE_BRANCH
 fi
 
-cd ../../scripts/
+############################################
+# Run integration tests on prisma-examples #
+############################################
 
-./test-examples.sh $newVersion || echo ""
+languages=( typescript flow )
+
+# Clone
+
+git clone git@github.com:prisma/prisma-examples.git
+cd prisma-examples
+branch="client-$CIRCLE_BRANCH"
+
+if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
+  # Setup branch
+  git checkout $branch
+
+  # Bump prisma-client-lib version
+  for language in "${languages[@]}"; do
+    cd $language
+
+    for example in */; do
+      cd $example
+
+      yarn add prisma-client-lib@$CIRCLE_BRANCH 
+
+      cd ..
+    done 
+
+    cd ..
+  done
+
+  # Push changes
+  git config --global user.email "tim.suchanek@gmail.com"
+  git config --global user.name "Tim Suchanek"
+  git commit -a -m "bump prisma-client-lib versions to ${newVersion}"
+  git remote add origin-push https://${GH_TOKEN}@github.com/prisma/prisma-examples.git > /dev/null 2>&1
+  git push --quiet --set-upstream origin-push $branch
+fi

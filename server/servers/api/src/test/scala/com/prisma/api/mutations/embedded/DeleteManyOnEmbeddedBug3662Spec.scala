@@ -77,6 +77,86 @@ class DeleteManyOnEmbeddedBug3662Spec extends FlatSpec with Matchers with ApiSpe
     val res2 = server.query("query{items{name, subItems{name}}}", project)
 
     res2.toString() should be("""{"data":{"items":[{"name":"ITEM","subItems":[]}]}}""")
+  }
 
+  "DeleteMany bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query(
+      s""" mutation {
+         |  createPost(data: {
+         |    title:"nice"
+         |    author: {
+         |      create: {
+         |        name: "Lydia"
+         |      }
+         |    }
+         |  }) {
+         |    title
+         |    author{name}
+         |  }
+         |} """,
+      project
+    )
+
+    create.toString should be("""{"data":{"createPost":{"title":"nice","author":{"name":"Lydia"}}}}""")
+
+    val result = server.query(
+      s""" mutation {
+         |  deleteManyUsers(where: {
+         |    pets_some: {
+         |      breed: "Test"
+         |    }
+         |  }) {
+         |    count
+         |  }
+         |} """,
+      project
+    )
+
+    result.toString should be("""{"data":{"deleteManyUsers":{"count":0}}}""")
+
+    val result2 = server.query(
+      s""" mutation {
+         |  deleteManyUsers(where: {
+         |    pets_every: {
+         |      breed: "Test"
+         |    }
+         |  }) {
+         |    count
+         |  }
+         |} """,
+      project
+    )
+
+    result2.toString should be("""{"data":{"deleteManyUsers":{"count":1}}}""")
   }
 }

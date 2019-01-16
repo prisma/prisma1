@@ -7,16 +7,15 @@ import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.ScalarField
 import org.mongodb.scala.bson.collection.mutable.Document
-import org.mongodb.scala.bson.{BsonArray, conversions}
+import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
 //relationfilters depend on relationtype
 // embedded -> use dot notation to go deeper in tree
-// nonEmbedded -> not supported, Inputtypes for filter should not be generated in api
+// nonEmbedded -> have to use AggregationQueryBuilder
 //field_every:  $not $elemMatch ($not nested)
 //field_some:   $elemMatch (nested)
 //field_none:   $not $elemMatch (nested)
-
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter("", filter)
@@ -41,30 +40,29 @@ trait FilterConditionBuilder {
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => hackForTrue
       case FalseFilter                                           => not(hackForTrue)
-      case ScalarFilter(scalarField, Contains(value))            => regex(combineTwo(path, renameId(scalarField)), value.value.toString)
-      case ScalarFilter(scalarField, NotContains(value))         => not(regex(combineTwo(path, renameId(scalarField)), value.value.toString))
-      case ScalarFilter(scalarField, StartsWith(value))          => regex(combineTwo(path, renameId(scalarField)), "^" + value.value)
-      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(combineTwo(path, renameId(scalarField)), "^" + value.value))
-      case ScalarFilter(scalarField, EndsWith(value))            => regex(combineTwo(path, renameId(scalarField)), value.value + "$")
-      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(combineTwo(path, renameId(scalarField)), value.value + "$"))
-      case ScalarFilter(scalarField, LessThan(value))            => lt(combineTwo(path, renameId(scalarField)), GCToBson(value))
-      case ScalarFilter(scalarField, GreaterThan(value))         => gt(combineTwo(path, renameId(scalarField)), GCToBson(value))
-      case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(combineTwo(path, renameId(scalarField)), GCToBson(value))
-      case ScalarFilter(scalarField, GreaterThanOrEquals(value)) => gte(combineTwo(path, renameId(scalarField)), GCToBson(value))
-      case ScalarFilter(scalarField, NotEquals(NullGCValue))     => notEqual(combineTwo(path, renameId(scalarField)), null)
-      case ScalarFilter(scalarField, NotEquals(value))           => notEqual(combineTwo(path, renameId(scalarField)), GCToBson(value))
-      case ScalarFilter(scalarField, Equals(NullGCValue))        => equal(combineTwo(path, renameId(scalarField)), null)
-      case ScalarFilter(scalarField, Equals(value))              => equal(combineTwo(path, renameId(scalarField)), GCToBson(value))
-      case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => in(combineTwo(path, renameId(scalarField)), null)
-      case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(combineTwo(path, renameId(scalarField)), null))
-      case ScalarFilter(scalarField, In(values))                 => in(combineTwo(path, renameId(scalarField)), values.map(GCToBson(_)): _*)
-      case ScalarFilter(scalarField, NotIn(values))              => not(in(combineTwo(path, renameId(scalarField)), values.map(GCToBson(_)): _*))
+      case ScalarFilter(scalarField, Contains(value))            => regex(dotPath(path, scalarField), value.value.toString)
+      case ScalarFilter(scalarField, NotContains(value))         => not(regex(dotPath(path, scalarField), value.value.toString))
+      case ScalarFilter(scalarField, StartsWith(value))          => regex(dotPath(path, scalarField), "^" + value.value)
+      case ScalarFilter(scalarField, NotStartsWith(value))       => not(regex(dotPath(path, scalarField), "^" + value.value))
+      case ScalarFilter(scalarField, EndsWith(value))            => regex(dotPath(path, scalarField), value.value + "$")
+      case ScalarFilter(scalarField, NotEndsWith(value))         => not(regex(dotPath(path, scalarField), value.value + "$"))
+      case ScalarFilter(scalarField, LessThan(value))            => lt(dotPath(path, scalarField), GCToBson(value))
+      case ScalarFilter(scalarField, GreaterThan(value))         => gt(dotPath(path, scalarField), GCToBson(value))
+      case ScalarFilter(scalarField, LessThanOrEquals(value))    => lte(dotPath(path, scalarField), GCToBson(value))
+      case ScalarFilter(scalarField, GreaterThanOrEquals(value)) => gte(dotPath(path, scalarField), GCToBson(value))
+      case ScalarFilter(scalarField, NotEquals(NullGCValue))     => notEqual(dotPath(path, scalarField), null)
+      case ScalarFilter(scalarField, NotEquals(value))           => notEqual(dotPath(path, scalarField), GCToBson(value))
+      case ScalarFilter(scalarField, Equals(NullGCValue))        => equal(dotPath(path, scalarField), null)
+      case ScalarFilter(scalarField, Equals(value))              => equal(dotPath(path, scalarField), GCToBson(value))
+      case ScalarFilter(scalarField, In(Vector(NullGCValue)))    => in(dotPath(path, scalarField), null)
+      case ScalarFilter(scalarField, NotIn(Vector(NullGCValue))) => not(in(dotPath(path, scalarField), null))
+      case ScalarFilter(scalarField, In(values))                 => in(dotPath(path, scalarField), values.map(GCToBson(_)): _*)
+      case ScalarFilter(scalarField, NotIn(values))              => not(in(dotPath(path, scalarField), values.map(GCToBson(_)): _*))
       //Fixme test this thoroughly
-      case ScalarListFilter(scalarListField, ListContains(value)) => all(combineTwo(path, renameId(scalarListField)), GCToBson(value))
-      case ScalarListFilter(scalarListField, ListContainsSome(values)) =>
-        or(values.map(value => all(combineTwo(path, renameId(scalarListField)), GCToBson(value))): _*)
-      case ScalarListFilter(scalarListField, ListContainsEvery(values)) => all(combineTwo(path, renameId(scalarListField)), values.map(GCToBson(_)): _*)
-      case OneRelationIsNullFilter(field)                               => equal(combineTwo(path, field.name), null)
+      case ScalarListFilter(scalarListField, ListContains(value))       => all(dotPath(path, scalarListField), GCToBson(value))
+      case ScalarListFilter(scalarListField, ListContainsSome(values))  => or(values.map(value => all(dotPath(path, scalarListField), GCToBson(value))): _*)
+      case ScalarListFilter(scalarListField, ListContainsEvery(values)) => all(dotPath(path, scalarListField), values.map(GCToBson(_)): _*)
+      case OneRelationIsNullFilter(field)                               => equal(dotPath(path, field), null)
       case x                                                            => sys.error(s"Not supported: $x")
     }
 
@@ -92,7 +90,7 @@ trait FilterConditionBuilder {
       case AtLeastOneRelatedNode => elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter))
       case EveryRelatedNode      => not(elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter, true)))
       case NoRelatedNode         => not(elemMatch(fieldName, buildConditionForFilter("", relationFilter.nestedFilter)))
-      case ToOneRelatedNode      => buildConditionForFilter(combineTwo(path, fieldName), relationFilter.nestedFilter)
+      case ToOneRelatedNode      => buildConditionForFilter(dotPath(path, relationFilter.field), relationFilter.nestedFilter)
     }
   }
 }

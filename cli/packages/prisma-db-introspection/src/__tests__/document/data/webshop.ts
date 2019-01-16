@@ -109,35 +109,82 @@ export const orders = [{
 }]
 
 export const collections = {
-  User: users,
-  Order: orders, 
-  Item: items
+  users: users,
+  orders: orders, 
+  items: items
 }
 
-export const schemaString = `type Item {
+export const schemaString = `type items {
   # Type String is currently not supported for id fields.
   _id: String! @id
   keywords: [String!]!
   price: Float
   rating: Float
-  reviews: [ItemReviews!]!
+  reviews: [itemsReviews!]!
 }
 
-type ItemReviews @embedded {
+type itemsReviews @embedded {
   rating: Float
   text: String
 }
 
-type Order {
+type orders {
   # Type Int is currently not supported for id fields.
   _id: Int! @id
-  amount: Int
-  customer: User
-  items: [String!]!
+  amount: Float
+  customer: users @relation(link: INLINE)
+  items: [items!]! @relation(link: INLINE)
   orderDate: String
 }
 
-type User {
+type users {
+  # Type String is currently not supported for id fields.
+  _id: String! @id
+  firstName: String
+  lastName: String
+  paymentInfo: [usersPaymentInfo!]!
+  shippingAddress: usersShippingAddress
+}
+
+type usersPaymentInfo @embedded {
+  accountId: String
+  BIC: String
+  expires: String
+  IBAN: String
+  number: String
+  type: String
+}
+
+type usersShippingAddress @embedded {
+  country: String
+  number: String
+  street: String
+}`
+
+export const normalizedSchemaString = `type Item @db(name: "items") {
+  # Type String is currently not supported for id fields.
+  _id: String! @id
+  keywords: [String!]!
+  price: Float
+  rating: Float
+  reviews: [ItemReview!]!
+}
+
+type ItemReview @embedded {
+  rating: Float
+  text: String
+}
+
+type Order @db(name: "orders") {
+  # Type Int is currently not supported for id fields.
+  _id: Int! @id
+  amount: Float
+  customer: User @relation(link: INLINE)
+  items: [Item!]! @relation(link: INLINE)
+  orderDate: String
+}
+
+type User @db(name: "users") {
   # Type String is currently not supported for id fields.
   _id: String! @id
   firstName: String
@@ -147,7 +194,10 @@ type User {
 }
 
 type UserPaymentInfo @embedded {
+  accountId: String
+  BIC: String
   expires: String
+  IBAN: String
   number: String
   type: String
 }

@@ -1,5 +1,5 @@
 
-import { IGQLType, IGQLField, GQLScalarField } from '../../src/datamodel/model'
+import { IGQLType, IGQLField, GQLScalarField, IDirectiveInfo } from '../../src/datamodel/model'
 import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType';
@@ -16,6 +16,11 @@ const simpleModel =
   roles: [Int!]!
 }`
 
+const modelWithDirectives =
+`type Test @dummyDirective(isDummy: true) {
+  test: String @relation(link: INLINE)
+  test2: Int @defaultValue(value: 10) @relation(name: "TestRelation")
+}`
 
 describe(`Renderer test`, () => {
   test('Renderer a single type with scalars and default value correctly.', () => {
@@ -47,6 +52,54 @@ describe(`Renderer test`, () => {
     })
 
     expect(res).toEqual(simpleModel)
+  })
+
+  test('Render directives correctly', () => {
+    const scalarField = new GQLScalarField('test', 'String')
+    scalarField.directives = [{
+      name: "relation",
+      arguments: {
+        link: "INLINE"
+      }
+    }]
+
+    const arrayField = new GQLScalarField('test2', 'Int')
+    arrayField.directives = [{
+      name: "relation",
+      arguments: {
+        name: "\"TestRelation\""
+      }
+    }, {
+      name: "defaultValue",
+      arguments: {
+        value: "10"
+      }
+    }]
+
+    const typeDirectives: IDirectiveInfo[] = [{
+      name: "dummyDirective",
+      arguments: {
+        isDummy: "true"
+      }
+    }]
+
+    const type: IGQLType = {
+      name: "Test", 
+      isEmbedded: false,
+      directives: typeDirectives,
+      isEnum: false,
+      fields: [
+        scalarField, arrayField
+      ]
+    }
+
+
+
+    const res = renderer.render({
+      types: [type]
+    })
+
+    expect(res).toEqual(modelWithDirectives)
   })
 
   test('Render a single type consistently with the parser', () => {

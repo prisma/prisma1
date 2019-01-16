@@ -1,6 +1,7 @@
 import Warning from 'components/Markdown/Warning'
 import QueryChooser from 'components/Markdown/QueryChooser'
 import Code from 'components/Markdown/Code'
+import Collapse from 'components/Markdown/Collapse'
 
 export const meta = {
   title: 'Set up Prisma',
@@ -26,13 +27,15 @@ On this page, you will learn how to:
 
 <Warning>
 
-Using your existing database with Prisma currently only works when using **PostgreSQL** databases.
+Using your existing database with Prisma currently only works when using **PostgreSQL** or **MongoDB** databases. It is [not yet]((https://github.com/prisma/prisma/issues/2506)) supported for **MySQL**.
 
 </Warning>
 
 ## Prerequisites
 
 Make sure to have connection details for your database at hand. This includes the following pieces of information:
+
+<Collapse title="Required connection details for PostgreSQL">
 
 - **Host**: The host of your Postgres server, e.g. `localhost`.
 - **Port**: The port where your Postgres server listens, e.g. `5432`.
@@ -41,6 +44,14 @@ Make sure to have connection details for your database at hand. This includes th
 - **Name of existing _schema_**: The name of the Postgres _schema_, e.g. `public`.
 
 You also need to know whether your database server uses **SSL**.
+
+</Collapse>
+
+<Collapse title="Required connection details for MongoDB">
+
+Your MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string/).
+
+</Collapse>
 
 ## Install the Prisma CLI
 
@@ -58,6 +69,16 @@ npm install -g prisma
 ```
 
 </Code>
+
+<Warning>
+
+When using **MongoDB**, you need to install the beta version of the Prisma CLI: 
+
+```console copy
+npm install -g prisma@beta
+```
+
+</Warning>
 
 ## Install Docker
 
@@ -84,7 +105,7 @@ touch docker-compose.yml
 
 Paste the following contents into the Docker Compose file you just created:
 
-<Code languages={["PostgreSQL", "MySQL"]}>
+<Code languages={["PostgreSQL", "MySQL", "MongoDB"]}>
 
 ```yml copy
 version: '3'
@@ -114,11 +135,30 @@ services:
 # Coming soon. See https://github.com/prisma/prisma/issues/2506
 ```
 
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.22
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mongo
+            uri: __YOUR_CONNECTION_STRING__
+```
+
 </Code>
 
 ### Specify database connection
 
-To specify the database to which Prisma should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose files with the corresponding values of your database:
+To specify the database to which Prisma should connect, replace the placeholders that are spelled all-uppercased in the Docker Compose file with the corresponding values of your database:
+
+<Collapse title="Placeholder overview for PostgreSQL">
 
 - `__YOUR_POSTGRES_HOST__`: The host of your Postgres server, e.g. `localhost`. (When connecting to a local database, you might need to use `host.docker.internal`.)
 - `__YOUR_POSTGRES_PORT__`: The port where your Postgres server listens, e.g. `5432`.
@@ -127,6 +167,14 @@ To specify the database to which Prisma should connect, replace the placeholders
 - `__YOUR_POSTGRES_USER__`: The database user.
 - `__YOUR_POSTGRES_PASSWORD__`: The password for the database user.
 - `__SSL_CONNECTION__`: Whether your database server uses SSL, possible values are `true` and `false`.
+
+</Collapse>
+
+<Collapse title="Placeholder overview for MongoDB">
+
+- `__YOUR_CONNECTION_STRING__`: Your MongoDB connection string ([learn more](b6o5#prisma_config)).
+
+</Collapse>
 
 ### Launch Prisma
 

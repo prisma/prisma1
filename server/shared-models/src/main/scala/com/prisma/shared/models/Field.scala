@@ -17,6 +17,7 @@ object RelationSide extends Enumeration {
 object TypeIdentifier {
   sealed trait TypeIdentifier {
     def code: String
+    def userFriendlyTypeName: String = code
   }
 
   object Relation extends TypeIdentifier { def code = "Relation" }
@@ -30,7 +31,7 @@ object TypeIdentifier {
   object DateTime                   extends ScalarTypeIdentifier { def code = "DateTime" }
 
   sealed trait IdTypeIdentifier extends ScalarTypeIdentifier
-  object Cuid                   extends IdTypeIdentifier { def code = "GraphQLID" }
+  object Cuid                   extends IdTypeIdentifier { def code = "GraphQLID"; override def userFriendlyTypeName = "ID" }
   object UUID                   extends IdTypeIdentifier { def code = "UUID" }
   object Int                    extends IdTypeIdentifier { def code = "Int" }
 
@@ -131,6 +132,11 @@ sealed trait Field {
   lazy val isVisible: Boolean         = !isHidden
 
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
+
+  def asScalarField_! : ScalarField     = this.asInstanceOf[ScalarField]
+  def asRelationField_! : RelationField = this.asInstanceOf[RelationField]
+
+  def userFriendlyTypeName: String
 }
 
 case class RelationField(
@@ -143,14 +149,15 @@ case class RelationField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  override def typeIdentifier = TypeIdentifier.Relation
-  override def isRelation     = true
-  override def isScalar       = false
-  override def isUnique       = false
-  override def isReadonly     = false
-  override def enum           = None
-  override def defaultValue   = None
-  override def schema         = model.schema
+  override def typeIdentifier       = TypeIdentifier.Relation
+  override def isRelation           = true
+  override def isScalar             = false
+  override def isUnique             = false
+  override def isReadonly           = false
+  override def enum                 = None
+  override def defaultValue         = None
+  override def schema               = model.schema
+  override def userFriendlyTypeName = relatedModel_!.name
 
   lazy val dbName: String = relation.manifestation match {
     case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
@@ -202,7 +209,7 @@ case class RelationField(
 
   def isRelationWithNameAndSide(relationName: String, side: RelationSide.Value): Boolean = relation.name == relationName && this.relationSide == side
 
-  def asScalarField: ScalarField = {
+  def scalarCopy: ScalarField = {
     model.idField_!.copy(
       name = this.name,
       typeIdentifier = this.relatedModel_!.idField_!.typeIdentifier,
@@ -229,16 +236,17 @@ case class ScalarField(
   import template._
   import ReservedFields._
 
-  override def isRelation      = false
-  override def isScalar        = true
-  override def relationOpt     = None
-  override val dbName: String  = manifestation.map(_.dbName).getOrElse(name)
-  override def isUnique        = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
-  lazy val isWritable: Boolean = !isReadonly && !isId && !isCreatedAt && !isUpdatedAt
-
-  override def schema = model.schema
+  override def isRelation           = false
+  override def isScalar             = true
+  override def relationOpt          = None
+  override val dbName: String       = manifestation.map(_.dbName).getOrElse(name)
+  override def isUnique             = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
+  lazy val isWritable: Boolean      = !isReadonly && !isId && !isCreatedAt && !isUpdatedAt
+  override def schema               = model.schema
+  override def userFriendlyTypeName = typeIdentifier.userFriendlyTypeName
 
   val isId: Boolean        = if (model.isLegacy) name == idFieldName || name == embeddedIdFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
   val isCreatedAt: Boolean = if (model.isLegacy) name == ReservedFields.createdAtFieldName else behaviour.contains(CreatedAtBehaviour)
   val isUpdatedAt: Boolean = if (model.isLegacy) name == ReservedFields.updatedAtFieldName else behaviour.contains(UpdatedAtBehaviour)
+
 }

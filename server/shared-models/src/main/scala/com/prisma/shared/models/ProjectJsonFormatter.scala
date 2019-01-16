@@ -6,6 +6,7 @@ import com.prisma.gc_values._
 import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models.FieldConstraintType.FieldConstraintType
 import com.prisma.shared.models.Manifestations._
+import com.prisma.shared.models.MigrationStatus.MigrationStatus
 import com.prisma.shared.models.MigrationStepsJsonFormatter._
 import com.prisma.utils.json.JsonUtils
 import com.prisma.utils.json.JsonUtils._
@@ -349,7 +350,56 @@ object ProjectJsonFormatter {
   implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
   implicit lazy val projectFormat         = Json.format[Project]
   implicit lazy val migrationStatusFormat = JsonUtils.enumFormat(MigrationStatus)
-  implicit lazy val migrationFormat       = Json.format[Migration]
+
+  val migrationReads: Reads[Migration] = for {
+    projectId    <- (JsPath \ "projectId").read[String]
+    revision     <- (JsPath \ "revision").read[Int]
+    schema       <- (JsPath \ "schema").read[Schema]
+    functions    <- (JsPath \ "functions").read[Vector[Function]]
+    rawDataModel <- (JsPath \ "datamodel").readNullable[String]
+    status       <- (JsPath \ "status").read[MigrationStatus]
+    applied      <- (JsPath \ "applied").read[Int]
+    rolledBack   <- (JsPath \ "rolledBack").read[Int]
+    steps        <- (JsPath \ "steps").read[Vector[MigrationStep]]
+    errors       <- (JsPath \ "errors").read[Vector[String]]
+    startedAt    <- (JsPath \ "startedAt").readNullable[DateTime]
+    finishedAt   <- (JsPath \ "finishedAt").readNullable[DateTime]
+  } yield {
+    Migration(
+      projectId = projectId,
+      revision = revision,
+      schema = schema,
+      functions = functions,
+      rawDataModel = rawDataModel.getOrElse(""),
+      status = status,
+      applied = applied,
+      rolledBack = rolledBack,
+      steps = steps,
+      errors = errors,
+      startedAt = startedAt,
+      finishedAt = finishedAt,
+      previousSchema = Schema.empty
+    )
+  }
+
+  val migrationWrites = OWrites.apply[Migration] { migration =>
+    Json.obj(
+      "projectId"  -> migration.projectId,
+      "revision"   -> migration.revision,
+      "schema"     -> migration.schema,
+      "functions"  -> Json.toJson(migration.functions), // somehow this compiled only when written like that
+      "datamodel"  -> migration.rawDataModel,
+      "status"     -> migration.status,
+      "applied"    -> migration.applied,
+      "rolledBack" -> migration.rolledBack,
+      "steps"      -> migration.steps,
+      "errors"     -> migration.errors,
+      "startedAt"  -> migration.startedAt,
+      "finishedAt" -> migration.finishedAt
+    )
+  }
+
+  implicit lazy val migrationFormat = OFormat(migrationReads, migrationWrites)
 
   def failingFormat[T] = new Format[T] {
 

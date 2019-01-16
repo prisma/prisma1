@@ -5,7 +5,7 @@ import java.sql.ResultSet
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.shared.models.RelationSide.RelationSide
-import com.prisma.shared.models.{Model, RelationField}
+import com.prisma.shared.models.{Model, Relation, RelationField}
 import org.jooq.impl.DSL._
 
 case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends JdbcBase {
@@ -21,21 +21,25 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
     queryToDBIO(query)(readResult = readExists)
   }
 
-  def existsByRelation(projectId: String, relationId: String): DBIOAction[Boolean, NoStream, Effect.All] = {
+  def existsByRelation(projectId: String, relation: Relation): DBIOAction[Boolean, NoStream, Effect.All] = {
     val query = sql.select(
       field(
-        exists(sql.select(field(name("id"))).from(table(name(projectId, relationId))))
+        exists(sql.select(field(name("id"))).from(table(name(projectId, relation.relationTableName))))
       )
     )
 
     queryToDBIO(query)(readResult = readExists)
   }
 
-  def existsDuplicateByRelationAndSide(projectId: String, relationTableName: String, relationSide: RelationSide): DBIOAction[Boolean, NoStream, Effect.All] = {
+  def existsDuplicateByRelationAndSide(projectId: String, relation: Relation, relationSide: RelationSide): DBIOAction[Boolean, NoStream, Effect.All] = {
     val query = sql.select(
       field(
         exists(
-          sql.select(count()).from(table(name(projectId, relationTableName))).groupBy(field(name(relationSide.toString))).having(count().gt(inline(1)))
+          sql
+            .select(count())
+            .from(table(name(projectId, relation.relationTableName)))
+            .groupBy(field(name(relation.columnForRelationSide(relationSide))))
+            .having(count().gt(inline(1)))
         ))
     )
 

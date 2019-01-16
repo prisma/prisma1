@@ -90,12 +90,13 @@ export default class ScalarTypeGenerator extends ScalarTypeGeneratorBase {
 
   public wrapList<T extends GraphQLType>(type: T): GraphQLList<GraphQLNonNull<T>> {
     return new GraphQLList(
-      new GraphQLNonNull(type))
+      new GraphQLNonNull(type) as GraphQLNonNull<T>
+    ) as GraphQLList<GraphQLNonNull<T>>
   }
 
   public requiredIf<T extends GraphQLType>(required: boolean, type: T): GraphQLNonNull<T> | T {
     if (required) {
-      return new GraphQLNonNull(type)
+      return new GraphQLNonNull(type) as GraphQLNonNull<T>
     } else {
       return type
     }

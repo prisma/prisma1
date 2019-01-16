@@ -1,6 +1,6 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -40,7 +40,10 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 }
 
 case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
-  def has(capability: ConnectorCapability): Boolean    = capabilities.contains(capability)
+  def has(capability: ConnectorCapability): Boolean = capability match {
+    case ScalarListsCapability => capabilities.contains(EmbeddedScalarListsCapability) || capabilities.contains(NonEmbeddedScalarListCapability)
+    case x                     => capabilities.contains(x)
+  }
   def hasNot(capability: ConnectorCapability): Boolean = !has(capability)
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
@@ -96,9 +99,8 @@ object ConnectorCapabilities extends BooleanUtils {
       RelationLinkListCapability,
       EmbeddedTypesCapability
     )
-    val migrationsCapability = isActive.toOption(MigrationsCapability)
-    val dataModelCapability  = isTest.toOption(LegacyDataModelCapability)
+    val dataModelCapability = isTest.toOption(LegacyDataModelCapability)
 
-    ConnectorCapabilities(common ++ migrationsCapability ++ dataModelCapability)
+    ConnectorCapabilities(common ++ dataModelCapability)
   }
 }

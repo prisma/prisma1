@@ -6,7 +6,7 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.model.{ContentTypes, HttpMethods, HttpRequest, RemoteAddress}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{as, entity, extractClientIP, _}
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.server.{ExceptionHandler, Route, UnsupportedWebSocketSubprotocolRejection}
@@ -48,7 +48,12 @@ case class AkkaHttpSangriaServer(
                 post {
                   entity(as[JsValue]) { requestJson =>
                     val rawRequest = akkaRequestToRawRequest(request, requestJson, clientIp, requestId)
-                    complete(OK -> handler.handleRawRequest(rawRequest))
+                    onSuccess(handler.handleRawRequest(rawRequest)) { response =>
+                      val headers = response.headers.map(h => RawHeader(h._1, h._2)).toVector
+                      respondWithHeaders(headers: _*) {
+                        complete(OK -> response.json)
+                      }
+                    }
                   }
                 } ~ (get & path("status")) {
                   complete("OK")

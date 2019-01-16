@@ -14,7 +14,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
                          for {
-                           optionRes <- getNodeByWhere(where)
+                           optionRes <- getNodeByWhere(where, SelectedFields.forRelationField(relationField))
                            filterOption = optionRes.flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
@@ -38,7 +38,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
                          for {
-                           optionRes <- getNodeByWhere(parent.where)
+                           optionRes <- getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(relationField, parent))
                            filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))
@@ -71,15 +71,16 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
   def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], otherField: RelationField)(implicit ec: ExecutionContext) = {
     val otherModel   = otherField.model
     val relatedModel = otherField.relatedModel_!
+    val relatedField = otherField.relatedField
 
     for {
       filter <- otherField.relationIsInlinedInParent match {
                  case false =>
                    val filter = ScalarFilter(relatedModel.idField_!, In(parentIds))
                    for {
-                     result <- getNodes(relatedModel, QueryArguments.withFilter(filter), SelectedFields.all(relatedModel))
+                     result <- getNodes(relatedModel, QueryArguments.withFilter(filter), SelectedFields.forRelationField(relatedField))
                      ids = result.nodes.flatMap { node =>
-                       (otherField.relatedField.isList, node.data.map.get(otherField.relatedField.name)) match {
+                       (otherField.relatedField.isList, node.data.map.get(relatedField.name)) match {
                          case (true, Some(ListGCValue(values))) => values
                          case (false, Some(x: IdGCValue))       => Vector(x)
                          case (_, _)                            => Vector.empty
@@ -108,7 +109,7 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
 
     relationField.relationIsInlinedInParent match {
       case true =>
-        getNodeByWhere(parent.where).map(optionRes =>
+        getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(relationField, parent)).map(optionRes =>
           optionRes.foreach { res =>
             val optionNode = PrismaNode.getNodeAtPath(Some(res), parent.path.segments)
 
@@ -121,7 +122,6 @@ trait ValidationActions extends FilterConditionBuilder with NodeSingleQueries wi
                   case (_, _)                                                        => throw NodesNotConnectedError(relationField.relation, parentModel, None, relationField.relatedModel_!, None)
                 }
             }
-
         })
 
       case false =>

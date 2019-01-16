@@ -1,13 +1,11 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.{DocumentToId, DocumentToRoot}
+import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
-import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.{Document, FindObservable, MongoDatabase}
 
 import scala.collection.JavaConverters._
@@ -15,19 +13,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.existentials
 
-trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder {
+trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder with MongoResultReader {
 
-  // Fixme this does not use selected fields
   def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    val nodes = manyQueryHelper(model, queryArguments, None, database).map { results: Seq[Document] =>
-      results.map { result =>
-        val root = DocumentToRoot(model, result)
-        PrismaNode(root.idFieldByName(model.idField_!.name), root, Some(model.name))
-      }
-    }
-
-    nodes.map { n =>
-      ResolverResult[PrismaNode](queryArguments, n.toVector)
+    manyQueryHelper(model, queryArguments, None, database, false, selectedFields).map { results: Seq[Document] =>
+      val nodes = results.map(readsPrismaNode(_, model, selectedFields))
+      ResolverResult[PrismaNode](queryArguments, nodes.toVector)
     }
   }
 
@@ -38,10 +29,10 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       database
         .getCollection(model.dbName)
         .find(buildConditionForFilter(filter))
-        .projection(include("_id"))
+        .projection(idProjection)
         .collect()
         .toFuture
-        .map(res => res.map(DocumentToId.toCUIDGCValue))
+        .map(_.map(readsId))
     }
   }
 
@@ -49,7 +40,8 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
                       queryArguments: QueryArguments,
                       extraFilter: Option[Filter] = None,
                       database: MongoDatabase,
-                      idOnly: Boolean = false): Future[Seq[Document]] = {
+                      idOnly: Boolean = false,
+                      selectedFields: SelectedFields): Future[Seq[Document]] = {
 
     val updatedQueryArgs = extraFilter match {
       case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
@@ -78,8 +70,8 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       }
 
       idOnly match {
-        case true  => queryWithLimit.projection(include("_id")).collect().toFuture
-        case false => queryWithLimit.collect().toFuture
+        case true  => queryWithLimit.projection(idProjection).collect().toFuture
+        case false => queryWithLimit.projection(projectSelected(selectedFields)).collect().toFuture
       }
     }
   }
@@ -89,34 +81,30 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
       val relatedField = fromField.relatedField
       val model        = fromField.relatedModel_!
 
-      val inFilter: Filter = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
-      manyQueryHelper(model, queryArguments, Some(inFilter), database).map { results: Seq[Document] =>
-        val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
-          case true =>
-            val tuples = for {
-              result <- results
-              id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
-            } yield (id, result)
+      val inFilter: Filter      = ScalarListFilter(model.dummyField(relatedField), ListContainsSome(fromNodeIds))
+      val updatedSelectedFields = selectedFields ++ SelectedFields.forRelationField(relatedField)
+      manyQueryHelper(model, queryArguments, Some(inFilter), database, false, updatedSelectedFields)
+        .map { results: Seq[Document] =>
+          val groups: Map[StringIdGCValue, Seq[Document]] = relatedField.isList match {
+            case true =>
+              val tuples = for {
+                result <- results
+                id     <- result(relatedField.dbName).asArray().getValues.asScala.map(_.asObjectId()).map(x => StringIdGCValue(x.getValue.toString))
+              } yield (id, result)
 
-            tuples.groupBy(_._1).mapValues(_.map(_._2))
+              tuples.groupBy(_._1).mapValues(_.map(_._2))
 
-          case false =>
-            results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
-        }
+            case false =>
+              results.groupBy(x => StringIdGCValue(x(relatedField.dbName).asObjectId().getValue.toString))
+          }
 
-        fromNodeIds.map { id =>
-          groups.get(id.asInstanceOf[StringIdGCValue]) match {
-            case Some(group) =>
-              val roots = group.map(DocumentToRoot(model, _))
-              val prismaNodes: Vector[PrismaNodeWithParent] =
-                roots.map(r => PrismaNodeWithParent(id, PrismaNode(r.idFieldByName(model.idField_!.name), r, Some(model.name)))).toVector
-              ResolverResult(queryArguments, prismaNodes, parentModelId = Some(id))
-
-            case None =>
-              ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+          fromNodeIds.map { id =>
+            groups.get(id.asInstanceOf[StringIdGCValue]) match {
+              case Some(group) => ResolverResult(queryArguments, group.map(readsPrismaNodeWithParent(_, model, selectedFields, id)).toVector, Some(id))
+              case None        => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+            }
           }
         }
-      }
     }
 
   //Fixme this does not use all queryarguments

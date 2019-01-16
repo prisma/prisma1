@@ -47,7 +47,7 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
     workerServer.onStart.map(_ => ())
   }
 
-  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext): Future[JsValue] = {
+  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext): Future[Response] = {
     val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
     val projectId                          = projectIdEncoder.fromSegments(projectSegments)
     val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
@@ -57,7 +57,7 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
           if (apiDependencies.apiConnector.capabilities.has(ImportExportCapability)) {
             val result = new BulkImport(project).executeImport(rawRequest.json)
             result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-            result
+            result.map(Response(_))
           } else {
             sys.error(s"The connector is missing the import / export capability.")
           }
@@ -69,29 +69,32 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
             val resolver = apiDependencies.dataResolver(project)
             val result   = new BulkExport(project).executeExport(resolver, rawRequest.json)
             result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-            result
+            result.map(Response(_))
           } else {
             sys.error(s"The connector is missing the import / export capability.")
           }
         }
 
       case _ =>
-        super.handleRawRequest(rawRequest)
-
+        requestThrottler.throttleCallIfNeeded(projectIdAsString, isManagementApiRequest = isManagementApiRequest(rawRequest)) {
+          super.handleRawRequest(rawRequest)
+        }
     }
 
     result.recover {
-      case e: UserFacingError => JsonErrorHelper.errorJson(rawRequest.id, e.getMessage, e.code)
+      case e: UserFacingError => Response(JsonErrorHelper.errorJson(rawRequest.id, e.getMessage, e.code))
     }
   }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
-    if (request.path == Vector("management") && managementApiEnabled) {
+    if (isManagementApiRequest(request) && managementApiEnabled) {
       handleQueryForManagementApi(request, query)
     } else {
       handleQueryForServiceApi(request, query)
     }
   }
+
+  def isManagementApiRequest(request: RawRequest): Boolean = request.path == Vector("management")
 
   private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: Project => Future[T]): Future[T] = {
     (for {
@@ -155,9 +158,7 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
     verifyAuth(projectIdAsString, rawRequest) { project =>
       reservedSegment match {
         case None =>
-          requestThrottler.throttleCallIfNeeded(project) {
-            handleRequestForPublicApi(project, rawRequest, query)
-          }
+          handleRequestForPublicApi(project, rawRequest, query)
 
         case Some("private") =>
           val result = handleRequestForPrivateApi(project, rawRequest, query)

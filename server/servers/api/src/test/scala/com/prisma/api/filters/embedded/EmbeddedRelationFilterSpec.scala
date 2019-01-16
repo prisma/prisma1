@@ -204,4 +204,193 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
   }
 
+  "Fancy filter" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  name: String!
+        |  pets: [Dog]
+        |  posts: [Post]
+        |}
+        |
+        |type Post {
+        |  id: ID! @unique
+        |  author: User @mongoRelation(field: "author")
+        |  title: String!
+        |  createdAt: DateTime!
+        |  updatedAt: DateTime!
+        |}
+        |
+        |type Walker {
+        |  id: ID! @unique
+        |  name: String!
+        |}
+        |
+        |type Dog @embedded {
+        |  breed: String!
+        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |}"""
+    }
+
+    database.setup(project)
+
+    val query = """mutation create {
+                  |  createUser(
+                  |    data: {
+                  |      name: "User"
+                  |      pets: {
+                  |        create: [
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |          { breed: "Breed 1", walker: { create: { name: "Walker 1" } } }
+                  |        ]
+                  |      }
+                  |    }
+                  |  ) {
+                  |    name
+                  |    pets {
+                  |      breed
+                  |      walker {
+                  |        name
+                  |      }
+                  |    }
+                  |  }
+                  |}"""
+
+    server.query(query, project).toString should be(
+      """{"data":{"createUser":{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}}}""")
+
+    val query2 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 2" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query2, project).toString should be("""{"data":{"users":[]}}""")
+
+    val query3 = """query withFilter {
+                   |  users(
+                   |    where: {
+                   |      name: "User"
+                   |      pets_some: { breed: "Breed 1", walker: { name: "Walker 1" } }
+                   |    }
+                   |  ) {
+                   |    name
+                   |    pets {
+                   |      breed
+                   |      walker {
+                   |        name
+                   |      }
+                   |    }
+                   |  }
+                   |}"""
+
+    server.query(query3, project).toString should be(
+      """{"data":{"users":[{"name":"User","pets":[{"breed":"Breed 1","walker":{"name":"Walker 1"}},{"breed":"Breed 1","walker":{"name":"Walker 1"}}]}]}}""")
+  }
+
+  "Self relations bug" should "be fixed" in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type User {
+        |  id: ID! @unique
+        |  updatedAt: DateTime!
+        |  nick: String! @unique
+        |}
+        |
+        |type Todo {
+        |  id: ID! @unique
+        |  title: String! @unique
+        |  comments: [Comment]
+        |}
+        |
+        |type Comment @embedded {
+        |  text: String!
+        |  user: User! @mongoRelation(field: "user")
+        |  snarkyRemark: Comment
+        |}"""
+    }
+
+    database.setup(project)
+
+    val create = server.query("""mutation{createTodo(data:{title:"todoTitle"}){title}}""", project)
+    create.toString should be("""{"data":{"createTodo":{"title":"todoTitle"}}}""")
+
+    val create2 = server.query("""mutation{createUser(data:{nick:"Marcus"}){nick}}""", project)
+    create2.toString should be("""{"data":{"createUser":{"nick":"Marcus"}}}""")
+
+    val update = server.query(
+      s"""mutation c{
+  updateTodo(
+    where: { title: "todoTitle" }
+    data: {
+      comments: {
+        create: [
+          {
+            text:"This is very important"
+            user: {
+              connect: {
+                nick: "Marcus"
+              }
+            }
+            snarkyRemark: {
+              create: {
+                text:"This is very very imporanto!"
+                user: {
+                  connect: {nick:"Marcus"}
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ){
+    title
+  }
+}""",
+      project
+    )
+
+    update.toString should be("""{"data":{"updateTodo":{"title":"todoTitle"}}}""")
+
+    val result = server.query(
+      s"""query commentsOfAUser {
+         |  todoes(where: {
+         |    comments_some: {
+         |      text_contains: "This"
+         |    }
+         |  }) {
+         |    title
+         |    comments {
+         |      text
+         |      snarkyRemark{
+         |         text
+         |         user{
+         |            nick
+         |         }
+         |      }
+         |    }
+         |  }
+         |} """,
+      project
+    )
+
+    result.toString should be(
+      """{"data":{"todoes":[{"title":"todoTitle","comments":[{"text":"This is very important","snarkyRemark":{"text":"This is very very imporanto!","user":{"nick":"Marcus"}}}]}]}}""")
+  }
+
 }

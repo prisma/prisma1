@@ -4,9 +4,10 @@ import java.sql.Driver
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
-import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MysqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
+import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -28,7 +29,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit
   lazy val managementDatabase   = databases.primary
   lazy val projectDatabase      = databases.primary.database
   lazy val mySqlTypeMapper      = MysqlTypeMapper()
-  lazy val mutationBuilder      = MysqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
+  lazy val mutationBuilder      = MySqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
   override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
   override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
@@ -108,5 +109,8 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit
     )
   }
 
-  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
+  override def testFacilities() = {
+    val db = internalDatabaseDefs.databases(root = true)
+    DeployTestFacilites(DatabaseInspectorImpl(db.primary.database))
+  }
 }
