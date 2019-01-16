@@ -6,10 +6,9 @@ import { DatabaseType } from '../../src/databaseType'
 import { dedent } from '../../src/util/util'
 
 describe(`Renderer directives test`, () => {
-  test('Render built-in directives correctly with mongo Rrnderer', () => {
+  test('Render built-in directives correctly with mongo renderer', () => {
     const renderer = Renderer.create(DatabaseType.mongo)
-    const parser = Parser.create(DatabaseType.mongo)
-
+    
     const modelWithDirectives = dedent(`
       type Test @embedded {
         hasBeenCreatedAt: DateTime @createdAt
@@ -48,7 +47,6 @@ describe(`Renderer directives test`, () => {
 
   test('Render built-in directives correctly with postgres renderer', () => {
     const renderer = Renderer.create(DatabaseType.postgres)
-    const parser = Parser.create(DatabaseType.postgres)
 
     const modelWithDirectives = dedent(`
       type Test @db(name: "testType") {
