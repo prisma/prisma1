@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.postgres
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
+import com.prisma.deploy.connector.jdbc.{DatabaseInspectorImpl, JdbcInternalMigrationApplier}
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence._
 import com.prisma.deploy.connector.persistence._
@@ -73,17 +73,41 @@ case class PostgresDeployConnector(
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
 
   override def internalMigrationPersistence: InternalMigrationPersistence = JdbcInternalMigrationPersistence(managementDatabases.primary)
-  override def internalMigrationApplier: InternalMigrationApplier         = ???
+  override def internalMigrationApplier: InternalMigrationApplier         = JdbcInternalMigrationApplier(projectDatabases.primary)
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
-    setupDatabases.primary.database
-      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabases.dbName))
-      .transformWith { _ =>
-        val action = InternalDatabaseSchema.createSchemaActions(internalDatabases.managementSchemaName, recreate = false)
-        projectDatabase.run(action)
-      }
-      .flatMap(_ => setupDatabases.shutdown)
+    def setupSchema =
+      setupDatabases.primary.database
+        .run(InternalDatabaseSchema.createDatabaseAction(internalDatabases.dbName))
+        .transformWith { _ =>
+          val action = InternalDatabaseSchema.createSchemaActions(internalDatabases.managementSchemaName, recreate = false)
+          projectDatabase.run(action)
+        }
+        .flatMap(_ => setupDatabases.shutdown)
+
+    for {
+      _ <- setupSchema
+      _ <- applyInternalMigrations
+    } yield ()
+  }
+
+  private def applyInternalMigrations = {
+    def applyOneMigration(migration: InternalMigration, projects: Vector[Project]): Future[Unit] = {
+      for {
+        _ <- Future.sequence {
+              projects.map(p => internalMigrationApplier.apply(migration, p))
+            }
+        _ <- internalMigrationPersistence.create(migration)
+      } yield ()
+    }
+
+    for {
+      appliedMigrations <- internalMigrationPersistence.loadAll()
+      migrationsToApply = InternalMigration.values.toSet.diff(appliedMigrations.toSet)
+      allProjects       <- projectPersistence.loadAll()
+      _                 <- Future.sequence(migrationsToApply.map(m => applyOneMigration(m, allProjects.toVector)))
+    } yield ()
   }
 
   override def reset(): Future[Unit] = truncateManagementTablesInDatabase(managementDatabase)
