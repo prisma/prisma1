@@ -1,4 +1,4 @@
-import { DatabaseType, Parser, Renderer, dedent } from 'prisma-datamodel'
+import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
 import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
 
 function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
@@ -11,7 +11,7 @@ function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
 
   normalizer.normalize(fromDb)
 
-  const renderer = new Renderer()
+  const renderer = DefaultRenderer.create(DatabaseType.mongo)
   const resultSchema = renderer.render(fromDb)
 
   expect(resultSchema).toEqual(expectedResultSchema)
