@@ -26,8 +26,14 @@ case class AsyncMigrator(
   lazy val deploymentScheduler = system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, deployConnector)))
   implicit val timeout         = new Timeout(5.minutes)
 
-  override def schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Migration] = {
-    (deploymentScheduler ? Schedule(projectId, nextSchema, steps, functions)).mapTo[Migration]
+  override def schedule(
+      projectId: String,
+      nextSchema: Schema,
+      steps: Vector[MigrationStep],
+      functions: Vector[Function],
+      rawDataModel: String
+  ): Future[Migration] = {
+    (deploymentScheduler ? Schedule(projectId, nextSchema, steps, functions, rawDataModel)).mapTo[Migration]
   }
 
   override def initialize: Unit = {

@@ -33,15 +33,34 @@ export default class Renderer {
     }).join(`\n\n`)
   }
 
+  protected createIsEmbeddedTypeDirective(type: IGQLType) {
+    return { name: DirectiveKeys.isEmbedded, arguments: {} }
+  }
+
+  protected createDatabaseNameTypeDirective(type: IGQLType) {
+    return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }
+  }
+
+  protected shouldCreateIsEmbeddedTypeDirective(type: IGQLType) {
+    return type.isEmbedded
+  }
+
+  protected shouldCreateDatabaseNameTypeDirective(type: IGQLType) {
+    return type.databaseName && !type.isEmbedded
+  }
+
+  protected createReservedTypeDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
+    if(this.shouldCreateIsEmbeddedTypeDirective(type)) { typeDirectives.push(this.createIsEmbeddedTypeDirective(type)) }
+    if(this.shouldCreateDatabaseNameTypeDirective(type)) { typeDirectives.push(this.createDatabaseNameTypeDirective(type)) }
+
+  }
+
   protected renderType(type: IGQLType): string {
-    const typedirectives: IDirectiveInfo[] = type.directives || []
+    const typeDirectives: IDirectiveInfo[] = type.directives || []
 
-    // TODO Move direction magic to superclass
-    if(type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
-    // We ignore the database name for embedded types.
-    if(type.databaseName && !type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }) }
+    this.createReservedTypeDirectives(type, typeDirectives)
 
-    const renderedDirectives = this.renderDirectives(typedirectives)
+    const renderedDirectives = this.renderDirectives(typeDirectives)
     const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
     const renderedFields = sortedFields.map(x => this.renderField(x))
 
@@ -69,21 +88,79 @@ export default class Renderer {
     return { renderedComments, hasError }
   }
 
+  protected createDefaultValueFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}
+  }
+
+  protected createIsUniqueFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.isUnique, arguments: {} }
+  }
+
+  protected createRelationNameFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.relation, arguments: { name: this.renderValue(TypeIdentifiers.string, field.relationName) } }
+  }
+
+  protected createIsIdfFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.isId, arguments: { } }
+  }
+
+  protected createIsCreatedAtFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.isCreatedAt, arguments: { } } 
+  }
+
+  protected createIsUpdatedAtFieldDirctive(field: IGQLField) {
+    return { name: DirectiveKeys.isUpdatedAt, arguments: { } } 
+  }
+
+  protected createDatabaseNameFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }
+  }
+
+  protected shouldCreateDefaultValueFieldDirective(field: IGQLField) {
+    return field.defaultValue !== null
+  }
+
+  protected shouldCreateIsUniqueFieldDirective(field: IGQLField) {
+    // No explicit unique directive for id fields.
+    return field.isUnique && !field.isId
+  }
+
+  protected shouldCreateRelationNameFieldDirective(field: IGQLField) {
+    return field.relationName !== null
+  }
+  
+  protected shouldCreateIsIdFieldDirective(field: IGQLField) {
+    return field.isId
+  }
+
+  protected shouldCreateCreatedAtFieldDirective(field: IGQLField) {
+    return field.isCreatedAt
+  }
+
+  protected shouldCreateUpdatedAtFieldDirective(field: IGQLField) {
+    return field.isUpdatedAt
+  }
+
+  protected shouldCreateDatabaseNameFieldDirective(field: IGQLField) {
+    // No explicit database name direcitve for mongo _id fields
+    return field.databaseName && !(field.isId && field.databaseName === '_id')
+  }
+
+  protected createReservedFieldDirectives(field: IGQLField, fieldDirectives: IDirectiveInfo[]) {
+    if(this.shouldCreateDefaultValueFieldDirective(field)) { fieldDirectives.push(this.createDefaultValueFieldDirective(field)) }
+    if(this.shouldCreateIsUniqueFieldDirective(field)) { fieldDirectives.push(this.createIsUniqueFieldDirective(field)) }
+    if(this.shouldCreateRelationNameFieldDirective(field)) { fieldDirectives.push(this.createRelationNameFieldDirective(field)) }
+    if(this.shouldCreateIsIdFieldDirective(field)) { fieldDirectives.push(this.createIsIdfFieldDirective(field)) }
+    if(this.shouldCreateCreatedAtFieldDirective(field)) { fieldDirectives.push(this.createIsCreatedAtFieldDirective(field)) }
+    if(this.shouldCreateUpdatedAtFieldDirective(field)) { fieldDirectives.push(this.createIsUpdatedAtFieldDirctive(field)) }
+    if(this.shouldCreateDatabaseNameFieldDirective(field)) { fieldDirectives.push(this.createDatabaseNameFieldDirective(field)) }
+  }
+
   protected renderField(field: IGQLField) : string {
     const fieldDirectives: IDirectiveInfo[] = field.directives || []
 
-    // TODO(ejoebstl) Move direction magic to superclass
-    if(field.defaultValue !== null) { fieldDirectives.push({ name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}) }
-    // No explicit unique directive for id fields.
-    if(field.isUnique && !field.isId) { fieldDirectives.push({ name: DirectiveKeys.isUnique, arguments: {} }) }
-    if(field.relationName !== null) { fieldDirectives.push({ name: DirectiveKeys.relation, arguments: { name: this.renderValue(TypeIdentifiers.string, field.relationName) } }) }
-    if(field.isId) { fieldDirectives.push({ name: DirectiveKeys.isId, arguments: { } }) }
-    if(field.isCreatedAt) { fieldDirectives.push({ name: DirectiveKeys.isCreatedAt, arguments: { } }) }
-    if(field.isUpdatedAt) { fieldDirectives.push({ name: DirectiveKeys.isUpdatedAt, arguments: { } }) }
-    // No explicit database name direcitve for mongo _id fields
-    // TODO(ejoebstl): This really should be moved to a superclass and only conducted for mongo DB types
-    if(field.databaseName && !(field.isId && field.databaseName === '_id')) { fieldDirectives.push({ name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }) }
-    
+    this.createReservedFieldDirectives(field, fieldDirectives)
+
     const renderedDirectives = this.renderDirectives(fieldDirectives)
     
     let type = this.extractTypeIdentifier(field.type)

@@ -80,11 +80,11 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
          |   createParent(data: {
          |   name: "Dad",
          |   child: {create:{
-         |   name: "Daughter"
-         |   child: {create:{
-         |      name: "GrandSon"
-         |      friend: {create:{
-         |          name: "Friend"
+         |      name: "Daughter"
+         |      child: {create:{
+         |          name: "GrandSon"
+         |          friend: {create:{
+         |               name: "Friend"
          |          }}
          |      }}
          |   }}

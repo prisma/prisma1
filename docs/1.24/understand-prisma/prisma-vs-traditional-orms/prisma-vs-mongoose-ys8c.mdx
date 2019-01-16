@@ -1,0 +1,272 @@
+import Code from "components/Markdown/Code"
+import Icon from 'components/Markdown/Icon'
+
+export const meta = {
+  title: "Prisma & Mongoose",
+  position: 80,
+  description: "Learn how Prisma compares to Mongoose"
+}
+
+## Overview
+
+This page compares Prisma with [Mongoose](https://mongoosejs.com/). Here is a high-level overview:
+
+|  | Prisma | Mongoose |
+| --- | --- | --- |
+| Auto-generated DB client | <Icon type="check" /> | <Icon type="cross" /> |
+| Type-safe | <Icon type="check" /> | <Icon type="cross" /> |
+| Declarative data modelling & migrations | <Icon type="check" /> | <Icon type="cross" /> |
+| Connection pooling | <Icon type="check" /> | <Icon type="check" /> |
+| Supported DB types | Document & Relational |  Document |
+| Supported ORM patterns | DataMapper | Actice Record | 
+| [Fluent API for relations](#fetching-relations) | <Icon type="check" /> | <Icon type="cross" /> |
+| [Relation filters](#relation-filters) | <Icon type="check" /> | <Icon type="cross" /> |
+
+In the following, you find a detailled comparison of the Mongoose and Prisma APIs.
+
+## Fetching single objects
+
+**Prisma**
+
+```ts
+const user = await prisma.user({ id })
+```
+
+**Mongoose**
+
+```ts
+const user = await findById(id)
+```
+
+## Fetching selected scalars of single objects
+
+**Prisma**
+
+```ts
+const userFragment = await prisma.user({ id }).$fragment(`
+  fragment NameAndEmail on User { id email }`
+`)
+```
+
+**Mongoose**
+
+```ts
+const user = await findById(id)
+  .select("id email")
+```
+
+## Fetching relations
+
+**Prisma**
+
+<Code hideCopy={true} languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
+
+```ts
+const postsByUser = await prisma
+  .user({ id })
+  .posts()
+```
+
+```ts
+const userWithPosts = await prisma
+  .user({ id })
+  .$fragment(`
+    fragment UserPosts on User {
+      posts { id title content published }
+    }
+  `)
+```
+
+```ts
+const userWithPosts = await prisma
+  .$graphql(`
+    query ($id: ID!) {
+      user(id: $id) {
+        posts { id title content published }
+      }
+    }
+  `, 
+  { id }
+  )
+```
+
+</Code>
+
+**Mongoose**
+
+```ts
+const userWithPosts = await User
+  .findById(id)
+  .populate("posts")
+```
+
+## Filtering for concrete values
+
+**Prisma**
+
+```ts
+const users = await prisma.users({
+  where: {
+    name: "Alice"
+  }
+})
+```
+
+**Mongoose**
+
+```ts
+const user = await User.find({
+  name: "Alice"
+})
+```
+
+## Other filter criteria
+
+**Prisma**
+
+Prisma generates many additional filters that are commonly used in modern application development:
+
+- `<field>_ends_with` & `<field>_starts_with`
+- `<field>_not_ends_with` & `<field>_not_starts_with`
+- `<field>_gt` & `<field>_gte`
+- `<field>_lt` & `<field>_lte`
+- `<field>_contains` & `<field>_not_contains`
+- `<field>_in` & `<field>_not_in`
+
+**Mongoose**
+
+Mongoose exposes the [MongoDB query selectors](https://docs.mongodb.com/manual/reference/operator/query/#query-selectors) as filter criteria.
+
+## Relation filters
+
+**Prisma**
+
+Prisma lets you filter a list based on a criteria that applies not only to the models of the list being retrieved, but to a _relation_ of that model. 
+
+For example, you want to fetch only those users that wrote a post with the title "Hello World":
+
+```ts
+query {
+  user(where: {
+    posts_some: {
+      title: "Hello World"
+    }
+  }) {
+    id
+  }
+}
+```
+
+**Mongoose**
+
+Mongoose doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
+
+## Pagination
+
+**Prisma**
+
+```ts
+const posts = await prisma.posts({
+  skip: 5,
+  first: 10
+})
+```
+
+In addition to `skip` and `first`, the Prisma API also offers:
+
+- `last`
+- `before` & `after` for cursor based pagination
+- Relay-style pagination
+
+**Mongoose**
+
+```ts
+const posts = await Post.find({
+  skip: 5,
+  limit: 10
+})
+```
+
+## Creating objects
+
+**Prisma**
+
+```ts
+const user = await prisma.createUser({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+```
+
+**Mongoose**
+
+<Code hideCopy={true} languages={["Using `create`", "Using `save`"]}>
+
+```ts
+const user = await User.create({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+```
+
+```ts
+const user = new User({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+await user.save()
+```
+
+</Code>
+
+## Updating objects
+
+**Prisma**
+
+```ts
+const updatedUser = await prisma.updateUser({
+  where: { id },
+  data: {
+    name: "James",
+    email: "james@prisma.io"
+  }
+})
+```
+
+**Mongoose**
+
+<Code hideCopy={true} languages={["Using `findOneAndUpdate`", "Using `save`"]}>
+
+```ts
+const updatedUser = await User.findOneAndUpdate(
+  { _id: id },
+  {
+    $set: {
+      name: "James",
+      email: "james@prisma.io"
+    }
+  }
+)
+```
+
+```ts
+user.name = "James"
+user.email =" james@prisma.com"
+await user.save()
+```
+
+</Code>
+
+## Deleting objects
+
+**Prisma**
+
+```ts
+const deletedUser = await prisma.deleteUser({ id })
+```
+
+**Mongoose**
+
+```ts
+await User.deleteOne({ _id: id })
+```

@@ -165,6 +165,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   else
     npm publish --tag $CIRCLE_BRANCH
   fi
+  sleep 20.0
   cd ..
 fi
 
@@ -358,10 +359,11 @@ languages=( typescript flow )
 
 git clone git@github.com:prisma/prisma-examples.git
 cd prisma-examples
+branch="client-$CIRCLE_BRANCH"
 
 if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
   # Setup branch
-  git checkout "client-$CIRCLE_BRANCH"
+  git checkout $branch
 
   # Bump prisma-client-lib version
   for language in "${languages[@]}"; do
@@ -379,6 +381,9 @@ if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
   done
 
   # Push changes
-  git commit -a -m "bump prisma-client-lib versions"
-  git push origin "client-$CIRCLE_BRANCH"
+  git config --global user.email "tim.suchanek@gmail.com"
+  git config --global user.name "Tim Suchanek"
+  git commit -a -m "bump prisma-client-lib versions to ${newVersion}"
+  git remote add origin-push https://${GH_TOKEN}@github.com/prisma/prisma-examples.git > /dev/null 2>&1
+  git push --quiet --set-upstream origin-push $branch
 fi

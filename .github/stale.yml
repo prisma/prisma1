@@ -5,6 +5,9 @@ daysUntilClose: 10
 # Issues with these labels will never be considered stale
 exemptLabels:
   - kind/feature
+  - kind/discussion
+  - kind/feedback
+  - kind/question
   - rfc/0-proposal
   - rfc/1-draft
   - rfc/2-accepted

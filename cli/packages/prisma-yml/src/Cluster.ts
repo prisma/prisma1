@@ -185,7 +185,7 @@ Original error: ${e.message}`,
 
   async isOnline(): Promise<boolean> {
     const version = await this.getVersion()
-    return Boolean(version)
+    return typeof version === 'string'
   }
 
   async getVersion(): Promise<string | null> {

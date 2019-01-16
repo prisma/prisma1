@@ -352,18 +352,35 @@ object ProjectJsonFormatter {
   implicit lazy val migrationStatusFormat = JsonUtils.enumFormat(MigrationStatus)
 
   val migrationReads: Reads[Migration] = for {
-    projectId  <- (JsPath \ "projectId").read[String]
-    revision   <- (JsPath \ "revision").read[Int]
-    schema     <- (JsPath \ "schema").read[Schema]
-    functions  <- (JsPath \ "functions").read[Vector[Function]]
-    status     <- (JsPath \ "status").read[MigrationStatus]
-    applied    <- (JsPath \ "applied").read[Int]
-    rolledBack <- (JsPath \ "rolledBack").read[Int]
-    steps      <- (JsPath \ "steps").read[Vector[MigrationStep]]
-    errors     <- (JsPath \ "errors").read[Vector[String]]
-    startedAt  <- (JsPath \ "startedAt").readNullable[DateTime]
-    finishedAt <- (JsPath \ "finishedAt").readNullable[DateTime]
-  } yield Migration(projectId, revision, schema, functions, status, applied, rolledBack, steps, errors, startedAt, finishedAt, previousSchema = Schema.empty)
+    projectId    <- (JsPath \ "projectId").read[String]
+    revision     <- (JsPath \ "revision").read[Int]
+    schema       <- (JsPath \ "schema").read[Schema]
+    functions    <- (JsPath \ "functions").read[Vector[Function]]
+    rawDataModel <- (JsPath \ "datamodel").readNullable[String]
+    status       <- (JsPath \ "status").read[MigrationStatus]
+    applied      <- (JsPath \ "applied").read[Int]
+    rolledBack   <- (JsPath \ "rolledBack").read[Int]
+    steps        <- (JsPath \ "steps").read[Vector[MigrationStep]]
+    errors       <- (JsPath \ "errors").read[Vector[String]]
+    startedAt    <- (JsPath \ "startedAt").readNullable[DateTime]
+    finishedAt   <- (JsPath \ "finishedAt").readNullable[DateTime]
+  } yield {
+    Migration(
+      projectId = projectId,
+      revision = revision,
+      schema = schema,
+      functions = functions,
+      rawDataModel = rawDataModel.getOrElse(""),
+      status = status,
+      applied = applied,
+      rolledBack = rolledBack,
+      steps = steps,
+      errors = errors,
+      startedAt = startedAt,
+      finishedAt = finishedAt,
+      previousSchema = Schema.empty
+    )
+  }
 
   val migrationWrites = OWrites.apply[Migration] { migration =>
     Json.obj(
@@ -371,6 +388,7 @@ object ProjectJsonFormatter {
       "revision"   -> migration.revision,
       "schema"     -> migration.schema,
       "functions"  -> Json.toJson(migration.functions), // somehow this compiled only when written like that
+      "datamodel"  -> migration.rawDataModel,
       "status"     -> migration.status,
       "applied"    -> migration.applied,
       "rolledBack" -> migration.rolledBack,
