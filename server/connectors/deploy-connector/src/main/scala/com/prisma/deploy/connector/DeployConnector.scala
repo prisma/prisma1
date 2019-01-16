@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector
 
-import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
+import com.prisma.deploy.connector.persistence._
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models._
 import org.joda.time.DateTime
@@ -21,6 +21,8 @@ trait DeployConnector {
   def projectIdEncoder: ProjectIdEncoder
   def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
   def capabilities: ConnectorCapabilities
+  def internalMigrationPersistence: InternalMigrationPersistence
+  def internalMigrationApplier: InternalMigrationApplier
 
   def initialize(): Future[Unit]
   def reset(): Future[Unit]

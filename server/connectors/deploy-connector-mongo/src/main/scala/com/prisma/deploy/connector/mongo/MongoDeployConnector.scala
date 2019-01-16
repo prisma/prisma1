@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mongo
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mongo.impl._
-import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
+import com.prisma.deploy.connector.persistence._
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import org.mongodb.scala.MongoClient
@@ -30,7 +30,9 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
-  override def initialize(): Future[Unit] = Future.unit
+  override def internalMigrationPersistence: InternalMigrationPersistence = EmptyInternalMigrationPersistence
+  override def internalMigrationApplier: InternalMigrationApplier         = EmptyInternalMigrationApplier
+  override def initialize(): Future[Unit]                                 = Future.unit
 
   override def reset(): Future[Unit] = {
     for {
