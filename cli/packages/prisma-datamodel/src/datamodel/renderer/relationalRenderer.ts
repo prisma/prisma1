@@ -34,13 +34,13 @@ export default class RelationalRenderer extends Renderer {
 
   protected renderField(field: IGQLField): string {
     if(field.isId && field.name !== idFieldName) {
-      GQLAssert.raise(`ID musst be called "${idFieldName}" in relational models.`)
+      GQLAssert.raise(`ID field must be called "${idFieldName}" in relational models.`)
     }
     if(field.isCreatedAt && field.name !== createdAtFieldName) {
-      GQLAssert.raise(`ID musst be called "${createdAtFieldName}" in relational models.`)
+      GQLAssert.raise(`CreatedAt field must be called "${createdAtFieldName}" in relational models.`)
     }
     if(field.isUpdatedAt && field.name !== updatedAtFieldName) {
-      GQLAssert.raise(`ID musst be called "${updatedAtFieldName}" in relational models.`)
+      GQLAssert.raise(`UpdatedAt field must be called "${updatedAtFieldName}" in relational models.`)
     }
 
     return super.renderField(field)
