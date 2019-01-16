@@ -33,11 +33,11 @@ If the `@rename` directive is not used, Prisma deletes old type/field before cre
 
 </Warning>
 
-#### Renaming a type
+**Renaming a type**
 
 Here is an example scenario:
 
-**1. Before migration**
+1. Before migration
 
 ```graphql
 type Post {
@@ -45,11 +45,11 @@ type Post {
 }
 ```
 
-**2. Goals**
+2. Goals
 
 - Rename the `Post` type to `Story`
 
-**3. Adding the `@rename` directive**
+3. Adding the `@rename` directive
 
 ```graphql
 # renaming the `Post` type to `Story`
@@ -58,7 +58,7 @@ type Story @rename(oldName: "Post") {
 }
 ```
 
-**4. Migrating the database with `prisma deploy`**
+4. Migrating the database with `prisma deploy`
 
 After having the saved the datamodel file with these changes, you need to run:
 
@@ -66,7 +66,7 @@ After having the saved the datamodel file with these changes, you need to run:
 prisma deploy
 ```
 
-**5. Removing the `@rename` directive manually**
+5. Removing the `@rename` directive manually
 
 ```graphql
 type Story {
@@ -74,11 +74,11 @@ type Story {
 }
 ```
 
-#### Renaming a field
+**Renaming a field**
 
 Here is an example scenario:
 
-**1. Before migration**
+1. Before migration
 
 ```graphql
 type Post {
@@ -86,11 +86,11 @@ type Post {
 }
 ```
 
-**2. Goals**
+2. Goals
 
 - Rename the `text` field to `content`
 
-**3. Adding the `@rename` directive**
+3. Adding the `@rename` directive
 
 ```graphql
 # renaming the `text` field to `content`
@@ -99,7 +99,7 @@ type Post {
 }
 ```
 
-**4. Migrating the database with `prisma deploy`**
+4. Migrating the database with `prisma deploy`
 
 After having the saved the datamodel file with these changes, you need to run:
 
@@ -107,7 +107,7 @@ After having the saved the datamodel file with these changes, you need to run:
 prisma deploy
 ```
 
-**5. Removing the `@rename` directive manually**
+5. Removing the `@rename` directive manually
 
 ```graphql
 type Post {
