@@ -1,0 +1,35 @@
+export const meta = {
+  title: "prisma export",
+  position: 220,
+}
+
+## `$ prisma export`
+
+Exports your service data to a local zip directory. For more info, read the [Data Import & Export](jsw9) page.
+
+### Usage
+
+```sh
+prisma export [flags]
+```
+
+### Flags
+
+```
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+-p, --path PATH            Path to export .zip file
+```
+
+### Examples
+
+**Export data to file with default name (`export-<timestamp>.zip`)**
+
+```sh
+prisma export
+```
+
+**Export data to file called `mydata.zip`**
+
+```sh
+prisma export --path mydata.zip
+```

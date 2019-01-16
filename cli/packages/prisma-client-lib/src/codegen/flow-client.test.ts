@@ -21,3 +21,16 @@ test('flow generator', t => {
     console.log(e.codeFrame)
   }
 })
+test('flow generator - print schema', t => {
+  try {
+    const schema = buildSchema(typeDefs)
+    const generator = new FlowGenerator({
+      schema,
+      internalTypes: [],
+    })
+    const result = generator.renderTypedefs()
+    t.snapshot(result)
+  } catch (e) {
+    console.log(e.codeFrame)
+  }
+})
