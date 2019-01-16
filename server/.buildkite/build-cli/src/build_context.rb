@@ -19,7 +19,8 @@ class BuildContext
   def get_last_git_tag
     last_tags = Command.new("git", "tag", "--sort=-version:refname").run!.raise!
     puts last_tags.get_stdout
-    filtered = last_tags.get_stdout.lines.map(&:chomp).select { |tag| !tag.include?("beta") }
+    filtered = last_tags.get_stdout.lines.map(&:chomp).select { |tag| !tag.include?("beta") && !tag.start_with?("v") }
+    puts "Last tag: #{filtered.first}"
     Tag.new(filtered.first)
 
 
