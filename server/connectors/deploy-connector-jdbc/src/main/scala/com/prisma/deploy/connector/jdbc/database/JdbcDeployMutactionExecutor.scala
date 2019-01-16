@@ -34,15 +34,18 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
 
     if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
-      val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path = s"""'db/${mutaction.projectId}'"""
-      val att  = sqlu"ATTACH DATABASE #${path} AS #${mutaction.projectId};"
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/${mutaction.projectId}'"""
+      val att                = sqlu"ATTACH DATABASE #${path} AS #${mutaction.projectId};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
       val attach = for {
         attachedDbs <- list
         _ <- attachedDbs.map(_._2).contains(mutaction.projectId) match {
               case true  => DBIO.successful(())
               case false => att
             }
+        _ <- activateForeignKey
       } yield ()
       database.run(DBIO.seq(attach, action).withPinnedSession).map(_ => ())
     } else {
@@ -73,15 +76,18 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
 
     if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
-      val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path = s"""'db/${mutaction.projectId}'"""
-      val att  = sqlu"ATTACH DATABASE #${path} AS #${mutaction.projectId};"
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/${mutaction.projectId}'"""
+      val att                = sqlu"ATTACH DATABASE #${path} AS #${mutaction.projectId};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
       val attach = for {
         attachedDbs <- list
         _ <- attachedDbs.map(_._2).contains(mutaction.projectId) match {
               case true  => DBIO.successful(())
               case false => att
             }
+        _ <- activateForeignKey
       } yield ()
       database.run(DBIO.seq(attach, action).withPinnedSession).map(_ => ())
     } else {

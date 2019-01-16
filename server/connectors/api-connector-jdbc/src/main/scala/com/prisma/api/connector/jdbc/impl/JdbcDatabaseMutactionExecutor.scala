@@ -41,9 +41,10 @@ case class JdbcDatabaseMutactionExecutor(
       slickDatabase.database.run(singleAction)
     } else if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
-      val list   = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path   = s"""'db/$projectId'"""
-      val attach = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/$projectId'"""
+      val attach             = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 
       val attachIfNecessary = for {
         attachedDbs <- list
@@ -51,6 +52,7 @@ case class JdbcDatabaseMutactionExecutor(
               case true  => DBIO.successful(())
               case false => attach
             }
+        _      <- activateForeignKey
         result <- singleAction
       } yield result
 

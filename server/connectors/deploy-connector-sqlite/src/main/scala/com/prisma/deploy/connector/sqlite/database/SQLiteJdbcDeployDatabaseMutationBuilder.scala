@@ -45,7 +45,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     //          yes -> detach, delete
     //          no  -> delete
     //http://www.sqlitetutorial.net/sqlite-attach-database/
-    val fileTemp = new File(s"""db/$projectId""")
+    val fileTemp = new File(s"""./db/$projectId""")
 
     if (fileTemp.exists) {
       //      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
@@ -202,17 +202,10 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             isList: Boolean,
                             typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
-    val uniqueString =
-      if (isUnique) {
-        val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = isList, typeIdentifier))
-        s", ADD UNIQUE INDEX ${qualify(s"${columnName}_UNIQUE")} (${qualify(columnName)}$indexSize ASC)"
-      } else {
-        ""
-      }
+    val unique    = if (isUnique) addUniqueConstraint(projectId, tableName, columnName, typeIdentifier) else DBIO.successful(())
+    val add       = sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql"""
 
-    sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql"""
-
-    //Fixme unique separately
+    DBIO.seq(add, unique)
   }
 
   override def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
@@ -239,10 +232,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
-    val indexSize = indexSizeForSQLType(sqlType)
-
-    sqlu"ALTER TABLE #${qualify(projectId, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
+    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(projectId, s"${columnName}_UNIQUE")} ON #${qualify(tableName)} (#${qualify(columnName)} ASC)"
   }
 
   override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_] = {
