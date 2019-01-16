@@ -163,6 +163,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   private def getNamesOfForeignKeyConstraints(projectId: String, model: Model, column: String): DatabaseAction[Vector[String], NoStream, Effect] = {
+    //Fixme this probably does not work
+
     for {
       result <- sql"""
             SELECT
@@ -204,7 +206,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val newColSql = rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
     val unique    = if (isUnique) addUniqueConstraint(projectId, tableName, columnName, typeIdentifier) else DBIO.successful(())
     val add       = sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql"""
-
+//Fixme Not null
     DBIO.seq(add, unique)
   }
 
@@ -222,6 +224,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             newIsRequired: Boolean,
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+
+    //Fixme required / Not Null
     val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }

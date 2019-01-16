@@ -174,7 +174,7 @@ lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
   .dependsOn(slickUtils)
   .dependsOn(connectorShared)
   .settings(
-    libraryDependencies ++= Seq(postgresClient)
+    libraryDependencies ++= Seq(postgresClient, sqliteClient)
   )
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
