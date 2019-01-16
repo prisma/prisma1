@@ -62,10 +62,9 @@ trait DeployDependencies extends AwaitUtils {
     for {
       appliedMigrations <- deployConnector.internalMigrationPersistence.loadAll()
       migrationsToApply = InternalMigration.values.toSet.diff(appliedMigrations.toSet)
-      if migrationsToApply.nonEmpty
-      allProjects     <- projectPersistence.loadAll()
-      migrationThunks = migrationsToApply.map(m => () => applyOneMigration(m, allProjects.toVector)).toVector
-      _               <- migrationThunks.runInChunksOf(10)
+      allProjects       <- if (migrationsToApply.nonEmpty) projectPersistence.loadAll() else Future.successful(Vector.empty)
+      migrationThunks   = migrationsToApply.map(m => () => applyOneMigration(m, allProjects.toVector)).toVector
+      _                 <- migrationThunks.runInChunksOf(10)
     } yield ()
   }
 }
