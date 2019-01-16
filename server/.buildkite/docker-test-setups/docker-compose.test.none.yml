@@ -8,6 +8,7 @@ services:
       CLUSTER_VERSION: "latest"
       COMMIT_SHA: "123abcd"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
+      RABBITMQ_URI: amqp://rabbit
       PRISMA_CONFIG: |
         port: 4466
         rabbitUri: amqp://rabbit
