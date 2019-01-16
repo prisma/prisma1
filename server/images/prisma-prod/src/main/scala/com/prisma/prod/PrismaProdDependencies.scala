@@ -27,7 +27,7 @@ import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
 import com.prisma.workers.dependencies.WorkerDependencies
 import com.prisma.workers.payloads.{JsonConversions, Webhook => WorkerWebhook}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 case class PrismaProdDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends DeployDependencies
@@ -91,8 +91,9 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
-  override def initialize()(implicit ec: ExecutionContext): Unit = {
-    super.initialize()(ec)
+  override def initialize()(implicit ec: ExecutionContext): Future[Unit] = {
+    val superResult = super.initialize()(ec)
     MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+    superResult
   }
 }

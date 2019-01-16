@@ -14,7 +14,7 @@ import com.prisma.messagebus.PubSubPublisher
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.utils.await.AwaitUtils
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait DeployDependencies extends AwaitUtils {
   implicit val system: ActorSystem
@@ -37,8 +37,8 @@ trait DeployDependencies extends AwaitUtils {
   lazy val migrationPersistence    = deployConnector.migrationPersistence
   lazy val managementSchemaBuilder = SchemaBuilder()
 
-  def initialize()(implicit ec: ExecutionContext): Unit = {
-    await(deployConnector.initialize(), seconds = 30)
+  def initialize()(implicit ec: ExecutionContext): Future[Unit] = {
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployConnector)))
+    deployConnector.initialize()
   }
 }

@@ -5,12 +5,16 @@ import akka.stream.ActorMaterializer
 import com.prisma.image.SangriaHandlerImpl
 import com.prisma.sangria_server.AkkaHttpSangriaServer
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 object PrismaLocalMain extends App {
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaLocalDependencies()
 
-  dependencies.initialize()(system.dispatcher)
+  val initResult = dependencies.initialize()(system.dispatcher).await
+  Await.result(initResult, Duration.Inf)
 
   Version.check()
 
