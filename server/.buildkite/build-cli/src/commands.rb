@@ -115,5 +115,6 @@ end
 
 # Eliminates consistency issues on buildkite
 def git_fetch
-    Command.new("git", "fetch").puts!.run!.raise!
+  puts "Fetching tags"
+  Command.new("git", "fetch", "--tags").puts!.run!.raise!
 end
