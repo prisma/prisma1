@@ -181,7 +181,8 @@ case class DeployMutationInput(
     dryRun: Option[Boolean],
     force: Option[Boolean],
     secrets: Vector[String],
-    functions: Vector[FunctionInput]
+    functions: Vector[FunctionInput],
+    noMigration: Option[Boolean]
 ) extends sangria.relay.Mutation
 
 case class FunctionInput(
