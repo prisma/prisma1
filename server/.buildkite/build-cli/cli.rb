@@ -4,6 +4,7 @@ require_relative './src/commands'
 
 Dir.chdir(__dir__)
 
+git_fetch
 context = BuildContext.new
 
 unless context.should_build?

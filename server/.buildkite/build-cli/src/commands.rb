@@ -3,7 +3,6 @@ require_relative './command'
 require_relative './docker'
 
 def upload_pipeline(context)
-  git_fetch
 
   yml = PipelineRenderer.new(context).render!
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([yml]).run!.raise!
@@ -14,13 +13,11 @@ def upload_pipeline(context)
 end
 
 def test_project(context, project, connector)
-  git_fetch
   DockerCommands.kill_all
   DockerCommands.run_tests_for(context, project, connector)
 end
 
 def build_images(context, tag)
-  git_fetch
   DockerCommands.kill_all
   raise "Invalid version to build images from." if tag.nil?
 
@@ -34,7 +31,6 @@ def build_images(context, tag)
 end
 
 def native_image(context, target, version_str)
-  git_fetch
   parsed_version = Tag.new(version_str)
   artifact_s3_paths = ["s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}/"]
 
@@ -115,6 +111,5 @@ end
 
 # Eliminates consistency issues on buildkite
 def git_fetch
-  puts "Fetching tags"
-  Command.new("git", "fetch", "--tags").puts!.run!.raise!
+  Command.new("git", "fetch", "--tags").run!.raise!
 end
