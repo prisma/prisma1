@@ -48,6 +48,8 @@ trait DeployDependencies extends AwaitUtils {
 
   private def applyInternalMigrations = {
     import system.dispatcher
+    import com.prisma.utils.future.FutureUtils._
+
     def applyOneMigration(migration: InternalMigration, projects: Vector[Project]): Future[Unit] = {
       for {
         _ <- Future.sequence {
@@ -61,8 +63,9 @@ trait DeployDependencies extends AwaitUtils {
       appliedMigrations <- deployConnector.internalMigrationPersistence.loadAll()
       migrationsToApply = InternalMigration.values.toSet.diff(appliedMigrations.toSet)
       if migrationsToApply.nonEmpty
-      allProjects <- projectPersistence.loadAll()
-      _           <- Future.sequence(migrationsToApply.map(m => applyOneMigration(m, allProjects.toVector)))
+      allProjects     <- projectPersistence.loadAll()
+      migrationThunks = migrationsToApply.map(m => () => applyOneMigration(m, allProjects.toVector)).toVector
+      _               <- migrationThunks.runInChunksOf(10)
     } yield ()
   }
 }
