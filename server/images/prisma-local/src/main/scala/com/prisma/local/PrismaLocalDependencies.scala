@@ -79,7 +79,8 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
   override def initialize()(implicit ec: ExecutionContext): Future[Unit] = {
-    super.initialize()(ec)
+    val superResult = super.initialize()(ec)
     MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+    superResult
   }
 }

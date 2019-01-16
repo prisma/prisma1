@@ -5,13 +5,14 @@ import akka.stream.ActorMaterializer
 import com.prisma.auth.Auth
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.connector.persistence.InternalMigration
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.SchemaBuilder
 import com.prisma.deploy.schema.mutations.FunctionValidator
 import com.prisma.deploy.server.auth.ManagementAuth
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.PubSubPublisher
-import com.prisma.shared.models.ProjectIdEncoder
+import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.utils.await.AwaitUtils
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,6 +40,29 @@ trait DeployDependencies extends AwaitUtils {
 
   def initialize()(implicit ec: ExecutionContext): Future[Unit] = {
     system.actorOf(Props(DatabaseSizeReporter(projectPersistence, deployConnector)))
-    deployConnector.initialize()
+    for {
+      _ <- deployConnector.initialize()
+      _ <- applyInternalMigrations
+    } yield ()
+  }
+
+  private def applyInternalMigrations = {
+    import system.dispatcher
+    def applyOneMigration(migration: InternalMigration, projects: Vector[Project]): Future[Unit] = {
+      for {
+        _ <- Future.sequence {
+              projects.map(p => deployConnector.internalMigrationApplier.apply(migration, p))
+            }
+        _ <- deployConnector.internalMigrationPersistence.create(migration)
+      } yield ()
+    }
+
+    for {
+      appliedMigrations <- deployConnector.internalMigrationPersistence.loadAll()
+      migrationsToApply = InternalMigration.values.toSet.diff(appliedMigrations.toSet)
+      if migrationsToApply.nonEmpty
+      allProjects <- projectPersistence.loadAll()
+      _           <- Future.sequence(migrationsToApply.map(m => applyOneMigration(m, allProjects.toVector)))
+    } yield ()
   }
 }

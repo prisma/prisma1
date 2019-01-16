@@ -10,7 +10,8 @@ object PrismaProdMain extends App {
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaProdDependencies()
 
-  dependencies.initialize()(system.dispatcher)
+  val initResult = dependencies.initialize()(system.dispatcher)
+  Await.result(initResult, Duration.Inf)
 
   val sangriaHandler = SangriaHandlerImpl(managementApiEnabled = dependencies.config.managmentApiEnabled.getOrElse(false))
   val executor       = AkkaHttpSangriaServer

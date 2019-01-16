@@ -77,37 +77,13 @@ case class PostgresDeployConnector(
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql
-    def setupSchema =
-      setupDatabases.primary.database
-        .run(InternalDatabaseSchema.createDatabaseAction(internalDatabases.dbName))
-        .transformWith { _ =>
-          val action = InternalDatabaseSchema.createSchemaActions(internalDatabases.managementSchemaName, recreate = false)
-          projectDatabase.run(action)
-        }
-        .flatMap(_ => setupDatabases.shutdown)
-
-    for {
-      _ <- setupSchema
-      _ <- applyInternalMigrations
-    } yield ()
-  }
-
-  private def applyInternalMigrations = {
-    def applyOneMigration(migration: InternalMigration, projects: Vector[Project]): Future[Unit] = {
-      for {
-        _ <- Future.sequence {
-              projects.map(p => internalMigrationApplier.apply(migration, p))
-            }
-        _ <- internalMigrationPersistence.create(migration)
-      } yield ()
-    }
-
-    for {
-      appliedMigrations <- internalMigrationPersistence.loadAll()
-      migrationsToApply = InternalMigration.values.toSet.diff(appliedMigrations.toSet)
-      allProjects       <- projectPersistence.loadAll()
-      _                 <- Future.sequence(migrationsToApply.map(m => applyOneMigration(m, allProjects.toVector)))
-    } yield ()
+    setupDatabases.primary.database
+      .run(InternalDatabaseSchema.createDatabaseAction(internalDatabases.dbName))
+      .transformWith { _ =>
+        val action = InternalDatabaseSchema.createSchemaActions(internalDatabases.managementSchemaName, recreate = false)
+        projectDatabase.run(action)
+      }
+      .flatMap(_ => setupDatabases.shutdown)
   }
 
   override def reset(): Future[Unit] = truncateManagementTablesInDatabase(managementDatabase)

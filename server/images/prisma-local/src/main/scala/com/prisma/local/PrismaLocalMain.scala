@@ -13,7 +13,7 @@ object PrismaLocalMain extends App {
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaLocalDependencies()
 
-  val initResult = dependencies.initialize()(system.dispatcher).await
+  val initResult = dependencies.initialize()(system.dispatcher)
   Await.result(initResult, Duration.Inf)
 
   Version.check()
