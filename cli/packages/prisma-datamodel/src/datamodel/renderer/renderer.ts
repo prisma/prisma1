@@ -8,7 +8,7 @@ import { TypeIdentifiers } from "../scalar";
 const indent = '  '
 const comment = '#'
 
-export default class Renderer {
+export default abstract class Renderer {
   public render(input: ISDL): string {
 
     // Sort alphabetically. Enums last. 
@@ -121,7 +121,6 @@ export default class Renderer {
   }
 
   protected shouldCreateIsUniqueFieldDirective(field: IGQLField) {
-    // No explicit unique directive for id fields.
     return field.isUnique && !field.isId
   }
 
@@ -142,8 +141,7 @@ export default class Renderer {
   }
 
   protected shouldCreateDatabaseNameFieldDirective(field: IGQLField) {
-    // No explicit database name direcitve for mongo _id fields
-    return field.databaseName && !(field.isId && field.databaseName === '_id')
+    return field.databaseName !== null && field.databaseName !== undefined
   }
 
   protected createReservedFieldDirectives(field: IGQLField, fieldDirectives: IDirectiveInfo[]) {
