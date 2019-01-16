@@ -9,14 +9,11 @@ class InternalMigrationPersistenceSpec extends WordSpecLike with Matchers with D
   val persistence                      = testDependencies.deployConnector.internalMigrationPersistence
 
   "everything should work" in {
-    val migration1 = InternalMigration(id = "my-fancy-test-migration-1")
-    val migration2 = InternalMigration(id = "my-fancy-test-migration-2")
+    val migration1 = InternalMigration.RemoveIdColumnFromRelationTables
 
+    persistence.loadAll().await should be(Vector.empty)
     persistence.create(migration1).await
     persistence.loadAll().await should be(Vector(migration1))
-
-    persistence.create(migration2).await
-    persistence.loadAll().await should be(Vector(migration1, migration2))
   }
 
 }
