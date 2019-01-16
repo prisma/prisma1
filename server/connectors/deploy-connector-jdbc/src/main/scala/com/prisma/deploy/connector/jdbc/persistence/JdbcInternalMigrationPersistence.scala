@@ -70,7 +70,7 @@ case class JdbcInternalMigrationPersistence(slickDatabase: SlickDatabase)(implic
   }
 
   private def internalMigrationFromResultSet(rs: ResultSet): InternalMigration = {
-    InternalMigration(id = rs.getString(idColumn.getName))
+    InternalMigration.withName(rs.getString(idColumn.getName))
   }
 
 }
