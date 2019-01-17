@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -171,6 +172,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
   }
 
   "should succeed for legacy style relation tables" in {
+    val capas: Set[ConnectorCapability] = Set(RelationLinkTableCapability)
     val dataModelString =
       """
         |type Model {
@@ -185,8 +187,16 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |}
       """.stripMargin
 
-    val dataModel         = validate(dataModelString, Set(RelationLinkTableCapability))
+    val dataModel         = validate(dataModelString, capas)
     val relationTableType = dataModel.type_!("ModelToModelRelation")
     relationTableType.isRelationTable should be(true)
+
+    val warnings = validateThatMustWarn(dataModelString, capas)
+    warnings should have(size(1))
+    val warning = warnings.head
+    warning.`type` should be("ModelToModelRelation")
+    warning.field should be(Some("id"))
+    warning.description should be(
+      "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column.")
   }
 }

@@ -64,8 +64,8 @@ object SchemaDsl extends AwaitUtils {
     val validator          = LegacyDataModelValidator
 
     val prismaSdl = validator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {
-      case Good(prismaSdl) =>
-        prismaSdl
+      case Good(result) =>
+        result.dataModel
       case Bad(errors) =>
         sys.error(
           s"""Encountered the following errors during schema validation. Please fix:
