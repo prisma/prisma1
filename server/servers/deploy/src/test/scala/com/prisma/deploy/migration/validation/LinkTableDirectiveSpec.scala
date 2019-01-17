@@ -1,7 +1,7 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.shared.models.ConnectorCapability
-import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, RelationLinkTableCapability}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
@@ -197,6 +197,30 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
     warning.`type` should be("ModelToModelRelation")
     warning.field should be(Some("id"))
     warning.description should be(
-      "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column.")
+      "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column. ")
+  }
+
+  "should error for if the id field does not have the ID type" in {
+    val capas: Set[ConnectorCapability] = Set(RelationLinkTableCapability, IntIdCapability)
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  id: Int! @id
+        |  A: Model!
+        |  B: Model!
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, capas)
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("ModelToModelRelation")
+    error.field should be(Some("id"))
+    error.description should be("The id field of a link table must be of type `ID!`.")
   }
 }

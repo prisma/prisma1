@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl, PrismaType, ScalarPrismaField}
-import com.prisma.shared.models.ConnectorCapabilities
+import com.prisma.shared.models.{ConnectorCapabilities, TypeIdentifier}
 import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import sangria.ast.{Directive, Document, ObjectTypeDefinition}
@@ -48,15 +48,20 @@ object LinkTableDirective extends TypeDirective[Boolean] {
       val rfError = (relationTable.relationFields.size != 2).toOption {
         DeployError(relationTable.name, "A link must specify exactly two relation fields.")
       }
-      val superFluousScalarFields = relationTable.nonRelationFields.filter {
-        case s: ScalarPrismaField if s.isId => false
-        case _                              => true
-      }
-      val superFluousErrors = superFluousScalarFields.map { scalarField =>
-        DeployError(scalarField.tpe.name, scalarField.name, "A link table must not specify any additional scalar fields.")
+      val superFluousErrors = relationTable.nonRelationFields
+        .filter {
+          case s: ScalarPrismaField if s.isId => false
+          case _                              => true
+        }
+        .map { scalarField =>
+          DeployError(scalarField.tpe.name, scalarField.name, "A link table must not specify any additional scalar fields.")
+        }
+
+      val idFieldHasIllegalType = relationTable.scalarFields.find(f => f.isId && f.typeIdentifier != TypeIdentifier.Cuid).map { scalarField =>
+        DeployError(scalarField.tpe.name, scalarField.name, "The id field of a link table must be of type `ID!`.")
       }
 
-      rfError ++ superFluousErrors
+      rfError ++ superFluousErrors ++ idFieldHasIllegalType
     }
   }
 
