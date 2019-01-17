@@ -144,7 +144,7 @@ class PipelineRenderer
   end
 
   def build_steps_for(version)
-    ['debian' ,'lambda'].map do |target|
+    ['debian', 'lambda'].map do |target|
       PipelineStep.new
         .label(":rust: Native image [#{target}] [#{version}]")
         .command("./server/.buildkite/pipeline.sh native-image #{target} #{version}")

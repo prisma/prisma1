@@ -2,6 +2,7 @@ package com.prisma.api.connector.postgres
 
 import java.sql.Driver
 
+import com.typesafe.config.ConfigFactory
 import com.prisma.config.DatabaseConfig
 import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
@@ -23,21 +24,21 @@ object PostgresDatabasesFactory {
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
-  def databaseForConfig(dbConfig: DatabaseConfig, driver: Driver) = {
-//    val source         = hikariDataSource(dbConfig)
-    val source         = simpleDataSource(dbConfig, driver)
-    val poolName       = "database"
-    val numThreads     = dbConfig.connectionLimit.getOrElse(10) - 1
-    val maxConnections = numThreads
-    val executor       = AsyncExecutor(poolName, numThreads, numThreads, 1000, maxConnections, registerMbeans = false)
+  private def isPooled(dbConfig: DatabaseConfig) = {
+    dbConfig.pooled
+  }
 
-    Database.forSource(source, executor)
+  def databaseForConfig(dbConfig: DatabaseConfig, driver: Driver) = {
+    if (isPooled(dbConfig))
+      pooledDataSource(dbConfig, driver)
+    else
+      simpleDataSource(dbConfig, driver)
   }
 
   def simpleDataSource(dbConfig: DatabaseConfig, driver: Driver) = {
     val database = dbConfig.database.getOrElse(defaultDatabase)
 
-    new DataSourceJdbcDataSource(
+    val source = new DataSourceJdbcDataSource(
       new DriverDataSource(
         url =
           s"jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory",
@@ -48,37 +49,34 @@ object PostgresDatabasesFactory {
       keepAliveConnection = true,
       maxConnections = None
     )
+
+    val poolName       = "database"
+    val numThreads     = dbConfig.connectionLimit.getOrElse(10) - 1
+    val maxConnections = numThreads
+    val executor       = AsyncExecutor(poolName, numThreads, numThreads, 1000, maxConnections, registerMbeans = false)
+
+    Database.forSource(source, executor)
   }
 
-  def hikariDataSource(dbConfig: DatabaseConfig) = {
+  def pooledDataSource(dbConfig: DatabaseConfig, driver: Driver) = {
+    val pooled   = if (dbConfig.pooled) "" else "connectionPool = disabled"
     val database = dbConfig.database.getOrElse(defaultDatabase)
-    val hconf    = new HikariConfig()
 
-    hconf.setJdbcUrl(
-      s"jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory"
-    )
+    val config = ConfigFactory
+      .parseString(s"""
+                      |database {
+                      |  url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory"
+                      |  properties {
+                      |    user = "${dbConfig.user}"
+                      |    password = "${dbConfig.password.getOrElse("")}"
+                      |  }
+                      |  numThreads = ${dbConfig.connectionLimit.getOrElse(10) - 1} // we subtract 1 because one connection is consumed already by deploy
+                      |  connectionTimeout = 5000
+                      |  $pooled
+                      |}
+      """.stripMargin)
+      .resolve
 
-    hconf.setUsername(dbConfig.user)
-    hconf.setPassword(dbConfig.password.getOrElse(""))
-
-    // Pool configuration
-    hconf.setConnectionTimeout(5000)
-    hconf.setValidationTimeout(1000)
-    hconf.setIdleTimeout(600000)
-    hconf.setMaxLifetime(1800000)
-    hconf.setLeakDetectionThreshold(0)
-    hconf.setInitializationFailFast(false)
-
-    val numThreads = dbConfig.connectionLimit.map(_ - 1).getOrElse(10)
-    hconf.setMaximumPoolSize(numThreads)
-    hconf.setMinimumIdle(numThreads)
-    hconf.setPoolName("database")
-    hconf.setRegisterMbeans(false)
-
-    hconf.setReadOnly(false)
-    hconf.setCatalog(null)
-
-    val ds = new HikariDataSource(hconf)
-    new HikariCPJdbcDataSource(ds, hconf)
+    Database.forConfig("database", config, driver)
   }
 }
