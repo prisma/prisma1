@@ -68,6 +68,12 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
+  lazy val relationTableHas3Columns = manifestation match {
+    case None                                  => true
+    case Some(RelationTable(_, _, _, Some(_))) => true
+    case _                                     => false
+  }
+
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn
 
   def containsTheModel(model: Model): Boolean = modelA == model || modelB == model

@@ -107,6 +107,13 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
+    val removeIdColumn = (previousRelation.relationTableHas3Columns && !nextRelation.relationTableHas3Columns).toOption {
+      previousRelation.manifestation match {
+        case None                                         => deleteColumn(projectId, previousRelation.relationTableName, "id")
+        case Some(RelationTable(_, _, _, Some(idColumn))) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
+        case _                                            => sys.error("Must not happen")
+      }
+    }
     val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}"""
@@ -119,7 +126,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME TO #${qualify(nextRelation.relationTableName)}"""
     )
-    val all = renameModelAColumn ++ renameModelBColumn ++ renameTable
+    val all = removeIdColumn ++ renameModelAColumn ++ renameModelBColumn ++ renameTable
     DBIO.sequence(all.toVector)
   }
 

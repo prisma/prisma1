@@ -398,6 +398,58 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
+  "migrating from a legacy link table to a normal link table should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @linkTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myId: ID! @id
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val initialResult        = deploy(initialDataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val initialRelationTable = initialResult.table_!("CustomLinkTable")
+    initialRelationTable.columns should have(size(3))
+    initialRelationTable.column("myId") should not(be(empty))
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @linkTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(2))
+    relationTable.column("myId") should be(empty)
+  }
+
   "switching models in a link table must work" in {
     val capas = ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability)
     val initialDataModel =
