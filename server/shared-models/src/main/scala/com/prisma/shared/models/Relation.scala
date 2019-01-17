@@ -69,10 +69,12 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
-  lazy val relationTableHas3Columns = manifestation match {
-    case None                                  => true
-    case Some(RelationTable(_, _, _, Some(_))) => true
-    case _                                     => false
+  lazy val relationTableHas3Columns = idColumn.isDefined
+
+  lazy val idColumn: Option[String] = manifestation match {
+    case None                                         => Some("id")
+    case Some(RelationTable(_, _, _, Some(idColumn))) => Some(idColumn)
+    case _                                            => None
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn

@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.postgres.database
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.shared.models.Manifestations.RelationTable
-import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
@@ -107,13 +107,13 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    val removeIdColumn = (previousRelation.relationTableHas3Columns && !nextRelation.relationTableHas3Columns).toOption {
-      previousRelation.manifestation match {
-        case None                                         => deleteColumn(projectId, previousRelation.relationTableName, "id")
-        case Some(RelationTable(_, _, _, Some(idColumn))) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
-        case _                                            => sys.error("Must not happen")
-      }
+    val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
+      case (Some(idColumn), None) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
+      case (None, Some(idColumn)) => sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+                                            ADD COLUMN "#$idColumn" varchar default null"""
+      case _                      => DBIO.successful(())
     }
+
     val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}"""
@@ -126,7 +126,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME TO #${qualify(nextRelation.relationTableName)}"""
     )
-    val all = removeIdColumn ++ renameModelAColumn ++ renameModelBColumn ++ renameTable
+    val all = Vector(addOrRemoveIdColumn) ++ renameModelAColumn ++ renameModelBColumn ++ renameTable
     DBIO.sequence(all.toVector)
   }
 
@@ -141,13 +141,15 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     deleteColumn(projectId, model.dbName, column)
   }
 
-  override def createColumn(projectId: String,
-                            tableName: String,
-                            columnName: String,
-                            isRequired: Boolean,
-                            isUnique: Boolean,
-                            isList: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def createColumn(
+      projectId: String,
+      tableName: String,
+      columnName: String,
+      isRequired: Boolean,
+      isUnique: Boolean,
+      isList: Boolean,
+      typeIdentifier: ScalarTypeIdentifier
+  ): DBIO[_] = {
     val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, isList, typeIdentifier)
     val uniqueAction = isUnique match {
       case true  => addUniqueConstraint(projectId, tableName, columnName, typeIdentifier)

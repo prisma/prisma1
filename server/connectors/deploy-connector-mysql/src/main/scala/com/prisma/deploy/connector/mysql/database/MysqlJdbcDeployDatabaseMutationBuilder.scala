@@ -110,18 +110,15 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    val removeIdColumn = if (previousRelation.relationTableHas3Columns && !nextRelation.relationTableHas3Columns) {
-      previousRelation.manifestation match {
-        case None                                         => deleteColumn(projectId, previousRelation.relationTableName, "id")
-        case Some(RelationTable(_, _, _, Some(idColumn))) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
-        case _                                            => sys.error("Must not happen")
-      }
-    } else {
-      DBIO.successful(())
+    val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
+      case (Some(idColumn), None) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
+      case (None, Some(idColumn)) => sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+                                            ADD COLUMN `#$idColumn` varchar(40) default null"""
+      case _                      => DBIO.successful(())
     }
 
     DBIO.seq(
-      removeIdColumn,
+      addOrRemoveIdColumn,
       updateColumn(
         projectId = projectId,
         tableName = previousRelation.relationTableName,
