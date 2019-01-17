@@ -37,7 +37,6 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
       grant.map(_.action).orNull
     )
 
-    debug(buffer)
     throwOnError(buffer)
 
     val dataString = buffer.data.getString(0)
@@ -56,7 +55,6 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
         expectedGrant.map(_.action).orNull
       )
 
-      debug(buffer)
       throwOnError(buffer)
 
       if (buffer.data_len.intValue() > 1) {
@@ -80,9 +78,5 @@ case class JnaAuth(algorithm: Algorithm) extends Auth {
 
       throw AuthFailure(errorString.capitalize)
     }
-  }
-
-  private def debug(buffer: ProtocolBufferJna): Unit = {
-    println(s"[JNA][Debug] $buffer")
   }
 }
