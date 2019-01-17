@@ -42,6 +42,7 @@ class Relation(
   lazy val modelBField: RelationField                        = modelB.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.B)).get
   lazy val hasManifestation: Boolean                         = manifestation.isDefined
   lazy val isInlineRelation: Boolean                         = manifestation.exists(_.isInstanceOf[EmbeddedRelationLink])
+  lazy val isRelationTable: Boolean                          = manifestation.exists(_.isInstanceOf[RelationTable])
   lazy val inlineManifestation: Option[EmbeddedRelationLink] = manifestation.collect { case x: EmbeddedRelationLink => x }
 
   lazy val relationTableName = manifestation match {

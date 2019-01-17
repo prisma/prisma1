@@ -2,7 +2,8 @@ package com.prisma.deploy.migration
 
 import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, Tables}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
-import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
+import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability, RelationLinkTableCapability, UuidIdCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
@@ -450,6 +451,64 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     relationTable.column("myId") should be(empty)
   }
 
+  "migrating from a normal link table to a legacy link table should error" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @linkTable {
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val initialResult        = deploy(initialDataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val initialRelationTable = initialResult.table_!("CustomLinkTable")
+    initialRelationTable.columns should have(size(2))
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @linkTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myId: ID! @id
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("CustomLinkTable")
+    error.field should be(Some("myId"))
+    error.description should be("Adding an id field to an existing link table is forbidden.")
+
+    val result        = inspect
+    val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(2))
+    relationTable.column("myId") should be(empty)
+  }
+
   "switching models in a link table must work" in {
     val capas = ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability)
     val initialDataModel =
@@ -834,7 +893,36 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     project = testDependencies.projectPersistence.load(serviceId).await.get
   }
 
+  def deployThatMustError(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Vector[DeployError] = {
+    deployInternal(dataModel, capabilities) match {
+      case MutationSuccess(result) =>
+        if (result.errors.isEmpty) {
+          sys.error(s"Deploy returned no errors which is unexpected.")
+        } else {
+          result.errors.toVector
+        }
+      case MutationError =>
+        sys.error("Deploy returned an unexpected error")
+    }
+  }
+
   def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
+    deployInternal(dataModel, capabilities) match {
+      case MutationSuccess(result) =>
+        if (result.errors.nonEmpty) {
+          sys.error(s"Deploy returned unexpected errors: ${result.errors}")
+        } else {
+          inspect
+        }
+      case MutationError =>
+        sys.error("Deploy returned an unexpected error")
+    }
+  }
+
+  private def deployInternal(
+      dataModel: String,
+      capabilities: ConnectorCapabilities = ConnectorCapabilities.empty
+  ): MutationResult[DeployMutationPayload] = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = name,
@@ -865,17 +953,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       isActive = true
     )
 
-    val result = mutation.execute.await
-    result match {
-      case MutationSuccess(result) =>
-        if (result.errors.nonEmpty) {
-          sys.error(s"Deploy returned unexpected errors: ${result.errors}")
-        } else {
-          inspect
-        }
-      case MutationError =>
-        sys.error("Deploy returned an unexpected error")
-    }
+    mutation.execute.await
   }
 
   def inspect: Tables = {
