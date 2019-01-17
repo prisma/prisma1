@@ -73,7 +73,7 @@ case class PostgresDeployConnector(
   override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('$')
 
   override def internalMigrationPersistence: InternalMigrationPersistence = JdbcInternalMigrationPersistence(managementDatabases.primary)
-  override def internalMigrationApplier: InternalMigrationApplier         = JdbcInternalMigrationApplier(projectDatabases.primary)
+  override def internalMigrationApplier: InternalMigrationApplier         = JdbcInternalMigrationApplier(projectDatabases.primary, testFacilities.inspector)
 
   override def initialize(): Future[Unit] = {
     // We're ignoring failures for createDatabaseAction as there is no "create if not exists" in psql

@@ -60,7 +60,9 @@ case class JdbcInternalMigrationPersistence(slickDatabase: SlickDatabase)(implic
       readResult = { rs =>
         val buffer = ArrayBuffer.empty[InternalMigration]
         while (rs.next()) {
-          buffer += internalMigrationFromResultSet(rs)
+          internalMigrationFromResultSet(rs).foreach { mig =>
+            buffer += mig
+          }
         }
 
         buffer.toVector
@@ -69,8 +71,8 @@ case class JdbcInternalMigrationPersistence(slickDatabase: SlickDatabase)(implic
     database.run(action)
   }
 
-  private def internalMigrationFromResultSet(rs: ResultSet): InternalMigration = {
-    InternalMigration.withName(rs.getString(idColumn.getName))
+  private def internalMigrationFromResultSet(rs: ResultSet): Option[InternalMigration] = {
+    InternalMigration.withNameOption(rs.getString(idColumn.getName))
   }
 
 }

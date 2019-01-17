@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.jdbc
 import com.prisma.connector.shared.jdbc.SlickDatabase
-import com.prisma.deploy.connector.InternalMigrationApplier
+import com.prisma.deploy.connector.{DatabaseInspector, InternalMigrationApplier, Tables}
 import com.prisma.deploy.connector.persistence.InternalMigration
 import com.prisma.shared.models.Project
 import slick.dbio.DBIO
@@ -8,27 +8,41 @@ import org.jooq.impl.DSL._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class JdbcInternalMigrationApplier(slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcBase with InternalMigrationApplier {
+case class JdbcInternalMigrationApplier(
+    slickDatabase: SlickDatabase,
+    databaseInspector: DatabaseInspector
+)(implicit ec: ExecutionContext)
+    extends JdbcBase
+    with InternalMigrationApplier {
 
   def apply(internalMigration: InternalMigration, project: Project): Future[Unit] = {
-    val action = internalMigration match {
+    internalMigration match {
       case InternalMigration.RemoveIdColumnFromRelationTables =>
-        removeIdColumnFromRelationTables(project)
+        for {
+          databaseSchema <- databaseInspector.inspect(project.id)
+          _              <- slickDatabase.database.run(removeIdColumnFromRelationTables(project, databaseSchema))
+        } yield ()
+
     }
-    slickDatabase.database.run(action)
   }
 
-  def removeIdColumnFromRelationTables(project: Project): DBIO[Unit] = {
+  def removeIdColumnFromRelationTables(project: Project, databaseSchema: Tables): DBIO[Unit] = {
     val actions = for {
       relation <- project.relations
       if !relation.hasManifestation
     } yield {
-      val query = sql
-        .alterTable(table(name(project.id, relation.relationTableName)))
-        .drop(field("id"))
+      databaseSchema.table(relation.relationTableName).flatMap(_.column("id")) match {
+        case Some(idColumn) =>
+          val query = sql
+            .alterTable(table(name(project.id, relation.relationTableName)))
+            .drop(field(idColumn.name))
 
-      changeDatabaseQueryToDBIO(query)()
+          changeDatabaseQueryToDBIO(query)()
+
+        case None =>
+          DBIO.successful(())
+      }
     }
-    DBIO.seq(actions: _*)
+    DBIO.seq(actions: _*).withPinnedSession
   }
 }

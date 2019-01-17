@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.mysql
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
+import com.prisma.deploy.connector.jdbc.{DatabaseInspectorImpl, JdbcInternalMigrationApplier}
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence._
 import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
@@ -36,7 +36,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
 
   override def internalMigrationPersistence: InternalMigrationPersistence = JdbcInternalMigrationPersistence(databases.primary)
-  override def internalMigrationApplier: InternalMigrationApplier         = ???
+  override def internalMigrationApplier: InternalMigrationApplier         = JdbcInternalMigrationApplier(databases.primary, testFacilities.inspector)
   override def capabilities                                               = ConnectorCapabilities.mysql
 
   override def createProjectDatabase(id: String): Future[Unit] = {

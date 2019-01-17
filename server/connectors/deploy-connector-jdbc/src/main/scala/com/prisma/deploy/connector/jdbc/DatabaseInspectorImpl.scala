@@ -20,7 +20,7 @@ case class DatabaseInspectorImpl(db: JdbcProfile#Backend#Database)(implicit ec: 
       // we therefore have one additional filter step
       potentialTables <- MTable.getTables(cat = None, schemaPattern = None, namePattern = None, types = None)
       mTables         = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
-      tables          <- DBIO.sequence(mTables.map(mTableToModel))
+      tables          <- DBIO.sequence(mTables.map(mTableToModel)).withPinnedSession
     } yield {
       Tables(tables)
     }
