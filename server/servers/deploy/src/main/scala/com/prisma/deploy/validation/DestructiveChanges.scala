@@ -260,9 +260,9 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     // todo cardinality change
     val previousRelation = previousSchema.getRelationByName_!(x.name)
     val nextRelation     = nextSchema.getRelationByName_!(x.finalName)
-    if (previousRelation.isRelationTable && !previousRelation.relationTableHas3Columns) {
-      nextRelation.manifestation match {
-        case Some(RelationTable(_, _, _, Some(idColumn))) =>
+    if (previousRelation.isRelationTable && nextRelation.isRelationTable) {
+      (previousRelation.idColumn, nextRelation.idColumn) match {
+        case (None, Some(idColumn)) =>
           val error = DeployError(previousRelation.name, "Adding an id field to an existing link table is forbidden.", Some(idColumn))
           Future.successful(Vector(error))
         case _ =>
