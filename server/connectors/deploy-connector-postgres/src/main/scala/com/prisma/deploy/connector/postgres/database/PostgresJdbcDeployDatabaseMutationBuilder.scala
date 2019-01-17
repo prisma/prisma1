@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.postgres.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
+import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.{Model, Project, Relation}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.utils.boolean.BooleanUtils
@@ -66,22 +67,36 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       projectId: String,
       relation: Relation
   ): DBIO[_] = {
-    val relationTableName = relation.relationTableName
-    val modelA            = relation.modelA
-    val modelB            = relation.modelB
-    val modelAColumn      = relation.modelAColumn
-    val modelBColumn      = relation.modelBColumn
-    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
-    val tableCreate       = sqlu"""
+    val relationTableName                   = relation.relationTableName
+    val modelA                              = relation.modelA
+    val modelB                              = relation.modelB
+    val modelAColumn                        = relation.modelAColumn
+    val modelBColumn                        = relation.modelBColumn
+    val aColSql                             = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
+    val bColSql                             = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    def legacyTableCreate(idColumn: String) = sqlu"""
                         CREATE TABLE #${qualify(projectId, relationTableName)} (
-                            "id" CHAR(25) NOT NULL,
-                            PRIMARY KEY ("id"),
+                            "#$idColumn" CHAR(25) NOT NULL,
+                            PRIMARY KEY ("#$idColumn"),
                             #$aColSql,
                             #$bColSql,
                             FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
                             FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(projectId, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
+
+    val modernTableCreate = sqlu"""
+                        CREATE TABLE #${qualify(projectId, relationTableName)} (
+                            #$aColSql,
+                            #$bColSql,
+                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(projectId, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                        );"""
+
+    val tableCreate = relation.manifestation match {
+      case None                                         => legacyTableCreate("id")
+      case Some(RelationTable(_, _, _, Some(idColumn))) => legacyTableCreate(idColumn)
+      case _                                            => modernTableCreate
+    }
 
     val indexCreate =
       sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""

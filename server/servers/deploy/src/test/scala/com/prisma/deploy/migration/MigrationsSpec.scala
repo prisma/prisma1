@@ -252,7 +252,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column_!("b").foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
-  "adding a plain many to many relation should result in our plain relation table" in {
+  "adding a plain many to many relation should result in a plain relation table" in {
     val dataModel =
       """
         |type A {
@@ -268,8 +268,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val result        = deploy(dataModel)
     val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -294,8 +293,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
     val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.Int)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -325,8 +323,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
     val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -358,8 +355,41 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
     val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(2))
+    val aColumn = relationTable.column_!("myA")
+    aColumn.typeIdentifier should be(TI.String)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("myB")
+    bColumn.typeIdentifier should be(TI.Int)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
+  "providing an explicit legacy link table must work" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @linkTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myId: ID! @id
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val relationTable = result.table_!("CustomLinkTable")
     relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    relationTable.column_!("myId").typeIdentifier should be(TI.String)
     val aColumn = relationTable.column_!("myA")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -474,8 +504,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     val result = deploy(dataModel, capas)
     result.table("CustomLinkTable").isDefined should be(false)
     val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
