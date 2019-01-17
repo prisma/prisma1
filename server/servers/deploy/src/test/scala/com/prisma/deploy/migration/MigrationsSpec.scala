@@ -841,7 +841,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       stage = stage,
       types = dataModel,
       dryRun = None,
-      force = None,
+      force = Some(true),
       secrets = Vector.empty,
       functions = Vector.empty,
       noMigration = None
