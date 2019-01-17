@@ -2,6 +2,7 @@ package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.migration.DirectiveTypes.RelationDBDirective
 import com.prisma.gc_values.GCValue
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.OnDelete.OnDelete
 import com.prisma.shared.models.{FieldBehaviour, RelationStrategy, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
@@ -66,7 +67,12 @@ case class ScalarPrismaField(
     behaviour: Option[FieldBehaviour],
     isHidden: Boolean = false
 )(val tpe: PrismaType)
-    extends PrismaField
+    extends PrismaField {
+  def isId: Boolean = behaviour.exists {
+    case IdBehaviour(_, _) => true
+    case _                 => false
+  }
+}
 
 case class EnumPrismaField(
     name: String,

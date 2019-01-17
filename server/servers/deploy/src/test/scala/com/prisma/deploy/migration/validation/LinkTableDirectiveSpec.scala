@@ -123,4 +123,70 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
     error.field should be(None)
     error.description should be("The link table `MyRelation` is not referencing the right types.")
   }
+
+  "should error if the link table provides superfluous scalar fields" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  A: Model!
+        |  B: Model!
+        |  field: Int!
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("ModelToModelRelation")
+    error.field should be(Some("field"))
+    error.description should be("A link table must not specify any additional scalar fields.")
+  }
+
+  "should error if the link table provides superfluous relation fields" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  A: Model!
+        |  B: Model!
+        |  C: Model!
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("ModelToModelRelation")
+    error.field should be(None)
+    error.description should be("A link must specify exactly two relation fields.")
+  }
+
+  "should succeed for legacy style relation tables" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  id: ID! @id
+        |  A: Model!
+        |  B: Model!
+        |}
+      """.stripMargin
+
+    val dataModel         = validate(dataModelString, Set(RelationLinkTableCapability))
+    val relationTableType = dataModel.type_!("ModelToModelRelation")
+    relationTableType.isRelationTable should be(true)
+  }
 }
