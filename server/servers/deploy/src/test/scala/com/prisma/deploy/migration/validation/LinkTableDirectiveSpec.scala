@@ -197,7 +197,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
     warning.`type` should be("ModelToModelRelation")
     warning.field should be(Some("id"))
     warning.description should be(
-      "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column. ")
+      "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column.")
   }
 
   "should error for if the id field does not have the ID type" in {
