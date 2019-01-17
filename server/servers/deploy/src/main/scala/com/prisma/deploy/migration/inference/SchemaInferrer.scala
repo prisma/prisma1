@@ -354,7 +354,13 @@ case class SchemaInferrerImpl(
               relationTable.relationFields.find(_.referencesType == modelB).get
             }
 
-            Some(RelationTable(table = relationTable.finalTableName, modelAColumn = modelAColumn.finalDbName, modelBColumn = modelBColumn.finalDbName))
+            Some(
+              RelationTable(
+                table = relationTable.finalTableName,
+                modelAColumn = modelAColumn.finalDbName,
+                modelBColumn = modelBColumn.finalDbName,
+                idColumn = relationTable.scalarFields.find(_.isId).map(_.finalDbName)
+              ))
           case None =>
             Some(RelationTable(table = relationName, modelAColumn = "A", modelBColumn = "B"))
         }

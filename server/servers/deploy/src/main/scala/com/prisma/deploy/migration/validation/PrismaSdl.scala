@@ -34,6 +34,8 @@ case class PrismaType(
   val fields: Vector[PrismaField] = fieldFn.map(_.apply(this))
 
   val relationFields = fields.collect { case x: RelationalPrismaField => x }
+  val scalarFields   = fields.collect { case x: ScalarPrismaField     => x }
+  val enumFields     = fields.collect { case x: EnumPrismaField       => x }
   val nonRelationFields = fields.collect {
     case x: EnumPrismaField   => x
     case y: ScalarPrismaField => y
@@ -68,6 +70,8 @@ case class ScalarPrismaField(
     isHidden: Boolean = false
 )(val tpe: PrismaType)
     extends PrismaField {
+  def finalDbName = columnName.getOrElse(name)
+
   def isId: Boolean = behaviour.exists {
     case IdBehaviour(_, _) => true
     case _                 => false
