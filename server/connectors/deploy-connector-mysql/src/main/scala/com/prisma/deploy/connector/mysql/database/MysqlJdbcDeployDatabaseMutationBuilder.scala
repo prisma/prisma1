@@ -2,6 +2,7 @@ package com.prisma.deploy.connector.mysql.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
+import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.utils.boolean.BooleanUtils
@@ -74,23 +75,53 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val modelBColumn      = relation.modelBColumn
     val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
     val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
-    val idSql             = typeMapper.rawSQLFromParts("id", isRequired = true, isList = false, TypeIdentifier.Cuid)
 
-    sqlu"""
+    def legacyTableCreate(idColumn: String) = {
+      val idSql = typeMapper.rawSQLFromParts(idColumn, isRequired = true, isList = false, TypeIdentifier.Cuid)
+      sqlu"""
          CREATE TABLE #${qualify(projectId, relationTableName)} (
            #$idSql,
-           PRIMARY KEY (`id`),
-           UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+           PRIMARY KEY (`#$idColumn`),
+           UNIQUE INDEX `id_UNIQUE` (`#$idColumn` ASC),
            #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
            #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
            UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
            FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
-           DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"""
+           DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      """
+    }
+
+    val modernTableCreate = sqlu"""
+         CREATE TABLE #${qualify(projectId, relationTableName)} (
+           #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
+           #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
+           UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
+           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
+           DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      """
+
+    relation.manifestation match {
+      case None                                         => legacyTableCreate("id")
+      case Some(RelationTable(_, _, _, Some(idColumn))) => legacyTableCreate(idColumn)
+      case _                                            => modernTableCreate
+    }
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
+    val removeIdColumn = if (previousRelation.relationTableHas3Columns && !nextRelation.relationTableHas3Columns) {
+      previousRelation.manifestation match {
+        case None                                         => deleteColumn(projectId, previousRelation.relationTableName, "id")
+        case Some(RelationTable(_, _, _, Some(idColumn))) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
+        case _                                            => sys.error("Must not happen")
+      }
+    } else {
+      DBIO.successful(())
+    }
+
     DBIO.seq(
+      removeIdColumn,
       updateColumn(
         projectId = projectId,
         tableName = previousRelation.relationTableName,
