@@ -151,6 +151,7 @@ class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String]
     case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(mutaction = m)
     case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(mutaction = m)
     case m: NestedConnect     => NestedConnectInterpreter(mutaction = m)
+    case m: NestedSet         => NestedSetInterpreter(mutaction = m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(mutaction = m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(mutaction = m)
     case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(mutaction = m)

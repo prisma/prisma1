@@ -22,7 +22,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
 
@@ -116,6 +116,6 @@ case class SQLiteDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionC
 
   override def testFacilities() = {
     val db = internalDatabaseDefs.databases(root = true)
-    DeployTestFacilites(DatabaseInspectorImpl(db.primary.database))
+    DeployTestFacilites(DatabaseInspectorImpl(db.primary))
   }
 }

@@ -32,7 +32,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def modelIdColumn(model: Model)                                            = field(name(schemaName, model.dbName, model.dbNameOfIdField_!))
   def modelIdColumn(alias: String, model: Model)                             = field(name(alias, model.idField_!.dbName))
   def relationColumn(relation: Relation, side: RelationSide.Value)           = field(name(schemaName, relation.relationTableName, relation.columnForRelationSide(side)))
-  def relationIdColumn(relation: Relation)                                   = field(name(schemaName, relation.relationTableName, "id"))
+  def relationIdColumn(relation: Relation)                                   = field(name(schemaName, relation.relationTableName, relation.idColumn_!))
   def inlineRelationColumn(relation: Relation, mani: EmbeddedRelationLink)   = field(name(schemaName, relation.relationTableName, mani.referencingColumn))
   def scalarListColumn(scalarField: ScalarField, column: String)             = field(name(schemaName, scalarListTableName(scalarField), column))
   def column(table: String, column: String)                                  = field(name(schemaName, table, column))

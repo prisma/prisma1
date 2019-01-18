@@ -178,7 +178,8 @@ case class SchemaBuilderImpl(
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("errors", ListType(DeployErrorType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.errors),
         Field("migration", OptionType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration),
-        Field("warnings", ListType(DeployWarningType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.warnings)
+        Field("warnings", ListType(DeployWarningType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.warnings),
+        Field("steps", ListType(MigrationStepType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.steps),
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {

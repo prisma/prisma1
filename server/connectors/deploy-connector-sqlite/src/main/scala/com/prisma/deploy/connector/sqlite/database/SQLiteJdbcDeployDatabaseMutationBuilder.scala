@@ -254,7 +254,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(projectId, s"${columnName}_UNIQUE")} ON #${qualify(tableName)} (#${qualify(columnName)} ASC)"
   }
 
-  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_] = {
-    sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(s"${columnName}_UNIQUE")}"
+  override def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_] = {
+    sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(indexName)}"
   }
 }

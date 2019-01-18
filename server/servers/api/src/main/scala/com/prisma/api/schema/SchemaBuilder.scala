@@ -8,7 +8,7 @@ import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnectio
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.StringIdGCValue
 import com.prisma.shared.models.ConnectorCapability.NodeQueryCapability
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model, Project}
+import com.prisma.shared.models.{Field => _, Schema => _, _}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
@@ -306,12 +306,13 @@ case class SchemaBuilderImpl(
       for {
         _         <- Future.unit
         idGcValue = StringIdGCValue(id)
-        modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
-        resultOpt <- modelOpt match {
-                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model))
-                      case None        => Future.successful(None)
-                    }
-      } yield resultOpt
+        modelsWithStringIds = project.models.filter { model =>
+          val ti = model.idField_!.typeIdentifier
+          ti == TypeIdentifier.String || ti == TypeIdentifier.Cuid || ti == TypeIdentifier.UUID
+        }
+        results = modelsWithStringIds.map(model => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model)))
+        results <- Future.sequence(results)
+      } yield results.flatten.headOption
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

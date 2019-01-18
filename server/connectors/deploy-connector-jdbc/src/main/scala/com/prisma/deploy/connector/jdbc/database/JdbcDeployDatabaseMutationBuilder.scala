@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
@@ -24,7 +25,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def deleteProjectDatabase(projectId: String): DBIO[_]
   def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
   def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
-  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_]
+  def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_]
 
   def createModelTable(projectId: String, model: Model): DBIO[_]
   def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
@@ -76,9 +77,15 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     changeDatabaseQueryToDBIO(query)()
   }
 
-  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = {
-    val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
-    changeDatabaseQueryToDBIO(query)()
+  def dropScalarListTable(projectId: String, modelName: String, fieldName: String, dbSchema: DatabaseSchema) = {
+    val tableName = s"${modelName}_$fieldName"
+    dbSchema.table(tableName) match {
+      case Some(_) =>
+        val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
+        changeDatabaseQueryToDBIO(query)()
+      case None =>
+        DBIO.successful(())
+    }
   }
 
   def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {

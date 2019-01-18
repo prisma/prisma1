@@ -1,0 +1,391 @@
+import Code from "components/Markdown/Code"
+import Icon from 'components/Markdown/Icon'
+
+export const meta = {
+  title: "Prisma & Sequelize",
+  position: 70,
+  description: "Learn how Prisma compares to Sequelize"
+}
+
+## Overview
+
+This page compares Prisma with [Sequelize](http://docs.sequelizejs.com/). Here is a high-level overview:
+
+|  | Prisma | Sequelize |
+| --- | --- | --- |
+| Auto-generated DB client | <Icon type="check" /> |  <Icon type="cross" /> |
+| Type-safe | <Icon type="check" /> |  <Icon type="cross" /> |
+| Declarative data modelling & migrations | <Icon type="check" /> |  <Icon type="cross" /> |
+| Connection pooling | <Icon type="check" /> | <Icon type="check" /> |
+| Supported DB types | Document & Relational |  Relational |
+| Supported ORM patterns | DataMapper |  ActiveRecord |
+| [Fluent API for relations](#fetching-relations) | <Icon type="check" /> |  <Icon type="cross" /> |
+| [Relation filters](#relation-filters) | <Icon type="check" /> |  <Icon type="cross" /> |
+| Raw database access | <Icon type="check" /> | <Icon type="check" /> |
+| Transactional nested writes | <Icon type="check" /> | <Icon type="check" /> |
+| Manual transactions |  <Icon type="cross" /> | <Icon type="check" /> |
+
+In the following, you find a detailled comparison of the Sequelize and Prisma APIs.
+
+## Fetching single objects
+
+**Prisma**
+
+```ts
+const user = await prisma.user({ id })
+```
+
+**Sequelize**
+
+```ts
+const user = await User.findByPk(id)
+```
+
+## Fetching selected scalars of single objects
+
+**Prisma**
+
+```ts
+const userFragment = await prisma.user({ id }).$fragment(`
+  fragment NameAndEmail on User { id email }`
+`)
+```
+
+**Sequelize**
+
+```ts
+const user = await User.findByPk(id, attributes: {
+  ["name", "email"]
+})
+```
+
+## Fetching relations
+
+**Prisma**
+
+<Code hideCopy={true} languages={["Fluent API", "Using fragments", "Native GraphQL"]}>
+
+```ts
+const postsByUser = await prisma
+  .user({ id })
+  .posts()
+```
+
+```ts
+const userWithPosts = await prisma
+  .user({ id })
+  .$fragment(`
+    fragment UserPosts on User {
+      posts { id title content published }
+    }
+  `)
+```
+
+```ts
+const userWithPosts = await prisma
+  .$graphql(`
+    query ($id: ID!) {
+      user(id: $id) {
+        posts { id title content published }
+      }
+    }
+  `, 
+  { id }
+  )
+```
+
+</Code>
+
+**Sequelize**
+
+```ts
+const user = await User.findByPk(id, {
+  include: [{
+    model: Post
+  }]
+})
+```
+
+## Filtering for concrete values
+
+**Prisma**
+
+```ts
+const users = await prisma.users({
+  where: {
+    name: "Alice"
+  }
+})
+```
+
+**Sequelize**
+
+```ts
+const user = User.findAll({
+  where: {
+    name: "Alice"
+  }
+})
+```
+
+## Other filter criteria
+
+**Prisma**
+
+Prisma generates many additional filters that are commonly used in modern application development:
+
+- `<field>_ends_with` & `<field>_starts_with`
+- `<field>_not_ends_with` & `<field>_not_starts_with`
+- `<field>_gt` & `<field>_gte`
+- `<field>_lt` & `<field>_lte`
+- `<field>_contains` & `<field>_not_contains`
+- `<field>_in` & `<field>_not_in`
+
+**Sequelize**
+
+Sequelize has an extensive set of operators to be found [here](http://docs.sequelizejs.com/manual/tutorial/querying.html#operators).
+
+## Relation filters
+
+**Prisma**
+
+Prisma lets you filter a list based on a criteria that applies not only to the models of the list being retrieved, but to a _relation_ of that model. 
+
+For example, you want to fetch only those users that wrote a post with the title "Hello World":
+
+```ts
+query {
+  user(where: {
+    posts_some: {
+      title: "Hello World"
+    }
+  }) {
+    id
+  }
+}
+```
+
+**Sequelize**
+
+Sequelize doesn't offer a dedicated API for relation filters. You can get similar functionality by sending a raw SQL query to the database.
+
+## Pagination
+
+**Prisma**
+
+```ts
+const posts = await prisma.posts({
+  skip: 5,
+  first: 10
+})
+```
+
+In addition to `skip` and `first`, the Prisma API also offers:
+
+- `last`
+- `before` & `after` for cursor based pagination
+- Relay-style pagination
+
+**Sequelize**
+
+```ts
+const posts = await Post.findAll({ 
+  offset: 5, 
+  limit: 10 
+})
+```
+
+## Creating objects
+
+**Prisma**
+
+```ts
+const user = await prisma.createUser({
+  name: "Alice",
+  email: "alice@prisma.io"
+})
+```
+
+**Sequelize**
+
+<Code hideCopy={true} languages={["Using `save`", "Using `create`"]}>
+
+```ts
+const user = User.build({
+  name: "Alice",
+  email: "alice@prisma,io"
+})
+await user.save()
+```
+
+```ts
+const user = await User.create({
+  name: "Alice",
+  email: "alice@prisma,io"
+})
+```
+
+</Code>
+
+## Updating objects
+
+**Prisma**
+
+```ts
+const updatedUser = await prisma.updateUser({
+  where: { id },
+  data: {
+    name: "James",
+    email: "james@prisma.io"
+  }
+})
+```
+
+**Sequelize**
+
+<Code hideCopy={true} languages={["Using `save`", "Using `update`"]}>
+
+```ts
+user.name = "James"
+user.email =" alice@prisma.com"
+await user.save()
+```
+
+```ts
+await user.update({
+  name: "James",
+  email: "james@prisma.io"
+})
+```
+
+</Code>
+
+## Deleting objects
+
+**Prisma**
+
+```ts
+const deletedUser = await prisma.deleteUser({ id })
+```
+
+**Sequelize**
+
+```ts
+await user.destroy()
+```
+
+## Batch updates
+
+**Prisma**
+
+```ts
+const updatedUsers = await prisma
+  .updateManyUsers({
+    data: { role: "ADMIN" },
+    where: {
+      email_ends_with: "@prisma.io"
+    }
+  })
+```
+
+**Sequelize**
+
+```ts
+const updatedUsers = await User.update({ 
+  { role: "Admin" },
+  where: {
+    email: {
+      [Op.like]: "%@prisma.io"
+    }
+  },
+})
+```
+
+## Batch deletes
+
+**Prisma**
+
+```ts
+await prisma.deleteManyUsers({
+  id_in: [id1, id2, id3]
+})
+```
+
+**Sequelize**
+
+```ts
+await User.destroy({
+  where: {
+    id: {
+      [Op.in]: [id1, id2, id3]
+    }
+  }
+})
+```
+
+## Transactions
+
+**Prisma**
+
+```ts
+const newUser = await prisma.createUser({
+  name: "Bob",
+  email: "bob@prisma.io",
+  posts: {
+    create: [
+      { title: "Join us for GraphQL Conf in 2019" },
+      { title: "Subscribe to GraphQL Weekly for GraphQL news" }
+    ]
+  }
+})
+```
+
+
+**Sequelize**
+
+<Code hideCopy={true} languages={["Manual", "Automatic"]}>
+
+```ts
+return sequelize.transaction(async t => {
+  const user = await User.create({
+    name: "Alice",
+    email: "alice@prisma,io"
+  }, { 
+    transaction: t 
+  })
+  const post1 = await Post.create({
+    title: "Join us for GraphQL Conf in 2019"
+  }, { 
+    transaction: t 
+  })
+  const post2 = await Post.create({
+    title: "Subscribe to GraphQL Weekly for GraphQL news"
+  }, { 
+    transaction: t 
+  })
+  await user.setPosts([post1, post2])
+})
+```
+
+```ts
+return sequelize.transaction(async transaction => {
+  try {
+      const user = await User.create({
+      name: "Alice",
+      email: "alice@prisma,io"
+    })
+    const post1 = await Post.create({
+      title: "Join us for GraphQL Conf in 2019"
+    })
+    const post2 = await Post.create({
+      title: "Subscribe to GraphQL Weekly for GraphQL news"
+    })
+    await user.setPosts([post1, post2])
+  } catch(e) {
+    return t.rollback()
+  }
+})
+```
+
+</Code>
+

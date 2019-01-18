@@ -7,7 +7,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Pro
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
+case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = PostgresDatabasesFactory.initialize(config)
 
   override def initialize() = {
@@ -22,9 +22,18 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean)(impli
     } yield ()
   }
 
-  override val databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, isActive, schemaName = config.schema)
-  override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
-  override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
-  override def projectIdEncoder: ProjectIdEncoder                       = ProjectIdEncoder('$')
-  override val capabilities                                             = ConnectorCapabilities.postgres(isActive)
+  override val databaseMutactionExecutor = {
+    val manageRelayIds = if (isPrototype) false else isActive
+    JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds, schemaName = config.schema)
+  }
+  override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
+  override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
+  override def projectIdEncoder: ProjectIdEncoder   = ProjectIdEncoder('$')
+  override val capabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.postgresPrototype
+    } else {
+      ConnectorCapabilities.postgres(isActive = isActive)
+    }
+  }
 }

@@ -18,12 +18,19 @@ import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
-    isActive: Boolean
+    isActive: Boolean,
+    isPrototype: Boolean
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: ConnectorCapabilities           = ConnectorCapabilities.postgres(isActive)
+  override def capabilities: ConnectorCapabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.postgresPrototype
+    } else {
+      ConnectorCapabilities.postgres(isActive = isActive)
+    }
+  }
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
   lazy val setupDatabases      = internalDatabases.setupDatabase
@@ -93,7 +100,7 @@ case class PostgresDeployConnector(
     if (isActive) {
       EmptyDatabaseIntrospectionInferrer
     } else {
-      val schema = dbConfig.schema.getOrElse(projectId).toLowerCase
+      val schema = dbConfig.schema.getOrElse(projectId)
       DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
     }
   }
@@ -123,5 +130,5 @@ case class PostgresDeployConnector(
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 
-  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabase))
+  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabases.primary))
 }

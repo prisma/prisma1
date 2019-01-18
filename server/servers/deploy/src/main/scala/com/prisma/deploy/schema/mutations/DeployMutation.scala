@@ -7,6 +7,7 @@ import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
+import com.prisma.deploy.schema.types.MigrationStepType.MigrationStepAndSchema
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
@@ -51,32 +52,42 @@ case class DeployMutation(
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     internalExecute.map {
       case Good(payload) => MutationSuccess(payload)
-      case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty))
+      case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty, steps = Vector.empty))
     }
   }
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
-      prismaSdl          <- FutureOr(validateSyntax)
-      schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-      inferredTables     <- FutureOr(inferTables)
-      inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
-      _                  <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-      functions          <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
-      steps              <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
-      warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      validationResult    <- FutureOr(validateSyntax)
+      schemaMapping       = schemaMapper.createMapping(graphQlSdl)
+      inferredTables      <- FutureOr(inferTables)
+      inferredNextSchema  = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
+      _                   <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
+      functions           <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
+      steps               <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
+      destructiveWarnings <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      warnings            = validationResult.warnings ++ destructiveWarnings
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
-                 case (_, true)      => FutureOr(performDeployment(inferredNextSchema, steps, functions))
-                 case (true, false)  => FutureOr(performDeployment(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
-                 case (false, false) => FutureOr(Future.successful(Good(DeployMutationPayload(args.clientMutationId, None, errors = Vector.empty, warnings))))
+                 case (_, true)     => FutureOr(performDeployment(inferredNextSchema, steps, functions))
+                 case (true, false) => FutureOr(performDeployment(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
+                 case (false, false) =>
+                   FutureOr(Future.successful(Good {
+                     DeployMutationPayload(
+                       clientMutationId = args.clientMutationId,
+                       migration = None,
+                       errors = Vector.empty,
+                       warnings = warnings,
+                       steps = convertStepsToCorrectType(steps, inferredNextSchema)
+                     )
+                   }))
                }
     } yield result
 
     x.future
   }
 
-  private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
+  private def validateSyntax: Future[DataModelValidationResult Or Vector[DeployError]] = Future.successful {
     val validator = if (capabilities.has(LegacyDataModelCapability)) {
       LegacyDataModelValidator
     } else {
@@ -125,7 +136,14 @@ case class DeployMutation(
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
     } yield {
       invalidationPublisher.publish(Only(project.id), project.id)
-      Good(DeployMutationPayload(args.clientMutationId, migration, errors = Vector.empty, warnings = Vector.empty))
+      Good(
+        DeployMutationPayload(
+          clientMutationId = args.clientMutationId,
+          migration = migration,
+          errors = Vector.empty,
+          warnings = Vector.empty,
+          steps = convertStepsToCorrectType(steps, nextSchema)
+        ))
     }
   }
 
@@ -149,6 +167,10 @@ case class DeployMutation(
   }
 
   private def invalidateSchema(): Unit = invalidationPublisher.publish(Only(project.id), project.id)
+
+  private def convertStepsToCorrectType(steps: Vector[MigrationStep], nextSchema: Schema): Vector[MigrationStepAndSchema[MigrationStep]] = {
+    steps.map(step => MigrationStepAndSchema(step = step, schema = nextSchema, previous = project.schema))
+  }
 }
 
 case class DeployMutationInput(
@@ -159,7 +181,8 @@ case class DeployMutationInput(
     dryRun: Option[Boolean],
     force: Option[Boolean],
     secrets: Vector[String],
-    functions: Vector[FunctionInput]
+    functions: Vector[FunctionInput],
+    noMigration: Option[Boolean]
 ) extends sangria.relay.Mutation
 
 case class FunctionInput(
@@ -178,5 +201,6 @@ case class DeployMutationPayload(
     clientMutationId: Option[String],
     migration: Option[Migration],
     errors: Seq[DeployError],
-    warnings: Seq[DeployWarning]
+    warnings: Seq[DeployWarning],
+    steps: Vector[MigrationStepAndSchema[MigrationStep]]
 ) extends sangria.relay.Mutation

@@ -8,13 +8,14 @@ case class NestedMutations(
     upserts: Vector[UpsertOne],
     deletes: Vector[DeleteOne],
     connects: Vector[ConnectByWhere],
+    sets: Option[Vector[SetByWhere]],
     disconnects: Vector[DisconnectOne],
     updateManys: Vector[NestedUpdateMany],
     deleteManys: Vector[NestedDeleteMany]
 )
 
 object NestedMutations {
-  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
+  def empty = NestedMutations(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, None, Vector.empty, Vector.empty, Vector.empty)
 }
 
 sealed trait NestedMutation
@@ -22,6 +23,7 @@ sealed trait NestedWhere { def where: NodeSelector }
 case class CreateOne(data: CoolArgs) extends NestedMutation
 
 case class ConnectByWhere(where: NodeSelector) extends NestedMutation with NestedWhere
+case class SetByWhere(where: NodeSelector)     extends NestedMutation with NestedWhere
 
 sealed trait UpdateOne                                        extends NestedMutation { def data: CoolArgs }
 case class UpdateByRelation(data: CoolArgs)                   extends UpdateOne

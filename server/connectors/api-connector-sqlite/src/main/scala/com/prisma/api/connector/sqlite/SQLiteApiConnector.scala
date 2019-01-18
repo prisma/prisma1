@@ -7,7 +7,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Pro
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+case class SQLiteApiConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = SQLiteDatabasesFactory.initialize(config)
 
   override def initialize() = {
@@ -22,7 +22,7 @@ case class SQLiteApiConnector(config: DatabaseConfig)(implicit ec: ExecutionCont
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, isActive = true, schemaName = None)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = true, schemaName = None)
   override def dataResolver(project: Project)                       = JdbcDataResolver(project, databases.replica, schemaName = None)(ec)
   override def masterDataResolver(project: Project)                 = JdbcDataResolver(project, databases.primary, schemaName = None)(ec)
 

@@ -19,7 +19,6 @@ export default class Deploy extends Command {
   static topic = 'deploy'
   static description = 'Deploy service changes (or new service)'
   static group = 'general'
-  static allowAnyFlags = true
   static help = `
   
   ${chalk.green.bold('Examples:')}

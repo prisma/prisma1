@@ -55,7 +55,7 @@ object ConnectorCapabilities extends BooleanUtils {
 
   import com.prisma.shared.models.ConnectorCapability._
 
-  def mysql: ConnectorCapabilities = {
+  lazy val mysql: ConnectorCapabilities = {
     val capas = Set(
       LegacyDataModelCapability,
       TransactionalExecutionCapability,
@@ -87,6 +87,31 @@ object ConnectorCapabilities extends BooleanUtils {
       common ++ Set(SupportsExistingDatabasesCapability)
     }
     ConnectorCapabilities(capas)
+  }
+
+  lazy val postgresPrototype: ConnectorCapabilities = {
+    val capas = sqlPrototype ++ Set(UuidIdCapability)
+    ConnectorCapabilities(capas)
+  }
+
+  lazy val mysqlPrototype: ConnectorCapabilities = {
+    ConnectorCapabilities(sqlPrototype)
+  }
+
+  private lazy val sqlPrototype: Set[ConnectorCapability] = {
+    Set(
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      MigrationsCapability,
+      NonEmbeddedScalarListCapability,
+      NodeQueryCapability,
+      ImportExportCapability,
+      IntrospectionCapability,
+      SupportsExistingDatabasesCapability,
+      IntIdCapability,
+    )
   }
 
   def mongo(isActive: Boolean, isTest: Boolean): ConnectorCapabilities = {
