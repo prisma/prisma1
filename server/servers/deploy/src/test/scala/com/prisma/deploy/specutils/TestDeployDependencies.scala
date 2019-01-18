@@ -14,16 +14,24 @@ import com.prisma.jwt.jna.JnaAuth
 import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.metrics.MetricsRegistry
+import com.prisma.native_jdbc.CustomJdbcDriver
 import com.prisma.shared.models.{ProjectIdEncoder, Schema}
 import org.scalactic.{Bad, Good}
 
 case class TestDeployDependencies()(implicit val system: ActorSystem, val materializer: ActorMaterializer) extends DeployDependencies {
   override implicit def self: DeployDependencies = this
 
-  val config = ConfigLoader.load()
+  val config          = ConfigLoader.load()
+  val useNativeDriver = sys.env.getOrElse("USE_NATIVE_DRIVER", "0") == "1"
+
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
-    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
-    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+    SupportedDrivers.MYSQL -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> (if (useNativeDriver) {
+                                    println("Using native driver for testing")
+                                    CustomJdbcDriver.jna
+                                  } else {
+                                    new org.postgresql.Driver
+                                  })
   )
 
   implicit val reporter: ErrorReporter    = DummyErrorReporter

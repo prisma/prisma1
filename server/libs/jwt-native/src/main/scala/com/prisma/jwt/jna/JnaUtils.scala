@@ -2,7 +2,7 @@ package com.prisma.jwt.jna
 
 import java.nio.charset.Charset
 
-import com.sun.jna.{Memory, Pointer, StringArray}
+import com.sun.jna.{Memory, Pointer}
 
 object JnaUtils {
   val charset = Charset.forName("UTF-8")

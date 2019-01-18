@@ -13,6 +13,7 @@ import com.prisma.jwt.{Algorithm, Auth}
 import com.prisma.messagebus.testkits.InMemoryPubSubTestKit
 import com.prisma.messagebus.{PubSubPublisher, PubSubSubscriber}
 import com.prisma.metrics.MetricsRegistry
+import com.prisma.native_jdbc.CustomJdbcDriver
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 
@@ -23,10 +24,17 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
     with TestApiDependencies {
   override implicit def self: ApiDependencies = this
 
-  val config = ConfigLoader.load()
+  val config          = ConfigLoader.load()
+  val useNativeDriver = sys.env.getOrElse("USE_NATIVE_DRIVER", "0") == "1"
+
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
-    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
-    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+    SupportedDrivers.MYSQL -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> (if (useNativeDriver) {
+                                    println("Using native driver for testing")
+                                    CustomJdbcDriver.jna
+                                  } else {
+                                    new org.postgresql.Driver
+                                  })
   )
 
   override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
