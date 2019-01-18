@@ -9,6 +9,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       val validConfig = """
                           |port: 4466
                           |managementApiSecret: somesecret
+                          |prototype: true
                           |databases:
                           |  default:
                           |    connector: mysql
@@ -28,6 +29,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
 
       config.get.port shouldBe Some(4466)
       config.get.managementApiSecret should contain("somesecret")
+      config.get.prototype should contain(true)
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "mysql"
@@ -59,6 +61,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.isSuccess shouldBe true
       config.get.port should contain(4466)
       config.get.managementApiSecret shouldBe None
+      config.get.prototype shouldBe None
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "mysql"
@@ -218,6 +221,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                         |    uri: $uri
                       """.stripMargin
     val config        = ConfigLoader.tryLoadString(invalidConfig)
+    println(config)
     config.isSuccess shouldBe true
     val db = config.get.databases.head
     db.connector should be("mongo")

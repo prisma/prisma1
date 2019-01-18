@@ -157,7 +157,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
      |, title     text NOT NULL
      |);
      |
-     |CREATE TABLE TodoToList(
+     |CREATE TABLE todotolist (
      |  list_id varchar NOT NULL REFERENCES list (id) ON UPDATE CASCADE,
      |  todo_id varchar NOT NULL REFERENCES todo (id) ON UPDATE CASCADE
      |)

@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.migrator
 
-import com.prisma.deploy.connector.{CreateModelTable, DeployMutaction, DeployMutactionExecutor, MigrationStepMapper}
+import com.prisma.deploy.connector._
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -119,7 +119,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
   def loadMigrationFromDb: Migration = persistence.byId(migration.id).await.get
 
   def migrationApplier(stepMapper: MigrationStepMapper, mutactionExecutor: DeployMutactionExecutor) = {
-    MigrationApplierImpl(persistence, stepMapper, mutactionExecutor)
+    MigrationApplierImpl(persistence, stepMapper, mutactionExecutor, deployConnector.testFacilities.inspector)
   }
 
 //  lazy val succeedingSqlMutactionWithSucceedingRollback = clientSqlMutaction(succeedingStatementResult, rollback = succeedingStatementResult)
@@ -154,9 +154,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     val rollbackPf = rollback
 
     new DeployMutactionExecutor {
-      override def execute(mutaction: DeployMutaction) = doit(executePf, mutaction)
+      override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema) = doit(executePf, mutaction)
 
-      override def rollback(mutaction: DeployMutaction) = doit(rollbackPf, mutaction)
+      override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema) = doit(rollbackPf, mutaction)
 
       def doit(pf: PartialFunction[DeployMutaction, Option[Throwable]], mutaction: DeployMutaction) = {
         pf.lift.apply(mutaction).flatten match {

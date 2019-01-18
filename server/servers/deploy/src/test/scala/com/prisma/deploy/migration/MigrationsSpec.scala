@@ -1,11 +1,12 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, Tables}
+import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
+import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability, RelationLinkTableCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -22,8 +23,11 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  val inspector        = deployConnector.testFacilities.inspector
-  var project: Project = Project(id = serviceId, schema = Schema.empty)
+  val inspector          = deployConnector.testFacilities.inspector
+  var project: Project   = Project(id = serviceId, schema = Schema.empty)
+  lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
+  def isMySql            = slickDatabase.isMySql
+  def isPostgres         = slickDatabase.isPostgres
 
   import system.dispatcher
 
@@ -885,6 +889,36 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     index should be(empty)
   }
 
+  "adding a custom sequence must work" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id(strategy: SEQUENCE) @sequence(name: "My_sequence_for_B" initialValue:101 allocationSize:100)
+        |}
+      """.stripMargin
+    val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
+    val sequence = result.table_!("B").column_!("id").sequence.get
+    if (isPostgres) { // mysql does not support named sequences
+      sequence.name should be("My_sequence_for_B")
+    }
+    sequence.current should be(101)
+  }
+
+  "an id field of type Int implies a sequence" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id(strategy: AUTO)
+        |}
+      """.stripMargin
+    val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
+    val sequence = result.table_!("B").column_!("id").sequence.get
+    if (isPostgres) { // mysql does not support named sequences
+      sequence.name should be("B_id_seq")
+    }
+    sequence.current should be(1)
+  }
+
   def setup() = {
     val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
     deployConnector.deleteProjectDatabase(idAsString).await()
@@ -906,7 +940,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     }
   }
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): DatabaseSchema = {
     deployInternal(dataModel, capabilities) match {
       case MutationSuccess(result) =>
         if (result.errors.nonEmpty) {
@@ -956,7 +990,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     mutation.execute.await
   }
 
-  def inspect: Tables = {
+  def inspect: DatabaseSchema = {
     deployConnector.testFacilities.inspector.inspect(serviceId).await()
   }
 }

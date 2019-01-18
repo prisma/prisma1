@@ -2,9 +2,11 @@ package com.prisma.deploy.connector.postgres.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
+import com.prisma.gc_values.StringGCValue
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.RelationTable
-import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.{Model, Project, Relation}
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -39,15 +41,42 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createModelTable(projectId: String, model: Model): DBIO[_] = {
-    val idField    = model.idField_!
-    val idFieldSQL = typeMapper.rawSQLForField(idField)
+    val idField = model.idField_!
+    val sequence = idField.behaviour.flatMap {
+      case IdBehaviour(_, seq) => seq
+      case _                   => None
+    }
 
-    sqlu"""
+    val idFieldSQL = sequence match {
+      case Some(seq) =>
+        typeMapper.rawSQLFromParts(
+          name = idField.dbName,
+          isRequired = idField.isRequired,
+          isList = false,
+          typeIdentifier = idField.typeIdentifier,
+          defaultValue = Some(StringGCValue(s"""nextval('"$projectId"."${seq.name}"'::regclass)"""))
+        )
+      case None =>
+        typeMapper.rawSQLForField(idField)
+    }
+
+    val createSequenceIfRequired = sequence match {
+      case Some(sequence) =>
+        sqlu"""
+              CREATE SEQUENCE "#$projectId"."#${sequence.name}" START #${sequence.initialValue}
+            """
+      case _ =>
+        DBIO.successful(())
+    }
+
+    val createTable = sqlu"""
          CREATE TABLE #${qualify(projectId, model.dbName)} (
             #$idFieldSQL,
             PRIMARY KEY (#${qualify(idField.dbName)})
          )
       """
+
+    DBIO.seq(createSequenceIfRequired, createTable)
   }
 
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
@@ -197,7 +226,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     sqlu"""CREATE UNIQUE INDEX #${qualify(s"$projectId.$tableName.$columnName._UNIQUE")} ON #${qualify(projectId, tableName)}(#${qualify(columnName)} ASC);"""
   }
 
-  override def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIO[_] = {
-    sqlu"""DROP INDEX #${qualify(projectId, s"$projectId.$tableName.$columnName._UNIQUE")}"""
+  override def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_] = {
+    sqlu"""DROP INDEX #${qualify(projectId, indexName)}"""
   }
 }

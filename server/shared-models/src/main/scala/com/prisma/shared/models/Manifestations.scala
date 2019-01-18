@@ -23,6 +23,9 @@ object FieldBehaviour {
   case class ScalarListBehaviour(strategy: ScalarListStrategy)                    extends FieldBehaviour
 
   case class Sequence(name: String, initialValue: Int, allocationSize: Int)
+  object Sequence {
+    def default(model: String, field: String) = Sequence(s"${model}_${field}_seq", initialValue = 1, allocationSize = 100)
+  }
 
   sealed abstract class IdStrategy(override val entryName: String) extends EnumEntry
   object IdStrategy extends Enumeratum[IdStrategy] {
