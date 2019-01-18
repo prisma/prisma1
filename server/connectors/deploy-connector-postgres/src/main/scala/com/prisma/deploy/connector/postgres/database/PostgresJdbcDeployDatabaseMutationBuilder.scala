@@ -98,12 +98,12 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       case _                                            => modernTableCreate
     }
 
+    // we do not create an index on A because queries for the A column can be satisfied with the combined index as well
     val indexCreate =
       sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
-    val indexA = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_A")} on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC)"""
     val indexB = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(projectId, relationTableName)} ("#$modelBColumn" ASC)"""
 
-    DatabaseAction.seq(tableCreate, indexCreate, indexA, indexB)
+    DatabaseAction.seq(tableCreate, indexCreate, indexB)
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {

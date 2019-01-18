@@ -76,6 +76,8 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
     val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
 
+    // we do not create an index on A because queries for the A column can be satisfied with the combined index as well
+
     def legacyTableCreate(idColumn: String) = {
       val idSql = typeMapper.rawSQLFromParts(idColumn, isRequired = true, isList = false, TypeIdentifier.Cuid)
       sqlu"""
@@ -83,8 +85,9 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
            #$idSql,
            PRIMARY KEY (`#$idColumn`),
            UNIQUE INDEX `id_UNIQUE` (`#$idColumn` ASC),
-           #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
-           #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
+           #$aColSql, 
+           #$bColSql,
+           INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
            UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
            FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
@@ -94,8 +97,9 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
     val modernTableCreate = sqlu"""
          CREATE TABLE #${qualify(projectId, relationTableName)} (
-           #$aColSql, INDEX `#$modelAColumn` (`#$modelAColumn` ASC),
-           #$bColSql, INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
+           #$aColSql,
+           #$bColSql,
+           INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
            UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
            FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(projectId, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(projectId, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
