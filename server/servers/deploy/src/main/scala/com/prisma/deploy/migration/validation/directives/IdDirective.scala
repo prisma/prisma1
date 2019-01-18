@@ -57,7 +57,7 @@ object IdDirective extends FieldDirective[IdBehaviour] {
       val strategy = IdStrategyArgument(capabilities).value(directive).getOrElse(FieldBehaviour.IdStrategy.Auto)
       val sequence = (strategy, fieldDef.typeIdentifier(document)) match {
         case (FieldBehaviour.IdStrategy.Auto, TypeIdentifier.Int) =>
-          Some(FieldBehaviour.Sequence(s"${typeDef.name}_${fieldDef.name}_seq", initialValue = 1, allocationSize = 100))
+          Some(FieldBehaviour.Sequence.default(typeDef.name, fieldDef.name))
         case _ =>
           SequenceDirective.value(document, typeDef, fieldDef, capabilities)
       }
