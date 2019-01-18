@@ -100,10 +100,10 @@ case class LegacyDataModelValidator(
   val result   = GraphQlSdlParser.parse(schema)
   lazy val doc = result.get
 
-  def validateSyntax: PrismaSdl Or Vector[DeployError] = {
+  def validateSyntax: DataModelValidationResult Or Vector[DeployError] = {
     val errors = validate
     if (errors.isEmpty) {
-      Good(generateSDL)
+      Good(DataModelValidationResult(generateSDL, warnings = Vector.empty))
     } else {
       Bad(errors.toVector)
     }

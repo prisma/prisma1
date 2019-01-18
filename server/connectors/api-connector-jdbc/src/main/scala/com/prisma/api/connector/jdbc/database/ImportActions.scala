@@ -105,21 +105,42 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
 
     SimpleDBIO[Vector[String]] { x =>
       val res = try {
-        val query = sql
-          .insertInto(relationTable(relation))
-          .columns(relationIdColumn(relation),
-                   relationColumn(relation, relation.modelAField.relationSide),
-                   relationColumn(relation, relation.modelBField.relationSide))
-          .values(placeHolder, placeHolder, placeHolder)
+        if (relation.relationTableHas3Columns) {
+          val query = sql
+            .insertInto(relationTable(relation))
+            .columns(
+              relationIdColumn(relation),
+              relationColumn(relation, relation.modelAField.relationSide),
+              relationColumn(relation, relation.modelBField.relationSide)
+            )
+            .values(placeHolder, placeHolder, placeHolder)
 
-        val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
-        mutaction.args.foreach { arg =>
-          relationInsert.setString(1, Cuid.createCuid())
-          relationInsert.setGcValue(2, arg._1)
-          relationInsert.setGcValue(3, arg._2)
-          relationInsert.addBatch()
+          val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
+          mutaction.args.foreach { arg =>
+            relationInsert.setString(1, Cuid.createCuid())
+            relationInsert.setGcValue(2, arg._1)
+            relationInsert.setGcValue(3, arg._2)
+            relationInsert.addBatch()
+          }
+          relationInsert.executeBatch()
+
+        } else {
+          val query = sql
+            .insertInto(relationTable(relation))
+            .columns(
+              relationColumn(relation, relation.modelAField.relationSide),
+              relationColumn(relation, relation.modelBField.relationSide)
+            )
+            .values(placeHolder, placeHolder)
+
+          val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
+          mutaction.args.foreach { arg =>
+            relationInsert.setGcValue(1, arg._1)
+            relationInsert.setGcValue(2, arg._2)
+            relationInsert.addBatch()
+          }
+          relationInsert.executeBatch()
         }
-        relationInsert.executeBatch()
         Vector.empty
       } catch {
         case e: java.sql.BatchUpdateException =>

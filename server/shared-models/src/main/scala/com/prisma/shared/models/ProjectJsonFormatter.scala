@@ -190,7 +190,8 @@ object ProjectJsonFormatter {
   val relationTableManifestationFormat: OFormat[RelationTable] = (
     (JsPath \ "table").format[String] and
       (JsPath \ "modelAColumn").format[String] and
-      (JsPath \ "modelBColumn").format[String]
+      (JsPath \ "modelBColumn").format[String] and
+      (JsPath \ "idColumn").formatNullable[String]
   )(RelationTable.apply, unlift(RelationTable.unapply))
 
   implicit lazy val relationManifestation = new Format[RelationLinkManifestation] {

@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
+import com.prisma.shared.models.ConnectorCapability
+import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, RelationLinkTableCapability}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
@@ -122,5 +123,104 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
     error.`type` should be("MyRelation")
     error.field should be(None)
     error.description should be("The link table `MyRelation` is not referencing the right types.")
+  }
+
+  "should error if the link table provides superfluous scalar fields" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  A: Model!
+        |  B: Model!
+        |  field: Int!
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("ModelToModelRelation")
+    error.field should be(Some("field"))
+    error.description should be("A link table must not specify any additional scalar fields.")
+  }
+
+  "should error if the link table provides superfluous relation fields" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  A: Model!
+        |  B: Model!
+        |  C: Model!
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("ModelToModelRelation")
+    error.field should be(None)
+    error.description should be("A link table must specify exactly two relation fields.")
+  }
+
+  "should succeed for legacy style relation tables" in {
+    val capas: Set[ConnectorCapability] = Set(RelationLinkTableCapability)
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  id: ID! @id
+        |  A: Model!
+        |  B: Model!
+        |}
+      """.stripMargin
+
+    val dataModel         = validate(dataModelString, capas)
+    val relationTableType = dataModel.type_!("ModelToModelRelation")
+    relationTableType.isRelationTable should be(true)
+
+    val warnings = validateThatMustWarn(dataModelString, capas)
+    warnings should have(size(1))
+    val warning = warnings.head
+    warning.`type` should be("ModelToModelRelation")
+    warning.field should be(Some("id"))
+    warning.description should be(
+      "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column.")
+  }
+
+  "should error for if the id field does not have the ID type" in {
+    val capas: Set[ConnectorCapability] = Set(RelationLinkTableCapability, IntIdCapability)
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  id: Int! @id
+        |  A: Model!
+        |  B: Model!
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, capas)
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("ModelToModelRelation")
+    error.field should be(Some("id"))
+    error.description should be("The id field of a link table must be of type `ID!`.")
   }
 }
