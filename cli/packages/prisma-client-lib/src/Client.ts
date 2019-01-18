@@ -182,6 +182,28 @@ export class Client {
     }
     log('unpack it')
 
+    const lastInstruction = instructions[count - 1]
+    const selectionFromFragment = Boolean(lastInstruction.fragment)
+
+    if (
+      !selectionFromFragment &&
+      Array.isArray(pointer) &&
+      pointer.length > 0
+    ) {
+      /*
+        As per the spec: https://github.com/prisma/prisma/issues/3309
+        We need to remove objects of the shape {__typename: <type>} 
+        from the output (except when fragment). Checking one element
+        is enough, as they will have the same shape.
+      */
+      if (
+        Object.keys(pointer[0]).length === 1 &&
+        Object.keys(pointer[0])[0] === '__typename'
+      ) {
+        pointer = []
+      }
+    }
+
     return pointer
   }
 
@@ -334,6 +356,17 @@ export class Client {
 
       return node
     }, null)
+
+    if (ast.selectionSet.selections.length === 0) {
+      ast.selectionSet.selections = [
+        {
+          kind: 'Field',
+          name: { kind: 'Name', value: '__typename' },
+          arguments: [],
+          directives: [],
+        },
+      ]
+    }
 
     return {
       ast: { ...ast, variableDefinitions },
