@@ -200,7 +200,16 @@ export class Client {
         Object.keys(pointer[0]).length === 1 &&
         Object.keys(pointer[0])[0] === '__typename'
       ) {
-        pointer = []
+        pointer = new Array(pointer.length).fill({})
+      }
+    }
+
+    if (!selectionFromFragment && !Array.isArray(pointer)) {
+      if (
+        Object.keys(pointer).length === 1 &&
+        Object.keys(pointer)[0] === '__typename'
+      ) {
+        pointer = {}
       }
     }
 
@@ -354,19 +363,19 @@ export class Client {
         node.selectionSet.selections.push(acc)
       }
 
+      if (node.selectionSet.selections.length === 0) {
+        node.selectionSet.selections = [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: '__typename' },
+            arguments: [],
+            directives: [],
+          },
+        ]
+      }
+
       return node
     }, null)
-
-    if (ast.selectionSet.selections.length === 0) {
-      ast.selectionSet.selections = [
-        {
-          kind: 'Field',
-          name: { kind: 'Name', value: '__typename' },
-          arguments: [],
-          directives: [],
-        },
-      ]
-    }
 
     return {
       ast: { ...ast, variableDefinitions },
