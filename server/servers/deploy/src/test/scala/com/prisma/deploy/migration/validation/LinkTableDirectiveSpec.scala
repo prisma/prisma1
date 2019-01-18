@@ -168,7 +168,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
     val error = errors.head
     error.`type` should be("ModelToModelRelation")
     error.field should be(None)
-    error.description should be("A link must specify exactly two relation fields.")
+    error.description should be("A link table must specify exactly two relation fields.")
   }
 
   "should succeed for legacy style relation tables" in {
