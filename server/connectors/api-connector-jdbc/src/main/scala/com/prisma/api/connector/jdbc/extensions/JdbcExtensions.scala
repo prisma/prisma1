@@ -6,13 +6,10 @@ import java.util.{Calendar, TimeZone}
 import com.prisma.connector.shared.jdbc.SharedJdbcExtensions
 import com.prisma.gc_values._
 import com.prisma.shared.models.{Model, TypeIdentifier}
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json.Json
 
 trait JdbcExtensions {
   import JdbcExtensionsValueClasses._
-
-  def currentDateTimeGCValue = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))
 
   implicit def preparedStatementExtensions(ps: PreparedStatement): PreparedStatementExtensions = new PreparedStatementExtensions(ps)
   implicit def resultSetExtensions(resultSet: ResultSet): ResultSetExtensions                  = new ResultSetExtensions(resultSet)
@@ -80,7 +77,7 @@ object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
 
     private def getDateTimeGCValue(name: String) = {
       val sqlType = resultSet.getTimestamp(name, calendar)
-      if (sqlType != null) DateTimeGCValue(new DateTime(sqlType, DateTimeZone.UTC)) else NullGCValue
+      if (sqlType != null) DateTimeGCValue(sqlTimestampToDateTime(sqlType)) else NullGCValue
     }
 
     private def getJsonGCValue(name: String) = {

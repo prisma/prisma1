@@ -6,7 +6,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values._
 import com.prisma.shared.models._
-import slick.dbio.{DBIO, DBIOAction, NoStream}
+import slick.dbio.DBIO
 
 import scala.concurrent.{ExecutionContext, Future}
 
