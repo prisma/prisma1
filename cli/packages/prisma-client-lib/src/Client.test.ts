@@ -3,6 +3,67 @@ import { Client } from './Client'
 import { Model } from './types'
 import { print } from 'graphql'
 
+test('automatic non-scalar sub selection in connections', t => {
+  const typeDefs = `
+    type Query {
+      usersConnection(where: UserWhereInput): UserConnection
+    }
+
+    type UserConnection {
+      pageInfo: PageInfo!
+      edges: [UserEdge]!
+      aggregate: AggregateUser!
+    }
+
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+
+    type AggregateUser {
+      count: Int!
+    }
+
+    type UserEdge {
+      node: User!
+      cursor: String!
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      house: House!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.usersConnection()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
 test('automatic non-scalar sub selection for relation', t => {
   const typeDefs = `
     type Query {
@@ -34,9 +95,11 @@ test('automatic non-scalar sub selection for relation', t => {
     models,
   })
 
-  client.house({
-    id: "id"
-  }).user()
+  client
+    .house({
+      id: 'id',
+    })
+    .user()
 
   const document = client.getDocumentForInstructions(
     Object.keys(client._currentInstructions)[0],

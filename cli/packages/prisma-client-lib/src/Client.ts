@@ -211,6 +211,24 @@ export class Client {
       ) {
         pointer = {}
       }
+
+      // Handle opinionated relay connection: https://github.com/prisma/prisma/issues/3629
+      if (pointer.edges && pointer.edges.length > 0) {
+        pointer.edges = pointer.edges.map(edge => {
+          if (
+            edge.node &&
+            Object.keys(edge.node).length === 1 &&
+            Object.keys(edge.node)[0] === '__typename'
+          ) {
+            return {
+              ...edge,
+              node: {},
+            }
+          } else {
+            return edge
+          }
+        })
+      }
     }
 
     return pointer
@@ -474,6 +492,17 @@ export class Client {
           args: [],
         })
       })
+
+    if (node.selectionSet.selections.length === 0) {
+      node.selectionSet.selections = [
+        {
+          kind: 'Field',
+          name: { kind: 'Name', value: '__typename' },
+          arguments: [],
+          directives: [],
+        },
+      ]
+    }
 
     return node
   }
