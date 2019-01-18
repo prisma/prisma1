@@ -557,6 +557,28 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     idField.isUnique should be(true)
   }
 
+  "should support link tables" in {
+    val types =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  firstColumn: Model!
+        |  secondColumn: Model!
+        |}
+      """.stripMargin
+    val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
+    val relation = schema.relations.head
+    relation.name should be("ModelToModelRelation")
+    val manifestation = relation.manifestation.get.asInstanceOf[RelationTable]
+    manifestation.modelAColumn should be("firstColumn")
+    manifestation.modelBColumn should be("secondColumn")
+    manifestation.idColumn should be(None)
+  }
+
   "should support the legacy style link tables" in {
     val types =
       """
