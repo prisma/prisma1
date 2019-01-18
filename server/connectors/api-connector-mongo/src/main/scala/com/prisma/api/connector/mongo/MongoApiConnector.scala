@@ -18,7 +18,7 @@ case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionConte
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
-  override def capabilities = ConnectorCapabilities.mongo(isActive = false, isTest = false)
+  override def capabilities = ConnectorCapabilities.mongo(isTest = false)
 
   override def initialize(): Future[Unit] = {
     client

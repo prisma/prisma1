@@ -114,7 +114,7 @@ object ConnectorCapabilities extends BooleanUtils {
     )
   }
 
-  def mongo(isActive: Boolean, isTest: Boolean): ConnectorCapabilities = {
+  def mongo(isTest: Boolean): ConnectorCapabilities = {
     val common = Set(
       NodeQueryCapability,
       EmbeddedScalarListsCapability,
