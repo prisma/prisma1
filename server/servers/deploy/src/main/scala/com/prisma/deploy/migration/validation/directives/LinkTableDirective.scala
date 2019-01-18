@@ -45,10 +45,10 @@ object LinkTableDirective extends TypeDirective[Boolean] {
 
   def validateShapeOfLinkTable(dataModel: PrismaSdl): Vector[DeployError] = {
     dataModel.relationTables.flatMap { relationTable =>
-      val rfError = (relationTable.relationFields.size != 2).toOption {
-        DeployError(relationTable.name, "A link must specify exactly two relation fields.")
+      val wrongNumberOfRelationFields = (relationTable.relationFields.size != 2).toOption {
+        DeployError(relationTable.name, "A link table must specify exactly two relation fields.")
       }
-      val superFluousErrors = relationTable.nonRelationFields
+      val superfluousFieldErrors = relationTable.nonRelationFields
         .filter {
           case s: ScalarPrismaField if s.isId => false
           case _                              => true
@@ -61,7 +61,7 @@ object LinkTableDirective extends TypeDirective[Boolean] {
         DeployError(scalarField.tpe.name, scalarField.name, "The id field of a link table must be of type `ID!`.")
       }
 
-      rfError ++ superFluousErrors ++ idFieldHasIllegalType
+      wrongNumberOfRelationFields ++ superfluousFieldErrors ++ idFieldHasIllegalType
     }
   }
 
