@@ -53,7 +53,7 @@ export class Client {
   _secret?: string
   _client: BatchedGraphQLClient
   _subscriptionClient: SubscriptionClient
-  schema: GraphQLSchema
+  _schema: GraphQLSchema
   _token: string
   _currentInstructions: InstructionsMap = {}
   _models: Model[] = []
@@ -61,7 +61,7 @@ export class Client {
 
   constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
     this.debug = debug
-    this.schema = buildSchema(typeDefs)
+    this._schema = buildSchema(typeDefs)
     this._endpoint = endpoint
     this._secret = secret
     this._models = models
@@ -486,7 +486,7 @@ export class Client {
   }
 
   getTypes() {
-    const typeMap = this.schema.getTypeMap()
+    const typeMap = this._schema.getTypeMap()
     const types = Object.entries(typeMap)
       .map(([name, type]) => {
         let value = {
@@ -595,7 +595,7 @@ export class Client {
   }
 
   private buildExists(): Exists {
-    const queryType = this.schema.getQueryType()
+    const queryType = this._schema.getQueryType()
     if (!queryType) {
       return {}
     }
