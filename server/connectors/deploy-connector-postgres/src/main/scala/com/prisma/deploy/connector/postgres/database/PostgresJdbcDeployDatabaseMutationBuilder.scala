@@ -109,9 +109,11 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
     val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
       case (Some(idColumn), None) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
-      case (None, Some(idColumn)) => sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
-                                            ADD COLUMN "#$idColumn" varchar default null"""
-      case _                      => DBIO.successful(())
+      case (None, Some(idColumn)) =>
+        // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
+        sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+               ADD COLUMN "#$idColumn" varchar(40) default null"""
+      case _ => DBIO.successful(())
     }
 
     val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
