@@ -1,4 +1,4 @@
-import { Generator } from './Generator'
+import { Generator } from '../Generator'
 import {
   GraphQLUnionType,
   GraphQLInterfaceType,
@@ -15,7 +15,7 @@ import {
 
 import * as upperCamelCase from 'uppercamelcase'
 
-import { getTypeNames } from '../utils/getTypeNames'
+import { getTypeNames } from '../../utils/getTypeNames'
 
 const goCase = (s: string) => {
   const cased = upperCamelCase(s)
@@ -61,16 +61,16 @@ export class GoGenerator extends Generator {
 
   goTypeName(fieldType: FieldLikeType): string {
     let typ: string
-    if(fieldType.isEnum) {
+    if (fieldType.isEnum) {
       typ = goCase(fieldType.typeName)
     } else {
       typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
     }
 
-    if(fieldType.isList) {
-      typ = "[]" + typ
-    } else if(!fieldType.isNonNull) {
-      typ = "*" + typ
+    if (fieldType.isList) {
+      typ = '[]' + typ
+    } else if (!fieldType.isNonNull) {
+      typ = '*' + typ
     }
     return typ
   }
@@ -80,11 +80,11 @@ export class GoGenerator extends Generator {
   }
 
   goStructTag(field: GraphQLField<any, any>): string {
-    let s = "`json:\"" + field.name
-    if(this.shouldOmitEmpty(this.extractFieldLikeType(field))) {
-      s += ",omitempty"
+    let s = '`json:"' + field.name
+    if (this.shouldOmitEmpty(this.extractFieldLikeType(field))) {
+      s += ',omitempty'
     }
-    s += "\"`"
+    s += '"`'
     return s
   }
 
@@ -97,7 +97,9 @@ export class GoGenerator extends Generator {
     const isList =
       field.type.toString().indexOf('[') === 0 &&
       field.type.toString().indexOf(']') > -1
-    const isNonNull = field.type.toString().indexOf('!') > -1 && field.type.toString().indexOf('!]') === -1
+    const isNonNull =
+      field.type.toString().indexOf('!') > -1 &&
+      field.type.toString().indexOf('!]') === -1
     let fieldMap: GraphQLFieldMap<any, any> | GraphQLInputFieldMap | null = null
     if (deepType!.constructor.name === 'GraphQLObjectType') {
       fieldMap = (deepType as GraphQLObjectType).getFields()
@@ -140,11 +142,11 @@ export class GoGenerator extends Generator {
         | GraphQLInterfaceType,
     ): string => {
       const fieldMap = type.getFields()
-      if(type.name === "BatchPayload") {
-        return ""
+      if (type.name === 'BatchPayload') {
+        return ''
       }
 
-      if(type.name.startsWith("Aggregate")) {
+      if (type.name.startsWith('Aggregate')) {
         // We're merging all Aggregate types into a single type
         return ``
       }
@@ -173,8 +175,8 @@ export class GoGenerator extends Generator {
               field as GraphQLField<any, any>,
             )
 
-            let sTyp = ""
-            const meth = goCase(field.name) + "ParamsExec"
+            let sTyp = ''
+            const meth = goCase(field.name) + 'ParamsExec'
 
             // TODO(dh): This type (FooParamsExec) is redundant.
             // If we have a relation article.authors -> [User],
@@ -182,26 +184,42 @@ export class GoGenerator extends Generator {
             // The only reason we can't do it right now
             // is because we don't have the base type's plural name available
             // (and appending a single s doesn't work for names like Mouse)
-            if(!this.printedTypes[meth] && field.args.length > 0) {
+            if (!this.printedTypes[meth] && field.args.length > 0) {
               this.printedTypes[meth] = true
               sTyp = `
                 type ${meth} struct {
                   ${args
-                    .map(arg => `${goCase(arg.name)} ${this.goTypeName(this.extractFieldLikeType(arg as GraphQLField<any, any>))}`).join('\n')
-                  }
+                    .map(
+                      arg =>
+                        `${goCase(arg.name)} ${this.goTypeName(
+                          this.extractFieldLikeType(arg as GraphQLField<
+                            any,
+                            any
+                          >),
+                        )}`,
+                    )
+                    .join('\n')}
                 }`
             }
 
-            if(field.args.length !== 0 && field.args.length !== whereArgs) {
+            if (field.args.length !== 0 && field.args.length !== whereArgs) {
               throw new Error(`unexpected argument count ${field.args.length}`)
             }
-            if(field.args.length === whereArgs && !isList) {
-              throw new Error("looks like a getMany query but doesn't return an array")
+            if (field.args.length === whereArgs && !isList) {
+              throw new Error(
+                "looks like a getMany query but doesn't return an array",
+              )
             }
 
             if (field.args.length > 0) {
-              return sTyp + `
-                func (instance *${type.name}Exec) ${goCase(field.name)}(params *${goCase(field.name)}ParamsExec) *${goCase(typeName)}ExecArray {
+              return (
+                sTyp +
+                `
+                func (instance *${type.name}Exec) ${goCase(
+                  field.name,
+                )}(params *${goCase(field.name)}ParamsExec) *${goCase(
+                  typeName,
+                )}ExecArray {
                   var wparams *prisma.WhereParams
                   if params != nil {
                     wparams = &prisma.WhereParams{
@@ -218,16 +236,26 @@ export class GoGenerator extends Generator {
                   ret := instance.exec.Client.GetMany(
                     instance.exec,
                     wparams,
-                    [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                    [3]string{"${field.args[0].type}", "${
+                  field.args[1].type
+                }", "${typeName}"},
                     "${field.name}",
                     []string{${typeFields.join(',')}})
 
                   return &${goCase(typeName)}ExecArray{ret}
                 }`
+              )
             } else {
-              if(type.name.endsWith("Connection") && field.name === "aggregate") {
-                return sTyp + `
-                  func (instance *${type.name}Exec) ${goCase(field.name)}(ctx context.Context) (Aggregate, error) {
+              if (
+                type.name.endsWith('Connection') &&
+                field.name === 'aggregate'
+              ) {
+                return (
+                  sTyp +
+                  `
+                  func (instance *${type.name}Exec) ${goCase(
+                    field.name,
+                  )}(ctx context.Context) (Aggregate, error) {
                     ret := instance.exec.Client.GetOne(
                       instance.exec,
                       nil,
@@ -239,9 +267,14 @@ export class GoGenerator extends Generator {
                     _, err := ret.Exec(ctx, &v)
                     return v, err
                   }`
+                )
               }
-              return sTyp + `
-                func (instance *${type.name}Exec) ${goCase(field.name)}() *${goCase(typeName)}Exec {
+              return (
+                sTyp +
+                `
+                func (instance *${type.name}Exec) ${goCase(
+                  field.name,
+                )}() *${goCase(typeName)}Exec {
                   ret := instance.exec.Client.GetOne(
                     instance.exec,
                     nil,
@@ -251,10 +284,14 @@ export class GoGenerator extends Generator {
 
                   return &${goCase(typeName)}Exec{ret}
                 }`
+              )
             }
-          }).join('\n')}
+          })
+          .join('\n')}
 
-          func (instance ${type.name}Exec) Exec(ctx context.Context) (*${type.name}, error) {
+          func (instance ${type.name}Exec) Exec(ctx context.Context) (*${
+        type.name
+      }, error) {
             var v ${type.name}
             ok, err := instance.exec.Exec(ctx, &v)
             if err != nil {
@@ -266,7 +303,9 @@ export class GoGenerator extends Generator {
             return &v, nil
           }
 
-          func (instance ${type.name}Exec) Exists(ctx context.Context) (bool, error) {
+          func (instance ${
+            type.name
+          }Exec) Exists(ctx context.Context) (bool, error) {
             return instance.exec.Exists(ctx)
           }
 
@@ -274,7 +313,9 @@ export class GoGenerator extends Generator {
             exec *prisma.Exec
           }
 
-          func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${type.name}, error) {
+          func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${
+        type.name
+      }, error) {
             var v []${type.name}
             err := instance.exec.ExecArray(ctx, &v)
             return v, err
@@ -284,16 +325,21 @@ export class GoGenerator extends Generator {
           ${Object.keys(fieldMap)
             .filter(key => {
               const field = fieldMap[key]
-              const {
-                isScalar,
-              } = this.extractFieldLikeType(field as GraphQLField<any, any>)
+              const { isScalar } = this.extractFieldLikeType(
+                field as GraphQLField<any, any>,
+              )
               return isScalar
             })
             .map(key => {
               const field = fieldMap[key]
-              const fieldType = this.extractFieldLikeType(field as GraphQLField<any, any>)
+              const fieldType = this.extractFieldLikeType(field as GraphQLField<
+                any,
+                any
+              >)
 
-              return `${goCase(field.name)} ${this.goTypeName(fieldType)} ${this.goStructTag(field as GraphQLField<any, any>)}`
+              return `${goCase(field.name)} ${this.goTypeName(
+                fieldType,
+              )} ${this.goStructTag(field as GraphQLField<any, any>)}`
             })
             .join('\n')}
         }`
@@ -305,9 +351,9 @@ export class GoGenerator extends Generator {
         | GraphQLInputObjectType
         | GraphQLInterfaceType,
     ): string => {
-      if(type.name === "Node") {
+      if (type.name === 'Node') {
         // Don't emit code relating to generic node fetching
-        return ""
+        return ''
       }
       const fieldMap = type.getFields()
       return `
@@ -340,13 +386,17 @@ export class GoGenerator extends Generator {
         ${Object.keys(fieldMap)
           .map(key => {
             const field = fieldMap[key]
-            const fieldType = this.extractFieldLikeType(
-              field as GraphQLField<any, any>,
-            )
+            const fieldType = this.extractFieldLikeType(field as GraphQLField<
+              any,
+              any
+            >)
 
             const typ = this.goTypeName(fieldType)
-            return `${goCase(field.name)} ${typ} ${this.goStructTag(field as GraphQLField<any, any>)}`
-          }).join('\n')}
+            return `${goCase(field.name)} ${typ} ${this.goStructTag(
+              field as GraphQLField<any, any>,
+            )}`
+          })
+          .join('\n')}
           }`
     },
 
@@ -361,9 +411,7 @@ export class GoGenerator extends Generator {
         type ${typ} string
         const (
           ${enumValues
-            .map(
-              v => `${typ}${goCase(v.name)} ${typ} = "${v.name}"`,
-            )
+            .map(v => `${typ}${goCase(v.name)} ${typ} = "${v.name}"`)
             .join('\n')}
           )`
     },
@@ -411,9 +459,13 @@ export class GoGenerator extends Generator {
   }
 
   opUpdateMany(field) {
-    const param = this.paramsType(field, "updateMany")
-    return param.code + `
-      func (client *Client) ${goCase(field.name)} (params ${param.type}) *BatchPayloadExec {
+    const param = this.paramsType(field, 'updateMany')
+    return (
+      param.code +
+      `
+      func (client *Client) ${goCase(field.name)} (params ${
+        param.type
+      }) *BatchPayloadExec {
         exec := client.Client.UpdateMany(
           prisma.UpdateParams{
             Data: params.Data,
@@ -423,30 +475,42 @@ export class GoGenerator extends Generator {
           "${field.name}")
         return &BatchPayloadExec{exec}
       }`
+    )
   }
 
   opUpdate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    const param = this.paramsType(field, "update")
-    return param.code + `
-      func (client *Client) ${goCase(field.name)} (params ${param.type}) *${goCase(typeName)}Exec {
+    const param = this.paramsType(field, 'update')
+    return (
+      param.code +
+      `
+      func (client *Client) ${goCase(field.name)} (params ${
+        param.type
+      }) *${goCase(typeName)}Exec {
         ret := client.Client.Update(
                  prisma.UpdateParams{
                    Data: params.Data,
                    Where: params.Where,
                  },
-                 [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+                 [3]string{"${field.args[0].type}", "${
+        field.args[1].type
+      }", "${typeName}"},
                  "${field.name}",
                  []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
+    )
   }
 
   opDeleteMany(field) {
     return `
-      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(field.args[0].type)}) *BatchPayloadExec {
-        exec := client.Client.DeleteMany(params, "${field.args[0].type}", "${field.name}")
+      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(
+      field.args[0].type,
+    )}) *BatchPayloadExec {
+        exec := client.Client.DeleteMany(params, "${field.args[0].type}", "${
+      field.name
+    }")
         return &BatchPayloadExec{exec}
       }`
   }
@@ -454,7 +518,9 @@ export class GoGenerator extends Generator {
   opDelete(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(
+      field.args[0].type,
+    )}) *${goCase(typeName)}Exec {
         ret := client.Client.Delete(
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
@@ -468,7 +534,9 @@ export class GoGenerator extends Generator {
   opGetOne(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(
+      field.args[0].type,
+    )}) *${goCase(typeName)}Exec {
         ret := client.Client.GetOne(
           nil,
           params,
@@ -483,8 +551,12 @@ export class GoGenerator extends Generator {
   opGetMany(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field)
-    return param.code + `
-      func (client *Client) ${goCase(field.name)} (params *${param.type}) *${goCase(typeName)}ExecArray {
+    return (
+      param.code +
+      `
+      func (client *Client) ${goCase(field.name)} (params *${
+        param.type
+      }) *${goCase(typeName)}ExecArray {
         var wparams *prisma.WhereParams
         if params != nil {
           wparams = &prisma.WhereParams{
@@ -501,28 +573,38 @@ export class GoGenerator extends Generator {
         ret := client.Client.GetMany(
           nil,
           wparams,
-          [3]string{"${field.args[0].type}", "${field.args[1].type}", "${typeName}"},
+          [3]string{"${field.args[0].type}", "${
+        field.args[1].type
+      }", "${typeName}"},
           "${field.name}",
           []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}ExecArray{ret}
       }`
+    )
   }
 
   opGetConnection(field) {
     // TODO(dh): Connections are not yet implemented
     const { typeName } = this.extractFieldLikeType(field)
     const param = this.paramsType(field)
-    return param.code + `
-      func (client *Client) ${goCase(field.name)} (params *${param.type}) (${goCase(typeName)}Exec) {
+    return (
+      param.code +
+      `
+      func (client *Client) ${goCase(field.name)} (params *${
+        param.type
+      }) (${goCase(typeName)}Exec) {
         panic("not implemented")
       }`
+    )
   }
 
   opCreate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(field.args[0].type)}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(
+      field.args[0].type,
+    )}) *${goCase(typeName)}Exec {
         ret := client.Client.Create(
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
@@ -535,9 +617,13 @@ export class GoGenerator extends Generator {
 
   opUpsert(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
-    const param = this.paramsType(field, "upsert")
-    return param.code + `
-      func (client *Client) ${goCase(field.name)} (params ${param.type}) *${goCase(typeName)}Exec {
+    const param = this.paramsType(field, 'upsert')
+    return (
+      param.code +
+      `
+      func (client *Client) ${goCase(field.name)} (params ${
+        param.type
+      }) *${goCase(typeName)}Exec {
         uparams := &prisma.UpsertParams{
           Where:  params.Where,
           Create: params.Create,
@@ -545,29 +631,34 @@ export class GoGenerator extends Generator {
         }
         ret := client.Client.Upsert(
           uparams,
-          [4]string{"${field.args[0].type}", "${field.args[1].type}", "${field.args[2].type}","${typeName}"},
+          [4]string{"${field.args[0].type}", "${field.args[1].type}", "${
+        field.args[2].type
+      }","${typeName}"},
           "${field.name}",
           []string{${typeFields.join(',')}})
 
         return &${goCase(typeName)}Exec{ret}
       }`
+    )
   }
 
   paramsType(field, verb?: string) {
-    let type = goCase(field.name) + "Params"
-    if(verb) {
+    let type = goCase(field.name) + 'Params'
+    if (verb) {
       // Mangle the name from <verb><noun>Params to <noun><verb>Params.
       // When the noun is in its plural form, turn it into its singular form.
 
-      let arg = field.args.find(arg => { return arg.name === "where" })
-      if(!arg) {
+      let arg = field.args.find(arg => {
+        return arg.name === 'where'
+      })
+      if (!arg) {
         throw new Error("couldn't find expected 'where' argument")
       }
-      let match = arg.type.toString().match("^(.+)Where(?:Unique)?Input!?$")
-      if(match === null) {
+      let match = arg.type.toString().match('^(.+)Where(?:Unique)?Input!?$')
+      if (match === null) {
         throw new Error("couldn't determine type name")
       }
-      type = match[1] + goCase(verb) + "Params"
+      type = match[1] + goCase(verb) + 'Params'
     }
     let code = `
       type ${type} struct {
@@ -592,46 +683,52 @@ export class GoGenerator extends Generator {
         // FIXME(dh): This is brittle. A model may conceivably be named "Many",
         // in which case updateMany would be updating a single instance of Many.
         // The same issue applies to many other prefixes.
-        if(operation === "mutation") {
-          if(field.name.startsWith("updateMany")) {
+        if (operation === 'mutation') {
+          if (field.name.startsWith('updateMany')) {
             return this.opUpdateMany(field)
           }
-          if(field.name.startsWith("update")) {
+          if (field.name.startsWith('update')) {
             return this.opUpdate(field)
           }
-          if(field.name.startsWith("deleteMany")) {
+          if (field.name.startsWith('deleteMany')) {
             return this.opDeleteMany(field)
           }
-          if(field.name.startsWith("delete")) {
+          if (field.name.startsWith('delete')) {
             return this.opDelete(field)
           }
-          if(field.name.startsWith("create")) {
+          if (field.name.startsWith('create')) {
             return this.opCreate(field)
           }
-          if(field.name.startsWith("upsert")) {
+          if (field.name.startsWith('upsert')) {
             return this.opUpsert(field)
           }
-          throw new Error("unsupported mutation operation on field " + field.name)
+          throw new Error(
+            'unsupported mutation operation on field ' + field.name,
+          )
         }
 
-        if(operation === "query") {
-          if(!isList && field.args.length === 1 && field.name !== "node") {
+        if (operation === 'query') {
+          if (!isList && field.args.length === 1 && field.name !== 'node') {
             return this.opGetOne(field)
           }
-          if(isList && field.args.length === whereArgs) {
+          if (isList && field.args.length === whereArgs) {
             return this.opGetMany(field)
           }
-          if(!isList && field.args.length === whereArgs && field.name.endsWith("Connection")) {
+          if (
+            !isList &&
+            field.args.length === whereArgs &&
+            field.name.endsWith('Connection')
+          ) {
             return this.opGetConnection(field)
           }
-          if(field.name === "node") {
+          if (field.name === 'node') {
             // Don't emit generic Node fetching
             return ``
           }
-          throw new Error("unsupported query operation on field " + field.name)
+          throw new Error('unsupported query operation on field ' + field.name)
         }
 
-        throw new Error("unsupported operation " + operation)
+        throw new Error('unsupported operation ' + operation)
       })
       .join('\n')
   }
@@ -656,8 +753,8 @@ export class GoGenerator extends Generator {
     } else {
       if (options.secret!.startsWith('${process.env')) {
         // Find a better way to generate Go env construct
-        const envVariable = `${options.secret!
-          .replace('${process.env[', '')
+        const envVariable = `${options
+          .secret!.replace('${process.env[', '')
           .replace(']}', '')}`
           .replace("'", '')
           .replace("'", '')
@@ -667,7 +764,7 @@ export class GoGenerator extends Generator {
       }
     }
   }
-  
+
   render(options: RenderOptions) {
     const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
@@ -768,4 +865,34 @@ ${typeNames
 
     return fixed + dynamic
   }
+
+  static replaceEnv(str: string): string {
+    const regex = /\${env:(.*?)}/
+    const match = regex.exec(str)
+    // tslint:disable-next-line:prefer-conditional-expression
+    if (match) {
+      let before = trimQuotes(str.slice(0, match.index))
+      before = before.length > 0 ? `"${before}" + ` : ''
+      let after = trimQuotes(str.slice(match[0].length + match.index))
+      after = after.length > 0 ? ` + "${after}"` : ''
+      return GoGenerator.replaceEnv(
+        `${before}os.Getenv("${match[1]}")${after}`.replace(/`/g, ''),
+      )
+    } else {
+      return `\`${str}\``
+    }
+  }
+}
+
+function trimQuotes(str) {
+  let copy = str
+  if (copy[0] === '"') {
+    copy = copy.slice(1)
+  }
+
+  if (copy.slice(-1)[0] === '"') {
+    copy = copy.slice(0, -1)
+  }
+
+  return copy
 }

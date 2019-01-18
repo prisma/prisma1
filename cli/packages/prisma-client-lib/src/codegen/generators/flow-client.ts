@@ -1,8 +1,8 @@
 import { TypescriptGenerator } from './typescript-client'
-import { getExistsFlowTypes } from '../utils'
+import { getExistsFlowTypes } from '../../utils'
 
 import * as prettier from 'prettier'
-import { codeComment } from '../utils/codeComment'
+import { codeComment } from '../../utils/codeComment'
 
 import * as os from 'os'
 
@@ -66,11 +66,27 @@ type NodePromise = Promise<Node>`
   renderExports(options?: RenderOptions) {
     const args = this.renderPrismaClassArgs(options)
 
-    return `export const Prisma: ClientConstructor<${this.prismaInterface}> = makePrismaClientClass(${args})
+    return `export const Prisma: ClientConstructor<${
+      this.prismaInterface
+    }> = makePrismaClientClass(${args})
 
 export const prisma = new Prisma()`
   }
   renderTypedefsFirstLine() {
     return `// @flow${os.EOL}`
+  }
+  static replaceEnv(str: string): string {
+    const regex = /\${env:(.*?)}/
+    const match = regex.exec(str)
+    // tslint:disable-next-line:prefer-conditional-expression
+    if (match) {
+      return FlowGenerator.replaceEnv(
+        `${str.slice(0, match.index)}$\{process.env['${
+          match[1]
+        }'] || ""}}${str.slice(match[0].length + match.index)}`,
+      )
+    } else {
+      return `\`${str}\``
+    }
   }
 }

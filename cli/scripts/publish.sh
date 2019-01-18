@@ -165,7 +165,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   else
     npm publish --tag $CIRCLE_BRANCH
   fi
-  sleep 10.0
+  sleep 20.0
   cd ..
 fi
 

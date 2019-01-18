@@ -3,9 +3,10 @@ package com.prisma.deploy.connector.postgres.database
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.gc_values.StringGCValue
-import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
-import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
+import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.{Model, Project, Relation}
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -87,32 +88,55 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       projectId: String,
       relation: Relation
   ): DBIO[_] = {
-    val relationTableName = relation.relationTableName
-    val modelA            = relation.modelA
-    val modelB            = relation.modelB
-    val modelAColumn      = relation.modelAColumn
-    val modelBColumn      = relation.modelBColumn
-    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
-    val tableCreate       = sqlu"""
+    val relationTableName                   = relation.relationTableName
+    val modelA                              = relation.modelA
+    val modelB                              = relation.modelB
+    val modelAColumn                        = relation.modelAColumn
+    val modelBColumn                        = relation.modelBColumn
+    val aColSql                             = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
+    val bColSql                             = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    def legacyTableCreate(idColumn: String) = sqlu"""
                         CREATE TABLE #${qualify(projectId, relationTableName)} (
-                            "id" CHAR(25) NOT NULL,
-                            PRIMARY KEY ("id"),
+                            "#$idColumn" CHAR(25) NOT NULL,
+                            PRIMARY KEY ("#$idColumn"),
                             #$aColSql,
                             #$bColSql,
                             FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
                             FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(projectId, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
+    val modernTableCreate = sqlu"""
+                        CREATE TABLE #${qualify(projectId, relationTableName)} (
+                            #$aColSql,
+                            #$bColSql,
+                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(projectId, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(projectId, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                        );"""
+
+    val tableCreate = relation.manifestation match {
+      case None                                         => legacyTableCreate("id")
+      case Some(RelationTable(_, _, _, Some(idColumn))) => legacyTableCreate(idColumn)
+      case _                                            => modernTableCreate
+    }
+
+    // we do not create an index on A because queries for the A column can be satisfied with the combined index as well
     val indexCreate =
       sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
-    val indexA = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_A")} on #${qualify(projectId, relationTableName)} ("#$modelAColumn" ASC)"""
     val indexB = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(projectId, relationTableName)} ("#$modelBColumn" ASC)"""
 
-    DatabaseAction.seq(tableCreate, indexCreate, indexA, indexB)
+    DatabaseAction.seq(tableCreate, indexCreate, indexB)
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
+    val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
+      case (Some(idColumn), None) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
+      case (None, Some(idColumn)) =>
+        // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
+        sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
+               ADD COLUMN "#$idColumn" varchar(40) default null"""
+      case _ => DBIO.successful(())
+    }
+
     val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}"""
@@ -125,7 +149,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
              RENAME TO #${qualify(nextRelation.relationTableName)}"""
     )
-    val all = renameModelAColumn ++ renameModelBColumn ++ renameTable
+    val all = Vector(addOrRemoveIdColumn) ++ renameModelAColumn ++ renameModelBColumn ++ renameTable
     DBIO.sequence(all.toVector)
   }
 
@@ -140,13 +164,15 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     deleteColumn(projectId, model.dbName, column)
   }
 
-  override def createColumn(projectId: String,
-                            tableName: String,
-                            columnName: String,
-                            isRequired: Boolean,
-                            isUnique: Boolean,
-                            isList: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def createColumn(
+      projectId: String,
+      tableName: String,
+      columnName: String,
+      isRequired: Boolean,
+      isUnique: Boolean,
+      isList: Boolean,
+      typeIdentifier: ScalarTypeIdentifier
+  ): DBIO[_] = {
     val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, isList, typeIdentifier)
     val uniqueAction = isUnique match {
       case true  => addUniqueConstraint(projectId, tableName, columnName, typeIdentifier)

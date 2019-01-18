@@ -1,13 +1,14 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from './typescript-client'
+import { TypescriptGenerator } from '../typescript-client'
 import { test } from 'ava'
 import { parseInternalTypes } from 'prisma-generate-schema'
 import { DatabaseType } from 'prisma-datamodel'
+import { fixturesPath } from './fixtures'
 
 const typeDefs = fs.readFileSync(
-  path.join(__dirname, '../../src/codegen/fixtures/embedded.graphql'),
+  path.join(fixturesPath, 'embedded.graphql'),
   'utf-8',
 )
 

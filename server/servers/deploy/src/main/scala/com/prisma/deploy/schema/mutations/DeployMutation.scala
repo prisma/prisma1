@@ -59,14 +59,15 @@ case class DeployMutation(
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
-      prismaSdl          <- FutureOr(validateSyntax)
-      schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-      inferredTables     <- FutureOr(inferTables)
-      inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
-      _                  <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-      functions          <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
-      steps              <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
-      warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      validationResult    <- FutureOr(validateSyntax)
+      schemaMapping       = schemaMapper.createMapping(graphQlSdl)
+      inferredTables      <- FutureOr(inferTables)
+      inferredNextSchema  = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
+      _                   <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
+      functions           <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
+      steps               <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
+      destructiveWarnings <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      warnings            = validationResult.warnings ++ destructiveWarnings
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
                  case (_, true)     => FutureOr(performDeployment(inferredNextSchema, steps, functions))
@@ -87,7 +88,7 @@ case class DeployMutation(
     x.future
   }
 
-  private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
+  private def validateSyntax: Future[DataModelValidationResult Or Vector[DeployError]] = Future.successful {
     val validator = if (capabilities.has(LegacyDataModelCapability)) {
       LegacyDataModelValidator
     } else {
@@ -181,7 +182,8 @@ case class DeployMutationInput(
     dryRun: Option[Boolean],
     force: Option[Boolean],
     secrets: Vector[String],
-    functions: Vector[FunctionInput]
+    functions: Vector[FunctionInput],
+    noMigration: Option[Boolean]
 ) extends sangria.relay.Mutation
 
 case class FunctionInput(

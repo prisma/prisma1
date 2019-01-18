@@ -347,10 +347,24 @@ case class SchemaInferrerImpl(
             // FIXME: this is a duplication of the name logic in `nextRelations`
             val (modelX, modelY) = (prismaType.name, relationField.referencesType)
             val (modelA, modelB) = if (modelX < modelY) (modelX, modelY) else (modelY, modelX)
-            val modelAColumn     = relationTable.relationFields.find(_.referencesType == modelA).get
-            val modelBColumn     = relationTable.relationFields.find(_.referencesType == modelB).get
+            val modelAColumn = if (modelA == modelB) {
+              relationTable.relationFields(0)
+            } else {
+              relationTable.relationFields.find(_.referencesType == modelA).get
+            }
+            val modelBColumn = if (modelA == modelB) {
+              relationTable.relationFields(1)
+            } else {
+              relationTable.relationFields.find(_.referencesType == modelB).get
+            }
 
-            Some(RelationTable(table = relationTable.finalTableName, modelAColumn = modelAColumn.finalDbName, modelBColumn = modelBColumn.finalDbName))
+            Some(
+              RelationTable(
+                table = relationTable.finalTableName,
+                modelAColumn = modelAColumn.finalDbName,
+                modelBColumn = modelBColumn.finalDbName,
+                idColumn = relationTable.scalarFields.find(_.isId).map(_.finalDbName)
+              ))
           case None =>
             Some(RelationTable(table = relationName, modelAColumn = "A", modelBColumn = "B"))
         }

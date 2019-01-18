@@ -11,6 +11,7 @@
     "no-var-requires": null,
     "no-submodule-imports": null,
     "no-invalid-template-strings": null,
-    "no-implicit-dependencies": null
+    "no-implicit-dependencies": null,
+    "prefer-conditional-expression": false
   }
 }

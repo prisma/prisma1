@@ -147,7 +147,8 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
       dryRun = None,
       force = None,
       secrets = Vector.empty,
-      functions = Vector.empty
+      functions = Vector.empty,
+      noMigration = None
     )
     val refreshedProject = testDependencies.projectPersistence.load(projectId).await.getOrElse(sys.error(s"No project found for id $projectId"))
     val mutation = DeployMutation(

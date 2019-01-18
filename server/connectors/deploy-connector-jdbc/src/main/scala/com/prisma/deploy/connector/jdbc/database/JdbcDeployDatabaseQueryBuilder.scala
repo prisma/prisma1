@@ -24,7 +24,7 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
   def existsByRelation(projectId: String, relation: Relation): DBIOAction[Boolean, NoStream, Effect.All] = {
     val query = sql.select(
       field(
-        exists(sql.select(field(name("id"))).from(table(name(projectId, relation.relationTableName))))
+        exists(sql.select(asterisk()).from(table(name(projectId, relation.relationTableName))))
       )
     )
 

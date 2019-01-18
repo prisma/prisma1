@@ -1,16 +1,17 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { buildSchema } from 'graphql'
-import { TypescriptGenerator } from './typescript-client'
+import { TypescriptDefinitionsGenerator } from '../../generators/typescript-definitions'
 import { test } from 'ava'
+import { fixturesPath } from './fixtures'
 
 const typeDefs = fs.readFileSync(
-  path.join(__dirname, '../../src/codegen/fixtures/schema.graphql'),
+  path.join(fixturesPath, 'schema.graphql'),
   'utf-8',
 )
-test.only('typescript generator', t => {
+test('typescript definitions generator', t => {
   const schema = buildSchema(typeDefs)
-  const generator = new TypescriptGenerator({
+  const generator = new TypescriptDefinitionsGenerator({
     schema,
     internalTypes: [],
   })

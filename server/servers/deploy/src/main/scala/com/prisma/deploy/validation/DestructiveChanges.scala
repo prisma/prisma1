@@ -2,6 +2,7 @@ package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.{ClientDbQueries, DeployConnector}
 import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
+import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
 
@@ -246,7 +247,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def deleteRelationValidation(x: DeleteRelation) = {
-    val previousRelation = previousSchema.relations.find(_.name == x.name).get
+    val previousRelation = previousSchema.getRelationByName_!(x.name)
 
     clientDbQueries.existsByRelation(previousRelation).map {
       case true  => Vector(DeployWarnings.dataLossRelation(x.name))
@@ -257,8 +258,19 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   private def updateRelationValidation(x: UpdateRelation) = {
     // becomes required is handled by the change on the updateField
     // todo cardinality change
-
-    validationSuccessful
+    val previousRelation = previousSchema.getRelationByName_!(x.name)
+    val nextRelation     = nextSchema.getRelationByName_!(x.finalName)
+    if (previousRelation.isRelationTable && nextRelation.isRelationTable) {
+      (previousRelation.idColumn, nextRelation.idColumn) match {
+        case (None, Some(idColumn)) =>
+          val error = DeployError(previousRelation.name, "Adding an id field to an existing link table is forbidden.", Some(idColumn))
+          Future.successful(Vector(error))
+        case _ =>
+          validationSuccessful
+      }
+    } else {
+      validationSuccessful
+    }
   }
 
   private def validationSuccessful = Future.successful(Vector.empty)
