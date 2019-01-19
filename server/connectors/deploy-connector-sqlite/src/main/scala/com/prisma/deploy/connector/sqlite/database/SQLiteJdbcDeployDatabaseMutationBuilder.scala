@@ -77,14 +77,6 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            );"""
   }
 
-  override def renameTable(projectId: String, oldTableName: String, newTableName: String): DBIO[_] = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
-  }
-
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, isList = false, TypeIdentifier.Cuid)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, isList = false, typeIdentifier)
@@ -128,32 +120,13 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    DBIO
-      .seq(
-        updateColumn(
-          projectId = projectId,
-          tableName = previousRelation.relationTableName,
-          oldColumnName = previousRelation.modelAColumn,
-          newColumnName = nextRelation.modelAColumn,
-          newIsRequired = true,
-          newIsList = false,
-          newTypeIdentifier = nextRelation.modelA.idField_!.typeIdentifier
-        ),
-        updateColumn(
-          projectId = projectId,
-          tableName = previousRelation.relationTableName,
-          oldColumnName = previousRelation.modelBColumn,
-          newColumnName = nextRelation.modelBColumn,
-          newIsRequired = true,
-          newIsList = false,
-          newTypeIdentifier = nextRelation.modelB.idField_!.typeIdentifier
-        ),
-        if (previousRelation.relationTableName != nextRelation.relationTableName) {
-          renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
-        } else {
-          DBIO.successful(())
-        }
-      )
+    val addOrRemoveId        = addOrRemoveIdColumn(projectId, previousRelation, nextRelation)
+    val renameModelAColumn   = renameColumn(projectId, previousRelation.relationTableName, previousRelation.modelAColumn, nextRelation.modelAColumn)
+    val renameModelBColumn   = renameColumn(projectId, previousRelation.relationTableName, previousRelation.modelBColumn, nextRelation.modelBColumn)
+    val renameTableStatement = renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
+
+    val all = Vector(addOrRemoveId, renameModelAColumn, renameModelBColumn, renameTableStatement)
+    DBIO.sequence(all)
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
@@ -165,6 +138,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
+    //Fixme see below
     for {
       namesOfForeignKey <- getNamesOfForeignKeyConstraints(projectId, model, column)
       _                 <- sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
@@ -241,6 +215,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val indexSize = indexSizeForSQLType(sqlType)
 
     sqlu"ALTER TABLE #${qualify(projectId, s"${modelName}_$fieldName")} DROP INDEX `value`, CHANGE COLUMN `value` `value` #$sqlType, ADD INDEX `value` (`value`#$indexSize ASC)"
+
+//Fixme -> Change does not work
   }
 
   override def updateColumn(projectId: String,
@@ -253,6 +229,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     val newColSql = rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+    //Fixme -> Change does not work
+
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {
@@ -267,4 +245,21 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   override def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_] = {
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(indexName)}"
   }
+
+  override def renameTable(projectId: String, oldTableName: String, newTableName: String): DBIO[_] = {
+    if (oldTableName != newTableName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(newTableName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
+  }
+
+  override def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String) = {
+    if (oldColumnName != newColumnName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
+  }
+
 }

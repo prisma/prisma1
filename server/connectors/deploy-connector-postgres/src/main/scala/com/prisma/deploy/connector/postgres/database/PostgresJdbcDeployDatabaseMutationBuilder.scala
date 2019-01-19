@@ -83,14 +83,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(createSequenceIfRequired, createTable)
   }
 
-  override def renameTable(projectId: String, oldTableName: String, newTableName: String) = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
-  }
-
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
 
@@ -145,24 +137,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val indexB = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(projectId, relationTableName)} ("#$modelBColumn" ASC)"""
 
     DatabaseAction.seq(tableCreate, indexCreate, indexB)
-  }
-
-  override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
-      case (Some(idColumn), None) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
-      case (None, Some(idColumn)) =>
-        // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
-        sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
-               ADD COLUMN "#$idColumn" varchar(40) default null"""
-      case _ => DBIO.successful(())
-    }
-
-    val renameModelAColumn   = renameColumn(projectId, previousRelation.relationTableName, previousRelation.modelAColumn, nextRelation.modelAColumn)
-    val renameModelBColumn   = renameColumn(projectId, previousRelation.relationTableName, previousRelation.modelBColumn, nextRelation.modelBColumn)
-    val renameTableStatement = renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
-
-    val all = Vector(addOrRemoveIdColumn, renameModelAColumn, renameModelBColumn, renameTableStatement)
-    DBIO.sequence(all)
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
@@ -228,12 +202,19 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     sqlu"""DROP INDEX #${qualify(projectId, indexName)}"""
   }
 
-  private def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String) = {
+  override def renameTable(projectId: String, oldTableName: String, newTableName: String) = {
+    if (oldTableName != newTableName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(newTableName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
+  }
+
+  override def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String) = {
     if (oldColumnName != newColumnName) {
       sqlu"""ALTER TABLE #${qualify(projectId, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
     } else {
       DatabaseAction.successful(())
     }
   }
-
 }

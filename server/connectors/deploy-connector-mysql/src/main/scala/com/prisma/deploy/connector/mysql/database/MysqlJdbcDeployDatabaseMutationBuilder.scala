@@ -54,14 +54,6 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
-  override def renameTable(projectId: String, oldTableName: String, newTableName: String) = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(projectId, newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
-  }
-
   override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier))
     val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, isList = false, TypeIdentifier.Cuid)
@@ -120,44 +112,6 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
       case Some(RelationTable(_, _, _, Some(idColumn))) => legacyTableCreate(idColumn)
       case _                                            => modernTableCreate
     }
-  }
-
-  override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
-      case (Some(idColumn), None) => deleteColumn(projectId, previousRelation.relationTableName, idColumn)
-      case (None, Some(idColumn)) =>
-        // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
-        sqlu"""ALTER TABLE #${qualify(projectId, previousRelation.relationTableName)}
-               ADD COLUMN `#$idColumn` varchar(40) default null"""
-      case _ => DBIO.successful(())
-    }
-
-    DBIO.seq(
-      addOrRemoveIdColumn,
-      updateColumn(
-        projectId = projectId,
-        tableName = previousRelation.relationTableName,
-        oldColumnName = previousRelation.modelAColumn,
-        newColumnName = nextRelation.modelAColumn,
-        newIsRequired = true,
-        newIsList = false,
-        newTypeIdentifier = nextRelation.modelA.idField_!.typeIdentifier
-      ),
-      updateColumn(
-        projectId = projectId,
-        tableName = previousRelation.relationTableName,
-        oldColumnName = previousRelation.modelBColumn,
-        newColumnName = nextRelation.modelBColumn,
-        newIsRequired = true,
-        newIsList = false,
-        newTypeIdentifier = nextRelation.modelB.idField_!.typeIdentifier
-      ),
-      if (previousRelation.relationTableName != nextRelation.relationTableName) {
-        renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
-      } else {
-        DBIO.successful(())
-      }
-    )
   }
 
   override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
@@ -242,5 +196,21 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
   override def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_] = {
     sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(indexName)}"
+  }
+
+  override def renameTable(projectId: String, oldTableName: String, newTableName: String): DBIO[_] = {
+    if (oldTableName != newTableName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(projectId, newTableName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
+  }
+
+  override def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_] = {
+    if (oldColumnName != newColumnName) {
+      sqlu"""ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
   }
 }
