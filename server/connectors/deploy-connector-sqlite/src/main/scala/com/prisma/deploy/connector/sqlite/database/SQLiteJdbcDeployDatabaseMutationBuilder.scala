@@ -23,7 +23,17 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   import slickDatabase.profile.api._
 
   override def createSchema(projectId: String): DBIO[_] = {
-    DBIO.successful(())
+    val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
+    val path = s"""'db/$projectId'"""
+    val att  = sqlu"ATTACH DATABASE #${path} AS #$projectId;"
+
+    for {
+      attachedDbs <- list
+      _ <- attachedDbs.map(_._2).contains(projectId) match {
+            case true  => DBIO.successful(())
+            case false => att
+          }
+    } yield ()
   }
 
   override def truncateProjectTables(project: Project): DBIO[_] = {

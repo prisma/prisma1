@@ -40,7 +40,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
 
-  override def capabilities = ConnectorCapabilities.mysql
+  override def capabilities = ConnectorCapabilities.mysql //Fixme
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
@@ -68,7 +68,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, databases.primary)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
-  override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
+  override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('_')
 
   override def initialize(): Future[Unit] = {
     setupDatabase.primary.database
@@ -105,13 +105,11 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-//    DBIO.seq(
-//      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-//        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
-//        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-//    )
-
-    DBIO.seq()
+    DBIO.seq(
+      List(sqlu"""PRAGMA FOREIGN_KEYS=OFF""") ++
+        tableNames.map(name => sqlu"DELETE FROM `#$name`") ++
+        List(sqlu"""PRAGMA FOREIGN_KEYs=ON"""): _*
+    )
   }
 
   override def testFacilities() = {

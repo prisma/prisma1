@@ -70,18 +70,15 @@ object SQLiteInternalDatabaseSchema {
 
   def addDataModelColumnToMigrationTable(internalSchema: String)(implicit ec: ExecutionContext) =
     for { // Fixme
-      doesExist <- DBIO.successful(true) //doesColumnExist(internalSchema, "Migration", "datamodel")
+      doesExist <- doesColumnExist(internalSchema, "Migration", "datamodel")
       _ <- if (doesExist) DBIO.successful(())
           else sqlu"""ALTER TABLE `Migration` ADD COLUMN `datamodel` mediumtext DEFAULT NULL;"""
     } yield ()
 
   //https://stackoverflow.com/questions/6460671/sqlite-schema-information-metadata
   def doesColumnExist(schema: String, table: String, column: String)(implicit ec: ExecutionContext): DBIO[Boolean] = {
-    sql"""
-         select column_name from sqlite_master
-         where type = 'table'
-         and name = '#$table'
-         and column_name = '#$column'
-      """.as[String].map(_.nonEmpty)
+    sql"""SELECT m.name FROM sqlite_master AS m JOIN pragma_table_info(m.name) AS p WHERE m.type = 'table' AND m.name = '#$table' AND p.name = '#$column'"""
+      .as[String]
+      .map(_.nonEmpty)
   }
 }

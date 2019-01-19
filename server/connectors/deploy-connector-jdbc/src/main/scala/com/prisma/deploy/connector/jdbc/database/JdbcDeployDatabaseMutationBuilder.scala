@@ -69,7 +69,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
         .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
         .constraint(constraint("pk_RelayId").primaryKey(name(projectId, "_RelayId", "id"))))()
 
-    DBIO.seq(schema, table)
+    DBIO.seq(schema, table).withPinnedSession
   }
 
   def dropTable(projectId: String, tableName: String) = {
