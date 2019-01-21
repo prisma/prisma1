@@ -1,7 +1,7 @@
 package com.prisma.deploy.specutils
 
 import akka.actor.ActorSystem
-import com.prisma.deploy.connector.persistence.MigrationPersistence
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.{DatabaseInspector, DeployMutactionExecutor, MigrationStepMapperImpl}
 import com.prisma.deploy.migration.migrator.{MigrationApplierImpl, Migrator}
 import com.prisma.shared.models._
@@ -11,6 +11,7 @@ import scala.concurrent.Future
 
 case class TestMigrator(
     migrationPersistence: MigrationPersistence,
+    projectPersistence: ProjectPersistence,
     mutactionExecutor: DeployMutactionExecutor,
     databaseInspector: DatabaseInspector
 )(implicit val system: ActorSystem)
@@ -27,7 +28,7 @@ case class TestMigrator(
       rawDataModel: String
   ): Future[Migration] = {
     val stepMapper = MigrationStepMapperImpl(project)
-    val applier    = MigrationApplierImpl(migrationPersistence, stepMapper, mutactionExecutor, databaseInspector)
+    val applier    = MigrationApplierImpl(migrationPersistence, projectPersistence, stepMapper, mutactionExecutor, databaseInspector)
 
     val result: Future[Migration] = for {
       savedMigration <- migrationPersistence.create(Migration(project.id, nextSchema, steps, functions, rawDataModel))

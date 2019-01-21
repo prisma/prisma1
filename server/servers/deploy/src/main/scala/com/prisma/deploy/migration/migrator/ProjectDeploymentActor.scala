@@ -40,6 +40,7 @@ case class ProjectDeploymentActor(
   implicit val ec = context.system.dispatcher
   val applier = MigrationApplierImpl(
     migrationPersistence,
+    deployConnector.projectPersistence,
     MigrationStepMapperImpl(project),
     deployConnector.deployMutactionExecutor,
     deployConnector.testFacilities.inspector

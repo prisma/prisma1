@@ -20,10 +20,10 @@ case class Project(
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
   val dbName: String = manifestation match {
-    case Some(ProjectManifestation(_, Some(schema))) => schema
-    case Some(ProjectManifestation(database, _))     => database
-    case None                                        => id
+    case Some(ProjectManifestation(_, Some(schema)))   => schema
+    case Some(ProjectManifestation(Some(database), _)) => database
+    case _                                             => id
   }
 }
 
-case class ProjectManifestation(database: String, schema: Option[String])
+case class ProjectManifestation(database: Option[String], schema: Option[String])

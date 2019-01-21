@@ -29,7 +29,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
     val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
     val queries = tables.map(tableName => {
-      changeDatabaseQueryToDBIO(sql.truncate(DSL.name(project.id, tableName)).cascade())()
+      changeDatabaseQueryToDBIO(sql.truncate(DSL.name(project.dbName, tableName)).cascade())()
     })
 
     DBIO.seq(queries: _*)
@@ -54,7 +54,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
           isRequired = idField.isRequired,
           isList = false,
           typeIdentifier = idField.typeIdentifier,
-          defaultValue = Some(StringGCValue(s"""nextval('"${project.id}"."${seq.name}"'::regclass)"""))
+          defaultValue = Some(StringGCValue(s"""nextval('"${project.dbName}"."${seq.name}"'::regclass)"""))
         )
       case None =>
         typeMapper.rawSQLForField(idField)
@@ -63,14 +63,14 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val createSequenceIfRequired = sequence match {
       case Some(sequence) =>
         sqlu"""
-              CREATE SEQUENCE "#${project.id}"."#${sequence.name}" START #${sequence.initialValue}
+              CREATE SEQUENCE "#${project.dbName}"."#${sequence.name}" START #${sequence.initialValue}
             """
       case _ =>
         DBIO.successful(())
     }
 
     val createTable = sqlu"""
-         CREATE TABLE #${qualify(project.id, model.dbName)} (
+         CREATE TABLE #${qualify(project.dbName, model.dbName)} (
             #$idFieldSQL,
             PRIMARY KEY (#${qualify(idField.dbName)})
          )
@@ -83,8 +83,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
 
     sqlu"""
-           CREATE TABLE #${qualify(project.id, s"${model.dbName}_$fieldName")} (
-              "nodeId" VARCHAR (25) NOT NULL REFERENCES #${qualify(project.id, model.dbName)} (#${qualify(model.dbNameOfIdField_!)}),
+           CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
+              "nodeId" VARCHAR (25) NOT NULL REFERENCES #${qualify(project.dbName, model.dbName)} (#${qualify(model.dbNameOfIdField_!)}),
               "position" INT NOT NULL,
               "value" #$sqlType NOT NULL,
               PRIMARY KEY ("nodeId", "position")
@@ -104,21 +104,21 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val aColSql                             = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
     val bColSql                             = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
     def legacyTableCreate(idColumn: String) = sqlu"""
-                        CREATE TABLE #${qualify(project.id, relationTableName)} (
+                        CREATE TABLE #${qualify(project.dbName, relationTableName)} (
                             "#$idColumn" CHAR(25) NOT NULL,
                             PRIMARY KEY ("#$idColumn"),
                             #$aColSql,
                             #$bColSql,
-                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(project.id, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.id, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(project.dbName, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.dbName, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
     val modernTableCreate = sqlu"""
-                        CREATE TABLE #${qualify(project.id, relationTableName)} (
+                        CREATE TABLE #${qualify(project.dbName, relationTableName)} (
                             #$aColSql,
                             #$bColSql,
-                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(project.id, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.id, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                            FOREIGN KEY ("#$modelAColumn") REFERENCES #${qualify(project.dbName, modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY ("#$modelBColumn") REFERENCES #${qualify(project.dbName, modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
 
     val tableCreate = relation.manifestation match {
@@ -129,8 +129,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
     // we do not create an index on A because queries for the A column can be satisfied with the combined index as well
     val indexCreate =
-      sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(project.id, relationTableName)} ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
-    val indexB = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(project.id, relationTableName)} ("#$modelBColumn" ASC)"""
+      sqlu"""CREATE UNIQUE INDEX "#${relationTableName}_AB_unique" on #${qualify(project.dbName, relationTableName)} ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
+    val indexB = sqlu"""CREATE INDEX #${qualify(s"${relationTableName}_B")} on #${qualify(project.dbName, relationTableName)} ("#$modelBColumn" ASC)"""
 
     DatabaseAction.seq(tableCreate, indexCreate, indexB)
   }
@@ -140,21 +140,21 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       case (Some(idColumn), None) => deleteColumn(project, previousRelation.relationTableName, idColumn)
       case (None, Some(idColumn)) =>
         // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
-        sqlu"""ALTER TABLE #${qualify(project.id, previousRelation.relationTableName)}
+        sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
                ADD COLUMN "#$idColumn" varchar(40) default null"""
       case _ => DBIO.successful(())
     }
 
     val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
-      sqlu"""ALTER TABLE #${qualify(project.id, previousRelation.relationTableName)}
+      sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
              RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}"""
     )
     val renameModelBColumn = (previousRelation.modelBColumn != nextRelation.modelBColumn).toOption(
-      sqlu"""ALTER TABLE #${qualify(project.id, previousRelation.relationTableName)}
+      sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
              RENAME COLUMN #${qualify(previousRelation.modelBColumn)} TO #${qualify(nextRelation.modelBColumn)}"""
     )
     val renameTable = (previousRelation.relationTableName != nextRelation.relationTableName).toOption(
-      sqlu"""ALTER TABLE #${qualify(project.id, previousRelation.relationTableName)}
+      sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
              RENAME TO #${qualify(nextRelation.relationTableName)}"""
     )
     val all = Vector(addOrRemoveIdColumn) ++ renameModelAColumn ++ renameModelBColumn ++ renameTable
@@ -164,8 +164,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
 
-    sqlu"""ALTER TABLE #${qualify(project.id, model.dbName)} ADD COLUMN #$colSql
-           REFERENCES #${qualify(project.id, references.dbName)} (#${qualify(references.dbNameOfIdField_!)}) ON DELETE SET NULL;"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} ADD COLUMN #$colSql
+           REFERENCES #${qualify(project.dbName, references.dbName)} (#${qualify(references.dbNameOfIdField_!)}) ON DELETE SET NULL;"""
   }
 
   override def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
@@ -187,13 +187,13 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       case false => DatabaseAction.successful(())
     }
 
-    val addColumn = sqlu"""ALTER TABLE #${qualify(project.id, tableName)} ADD COLUMN #$fieldSQL"""
+    val addColumn = sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$fieldSQL"""
     DatabaseAction.seq(addColumn, uniqueAction)
   }
 
   override def updateScalarListType(project: Project, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
     val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
-    sqlu"""ALTER TABLE #${qualify(project.id, s"${modelName}_$fieldName")} DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, s"${modelName}_$fieldName")} DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
   }
 
   override def updateColumn(project: Project,
@@ -206,27 +206,27 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val nulls   = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
     val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
     val renameIfNecessary = if (oldColumnName != newColumnName) {
-      sqlu"""ALTER TABLE #${qualify(project.id, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
     } else {
       DatabaseAction.successful(())
     }
 
     DatabaseAction.seq(
-      sqlu"""ALTER TABLE #${qualify(project.id, tableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
-      sqlu"""ALTER TABLE #${qualify(project.id, tableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
+      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
+      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
       renameIfNecessary
     )
   }
 
   override def renameTable(project: Project, currentName: String, newName: String): DBIO[_] = {
-    sqlu"""ALTER TABLE #${qualify(project.id, currentName)} RENAME TO #${qualify(newName)}"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, currentName)} RENAME TO #${qualify(newName)}"""
   }
 
   override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    sqlu"""CREATE UNIQUE INDEX #${qualify(s"${project.id}.$tableName.$columnName._UNIQUE")} ON #${qualify(project.id, tableName)}(#${qualify(columnName)} ASC);"""
+    sqlu"""CREATE UNIQUE INDEX #${qualify(s"${project.dbName}.$tableName.$columnName._UNIQUE")} ON #${qualify(project.dbName, tableName)}(#${qualify(columnName)} ASC);"""
   }
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
-    sqlu"""DROP INDEX #${qualify(project.id, indexName)}"""
+    sqlu"""DROP INDEX #${qualify(project.dbName, indexName)}"""
   }
 }

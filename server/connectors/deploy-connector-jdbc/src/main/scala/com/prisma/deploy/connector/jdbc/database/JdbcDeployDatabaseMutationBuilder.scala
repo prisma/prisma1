@@ -59,10 +59,10 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
    * Connector-agnostic functions
    */
   def createClientDatabaseForProject(projectId: String) = {
-    val schema = changeDatabaseQueryToDBIO(sql.createSchema(projectId))()
+    val schema = changeDatabaseQueryToDBIO(sql.createSchema(projectId))().asTry.map(_ => ())
     val table = changeDatabaseQueryToDBIO(
       sql
-        .createTable(name(projectId, "_RelayId"))
+        .createTableIfNotExists(name(projectId, "_RelayId"))
         .column("id", SQLDataType.VARCHAR(36).nullable(false))
         .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
         .constraint(constraint("pk_RelayId").primaryKey(name(projectId, "_RelayId", "id"))))()
@@ -71,7 +71,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   }
 
   def dropTable(project: Project, tableName: String) = {
-    val query = sql.dropTable(name(project.id, tableName))
+    val query = sql.dropTable(name(project.dbName, tableName))
     changeDatabaseQueryToDBIO(query)()
   }
 
@@ -79,7 +79,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     val tableName = s"${modelName}_$fieldName"
     dbSchema.table(tableName) match {
       case Some(_) =>
-        val query = sql.dropTable(name(project.id, s"${modelName}_$fieldName"))
+        val query = sql.dropTable(name(project.dbName, s"${modelName}_$fieldName"))
         changeDatabaseQueryToDBIO(query)()
       case None =>
         DBIO.successful(())
@@ -87,7 +87,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   }
 
   def renameScalarListTable(project: Project, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    val query = sql.alterTable(name(project.id, s"${modelName}_$fieldName")).renameTo(name(project.id, s"${newModelName}_$newFieldName"))
+    val query = sql.alterTable(name(project.dbName, s"${modelName}_$fieldName")).renameTo(name(project.id, s"${newModelName}_$newFieldName"))
     changeDatabaseQueryToDBIO(query)()
   }
 
@@ -97,7 +97,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
 //  }
 
   def deleteColumn(project: Project, tableName: String, columnName: String) = {
-    val query = sql.alterTable(name(project.id, tableName)).dropColumn(name(columnName))
+    val query = sql.alterTable(name(project.dbName, tableName)).dropColumn(name(columnName))
     changeDatabaseQueryToDBIO(query)()
   }
 }

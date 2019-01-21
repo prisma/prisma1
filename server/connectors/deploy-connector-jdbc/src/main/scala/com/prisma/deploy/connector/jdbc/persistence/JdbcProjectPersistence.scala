@@ -29,14 +29,9 @@ object ProjectTable {
 case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: DatabaseConfig) extends JdbcBase with ProjectPersistence {
   import com.prisma.shared.models.ProjectJsonFormatter._
 
-  val projectManifestation: Option[ProjectManifestation] = {
-    dbConfig.database.map { db =>
-      ProjectManifestation(db, dbConfig.schema)
-    }
-  }
-
-  val pt = ProjectTable
-  val mt = MigrationTable
+  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema)
+  val pt                                         = ProjectTable
+  val mt                                         = MigrationTable
 
   override def load(id: String): Future[Option[Project]] = {
     val query = sql
@@ -169,7 +164,7 @@ case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: Databa
       allowQueries = rs.getBoolean(pt.allowQueries.getName),
       allowMutations = rs.getBoolean(pt.allowMutations.getName),
       functions = functions,
-      manifestation = projectManifestation
+      manifestation = Some(projectManifestation)
     )
   }
 }

@@ -350,7 +350,7 @@ object ProjectJsonFormatter {
 
   implicit lazy val schemaFormat = Format(schemaReads, schemaWrites)
   implicit lazy val projectManifestationFormat: OFormat[ProjectManifestation] = (
-    (JsPath \ "database").format[String] and
+    (JsPath \ "database").formatNullable[String] and
       (JsPath \ "schema").formatNullable[String]
   )(ProjectManifestation.apply, unlift(ProjectManifestation.unapply))
   implicit lazy val projectFormat         = Json.format[Project]
