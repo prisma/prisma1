@@ -5,6 +5,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
+import com.prisma.shared.models.Project
 import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
 
@@ -18,8 +19,8 @@ case class JdbcDatabaseMutactionExecutor(
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
 
-  override def executeRaw(query: String): Future[JsValue] = {
-    val action = JdbcActionsBuilder(null, slickDatabase).executeRaw(query)
+  override def executeRaw(project: Project, query: String): Future[JsValue] = {
+    val action = JdbcActionsBuilder(project, slickDatabase).executeRaw(query)
     slickDatabase.database.run(action)
   }
 

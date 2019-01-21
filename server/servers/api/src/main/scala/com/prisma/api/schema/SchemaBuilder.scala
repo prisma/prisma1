@@ -280,9 +280,8 @@ case class SchemaBuilderImpl(
           Argument("query", StringType)
         ),
         resolve = ctx => {
-          val query    = ctx.arg[String]("query")
-          val database = ctx.argOpt[String]("database") //Fixme is this intentional?
-          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
+          val query = ctx.arg[String]("query")
+          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(project, query)
         }
       )
     }

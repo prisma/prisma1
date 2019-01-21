@@ -4,6 +4,7 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.extensions.SlickReplacement._
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.shared.models.Project
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import play.api.libs.json.{JsValue, Json}
 
@@ -157,5 +158,5 @@ class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String]
     case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(mutaction = m)
   }
 
-  override def executeRaw(query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))
+  override def executeRaw(project: Project, query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))
 }
