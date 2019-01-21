@@ -36,9 +36,9 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
 
-        CreateInlineRelation(project.id, relation, model, references, m.referencingColumn)
+        CreateInlineRelation(project, relation, model, references, m.referencingColumn)
       case _ =>
-        CreateRelationTable(project.id, relation = relation)
+        CreateRelationTable(project, relation = relation)
     }
     runMutaction(mutaction)
   }
@@ -47,15 +47,15 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   def runDatabaseMutactionOnClientDb(mutaction: TopLevelDatabaseMutaction) = dependencies.databaseMutactionExecutor.executeTransactionally(mutaction).await
 
   private def createModelTable(project: Project, model: Model) = {
-    runMutaction(CreateModelTable(project.id, model))
+    runMutaction(CreateModelTable(project, model))
 
     model.scalarNonListFields
       .filter(f => f.name != ReservedFields.idFieldName)
-      .map(field => CreateColumn(project.id, model, field))
+      .map(field => CreateColumn(project, model, field))
       .map(runMutaction)
 
     model.scalarListFields
-      .map(field => CreateScalarListTable(project.id, model, field))
+      .map(field => CreateScalarListTable(project, model, field))
       .map(runMutaction)
   }
 }

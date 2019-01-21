@@ -9,12 +9,12 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoDeployMutactionExecutor(client: MongoClient, databaseOption: Option[String])(implicit ec: ExecutionContext) extends DeployMutactionExecutor {
   override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = MongoAnyMutactionInterpreter.execute(mutaction)
-    run(client.getDatabase(databaseOption.getOrElse(mutaction.projectId)), action).map(_ => ())
+    run(client.getDatabase(databaseOption.getOrElse(mutaction.project.id)), action).map(_ => ())
   }
 
   override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = MongoAnyMutactionInterpreter.rollback(mutaction)
-    run(client.getDatabase(databaseOption.getOrElse(mutaction.projectId)), action).map(_ => ())
+    run(client.getDatabase(databaseOption.getOrElse(mutaction.project.id)), action).map(_ => ())
   }
 
   def run(database: MongoDatabase, action: DeployMongoAction): Future[Unit] = action.fn(database)

@@ -20,18 +20,18 @@ case class TestMigrator(
 
   // For tests, the schedule directly does all the migration work to remove the asynchronous component
   override def schedule(
-      projectId: String,
+      project: Project,
       nextSchema: Schema,
       steps: Vector[MigrationStep],
       functions: Vector[Function],
       rawDataModel: String
   ): Future[Migration] = {
-    val stepMapper = MigrationStepMapperImpl(projectId)
+    val stepMapper = MigrationStepMapperImpl(project)
     val applier    = MigrationApplierImpl(migrationPersistence, stepMapper, mutactionExecutor, databaseInspector)
 
     val result: Future[Migration] = for {
-      savedMigration <- migrationPersistence.create(Migration(projectId, nextSchema, steps, functions, rawDataModel))
-      lastMigration  <- migrationPersistence.getLastMigration(projectId)
+      savedMigration <- migrationPersistence.create(Migration(project.id, nextSchema, steps, functions, rawDataModel))
+      lastMigration  <- migrationPersistence.getLastMigration(project.id)
       applied <- applier.apply(lastMigration.get.schema, savedMigration).flatMap { result =>
                   if (result.succeeded) {
                     migrationPersistence.updateMigrationStatus(savedMigration.id, MigrationStatus.Success).map { _ =>

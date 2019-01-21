@@ -84,7 +84,7 @@ object MongoDeployDatabaseMutationBuilder {
 //    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
-  def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
+  def renameCollection(project: Project, collectionName: String, newName: String) = DeployMongoAction { database =>
     Future.successful(())
 
 //    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)

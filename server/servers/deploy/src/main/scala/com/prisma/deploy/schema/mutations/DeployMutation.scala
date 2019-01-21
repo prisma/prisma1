@@ -169,7 +169,7 @@ case class DeployMutation(
     val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
-      migrator.schedule(project.id, nextSchema, steps, functions, args.types).map(Some(_))
+      migrator.schedule(project, nextSchema, steps, functions, args.types).map(Some(_))
     } else {
       Future.successful(None)
     }

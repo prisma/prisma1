@@ -35,7 +35,7 @@ case class DeleteProjectMutation(
       _ <- if (connectorCapabilities.isDataModelV2) {
             Future.successful(())
           } else {
-            if (deployConnector.isActive && !deployConnector.capabilities.has(EmbeddedTypesCapability)) deployConnector.deleteProjectDatabase(projectId)
+            if (deployConnector.isActive && !deployConnector.capabilities.has(EmbeddedTypesCapability)) deployConnector.deleteProjectDatabase(project.id)
             else Future.successful(())
           }
       _ = invalidationPubSub.publish(Only(projectId), projectId)
