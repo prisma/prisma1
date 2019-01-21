@@ -21,7 +21,7 @@ export interface DeployPayload {
   errors: SchemaError[]
   warnings: SchemaError[]
   migration: Migration
-  steps: MigrationStep[]
+  steps?: MigrationStep[]
 }
 
 export interface AuthenticationPayload {

@@ -22,6 +22,8 @@ import {
 } from './types'
 import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
+import { IntrospectionQuery } from 'graphql'
+import { hasTypeWithField } from '../utils/graphql-schema'
 
 const debug = require('debug')('client')
 
@@ -725,6 +727,14 @@ export class Client {
     }
   }
 
+  async hasStepsApi() {
+    const result: IntrospectionQuery = await this.client.request(
+      introspectionQuery,
+    )
+
+    return hasTypeWithField(result, 'DeployPayload', 'steps')
+  }
+
   async deploy(
     name: string,
     stage: string,
@@ -733,7 +743,7 @@ export class Client {
     subscriptions: FunctionInput[],
     secrets: string[] | null,
     force?: boolean,
-  ): Promise<any> {
+  ): Promise<DeployPayload> {
     const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
@@ -756,6 +766,9 @@ export class Client {
       }
       ${MIGRATION_FRAGMENT}
     `
+
+    const hasStepsApi = await this.hasStepsApi()
+    const steps = hasStepsApi ? `steps { ${STEP_FRAGMENT} }` : ''
 
     const newMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
@@ -781,9 +794,8 @@ export class Client {
           migration {
             ...MigrationFragment
           }
-          steps {
-            ${STEP_FRAGMENT}
-          }
+          
+          ${steps}
         }
       }
       ${MIGRATION_FRAGMENT}
