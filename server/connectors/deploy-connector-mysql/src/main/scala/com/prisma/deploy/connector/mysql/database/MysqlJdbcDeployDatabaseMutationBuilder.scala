@@ -28,7 +28,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
     val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
     val queries = tables.map(tableName => {
-      changeDatabaseQueryToDBIO(sql.truncate(DSL.name(project.id, tableName)))()
+      changeDatabaseQueryToDBIO(sql.truncate(DSL.name(project.dbName, tableName)))()
     })
 
     DBIO.seq(sqlu"set foreign_key_checks=0" +: queries :+ sqlu"set foreign_key_checks=1": _*)
@@ -39,7 +39,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def renameTable(project: Project, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All] = {
-    sqlu"""RENAME TABLE #${qualify(project.id, currentName)} TO #${qualify(project.id, newName)};"""
+    sqlu"""RENAME TABLE #${qualify(project.dbName, currentName)} TO #${qualify(project.dbName, newName)};"""
   }
 
   override def createModelTable(project: Project, model: Model): DBIO[_] = {
@@ -47,7 +47,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val idFieldSQL           = typeMapper.rawSQLForField(idField)
     val initialSequenceValue = idField.behaviour.collect { case IdBehaviour(_, Some(seq)) => seq.initialValue }
 
-    sqlu"""CREATE TABLE #${qualify(project.id, model.dbName)} (
+    sqlu"""CREATE TABLE #${qualify(project.dbName, model.dbName)} (
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)}),
            UNIQUE INDEX `id_UNIQUE` (#${qualify(idField.dbName)} ASC))
@@ -60,13 +60,13 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, isList = false, TypeIdentifier.Cuid)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, isList = false, typeIdentifier)
 
-    sqlu"""CREATE TABLE #${qualify(project.id, s"${model.dbName}_$fieldName")} (
+    sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
            #$nodeIdSql,
            `position` INT(4) NOT NULL,
            #$valueSql,
            PRIMARY KEY (`nodeId`, `position`),
            INDEX `value` (`value`#$indexSize ASC),
-           FOREIGN KEY (`nodeId`) REFERENCES #${qualify(project.id, model.dbName)} (#${qualify(model.idField_!.dbName)}) ON DELETE CASCADE)
+           FOREIGN KEY (`nodeId`) REFERENCES #${qualify(project.dbName, model.dbName)} (#${qualify(model.idField_!.dbName)}) ON DELETE CASCADE)
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"""
   }
 
@@ -84,7 +84,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     def legacyTableCreate(idColumn: String) = {
       val idSql = typeMapper.rawSQLFromParts(idColumn, isRequired = true, isList = false, TypeIdentifier.Cuid)
       sqlu"""
-         CREATE TABLE #${qualify(project.id, relationTableName)} (
+         CREATE TABLE #${qualify(project.dbName, relationTableName)} (
            #$idSql,
            PRIMARY KEY (`#$idColumn`),
            UNIQUE INDEX `id_UNIQUE` (`#$idColumn` ASC),
@@ -92,20 +92,20 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
            #$bColSql,
            INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
            UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
-           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(project.id, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(project.id, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
+           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(project.dbName, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(project.dbName, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
       """
     }
 
     val modernTableCreate = sqlu"""
-         CREATE TABLE #${qualify(project.id, relationTableName)} (
+         CREATE TABLE #${qualify(project.dbName, relationTableName)} (
            #$aColSql,
            #$bColSql,
            INDEX `#$modelBColumn` (`#$modelBColumn` ASC),
            UNIQUE INDEX `#${relation.name}_AB_unique` (`#$modelAColumn` ASC, `#$modelBColumn` ASC),
-           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(project.id, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
-           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(project.id, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
+           FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(project.dbName, modelA.dbName)}(#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+           FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(project.dbName, modelB.dbName)}(#${qualify(modelB.dbNameOfIdField_!)}) ON DELETE CASCADE)
            DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
       """
 
@@ -121,7 +121,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
       case (Some(idColumn), None) => deleteColumn(project, previousRelation.relationTableName, idColumn)
       case (None, Some(idColumn)) =>
         // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
-        sqlu"""ALTER TABLE #${qualify(project.id, previousRelation.relationTableName)}
+        sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
                ADD COLUMN `#$idColumn` varchar(40) default null"""
       case _ => DBIO.successful(())
     }
@@ -156,17 +156,17 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
-    sqlu"""ALTER TABLE #${qualify(project.id, model.dbName)}
+    sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
           ADD COLUMN #$colSql,
-          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.id, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
+          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
         """
   }
 
   override def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     for {
       namesOfForeignKey <- getNamesOfForeignKeyConstraints(project, model, column)
-      _                 <- sqlu"""ALTER TABLE #${qualify(project.id, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
-      _                 <- sqlu"""ALTER TABLE #${qualify(project.id, model.dbName)} DROP COLUMN `#$column`;"""
+      _                 <- sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
+      _                 <- sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} DROP COLUMN `#$column`;"""
     } yield ()
   }
 
@@ -201,14 +201,14 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
         ""
       }
 
-    sqlu"""ALTER TABLE #${qualify(project.id, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
   }
 
   override def updateScalarListType(project: Project, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
     val indexSize = indexSizeForSQLType(sqlType)
 
-    sqlu"ALTER TABLE #${qualify(project.id, s"${modelName}_$fieldName")} DROP INDEX `value`, CHANGE COLUMN `value` `value` #$sqlType, ADD INDEX `value` (`value`#$indexSize ASC)"
+    sqlu"ALTER TABLE #${qualify(project.dbName, s"${modelName}_$fieldName")} DROP INDEX `value`, CHANGE COLUMN `value` `value` #$sqlType, ADD INDEX `value` (`value`#$indexSize ASC)"
   }
 
   override def updateColumn(project: Project,
@@ -219,7 +219,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
-    sqlu"ALTER TABLE #${qualify(project.id, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {
@@ -231,10 +231,10 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
     val indexSize = indexSizeForSQLType(sqlType)
 
-    sqlu"ALTER TABLE #${qualify(project.id, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
+    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
   }
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
-    sqlu"ALTER TABLE #${qualify(project.id, tableName)} DROP INDEX #${qualify(indexName)}"
+    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)}"
   }
 }
