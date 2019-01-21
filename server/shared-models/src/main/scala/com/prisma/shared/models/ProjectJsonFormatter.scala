@@ -348,7 +348,11 @@ object ProjectJsonFormatter {
       (JsPath \ "version").writeNullable[String]
   )(s => (s.modelTemplates, s.relationTemplates, s.enums, s.version))
 
-  implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
+  implicit lazy val schemaFormat = Format(schemaReads, schemaWrites)
+  implicit lazy val projectManifestationFormat: OFormat[ProjectManifestation] = (
+    (JsPath \ "database").format[String] and
+      (JsPath \ "schema").formatNullable[String]
+  )(ProjectManifestation.apply, unlift(ProjectManifestation.unapply))
   implicit lazy val projectFormat         = Json.format[Project]
   implicit lazy val migrationStatusFormat = JsonUtils.enumFormat(MigrationStatus)
 
