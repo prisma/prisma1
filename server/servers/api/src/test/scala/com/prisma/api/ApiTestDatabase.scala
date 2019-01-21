@@ -15,7 +15,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
 
   def setup(project: Project): Unit = {
-    dependencies.deployConnector.deleteProjectDatabase(project.id).await
+    dependencies.deployConnector.deleteProjectDatabase(project.dbName).await
     dependencies.invalidationTestKit.publish(Only(project.id), project.id)
     createProjectDatabase(project)
 
