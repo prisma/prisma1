@@ -152,7 +152,7 @@ case class ProjectDeploymentActor(
   def handleDeployment(): Future[Unit] = {
     migrationPersistence.getNextMigration(project.id).transformWith {
       case Success(Some(nextMigration)) =>
-        applier.apply(previousSchema = activeSchema, migration = nextMigration).map { result =>
+        applier.apply(project, previousSchema = activeSchema, migration = nextMigration).map { result =>
           if (result.succeeded) {
             activeSchema = nextMigration.schema
           }

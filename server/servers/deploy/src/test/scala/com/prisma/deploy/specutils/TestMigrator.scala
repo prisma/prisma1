@@ -33,7 +33,7 @@ case class TestMigrator(
     val result: Future[Migration] = for {
       savedMigration <- migrationPersistence.create(Migration(project.id, nextSchema, steps, functions, rawDataModel))
       lastMigration  <- migrationPersistence.getLastMigration(project.id)
-      applied <- applier.apply(lastMigration.get.schema, savedMigration).flatMap { result =>
+      applied <- applier.apply(project, lastMigration.get.schema, savedMigration).flatMap { result =>
                   if (result.succeeded) {
                     migrationPersistence.updateMigrationStatus(savedMigration.id, MigrationStatus.Success).map { _ =>
                       savedMigration.copy(status = MigrationStatus.Success)

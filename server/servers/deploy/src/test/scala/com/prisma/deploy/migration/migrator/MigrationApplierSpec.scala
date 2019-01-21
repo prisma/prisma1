@@ -55,7 +55,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
       }
     )
     val applier = migrationApplier(mapper, executor)
-    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(project, previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(true)
 
     val persisted = persistence.getLastMigration(projectId).await.get
@@ -82,7 +82,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
       }
     )
     val applier = migrationApplier(mapper, executor)
-    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(project, previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(false)
 
     val persisted = loadMigrationFromDb
@@ -108,7 +108,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     )
 
     val applier = migrationApplier(mapper, executor)
-    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(project, previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(false)
 
     val persisted = loadMigrationFromDb

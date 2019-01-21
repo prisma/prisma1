@@ -2,7 +2,7 @@ package com.prisma.deploy.migration.migrator
 
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.shared.models.{Migration, MigrationStatus, MigrationStep, Schema}
+import com.prisma.shared.models._
 import com.prisma.utils.exceptions.StackTraceUtils
 import org.joda.time.DateTime
 
@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 trait MigrationApplier {
-  def apply(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult]
+  def apply(project: Project, previousSchema: Schema, migration: Migration): Future[MigrationApplierResult]
 }
 case class MigrationApplierResult(succeeded: Boolean)
 
@@ -23,10 +23,9 @@ case class MigrationApplierImpl(
 )(implicit ec: ExecutionContext)
     extends MigrationApplier {
 
-  override def apply(previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
+  override def apply(project: Project, previousSchema: Schema, migration: Migration): Future[MigrationApplierResult] = {
     for {
-      project   <- projectPersistence.load(migration.projectId)
-      tables    <- databaseInspector.inspect(project.get.dbName)
+      tables    <- databaseInspector.inspect(project.dbName)
       nextState = if (migration.status == MigrationStatus.Pending) MigrationStatus.InProgress else migration.status
       _         <- migrationPersistence.updateMigrationStatus(migration.id, nextState)
       _         <- migrationPersistence.updateStartedAt(migration.id, DateTime.now())
