@@ -108,7 +108,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(im
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(
       List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
+        tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++
         List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
     )
   }

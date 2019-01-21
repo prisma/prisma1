@@ -41,7 +41,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
   ): DBIO[_]
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def updateScalarListType(projectId: String, modelName: String, fieldName: String, newType: ScalarTypeIdentifier): DBIO[_]
   def updateColumn(
       projectId: String,
       tableName: String,
@@ -55,7 +55,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_]
 
   def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_]
-//  def addOrRemoveIdColumn(projectId: String, previousRelation: Relation, nextRelation: Relation): DBIO[_]
 
   /*
    * Connector-agnostic functions

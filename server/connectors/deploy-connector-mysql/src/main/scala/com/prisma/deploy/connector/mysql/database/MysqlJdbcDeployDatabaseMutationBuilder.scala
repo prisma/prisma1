@@ -164,8 +164,8 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
   }
 
-  override def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
+  override def updateScalarListType(projectId: String, modelName: String, fieldName: String, newType: ScalarTypeIdentifier): DBIO[_] = {
+    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, newType)
     val indexSize = indexSizeForSQLType(sqlType)
 
     sqlu"ALTER TABLE #${qualify(projectId, s"${modelName}_$fieldName")} DROP INDEX `value`, CHANGE COLUMN `value` `value` #$sqlType, ADD INDEX `value` (`value`#$indexSize ASC)"
