@@ -6,9 +6,7 @@ sealed trait DeployMutaction {
   def projectId: String
 }
 
-case class CreateProject(projectId: String)  extends DeployMutaction
 case class TruncateProject(project: Project) extends DeployMutaction { val projectId = project.id }
-case class DeleteProject(projectId: String)  extends DeployMutaction
 
 case class CreateColumn(projectId: String, model: Model, field: ScalarField)                           extends DeployMutaction
 case class DeleteColumn(projectId: String, model: Model, field: ScalarField)                           extends DeployMutaction
