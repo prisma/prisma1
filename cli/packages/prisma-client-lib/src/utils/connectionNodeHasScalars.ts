@@ -5,9 +5,6 @@ import {
 
 import { getDeepType } from '.'
 
-// TODO: If isScalar is called from a functional context
-// it loses instanceof powers. Hence, this is copy pasted here
-// for now.
 function isScalar(field) {
     const fieldType = getDeepType(field.type)
 
