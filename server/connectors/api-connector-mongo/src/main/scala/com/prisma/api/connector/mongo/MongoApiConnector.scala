@@ -10,11 +10,11 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoApiConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val client = MongoDatabasesFactory.initialize(config)
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(client, config.database)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = new MongoDatabaseMutactionExecutor(client)
 
-  override def dataResolver(project: Project): DataResolver = MongoDataResolver(project, client, config.database)
+  override def dataResolver(project: Project): DataResolver = MongoDataResolver(project, client)
 
-  override def masterDataResolver(project: Project): DataResolver = MongoDataResolver(project, client, config.database)
+  override def masterDataResolver(project: Project): DataResolver = MongoDataResolver(project, client)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 

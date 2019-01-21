@@ -10,14 +10,14 @@ import play.api.libs.json.{JsValue, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String])(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = true)
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = MongoActionsBuilder(schema.getOrElse(mutaction.project.id), client)
+    val actionsBuilder = MongoActionsBuilder(mutaction.project.dbName, client)
     val action         = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
 
     run(actionsBuilder.database, action)

@@ -22,9 +22,9 @@ case class MySqlApiConnector(config: DatabaseConfig, isPrototype: Boolean)(impli
     } yield ()
   }
 
-  override def databaseMutactionExecutor            = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = !isPrototype, schemaName = None)
-  override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.replica, schemaName = None)(ec)
-  override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary, schemaName = None)(ec)
+  override def databaseMutactionExecutor            = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = !isPrototype)
+  override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.replica)(ec)
+  override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 

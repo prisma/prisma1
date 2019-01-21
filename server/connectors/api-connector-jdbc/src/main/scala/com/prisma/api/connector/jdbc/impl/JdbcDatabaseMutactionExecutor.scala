@@ -13,8 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    manageRelayIds: Boolean,
-    schemaName: Option[String]
+    manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
