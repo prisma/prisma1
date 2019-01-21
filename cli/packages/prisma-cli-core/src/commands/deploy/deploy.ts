@@ -253,7 +253,7 @@ ${chalk.gray(
       force,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
-    this.printResult(migrationResult, force)
+    this.printResult(migrationResult, force, dryRun)
 
     if (
       migrationResult.migration &&
@@ -301,34 +301,7 @@ ${chalk.gray(
 
       this.out.action.stop(prettyTime(Date.now() - before))
     }
-    // TODO move up to if statement after testing done
-    if (migrationResult.migration) {
-      if (
-        this.definition.definition!.seed &&
-        !this.flags['no-seed'] &&
-        projectNew
-      ) {
-        this.printHooks()
-        await this.seed(
-          cluster,
-          projectNew,
-          serviceName,
-          stageName,
-          this.definition.getWorkspace(),
-        )
-      }
 
-      // no action required
-      this.deploying = false
-      if (migrationResult.migration) {
-        this.printEndpoints(
-          cluster,
-          serviceName,
-          stageName,
-          this.definition.getWorkspace() || undefined,
-        )
-      }
-    }
     const hooks = this.definition.getHooks('post-deploy')
     if (hooks.length > 0) {
       this.out.log(`\n${chalk.bold('post-deploy')}:`)
@@ -355,6 +328,34 @@ ${chalk.gray(
         this.out.action.stop(chalk.red(figures.cross))
       } else {
         this.out.action.stop()
+      }
+    }
+
+    if (migrationResult.migration) {
+      if (
+        this.definition.definition!.seed &&
+        !this.flags['no-seed'] &&
+        projectNew
+      ) {
+        this.printHooks()
+        await this.seed(
+          cluster,
+          projectNew,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace(),
+        )
+      }
+
+      // no action required
+      this.deploying = false
+      if (migrationResult.migration) {
+        this.printEndpoints(
+          cluster,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace() || undefined,
+        )
       }
     }
   }
@@ -438,7 +439,7 @@ ${chalk.gray(
     return false
   }
 
-  private printResult(payload: DeployPayload, force: boolean) {
+  private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
@@ -471,15 +472,23 @@ ${chalk.gray(
       }
     }
 
-    if (!payload.migration || payload.migration.steps.length === 0) {
-      this.out.log('Service is already up to date.')
+    const steps = payload.steps || payload.migration.steps || []
+
+    if (steps.length === 0) {
+      if (dryRun) {
+        this.out.log('There are no changes.')
+      } else {
+        this.out.log('Service is already up to date.')
+      }
       return
     }
 
-    if (payload.migration.steps.length > 0) {
+    if (steps.length > 0) {
       // this.out.migrati
-      this.out.log('\n' + chalk.bold('Changes:'))
-      this.out.migration.printMessages(payload.migration.steps)
+      this.out.log(
+        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
+      )
+      this.out.migration.printMessages(steps)
       this.out.log('')
     }
   }
