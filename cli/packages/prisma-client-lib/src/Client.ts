@@ -41,14 +41,19 @@ export interface Instruction {
 }
 
 export class Client {
-  // subscription: SubscriptionMap
-  _types: any
+  /**
+   * These properties are exposed through the Client API
+   */
   query: any
+  mutation: any
   $subscribe: any
   $graphql: any
   $exists: any
-  debug
-  mutation: any
+  /**
+   * These are internal properties used by the Client implementation
+   */
+  _types: any
+  _debug
   _endpoint: string
   _secret?: string
   _client: BatchedGraphQLClient
@@ -60,7 +65,7 @@ export class Client {
   _promises: InstructionPromiseMap = {}
 
   constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
-    this.debug = debug
+    this._debug = debug
     this._schema = buildSchema(typeDefs)
     this._endpoint = endpoint
     this._secret = secret
@@ -140,7 +145,7 @@ export class Client {
     const document = this.getDocumentForInstructions(id)
     const operation = this.getOperation(instructions) as OperationTypeNode
 
-    if (this.debug) {
+    if (this._debug) {
       console.log(`\nQuery:`)
       const query = print(document)
       console.log(query)
