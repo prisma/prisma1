@@ -411,6 +411,41 @@ export class Client {
     return typeName.endsWith('Connection') && typeName !== 'Connection'
   }
 
+  connectionNodeHasScalars({ type }) {
+    const edgesField = Object.entries(type.getFields())
+      .filter(([, subField]: any) => {
+        return subField.name === 'edges'
+      })
+      .map(([, subField]: any) => {
+        return subField
+      })
+
+    if (edgesField.length === 0) {
+      return false
+    }
+
+    const edgesFieldType = this.getDeepType(edgesField[0].type)
+    const nodeField = Object.entries(edgesFieldType.getFields())
+      .filter(([, subField]: any) => {
+        return subField.name === 'node'
+      })
+      .map(([, subField]: any) => {
+        return subField
+      })
+    if (nodeField.length === 0) {
+      return false
+    }
+    const nodeFieldType = this.getDeepType(nodeField[0].type)
+    const nodeFieldScalars = Object.entries(nodeFieldType.getFields())
+      .filter(([, subField]: any) => {
+        return this.isScalar(subField)
+      })
+      .map(([, subField]: any) => {
+        return subField
+      })
+    return nodeFieldScalars.length > 0
+  }
+
   getFieldAst({ field, fieldName, isRelayConnection, isSubscription, args }) {
     const node: any = {
       kind: Kind.FIELD,
@@ -432,6 +467,14 @@ export class Client {
     }
 
     const type = this.getDeepType(field.type)
+
+    if (isRelayConnection) {
+      let relayConnectionHasScalars = false
+      relayConnectionHasScalars = this.connectionNodeHasScalars({ type })
+      if (this.isConnectionTypeName(fieldName) && !relayConnectionHasScalars) {
+        return node
+      }
+    }
 
     node.selectionSet.selections = Object.entries(type.getFields())
       .filter(([, subField]: any) => {
