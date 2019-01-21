@@ -41,10 +41,9 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
   ): DBIO[_]
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, newType: ScalarTypeIdentifier): DBIO[_]
   def updateColumn(
       projectId: String,
-      tableName: String,
+      model: Model,
       oldColumnName: String,
       newColumnName: String,
       newIsRequired: Boolean,
@@ -103,6 +102,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     renameTable(projectId, s"${modelName}_$fieldName", s"${newModelName}_$newFieldName")
   }
 
+  //There is a bug in jOOQ currently that does not render this correctly for all connectors, until it is fixed this is connector specific
+  //Scheduled to be fixed in 3.11.10 https://github.com/jOOQ/jOOQ/issues/8042
 //  def renameTable(projectId: String, currentName: String, newName: String) = {
 //    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
 //    changeDatabaseQueryToDBIO(query)()

@@ -175,32 +175,52 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(add, unique)
   }
 
-  override def updateScalarListType(projectId: String, modelName: String, fieldName: String, newType: ScalarTypeIdentifier): DBIO[_] = {
-    val tableName    = s"${modelName}_$fieldName"
-    val dropIndex    = removeIndex(projectId, tableName, "value_Index")
-    val changeColumn = updateColumn(projectId, tableName, "value", "value", true, false, newType)
-    val addIndex     = sqlu"CREATE INDEX IF NOT EXISTS #${qualify(projectId, "value_Index")} ON #${qualify(s"${modelName}_$fieldName")} (#${qualify("value")} ASC)"
-
-    DBIO.seq(dropIndex, changeColumn, addIndex)
-  }
-
+  //https://www.sqlite.org/lang_altertable.html
   override def updateColumn(projectId: String,
-                            tableName: String,
+                            model: Model,
                             oldColumnName: String,
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
 
-    val newColSql = rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
-    sqlu"ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
-    //Fixme -> Change does not work
+//    If foreign key constraints are enabled, disable them using PRAGMA foreign_keys=OFF.
+    val foreignKeysOff = sqlu"Pragma foreign_keys=OFF"
 
-  }
+//    Start a transaction.
+    val beginTransaction = sqlu"BEGIN TRANSACTION"
+//    Remember the format of all indexes and triggers associated with table X. This information will be needed in step 8 below
+//    One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
 
-  def indexSizeForSQLType(sql: String): String = sql match {
-    case x if x.startsWith("text") | x.startsWith("mediumtext") => "(191)"
-    case _                                                      => ""
+//    Use CREATE TABLE to construct a new table "new_X" that is in the desired revised format of table X.
+//    Make sure that the name "new_X" does not collide with any existing table name, of course.
+    val idField    = model.idField_!
+    val idFieldSQL = typeMapper.rawSQLForField(idField)
+
+    val createNewTable = sqlu"""CREATE TABLE #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} (
+           #$idFieldSQL,
+           PRIMARY KEY (#${qualify(idField.dbName)})
+           );"""
+    // new table with all columns
+
+//    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
+
+//    Drop the old table X: DROP TABLE X.
+    val dropOldTable = sqlu"DROP TABLE #${qualify(projectId, model.dbName)} "
+//    Change the name of new_X to X using: ALTER TABLE new_X RENAME TO X.
+
+    val renameNewTable = sqlu"ALTER TABLE #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} RENAME TO #${qualify(projectId, model.dbName)}"
+//    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
+
+//    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
+
+//    If foreign key constraints were originally enabled then run PRAGMA foreign_key_check to verify that the schema change did not break any foreign key constraints.
+
+//    Commit the transaction started in step 2.
+
+//    If foreign keys constraints were originally enabled, reenable them now.
+
+    DBIO.successful(())
   }
 
   override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
@@ -260,5 +280,4 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     s"$n $ty $nullable $default $generated"
   }
-
 }

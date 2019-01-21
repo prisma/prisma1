@@ -164,22 +164,15 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
   }
 
-  override def updateScalarListType(projectId: String, modelName: String, fieldName: String, newType: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, newType)
-    val indexSize = indexSizeForSQLType(sqlType)
-
-    sqlu"ALTER TABLE #${qualify(projectId, s"${modelName}_$fieldName")} DROP INDEX `value`, CHANGE COLUMN `value` `value` #$sqlType, ADD INDEX `value` (`value`#$indexSize ASC)"
-  }
-
   override def updateColumn(projectId: String,
-                            tableName: String,
+                            model: Model,
                             oldColumnName: String,
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
-    sqlu"ALTER TABLE #${qualify(projectId, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+    sqlu"ALTER TABLE #${qualify(projectId, model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {

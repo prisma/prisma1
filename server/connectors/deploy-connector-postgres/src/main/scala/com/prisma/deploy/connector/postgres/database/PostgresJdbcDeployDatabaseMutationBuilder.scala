@@ -169,20 +169,14 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     DatabaseAction.seq(addColumn, uniqueAction)
   }
 
-  override def updateScalarListType(projectId: String, modelName: String, fieldName: String, newType: ScalarTypeIdentifier) = {
-    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, newType)
-    sqlu"""ALTER TABLE #${qualify(projectId, s"${modelName}_$fieldName")} DROP INDEX "value",
-           CHANGE COLUMN "value" "value" #$sqlType,
-           ADD INDEX "value" ("value" ASC)"""
-  }
-
   override def updateColumn(projectId: String,
-                            tableName: String,
+                            model: Model,
                             oldColumnName: String,
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+    val tableName         = model.dbName
     val nulls             = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
     val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
     val renameIfNecessary = renameColumn(projectId, tableName, oldColumnName, newColumnName)
