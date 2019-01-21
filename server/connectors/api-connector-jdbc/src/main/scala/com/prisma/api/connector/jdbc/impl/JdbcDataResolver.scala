@@ -17,7 +17,7 @@ case class JdbcDataResolver(
     extends DataResolver {
 
   val queryBuilder = JdbcActionsBuilder(
-    schemaName = schemaName.getOrElse(project.id),
+    project = project,
     slickDatabase = slickDatabase
   )
 

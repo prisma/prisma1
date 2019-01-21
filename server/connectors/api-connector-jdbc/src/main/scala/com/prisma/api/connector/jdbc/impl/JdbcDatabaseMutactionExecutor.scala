@@ -19,7 +19,7 @@ case class JdbcDatabaseMutactionExecutor(
   import slickDatabase.profile.api._
 
   override def executeRaw(query: String): Future[JsValue] = {
-    val action = JdbcActionsBuilder("", slickDatabase).executeRaw(query)
+    val action = JdbcActionsBuilder(null, slickDatabase).executeRaw(query)
     slickDatabase.database.run(action)
   }
 
@@ -28,7 +28,7 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = JdbcActionsBuilder(schemaName = schemaName.getOrElse(mutaction.project.id), slickDatabase)
+    val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)

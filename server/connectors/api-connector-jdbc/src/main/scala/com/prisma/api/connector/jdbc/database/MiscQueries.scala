@@ -17,7 +17,7 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
   def countAllFromTable(tableName: String, whereFilter: Option[Filter]): DBIO[Int] = {
 
     lazy val query = {
-      val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
+      val aliasedTable = table(name(project.dbName, tableName)).as(topLevelAlias)
       val condition    = buildConditionForFilter(whereFilter)
 
       sql
