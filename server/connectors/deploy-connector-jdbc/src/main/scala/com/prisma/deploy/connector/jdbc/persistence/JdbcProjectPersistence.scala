@@ -164,7 +164,7 @@ case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: Databa
       allowQueries = rs.getBoolean(pt.allowQueries.getName),
       allowMutations = rs.getBoolean(pt.allowMutations.getName),
       functions = functions,
-      manifestation = Some(projectManifestation)
+      manifestation = projectManifestation
     )
   }
 }
