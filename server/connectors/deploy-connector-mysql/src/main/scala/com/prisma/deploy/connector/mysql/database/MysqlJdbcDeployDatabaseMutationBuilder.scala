@@ -178,7 +178,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
             FROM
               INFORMATION_SCHEMA.KEY_COLUMN_USAGE
             WHERE
-              REFERENCED_TABLE_SCHEMA = '#$project.id' AND
+              REFERENCED_TABLE_SCHEMA = '#${project.dbName}' AND
               TABLE_NAME = '#${model.dbName}' AND
               COLUMN_NAME = '#$column';
           """.as[String]
