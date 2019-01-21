@@ -175,7 +175,6 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(add, unique)
   }
 
-  //https://www.sqlite.org/lang_altertable.html
   override def updateColumn(projectId: String,
                             model: Model,
                             oldColumnName: String,
@@ -184,6 +183,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
 
+//    https://www.sqlite.org/lang_altertable.html
 //    If foreign key constraints are enabled, disable them using PRAGMA foreign_keys=OFF.
     val foreignKeysOff = sqlu"Pragma foreign_keys=OFF"
 
@@ -201,9 +201,18 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)})
            );"""
-    // new table with all columns
+
+    val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.map { field =>
+      createColumn(projectId, s"${model.dbName}_TEMP_TABLE", field.dbName, field.isRequired, field.isUnique, field.isList, field.typeIdentifier)
+    }: _*)
 
 //    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
+    val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",")
+    val transferContent =
+      sqlu"""INSERT INTO #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} (#$columnNames)
+             SELECT #$columnNames
+             FROM #${qualify(projectId, s"${model.dbName}")}
+          """
 
 //    Drop the old table X: DROP TABLE X.
     val dropOldTable = sqlu"DROP TABLE #${qualify(projectId, model.dbName)} "
@@ -211,16 +220,36 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     val renameNewTable = sqlu"ALTER TABLE #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} RENAME TO #${qualify(projectId, model.dbName)}"
 //    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
-
+    val createIndexes = sqlu"" //Fixme
 //    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
 
 //    If foreign key constraints were originally enabled then run PRAGMA foreign_key_check to verify that the schema change did not break any foreign key constraints.
-
+    val foreignKeyCheck = sqlu"Pragma foreign_key_check"
 //    Commit the transaction started in step 2.
 
+    val commit = sqlu"COMMIT"
 //    If foreign keys constraints were originally enabled, reenable them now.
+    val foreignKeysOn = sqlu"Pragma foreign_keys=ON"
 
-    DBIO.successful(())
+    DBIO.seq(
+      foreignKeysOff,
+      beginTransaction,
+      createNewTable,
+      addAllScalarNonListFields,
+      transferContent,
+      dropOldTable,
+      renameNewTable,
+      createIndexes,
+      foreignKeyCheck,
+      commit,
+      foreignKeysOn
+    )
+  }
+
+  override def deleteColumn(projectId: String, tableName: String, columnName: String, model: Option[Model]) = {
+    //if no model is provided, this concerns the relation table
+
+    sqlu"""ALTER TABLE #${qualify(projectId, tableName)} DROP COLUMN #${qualify(columnName)}"""
   }
 
   override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {

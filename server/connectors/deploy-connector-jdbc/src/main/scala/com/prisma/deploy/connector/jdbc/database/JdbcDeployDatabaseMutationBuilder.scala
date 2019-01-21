@@ -52,7 +52,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   ): DBIO[_]
 
   def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_]
-
+  def deleteColumn(projectId: String, tableName: String, columnName: String, model: Option[Model] = None): DBIO[_]
   def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_]
 
   /*
@@ -90,11 +90,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def dropScalarListTable(projectId: String, modelName: String, fieldName: String, dbSchema: DatabaseSchema) = {
     val tableName = s"${modelName}_$fieldName"
     dbSchema.table(tableName) match {
-      case Some(_) =>
-        val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
-        changeDatabaseQueryToDBIO(query)()
-      case None =>
-        DBIO.successful(())
+      case Some(_) => dropTable(projectId, tableName)
+      case None    => DBIO.successful(())
     }
   }
 
@@ -108,11 +105,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
 //    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
 //    changeDatabaseQueryToDBIO(query)()
 //  }
-
-  def deleteColumn(projectId: String, tableName: String, columnName: String) = {
-    val query = sql.alterTable(name(projectId, tableName)).dropColumn(name(columnName))
-    changeDatabaseQueryToDBIO(query)()
-  }
 
   def addOrRemoveIdColumn(projectId: String, previousRelation: Relation, nextRelation: Relation): DBIO[_] = {
     (previousRelation.idColumn, nextRelation.idColumn) match {

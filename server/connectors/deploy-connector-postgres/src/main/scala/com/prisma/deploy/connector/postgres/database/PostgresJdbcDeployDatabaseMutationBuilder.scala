@@ -188,6 +188,10 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     )
   }
 
+  override def deleteColumn(projectId: String, tableName: String, columnName: String, model: Option[Model]) = {
+    sqlu"""ALTER TABLE #${qualify(projectId, tableName)} DROP COLUMN #${qualify(columnName)}"""
+  }
+
   override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     sqlu"""CREATE UNIQUE INDEX #${qualify(s"$projectId.$tableName.$columnName._UNIQUE")} ON #${qualify(projectId, tableName)}(#${qualify(columnName)} ASC);"""
   }

@@ -1,12 +1,9 @@
 package com.prisma.deploy.connector.jdbc
 
-import java.sql.Types
-
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
-import slick.jdbc.JdbcProfile
 import slick.jdbc.meta.{MColumn, MForeignKey, MIndexInfo, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -125,6 +122,8 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
       x.toVector
     }
   }
+
+  //Fixme needs to handle sqlite
 
   def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey], mSequences: Vector[MSequence]): Table => Column = {
     val isRequired = !mColumn.nullable.getOrElse(true) // sometimes the metadata can't definitely say if something is nullable. We treat those as not required.

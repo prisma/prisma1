@@ -164,6 +164,10 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
   }
 
+  override def deleteColumn(projectId: String, tableName: String, columnName: String, model: Option[Model]) = {
+    sqlu"""ALTER TABLE #${qualify(projectId, tableName)} DROP COLUMN #${qualify(columnName)}"""
+  }
+
   override def updateColumn(projectId: String,
                             model: Model,
                             oldColumnName: String,
