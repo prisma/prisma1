@@ -25,8 +25,8 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   }
 
   def truncateProjectTables(project: Project): Unit   = runMutaction(TruncateProject(project))
-  def deleteProjectDatabase(project: Project): Unit   = dependencies.deployConnector.deleteProjectDatabase(project.id).await()
-  private def createProjectDatabase(project: Project) = dependencies.deployConnector.createProjectDatabase(project.id).await()
+  def deleteProjectDatabase(project: Project): Unit   = dependencies.deployConnector.deleteProjectDatabase(project.dbName).await()
+  private def createProjectDatabase(project: Project) = dependencies.deployConnector.createProjectDatabase(project.dbName).await()
 
   //Fixme how does this work with self relations?
   private def createRelationTable(project: Project, relation: Relation) = {
