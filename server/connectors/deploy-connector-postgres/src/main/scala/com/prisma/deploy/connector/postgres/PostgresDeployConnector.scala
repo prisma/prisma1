@@ -43,7 +43,7 @@ case class PostgresDeployConnector(
   lazy val postgresTypeMapper = PostgresTypeMapper()
   lazy val mutationBuilder    = PostgresJdbcDeployDatabaseMutationBuilder(managementDatabases.primary, postgresTypeMapper)
 
-  override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary)
+  override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary, dbConfig)
   override lazy val migrationPersistence: MigrationPersistence       = JdbcMigrationPersistence(managementDatabases.primary)
   override lazy val cloudSecretPersistence: CloudSecretPersistence   = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence       = JdbcTelemetryPersistence(managementDatabases.primary)
