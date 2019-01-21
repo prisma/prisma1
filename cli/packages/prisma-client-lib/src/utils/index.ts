@@ -18,11 +18,6 @@ import {
 import { Operation } from '../types'
 
 export function isScalar(t: GraphQLOutputType): boolean {
-  console.log(
-    { typeof: typeof t },
-    { constructor: t.constructor.name },
-    { isObject: t instanceof Object },
-  )
   if (t instanceof GraphQLScalarType || t instanceof GraphQLEnumType) {
     return true
   }
