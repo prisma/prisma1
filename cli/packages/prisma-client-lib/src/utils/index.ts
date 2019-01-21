@@ -18,6 +18,11 @@ import {
 import { Operation } from '../types'
 
 export function isScalar(t: GraphQLOutputType): boolean {
+  console.log(
+    { typeof: typeof t },
+    { constructor: t.constructor.name },
+    { isObject: t instanceof Object },
+  )
   if (t instanceof GraphQLScalarType || t instanceof GraphQLEnumType) {
     return true
   }
@@ -139,6 +144,14 @@ export function getTypesAndWhere(queryType: GraphQLObjectType) {
 export function getWhere(field) {
   return (field.args.find(a => a.name === 'where')!
     .type as GraphQLInputObjectType).name
+}
+
+export function getDeepType(type) {
+  if (type.ofType) {
+    return getDeepType(type.ofType)
+  }
+
+  return type
 }
 
 export function getDeepListType(field) {

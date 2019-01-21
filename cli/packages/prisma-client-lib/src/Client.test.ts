@@ -3,6 +3,130 @@ import { Client } from './Client'
 import { Model } from './types'
 import { print } from 'graphql'
 
+test('automatic non-scalar sub selection for a connection without scalars', t => {
+  const typeDefs = `
+    type Query {
+      usersConnection(where: UserWhereInput): UserConnection
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type UserConnection {
+      pageInfo: PageInfo!
+      edges: [UserEdge]!
+      aggregate: AggregateUser!
+    }
+
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+
+    type UserEdge {
+      node: User!
+      cursor: String!
+    }
+
+    type AggregateUser {
+      count: Int!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+      user: User!
+    }
+
+    type User {
+      house: House!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.usersConnection()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection for a connection with scalars', t => {
+  const typeDefs = `
+    type Query {
+      housesConnection(where: HouseWhereInput): HouseConnection
+    }
+
+    input HouseWhereInput {
+      id: ID!
+    }
+
+    type HouseConnection {
+      pageInfo: PageInfo!
+      edges: [HouseEdge]!
+      aggregate: AggregateHouse!
+    }
+
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+
+    type HouseEdge {
+      node: House!
+      cursor: String!
+    }
+
+    type AggregateHouse {
+      count: Int!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+      user: User!
+    }
+
+    type User {
+      house: House!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.housesConnection()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
 test('automatic non-scalar sub selection for relation', t => {
   const typeDefs = `
     type Query {

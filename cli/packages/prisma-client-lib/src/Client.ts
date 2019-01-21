@@ -10,6 +10,7 @@ import {
   buildSchema,
   GraphQLEnumType,
 } from 'graphql'
+import { connectionNodeHasScalars } from './utils/connectionNodeHasScalars'
 import mapAsyncIterator from './utils/mapAsyncIterator'
 import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
@@ -401,41 +402,6 @@ export class Client {
     return typeName.endsWith('Connection') && typeName !== 'Connection'
   }
 
-  connectionNodeHasScalars({ type }) {
-    const edgesField = Object.entries(type.getFields())
-      .filter(([, subField]: any) => {
-        return subField.name === 'edges'
-      })
-      .map(([, subField]: any) => {
-        return subField
-      })
-
-    if (edgesField.length === 0) {
-      return false
-    }
-
-    const edgesFieldType = this.getDeepType(edgesField[0].type)
-    const nodeField = Object.entries(edgesFieldType.getFields())
-      .filter(([, subField]: any) => {
-        return subField.name === 'node'
-      })
-      .map(([, subField]: any) => {
-        return subField
-      })
-    if (nodeField.length === 0) {
-      return false
-    }
-    const nodeFieldType = this.getDeepType(nodeField[0].type)
-    const nodeFieldScalars = Object.entries(nodeFieldType.getFields())
-      .filter(([, subField]: any) => {
-        return this.isScalar(subField)
-      })
-      .map(([, subField]: any) => {
-        return subField
-      })
-    return nodeFieldScalars.length > 0
-  }
-
   getFieldAst({ field, fieldName, isRelayConnection, isSubscription, args }) {
     const node: any = {
       kind: Kind.FIELD,
@@ -460,7 +426,7 @@ export class Client {
 
     if (isRelayConnection) {
       let relayConnectionHasScalars = false
-      relayConnectionHasScalars = this.connectionNodeHasScalars({ type })
+      relayConnectionHasScalars = connectionNodeHasScalars({ type })
       if (this.isConnectionTypeName(fieldName) && !relayConnectionHasScalars) {
         return node
       }
