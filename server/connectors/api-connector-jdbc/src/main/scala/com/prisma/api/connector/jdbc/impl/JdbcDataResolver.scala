@@ -11,13 +11,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDataResolver(
     project: Project,
-    slickDatabase: SlickDatabase,
-    schemaName: Option[String]
+    slickDatabase: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
   val queryBuilder = JdbcActionsBuilder(
-    schemaName = schemaName.getOrElse(project.id),
+    project = project,
     slickDatabase = slickDatabase
   )
 

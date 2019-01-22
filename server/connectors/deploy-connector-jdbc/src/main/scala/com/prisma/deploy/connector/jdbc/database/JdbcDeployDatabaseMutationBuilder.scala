@@ -22,16 +22,16 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
    */
   def truncateProjectTables(project: Project): DBIO[_]
   def deleteProjectDatabase(projectId: String): DBIO[_]
-  def renameTable(projectId: String, currentName: String, newName: String): DBIO[_]
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
-  def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_]
+  def renameTable(project: Project, currentName: String, newName: String): DBIO[_]
+  def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_]
 
-  def createModelTable(projectId: String, model: Model): DBIO[_]
-  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
-  def createRelationTable(projectId: String, relation: Relation): DBIO[_]
-  def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_]
+  def createModelTable(project: Project, model: Model): DBIO[_]
+  def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def createRelationTable(project: Project, relation: Relation): DBIO[_]
+  def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
   def createColumn(
-      projectId: String,
+      project: Project,
       tableName: String,
       columnName: String,
       isRequired: Boolean,
@@ -40,9 +40,9 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
   ): DBIO[_]
 
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def updateScalarListType(project: Project, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
   def updateColumn(
-      projectId: String,
+      project: Project,
       tableName: String,
       oldColumnName: String,
       newColumnName: String,
@@ -51,53 +51,53 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       newTypeIdentifier: ScalarTypeIdentifier
   ): DBIO[_]
 
-  def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation): DBIO[_]
+  def updateRelationTable(project: Project, previousRelation: Relation, nextRelation: Relation): DBIO[_]
 
-  def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_]
+  def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
 
   /*
    * Connector-agnostic functions
    */
-  def createClientDatabaseForProject(projectId: String) = {
-    val schema = changeDatabaseQueryToDBIO(sql.createSchema(projectId))()
+  def createDatabaseForProject(id: String) = {
+    val schema = changeDatabaseQueryToDBIO(sql.createSchema(id))().asTry.map(_ => ())
     val table = changeDatabaseQueryToDBIO(
       sql
-        .createTable(name(projectId, "_RelayId"))
+        .createTableIfNotExists(name(id, "_RelayId"))
         .column("id", SQLDataType.VARCHAR(36).nullable(false))
         .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
-        .constraint(constraint("pk_RelayId").primaryKey(name(projectId, "_RelayId", "id"))))()
+        .constraint(constraint("pk_RelayId").primaryKey(name(id, "_RelayId", "id"))))()
 
     DBIO.seq(schema, table)
   }
 
-  def dropTable(projectId: String, tableName: String) = {
-    val query = sql.dropTable(name(projectId, tableName))
+  def dropTable(project: Project, tableName: String) = {
+    val query = sql.dropTable(name(project.dbName, tableName))
     changeDatabaseQueryToDBIO(query)()
   }
 
-  def dropScalarListTable(projectId: String, modelName: String, fieldName: String, dbSchema: DatabaseSchema) = {
+  def dropScalarListTable(project: Project, modelName: String, fieldName: String, dbSchema: DatabaseSchema) = {
     val tableName = s"${modelName}_$fieldName"
     dbSchema.table(tableName) match {
       case Some(_) =>
-        val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
+        val query = sql.dropTable(name(project.dbName, s"${modelName}_$fieldName"))
         changeDatabaseQueryToDBIO(query)()
       case None =>
         DBIO.successful(())
     }
   }
 
-  def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    val query = sql.alterTable(name(projectId, s"${modelName}_$fieldName")).renameTo(name(projectId, s"${newModelName}_$newFieldName"))
+  def renameScalarListTable(project: Project, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
+    val query = sql.alterTable(name(project.dbName, s"${modelName}_$fieldName")).renameTo(name(project.id, s"${newModelName}_$newFieldName"))
     changeDatabaseQueryToDBIO(query)()
   }
 
-//  def renameTable(projectId: String, currentName: String, newName: String) = {
+//  def renameTable(project: Project, currentName: String, newName: String) = {
 //    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
 //    changeDatabaseQueryToDBIO(query)()
 //  }
 
-  def deleteColumn(projectId: String, tableName: String, columnName: String) = {
-    val query = sql.alterTable(name(projectId, tableName)).dropColumn(name(columnName))
+  def deleteColumn(project: Project, tableName: String, columnName: String) = {
+    val query = sql.alterTable(name(project.dbName, tableName)).dropColumn(name(columnName))
     changeDatabaseQueryToDBIO(query)()
   }
 }

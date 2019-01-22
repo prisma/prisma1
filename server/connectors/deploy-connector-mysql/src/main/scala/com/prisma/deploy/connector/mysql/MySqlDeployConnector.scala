@@ -29,7 +29,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(im
   lazy val mySqlTypeMapper      = MysqlTypeMapper()
   lazy val mutationBuilder      = MySqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
-  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
+  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase, config)
   override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
@@ -44,7 +44,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(im
   }
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 

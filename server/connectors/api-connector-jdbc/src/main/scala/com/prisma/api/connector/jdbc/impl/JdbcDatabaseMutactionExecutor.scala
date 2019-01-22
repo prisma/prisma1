@@ -5,6 +5,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
+import com.prisma.shared.models.Project
 import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
 
@@ -12,14 +13,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    manageRelayIds: Boolean,
-    schemaName: Option[String]
+    manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
 
-  override def executeRaw(query: String): Future[JsValue] = {
-    val action = JdbcActionsBuilder("", slickDatabase).executeRaw(query)
+  override def executeRaw(project: Project, query: String): Future[JsValue] = {
+    val action = JdbcActionsBuilder(project, slickDatabase).executeRaw(query)
     slickDatabase.database.run(action)
   }
 
@@ -28,7 +28,7 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = JdbcActionsBuilder(schemaName = schemaName.getOrElse(mutaction.project.id), slickDatabase)
+    val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)

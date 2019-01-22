@@ -45,6 +45,14 @@ case class DeployMutation(
 ) extends Mutation[DeployMutationPayload]
     with AwaitUtils {
 
+  val actsAsActive = if (capabilities.isDataModelV2) {
+    val noMigration = args.noMigration.getOrElse(false)
+    !noMigration
+  } else {
+    isActive
+  }
+  val actsAsPassive = !actsAsActive
+
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
@@ -102,7 +110,7 @@ case class DeployMutation(
   }
 
   private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (!isActive && capabilities.has(IntrospectionCapability)) {
+    if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
         Future.successful(Good(()))
@@ -115,7 +123,7 @@ case class DeployMutation(
   }
 
   private def inferMigrationSteps(nextSchema: Schema, schemaMapping: SchemaMapping): Future[Vector[MigrationStep] Or Vector[DeployError]] = {
-    val steps = if (isActive) {
+    val steps = if (actsAsActive) {
       migrationStepsInferrer.infer(project.schema, nextSchema, schemaMapping)
     } else {
       Vector.empty
@@ -161,7 +169,7 @@ case class DeployMutation(
     val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
-      migrator.schedule(project.id, nextSchema, steps, functions, args.types).map(Some(_))
+      migrator.schedule(project, nextSchema, steps, functions, args.types).map(Some(_))
     } else {
       Future.successful(None)
     }

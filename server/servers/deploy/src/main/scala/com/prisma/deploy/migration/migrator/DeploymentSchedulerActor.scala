@@ -3,6 +3,7 @@ package com.prisma.deploy.migration.migrator
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.shared.models.Project
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -17,7 +18,7 @@ case class DeploymentSchedulerActor(
   import DeploymentProtocol._
 
   implicit val dispatcher = context.system.dispatcher
-  val projectWorkers      = new mutable.HashMap[String, ActorRef]()
+  val projectWorkers      = new mutable.HashMap[Project, ActorRef]()
 
   // Enhancement(s):
   //    - In the shared cluster we might face issues with too many project actors / high overhead during bootup
@@ -45,6 +46,7 @@ case class DeploymentSchedulerActor(
   def ready: Receive = {
     case msg: Schedule       => scheduleMigration(msg)
     case Terminated(watched) => handleTerminated(watched)
+    case p: Project          => workerForProject(p)
   }
 
   def initialize(): Future[Unit] = {
@@ -60,27 +62,34 @@ case class DeploymentSchedulerActor(
   }
 
   def scheduleMigration(scheduleMsg: Schedule): Unit = {
-    val workerRef = projectWorkers.get(scheduleMsg.projectId) match {
+    val workerRef = projectWorkers.get(scheduleMsg.project) match {
       case Some(worker) => worker
-      case None         => workerForProject(scheduleMsg.projectId)
+      case None         => workerForProject(scheduleMsg.project)
     }
 
     workerRef.tell(scheduleMsg, sender)
   }
 
-  def workerForProject(projectId: String): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, deployConnector)))
+  def workerForProject(projectId: String) = {
+    projectPersistence.load(projectId).onComplete {
+      case Success(Some(project)) => this.context.self ! project
+      case _                      =>
+    }
+  }
+
+  def workerForProject(project: Project): ActorRef = {
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(project, migrationPersistence, deployConnector)))
 
     context.watch(newWorker)
-    projectWorkers += (projectId -> newWorker)
+    projectWorkers += (project -> newWorker)
     newWorker
   }
 
   def handleTerminated(watched: ActorRef) = {
     projectWorkers.find(_._2 == watched) match {
-      case Some((pid, _)) =>
-        println(s"[Warning] Worker for project $pid terminated abnormally. Recreating...")
-        workerForProject(pid)
+      case Some((project, _)) =>
+        println(s"[Warning] Worker for project $project terminated abnormally. Recreating...")
+        workerForProject(project)
 
       case None =>
         println(s"[Warning] Terminated child actor $watched has never been mapped to a project.")

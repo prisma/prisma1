@@ -1,6 +1,11 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{
+  EmbeddedScalarListsCapability,
+  LegacyDataModelCapability,
+  NonEmbeddedScalarListCapability,
+  ScalarListsCapability
+}
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -47,6 +52,8 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
   def hasNot(capability: ConnectorCapability): Boolean = !has(capability)
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+
+  def isDataModelV2: Boolean = !capabilities.contains(LegacyDataModelCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
@@ -114,7 +121,7 @@ object ConnectorCapabilities extends BooleanUtils {
     )
   }
 
-  def mongo(isActive: Boolean, isTest: Boolean): ConnectorCapabilities = {
+  def mongo(isTest: Boolean): ConnectorCapabilities = {
     val common = Set(
       NodeQueryCapability,
       EmbeddedScalarListsCapability,
