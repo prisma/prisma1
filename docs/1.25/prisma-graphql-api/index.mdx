@@ -8,21 +8,15 @@ export const meta = {
 
 ## Prisma GraphQL API
 
-Every Prisma service exposes a GraphQL API with CRUD and realtime operations for the types defined in the service's datamodel. The GraphQL schema defining the types and operations of the Prisma GraphQL API is automatically generated based on the [datamodel](knul).
+Prisma uses GraphQL as a _wire protocol_. This means a Prisma service exposes a GraphQL API with CRUD and realtime operations for the service's models. This GraphQL API is **not** directly consumed by your frontend/mobile applications, instead you're consuming it through the Prisma client inside your application (e.g. to implement a web server with a GraphQL or REST API). 
 
-<Warning>
+The GraphQL schema defining the types and operations of the Prisma GraphQL API is auto-generated based on the [datamodel](knul).
 
-The Prisma GraphQL API is typically not consumed directly by a frontend/mobile application, but instead it's consumed through the [Prisma client](/prisma-client) in a web application server to implement a GraphQL or REST API and interface with the database.
+There are still some use cases where it can be appropriate to consume the Prisma GraphQL API directly:
 
-</Warning>
-
-There are still some use cases where it can be appropriate to consume the Prisma API directly:
-
-- **Prototyping**: While you're still in the validation phase of an application, using the Prisma API directly notably speeds up your development. When going into production, it's recommended to use Prisma as the ORM-layer in your app.
-- **Internal tooling & public APIs**: If your API doesn't have any requirements for access permissions, no business logic is required, it might be a valid option to expose the Prisma API directly to client applications.
-- **Learning**: If you want to learn how GraphQL is consumed from the frontend (e.g. using Apollo Client), you can consume the Prisma API directly without the need to add an additional web server layer on top.
-
-This chapter explains everything you need to know about the Prisma GraphQL API and how it can be used in various contexts.
+- **Prototyping**: While you're still in the validation phase of an application, using the Prisma GraphQL API directly notably speeds up your development. When going into production, it's strognly recommended to use Prisma as the ORM-layer in your app and consume the Prisma GraphQL API through the Prisma client.
+- **Internal tooling & public APIs**: If your API doesn't have any requirements for access permissions, no business logic is required, it might be a valid option to expose the Prisma GraphQL API directly to client applications.
+- **Learning**: If you want to learn how GraphQL is consumed from the frontend (e.g. using Apollo Client), you can consume the Prisma GraphQL API directly without the need to add an additional web server layer on top.
 
 ### Reference
 

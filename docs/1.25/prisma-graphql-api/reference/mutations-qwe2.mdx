@@ -481,7 +481,6 @@ mutation {
 }
 ```
 
-
 ## Scalar list mutations
 
 When an [object type](knul#object-types) has a field that is has a _scalar list_ as its type, there are a number of special mutations available.
@@ -503,7 +502,7 @@ When creating a new node of type `User`, a list of values can be provided for ea
 
 **Create a new `User` and set the values for `scores`, `friends` and `coinFlips`:**
 
-```grahpql
+```graphql
 mutation {
   createUser(data: {
     scores: { set: [1, 2, 3] }

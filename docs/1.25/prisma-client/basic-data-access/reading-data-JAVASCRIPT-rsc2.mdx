@@ -256,7 +256,7 @@ query {
 
 </Code>
 
-## Using fragments for fine-grained data access
+## Selecting fields
 
 Instead of querying all scalar fields of a model (which is the default behavior), you can specify which fields you'd like retrieve by using the `$fragment` API feature (based on GraphQL). This is useful to exclude large unneeded fields (like BLOB values or huge strings) or to even retrieve relations.
 
@@ -609,7 +609,7 @@ query {
 
 ## Pagination
 
-When querying a list of model objects, you can fetch _chunks_ of that list by supplying pagination arguments.
+When querying a list of model objects, you can fetch chunks (i.e. _pages_) of that list by supplying pagination arguments.
 
 ### Seeking forward and backward with `first` and `last`
 
