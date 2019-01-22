@@ -69,9 +69,9 @@ case class DeployMutation(
     val x = for {
       validationResult    <- FutureOr(validateSyntax)
       schemaMapping       = schemaMapper.createMapping(graphQlSdl)
-      inferredTables      <- FutureOr(inferTables)
-      inferredNextSchema  = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
-      _                   <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
+      databaseSchema      <- FutureOr(inferTables)
+      inferredNextSchema  = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, databaseSchema)
+      _                   <- FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, databaseSchema))
       functions           <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps               <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
@@ -109,7 +109,7 @@ case class DeployMutation(
     databaseIntrospectionInferrer.infer().map(Good(_))
   }
 
-  private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
+  private def checkProjectSchemaAgainstDatabaseSchema(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
     if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
