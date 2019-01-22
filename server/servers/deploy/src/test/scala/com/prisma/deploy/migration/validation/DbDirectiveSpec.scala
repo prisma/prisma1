@@ -56,6 +56,24 @@ class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
     field.columnName should be(Some("some_column"))
   }
 
+  "it must nor error on relation fields that are automatically inline" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  other: Other @db(name: "some_column")
+        |}
+        |
+        |type Other {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+
+    val dataModel = validate(dataModelString)
+    val field     = dataModel.type_!("Model").relationField_!("other")
+    field.columnName should be(Some("some_column"))
+  }
+
   "it should work on types" in {
     val dataModelString =
       """
