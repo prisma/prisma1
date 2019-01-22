@@ -115,7 +115,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
-    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
+    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = false, references.idField_!.typeIdentifier)
     sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
           ADD COLUMN #$colSql,
           ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
@@ -204,9 +204,11 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     }
   }
 
+  //Here this is only used for relationtables
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_] = {
     if (oldColumnName != newColumnName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+      val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = true, isList = false, project.models.head.idField_!.typeIdentifier)
+      sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
     } else {
       DatabaseAction.successful(())
     }
