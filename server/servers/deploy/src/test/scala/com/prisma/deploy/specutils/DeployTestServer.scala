@@ -20,10 +20,9 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
-
-  def printSchema: Boolean = false
-  def writeSchemaToFile    = false
-  def logSimple: Boolean   = false
+  def printSchema: Boolean                      = false
+  def writeSchemaToFile: Boolean                = false
+  def logSimple: Boolean                        = false
 
   /**
     * Execute a Query that must succeed.
@@ -86,7 +85,7 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                      requestId: String = "CombinedTestDatabase.requestId",
                                      prismaHeader: Option[String] = None): JsValue = {
 
-    val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
+    val schemaBuilder  = SchemaBuilder()(dependencies)
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)

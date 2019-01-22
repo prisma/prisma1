@@ -1,13 +1,10 @@
 package com.prisma.api.connector.jdbc.impl
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.shared.models.{Model, Project}
-import org.postgresql.util.PSQLException
-import org.sqlite.SQLiteException
 
 object GetFieldFromSQLUniqueException {
-
-  def getFieldOption(project: Project, model: Model, e: PSQLException): Option[String] = {
+  def getFieldOption(project: Project, model: Model, e: SQLException): Option[String] = {
     // see: https://til.hashrocket.com/posts/8f87c65a0a-postgresqls-max-identifier-length-is-63-bytes
     model.scalarFields.filter { field =>
       val constraintNameThatMightBeTooLong = project.dbName + "." + model.dbName + "." + field.dbName + "._UNIQUE"
@@ -26,7 +23,7 @@ object GetFieldFromSQLUniqueException {
     }
   }
 
-  def getFieldOptionSQLite(fieldNames: Vector[String], e: SQLiteException): Option[String] = {
+  def getFieldOptionSQLite(fieldNames: Vector[String], e: SQLException): Option[String] = {
     fieldNames.filter(x => e.getMessage.contains("." + x + ")") && e.getMessage.contains("UNIQUE constraint failed")) match {
       case x +: _ => Some("Field name = " + x)
       case _      => None

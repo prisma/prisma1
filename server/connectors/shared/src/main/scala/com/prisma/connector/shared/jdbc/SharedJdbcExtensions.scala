@@ -8,8 +8,10 @@ import org.joda.time.{DateTime, DateTimeZone}
 trait SharedJdbcExtensions {
   def currentSqlTimestampUTC: Timestamp = jodaDateTimeToSqlTimestampUTC(DateTime.now(DateTimeZone.UTC))
 
-  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp =
-    Timestamp.valueOf(java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(dateTime.getMillis), ZoneOffset.UTC))
+  def jodaDateTimeToSqlTimestampUTC(dateTime: DateTime): Timestamp = {
+    val milis = dateTime.getMillis
+    new Timestamp(milis)
+  }
 
   def sqlTimestampToDateTime(ts: Timestamp): DateTime = {
     new DateTime(ts, DateTimeZone.UTC)

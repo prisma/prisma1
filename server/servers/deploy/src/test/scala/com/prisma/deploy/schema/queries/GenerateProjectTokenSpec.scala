@@ -1,12 +1,11 @@
 package com.prisma.deploy.schema.queries
 
-import com.prisma.auth.{AuthImpl, AuthSuccess}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models.{Project, ProjectId}
 import org.scalatest.{FlatSpec, Matchers}
 
 class GenerateProjectTokenSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
-  val auth = AuthImpl
+  val auth = testDependencies.auth
 
   "the GenerateProjectToken query" should "return a proper token for the requested project" in {
     val (project: Project, _)  = setupProject(schema = basicTypesGql, secrets = Vector("super-duper-secret"))
@@ -18,7 +17,7 @@ class GenerateProjectTokenSpec extends FlatSpec with Matchers with ActiveDeployS
       """.stripMargin)
 
     val token = result.pathAsString("data.generateProjectToken")
-    auth.verify(project.secrets, Some(token)) should be(AuthSuccess)
+    auth.verifyToken(token, project.secrets).isSuccess should be(true)
   }
 
   "the GenerateProjectToken query" should "return an empty string if the requested project does not have any secrets" in {
@@ -32,6 +31,5 @@ class GenerateProjectTokenSpec extends FlatSpec with Matchers with ActiveDeployS
 
     val token = result.pathAsString("data.generateProjectToken")
     token should equal("")
-    auth.verify(project.secrets, Some(token)) should be(AuthSuccess)
   }
 }

@@ -54,10 +54,12 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
               val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
-              s"Failure inserting ${model.dbName} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+              s"Failure inserting ${model.dbName} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause())}"
             }
             .toVector
-        case e: Exception => Vector(e.getCause.toString)
+
+        case e: Exception =>
+          Vector(e.getCause.toString)
       }
 
       val relayResult: Vector[String] = try {
@@ -82,10 +84,12 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
               val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
-              s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+              s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause())}"
             }
             .toVector
-        case e: Exception => Vector(e.getMessage)
+
+        case e: Exception =>
+          Vector(e.getMessage)
       }
 
       val res = nodeResult ++ relayResult
@@ -94,9 +98,14 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
     }
   }
 
-  private def removeConnectionInfoFromCause(cause: String): String = {
-    val connectionSubStringStart = cause.indexOf(": ERROR:")
-    cause.substring(connectionSubStringStart + 9)
+  private def removeConnectionInfoFromCause(cause: Throwable): String = {
+    if (cause == null) {
+      "unknown"
+    } else {
+      val stringified              = cause.toString
+      val connectionSubStringStart = stringified.indexOf(": ERROR:")
+      stringified.substring(connectionSubStringStart + 9)
+    }
   }
 
   def importRelations(mutaction: ImportRelations): SimpleDBIO[Vector[String]] = {
@@ -151,10 +160,12 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .map { failed =>
               val failedA = argsWithIndex.find(_._2 == failed._2).get._1._1
               val failedB = argsWithIndex.find(_._2 == failed._2).get._1._2
-              s"Failure inserting into relationtable ${relation.relationTableName} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(e.getCause.toString)}"
+              s"Failure inserting into relationtable ${relation.relationTableName} with ids $failedA and $failedB. Cause: ${removeConnectionInfoFromCause(e.getCause())}"
             }
             .toVector
-        case e: Exception => Vector(e.getMessage)
+
+        case e: Exception =>
+          Vector(e.getMessage)
       }
 
       if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
@@ -234,13 +245,14 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             val failedValue = argsWithIndex.find(_._2 == failed._2).get._1._2
             val failedId    = argsWithIndex.find(_._2 == failed._2).get._1._1
 
-            s"Failure inserting into listTable ${field.model.dbName}_${field.dbName} for the id ${failedId.value} for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(
-              e.getCause.toString)}"
+            s"Failure inserting into listTable ${field.model.dbName}_${field.dbName} for the id ${failedId.value} for value ${failedValue.value}. Cause: ${removeConnectionInfoFromCause(e.getCause)}"
           }
           .toVector
+
       case e: Exception =>
         Vector(e.getMessage)
     }
+
     if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
     res
   }

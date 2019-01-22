@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector.mysql
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
@@ -17,11 +19,11 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
 
-  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary

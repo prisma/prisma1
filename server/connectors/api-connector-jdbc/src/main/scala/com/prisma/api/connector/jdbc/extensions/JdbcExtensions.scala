@@ -19,7 +19,6 @@ object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
   val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
   class PreparedStatementExtensions(val ps: PreparedStatement) extends AnyVal {
-
     def setGcValue(index: Int, value: GCValue): Unit = {
       value match {
         case v: LeafGCValue => setLeafValue(index, v)
@@ -35,7 +34,7 @@ object JdbcExtensionsValueClasses extends SharedJdbcExtensions {
         case FloatGCValue(float)       => ps.setDouble(index, float)
         case StringIdGCValue(id)       => ps.setString(index, id)
         case UuidGCValue(uuid)         => ps.setObject(index, uuid)
-        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime))
+        case DateTimeGCValue(dateTime) => ps.setTimestamp(index, jodaDateTimeToSqlTimestampUTC(dateTime), calendar)
         case EnumGCValue(enum)         => ps.setString(index, enum)
         case JsonGCValue(json)         => ps.setString(index, json.toString)
         case NullGCValue               => ps.setNull(index, java.sql.Types.NULL)

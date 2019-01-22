@@ -20,6 +20,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       .insertInto(modelTable(model))
       .columns(fields.map(modelColumn): _*)
       .values(placeHolders(fields))
+      .returning(modelColumn(model.idField_!))
 
     insertReturningGeneratedKeysToDBIO(query)(
       setParams = { pp =>

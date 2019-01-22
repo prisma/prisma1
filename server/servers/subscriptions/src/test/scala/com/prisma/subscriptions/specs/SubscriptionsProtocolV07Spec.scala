@@ -18,6 +18,7 @@ class SubscriptionsProtocolV07Spec extends FlatSpec with Matchers with Subscript
       .field("float", _.Float)
 
   }
+
   val model = project.schema.getModelByName_!("Todo")
 
   var testNodeId, importantTestNodeId: String = null

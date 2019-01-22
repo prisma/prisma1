@@ -35,7 +35,7 @@ class ServerExecutorSpec extends AcceptanceSpecification with AfterAll {
     val server = ServerExecutor(port = 8000 + new scala.util.Random().nextInt(50000), servers: _*)
 
     try {
-      Await.result(server.start, 2.seconds)
+      Await.result(server.start, 5.seconds)
       checkFn(server)
     } finally {
       server.stopBlocking()
@@ -43,12 +43,12 @@ class ServerExecutorSpec extends AcceptanceSpecification with AfterAll {
   }
 
   def bodyAsString(entity: ResponseEntity): String = {
-    Await.result(Unmarshal(entity).to[String], 2.seconds)
+    Await.result(Unmarshal(entity).to[String], 5.seconds)
   }
 
   implicit class TestServerExecutorExtensions(executor: ServerExecutor) {
     def makeRequest(path: String): HttpResponse = {
-      Await.result(Http().singleRequest(HttpRequest(uri = s"http://localhost:${executor.port}/${path.stripPrefix("/")}")), 2.second)
+      Await.result(Http().singleRequest(HttpRequest(uri = s"http://localhost:${executor.port}/${path.stripPrefix("/")}")), 5.second)
     }
   }
 
