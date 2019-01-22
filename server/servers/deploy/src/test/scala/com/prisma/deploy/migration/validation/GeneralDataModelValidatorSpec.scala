@@ -129,8 +129,9 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
         |  myId: Int! @id
         |}
       """.stripMargin
-    val dataModel = validate(dataModelString, Set(IntIdCapability))
-    dataModel.type_!("Todo").scalarField_!("myId").behaviour should contain(IdBehaviour(IdStrategy.Auto))
+    val dataModel         = validate(dataModelString, Set(IntIdCapability))
+    val expectedBehaviour = IdBehaviour(IdStrategy.Auto, Some(Sequence.default("Todo", "myId")))
+    dataModel.type_!("Todo").scalarField_!("myId").behaviour should contain(expectedBehaviour)
   }
 
   "fail if there is a duplicate enum in datamodel" in {

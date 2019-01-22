@@ -8,9 +8,8 @@ import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient, databaseOption: Option[String])(implicit ec: ExecutionContext)
-    extends ClientDbQueries {
-  val database = databaseOption.getOrElse(project.id)
+case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient)(implicit ec: ExecutionContext) extends ClientDbQueries {
+  val database = project.dbName
 
   def existsByModel(model: Model): Future[Boolean] = {
     clientDatabase.getDatabase(database).getCollection(model.dbName).countDocuments().toFuture().map(count => if (count > 0) true else false)

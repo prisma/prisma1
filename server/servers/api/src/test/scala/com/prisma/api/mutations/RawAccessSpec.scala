@@ -21,7 +21,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
   val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field("title", _.String)
   }
-  val schemaName = project.id
+  val schemaName = project.dbName
   val model      = project.schema.getModelByName_!("Todo")
 
   override protected def beforeAll(): Unit = {

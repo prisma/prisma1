@@ -95,6 +95,7 @@ object ConfigLoader {
   def convertToConfig(map: Map[String, Any]): PrismaConfig = {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
+    val prototype      = extractBooleanOpt("prototype", map)
     val clusterAddress = extractStringOpt("clusterAddress", map)
     val rabbitUri      = extractStringOpt("rabbitUri", map)
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
@@ -114,6 +115,7 @@ object ConfigLoader {
       clusterAddress = clusterAddress,
       rabbitUri = rabbitUri,
       managmentApiEnabled = mgmtApiEnabled,
+      prototype = prototype,
       databases = databases
     )
   }
@@ -343,8 +345,11 @@ case class PrismaConfig(
     clusterAddress: Option[String],
     rabbitUri: Option[String],
     managmentApiEnabled: Option[Boolean],
+    prototype: Option[Boolean],
     databases: Seq[DatabaseConfig]
-)
+) {
+  def isPrototype = prototype.getOrElse(false)
+}
 
 case class DatabaseConfig(
     name: String,

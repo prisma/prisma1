@@ -20,8 +20,6 @@ case class Update(
   val coolArgs = CoolArgs.fromSchemaArgs(args.raw)
   val where    = CoolArgs(args.raw).extractNodeSelectorFromWhereField(model)
 
-  lazy val prismaNode: Future[Option[PrismaNode]] = dataResolver.getNodeByWhere(where, selectedFields)
-
   lazy val updateMutaction = DatabaseMutactions(project).getMutactionsForUpdate(model, where, coolArgs)
 
   def prepareMutactions(): Future[TopLevelDatabaseMutaction] = Future.successful { updateMutaction }

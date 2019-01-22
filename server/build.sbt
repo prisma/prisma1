@@ -232,6 +232,12 @@ lazy val deployConnectorMySql = connectorProject("deploy-connector-mysql")
 lazy val deployConnectorPostgres = connectorProject("deploy-connector-postgres")
   .dependsOn(deployConnectorJdbc)
 
+lazy val deployConnectorSQLite = connectorProject("deploy-connector-sqlite")
+  .dependsOn(deployConnectorJdbc)
+  .settings(
+    libraryDependencies ++= Seq(sqliteClient)
+  )
+
 lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
@@ -254,6 +260,12 @@ lazy val apiConnectorJdbc = connectorProject("api-connector-jdbc")
 
 lazy val apiConnectorMySql = connectorProject("api-connector-mysql")
   .dependsOn(apiConnectorJdbc)
+
+lazy val apiConnectorSQLite = connectorProject("api-connector-sqlite")
+  .dependsOn(apiConnectorJdbc)
+  .settings(
+    libraryDependencies ++= Seq(sqliteClient)
+  )
 
 lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
   .dependsOn(apiConnectorJdbc)
@@ -457,7 +469,8 @@ lazy val deployConnectorProjects = List(
   deployConnectorJdbc,
   deployConnectorMySql,
   deployConnectorPostgres,
-  deployConnectorMongo
+  deployConnectorMongo,
+  deployConnectorSQLite
 )
 
 lazy val apiConnectorProjects = List(
@@ -465,7 +478,8 @@ lazy val apiConnectorProjects = List(
   apiConnectorJdbc,
   apiConnectorMySql,
   apiConnectorPostgres,
-  apiConnectorMongo
+  apiConnectorMongo,
+  apiConnectorSQLite
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)

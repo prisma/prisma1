@@ -1,7 +1,6 @@
 package com.prisma.api.connector.jdbc.impl
 
 import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
-
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
@@ -28,8 +27,8 @@ case class CreateNodeInterpreter(
   }
 
   override val errorMapper = {
-    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).get)
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).get)
 
     case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
@@ -37,6 +36,9 @@ case class CreateNodeInterpreter(
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+
+    case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).get)
   }
 
 }
@@ -116,14 +118,17 @@ case class NestedCreateNodeInterpreter(
     }
 
   override val errorMapper = {
-    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).get)
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).get)
 
-    case e: SQLException if e.getSQLState == "23503" =>
+    case e: SQLException if e.getSQLState == "23503" => //Foreign Key Violation
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+
+    case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).get)
   }
 }

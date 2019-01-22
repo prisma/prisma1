@@ -1,4 +1,4 @@
-import { DatabaseType, Parser, Renderer, dedent } from 'prisma-datamodel'
+import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
 import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
 
 function testNormalization(schemaFromDb, expectedResultSchema) {
@@ -10,7 +10,7 @@ function testNormalization(schemaFromDb, expectedResultSchema) {
 
   normalizer.normalize(fromDb)
 
-  const renderer = new Renderer()
+  const renderer = DefaultRenderer.create(DatabaseType.mongo)
   const resultSchema = renderer.render(fromDb)
 
   expect(resultSchema).toEqual(expectedResultSchema)

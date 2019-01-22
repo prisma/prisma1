@@ -1,8 +1,7 @@
 package com.prisma.deploy.schema.mutations
 
-import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
@@ -45,6 +44,14 @@ case class DeployMutation(
 ) extends Mutation[DeployMutationPayload]
     with AwaitUtils {
 
+  val actsAsActive = if (capabilities.isDataModelV2) {
+    val noMigration = args.noMigration.getOrElse(false)
+    !noMigration
+  } else {
+    isActive
+  }
+  val actsAsPassive = !actsAsActive
+
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
     case Failure(e)   => throw InvalidQuery(e.getMessage)
@@ -59,14 +66,15 @@ case class DeployMutation(
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
-      prismaSdl          <- FutureOr(validateSyntax)
-      schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-      inferredTables     <- FutureOr(inferTables)
-      inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, prismaSdl, inferredTables)
-      _                  <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-      functions          <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
-      steps              <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
-      warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      validationResult    <- FutureOr(validateSyntax)
+      schemaMapping       = schemaMapper.createMapping(graphQlSdl)
+      inferredTables      <- FutureOr(inferTables)
+      inferredNextSchema  = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
+      _                   <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
+      functions           <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
+      steps               <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
+      destructiveWarnings <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      warnings            = validationResult.warnings ++ destructiveWarnings
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
                  case (_, true)     => FutureOr(performDeployment(inferredNextSchema, steps, functions))
@@ -87,7 +95,7 @@ case class DeployMutation(
     x.future
   }
 
-  private def validateSyntax: Future[PrismaSdl Or Vector[DeployError]] = Future.successful {
+  private def validateSyntax: Future[DataModelValidationResult Or Vector[DeployError]] = Future.successful {
     val validator = if (capabilities.has(LegacyDataModelCapability)) {
       LegacyDataModelValidator
     } else {
@@ -101,7 +109,7 @@ case class DeployMutation(
   }
 
   private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (!isActive && capabilities.has(IntrospectionCapability)) {
+    if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {
         Future.successful(Good(()))
@@ -114,7 +122,7 @@ case class DeployMutation(
   }
 
   private def inferMigrationSteps(nextSchema: Schema, schemaMapping: SchemaMapping): Future[Vector[MigrationStep] Or Vector[DeployError]] = {
-    val steps = if (isActive) {
+    val steps = if (actsAsActive) {
       migrationStepsInferrer.infer(project.schema, nextSchema, schemaMapping)
     } else {
       Vector.empty
@@ -160,7 +168,7 @@ case class DeployMutation(
     val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
-      migrator.schedule(project.id, nextSchema, steps, functions, args.types).map(Some(_))
+      migrator.schedule(project, nextSchema, steps, functions, args.types).map(Some(_))
     } else {
       Future.successful(None)
     }

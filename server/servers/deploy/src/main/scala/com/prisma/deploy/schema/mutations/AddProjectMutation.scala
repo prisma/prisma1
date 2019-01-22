@@ -14,7 +14,8 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    connectorCapabilities: ConnectorCapabilities
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
@@ -48,7 +49,12 @@ case class AddProjectMutation(
 
     for {
       _ <- projectPersistence.create(newProject)
-      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+//      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+      _ <- if (connectorCapabilities.isDataModelV2) {
+            deployConnector.createProjectDatabase(newProject.id)
+          } else {
+            if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+          }
       _ <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }

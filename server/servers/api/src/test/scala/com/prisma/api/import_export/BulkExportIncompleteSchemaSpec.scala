@@ -18,9 +18,8 @@ class BulkExportIncompleteSchemaSpec extends FlatSpec with Matchers with ApiSpec
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     database.setup(project)
+    database.truncateProjectTables(project)
   }
-
-  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   val exporter                   = new BulkExport(project)
   val dataResolver: DataResolver = this.dataResolver(project)

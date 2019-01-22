@@ -2,11 +2,11 @@ package com.prisma.shared.schema_dsl
 
 import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
-import com.prisma.deploy.migration.validation.{DataModelValidatorImpl, LegacyDataModelValidator}
+import com.prisma.deploy.migration.validation.{DataModelValidator, DataModelValidatorImpl, LegacyDataModelValidator}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.{FieldManifestation, EmbeddedRelationLink, ModelManifestation}
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
@@ -30,7 +30,7 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
+    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector, LegacyDataModelValidator)(sdlString.stripMargin)
 
     if (!deployConnector.isActive || deployConnector.capabilities.has(RelationLinkListCapability)) {
       addManifestations(project, deployConnector)
@@ -51,21 +51,22 @@ object SchemaDsl extends AwaitUtils {
       id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, deployConnector)(sdlString)
+    val project        = fromString(id, inferredTables, deployConnector, DataModelValidatorImpl)(sdlString)
+    project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      deployConnector: DeployConnector
+      deployConnector: DeployConnector,
+      dataModelValidator: DataModelValidator
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator          = LegacyDataModelValidator
 
-    val prismaSdl = validator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {
-      case Good(prismaSdl) =>
-        prismaSdl
+    val prismaSdl = dataModelValidator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {
+      case Good(result) =>
+        result.dataModel
       case Bad(errors) =>
         sys.error(
           s"""Encountered the following errors during schema validation. Please fix:
@@ -76,7 +77,8 @@ object SchemaDsl extends AwaitUtils {
 
     val schema                 = SchemaInferrer(deployConnector.capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
-    TestProject().copy(id = id, schema = withBackRelationsAdded)
+    val manifestation          = ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"))
+    TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {

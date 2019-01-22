@@ -12,16 +12,22 @@ import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace, Service, AuthenticationPayload } from './types'
+import {
+  User,
+  Migration,
+  DeployPayload,
+  Workspace,
+  Service,
+  AuthenticationPayload,
+} from './types'
 import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
+import { IntrospectionQuery } from 'graphql'
+import { hasTypeWithField } from '../utils/graphql-schema'
 
 const debug = require('debug')('client')
 
-const MIGRATION_FRAGMENT = `
-fragment MigrationFragment on Migration {
-  revision
-  steps {
+const STEP_FRAGMENT = `
     type
     __typename
     ... on CreateEnum {
@@ -81,6 +87,13 @@ fragment MigrationFragment on Migration {
       name
       um_newName: newName
     }
+`
+
+const MIGRATION_FRAGMENT = `
+fragment MigrationFragment on Migration {
+  revision
+  steps {
+    ${STEP_FRAGMENT}
   }
 }
 `
@@ -456,7 +469,9 @@ export class Client {
     const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
-      this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
+      this.out.log(
+        `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+      )
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -469,9 +484,10 @@ export class Client {
 
     this.out.log(`Opening ${url} in the browser\n`)
 
-    opn(url)
-    .catch(e => {
-      console.error(`Could not open the authentication link, maybe this is an environment without a browser. Please open this url in your browser to authenticate: ${url}`)
+    opn(url).catch(e => {
+      console.error(
+        `Could not open the authentication link, maybe this is an environment without a browser. Please open this url in your browser to authenticate: ${url}`,
+      )
     })
 
     while (!token) {
@@ -483,9 +499,11 @@ export class Client {
     }
     this.env.globalRC.cloudSessionKey = token
     this.out.action.stop()
-    
+
     authenticationPayload = await this.isAuthenticated()
-    await this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
+    await this.out.log(
+      `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+    )
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
@@ -593,7 +611,7 @@ export class Client {
 
     return {
       isAuthenticated: authenticated,
-      account
+      account,
     }
   }
 
@@ -709,6 +727,14 @@ export class Client {
     }
   }
 
+  async hasStepsApi() {
+    const result: IntrospectionQuery = await this.client.request(
+      introspectionQuery,
+    )
+
+    return hasTypeWithField(result, 'DeployPayload', 'steps')
+  }
+
   async deploy(
     name: string,
     stage: string,
@@ -717,7 +743,8 @@ export class Client {
     subscriptions: FunctionInput[],
     secrets: string[] | null,
     force?: boolean,
-  ): Promise<any> {
+    noMigration?: boolean,
+  ): Promise<DeployPayload> {
     const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
@@ -741,6 +768,26 @@ export class Client {
       ${MIGRATION_FRAGMENT}
     `
 
+    const introspectionResult: IntrospectionQuery = await this.client.request(
+      introspectionQuery,
+    )
+    const hasStepsApi = hasTypeWithField(
+      introspectionResult,
+      'DeployPayload',
+      'steps',
+    )
+    const steps = hasStepsApi ? `steps { ${STEP_FRAGMENT} }` : ''
+
+    if (
+      noMigration &&
+      !hasTypeWithField(introspectionResult, 'DeployInput', 'noMigration')
+    ) {
+      throw new Error(
+        `You provided the --no-migrate option, but the Prisma server doesn't support it yet. It's supported in Prisma 1.26 and above.`,
+      )
+    }
+    const noMigrationInput = noMigration ? 'noMigration: true' : ''
+
     const newMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
         deploy(input: {
@@ -751,6 +798,7 @@ export class Client {
           secrets: $secrets
           subscriptions: $subscriptions
           force: $force
+          ${noMigrationInput}
         }) {
           errors {
             type
@@ -765,6 +813,8 @@ export class Client {
           migration {
             ...MigrationFragment
           }
+          
+          ${steps}
         }
       }
       ${MIGRATION_FRAGMENT}

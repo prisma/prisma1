@@ -34,8 +34,13 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
                                   })
   )
 
-  implicit val reporter: ErrorReporter    = DummyErrorReporter
-  override lazy val migrator              = TestMigrator(migrationPersistence, deployConnector.deployMutactionExecutor)
+  implicit val reporter: ErrorReporter = DummyErrorReporter
+  override lazy val migrator = TestMigrator(
+    migrationPersistence,
+    projectPersistence,
+    deployConnector.deployMutactionExecutor,
+    deployConnector.testFacilities.inspector
+  )
   override lazy val managementAuth        = NoAuth
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()
 
