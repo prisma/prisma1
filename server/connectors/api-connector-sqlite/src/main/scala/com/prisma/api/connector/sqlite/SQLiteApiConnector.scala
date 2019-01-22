@@ -22,9 +22,9 @@ case class SQLiteApiConnector(config: DatabaseConfig, isPrototype: Boolean)(impl
     } yield ()
   }
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = true, schemaName = None)
-  override def dataResolver(project: Project)                       = JdbcDataResolver(project, databases.replica, schemaName = None)(ec)
-  override def masterDataResolver(project: Project)                 = JdbcDataResolver(project, databases.primary, schemaName = None)(ec)
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = true)
+  override def dataResolver(project: Project)                       = JdbcDataResolver(project, databases.replica)(ec)
+  override def masterDataResolver(project: Project)                 = JdbcDataResolver(project, databases.primary)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 

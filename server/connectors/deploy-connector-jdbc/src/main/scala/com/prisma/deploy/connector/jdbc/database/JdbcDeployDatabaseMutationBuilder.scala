@@ -22,7 +22,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
    */
   def createSchema(projectId: String): DBIO[_]
   def truncateProjectTables(project: Project): DBIO[_]
-  def deleteProjectDatabase(project: Project): DBIO[_]
+  def deleteProjectDatabase(projectId: String): DBIO[_]
   def renameTable(project: Project, currentName: String, newName: String): DBIO[_]
   def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
   def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_]

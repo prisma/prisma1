@@ -49,13 +49,13 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(sqlu"PRAGMA foreign_keys=off" +: queries :+ sqlu"PRAGMA foreign_keys=on": _*)
   }
 
-  override def deleteProjectDatabase(project: Project) = {
+  override def deleteProjectDatabase(projectId: String) = {
     //check if db is attached
     //  yes ->  check if connected
     //          yes -> detach, delete
     //          no  -> delete
     //http://www.sqlitetutorial.net/sqlite-attach-database/
-    val fileTemp = new File(s"""./db/${project.dbName}""")
+    val fileTemp = new File(s"""./db/$projectId""")
 
     if (fileTemp.exists) {
       //      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
@@ -161,7 +161,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             isList: Boolean,
                             typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
-    val unique    = if (isUnique) addUniqueConstraint(project.dbName, tableName, columnName, typeIdentifier) else DBIO.successful(())
+    val unique    = if (isUnique) addUniqueConstraint(project, tableName, columnName, typeIdentifier) else DBIO.successful(())
     val add       = sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$newColSql"""
     DBIO.seq(add, unique)
   }

@@ -38,8 +38,8 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(sqlu"set foreign_key_checks=0" +: queries :+ sqlu"set foreign_key_checks=1": _*)
   }
 
-  override def deleteProjectDatabase(project: Project) = {
-    sqlu"DROP DATABASE IF EXISTS #${qualify(project.dbName)}"
+  override def deleteProjectDatabase(projectId: String) = {
+    sqlu"DROP DATABASE IF EXISTS #${qualify(projectId)}"
   }
 
   override def createModelTable(project: Project, model: Model): DBIO[_] = {

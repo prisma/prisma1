@@ -39,8 +39,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(queries: _*)
   }
 
-  def deleteProjectDatabase(project: Project) = {
-    val query = sql.dropSchemaIfExists(project.dbName).cascade()
+  def deleteProjectDatabase(projectId: String) = {
+    val query = sql.dropSchemaIfExists(projectId).cascade()
     changeDatabaseQueryToDBIO(query)()
   }
 

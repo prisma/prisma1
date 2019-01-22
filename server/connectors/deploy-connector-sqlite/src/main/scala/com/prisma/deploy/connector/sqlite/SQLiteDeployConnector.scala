@@ -34,7 +34,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   lazy val mySqlTypeMapper      = SQLiteTypeMapper()
   lazy val mutationBuilder      = SQLiteJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
-  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
+  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase, config)
   override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
@@ -43,7 +43,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   override def capabilities = ConnectorCapabilities.mysql //Fixme
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -77,10 +77,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   }
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
-
-  override def shutdown() = {
-    databases.shutdown
-  }
+  override def shutdown()            = databases.shutdown
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
 
