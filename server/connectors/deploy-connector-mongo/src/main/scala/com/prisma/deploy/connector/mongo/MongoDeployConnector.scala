@@ -18,7 +18,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
 
   override val migrationPersistence: MigrationPersistence     = MongoMigrationPersistence(internalDatabase)
-  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence)
+  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence, config)
   override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
   override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
 
