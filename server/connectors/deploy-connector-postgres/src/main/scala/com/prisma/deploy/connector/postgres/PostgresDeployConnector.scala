@@ -50,7 +50,7 @@ case class PostgresDeployConnector(
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
