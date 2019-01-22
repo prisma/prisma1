@@ -64,7 +64,7 @@ const user = await findById(id)
 ```ts
 const postsByUser = await prisma
   .user({ id })
-  .posts()
+  .posts() 
 ```
 
 ```ts
@@ -91,6 +91,13 @@ const userWithPosts = await prisma
 ```
 
 </Code>
+
+> While the `$fragment` and the `$graphql` APIs each return a `user` object that includes a `posts` array, the fluent API returns just the `posts` array and no data about the `user`. 
+
+See the following GitHub issues to learn more about planned iterations of the Prisma client relations API:
+
+- [Improved relational client API: `$nested` queries](https://github.com/prisma/prisma/issues/3668)
+- [Extend fluent API for relations](https://github.com/prisma/prisma/issues/3126)
 
 **Mongoose**
 
