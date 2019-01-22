@@ -435,8 +435,7 @@ export class Client {
     const type = this.getDeepType(field.type)
 
     if (isRelayConnection) {
-      let relayConnectionHasScalars = false
-      relayConnectionHasScalars = connectionNodeHasScalars({ type })
+      const relayConnectionHasScalars = connectionNodeHasScalars({ type })
       if (this.isConnectionTypeName(fieldName) && !relayConnectionHasScalars) {
         return node
       }
