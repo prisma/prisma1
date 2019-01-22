@@ -201,7 +201,7 @@ type Amenities {
   crib: Boolean! @default(value: "false")
 }
 
-type Review {
+type Review @index(name: "RatingIndex", fields: ["stars", "checkIn", "value"], unique: false) {
   id: ID! @unique
   createdAt: DateTime!
   text: String!
