@@ -11,7 +11,7 @@ import { prettyTime } from '../../util'
 import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
-import { Parser, DatabaseType } from 'prisma-datamodel'
+import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 
 export default class IntrospectCommand extends Command {
@@ -57,10 +57,18 @@ export default class IntrospectCommand extends Command {
     ['mongo-db']: flags.string({
       description: 'Mongo database',
     }),
+
+    /**
+     * Temporary flag needed to test Datamodel v2
+     */
+    ['prototype']: flags.boolean({
+      description:
+        'Output Datamodel v2. Note: This is a temporary flag for debugging',
+    }),
   }
   static hidden = false
   async run() {
-    const { interactive } = this.flags
+    const { interactive, prototype } = this.flags
     const pgHost = this.flags['pg-host']
     const pgPort = this.flags['pg-port']
     const pgUser = this.flags['pg-user']
@@ -241,7 +249,10 @@ export default class IntrospectCommand extends Command {
       const introspection = await connector!.introspect(schema)
       const sdl = await introspection.getNormalizedDatamodel(datamodel)
       const numTables = sdl.types.length
-      const renderedSdl = introspection.renderer.render(sdl)
+
+      const renderedSdl = prototype
+        ? await Renderers.create(databaseType!, true).render(sdl)
+        : await introspection.renderToDatamodelString()
 
       // Mongo has .close, Postgres .end
       if (typeof client.close === 'function') {
@@ -259,7 +270,8 @@ export default class IntrospectCommand extends Command {
         )
         this.out.exit(1)
       }
-      const fileName = `datamodel-${new Date().getTime()}.prisma`
+      const prototypeFileName = prototype ? '-prototype' : ''
+      const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
       const fullFileName = path.join(this.config.definitionDir, fileName)
       fs.writeFileSync(fullFileName, renderedSdl)
       this.out.action.stop(prettyTime(Date.now() - before))
