@@ -9,7 +9,7 @@ import org.jooq.impl.DSL._
 
 case class RelatedModelsQueryBuilder(
     slickDatabase: SlickDatabase,
-    schemaName: String,
+    project: Project,
     fromField: RelationField,
     queryArguments: QueryArguments,
     relatedNodeIds: Vector[IdGCValue],

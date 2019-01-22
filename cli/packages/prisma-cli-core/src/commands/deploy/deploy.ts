@@ -53,6 +53,9 @@ ${chalk.gray(
       char: 'j',
       description: 'Json Output',
     }),
+    'no-migrate': flags.boolean({
+      description: 'Disable migrations. Prisma 1.26 and above needed',
+    }),
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
@@ -69,6 +72,7 @@ ${chalk.gray(
     const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
+    const noMigrate = this.flags['no-migrate']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -174,6 +178,7 @@ ${chalk.gray(
       dryRun,
       projectNew,
       workspace!,
+      noMigrate,
     )
   }
 
@@ -229,6 +234,7 @@ ${chalk.gray(
     dryRun: boolean,
     projectNew: boolean,
     workspace: string | null,
+    noMigrate: boolean,
   ): Promise<void> {
     this.deploying = true
     let before = Date.now()
@@ -243,6 +249,8 @@ ${chalk.gray(
       )}`,
     )
 
+    const hasStepsApi = await this.client.hasStepsApi()
+
     const migrationResult: DeployPayload = await this.client.deploy(
       concatName(cluster, serviceName, workspace),
       stageName,
@@ -251,9 +259,10 @@ ${chalk.gray(
       this.definition.getSubscriptions(),
       this.definition.secrets,
       force,
+      noMigrate,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
-    this.printResult(migrationResult, force)
+    this.printResult(migrationResult, force, dryRun)
 
     if (
       migrationResult.migration &&
@@ -301,34 +310,7 @@ ${chalk.gray(
 
       this.out.action.stop(prettyTime(Date.now() - before))
     }
-    // TODO move up to if statement after testing done
-    if (migrationResult.migration) {
-      if (
-        this.definition.definition!.seed &&
-        !this.flags['no-seed'] &&
-        projectNew
-      ) {
-        this.printHooks()
-        await this.seed(
-          cluster,
-          projectNew,
-          serviceName,
-          stageName,
-          this.definition.getWorkspace(),
-        )
-      }
 
-      // no action required
-      this.deploying = false
-      if (migrationResult.migration) {
-        this.printEndpoints(
-          cluster,
-          serviceName,
-          stageName,
-          this.definition.getWorkspace() || undefined,
-        )
-      }
-    }
     const hooks = this.definition.getHooks('post-deploy')
     if (hooks.length > 0) {
       this.out.log(`\n${chalk.bold('post-deploy')}:`)
@@ -355,6 +337,34 @@ ${chalk.gray(
         this.out.action.stop(chalk.red(figures.cross))
       } else {
         this.out.action.stop()
+      }
+    }
+
+    if (migrationResult.migration) {
+      if (
+        this.definition.definition!.seed &&
+        !this.flags['no-seed'] &&
+        projectNew
+      ) {
+        this.printHooks()
+        await this.seed(
+          cluster,
+          projectNew,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace(),
+        )
+      }
+
+      // no action required
+      this.deploying = false
+      if (migrationResult.migration) {
+        this.printEndpoints(
+          cluster,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace() || undefined,
+        )
       }
     }
   }
@@ -438,7 +448,7 @@ ${chalk.gray(
     return false
   }
 
-  private printResult(payload: DeployPayload, force: boolean) {
+  private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
@@ -471,15 +481,24 @@ ${chalk.gray(
       }
     }
 
-    if (!payload.migration || payload.migration.steps.length === 0) {
-      this.out.log('Service is already up to date.')
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
+
+    if (steps.length === 0) {
+      if (dryRun) {
+        this.out.log('There are no changes.')
+      } else {
+        this.out.log('Service is already up to date.')
+      }
       return
     }
 
-    if (payload.migration.steps.length > 0) {
+    if (steps.length > 0) {
       // this.out.migrati
-      this.out.log('\n' + chalk.bold('Changes:'))
-      this.out.migration.printMessages(payload.migration.steps)
+      this.out.log(
+        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
+      )
+      this.out.migration.printMessages(steps)
       this.out.log('')
     }
   }

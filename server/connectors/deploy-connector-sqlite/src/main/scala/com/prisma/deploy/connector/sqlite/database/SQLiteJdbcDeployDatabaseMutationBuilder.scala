@@ -49,13 +49,13 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.seq(sqlu"PRAGMA foreign_keys=off" +: queries :+ sqlu"PRAGMA foreign_keys=on": _*)
   }
 
-  override def deleteProjectDatabase(projectId: String) = {
+  override def deleteProjectDatabase(project: Project) = {
     //check if db is attached
     //  yes ->  check if connected
     //          yes -> detach, delete
     //          no  -> delete
     //http://www.sqlitetutorial.net/sqlite-attach-database/
-    val fileTemp = new File(s"""./db/$projectId""")
+    val fileTemp = new File(s"""./db/${project.dbName}""")
 
     if (fileTemp.exists) {
       //      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
@@ -67,33 +67,34 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     DBIO.successful(())
   }
 
-  override def createModelTable(projectId: String, model: Model): DBIO[_] = {
+  override def createModelTable(project: Project, model: Model): DBIO[_] = {
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
 
-    sqlu"""CREATE TABLE #${qualify(projectId, model.dbName)} (
+    sqlu"""CREATE TABLE #${qualify(project.dbName, model.dbName)} (
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)})
            );"""
   }
 
-  override def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, isList = false, TypeIdentifier.Cuid)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, isList = false, typeIdentifier)
 
-    val create = sqlu"""CREATE TABLE #${qualify(projectId, s"${model.dbName}_$fieldName")} (
+    val create = sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
            #$nodeIdSql,
            `position` INT(4) NOT NULL,
            #$valueSql,
            PRIMARY KEY (`nodeId`, `position`),
            FOREIGN KEY (`nodeId`) REFERENCES #${model.dbName} (#${qualify(model.idField_!.dbName)}) ON DELETE CASCADE)
            """
-    val index  = sqlu"CREATE INDEX IF NOT EXISTS #${qualify(projectId, "value_Index")} ON #${qualify(s"${model.dbName}_$fieldName")} (#${qualify("value")} ASC)"
+    val index =
+      sqlu"CREATE INDEX IF NOT EXISTS #${qualify(project.dbName, "value_Index")} ON #${qualify(s"${model.dbName}_$fieldName")} (#${qualify("value")} ASC)"
 
     DBIO.seq(create, index)
   }
 
-  override def createRelationTable(projectId: String, relation: Relation): DBIO[_] = {
+  override def createRelationTable(project: Project, relation: Relation): DBIO[_] = {
     val relationTableName = relation.relationTableName
     val modelA            = relation.modelA
     val modelB            = relation.modelB
@@ -102,7 +103,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
     val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
     val tableCreate       = sqlu"""
-                        CREATE TABLE #${qualify(projectId, relationTableName)} (
+                        CREATE TABLE #${qualify(project.dbName, relationTableName)} (
                             "id" CHAR(25) NOT NULL,
                             #$aColSql,
                             #$bColSql,
@@ -112,36 +113,26 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                         );"""
 
     val indexCreate =
-      sqlu"""CREATE UNIQUE INDEX #${qualify(projectId, s"${relationTableName}_AB_unique")} on #$relationTableName ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
-    val indexB = sqlu"""CREATE INDEX #${qualify(projectId, s"${relationTableName}_B")} on #$relationTableName ("#$modelBColumn" ASC)"""
+      sqlu"""CREATE UNIQUE INDEX #${qualify(project.dbName, s"${relationTableName}_AB_unique")} on #$relationTableName ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
+    val indexB = sqlu"""CREATE INDEX #${qualify(project.dbName, s"${relationTableName}_B")} on #$relationTableName ("#$modelBColumn" ASC)"""
 
     DatabaseAction.seq(tableCreate, indexCreate, indexB)
   }
 
-  override def updateRelationTable(projectId: String, previousRelation: Relation, nextRelation: Relation) = {
-    val addOrRemoveId        = addOrRemoveIdColumn(projectId, previousRelation, nextRelation)
-    val renameModelAColumn   = renameColumn(projectId, previousRelation.relationTableName, previousRelation.modelAColumn, nextRelation.modelAColumn)
-    val renameModelBColumn   = renameColumn(projectId, previousRelation.relationTableName, previousRelation.modelBColumn, nextRelation.modelBColumn)
-    val renameTableStatement = renameTable(projectId, previousRelation.relationTableName, nextRelation.relationTableName)
-
-    val all = Vector(addOrRemoveId, renameModelAColumn, renameModelBColumn, renameTableStatement)
-    DBIO.sequence(all)
-  }
-
-  override def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
+  override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
-    sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)}
+    sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
           ADD COLUMN #$colSql,
-          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(projectId, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
+          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
         """
   }
 
-  override def deleteRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIO[_] = {
+  override def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     //Fixme see below
     for {
-      namesOfForeignKey <- getNamesOfForeignKeyConstraints(projectId, model, column)
-      _                 <- sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
-      _                 <- sqlu"""ALTER TABLE #${qualify(projectId, model.dbName)} DROP COLUMN `#$column`;"""
+      namesOfForeignKey <- getNamesOfForeignKeyConstraints(project.dbName, model, column)
+      _                 <- sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
+      _                 <- sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} DROP COLUMN `#$column`;"""
     } yield ()
   }
 
@@ -162,7 +153,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     } yield result
   }
 
-  override def createColumn(projectId: String,
+  override def createColumn(project: Project,
                             tableName: String,
                             columnName: String,
                             isRequired: Boolean,
@@ -170,12 +161,12 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             isList: Boolean,
                             typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val newColSql = rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
-    val unique    = if (isUnique) addUniqueConstraint(projectId, tableName, columnName, typeIdentifier) else DBIO.successful(())
-    val add       = sqlu"""ALTER TABLE #${qualify(projectId, tableName)} ADD COLUMN #$newColSql"""
+    val unique    = if (isUnique) addUniqueConstraint(project.dbName, tableName, columnName, typeIdentifier) else DBIO.successful(())
+    val add       = sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$newColSql"""
     DBIO.seq(add, unique)
   }
 
-  override def updateColumn(projectId: String,
+  override def updateColumn(project: Project,
                             model: Model,
                             oldColumnName: String,
                             newColumnName: String,
@@ -197,28 +188,28 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
 
-    val createNewTable = sqlu"""CREATE TABLE #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} (
+    val createNewTable = sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_TEMP_TABLE")} (
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)})
            );"""
 
     val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.map { field =>
-      createColumn(projectId, s"${model.dbName}_TEMP_TABLE", field.dbName, field.isRequired, field.isUnique, field.isList, field.typeIdentifier)
+      createColumn(project, s"${model.dbName}_TEMP_TABLE", field.dbName, field.isRequired, field.isUnique, field.isList, field.typeIdentifier)
     }: _*)
 
 //    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
     val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",")
     val transferContent =
-      sqlu"""INSERT INTO #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} (#$columnNames)
+      sqlu"""INSERT INTO #${qualify(project.dbName, s"${model.dbName}_TEMP_TABLE")} (#$columnNames)
              SELECT #$columnNames
-             FROM #${qualify(projectId, s"${model.dbName}")}
+             FROM #${qualify(project.dbName, s"${model.dbName}")}
           """
 
 //    Drop the old table X: DROP TABLE X.
-    val dropOldTable = sqlu"DROP TABLE #${qualify(projectId, model.dbName)} "
+    val dropOldTable = sqlu"DROP TABLE #${qualify(project.dbName, model.dbName)} "
 //    Change the name of new_X to X using: ALTER TABLE new_X RENAME TO X.
 
-    val renameNewTable = sqlu"ALTER TABLE #${qualify(projectId, s"${model.dbName}_TEMP_TABLE")} RENAME TO #${qualify(projectId, model.dbName)}"
+    val renameNewTable = sqlu"ALTER TABLE #${qualify(project.dbName, s"${model.dbName}_TEMP_TABLE")} RENAME TO #${qualify(project.dbName, model.dbName)}"
 //    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
     val createIndexes = sqlu"" //Fixme
 //    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
@@ -246,31 +237,31 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     )
   }
 
-  override def deleteColumn(projectId: String, tableName: String, columnName: String, model: Option[Model]) = {
+  override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
     //if no model is provided, this concerns the relation table
 
-    sqlu"""ALTER TABLE #${qualify(projectId, tableName)} DROP COLUMN #${qualify(columnName)}"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} DROP COLUMN #${qualify(columnName)}"""
   }
 
-  override def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(projectId, s"${columnName}_UNIQUE")} ON #${qualify(tableName)} (#${qualify(columnName)} ASC)"
+  override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(project.dbName, s"${columnName}_UNIQUE")} ON #${qualify(tableName)} (#${qualify(columnName)} ASC)"
   }
 
-  override def removeIndex(projectId: String, tableName: String, indexName: String): DBIO[_] = {
-    sqlu"ALTER TABLE #${qualify(projectId, tableName)} DROP INDEX #${qualify(indexName)}"
+  override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
+    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)}"
   }
 
-  override def renameTable(projectId: String, oldTableName: String, newTableName: String): DBIO[_] = {
+  override def renameTable(project: Project, oldTableName: String, newTableName: String): DBIO[_] = {
     if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(projectId, oldTableName)} RENAME TO #${qualify(newTableName)}"""
+      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)}"""
     } else {
       DatabaseAction.successful(())
     }
   }
 
-  override def renameColumn(projectId: String, tableName: String, oldColumnName: String, newColumnName: String) = {
+  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String) = {
     if (oldColumnName != newColumnName) {
-      sqlu"""ALTER TABLE #${qualify(projectId, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
     } else {
       DatabaseAction.successful(())
     }

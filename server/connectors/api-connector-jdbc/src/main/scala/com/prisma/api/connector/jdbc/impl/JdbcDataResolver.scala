@@ -12,14 +12,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDataResolver(
     project: Project,
-    slickDatabase: SlickDatabase,
-    schemaName: Option[String]
+    slickDatabase: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends DataResolver {
 
-  val projectId = schemaName.getOrElse(project.id)
   val queryBuilder = JdbcActionsBuilder(
-    schemaName = projectId,
+    project = project,
     slickDatabase = slickDatabase
   )
 
@@ -28,13 +26,13 @@ case class JdbcDataResolver(
       import slickDatabase.profile.api._
 
       val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/$projectId'"""
-      val attach             = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
+      val path               = s"""'db/${project.dbName}'"""
+      val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
       val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 
       val attachIfNecessary = for {
         attachedDbs <- list
-        _ <- attachedDbs.map(_._2).contains(projectId) match {
+        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
               case true  => slick.dbio.DBIO.successful(())
               case false => attach
             }

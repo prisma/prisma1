@@ -13,9 +13,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
 
   override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = mutaction match {
-      case x: CreateProject         => CreateProjectInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: TruncateProject       => TruncateProjectInterpreter(builder).execute(x, schemaBeforeMigration)
-      case x: DeleteProject         => DeleteProjectInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: CreateColumn          => CreateColumnInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: UpdateColumn          => UpdateColumnInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: DeleteColumn          => DeleteColumnInterpreter(builder).execute(x, schemaBeforeMigration)
@@ -55,9 +53,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
 
   override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = mutaction match {
-      case x: CreateProject         => CreateProjectInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: TruncateProject       => TruncateProjectInterpreter(builder).rollback(x, schemaBeforeMigration)
-      case x: DeleteProject         => DeleteProjectInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: CreateColumn          => CreateColumnInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: UpdateColumn          => UpdateColumnInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: DeleteColumn          => DeleteColumnInterpreter(builder).rollback(x, schemaBeforeMigration)

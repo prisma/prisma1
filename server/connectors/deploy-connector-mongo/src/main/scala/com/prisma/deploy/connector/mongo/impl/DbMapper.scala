@@ -1,8 +1,9 @@
 package com.prisma.deploy.connector.mongo.impl
 
+import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector.MissingBackRelations
 import com.prisma.shared.models
-import com.prisma.shared.models.Migration
+import com.prisma.shared.models.{Migration, ProjectManifestation}
 import com.prisma.utils.mongo.{DocumentFormat, JsonBsonConversion, MongoExtensions}
 import org.mongodb.scala.Document
 import play.api.libs.functional.syntax._
@@ -35,12 +36,12 @@ object DbMapper extends JsonBsonConversion with MongoExtensions {
 
   def convertToDocument(migration: models.Migration): Document = migrationDocumentFormat.writes(migration)
 
-  def convertToProjectModel(project: Document, migration: models.Migration): models.Project = {
+  def convertToProjectModel(project: Document, migration: models.Migration, manifestation: ProjectManifestation): models.Project = {
     val projectDocument = project.as[ProjectDocument]
-    convertToProjectModel(projectDocument, migration)
+    convertToProjectModel(projectDocument, migration, manifestation)
   }
 
-  def convertToProjectModel(projectDocument: ProjectDocument, migration: models.Migration): models.Project = {
+  def convertToProjectModel(projectDocument: ProjectDocument, migration: models.Migration, manifestation: ProjectManifestation): models.Project = {
     val schemaWithMissingBackRelations = migration.schema
     val schemaWithAddedBackRelations   = MissingBackRelations.add(schemaWithMissingBackRelations)
 
@@ -51,7 +52,8 @@ object DbMapper extends JsonBsonConversion with MongoExtensions {
       allowMutations = projectDocument.allowMutations,
       revision = migration.revision,
       schema = schemaWithAddedBackRelations,
-      functions = migration.functions.toList
+      functions = migration.functions.toList,
+      manifestation = manifestation
     )
   }
 

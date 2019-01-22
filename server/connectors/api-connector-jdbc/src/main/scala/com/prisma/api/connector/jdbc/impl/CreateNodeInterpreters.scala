@@ -30,8 +30,8 @@ case class CreateNodeInterpreter(
   }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
@@ -121,8 +121,8 @@ case class NestedCreateNodeInterpreter(
     }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).get)
 
     case e: PSQLException if e.getSQLState == "23503" => //Foreign Key Violation
       APIErrors.NodeDoesNotExist("")

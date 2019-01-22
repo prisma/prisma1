@@ -3,6 +3,87 @@ import { Client } from './Client'
 import { Model } from './types'
 import { print } from 'graphql'
 
+test('automatic non-scalar sub selection for relation', t => {
+  const typeDefs = `
+    type Query {
+      house(where: HouseWhereInput): House
+    }
+
+    input HouseWhereInput {
+      id: ID!
+    }
+
+    type User {
+      house: House!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+      user: User!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.house({
+    id: "id"
+  }).user()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection', t => {
+  const typeDefs = `
+    type Query {
+      users(where: UserWhereInput): [User]
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      house: House!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.users()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
 test('related type', t => {
   const typeDefs = `
     type Query {
@@ -30,7 +111,7 @@ test('related type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -74,7 +155,7 @@ test('deep related type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -118,7 +199,7 @@ test('embedded type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -171,7 +252,7 @@ test('nested mbedded type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -269,7 +350,7 @@ test('nested args', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,

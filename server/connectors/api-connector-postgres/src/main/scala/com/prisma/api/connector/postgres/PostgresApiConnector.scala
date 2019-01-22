@@ -24,10 +24,10 @@ case class PostgresApiConnector(config: DatabaseConfig, isActive: Boolean, isPro
 
   override val databaseMutactionExecutor = {
     val manageRelayIds = if (isPrototype) false else isActive
-    JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds, schemaName = config.schema)
+    JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds)
   }
-  override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
-  override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary, schemaName = config.schema)
+  override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.primary)
+  override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary)
   override def projectIdEncoder: ProjectIdEncoder   = ProjectIdEncoder('$')
   override val capabilities = {
     if (isPrototype) {

@@ -230,7 +230,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            deployConnector = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector,
+            connectorCapabilities = dependencies.deployConnector.capabilities
           ).execute
       }
     )
@@ -256,7 +257,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             invalidationPubSub = dependencies.invalidationPublisher,
-            deployConnector = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector,
+            connectorCapabilities = dependencies.deployConnector.capabilities
           ).execute
       }
     )

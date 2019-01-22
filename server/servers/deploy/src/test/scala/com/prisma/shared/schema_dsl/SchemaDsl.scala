@@ -51,7 +51,7 @@ object SchemaDsl extends AwaitUtils {
       id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, deployConnector)(sdlString)
+    fromString(id, inferredTables, deployConnector)(sdlString).copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
   private def fromString(
@@ -76,7 +76,8 @@ object SchemaDsl extends AwaitUtils {
 
     val schema                 = SchemaInferrer(deployConnector.capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
-    TestProject().copy(id = id, schema = withBackRelationsAdded)
+    val manifestation          = ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"))
+    TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {

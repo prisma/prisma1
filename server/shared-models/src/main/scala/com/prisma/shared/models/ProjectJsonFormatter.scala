@@ -349,7 +349,6 @@ object ProjectJsonFormatter {
   )(s => (s.modelTemplates, s.relationTemplates, s.enums, s.version))
 
   implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
-  implicit lazy val projectFormat         = Json.format[Project]
   implicit lazy val migrationStatusFormat = JsonUtils.enumFormat(MigrationStatus)
 
   val migrationReads: Reads[Migration] = for {

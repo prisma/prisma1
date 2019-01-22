@@ -5,6 +5,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
+import com.prisma.shared.models.Project
 import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
 
@@ -12,14 +13,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    manageRelayIds: Boolean,
-    schemaName: Option[String]
+    manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
 
-  override def executeRaw(query: String): Future[JsValue] = {
-    val action = JdbcActionsBuilder("", slickDatabase).executeRaw(query)
+  override def executeRaw(project: Project, query: String): Future[JsValue] = {
+    val action = JdbcActionsBuilder(project, slickDatabase).executeRaw(query)
     slickDatabase.database.run(action)
   }
 
@@ -28,8 +28,8 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val projectId      = schemaName.getOrElse(mutaction.project.id)
-    val actionsBuilder = JdbcActionsBuilder(schemaName = projectId, slickDatabase)
+
+    val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)
@@ -42,13 +42,13 @@ case class JdbcDatabaseMutactionExecutor(
     } else if (slickDatabase.isSQLite) {
       import slickDatabase.profile.api._
       val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/$projectId'"""
-      val attach             = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
+      val path               = s"""'db/${mutaction.project.dbName}'"""
+      val attach             = sqlu"ATTACH DATABASE #${path} AS #${mutaction.project.dbName};"
       val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 
       val attachIfNecessary = for {
         attachedDbs <- list
-        _ <- attachedDbs.map(_._2).contains(projectId) match {
+        _ <- attachedDbs.map(_._2).contains(mutaction.project.dbName) match {
               case true  => DBIO.successful(())
               case false => attach
             }
