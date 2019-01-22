@@ -984,7 +984,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       clientDbQueries = deployConnector.clientDBQueries(project),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true
+      isActive = true,
+      deployConnector = deployConnector
     )
 
     mutation.execute.await

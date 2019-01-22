@@ -222,7 +222,8 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
       clientDbQueries = deployConnector.clientDBQueries(project),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true
+      isActive = true,
+      deployConnector = deployConnector
     )
 
     val result = mutation.execute.await
