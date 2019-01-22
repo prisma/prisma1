@@ -42,3 +42,7 @@ buildkite-script-*
 
 *svm-heapdump-*
 out
+
+# sqlite
+*.db
+/db/*
