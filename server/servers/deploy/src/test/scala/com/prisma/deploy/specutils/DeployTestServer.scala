@@ -1,10 +1,9 @@
 package com.prisma.deploy.specutils
 
-import akka.http.scaladsl.model.HttpRequest
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
-import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
+import com.prisma.shared.models.{Migration, MigrationId, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json.{JsArray, JsString, _}

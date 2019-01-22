@@ -9,6 +9,7 @@ import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Model, Project}
 import org.postgresql.util.PSQLException
+import org.sqlite.SQLiteException
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
@@ -144,5 +145,8 @@ trait SharedUpdateLogic {
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()
+
+    case e: SQLiteException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(args.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(args.keys, e).get)
   }
 }

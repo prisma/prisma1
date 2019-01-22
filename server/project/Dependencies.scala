@@ -37,6 +37,7 @@ object Dependencies {
   val mariaDbClient  = "org.mariadb.jdbc"  % "mariadb-java-client" % "2.1.2"
   val postgresClient = "org.postgresql"    % "postgresql"          % "42.2.2"
   val mongoClient    = "org.mongodb.scala" %% "mongo-scala-driver" % "2.4.0"
+  val sqliteClient   = "org.xerial"        % "sqlite-jdbc"         % "3.25.2"
 
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
@@ -89,8 +90,8 @@ object Dependencies {
   val apacheCommons     = "commons-lang"               % "commons-lang"                   % "2.6"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"        % "3.11.0",
-    "org.jooq" %% "jooq-scala" % "3.11.0"
+    "org.jooq" % "jooq"        % "3.11.9",
+    "org.jooq" %% "jooq-scala" % "3.11.9"
   )
 
   val http4s = Seq(

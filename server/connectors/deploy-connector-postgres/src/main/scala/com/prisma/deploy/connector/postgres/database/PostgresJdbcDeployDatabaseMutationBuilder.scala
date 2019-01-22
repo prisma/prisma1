@@ -22,6 +22,10 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   import slickDatabase.profile.api._
 
+  override def createSchema(projectId: String): DBIO[_] = {
+    sqlu"CREATE SCHEMA #${qualify(projectId)}"
+  }
+
   override def truncateProjectTables(project: Project): DBIO[_] = {
     val listTableNames: List[String] = project.models.flatMap { model =>
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
@@ -135,32 +139,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     DatabaseAction.seq(tableCreate, indexCreate, indexB)
   }
 
-  override def updateRelationTable(project: Project, previousRelation: Relation, nextRelation: Relation) = {
-    val addOrRemoveIdColumn = (previousRelation.idColumn, nextRelation.idColumn) match {
-      case (Some(idColumn), None) => deleteColumn(project, previousRelation.relationTableName, idColumn)
-      case (None, Some(idColumn)) =>
-        // We are not adding a primary key column because we don't need it actually. Because of the default this column will also work if the insert does not contain the id column.
-        sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
-               ADD COLUMN "#$idColumn" varchar(40) default null"""
-      case _ => DBIO.successful(())
-    }
-
-    val renameModelAColumn = (previousRelation.modelAColumn != nextRelation.modelAColumn).toOption(
-      sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
-             RENAME COLUMN #${qualify(previousRelation.modelAColumn)} TO #${qualify(nextRelation.modelAColumn)}"""
-    )
-    val renameModelBColumn = (previousRelation.modelBColumn != nextRelation.modelBColumn).toOption(
-      sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
-             RENAME COLUMN #${qualify(previousRelation.modelBColumn)} TO #${qualify(nextRelation.modelBColumn)}"""
-    )
-    val renameTable = (previousRelation.relationTableName != nextRelation.relationTableName).toOption(
-      sqlu"""ALTER TABLE #${qualify(project.dbName, previousRelation.relationTableName)}
-             RENAME TO #${qualify(nextRelation.relationTableName)}"""
-    )
-    val all = Vector(addOrRemoveIdColumn) ++ renameModelAColumn ++ renameModelBColumn ++ renameTable
-    DBIO.sequence(all.toVector)
-  }
-
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
 
@@ -191,25 +169,17 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     DatabaseAction.seq(addColumn, uniqueAction)
   }
 
-  override def updateScalarListType(project: Project, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier) = {
-    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
-    sqlu"""ALTER TABLE #${qualify(project.dbName, s"${modelName}_$fieldName")} DROP INDEX "value", CHANGE COLUMN "value" "value" #$sqlType, ADD INDEX "value" ("value" ASC)"""
-  }
-
   override def updateColumn(project: Project,
-                            tableName: String,
+                            model: Model,
                             oldColumnName: String,
                             newColumnName: String,
                             newIsRequired: Boolean,
                             newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val nulls   = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
-    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
-    val renameIfNecessary = if (oldColumnName != newColumnName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
+    val tableName         = model.dbName
+    val nulls             = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
+    val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
+    val renameIfNecessary = renameColumn(project, tableName, oldColumnName, newColumnName)
 
     DatabaseAction.seq(
       sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
@@ -218,8 +188,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     )
   }
 
-  override def renameTable(project: Project, currentName: String, newName: String): DBIO[_] = {
-    sqlu"""ALTER TABLE #${qualify(project.dbName, currentName)} RENAME TO #${qualify(newName)}"""
+  override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
+    sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} DROP COLUMN #${qualify(columnName)}"""
   }
 
   override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
@@ -228,5 +198,21 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
     sqlu"""DROP INDEX #${qualify(project.dbName, indexName)}"""
+  }
+
+  override def renameTable(project: Project, oldTableName: String, newTableName: String) = {
+    if (oldTableName != newTableName) {
+      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
+  }
+
+  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String) = {
+    if (oldColumnName != newColumnName) {
+      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+    } else {
+      DatabaseAction.successful(())
+    }
   }
 }

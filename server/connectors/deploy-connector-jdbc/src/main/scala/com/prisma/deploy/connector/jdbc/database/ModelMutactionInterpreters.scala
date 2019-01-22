@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.deploy.connector.{CreateModelTable, DeleteModelTable, RenameTable, DatabaseSchema}
+import com.prisma.deploy.connector.{CreateModelTable, DatabaseSchema, DeleteModelTable, RenameTable}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 import slick.jdbc.PostgresProfile.api._
 
