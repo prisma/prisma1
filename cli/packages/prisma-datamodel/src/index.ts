@@ -22,3 +22,6 @@ export { toposort } from './util/sort'
 export { TypeIdentifier, TypeIdentifiers } from './datamodel/scalar'
 export { SdlExpect } from './test-helpers'
 export { default as Renderers } from './datamodel/renderer'
+export {
+  default as RelationalRendererV2,
+} from './datamodel/renderer/relationalRendererV2'

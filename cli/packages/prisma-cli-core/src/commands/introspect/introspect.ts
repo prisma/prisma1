@@ -13,6 +13,7 @@ import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
 import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
+import { TmpRelationalRendererV2 } from './TmpRelationalRendererV2'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -251,7 +252,7 @@ export default class IntrospectCommand extends Command {
       const numTables = sdl.types.length
 
       const renderedSdl = prototype
-        ? await Renderers.create(databaseType!, true).render(sdl)
+        ? await new TmpRelationalRendererV2().render(sdl)
         : await introspection.renderToDatamodelString()
 
       // Mongo has .close, Postgres .end
