@@ -4,9 +4,6 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import cats.effect._
 import cats.implicits._
-import com.oracle.svm.core.log.{Log, StringBuilderLog}
-import com.oracle.svm.core.thread.VMThreads.StatusSupport
-import com.oracle.svm.core.thread.{JavaThreads, VMThreads}
 import io.circe.Json
 import org.http4s
 import org.http4s._
@@ -50,33 +47,6 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
   }
 
   val service = HttpService[IO] {
-    case request if request.pathInfo == "/debug" =>
-      println("----------------------------- Graal Threads -----------------------------")
-      var vmThread = VMThreads.firstThread()
-      val wat      = new StringBuilderLog().zhex(vmThread.rawValue())
-      while (vmThread.isNonNull) {
-        val javaThread = JavaThreads.singleton().fromVMThread(vmThread)
-        println(
-          s"VMThread: ${wat.asInstanceOf[StringBuilderLog].getResult}  ${StatusSupport.getStatusString(vmThread)}  ${javaThread.getId}  ${javaThread.getName}")
-
-        vmThread = VMThreads.nextThread(vmThread)
-      }
-
-      println("----------------------------- Java Threads -----------------------------")
-
-      Thread.getAllStackTraces.forEach((k, v) => {
-        println(s"""
-                 |---------------------
-                 |${k.getId}
-                 |${k.getName}
-                 |${k.toString}
-                 |${v.mkString("\n")}
-                 |---------------------
-                 |""".stripMargin)
-      })
-
-      Ok("Threads dumped to STDOUT")
-
     case request if request.method == GET && request.pathInfo == "/status" =>
       Ok("\"OK\"")
 
