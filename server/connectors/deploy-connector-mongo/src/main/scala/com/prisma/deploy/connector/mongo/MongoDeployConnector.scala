@@ -22,12 +22,12 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
   override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
 
-  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient, config.database)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
 
   override def capabilities: ConnectorCapabilities = ConnectorCapabilities.mongo(isTest = isTest)
 
-  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
+  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
   override def initialize(): Future[Unit] = Future.unit
