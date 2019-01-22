@@ -1,19 +1,14 @@
 package com.prisma.deploy.migration
-import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
-import com.prisma.deploy.connector.DatabaseSchema
-import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
-import com.prisma.deploy.specutils.{DataModelV2Base, DeploySpecBase, PassiveDeploySpecBase}
+import com.prisma.deploy.specutils.{DataModelV2Base, PassiveDeploySpecBase}
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
-class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase with DataModelV2Base {
+class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase {
   val TI = TypeIdentifier
-  case class SQLs(postgres: String, mysql: String)
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
   override def runOnlyForCapabilities                            = Set(MigrationsCapability)
-  lazy val slickDatabase                                         = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
 
   "adding a type for an existing table should work" in {
     val postgres =
@@ -307,28 +302,5 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     val column      = finalResult.table_!("blog").column_!("new_title")
     column.typeIdentifier should be(TI.Float)
     column.isRequired should be(false)
-  }
-
-  def setup(sqls: SQLs): DatabaseSchema = {
-    deployConnector.deleteProjectDatabase(projectId).await()
-    if (slickDatabase.isMySql) {
-      setupProjectDatabaseForProject(sqls.mysql)
-    } else if (slickDatabase.isPostgres) {
-      setupProjectDatabaseForProject(sqls.postgres)
-    } else {
-      sys.error("This is neither Postgres nor MySQL")
-    }
-    inspect
-  }
-
-  def executeSql(sqls: SQLs): DatabaseSchema = {
-    if (slickDatabase.isMySql) {
-      executeSql(sqls.mysql)
-    } else if (slickDatabase.isPostgres) {
-      executeSql(sqls.postgres)
-    } else {
-      sys.error("This is neither Postgres nor MySQL")
-    }
-    inspect
   }
 }
