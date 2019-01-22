@@ -237,12 +237,12 @@ export class Client {
     let result
     try {
       result = await this.processInstructionsOnce(id)
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       if (typeof resolve === 'function') {
         return resolve(result)
       }
     } catch (e) {
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       if (typeof reject === 'function') {
         return reject(e)
       }
@@ -254,9 +254,14 @@ export class Client {
     try {
       return await this.processInstructionsOnce(id)
     } catch (e) {
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       return reject(e)
     }
+  }
+
+  _releaseMemory(id) {
+    this._currentInstructions[id] = []
+    delete this._promises[id]
   }
 
   generateSelections(instructions) {
