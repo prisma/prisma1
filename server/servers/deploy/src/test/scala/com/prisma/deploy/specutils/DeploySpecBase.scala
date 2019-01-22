@@ -9,7 +9,8 @@ import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionIn
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
-import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
+import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.deploy.schema.mutations._
 import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -163,11 +164,37 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
 
   val project = Project(id = projectId, schema = Schema.empty)
 
+  def deployThatMustError(
+      dataModel: String,
+      capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
+      noMigration: Boolean = false
+  ): Vector[DeployError] = {
+    val result = deployInternal(dataModel, capabilities, noMigration)
+    if (result.errors.nonEmpty) {
+      result.errors.toVector
+    } else {
+      sys.error(s"The deploy did not return any error which is unexpected.")
+    }
+  }
+
   def deploy(
       dataModel: String,
       capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
       noMigration: Boolean = false
   ): DatabaseSchema = {
+    val result = deployInternal(dataModel, capabilities, noMigration)
+    if (result.errors.nonEmpty) {
+      sys.error(s"Deploy returned unexpected errors: ${result.errors}")
+    } else {
+      inspect
+    }
+  }
+
+  private def deployInternal(
+      dataModel: String,
+      capabilities: ConnectorCapabilities,
+      noMigration: Boolean
+  ): DeployMutationPayload = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = projectName,
@@ -201,11 +228,7 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
     val result = mutation.execute.await
     result match {
       case MutationSuccess(result) =>
-        if (result.errors.nonEmpty) {
-          sys.error(s"Deploy returned unexpected errors: ${result.errors}")
-        } else {
-          inspect
-        }
+        result
       case MutationError =>
         sys.error("Deploy returned an unexpected error")
     }
