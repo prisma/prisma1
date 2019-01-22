@@ -444,8 +444,7 @@ lazy val sangriaServer = libProject("sangria-server")
     cuid,
     scalajHttp % Test,
     akkaHttpCors
-  ) ++ http4s ++ ujson,
-    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar")) // todo remove (debug)
+  ) ++ http4s ++ ujson)
 
 val allDockerImageProjects = List(
   prismaNative,

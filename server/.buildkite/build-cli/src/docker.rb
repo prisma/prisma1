@@ -33,7 +33,7 @@ class DockerCommands
 
   def self.build(context, prisma_version)
     Command.new("docker", "run", "-e", "BRANCH=#{context.branch}", "-e", "COMMIT_SHA=#{context.commit}", "-e", "CLUSTER_VERSION=#{prisma_version.stringify}",
-      '-w', '/root',
+      '-w', '/root/build',
       '-v', "#{context.server_root_path}:/root/build",
       '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
       '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
