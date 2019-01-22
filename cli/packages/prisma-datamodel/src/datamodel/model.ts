@@ -41,6 +41,12 @@ export interface IComment {
   isError: boolean
 }
 
+export interface IIndexInfo {
+  name: string
+  fields: IGQLField[]
+  unique: boolean
+}
+
 /**
  * Represents a field in the datamodel.
  */
@@ -165,6 +171,13 @@ export interface IGQLType {
    * Comments for this type.
    */
   comments?: IComment[]
+
+  /**
+   * Indices for this type.
+   * 
+   * Will be parsed and rendered to the corresponding directive.
+   */
+  indices?: IIndexInfo[]
 }
 
 export interface ISDL {
@@ -274,6 +287,7 @@ function cloneType(type: IGQLType): IGQLType {
   }
 
   cloneCommentsAndDirectives(copy, type)
+  cloneIndices(copy, type)
 
   copy.fields = []
   for(const field of type.fields) {
@@ -281,6 +295,20 @@ function cloneType(type: IGQLType): IGQLType {
   }
 
   return copy
+}
+
+export function cloneIndices(copy: IGQLType, obj: IGQLType) {
+  if(obj.indices !== undefined) {
+    copy.indices = []
+    
+    for(const index of obj.indices) {
+      copy.indices.push({
+        name: index.name,
+        unique: index.unique,
+        fields: [...index.fields]
+      })
+    }
+  }
 }
 
 /**
@@ -301,7 +329,7 @@ export function cloneSchema(schema: ISDL): ISDL {
     copy.types.push(cloneType(type))
   }
 
-  // Re-Assign type pointer
+  // Re-Assign type pointer for relations
   for(const type of copy.types) {
     for(const field of type.fields) {
       if(typeof field.type !== 'string') {
@@ -309,6 +337,22 @@ export function cloneSchema(schema: ISDL): ISDL {
         const [fieldType] = copy.types.filter(x => x.name === typeName)
         console.assert(fieldType !== undefined) // This case should never happen
         field.type = fieldType
+      }
+    }
+  }
+
+  // Re-Assign field pointer for indices
+  for(const type of copy.types) {
+    if(type.indices !== undefined) {
+      for(const index of type.indices) {
+        // We need an index for setting the element
+        // tslint:disable-next-line:prefer-for-of
+        for(let i = 0; i < index.fields.length; i++) {
+          const fieldName = index.fields[i].name
+          const [field] = type.fields.filter(x => x.name === fieldName)
+          console.assert(field !== undefined) // This case should never happen
+          index.fields[i] = field
+        }
       }
     }
   }
