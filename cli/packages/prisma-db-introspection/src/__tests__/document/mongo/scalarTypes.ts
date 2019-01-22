@@ -17,5 +17,5 @@ describe('Mongo Model Introspector, end to end', () => {
     const schema = await introspection.renderToDatamodelString()
 
     expect(schema).toEqual(schemaString)
-  }, 10000)
+  }, 60000)
 })

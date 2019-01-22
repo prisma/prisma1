@@ -1,6 +1,11 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{
+  EmbeddedScalarListsCapability,
+  LegacyDataModelCapability,
+  NonEmbeddedScalarListCapability,
+  ScalarListsCapability
+}
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -47,6 +52,8 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
   def hasNot(capability: ConnectorCapability): Boolean = !has(capability)
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+
+  def isDataModelV2: Boolean = !capabilities.contains(LegacyDataModelCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
@@ -55,7 +62,7 @@ object ConnectorCapabilities extends BooleanUtils {
 
   import com.prisma.shared.models.ConnectorCapability._
 
-  def mysql: ConnectorCapabilities = {
+  lazy val mysql: ConnectorCapabilities = {
     val capas = Set(
       LegacyDataModelCapability,
       TransactionalExecutionCapability,
@@ -89,7 +96,32 @@ object ConnectorCapabilities extends BooleanUtils {
     ConnectorCapabilities(capas)
   }
 
-  def mongo(isActive: Boolean, isTest: Boolean): ConnectorCapabilities = {
+  lazy val postgresPrototype: ConnectorCapabilities = {
+    val capas = sqlPrototype ++ Set(UuidIdCapability)
+    ConnectorCapabilities(capas)
+  }
+
+  lazy val mysqlPrototype: ConnectorCapabilities = {
+    ConnectorCapabilities(sqlPrototype)
+  }
+
+  private lazy val sqlPrototype: Set[ConnectorCapability] = {
+    Set(
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      MigrationsCapability,
+      NonEmbeddedScalarListCapability,
+      NodeQueryCapability,
+      ImportExportCapability,
+      IntrospectionCapability,
+      SupportsExistingDatabasesCapability,
+      IntIdCapability,
+    )
+  }
+
+  def mongo(isTest: Boolean): ConnectorCapabilities = {
     val common = Set(
       NodeQueryCapability,
       EmbeddedScalarListsCapability,

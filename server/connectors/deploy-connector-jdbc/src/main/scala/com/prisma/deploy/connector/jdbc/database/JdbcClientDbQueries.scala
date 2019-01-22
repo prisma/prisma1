@@ -14,19 +14,19 @@ case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(i
   def existsByModel(model: Model): Future[Boolean] = {
     val query = queryBuilder.existsByModel(project.id, model)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    database.run(query).recover(recoverPf)
   }
 
   def existsDuplicateByRelationAndSide(relation: Relation, relationSide: RelationSide): Future[Boolean] = {
     val query = queryBuilder.existsDuplicateByRelationAndSide(project.id, relation, relationSide)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    database.run(query).recover(recoverPf)
   }
 
   def existsByRelation(relation: Relation): Future[Boolean] = {
     val query = queryBuilder.existsByRelation(project.id, relation)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    database.run(query).recover(recoverPf)
   }
 
   def existsNullByModelAndField(model: Model, field: Field): Future[Boolean] = {
@@ -35,17 +35,21 @@ case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(i
       case f: RelationField => queryBuilder.existsNullByModelAndRelationField(project.id, model, f)
     }
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    database.run(query).recover(recoverPf)
   }
 
   def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean] = {
     val query = queryBuilder.existsDuplicateValueByModelAndField(project.id, model, field.dbName)
 
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    database.run(query).recover(recoverPf)
   }
 
   override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
     val query = queryBuilder.enumValueIsInUse(project.id, models, enumName, value)
-    database.run(query).recover { case _: java.sql.SQLSyntaxErrorException => false }
+    database.run(query).recover(recoverPf)
+  }
+
+  private val recoverPf: PartialFunction[Throwable, Boolean] = {
+    case _: java.sql.SQLException => false
   }
 }

@@ -5,6 +5,7 @@ import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
+import com.prisma.shared.models.Project
 import play.api.libs.json.JsValue
 import slick.jdbc.TransactionIsolation
 
@@ -12,14 +13,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
     slickDatabase: SlickDatabase,
-    isActive: Boolean,
-    schemaName: Option[String]
+    manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
 
-  override def executeRaw(query: String): Future[JsValue] = {
-    val action = JdbcActionsBuilder("", slickDatabase).executeRaw(query)
+  override def executeRaw(project: Project, query: String): Future[JsValue] = {
+    val action = JdbcActionsBuilder(project, slickDatabase).executeRaw(query)
     slickDatabase.database.run(action)
   }
 
@@ -28,7 +28,7 @@ case class JdbcDatabaseMutactionExecutor(
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = JdbcActionsBuilder(schemaName = schemaName.getOrElse(mutaction.project.id), slickDatabase)
+    val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabase)
     val singleAction = transactionally match {
       case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)
@@ -103,12 +103,12 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
-    case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = isActive)
+    case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = manageRelayIds)
     case m: TopLevelUpdateNode => UpdateNodeInterpreter(m)
     case m: TopLevelUpsertNode => UpsertNodeInterpreter(m)
-    case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: UpdateNodes        => UpdateNodesInterpreter(m)
-    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: ResetData          => ResetDataInterpreter(m)
     case m: ImportNodes        => ImportNodesInterpreter(m)
     case m: ImportRelations    => ImportRelationsInterpreter(m)
@@ -116,14 +116,14 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = isActive)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = manageRelayIds)
     case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
     case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
-    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: NestedConnect     => NestedConnectInterpreter(m)
     case m: NestedSet         => NestedSetInterpreter(m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
-    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = isActive)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
   }
 }

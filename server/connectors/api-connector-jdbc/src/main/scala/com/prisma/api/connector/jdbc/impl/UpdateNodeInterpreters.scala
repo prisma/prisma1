@@ -7,7 +7,7 @@ import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLev
 import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, NodeSingleQueries}
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
-import com.prisma.shared.models.Model
+import com.prisma.shared.models.{Model, Project}
 import org.postgresql.util.PSQLException
 import slick.dbio._
 
@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext
 case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter
     with SharedUpdateLogic {
+  val project           = mutaction.project
   val model             = mutaction.where.model
   val nonListArgs       = mutaction.nonListArgs
   override def listArgs = mutaction.listArgs
@@ -34,6 +35,7 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
 }
 
 case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter with SharedUpdateLogic {
+  val project     = mutaction.project
   val model       = mutaction.model
   val nonListArgs = mutaction.nonListArgs
   val listArgs    = mutaction.listArgs
@@ -52,6 +54,7 @@ case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: Execution
 case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with SharedUpdateLogic {
+  val project     = mutaction.project
   val model       = mutaction.relationField.relatedModel_!
   val nonListArgs = mutaction.nonListArgs
   val listArgs    = mutaction.listArgs
@@ -71,6 +74,7 @@ case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit e
 case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with SharedUpdateLogic {
+  val project     = mutaction.project
   val model       = mutaction.relationField.relatedModel_!
   val parent      = mutaction.relationField.model
   val nonListArgs = mutaction.nonListArgs
@@ -101,6 +105,7 @@ case class NestedUpdateNodeInterpreter(mutaction: NestedUpdateNode)(implicit ec:
 }
 
 trait SharedUpdateLogic {
+  def project: Project
   def model: Model
   def nonListArgs: PrismaArgs
   def listArgs: Vector[(String, ListGCValue)]
@@ -126,8 +131,8 @@ trait SharedUpdateLogic {
   }
 
   def errorHandler(args: PrismaArgs): PartialFunction[Throwable, UserFacingError] = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(model, e).get)
+    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(project, model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(project, model, e).get)
 
     case e: PSQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()

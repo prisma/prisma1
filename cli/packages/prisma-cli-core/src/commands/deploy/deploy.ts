@@ -53,6 +53,9 @@ ${chalk.gray(
       char: 'j',
       description: 'Json Output',
     }),
+    'no-migrate': flags.boolean({
+      description: 'Disable migrations. Prisma 1.26 and above needed',
+    }),
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
@@ -69,6 +72,7 @@ ${chalk.gray(
     const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
+    const noMigrate = this.flags['no-migrate']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -174,6 +178,7 @@ ${chalk.gray(
       dryRun,
       projectNew,
       workspace!,
+      noMigrate,
     )
   }
 
@@ -229,6 +234,7 @@ ${chalk.gray(
     dryRun: boolean,
     projectNew: boolean,
     workspace: string | null,
+    noMigrate: boolean,
   ): Promise<void> {
     this.deploying = true
     let before = Date.now()
@@ -243,8 +249,6 @@ ${chalk.gray(
       )}`,
     )
 
-    const hasStepsApi = await this.client.hasStepsApi()
-
     const migrationResult: DeployPayload = await this.client.deploy(
       concatName(cluster, serviceName, workspace),
       stageName,
@@ -253,6 +257,7 @@ ${chalk.gray(
       this.definition.getSubscriptions(),
       this.definition.secrets,
       force,
+      noMigrate,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
     this.printResult(migrationResult, force, dryRun)
@@ -474,7 +479,8 @@ ${chalk.gray(
       }
     }
 
-    const steps = payload.steps || payload.migration.steps || []
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
 
     if (steps.length === 0) {
       if (dryRun) {

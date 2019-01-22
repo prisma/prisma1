@@ -124,6 +124,7 @@ sealed trait Field {
   def isRelation: Boolean
   def isScalar: Boolean
   def dbName: String
+  def behaviour: Option[FieldBehaviour] = template.behaviour
 
   lazy val isScalarList: Boolean      = isScalar && isList
   lazy val isScalarNonList: Boolean   = isScalar && !isList

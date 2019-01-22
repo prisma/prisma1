@@ -743,6 +743,7 @@ export class Client {
     subscriptions: FunctionInput[],
     secrets: string[] | null,
     force?: boolean,
+    noMigration?: boolean,
   ): Promise<DeployPayload> {
     const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
@@ -767,8 +768,25 @@ export class Client {
       ${MIGRATION_FRAGMENT}
     `
 
-    const hasStepsApi = await this.hasStepsApi()
+    const introspectionResult: IntrospectionQuery = await this.client.request(
+      introspectionQuery,
+    )
+    const hasStepsApi = hasTypeWithField(
+      introspectionResult,
+      'DeployPayload',
+      'steps',
+    )
     const steps = hasStepsApi ? `steps { ${STEP_FRAGMENT} }` : ''
+
+    if (
+      noMigration &&
+      !hasTypeWithField(introspectionResult, 'DeployInput', 'noMigration')
+    ) {
+      throw new Error(
+        `You provided the --no-migrate option, but the Prisma server doesn't support it yet. It's supported in Prisma 1.26 and above.`,
+      )
+    }
+    const noMigrationInput = noMigration ? 'noMigration: true' : ''
 
     const newMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
@@ -780,6 +798,7 @@ export class Client {
           secrets: $secrets
           subscriptions: $subscriptions
           force: $force
+          ${noMigrationInput}
         }) {
           errors {
             type

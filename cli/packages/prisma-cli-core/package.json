@@ -103,7 +103,7 @@
     "prisma-client-lib": "1.23.0-test.3",
     "prisma-datamodel": "1.23.0-alpha.1",
     "prisma-db-introspection": "0.0.7",
-    "prisma-generate-schema": "^1.23.0-alpha.178",
+    "prisma-generate-schema": "1.20.4",
     "prisma-yml": "1.0.95",
     "scuid": "^1.0.2",
     "sillyname": "^0.1.0",

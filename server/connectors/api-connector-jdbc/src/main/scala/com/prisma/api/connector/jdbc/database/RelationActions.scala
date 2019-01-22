@@ -33,23 +33,7 @@ trait RelationActions extends BuilderBase {
         }
       )
 
-    } else if (relation.hasManifestation) {
-      val query = sql
-        .insertInto(relationTable(relation))
-        .columns(
-          relationColumn(relation, relationField.relationSide),
-          relationColumn(relation, relationField.oppositeRelationSide)
-        )
-        .values(placeHolder, placeHolder)
-
-      insertToDBIO(query)(
-        setParams = { pp =>
-          pp.setGcValue(parentId)
-          pp.setGcValue(childId)
-        }
-      )
-
-    } else {
+    } else if (relation.relationTableHas3Columns) {
       val query = sql
         .insertInto(relationTable(relation))
         .columns(
@@ -63,6 +47,22 @@ trait RelationActions extends BuilderBase {
       insertToDBIO(query)(
         setParams = { pp =>
           pp.setGcValue(StringIdGCValue.random)
+          pp.setGcValue(parentId)
+          pp.setGcValue(childId)
+        }
+      )
+    } else {
+      val query = sql
+        .insertInto(relationTable(relation))
+        .columns(
+          relationColumn(relation, relationField.relationSide),
+          relationColumn(relation, relationField.oppositeRelationSide)
+        )
+        .values(placeHolder, placeHolder)
+        .onConflictDoNothing()
+
+      insertToDBIO(query)(
+        setParams = { pp =>
           pp.setGcValue(parentId)
           pp.setGcValue(childId)
         }

@@ -11,6 +11,8 @@ import { prettyTime } from '../../util'
 import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
+import { Parser, DatabaseType } from 'prisma-datamodel'
+import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -80,7 +82,8 @@ export default class IntrospectCommand extends Command {
     })
 
     let client
-    let connector
+    let connector: IConnector
+    let databaseType: DatabaseType
 
     /**
      * Handle MongoDB CLI args
@@ -105,6 +108,7 @@ export default class IntrospectCommand extends Command {
         database: mongoDb!,
       })
       connector = new MongoConnector(client)
+      databaseType = DatabaseType.mongo
     }
 
     /**
@@ -147,6 +151,7 @@ export default class IntrospectCommand extends Command {
         ssl: pgSsl,
       })
       connector = new PostgresConnector(client)
+      databaseType = DatabaseType.postgres
     }
 
     if (!interactive) {
@@ -161,25 +166,28 @@ export default class IntrospectCommand extends Command {
       if (await this.hasExecuteRaw()) {
         client = new PrismaDBClient(this.definition)
         connector = new PostgresConnector(client)
+        databaseType = DatabaseType.postgres
       }
     }
 
-    if (!client || !connector) {
+    if (!client || !connector!) {
       const credentials = await endpointDialog.getDatabase(true)
       if (credentials.type === 'postgres') {
         client = new PGClient(credentials)
         connector = new PostgresConnector(client)
+        databaseType = DatabaseType.postgres
       } else if (credentials.type === 'mongo') {
         client = await this.connectToMongo(credentials)
         connector = new MongoConnector(client)
         mongoDb = credentials.database
+        databaseType = DatabaseType.mongo
       }
     }
 
     let schemas
     const before = Date.now()
     try {
-      schemas = await connector.listSchemas()
+      schemas = await connector!.listSchemas()
     } catch (e) {
       throw new Error(`Could not connect to database. ${e.message}`)
     }
@@ -223,10 +231,15 @@ export default class IntrospectCommand extends Command {
             )
       }
 
+      const ParserInstance = Parser.create(databaseType!)
+      const datamodel = ParserInstance.parseFromSchemaString(
+        this.definition.typesString!,
+      )
+
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
 
-      const introspection = await connector.introspect(schema)
-      const sdl = await introspection.getDatamodel()
+      const introspection = await connector!.introspect(schema)
+      const sdl = await introspection.getNormalizedDatamodel(datamodel)
       const numTables = sdl.types.length
       const renderedSdl = introspection.renderer.render(sdl)
 
@@ -261,7 +274,10 @@ ${chalk.bold(
   ${chalk.cyan(fileName)}
 `)
 
-      if (!this.definition.definition || !this.definition.definition!.datamodel) {
+      if (
+        !this.definition.definition ||
+        !this.definition.definition!.datamodel
+      ) {
         await this.definition.load(this.flags)
         this.definition.addDatamodel(fileName)
         this.out.log(
