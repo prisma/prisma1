@@ -35,3 +35,7 @@ project/plugins/project/
 buildkite-script-*
 
 /prisma.yml
+
+# sqlite
+*.db
+/db/*
