@@ -33,7 +33,7 @@ object FieldDbDirective extends FieldDirective[String] {
       capabilities: ConnectorCapabilities
   ) = {
     val isInlineExplicitly    = RelationDirective.value(document, typeDef, fieldDef, capabilities).map(_.strategy).contains(Some(RelationStrategy.Inline))
-    val isInlineAutomatically = capabilities.hasNot(RelationLinkListCapability) && fieldDef.isList
+    val isInlineAutomatically = capabilities.hasNot(RelationLinkListCapability) && !fieldDef.isList
     val isInline              = isInlineExplicitly || isInlineAutomatically
     val errors = (fieldDef.isRelationField(document) && !isInline).toOption {
       DeployErrors.relationFieldsMustNotSpecifyDbName(typeDef, fieldDef)
