@@ -76,7 +76,7 @@ object SchemaDsl extends AwaitUtils {
 
     val schema                 = SchemaInferrer(deployConnector.capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
-    val manifestation          = ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_Schema"))
+    val manifestation          = ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"))
     TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 
