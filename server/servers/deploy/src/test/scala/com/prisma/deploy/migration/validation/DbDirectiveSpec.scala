@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
@@ -30,7 +30,7 @@ class DbDirectiveSpec extends WordSpecLike with Matchers with DataModelValidatio
         |  id: ID! @id
         |}
       """.stripMargin
-    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability, RelationLinkListCapability))
     errors should have(size(1))
     val error = errors.head
     error.`type` should be("Model")
