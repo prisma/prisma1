@@ -1,0 +1,20 @@
+[lib]
+crate-type = ["dylib", "staticlib"]
+
+[package]
+name = "jdbc-native"
+version = "0.1.0"
+authors = ["Marcus Böhm <boehm@prisma.io>", "Dominic Petrick <petrick@prisma.io>"]
+
+[dependencies]
+chrono = "0.4"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+postgres = { version = "0.15", features = ["with-chrono", "with-uuid"] }
+colored = "1.6"
+byteorder = "*" # Already defined in postgres as dep
+rust_decimal = { version = "0.10", features = ["postgres"] }
+num-traits = "0.2"
+uuid = "0.5"
+log = "0.4"

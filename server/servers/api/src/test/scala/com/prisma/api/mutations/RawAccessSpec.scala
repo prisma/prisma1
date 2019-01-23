@@ -80,7 +80,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
   "syntactic errors" should "bubble through to the user" in {
     val errorCode = if (isPostgres) 0 else 1064
     val errorContains = if (isPostgres) {
-      "ERROR: syntax error at end of input"
+      "syntax error at end of input"
     } else {
       "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near"
     }
@@ -101,7 +101,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     val id        = createTodo("title")
     val errorCode = if (isPostgres) 0 else 1062
     val errorContains = if (isPostgres) {
-      "ERROR: duplicate key value violates unique constraint"
+      "duplicate key value violates unique constraint"
     } else {
       "Duplicate entry"
     }

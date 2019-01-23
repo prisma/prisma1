@@ -14,20 +14,20 @@ object CursorConditionBuilder {
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return None
 
-    val sortDirection = orderBy match {
-      case Some(order) => order.sortOrder.toString
-      case None        => "asc"
+    val sortOrder = orderBy match {
+      case Some(order) => order.sortOrder
+      case None        => SortOrder.Asc
     }
 
     def cursorCondition(cursor: String, cursorType: String): conversions.Bson = {
       val objectId = GCToBson(StringIdGCValue(cursor))
 
-      (cursorType, sortDirection.toLowerCase.trim) match {
-        case ("before", "asc")  => Filters.lt("_id", objectId)
-        case ("before", "desc") => Filters.gt("_id", objectId)
-        case ("after", "asc")   => Filters.gt("_id", objectId)
-        case ("after", "desc")  => Filters.lt("_id", objectId)
-        case _                  => throw new IllegalArgumentException
+      (cursorType, sortOrder) match {
+        case ("before", SortOrder.Asc)  => Filters.lt("_id", objectId)
+        case ("before", SortOrder.Desc) => Filters.gt("_id", objectId)
+        case ("after", SortOrder.Asc)   => Filters.gt("_id", objectId)
+        case ("after", SortOrder.Desc)  => Filters.lt("_id", objectId)
+        case _                          => throw new IllegalArgumentException
       }
     }
 

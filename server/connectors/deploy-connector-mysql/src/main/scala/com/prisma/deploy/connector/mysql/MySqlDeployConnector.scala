@@ -1,11 +1,13 @@
 package com.prisma.deploy.connector.mysql
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
-import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MysqlTypeMapper}
+import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MySqlTypeMapper}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -17,16 +19,16 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
 
-  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary
   lazy val projectDatabase      = databases.primary.database
-  lazy val mySqlTypeMapper      = MysqlTypeMapper()
+  lazy val mySqlTypeMapper      = MySqlTypeMapper()
   lazy val mutationBuilder      = MySqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
   override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase, config)
@@ -108,7 +110,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(im
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(
       List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
+        tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++
         List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
     )
   }

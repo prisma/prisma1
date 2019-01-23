@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector.postgres
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
@@ -7,7 +9,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeplo
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.deploy.connector.postgres.database._
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -18,6 +20,7 @@ import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
+    driver: Driver,
     isActive: Boolean,
     isPrototype: Boolean
 )(implicit ec: ExecutionContext)
@@ -32,7 +35,7 @@ case class PostgresDeployConnector(
     }
   }
 
-  lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
+  lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig, driver)
   lazy val setupDatabases      = internalDatabases.setupDatabase
   lazy val managementDatabases = internalDatabases.managementDatabase
   lazy val projectDatabases    = internalDatabases.managementDatabase

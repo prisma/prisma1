@@ -1,7 +1,5 @@
 package com.prisma.api.mutations
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import com.prisma.api.ApiDependencies
 import com.prisma.api.connector._
 import com.prisma.api.mutactions.DatabaseMutactions
@@ -23,10 +21,6 @@ case class Delete(
     dataResolver: DataResolver
 )(implicit apiDependencies: ApiDependencies)
     extends SingleItemClientMutation {
-
-  implicit val system: ActorSystem             = apiDependencies.system
-  implicit val materializer: ActorMaterializer = apiDependencies.materializer
-
   var deletedItemOpt: Option[PrismaNode] = None
   val coolArgs                           = CoolArgs(args.raw)
   val where: NodeSelector                = coolArgs.extractNodeSelectorFromWhereField(model)

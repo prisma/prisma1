@@ -1,5 +1,5 @@
 package com.prisma.deploy.migration
-import com.prisma.deploy.specutils.{DataModelV2Base, PassiveDeploySpecBase}
+import com.prisma.deploy.specutils.PassiveDeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}

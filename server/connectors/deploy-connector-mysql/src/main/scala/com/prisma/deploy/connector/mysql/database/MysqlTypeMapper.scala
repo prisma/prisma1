@@ -6,7 +6,7 @@ import com.prisma.shared.models.TypeIdentifier
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import org.jooq.DSLContext
 
-case class MysqlTypeMapper() extends TypeMapper {
+case class MySqlTypeMapper() extends TypeMapper {
   override def rawSQLFromParts(
       name: String,
       isRequired: Boolean,

@@ -20,17 +20,21 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import scala.concurrent.{Await, Future}
 
 object AkkaHttpSangriaServer extends SangriaServerExecutor {
-  override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(handler, port, requestPrefix)
+  override def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer) = {
+    AkkaHttpSangriaServer(handler, port, requestPrefix)
+  }
 
   override def supportsWebsockets = true
 }
 
-case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
+case class AkkaHttpSangriaServer(
+    handler: SangriaHandler,
+    port: Int,
+    requestPrefix: String
+)(implicit val system: ActorSystem, val materializer: ActorMaterializer)
+    extends SangriaServer
+    with PlayJsonSupport {
   import scala.concurrent.duration._
-
-  implicit val system       = ActorSystem("sangria-server")
-  implicit val materializer = ActorMaterializer()
-
   import system.dispatcher
 
   val routes = {
@@ -87,7 +91,7 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
       case HttpMethods.POST => HttpMethod.Post
       case _                => sys.error("not allowed")
     }
-    val headers = req.headers.map(h => h.name -> h.value).toMap
+    val headers = req.headers.map(h => h.name.toLowerCase() -> h.value).toMap
     val path    = req.uri.path.toString.split('/').filter(_.nonEmpty)
     RawRequest(
       id = requestId,
@@ -100,7 +104,7 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
   }
 
   private def akkaRequestToRawWebsocketRequest(req: HttpRequest, ip: RemoteAddress, protocol: String, requestId: String): RawWebsocketRequest = {
-    val headers = req.headers.map(h => h.name -> h.value).toMap
+    val headers = req.headers.map(h => h.name.toLowerCase() -> h.value).toMap
     val path    = req.uri.path.toString.split('/')
     RawWebsocketRequest(
       id = requestId,

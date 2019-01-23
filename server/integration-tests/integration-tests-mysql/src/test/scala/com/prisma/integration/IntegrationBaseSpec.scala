@@ -26,8 +26,6 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
     apiTestDependencies.destroy
   }
 
-  def escapeString(str: String) = JsString(str).toString()
-
   // API
 
   implicit lazy val apiTestDependencies = new TestApiDependenciesImpl
