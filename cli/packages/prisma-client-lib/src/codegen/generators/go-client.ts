@@ -733,38 +733,6 @@ export class GoGenerator extends Generator {
       .join('\n')
   }
 
-  printEndpoint(options: RenderOptions) {
-    if (options.endpoint.startsWith('process.env')) {
-      // Find a better way to generate Go env construct
-      const envVariable = `${options.endpoint
-        .replace('process.env[', '')
-        .replace(']', '')}`
-        .replace("'", '')
-        .replace("'", '')
-      return `os.Getenv("${envVariable}")`
-    } else {
-      return `\"${options.endpoint.replace("'", '').replace("'", '')}\"`
-    }
-  }
-
-  printSecret(options: RenderOptions): string | null {
-    if (!options.secret) {
-      return `""`
-    } else {
-      if (options.secret!.startsWith('${process.env')) {
-        // Find a better way to generate Go env construct
-        const envVariable = `${options
-          .secret!.replace('${process.env[', '')
-          .replace(']}', '')}`
-          .replace("'", '')
-          .replace("'", '')
-        return `os.Getenv("${envVariable}")`
-      } else {
-        return `\"${options.secret.replace("'", '').replace("'", '')}\"`
-      }
-    }
-  }
-
   render(options: RenderOptions) {
     const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
@@ -786,6 +754,8 @@ package prisma
 import (
 	"context"
   "errors"
+
+  ${printOSImport(options)}
 
 	"github.com/prisma/prisma-client-lib-go"
 
@@ -844,8 +814,8 @@ func (client *Client) GraphQL(ctx context.Context, query string, variables map[s
     // Dynamic contains the parts of the generated code that are dynamically generated.
     const dynamic = `
 
-var DefaultEndpoint = ${this.printEndpoint(options)}
-var Secret          = ${this.printSecret(options)}
+var DefaultEndpoint = ${GoGenerator.replaceEnv(options.endpoint)}
+var Secret          = ${GoGenerator.replaceEnv(options.secret || '')}
 
 ${this.printOperation(queryFields, 'query', options)}
 
@@ -867,6 +837,9 @@ ${typeNames
   }
 
   static replaceEnv(str: string): string {
+    if (!str) {
+      return `""`
+    }
     const regex = /\${env:(.*?)}/
     const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
@@ -879,7 +852,12 @@ ${typeNames
         `${before}os.Getenv("${match[1]}")${after}`.replace(/`/g, ''),
       )
     } else {
-      return `\`${str}\``
+      const interpolatedString = `\`${str}\``
+      if (interpolatedString.includes('os.Getenv')) {
+        return `${interpolatedString.replace('`', '').replace('`', '')}`
+      } else {
+        return `"${interpolatedString.replace('`', '').replace('`', '')}"`
+      }
     }
   }
 }
@@ -895,4 +873,14 @@ function trimQuotes(str) {
   }
 
   return copy
+}
+
+function printOSImport(options) {
+  if (
+    (options.endpoint && options.endpoint.includes('os.Getenv')) ||
+    (options.secret && options.secret.includes('os.Getenv'))
+  ) {
+    return `"os"`
+  }
+  return ''
 }
