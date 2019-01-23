@@ -32,7 +32,7 @@ end
 
 def native_image(context, target, version_str)
   parsed_version = Tag.new(version_str)
-  artifact_s3_paths = ["s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}/"]
+  artifact_s3_paths = ["s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}"]
 
   if parsed_version.stable?
     version_to_build = [version_str, infer_additional_tags(context, parsed_version)].flatten.compact.find do |version|
@@ -51,7 +51,7 @@ def native_image(context, target, version_str)
 
   # Produces a binary in the target folder
   DockerCommands.native_image(context, version_to_build, "build-image:#{target}")
-  Dir.chdir("#{context.server_root_path}/images/prisma-native/target/prisma-native-image/") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+  Dir.chdir("#{context.server_root_path}/images/prisma-native/target/prisma-native-image") # Necessary to keep the buildkite agent from prefixing the binary when uploading
 
   artifact_s3_paths.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma-native").with_env({
