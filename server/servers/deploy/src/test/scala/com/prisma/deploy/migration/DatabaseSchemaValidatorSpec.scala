@@ -109,6 +109,32 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       "The underlying column for the field `title` has an incompatible type. The field has type `Int` and the column has type `String`.")
   }
 
+  "it should succeed if an id column has the right type" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id varchar(25) PRIMARY KEY
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id char(25), PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: ID! @id
+         |}
+       """.stripMargin
+
+    deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+  }
+
   "it should succeed if an inline relation field exists" in {
     val postgres =
       s"""

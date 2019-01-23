@@ -1,7 +1,8 @@
 package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.{Column, DatabaseSchema, Table}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
-import com.prisma.shared.models.{Field, Model, Relation, Schema}
+import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 
 trait DatabaseSchemaValidator {
@@ -30,7 +31,7 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
       _     <- table(model).toVector // only run the validation if the table exists
     } yield {
       column(field) match {
-        case Some(column) if field.typeIdentifier != column.typeIdentifier =>
+        case Some(column) if !typesAreCompatible(field.typeIdentifier, column.typeIdentifier) =>
           Some(
             DeployError(
               model.name,
@@ -43,8 +44,15 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
           None
       }
     }
-
     tmp.flatten
+  }
+
+  def typesAreCompatible(field: TypeIdentifier, column: TypeIdentifier): Boolean = {
+    val TI = TypeIdentifier
+    (field, column) match {
+      case (TI.Cuid, TI.String) => true
+      case _                    => field == column
+    }
   }
 
   val relationErrors = schema.relations.flatMap { relation =>
