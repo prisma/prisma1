@@ -20,8 +20,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val mysql =
       s"""
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
          | );
        """.stripMargin
 
@@ -53,8 +52,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val mysql =
       s"""
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
          | );
        """.stripMargin
 
@@ -87,9 +85,8 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val mysql =
       s"""
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   title mediumtext,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   title mediumtext
          | );
        """.stripMargin
 
@@ -125,9 +122,13 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
-         | CREATE TABLE blog (
+         | CREATE TABLE author (
          |   id int NOT NULL,
          |   PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES author(id)
          | );
        """.stripMargin
 
@@ -160,9 +161,11 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
          | );
        """.stripMargin
 
@@ -204,9 +207,15 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE wrong_table (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES wrong_table(id)
          | );
        """.stripMargin
 
@@ -247,9 +256,13 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
-         | CREATE TABLE blog (
+         | CREATE TABLE author(
          |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   nick int, UNIQUE KEY(nick)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES author(nick)
          | );
        """.stripMargin
 
@@ -280,19 +293,19 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val postgres =
       s"""
          | CREATE TABLE author (
-         |   id SERIAL PRIMARY KEY,
-         |   nick int UNIQUE
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog (
-         |   id SERIAL PRIMARY KEY,
-         |   author int references author(nick)
+         |   id SERIAL PRIMARY KEY
          |);
        """.stripMargin
     val mysql =
       s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
          | );
        """.stripMargin
 
@@ -328,12 +341,10 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val postgres =
       s"""
          | CREATE TABLE author (
-         |   id SERIAL PRIMARY KEY,
-         |   nick int UNIQUE
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog (
-         |   id SERIAL PRIMARY KEY,
-         |   author int references author(nick)
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog_to_author (
          |   blog int references blog(id),
@@ -342,9 +353,15 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   author int, FOREIGN KEY (author) REFERENCES author(id),
+         |   blog int, FOREIGN KEY (blog) REFERENCES blog(id)
          | );
        """.stripMargin
 
@@ -380,23 +397,27 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val postgres =
       s"""
          | CREATE TABLE author (
-         |   id SERIAL PRIMARY KEY,
-         |   nick int UNIQUE
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog (
-         |   id SERIAL PRIMARY KEY,
-         |   author int references author(nick)
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog_to_author (
          |   blog int references blog(id),
          |   author int references author(id)
-         | )
+         | );
        """.stripMargin
     val mysql =
       s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   author int, FOREIGN KEY (author) REFERENCES author(id),
+         |   blog int, FOREIGN KEY (blog) REFERENCES blog(id)
          | );
        """.stripMargin
 
@@ -426,12 +447,10 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val postgres =
       s"""
          | CREATE TABLE author (
-         |   id SERIAL PRIMARY KEY,
-         |   nick int UNIQUE
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog (
-         |   id SERIAL PRIMARY KEY,
-         |   author int references author(nick)
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog_to_author (
          |   blog int,
@@ -440,9 +459,15 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
          | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   author int,
+         |   blog int
          | );
        """.stripMargin
 
@@ -480,12 +505,10 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val postgres =
       s"""
          | CREATE TABLE author (
-         |   id SERIAL PRIMARY KEY,
-         |   nick int UNIQUE
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE blog (
-         |   id SERIAL PRIMARY KEY,
-         |   author int references author(nick)
+         |   id SERIAL PRIMARY KEY
          | );
          | CREATE TABLE wrong_table(
          |   id SERIAL PRIMARY KEY
@@ -497,10 +520,19 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
     val mysql =
       s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         | CREATE TABLE author (
+         |   id int NOT NULL, PRIMARY KEY(id)
          | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE wrong_table(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   blog int, FOREIGN KEY (blog) REFERENCES wrong_table(id),
+         |   author int, FOREIGN KEY (author) REFERENCES wrong_table(id)
+         | )
        """.stripMargin
 
     setup(SQLs(postgres = postgres, mysql = mysql))

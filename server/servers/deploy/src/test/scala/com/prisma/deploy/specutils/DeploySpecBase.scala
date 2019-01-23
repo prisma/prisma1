@@ -130,7 +130,12 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
 
     val setDefaultSchema = if (isPostgres) s"""SET search_path TO "$schemaName";""" else s"USE `$schemaName`;"
     statement.execute(setDefaultSchema)
-    statement.execute(sql)
+    sql.split(';').foreach { sql =>
+      val isNotOnlyWhiteSpace = sql.exists(c => c != '\n' && c != ' ')
+      if (isNotOnlyWhiteSpace) {
+        statement.execute(sql)
+      }
+    }
     session.close()
   }
 
