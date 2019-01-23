@@ -39,7 +39,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val error = errors.head
     error.`type` should be("Blog")
     error.field should be(empty)
-    error.description should be("Could not find the table for the model Blog in the database.")
+    error.description should be("Could not find the table for the model `Blog` in the database.")
   }
 
   "it should error if a column is missing" in {
@@ -71,7 +71,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val error = errors.head
     error.`type` should be("Blog")
     error.field should be(Some("title"))
-    error.description should be("Could not find the column for the field title in the database.")
+    error.description should be("Could not find the column for the field `title` in the database.")
   }
 
   "it should error if a column exists but it has the wrong type" in {
@@ -106,7 +106,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error.`type` should be("Blog")
     error.field should be(Some("title"))
     error.description should be(
-      "The underlying column for the field title has an incompatible type. The field has type `Int` and the column has type `String`.")
+      "The underlying column for the field `title` has an incompatible type. The field has type `Int` and the column has type `String`.")
   }
 
   "it should succeed if an inline relation field exists" in {
@@ -188,7 +188,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val error = errors.head
     error.`type` should be("Blog")
     error.field should be(Some("author"))
-    error.description should be("Could not find the column for the inline relation field author in the database.")
+    error.description should be("Could not find the column for the inline relation field `author` in the database.")
   }
 
   "it should error if the foreign key constraint for an inline relation field is referencing the wrong table" in {
@@ -239,7 +239,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error.`type` should be("Blog")
     error.field should be(Some("author"))
     error.description should be(
-      "The column for the inline relation field author is not referencing the right table. It should reference the table of model `Author` but is referencing the table `wrong_table`.")
+      "The column for the inline relation field `author` is not referencing the right table. It should reference the table of model `Author` but is referencing the table `wrong_table`.")
   }
 
   "it should error if the foreign key constraint for an inline relation field is referencing a column which is not the id" in {
@@ -286,7 +286,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error.`type` should be("Blog")
     error.field should be(Some("author"))
     error.description should be(
-      "The column for the inline relation field author is not referencing a valid column. Those columns must always reference the column of the id field of related model. So it should reference `id` instead of `nick`.")
+      "The column for the inline relation field `author` is not referencing a valid column. Those columns must always reference the column of the id field of related model. So it should reference `id` instead of `nick`.")
   }
 
   "it should error if a @linkTable is missing in the database" in {
@@ -390,7 +390,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val error = errors.head
     error.`type` should be("BlogToAuthor")
     error.field should be(Some("id"))
-    error.description should be("The link table BlogToAuthor is missing the column `id`.")
+    error.description should be("The link table `BlogToAuthor` is missing the column `id`.")
   }
 
   "it should succeed if the @linkTable matches the relation table in database" in {
