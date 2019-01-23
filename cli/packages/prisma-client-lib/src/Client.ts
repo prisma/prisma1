@@ -193,6 +193,7 @@ export class Client {
     if (
       !selectionFromFragment &&
       Array.isArray(pointer) &&
+      Boolean(pointer) &&
       pointer.length > 0
     ) {
       /*
@@ -209,7 +210,7 @@ export class Client {
       }
     }
 
-    if (!selectionFromFragment && !Array.isArray(pointer)) {
+    if (Boolean(pointer) && !selectionFromFragment && !Array.isArray(pointer)) {
       if (
         Object.keys(pointer).length === 1 &&
         Object.keys(pointer)[0] === '__typename'
