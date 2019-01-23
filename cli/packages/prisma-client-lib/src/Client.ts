@@ -10,6 +10,7 @@ import {
   buildSchema,
   GraphQLEnumType,
 } from 'graphql'
+import { connectionNodeHasScalars } from './utils/connectionNodeHasScalars'
 import mapAsyncIterator from './utils/mapAsyncIterator'
 import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
@@ -237,12 +238,12 @@ export class Client {
     let result
     try {
       result = await this.processInstructionsOnce(id)
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       if (typeof resolve === 'function') {
         return resolve(result)
       }
     } catch (e) {
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       if (typeof reject === 'function') {
         return reject(e)
       }
@@ -254,9 +255,14 @@ export class Client {
     try {
       return await this.processInstructionsOnce(id)
     } catch (e) {
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       return reject(e)
     }
+  }
+
+  _releaseMemory(id) {
+    this._currentInstructions[id] = []
+    delete this._promises[id]
   }
 
   generateSelections(instructions) {
@@ -427,6 +433,13 @@ export class Client {
     }
 
     const type = this.getDeepType(field.type)
+
+    if (isRelayConnection) {
+      const relayConnectionHasScalars = connectionNodeHasScalars({ type })
+      if (this.isConnectionTypeName(fieldName) && !relayConnectionHasScalars) {
+        return node
+      }
+    }
 
     node.selectionSet.selections = Object.entries(type.getFields())
       .filter(([, subField]: any) => {
