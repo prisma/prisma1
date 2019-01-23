@@ -138,7 +138,7 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
 
       !exclude
     }},
-    excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
+    excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus", "prisma-rs-build")
   )
 
 def absolute(relativePathToProjectRoot: String) = {
