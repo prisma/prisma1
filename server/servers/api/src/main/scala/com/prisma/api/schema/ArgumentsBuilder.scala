@@ -8,7 +8,7 @@ import sangria.schema._
 
 case class ArgumentsBuilder(project: Project)(implicit apiDependencies: ApiDependencies) {
 
-  val inputTypesBuilder: InputTypesBuilder = CachedInputTypesBuilder(project)
+  val inputTypesBuilder: InputTypesBuilder = CachedInputTypesBuilder(project, apiDependencies.cacheFactory)
 
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 

@@ -249,8 +249,6 @@ ${chalk.gray(
       )}`,
     )
 
-    const hasStepsApi = await this.client.hasStepsApi()
-
     const migrationResult: DeployPayload = await this.client.deploy(
       concatName(cluster, serviceName, workspace),
       stageName,

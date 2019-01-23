@@ -1,14 +1,13 @@
 package com.prisma.api.connector.jdbc.impl
 
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector._
+import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.api.connector.jdbc.database.{JdbcActionsBuilder, NodeSingleQueries}
 import com.prisma.api.schema.{APIErrors, UserFacingError}
 import com.prisma.gc_values.{IdGCValue, ListGCValue, RootGCValue}
 import com.prisma.shared.models.{Model, Project}
-import org.postgresql.util.PSQLException
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
@@ -131,18 +130,20 @@ trait SharedUpdateLogic {
   }
 
   def errorHandler(args: PrismaArgs): PartialFunction[Throwable, UserFacingError] = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(project, model, e).isDefined =>
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(project, model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(project, model, e).get)
 
-    case e: PSQLException if e.getSQLState == "23502" =>
+    case e: SQLException if e.getSQLState == "23502" =>
       APIErrors.FieldCannotBeNull()
 
     case e: SQLIntegrityConstraintViolationException
-        if e.getErrorCode == 1062 &&
-          GetFieldFromSQLUniqueException.getFieldOptionMySql(args.keys, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(args.keys, e).get)
+        if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(nonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1048 =>
       APIErrors.FieldCannotBeNull()
+
+    case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(args.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(args.keys, e).get)
   }
 }

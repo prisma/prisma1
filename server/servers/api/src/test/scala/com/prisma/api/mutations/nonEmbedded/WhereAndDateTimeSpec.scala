@@ -138,19 +138,25 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
          |      }
          |    }
          |  ){
-         |    id
+         |    id,
+         |    outerDateTime
+         |
          |  }
          |}
       """.stripMargin,
       project
     )
 
-    server.query(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
-                 project,
-                 dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.query(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
-                 project,
-                 dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.query(
+      s"""query{note(where:{outerDateTime:$outerWhere}){outerString, outerDateTime}}""",
+      project,
+      dataContains = s"""{"note":{"outerString":"Changed Outer String","outerDateTime":"2018-01-03T11:27:38.000Z"}}"""
+    )
+    server.query(
+      s"""query{todo(where:{innerDateTime:$innerWhere}){innerString, innerDateTime}}""",
+      project,
+      dataContains = s"""{"todo":{"innerString":"Changed Inner String","innerDateTime":"2018-01-03T11:27:38.000Z"}}"""
+    )
   }
 
 }

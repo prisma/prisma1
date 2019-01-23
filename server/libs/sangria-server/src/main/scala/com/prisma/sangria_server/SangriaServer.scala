@@ -1,6 +1,8 @@
 package com.prisma.sangria_server
 
 import akka.NotUsed
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json._
@@ -10,8 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait SangriaServerExecutor {
-  def create(handler: SangriaHandler, port: Int, requestPrefix: String): SangriaServer
-
+  def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer): SangriaServer
   def supportsWebsockets: Boolean
 }
 

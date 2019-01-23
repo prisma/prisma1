@@ -36,7 +36,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
         val updateColumn = mustUpdateColumn(c, mutaction).toOption {
           builder.updateColumn(
             mutaction.project,
-            tableName = mutaction.model.dbName,
+            model = mutaction.model,
             oldColumnName = mutaction.field.dbName,
             newColumnName = mutaction.field.dbName,
             newIsRequired = mutaction.field.isRequired,
@@ -156,7 +156,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
     def updateColumn = builder.updateColumn(
       mutaction.project,
-      tableName = mutaction.model.dbName,
+      model = mutaction.model,
       oldColumnName = before.dbName,
       newColumnName = after.dbName,
       newIsRequired = after.isRequired,
