@@ -1,65 +1,59 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector relation with inline relation column 1`] = `
-"type Product @pgTable(name: \\"product\\") {
-  id: Int! @unique
-  description: String!
-  bills: [Bill!]!
+"type Bill @pgTable(name: \\"bill\\") {
+  bill: String!
+  id: Int!
+  product_id: Product
 }
 
-type Bill @pgTable(name: \\"bill\\") {
-  product: Product @pgRelation(column: \\"product_id\\")
-  id: Int! @unique
-  bill: String!
+type Product @pgTable(name: \\"product\\") {
+  description: String!
+  id: Int!
 }"
 `;
 
 exports[`Introspector relation with inline relation column NOT NULL 1`] = `
-"type Product @pgTable(name: \\"product\\") {
-  id: Int! @unique
-  description: String!
-  bills: [Bill!]!
+"type Bill @pgTable(name: \\"bill\\") {
+  bill: String!
+  id: Int!
+  product_id: Product!
 }
 
-type Bill @pgTable(name: \\"bill\\") {
-  product: Product @pgRelation(column: \\"product_id\\")
-  id: Int! @unique
-  bill: String!
+type Product @pgTable(name: \\"product\\") {
+  description: String!
+  id: Int!
 }"
 `;
 
 exports[`Introspector relation with relation table 1`] = `
-"type Product @pgTable(name: \\"product\\") {
-  product: String!
-  id: Int! @unique
-  bills: [Bill!]!
-  bill_products: [Bill_product!]!
+"type Bill @pgTable(name: \\"bill\\") {
+  bill: String!
+  id: Int!
+  product: [Product!]! @relation(name: \\"bill_product\\")
 }
 
-type Bill @pgTable(name: \\"bill\\") {
-  products: [Product!]!
-  id: Int! @unique
-  bill_products: [Bill_product!]!
-  bill: String!
+type Product @pgTable(name: \\"product\\") {
+  bill: [Bill!]! @relation(name: \\"bill_product\\")
+  id: Int!
+  product: String!
 }"
 `;
 
 exports[`Introspector relation with relation table with extra column 1`] = `
-"type Product @pgTable(name: \\"product\\") {
-  product: String!
-  id: Int! @unique
-  bill_products: [Bill_product!]!
+"type Bill @pgTable(name: \\"bill\\") {
+  bill: String!
+  id: Int!
 }
 
 type Bill_product @pgTable(name: \\"bill_product\\") {
+  bill_id: Bill
+  product_id: Product
   some_other_column: String!
-  product: Product @pgRelation(column: \\"product_id\\")
-  bill: Bill @pgRelation(column: \\"bill_id\\")
 }
 
-type Bill @pgTable(name: \\"bill\\") {
-  id: Int! @unique
-  bill_products: [Bill_product!]!
-  bill: String!
+type Product @pgTable(name: \\"product\\") {
+  id: Int!
+  product: String!
 }"
 `;

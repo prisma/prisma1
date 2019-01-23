@@ -39,25 +39,26 @@ export class PostgresConnector extends RelationalConnector {
     return schemas.filter(schema => !schema.startsWith('pg_'))
   }
 
+  // TODO: Unit test for column comments
   protected async queryColumnComment(schemaName: string, tableName: string, columnName: string) {
     const commentQuery = `
-    SELECT
-    (
       SELECT
-        pg_catalog.col_description(c.oid, cols.ordinal_position::int)
-      FROM pg_catalog.pg_class c
+      (
+        SELECT
+          pg_catalog.col_description(c.oid, cols.ordinal_position::int)
+        FROM pg_catalog.pg_class c
+        WHERE
+          c.oid     = (SELECT ('"' || cols.table_schema || '"."' || cols.table_name || '"')::regclass::oid) AND
+          c.relname = cols.table_name
+      ) as column_comment   
+      FROM
+        information_schema.columns cols
       WHERE
-        c.oid     = (SELECT cols.table_name::regclass::oid) AND
-        c.relname = cols.table_name
-    ) as column_comment   
-    FROM
-      information_schema.columns cols
-    WHERE
-      cols.table_schema  = $1::text AND
-      cols.table_name    = $2::text AND
-      cols.column_name   = $3::text;
+        cols.table_schema  = $1::text AND
+        cols.table_name    = $2::text AND
+        cols.column_name   = $3::text;
     `
-    const [comment] = (await this.client.query(commentQuery, [schemaName, tableName, columnName])).rows.map(row => row.column_comment as string)
+    const [comment] = (await this.query(commentQuery, [schemaName, tableName, columnName])).map(row => row.column_comment as string)
 
     if(comment === undefined) {
       return null
@@ -72,7 +73,7 @@ export class PostgresConnector extends RelationalConnector {
           tableInfos.relname as table_name,
           indexInfos.relname as index_name,
           array_agg(columnInfos.attname) as column_names,
-          rawIndex.indisunique as is_unique
+          rawIndex.indisunique as is_unique,
           rawIndex.indisprimary as is_primary_key
       FROM
           -- pg_class stores infos about tables, indices etc: https://www.postgresql.org/docs/9.3/catalog-pg-class.html
@@ -100,15 +101,22 @@ export class PostgresConnector extends RelationalConnector {
           AND tableInfos.relname = $2::text
       GROUP BY
           tableInfos.relname,
-          indexInfos.relname
+          indexInfos.relname,
+          rawIndex.indisunique,
+          rawIndex.indisprimary
     `
-    return (await this.client.query(indexQuery, [schemaName, tableName])).rows.map(row => { return {
+    return (await this.query(indexQuery, [schemaName, tableName])).map(row => { return {
       tableName: row.table_name as string,
       name: row.index_name as string,
-      fields: row.column_names as string[],
+      fields: this.parsePgArray(row.column_names),
       unique: row.is_unique as boolean,
       isPrimaryKey: row.is_primary_key as boolean
     }})
+  }
+
+  parsePgArray(arrayAsString: string): string[] {
+    const withoutBraces = arrayAsString.substring(1, arrayAsString.length - 1)
+    return withoutBraces.split(',').map(x => x.trim())
   }
 
   parseDefaultValue(string) {
@@ -142,97 +150,4 @@ export class PostgresConnector extends RelationalConnector {
 
     return string
   }
-
-  toTypeIdentifier(
-    type: string,
-    field: string,
-    isPrimaryKey: boolean,
-  ): {
-    typeIdentifier: TypeIdentifier | null
-    comment: string | null
-    error: string | null
-  } {
-    if (
-      isPrimaryKey &&
-      (type === 'character' ||
-        type === 'character varying' ||
-        type === 'text' ||
-        type === 'uuid')
-    ) {
-      return {
-        typeIdentifier: type === 'uuid' ? 'UUID' : 'ID',
-        comment: null,
-        error: null,
-      }
-    }
-
-    if (type === 'uuid') {
-      return { typeIdentifier: 'UUID', comment: null, error: null }
-    }
-    if (type === 'character') {
-      return { typeIdentifier: 'String', comment: null, error: null }
-    }
-    if (type === 'character varying') {
-      return { typeIdentifier: 'String', comment: null, error: null }
-    }
-    if (type === 'text') {
-      return { typeIdentifier: 'String', comment: null, error: null }
-    }
-    if (type === 'smallint') {
-      return { typeIdentifier: 'Int', comment: null, error: null }
-    }
-    if (type === 'integer') {
-      return { typeIdentifier: 'Int', comment: null, error: null }
-    }
-    if (type === 'bigint') {
-      return { typeIdentifier: 'Int', comment: null, error: null }
-    }
-    if (type === 'real') {
-      return { typeIdentifier: 'Float', comment: null, error: null }
-    }
-    if (type === 'double precision') {
-      return { typeIdentifier: 'Float', comment: null, error: null }
-    }
-    if (type === 'numeric') {
-      return { typeIdentifier: 'Float', comment: null, error: null }
-    }
-    if (type === 'boolean') {
-      return { typeIdentifier: 'Boolean', comment: null, error: null }
-    }
-    if (type === 'timestamp without time zone') {
-      return { typeIdentifier: 'DateTime', comment: null, error: null }
-    }
-    if (type === 'timestamp with time zone') {
-      return { typeIdentifier: 'DateTime', comment: null, error: null }
-    }
-    if (type === 'timestamp') {
-      return { typeIdentifier: 'DateTime', comment: null, error: null }
-    }
-    if (type === 'json') {
-      return { typeIdentifier: 'Json', comment: null, error: null }
-    }
-    if (type === 'date') {
-      return { typeIdentifier: 'DateTime', comment: null, error: null }
-    }
-
-    return {
-      typeIdentifier: null,
-      comment: `Type '${type}' is not yet supported.`,
-      error: `Not able to handle type '${type}'`,
-    }
-  }
 }
-
-
-const uniqueColumnsQuery = ` 
-SELECT 
-  tableConstraints.Constraint_Name,
-  columnConstraint.Column_Name
-FROM 
-  information_schema.table_constraints tableConstraints
-INNER JOIN 
-  information_schema.constraint_column_usage columnConstraint ON tableConstraints.Constraint_Name = columnConstraint.Constraint_Name
-WHERE
-  tableConstraints.constraint_type = 'UNIQUE'
-ORDER BY
-  tableConstraints.Constraint_Name`

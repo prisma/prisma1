@@ -49,7 +49,6 @@
       "/node_modules/",
       "helpers.ts",
       "connectionDetails.ts",
-      "/postgres/",
       "/data/",
       "dist"
     ],

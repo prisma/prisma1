@@ -25,25 +25,36 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types
   }
 
+  private getDatabaseName(obj: IGQLType | IGQLField) {
+    if(obj.databaseName !== null) {
+      return obj.databaseName
+    } else {
+      return obj.name
+    }
+  }
+
   protected resolveRelation(types: IGQLType[], relation: ITableRelation) { 
     // Correctly sets field types according to given FK constraints.
     for(const typeA of types) {
       for(const typeB of types) {
         for(const fieldA of typeA.fields) {
           for(const fieldB of typeB.fields) {
-            if(relation.sourceColumn === fieldA.name && relation.sourceTable === typeA.name &&
-               relation.targetColumn === fieldB.name && relation.targetTable === typeB.name) {
+            if(relation.sourceColumn === this.getDatabaseName(fieldA) && relation.sourceTable === this.getDatabaseName(typeA) &&
+              relation.targetColumn === this.getDatabaseName(fieldB) && relation.targetTable === this.getDatabaseName(typeB)) {
               
               if(!fieldB.isId) {
                 GQLAssert.raise(`Relation ${typeA.name}.${fieldA.name} -> ${typeB.name}.${fieldB.name} does not target the PK column of ${typeB.name}`)
               }
 
               fieldA.type = typeB
+              return
             }
           }
         }
       }
     }
+
+    GQLAssert.raise(`Failed to resolve FK constraint ${relation.sourceTable}.${relation.sourceColumn} -> ${relation.targetTable}.${relation.targetColumn}.`)
   }
   
   /**
@@ -88,7 +99,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         }
 
         const relatedFieldForB: IGQLField = {
-          name: type.name,
+          name: typeA.name,
           type: typeA,
           isList: true,
           isUnique: false,
@@ -108,6 +119,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         relatedFieldForA.relatedField = relatedFieldForB
 
         typeA.fields.push(relatedFieldForA)
+        typeA.fields = typeA.fields.filter(x => x.type !== type)
+        typeB.fields = typeB.fields.filter(x => x.type !== type)
         typeB.fields.push(relatedFieldForB)
       } else {
         nonJoinTypes.push(type)
@@ -117,19 +130,36 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return nonJoinTypes
   }
 
+  /**
+   * Hides indices on related fields. These are always autmatically created by 
+   * prisma and dont need to be shown in the datamodel.
+   * @param types 
+   */
+  protected hideIndicesOnRelatedFields(types: IGQLType[]) {
+    for(const type of types) {
+      // Keep indices which have not exactly one field, or if they have one field, 
+      // the field is a scalar field.
+      type.indices = type.indices.filter(index => 
+        index.fields.length !== 1 ||
+        typeof index.fields[0].type === 'string')
+    }
+    return types
+  }
+
   protected abstract isTypeReserved(type: IGQLType): boolean
 
   protected hideReservedTypes(types: IGQLType[]) {
-    return types.filter(this.isTypeReserved)
+    return types.filter(x => !this.isTypeReserved(x))
   }
 
   protected infer(model: ITable[], relations: ITableRelation[]): ISDL {
     // TODO: Enums? 
 
-    let types = model.map(this.inferObjectType)
+    let types = model.map(x => this.inferObjectType(x))
     types = this.resolveRelations(types, relations)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
+    types = this.hideIndicesOnRelatedFields(types)
 
     return {
       comments: [],
@@ -149,7 +179,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
 
   protected inferObjectType(model: ITable): IGQLType {
 
-    const fields = model.columns.map(this.inferField)
+    const fields = model.columns.map(x => this.inferField(x))
     const indices = model.indices.map(x => this.inferIndex(x, fields))
 
     // Resolve primary key
@@ -160,6 +190,11 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         const [pkField] = fields.filter(field => field.name === pk.fields[0])
         if(!pkField) {
           GQLAssert.raise(`Index/Schema missmatch during introspection. Field ${pk.fields[0]} used in index, but does not exist on table ${model.name}`)
+        }
+        // Hard rename ID field to match old datamodel standard
+        if(pkField.name !== 'id') {
+          pkField.databaseName = pkField.name
+          pkField.name = 'id'
         }
         pkField.isId = true
       } else {
@@ -201,13 +236,23 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       })
     }
 
+    let type: string | null = this.toTypeIdentifyer(field.type)
+
+    if(type === null) {
+      comments.push({
+        text: `Type ${field.type} is not supported`,
+        isError: true
+      })
+      type = field.type
+    }
+
     return {
       name: field.name,
       isUnique: field.isUnique,
       isRequired: !field.isNullable,
-      defaultValue: field.defaultValue,
+      defaultValue: field.defaultValue !== null ? this.parseDefaultValue(field.defaultValue, type) : null,
       isList: field.isList,
-      type: this.toTypeIdentifyer(field.name),
+      type: type as string,
       isId: false, // Will resolve later, from indices
       relatedField: null,
       relationName: null,
@@ -222,8 +267,10 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
 
   /**
    * Maps a native database type. If null is returned, the corresponding
-   * field is handled as relation.
+   * field is marked with an error comment.
    * @param typeName 
    */
-  protected abstract toTypeIdentifyer(typeName: string): TypeIdentifier
+  protected abstract toTypeIdentifyer(typeName: string): TypeIdentifier | null
+
+  protected abstract parseDefaultValue(defaultValueString: string, type: string): string | null
 }

@@ -35,9 +35,9 @@ export abstract class RelationalConnector implements IConnector {
   public async listSchemas(): Promise<string[]> {
     const res = await this.query(
       `SELECT 
-        schema_name
+         schema_name
        FROM 
-        information_schema.schemata 
+         information_schema.schemata 
        WHERE schema_name NOT LIKE 'information_schema';`,
     )
 
@@ -49,7 +49,6 @@ export abstract class RelationalConnector implements IConnector {
     const allTables = await this.queryTables(schemaName)
     for(const tableName of allTables) {
       const columns = await this.queryColumns(schemaName, tableName)
-
       for(const column of columns) {
         column.comment = await this.queryColumnComment(schemaName, tableName, column.name)
       }
@@ -86,28 +85,30 @@ export abstract class RelationalConnector implements IConnector {
   protected async queryColumns(schemaName: string, tableName: string) {
     const allColumnsQuery = `
       SELECT
+        cols.ordinal_position,
         cols.column_name,
         cols.udt_name,
-        cols.is_updateable,
-        cols.column_default
-        cols.is_nullable = 'YES' as is_nullable
-        tableConstraint.constraints_type = 'UNIQUE' AS is_unique
+        cols.is_updatable,
+        cols.column_default,
+        cols.is_nullable = 'YES' as is_nullable,
+        EXISTS(
+          SELECT * FROM
+            information_schema.constraint_column_usage columnConstraint
+          LEFT JOIN
+            information_schema.table_constraints tableConstraints  
+          ON 
+            columnConstraint.constraint_name = tableConstraints.constraint_name
+          WHERE 
+            cols.column_name = columnConstraint.column_name
+            AND cols.table_name = columnConstraint.table_name
+            AND cols.table_schema = columnConstraint.table_schema
+            AND tableConstraints.constraint_type = 'UNIQUE'
+          ) AS is_unique
       FROM
         information_schema.columns AS cols
-      LEFT JOIN
-        information_schema.table_constraints tableConstraints 
-      ON 
-        cols.column_name = tableConstraints.column_name
-        AND cols.table_name = tableConstraints.table_name
-        AND cols.schema_name = tableConstraints.schema_name
-        AND tableConstraints.constraint_type = 'UNIQUE'
-      LEFT JOIN 
-        information_schema.constraint_column_usage columnConstraint ON tableConstraints.constraint_name = columnConstraint.constraint_name
-        AND cols.table_name = columnContraint.table_name
-        AND cols.schema_name = columnContraint.schema_name
       WHERE
-        columns.table_schema = $1::text
-        AND columns.table_name  = $2::text`
+        cols.table_schema = $1::text
+        AND cols.table_name  = $2::text`
 
     return (await this.query(allColumnsQuery, [schemaName, tableName])).map(row => { return {
       name: row.column_name as string,
@@ -144,7 +145,7 @@ export abstract class RelationalConnector implements IConnector {
         AND keyColumn2.constraint_name = refConstraints.unique_constraint_name
         AND keyColumn2.ordinal_position = keyColumn1.ordinal_position
       WHERE
-        refConstraints.constraint_schema = 'databaseintrospector'`
+        refConstraints.constraint_schema = $1::text`
 
     return (await this.query(fkQuery, [schemaName])).map(row => { return {
       sourceColumn: row.fkColumnName as string,

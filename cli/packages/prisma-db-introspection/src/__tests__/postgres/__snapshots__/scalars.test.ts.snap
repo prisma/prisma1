@@ -1,84 +1,82 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector DateTime columns 1`] = `
-"type Booleans @pgTable(name: \\"Booleans\\") {
-  c: DateTime!
-  b: DateTime!
+"type Boolean @pgTable(name: \\"Booleans\\") {
   a: DateTime
+  b: DateTime!
+  c: DateTime!
 }"
 `;
 
 exports[`Introspector Json columns 1`] = `
-"type Booleans @pgTable(name: \\"Booleans\\") {
-  b: Json!
+"type Boolean @pgTable(name: \\"Booleans\\") {
   a: Json
+  b: Json!
 }"
 `;
 
 exports[`Introspector Unmapped columns 1`] = `
-"# type Unmapped @pgTable(name: \\"Unmapped\\") {
-  # Type 'ARRAY' is not yet supported.
-  # d: <Unknown>
-  # Type 'tsvector' is not yet supported.
-  # c: <Unknown>
-  # Type 'jsonb' is not yet supported.
-  # a: <Unknown>
-# }"
+"type Unmapped {
+  a: Json
+  # Type tsvector is not supported
+  # c: tsvector
+  d: DateTime
+}"
 `;
 
 exports[`Introspector boolean columns 1`] = `
-"type Booleans @pgTable(name: \\"Booleans\\") {
-  b: Boolean!
+"type Boolean @pgTable(name: \\"Booleans\\") {
   a: Boolean
+  b: Boolean!
 }"
 `;
 
 exports[`Introspector float columns 1`] = `
-"type Floats @pgTable(name: \\"Floats\\") {
-  j: Float!
-  i: Float
-  h: Float!
-  g: Float!
-  f: Float!
-  e: Float!
-  d: Float
-  c: Float
-  b: Float
+"type Float @pgTable(name: \\"Floats\\") {
   a: Float @default(value: 3.4)
+  b: Float
+  c: Float
+  d: Float
+  e: Float!
+  f: Float!
+  g: Float!
+  h: Float!
+  i: Float
+  j: Float!
 }"
 `;
 
 exports[`Introspector int columns 1`] = `
-"type Ints @pgTable(name: \\"Ints\\") {
-  f: Int!
-  e: Int!
-  d: Int!
-  c: Int
-  b: Int
+"type Int @pgTable(name: \\"Ints\\") {
   a: Int @default(value: 3)
+  b: Int
+  c: Int
+  d: Int!
+  e: Int!
+  f: Int!
 }"
 `;
 
 exports[`Introspector text columns 1`] = `
-"type Strings @pgTable(name: \\"Strings\\") {
-  id: ID! @unique @pgColumn(name: \\"pk\\")
-  h: UUID!
-  g: UUID
-  f: String!
-  e: String!
-  d: String!
-  cc: String! @default(value: \\"abc\\")
-  c: String @default(value: \\"abc\\")
-  b: String @unique
-  aa: String! @unique
+"type String @index(name: \\"Strings_a_key\\", fields: [\\"a\\"]) @index(name: \\"Strings_aa_key\\", fields: [\\"aa\\"]) @index(name: \\"foo\\", fields: [\\"b\\"]) @pgTable(name: \\"Strings\\") {
   a: String @unique
+  aa: String! @unique
+  b: String @unique
+  c: String @default(value: \\"abc'\\")
+  cc: String! @default(value: \\"abc'\\")
+  d: String!
+  e: String!
+  f: String!
+  g: UUID
+  h: UUID!
+  id: String! @pgColumn(name: \\"pk\\")
 }"
 `;
 
 exports[`Introspector uuid columns 1`] = `
-"type UUIDs @pgTable(name: \\"UUIDs\\") {
-  tk: UUID
+"type UUID @pgTable(name: \\"UUIDs\\") {
+  id: UUID! @pgColumn(name: \\"pk\\")
   nk: UUID!
-  id: UUID! @unique @pgColumn(name: \\"pk\\")
+  tk: UUID
 }"
 `;

@@ -52,10 +52,10 @@ describe(`Renderer directives test`, () => {
     const renderer = Renderer.create(DatabaseType.postgres)
 
     const modelWithDirectives = dedent(`
-      type Test @db(name: "testType") {
+      type Test @pgTable(name: "testType") {
         createdAt: DateTime
         id: Int
-        mappedField: String @db(name: "dbField") @relation(name: "typeRelation")
+        mappedField: String @pgColumn(name: "dbField") @relation(name: "typeRelation")
         updatedAt: DateTime
       }`)
       
