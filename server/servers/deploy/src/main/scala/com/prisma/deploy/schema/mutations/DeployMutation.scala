@@ -45,7 +45,7 @@ case class DeployMutation(
 ) extends Mutation[DeployMutationPayload]
     with AwaitUtils {
 
-  val databaseInspector = deployConnector.testFacilities.inspector
+  val databaseInspector = deployConnector.databaseInspector
 
   val actsAsActive = if (capabilities.isDataModelV2) {
     val noMigration = args.noMigration.getOrElse(false)
@@ -124,7 +124,7 @@ case class DeployMutation(
       if (errors.isEmpty) {
         Future.successful(Good(()))
       } else {
-        Future.successful(Bad(errors.toVector))
+        Future.successful(Bad(errors))
       }
     } else {
       Future.successful(Good(()))

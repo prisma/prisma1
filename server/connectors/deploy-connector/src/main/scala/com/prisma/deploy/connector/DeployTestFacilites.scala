@@ -4,8 +4,6 @@ import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 
 import scala.concurrent.Future
 
-case class DeployTestFacilites(inspector: DatabaseInspector)
-
 trait DatabaseInspector {
   def inspect(schema: String): Future[DatabaseSchema]
 }

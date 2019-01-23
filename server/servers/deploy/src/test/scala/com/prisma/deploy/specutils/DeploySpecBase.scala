@@ -241,6 +241,6 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
   }
 
   def inspect: DatabaseSchema = {
-    deployConnector.testFacilities.inspector.inspect(projectId).await()
+    deployConnector.databaseInspector.inspect(projectId).await()
   }
 }

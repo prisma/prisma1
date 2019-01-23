@@ -51,6 +51,7 @@ case class PostgresDeployConnector(
   override lazy val cloudSecretPersistence: CloudSecretPersistence   = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence       = JdbcTelemetryPersistence(managementDatabases.primary)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
+  override lazy val databaseInspector: DatabaseInspector             = DatabaseInspectorImpl(projectDatabases.primary)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createDatabaseForProject(id = id)
@@ -132,6 +133,4 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
-
-  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabases.primary))
 }
