@@ -17,6 +17,7 @@ dev-mongo:
 	cp ./docker-compose/mongo/prisma.yml ./prisma.yml
 
 dev-sqlite:
+	mkdir -p db
 	docker-compose -f docker-compose/sqlite/dev-sqlite.yml up -d --remove-orphans
 	cp ./docker-compose/sqlite/prisma.yml ./prisma.yml
 

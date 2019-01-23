@@ -76,17 +76,10 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
       .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
-  override def shutdown()            = databases.shutdown
-
+  override def reset(): Future[Unit]                            = truncateTablesInDatabase(managementDatabase.database)
+  override def shutdown(): Future[Unit]                         = databases.shutdown
+  override def managementLock(): Future[Unit]                   = Future.unit
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
-
-  override def managementLock(): Future[Unit] = {
-    managementDatabase.database.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
-      case Success(result) => if (result == 1) Future.successful(()) else managementLock()
-      case Failure(err)    => Future.failed(err)
-    }
-  }
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {

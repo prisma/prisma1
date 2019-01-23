@@ -138,7 +138,7 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
 
       !exclude
     }},
-    excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus", "prisma-rs-build")
+    excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
   )
 
 def absolute(relativePathToProjectRoot: String) = {
@@ -281,7 +281,7 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
 
 lazy val apiConnectorSQLiteNative = connectorProject("api-connector-sqlite-native")
   .dependsOn(apiConnector)
-  .dependsOn(prismaRsBuild)
+  .dependsOn(prismaRS)
 
 
 // ##################
@@ -435,7 +435,11 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
-lazy val prismaRsBuild = libProject("prisma-rs-build")
+lazy val prismaRS = libProject("prisma-rs-build")
+  .settings(
+    libraryDependencies ++= Seq(jna),
+    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar")
+  )
 
 
 // #######################
@@ -507,7 +511,7 @@ val allLibProjects = List(
   jdbcNative,
   jwtNative,
   logging,
-  prismaRsBuild
+  prismaRS
 )
 
 val allIntegrationTestProjects = List(

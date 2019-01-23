@@ -7,7 +7,6 @@ import com.sun.jna.Structure;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class ProtocolBufferJna extends Structure {
     public Pointer error;
     public Pointer data;
@@ -21,3 +20,4 @@ public class ProtocolBufferJna extends Structure {
         return Arrays.asList("error", "data", "data_len");
     }
 }
+
