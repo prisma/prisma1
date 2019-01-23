@@ -18,11 +18,15 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
 
   def action(schema: String): DBIO[DatabaseSchema] = {
     for {
-      // the line below does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
-      // we therefore have one additional filter step
-      potentialTables <- MTable.getTables(cat = None, schemaPattern = None, namePattern = None, types = None)
-      mTables         = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
-      tables          <- DBIO.sequence(mTables.map(mTableToModel))
+      // we filter on catalog and schema at the same time, because:
+      // 1. For MySQL only catalog will be populated.
+      // 2. For Postgres only schema will be populated.
+      // 3. It works when both are populated.
+      potentialTables <- MTable.getTables(cat = Some(schema), schemaPattern = Some(schema), namePattern = None, types = None)
+      // the line above does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
+      // we therefore have one additional filter step in memory
+      mTables = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
+      tables  <- DBIO.sequence(mTables.map(mTableToModel))
     } yield {
       DatabaseSchema(tables)
     }
