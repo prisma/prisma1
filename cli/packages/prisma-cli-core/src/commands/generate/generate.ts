@@ -241,7 +241,6 @@ export default class GenereateCommand extends Command {
 
     const generator = new GoGenerator({ schema, internalTypes })
 
-    // TODO: Hotfix to make Go endpoint work partially till this is resolved https://github.com/prisma/prisma/issues/3277
     const endpoint = GoGenerator.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? GoGenerator.replaceEnv(this.definition.rawJson!.secret)
