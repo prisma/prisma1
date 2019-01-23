@@ -1,1 +1,6 @@
-../../prisma.yml
+port: 4466
+databases:
+  default:
+    connector: sqlite
+    migrations: true
+    file: /tmp/foo.db

@@ -18,7 +18,7 @@ public class CIntegration {
              * The header file with the C declarations that are imported. We use a helper class that
              * locates the file in our project structure.
              */
-            return Collections.singletonList("\"" + System.getenv("SERVER_ROOT") + "/prisma-rs/prisma.h\"");
+            return Collections.singletonList("\"" + System.getenv("SERVER_ROOT") + "/prisma-rs/config/prisma.h\"");
         }
     }
 

@@ -10,12 +10,12 @@ import scala.concurrent.{ExecutionContext, Future}
 case class SQLiteApiConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = SQLiteDatabasesFactory.initialize(config)
 
-  override def initialize() = {
+  override def initialize(): Future[Unit] = {
     databases
     Future.unit
   }
 
-  override def shutdown() = {
+  override def shutdown(): Future[Unit] = {
     for {
       _ <- databases.primary.database.shutdown
       _ <- databases.replica.database.shutdown
@@ -29,5 +29,4 @@ case class SQLiteApiConnector(config: DatabaseConfig, isPrototype: Boolean)(impl
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
   override val capabilities = ConnectorCapabilities.mysql
-
 }

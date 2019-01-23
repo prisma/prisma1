@@ -282,6 +282,7 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
 lazy val apiConnectorSQLiteNative = connectorProject("api-connector-sqlite-native")
   .dependsOn(apiConnector)
   .dependsOn(prismaRsBinding)
+  .dependsOn(apiConnectorSQLite)
 
 
 // ##################

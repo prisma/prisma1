@@ -7,7 +7,7 @@ import com.prisma.shared.models.{Model, Project, RelationField, ScalarField}
 
 import scala.concurrent.Future
 
-case class SQLiteNativeDataResolver() extends DataResolver {
+case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolver {
   override def project: Project = ???
 
   override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = ???

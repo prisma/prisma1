@@ -10,7 +10,10 @@ use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::NO_PARAMS;
 use serde_yaml;
-use std::fs::File;
+use std::{
+    fs::File,
+    env,
+};
 
 const SQLITE: &'static str = "sqlite";
 
@@ -26,8 +29,14 @@ lazy_static! {
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         }
     };
-    pub static ref CONFIG: PrismaConfig =
-        serde_yaml::from_reader(File::open("./config/prisma.yml").unwrap()).unwrap();
+    pub static ref CONFIG: PrismaConfig = {
+        let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
+        let path = format!("{}/prisma-rs/config/prisma.yml", root);
+
+        dbg!(&path);
+
+        serde_yaml::from_reader(File::open(path).unwrap()).unwrap()
+    };
 }
 
 #[no_mangle]
