@@ -78,7 +78,7 @@ export default abstract class Renderer {
   }
 
   protected shouldRenderIndexDirectives(type: IGQLType) {
-    return type.indices !== undefined
+    return type.indices.length > 0
   }
 
   protected createReservedTypeDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
@@ -101,10 +101,9 @@ export default abstract class Renderer {
     `type ${type.name}`
 
     const { renderedComments, hasError } = this.renderComments(type, '')
-    const allFieldsHaveError = type.fields.every(x => x.comments !== undefined && x.comments.some(c => c.isError))
+    const allFieldsHaveError = type.fields.every(x => x.comments.some(c => c.isError))
 
     const commentPrefix = allFieldsHaveError ? `${comment} ` : ''
-
 
     if(renderedComments.length > 0) {
       return `${renderedComments}\n${commentPrefix}${renderedTypeName} {\n${renderedFields.join('\n')}\n${commentPrefix}}`
@@ -114,8 +113,8 @@ export default abstract class Renderer {
   }
 
   protected renderComments(type: IGQLType | IGQLField, spacing: string) {
-    const renderedComments = type.comments !== undefined ? type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n') : []
-    const hasError =  type.comments !== undefined ? type.comments.some(x => x.isError) : false
+    const renderedComments = type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n')
+    const hasError = type.comments.some(x => x.isError)
 
     return { renderedComments, hasError }
   }
@@ -173,7 +172,7 @@ export default abstract class Renderer {
   }
 
   protected shouldCreateDatabaseNameFieldDirective(field: IGQLField) {
-    return field.databaseName !== null && field.databaseName !== undefined
+    return field.databaseName !== null
   }
 
   protected createReservedFieldDirectives(field: IGQLField, fieldDirectives: IDirectiveInfo[]) {

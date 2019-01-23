@@ -35,7 +35,10 @@ describe(`Renderer directives test`, () => {
       isEnum: false,
       fields: [
         field1, field2, field3, field4
-      ]
+      ],
+      directives: [],
+      comments: [],
+      indices: []
     }
 
     const res = renderer.render({
@@ -73,7 +76,10 @@ describe(`Renderer directives test`, () => {
       isEnum: false,
       fields: [
         field1, field2, field3, field4
-      ]
+      ],
+      directives: [],
+      comments: [],
+      indices: []
     }
 
     const res = renderer.render({
@@ -114,7 +120,10 @@ describe(`Renderer directives test`, () => {
       indices: [
         { name: 'NameIndex', fields: [firstNameField, lastNameField], unique: false},
         { name: 'PrimaryIndex', fields: [idField], unique: true}
-      ]
+      ],
+      directives: [],
+      comments: [],
+      databaseName: null
     }
 
     const res = renderer.render({

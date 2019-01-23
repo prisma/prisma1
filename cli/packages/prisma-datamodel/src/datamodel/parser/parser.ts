@@ -227,8 +227,8 @@ export default abstract class Parser {
       })
     }
 
-    if(res.length === null) {
-      return undefined
+    if(res.length === 0) {
+      return []
     } else {
       return res
     }
@@ -251,7 +251,7 @@ export default abstract class Parser {
     const isCreatedAt = this.isCreatedAtField(field)
     const defaultValue = this.getDefaultValue(field)
     const relationName = this.getRelationName(field)
-    const databaseName = this.getDatabaseName(field) || undefined
+    const databaseName = this.getDatabaseName(field)
     const directives = this.parseDirectives(field)
 
     return {
@@ -268,7 +268,8 @@ export default abstract class Parser {
       isCreatedAt,
       isReadOnly,
       databaseName,
-      directives
+      directives,
+      comments: []
     }
   }
 
@@ -291,7 +292,7 @@ export default abstract class Parser {
       }
     }
 
-    const databaseName = this.getDatabaseName(type) || undefined
+    const databaseName = this.getDatabaseName(type)
     const isEmbedded = this.isEmbedded(type)
     const directives = this.parseDirectives(type)
     const indices = this.parseIndices(type, fields)
@@ -303,7 +304,8 @@ export default abstract class Parser {
       isEmbedded,
       databaseName,
       directives,
-      indices
+      indices,
+      comments: []
     }
   }
 
@@ -348,7 +350,10 @@ export default abstract class Parser {
           fields: values,
           isEnum: true,
           isEmbedded: false,
-          directives
+          directives,
+          comments: [],
+          databaseName: null,
+          indices: []
         })
       }
     }

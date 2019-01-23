@@ -1,4 +1,4 @@
-export { ISDL, IGQLType, IGQLField, IComment, IDirectiveInfo, IArguments, GQLFieldBase, GQLOneRelationField, GQLMultiRelationField, GQLScalarField, cloneSchema } from './datamodel/model'
+export { ISDL, IGQLType, IGQLField, IComment, IDirectiveInfo, IIndexInfo, IArguments, GQLFieldBase, GQLOneRelationField, GQLMultiRelationField, GQLScalarField, cloneSchema } from './datamodel/model'
 export { default as Parser } from './datamodel/parser'
 export { default as Renderer } from './datamodel/renderer/renderer'
 export { default as DefaultRenderer } from './datamodel/renderer'

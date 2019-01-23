@@ -113,19 +113,19 @@ export interface IGQLField {
    * Indicates how this field is called in the database. If this value is not set,
    * the name in the database is equal to the field name. 
    */
-  databaseName?: string
+  databaseName: string | null
 
   /**
    * Indicates this fields extra directives, 
    * which can not expressed using this 
    * interface's other members.
    */
-  directives?: IDirectiveInfo[]
+  directives: IDirectiveInfo[]
 
   /**
    * Comments for this field.
    */
-  comments?: IComment[]
+  comments: IComment[]
 }
 
 /**
@@ -158,26 +158,26 @@ export interface IGQLType {
    * 
    * This field is ignored for embedded types, which never have a database name. 
    */
-  databaseName?: string
+  databaseName: string | null
 
   /**
    * Indicates this types extra directives, 
    * which can not expressed using this 
    * interface's other members.
    */
-  directives?: IDirectiveInfo[]
+  directives: IDirectiveInfo[]
 
   /**
    * Comments for this type.
    */
-  comments?: IComment[]
+  comments: IComment[]
 
   /**
    * Indices for this type.
    * 
    * Will be parsed and rendered to the corresponding directive.
    */
-  indices?: IIndexInfo[]
+  indices: IIndexInfo[]
 }
 
 export interface ISDL {
@@ -208,9 +208,9 @@ export class GQLFieldBase implements IGQLField {
   public isUpdatedAt: boolean
   public isId: boolean
   public isReadOnly: boolean
-  public databaseName?: string
-  public directives?: IDirectiveInfo[]
-  public comments?: IComment[]
+  public databaseName: string | null
+  public directives: IDirectiveInfo[]
+  public comments: IComment[]
 
   constructor(name: string, type: IGQLType | string, isRequired?: boolean) {
     this.name = name
@@ -225,7 +225,7 @@ export class GQLFieldBase implements IGQLField {
     this.isUpdatedAt = false
     this.isId = false
     this.isReadOnly = false
-
+    this.databaseName = null
     this.directives = []
     this.comments = []
   }

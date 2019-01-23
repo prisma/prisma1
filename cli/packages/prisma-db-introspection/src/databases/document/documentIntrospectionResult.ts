@@ -15,7 +15,7 @@ export class DocumentIntrospectionResult extends IntrospectionResult {
     this.model = model
   }
 
-  public async getDatamodel(): Promise<ISDL> {
+  public getDatamodel(): ISDL {
     // Return a copy - object is muteable.
     return cloneSchema(this.model)
   }
