@@ -121,6 +121,7 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
       "--enable-all-security-services",
       s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
       s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
+      s"-H:CLibraryPath=${absolute("prisma-rs/build")}",
       "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.logging.PrismaLogger$LogLevel",
       "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf",
       s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
@@ -278,6 +279,9 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
       oldOptions.filterNot(_ == "-Xfatal-warnings")
     })
 
+lazy val apiConnectorSQLiteNative = connectorProject("api-connector-sqlite-native")
+  .dependsOn(apiConnector)
+  .dependsOn(prismaRsBuild)
 
 
 // ##################
@@ -431,6 +435,8 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
+lazy val prismaRsBuild = libProject("prisma-rs-build")
+
 
 // #######################
 //       AGGREGATORS
@@ -478,7 +484,8 @@ lazy val apiConnectorProjects = List(
   apiConnectorMySql,
   apiConnectorPostgres,
   apiConnectorMongo,
-  apiConnectorSQLite
+  apiConnectorSQLite,
+  apiConnectorSQLiteNative
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
@@ -499,7 +506,8 @@ val allLibProjects = List(
   mongoUtils,
   jdbcNative,
   jwtNative,
-  logging
+  logging,
+  prismaRsBuild
 )
 
 val allIntegrationTestProjects = List(

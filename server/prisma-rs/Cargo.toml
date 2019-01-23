@@ -1,0 +1,15 @@
+[lib]
+crate-type = ["dylib", "staticlib"]
+path = "src/lib.rs"
+
+[[bin]]
+name = "prisma"
+path = "src/main.rs"
+
+[package]
+name = "prisma"
+version = "0.1.0"
+authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>"]
+edition = "2018"
+
+[dependencies]
