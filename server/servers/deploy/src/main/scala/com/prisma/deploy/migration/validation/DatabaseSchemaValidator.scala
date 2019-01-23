@@ -18,10 +18,9 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
   def check = modelErrors ++ fieldErrors ++ relationErrors
 
   val modelErrors = schema.models.flatMap { model =>
-    val missingTableError = table(model).isEmpty.toOption {
+    table(model).isEmpty.toOption {
       DeployError(model.name, s"Could not find the table for the model ${model.name} in the database.")
     }
-    missingTableError
   }
 
   val fieldErrors = {
