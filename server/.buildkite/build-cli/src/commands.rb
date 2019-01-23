@@ -24,7 +24,7 @@ def build_images(context, tag)
   tags_to_build = [tag.stringify]
   tags_to_build.push(infer_additional_tags(context, tag))
 
-  # DockerCommands.build(context, tag)
+  DockerCommands.build(context, tag)
   DockerCommands.tag_and_push(context, tags_to_build.flatten.compact)
 
   trigger_dependent_pipeline(context.branch, tags_to_build)

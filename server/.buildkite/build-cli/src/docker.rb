@@ -51,7 +51,7 @@ class DockerCommands
 
       puts "Tagging and pushing prismagraphql/#{image}:#{from_tag} image with #{to_tag}#{suffix}..."
       Command.new("docker", "tag", "prismagraphql/#{image}:#{from_tag}", "prismagraphql/#{image}:#{to_tag}#{suffix}").puts!.run!.raise!
-      #Command.new("docker", "push", "prismagraphql/#{image}:#{to_tag}#{suffix}").puts!.run!.raise!
+      Command.new("docker", "push", "prismagraphql/#{image}:#{to_tag}#{suffix}").puts!.run!.raise!
     end
   end
 
