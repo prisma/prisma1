@@ -12,7 +12,7 @@ case class SQLiteApiConnectorNative()(implicit ec: ExecutionContext) extends Api
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = ???
   override def dataResolver(project: Project): DataResolver         = SQLiteNativeDataResolver()
   override def masterDataResolver(project: Project): DataResolver   = SQLiteNativeDataResolver()
-  override def projectIdEncoder: ProjectIdEncoder                   = ProjectIdEncoder('@')
+  override def projectIdEncoder: ProjectIdEncoder                   = ProjectIdEncoder('_')
 
   override val capabilities = ConnectorCapabilities.mysql
 }

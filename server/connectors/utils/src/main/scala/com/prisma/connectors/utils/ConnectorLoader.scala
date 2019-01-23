@@ -23,11 +23,11 @@ object ConnectorLoader {
       case ("mysql", true, _)        => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
       case ("mysql", false, _)       => sys.error("There is not passive mysql deploy connector yet!")
       case ("postgres", isActive, _) => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES), isActive, config.isPrototype)
-//      case ("sqlite", _, true)       => SQLiteApiConnectorNative()
-      case ("sqlite", true, _)  => SQLiteApiConnector(databaseConfig, isPrototype = config.isPrototype)
-      case ("sqlite", false, _) => sys.error("There is no passive sqlite deploy connector yet!")
-      case ("mongo", _, _)      => MongoApiConnector(databaseConfig)
-      case (conn, _, _)         => sys.error(s"Unknown connector $conn")
+      case ("sqlite", _, true)       => SQLiteApiConnectorNative()
+      case ("sqlite", true, _)       => SQLiteApiConnector(databaseConfig, isPrototype = config.isPrototype)
+      case ("sqlite", false, _)      => sys.error("There is no passive sqlite deploy connector yet!")
+      case ("mongo", _, _)           => MongoApiConnector(databaseConfig)
+      case (conn, _, _)              => sys.error(s"Unknown connector $conn")
     }
   }
 

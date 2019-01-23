@@ -281,7 +281,7 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
 
 lazy val apiConnectorSQLiteNative = connectorProject("api-connector-sqlite-native")
   .dependsOn(apiConnector)
-  .dependsOn(prismaRS)
+  .dependsOn(prismaRsBinding)
 
 
 // ##################
@@ -435,7 +435,7 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
-lazy val prismaRS = libProject("prisma-rs-build")
+lazy val prismaRsBinding = libProject("prisma-rs-binding")
   .settings(
     libraryDependencies ++= Seq(jna),
     unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar")
@@ -511,7 +511,7 @@ val allLibProjects = List(
   jdbcNative,
   jwtNative,
   logging,
-  prismaRS
+  prismaRsBinding
 )
 
 val allIntegrationTestProjects = List(
