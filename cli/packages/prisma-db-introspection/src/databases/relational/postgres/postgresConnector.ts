@@ -114,40 +114,8 @@ export class PostgresConnector extends RelationalConnector {
     }})
   }
 
-  parsePgArray(arrayAsString: string): string[] {
+  private parsePgArray(arrayAsString: string): string[] {
     const withoutBraces = arrayAsString.substring(1, arrayAsString.length - 1)
     return withoutBraces.split(',').map(x => x.trim())
-  }
-
-  parseDefaultValue(string) {
-    if (string == null) {
-      return null
-    }
-
-    if (string.includes(`nextval('`)) {
-      return '[AUTO INCREMENT]'
-    }
-
-    if (string.includes('now()') || string.includes("'now'::text")) {
-      return null
-    }
-
-    if (string.includes('::')) {
-      const candidate = string.split('::')[0]
-      const withoutSuffix = candidate.endsWith(`'`)
-        ? candidate.substring(0, candidate.length - 1)
-        : candidate
-      const withoutPrefix = withoutSuffix.startsWith(`'`)
-        ? withoutSuffix.substring(1, withoutSuffix.length)
-        : withoutSuffix
-
-      if (withoutPrefix === 'NULL') {
-        return null
-      }
-
-      return withoutPrefix
-    }
-
-    return string
   }
 }
