@@ -14,7 +14,7 @@ use std::fs::File;
 const SQLITE: &'static str = "sqlite";
 
 lazy_static! {
-    pub static ref POOL: r2d2::Pool<SqliteConnectionManager> = {
+    pub static ref SQLITE_POOL: r2d2::Pool<SqliteConnectionManager> = {
         match CONFIG.databases.get("default") {
             Some(PrismaDatabase::File(ref config)) if config.connector == SQLITE => {
                 r2d2::Pool::builder()
@@ -36,7 +36,7 @@ mod test {
 
     #[test]
     fn test_basic_select() {
-        let conn = super::POOL.get().unwrap();
+        let conn = super::SQLITE_POOL.get().unwrap();
         let mut stmt = conn.prepare("SELECT 1").unwrap();
 
         let rows = stmt.query_map(NO_PARAMS, |row| row.get(0)).unwrap();
