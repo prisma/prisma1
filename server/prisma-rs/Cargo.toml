@@ -13,3 +13,14 @@ authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@pris
 edition = "2018"
 
 [dependencies]
+prost = "0.4"
+prost-derive = "0.4"
+prost-types = "0.4"
+bytes = "0.4"
+lazy_static = "1.2"
+r2d2 = "0.8"
+r2d2_sqlite = "0.8"
+rusqlite = "0.16"
+
+[build-dependencies]
+prost-build = "0.4"
