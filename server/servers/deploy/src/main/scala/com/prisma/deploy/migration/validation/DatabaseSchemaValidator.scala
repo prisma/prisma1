@@ -29,7 +29,7 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
       field <- model.fields
     } yield {
       (table(model).isDefined && column(field).isEmpty).toOption {
-        DeployError(model.name, field.name, "asjdfkl")
+        DeployError(model.name, field.name, s"Could not find the column for the field ${field.name} in the database.")
       }
     }
 
