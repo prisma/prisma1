@@ -81,11 +81,11 @@ class ExecResult
   end
 
   def get_stdout
-    stdout.join("\n")
+    stdout.join("")
   end
 
   def get_stderr
-    stderr.join("\n")
+    stderr.join("")
   end
 
   def print_stdout

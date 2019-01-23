@@ -22,10 +22,10 @@ def build_images(context, tag)
   raise "Invalid version to build images from." if tag.nil?
 
   tags_to_build = [tag.stringify]
-  tags_to_build.push(infer_additional_tags(context, tag)).flatten.compact
+  tags_to_build.push(infer_additional_tags(context, tag))
 
-  DockerCommands.build(context, tag)
-  DockerCommands.tag_and_push(context, tags_to_build)
+  # DockerCommands.build(context, tag)
+  DockerCommands.tag_and_push(context, tags_to_build.flatten.compact)
 
   trigger_dependent_pipeline(context.branch, tags_to_build)
 end
