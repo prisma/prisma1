@@ -74,7 +74,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error.description should be("Could not find the column for the field title in the database.")
   }
 
-  "a simple column case" in {
+  "it should error if a column exists but it has the wrong type" in {
     val postgres =
       s"""
          | CREATE TABLE blog (
@@ -101,7 +101,13 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |}
        """.stripMargin
 
-    deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val errors = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Blog")
+    error.field should be(Some("title"))
+    error.description should be(
+      "The underlying column for the field title has an incompatible type. The field has type `Int` and the column has type `String`.")
   }
 
   private def deploy(dataModel: String, capabilities: ConnectorCapabilities) = {

@@ -27,9 +27,20 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
     val tmp = for {
       model <- schema.models
       field <- model.fields
+      _     <- table(model).toVector // only run the validation if the table exists
     } yield {
-      (table(model).isDefined && column(field).isEmpty).toOption {
-        DeployError(model.name, field.name, s"Could not find the column for the field ${field.name} in the database.")
+      column(field) match {
+        case Some(column) if field.typeIdentifier != column.typeIdentifier =>
+          Some(
+            DeployError(
+              model.name,
+              field.name,
+              s"The underlying column for the field ${field.name} has an incompatible type. The field has type `${field.typeIdentifier.userFriendlyTypeName}` and the column has type `${column.typeIdentifier.userFriendlyTypeName}`."
+            ))
+        case None =>
+          Some(DeployError(model.name, field.name, s"Could not find the column for the field ${field.name} in the database."))
+        case _ =>
+          None
       }
     }
 
