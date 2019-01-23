@@ -21,6 +21,11 @@ lazy_static = "1.2"
 r2d2 = "0.8"
 r2d2_sqlite = "0.8"
 rusqlite = "0.16"
+serde = "1.0"
+serde_derive = "1.0"
+serde_yaml = "0.8"
+url = "1.7"
+url_serde = "0.2"
 
 [build-dependencies]
 prost-build = "0.4"
