@@ -272,7 +272,6 @@ export class Client {
 
     const ast = instructions.reduceRight((acc, instruction, index) => {
       let args: any[] = []
-
       if (instruction.args && Object.keys(instruction.args).length > 0) {
         Object.entries(instruction.args).forEach(([name, value]) => {
           let variableName
@@ -544,17 +543,23 @@ export class Client {
                       if (this._currentInstructions[id].length === 0) {
                         if (name === 'Mutation') {
                           if (fieldName.startsWith('create')) {
-                            realArgs = { data: realArgs }
+                            if (Boolean(realArgs)) {
+                              realArgs = { data: realArgs }
+                            }
                           }
                           if (fieldName.startsWith('delete')) {
-                            realArgs = { where: realArgs }
+                            if (Boolean(realArgs)) {
+                              realArgs = { where: realArgs }
+                            }
                           }
                         } else if (
                           name === 'Query' ||
                           name === 'Subscription'
                         ) {
                           if (field.args.length === 1) {
-                            realArgs = { where: realArgs }
+                            if (Boolean(realArgs)) {
+                              realArgs = { where: realArgs }
+                            }
                           }
                         }
                       }
