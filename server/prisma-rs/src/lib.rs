@@ -2,7 +2,6 @@
 extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
-
 #[macro_use]
 extern crate prost_derive;
 
@@ -10,6 +9,7 @@ mod config;
 mod protobuf;
 
 use config::{ConnectionLimit, PrismaConfig, PrismaDatabase};
+use protobuf::prisma::GetNodeByWhere;
 use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::NO_PARAMS;
@@ -17,8 +17,9 @@ use serde_yaml;
 use std::{
     fs::File,
     env,
+    slice,
 };
-//use prost::Message;
+use prost::Message;
 
 const SQLITE: &'static str = "sqlite";
 
@@ -54,8 +55,13 @@ pub extern "C" fn select_1() -> i32 {
         Some(r) => r.unwrap(),
         None => panic!("No result"),
     }
+}
 
-    //.unwrap().unwrap() as i32
+#[no_mangle]
+pub extern "C" fn get_node_by_where(data: *mut u8, len: usize) {
+    let payload = unsafe { slice::from_raw_parts_mut(data, len) };
+    let params = GetNodeByWhere::decode(payload).unwrap();
+    dbg!(params);
 }
 
 #[cfg(test)]

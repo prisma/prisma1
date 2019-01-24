@@ -16,7 +16,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolve
   override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = ???
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
-    val projectJson = Json.toJson(project)
+    //val projectJson = Json.toJson(project)
 
     println(NativeBinding.select_1())
     Future.successful(None)
