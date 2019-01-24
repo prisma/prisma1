@@ -5,6 +5,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
 
+mod schema;
 mod config;
 mod protobuf;
 
