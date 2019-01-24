@@ -72,7 +72,7 @@ export class PostgresConnector extends RelationalConnector {
       SELECT
           tableInfos.relname as table_name,
           indexInfos.relname as index_name,
-          array_agg(columnInfos.attname) as column_names,
+          array_to_string(array_agg(columnInfos.attname), ',') as column_names,
           rawIndex.indisunique as is_unique,
           rawIndex.indisprimary as is_primary_key
       FROM
@@ -108,14 +108,13 @@ export class PostgresConnector extends RelationalConnector {
     return (await this.query(indexQuery, [schemaName, tableName])).map(row => { return {
       tableName: row.table_name as string,
       name: row.index_name as string,
-      fields: this.parsePgArray(row.column_names),
+      fields: this.parseIndexColumns(row.column_names),
       unique: row.is_unique as boolean,
       isPrimaryKey: row.is_primary_key as boolean
     }})
   }
 
-  private parsePgArray(arrayAsString: string): string[] {
-    const withoutBraces = arrayAsString.substring(1, arrayAsString.length - 1)
-    return withoutBraces.split(',').map(x => x.trim())
+  private parseIndexColumns(arrayAsString: string): string[] {
+    return arrayAsString.split(',').map(x => x.trim())
   }
 }
