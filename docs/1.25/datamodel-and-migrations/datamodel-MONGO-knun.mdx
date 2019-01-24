@@ -83,10 +83,12 @@ This example illustrates a few important concepts when working with your datamod
 - There is a _bidirectional_ relation between `User` and `Tweet` (via the `owner` and `tweets` fields). Note that in the underlying database, only `User` documents store references to `Tweet` documents (not the other way around), because the `tweets` field on `User` specifies `link` on the `@relation`-directive. However, the Prisma API still lets you query the `owner` of a `Tweet` directly.
 - There is a _unidirectional_ relation from `Tweet` to `Location` (via the `location` field). `Location` is an _embedded type_, which means there are no `Location` documents are not stored in their own `Location` collection - instead each `Location` is stored inside a `Tweet` document in the `Tweet` collection. 
 - Except for the `name` field on `User`, all fields are _required_ in the datamodel (as indicated by the `!` following the type).
-- The fields annotated with the `@id`-, `@createdAt`- and `@updatedAt`-directives are managed by Prisma and _read-only_ in the exposed Prisma API (meaning they can not be altered via mutations).
+- The fields annotated with the `@id`-, `@createdAt`- and `@updatedAt`-directives are managed by Prisma and _read-only_ in the exposed Prisma API, meaning they can not be altered via mutations (except when [importing data using the NDF format](jsw9#data-import)).
 - The `@unique` directive expresses a _unique constraint_, meaning Prisma ensures that there never will be two nodes with the same values for the annotated field.
 
 Creating and updating your datamodel is as simple as writing and saving the datamodel file. Once you're happy with your datamodel, you can save the file and apply the changes to your Prisma service by running `prisma deploy`:
+
+The values of these fields are currently read-only  (except when [importing data using the NDF format](jsw9#data-import)) in the Prisma API  but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
 
 ```
 $ prisma deploy

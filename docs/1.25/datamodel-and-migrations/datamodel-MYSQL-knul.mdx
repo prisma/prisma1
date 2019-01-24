@@ -502,7 +502,7 @@ Notice that you need to always enclose the value in double-quotes, even for non-
 
 The three fields `id`, `createdAt` and `updatedAt` have special semantics in Prisma. They are optional in your datamodel, but will always be maintained in the underlying database. This way you can always add the field to your datamodel later, and the data will still be available for existing nodes.
 
-The values of these fields are currently read-only in the Prisma API (except when importing data) but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
+The values of these fields are currently read-only in the Prisma API (except when [importing data using the NDF format](jsw9#data-import)) but will be made configurable in the future. See [this proposal](https://github.com/prisma/prisma/issues/1278) for more information.
 
 Notice that you cannot have custom fields that are called `id`, `createdAt` and `updatedAt` since these field names are reserved for the system fields. Here are the only supported declarations for these three fields:
 
