@@ -576,14 +576,15 @@ The [MongoDB](jgfm) database connector currently does not support ACID transacti
 
 </Warning>
 
-If a model has a relation to a different model, the corresponding relation field is set with an object that has a subset of the following properties:
+If a model `A` has a relation to a different model `B`, you can write to the model `B` through `createA` and `updateA` operations. In these cases, the `data` argument for the `createA` and `updateA` operations can contain one of the following keywords: 
 
-- `create`: Creates a new record of the related model and connects it via the relation.
-- `update`: Updates an existing record of the related model that is already connected via the relation.
-- `upsert`: Updates an existing record of the related model or creates and connects a new one. 
-- `delete`: Deletes an existing record of the related model that is connected via the relation.
-- `connect`: Connects an existing record of the related model via the relation.
-- `disconnect`: Deletes an existing record of the related model via the relation.
+- `create`: Creates a new model `B` and connects it via a relation field to the model `A`.
+- `update`: Updates an existing model `B` that is connected to the model `A` via a relation field.
+- `upsert`: Updates an existing model `B` that is connected to the model `A` via a relation field or creates a new model `B` and connects it via a relation field to the model `A`.
+- `delete`: Deletes an existing model `B` that is connected to the model `A` via a relation field.
+- `connect`: Connects an existing model `B` to an the model `A` via a relation field.
+- `disconnect`: Disconnects an existing model `B` from the relation to model `A`.
+- `set`:  Connects an existing model `B` to an the model `A` via a relation field. If the model `B` was connected to a different model `A` before, it is further disconnected from that (the connection is "rewired").
 
 ### Examples
 
