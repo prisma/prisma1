@@ -58,7 +58,7 @@ exports[`Introspector int columns 1`] = `
 `;
 
 exports[`Introspector text columns 1`] = `
-"type String @index(name: \\"Strings_a_key\\", fields: [\\"a\\"]) @index(name: \\"Strings_aa_key\\", fields: [\\"aa\\"]) @index(name: \\"foo\\", fields: [\\"b\\"]) @pgTable(name: \\"Strings\\") {
+"type String @indexes(value: [{name: \\"Strings_a_key\\", fields: [\\"a\\"]}, {name: \\"Strings_aa_key\\", fields: [\\"aa\\"]}, {name: \\"foo\\", fields: [\\"b\\"]}]) @pgTable(name: \\"Strings\\") {
   a: String @unique
   aa: String! @unique
   b: String @unique
