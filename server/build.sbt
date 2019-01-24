@@ -88,7 +88,7 @@ lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaLocalGraalVM = imageProject("prisma-local-graalvm", imageName = "prisma", baseImage = "prismagraphql/runtime-image", tag = "graalvm")
+lazy val prismaLocalGraalVM = imageProject("prisma-local-graalvm", imageName = "prisma", baseImage = "prismagraphql/runtime-image", tag = "graal")
   .dependsOn(prismaLocal)
 
 
@@ -100,7 +100,7 @@ lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaProdGraalVM = imageProject("prisma-prod-graalvm", imageName = "prisma-prod", baseImage = "prismagraphql/runtime-image", tag = "graalvm")
+lazy val prismaProdGraalVM = imageProject("prisma-prod-graalvm", imageName = "prisma-prod", baseImage = "prismagraphql/runtime-image", tag = "graal")
   .dependsOn(prismaProd)
 
 lazy val prismaNative = imageProject("prisma-native", "prisma-native")
