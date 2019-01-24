@@ -233,6 +233,7 @@ Several nested mutation arguments exist:
 - `delete`
 - `connect`
 - `disconnect`
+- `set`
 
 Rather than mapping out all possible scenarios at this point, we provide a list of examples.
 
@@ -447,6 +448,29 @@ mutation {
     posts {
       id
     }
+  }
+}
+```
+
+**Disconnecting two `Post` node from its original `User` node and reconnecting them to a different `User` node using `set`**:
+
+```graphql
+mutation {
+  updateUser(
+    where: {
+      id: "cjcf1cj0c017y01461c6enbfe"
+    } 
+    data: {
+      posts: {
+        set: [{
+          id: "cjcdi63l80ady014658ud1u02"
+        }, {
+          id: "cjcf1cj0u01800146jii8h8ch"
+        }]
+      }
+    }
+  ) {
+    id
   }
 }
 ```

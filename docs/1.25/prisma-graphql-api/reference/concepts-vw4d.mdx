@@ -228,6 +228,16 @@ query {
 
 For the [MySQL](jgfs) and [PostgreSQL](jgfr) database connectors, single mutations in the Prisma API that are not batch operations are always executed _transactionally_ ([ACID](https://en.wikipedia.org/wiki/ACID_(computer_science)) compliant), even if they consist of many actions that potentially spread across multiple related nodes. This is also true for [nested mutations](qwe2#nested-mutations) that perform several database writes on multiple types.
 
+Nested mutations can be recognized by the following keywords inside of a `createX`- or `updateX`-mutation:
+
+- `create`
+- `update`
+- `upsert`
+- `delete`
+- `connect`
+- `disconnect`
+- `set`
+
 <Warning>
 
 The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
