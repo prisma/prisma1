@@ -39,7 +39,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
     migrationPersistence,
     projectPersistence,
     deployConnector.deployMutactionExecutor,
-    deployConnector.testFacilities.inspector
+    deployConnector.databaseInspector
   )
   override lazy val managementAuth        = NoAuth
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()

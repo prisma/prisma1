@@ -38,11 +38,14 @@ case class DeployMutation(
     clientDbQueries: ClientDbQueries,
     databaseIntrospectionInferrer: DatabaseIntrospectionInferrer,
     fieldRequirements: FieldRequirementsInterface,
-    isActive: Boolean
+    isActive: Boolean,
+    deployConnector: DeployConnector
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload]
     with AwaitUtils {
+
+  val databaseInspector = deployConnector.databaseInspector
 
   val actsAsActive = if (capabilities.isDataModelV2) {
     val noMigration = args.noMigration.getOrElse(false)
@@ -66,11 +69,16 @@ case class DeployMutation(
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
-      validationResult    <- FutureOr(validateSyntax)
-      schemaMapping       = schemaMapper.createMapping(graphQlSdl)
-      inferredTables      <- FutureOr(inferTables)
-      inferredNextSchema  = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
-      _                   <- FutureOr(checkSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
+      validationResult   <- FutureOr(validateSyntax)
+      schemaMapping      = schemaMapper.createMapping(graphQlSdl)
+      inferredTables     <- FutureOr(inferTables) // TODO: remove once fully switched to v2 datamodel
+      newDatabaseSchema  <- FutureOr(introspectDatabaseSchema)
+      inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
+      _ <- if (capabilities.isDataModelV2) { // TODO: remove if once fully switched to v2 datamodel
+            FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, newDatabaseSchema))
+          } else {
+            FutureOr(checkProjectSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
+          }
       functions           <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps               <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
@@ -104,11 +112,26 @@ case class DeployMutation(
     validator.validate(args.types, fieldRequirements, capabilities)
   }
 
+  private def introspectDatabaseSchema: Future[DatabaseSchema Or Vector[DeployError]] = databaseInspector.inspect(project.dbName).map(Good(_))
+
   private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
     databaseIntrospectionInferrer.infer().map(Good(_))
   }
 
-  private def checkSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
+  private def checkProjectSchemaAgainstDatabaseSchema(nextSchema: Schema, databaseSchema: DatabaseSchema): Future[Unit Or Vector[DeployError]] = {
+    if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
+      val errors = DatabaseSchemaValidatorImpl.check(nextSchema, databaseSchema)
+      if (errors.isEmpty) {
+        Future.successful(Good(()))
+      } else {
+        Future.successful(Bad(errors))
+      }
+    } else {
+      Future.successful(Good(()))
+    }
+  }
+
+  private def checkProjectSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
     if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
       val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
       if (errors.isEmpty) {

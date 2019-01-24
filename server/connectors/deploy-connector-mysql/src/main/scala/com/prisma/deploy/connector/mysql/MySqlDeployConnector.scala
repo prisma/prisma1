@@ -36,6 +36,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
+  override def databaseInspector: DatabaseInspector               = DatabaseInspectorImpl(internalDatabaseDefs.databases(root = true).primary)
 
   override def capabilities = {
     if (isPrototype) {
@@ -113,10 +114,5 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
         tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++
         List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
     )
-  }
-
-  override def testFacilities() = {
-    val db = internalDatabaseDefs.databases(root = true)
-    DeployTestFacilites(DatabaseInspectorImpl(db.primary))
   }
 }

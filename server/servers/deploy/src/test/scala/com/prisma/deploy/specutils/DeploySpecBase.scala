@@ -3,12 +3,14 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
-import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
+import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.deploy.schema.mutations._
 import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
@@ -75,35 +77,35 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   override def runOnlyForCapabilities = Set(MigrationsCapability)
 }
 
-trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
-
+trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: Suite =>
   private val stageSeparator           = this.deployConnector.projectIdEncoder.stageSeparator
   val projectName                      = this.getClass.getSimpleName
   val projectStage                     = "default"
   val projectId                        = s"$projectName$stageSeparator$projectStage"
   override def doNotRunForCapabilities = Set(MigrationsCapability)
+  lazy val slickDatabase               = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
+
+  case class SQLs(postgres: String, mysql: String)
 
   def addProject() = {
     deployConnector.deleteProjectDatabase(projectId).await()
     server.addProject(projectName, projectStage)
   }
 
-  def setupProjectDatabaseForProject(sql: String)(implicit suite: Suite): Unit = {
-    setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
+  def setup(sqls: SQLs): DatabaseSchema = {
+    deployConnector.deleteProjectDatabase(projectId).await()
+    if (slickDatabase.isMySql) {
+      setupWithRawSQL(sqls.mysql)
+    } else if (slickDatabase.isPostgres) {
+      setupWithRawSQL(sqls.postgres)
+    } else {
+      sys.error("This is neither Postgres nor MySQL")
+    }
+    inspect
   }
 
-  def executeSql(sql: String*): Unit = {
-    val isPostgres = deployConnector.isInstanceOf[PostgresDeployConnector]
-    val session = deployConnector match {
-      case c: PostgresDeployConnector => c.managementDatabase.createSession()
-      case c: MySqlDeployConnector    => c.managementDatabase.database.createSession()
-      case x                          => sys.error(s"$x is not supported here")
-    }
-    val statement        = session.createStatement()
-    val setDefaultSchema = if (isPostgres) s"""SET search_path TO "$projectId";""" else s"USE `$projectId`;"
-    statement.execute(setDefaultSchema)
-    sql.foreach(statement.execute)
-    session.close()
+  def setupWithRawSQL(sql: String)(implicit suite: Suite): Unit = {
+    setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
   }
 
   private def setupProjectDatabaseForProject(schemaName: String, name: String, stage: String, sql: String): Unit = {
@@ -128,7 +130,36 @@ trait PassiveDeploySpecBase extends DeploySpecBase { self: Suite =>
 
     val setDefaultSchema = if (isPostgres) s"""SET search_path TO "$schemaName";""" else s"USE `$schemaName`;"
     statement.execute(setDefaultSchema)
-    statement.execute(sql)
+    sql.split(';').foreach { sql =>
+      val isNotOnlyWhiteSpace = sql.exists(c => c != '\n' && c != ' ')
+      if (isNotOnlyWhiteSpace) {
+        statement.execute(sql)
+      }
+    }
+    session.close()
+  }
+
+  def executeSql(sqls: SQLs): DatabaseSchema = {
+    if (slickDatabase.isMySql) {
+      executeSql(sqls.mysql)
+    } else if (slickDatabase.isPostgres) {
+      executeSql(sqls.postgres)
+    } else {
+      sys.error("This is neither Postgres nor MySQL")
+    }
+    inspect
+  }
+
+  private def executeSql(sql: String*): Unit = {
+    val session = deployConnector match {
+      case c: PostgresDeployConnector => c.managementDatabase.createSession()
+      case c: MySqlDeployConnector    => c.managementDatabase.database.createSession()
+      case x                          => sys.error(s"$x is not supported here")
+    }
+    val statement        = session.createStatement()
+    val setDefaultSchema = if (slickDatabase.isPostgres) s"""SET search_path TO "$projectId";""" else s"USE `$projectId`;"
+    statement.execute(setDefaultSchema)
+    sql.foreach(statement.execute)
     session.close()
   }
 }
@@ -138,7 +169,37 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
 
   val project = Project(id = projectId, schema = Schema.empty)
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): DatabaseSchema = {
+  def deployThatMustError(
+      dataModel: String,
+      capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
+      noMigration: Boolean = false
+  ): Vector[DeployError] = {
+    val result = deployInternal(dataModel, capabilities, noMigration)
+    if (result.errors.nonEmpty) {
+      result.errors.toVector
+    } else {
+      sys.error(s"The deploy did not return any error which is unexpected.")
+    }
+  }
+
+  def deploy(
+      dataModel: String,
+      capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
+      noMigration: Boolean = false
+  ): DatabaseSchema = {
+    val result = deployInternal(dataModel, capabilities, noMigration)
+    if (result.errors.nonEmpty) {
+      sys.error(s"Deploy returned unexpected errors: ${result.errors}")
+    } else {
+      inspect
+    }
+  }
+
+  private def deployInternal(
+      dataModel: String,
+      capabilities: ConnectorCapabilities,
+      noMigration: Boolean
+  ): DeployMutationPayload = {
     val input = DeployMutationInput(
       clientMutationId = None,
       name = projectName,
@@ -148,7 +209,7 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
       force = None,
       secrets = Vector.empty,
       functions = Vector.empty,
-      noMigration = None
+      noMigration = Some(noMigration)
     )
     val refreshedProject = testDependencies.projectPersistence.load(projectId).await.getOrElse(sys.error(s"No project found for id $projectId"))
     val mutation = DeployMutation(
@@ -166,23 +227,20 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
       clientDbQueries = deployConnector.clientDBQueries(project),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true
+      isActive = true,
+      deployConnector = deployConnector
     )
 
     val result = mutation.execute.await
     result match {
       case MutationSuccess(result) =>
-        if (result.errors.nonEmpty) {
-          sys.error(s"Deploy returned unexpected errors: ${result.errors}")
-        } else {
-          inspect
-        }
+        result
       case MutationError =>
         sys.error("Deploy returned an unexpected error")
     }
   }
 
   def inspect: DatabaseSchema = {
-    deployConnector.testFacilities.inspector.inspect(projectId).await()
+    deployConnector.databaseInspector.inspect(projectId).await()
   }
 }

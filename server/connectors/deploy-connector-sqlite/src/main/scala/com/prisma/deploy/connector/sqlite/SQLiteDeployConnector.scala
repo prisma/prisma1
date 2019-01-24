@@ -39,8 +39,8 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
-
-  override def capabilities = ConnectorCapabilities.mysql //Fixme
+  override def databaseInspector: DatabaseInspector               = DatabaseInspectorImpl(internalDatabaseDefs.databases(root = true).primary)
+  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.mysql //Fixme
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createDatabaseForProject(id = id)
@@ -107,10 +107,5 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
         tableNames.map(name => sqlu"DELETE FROM `#$name`") ++
         List(sqlu"""PRAGMA FOREIGN_KEYs=ON"""): _*
     )
-  }
-
-  override def testFacilities() = {
-    val db = internalDatabaseDefs.databases(root = true)
-    DeployTestFacilites(DatabaseInspectorImpl(db.primary))
   }
 }

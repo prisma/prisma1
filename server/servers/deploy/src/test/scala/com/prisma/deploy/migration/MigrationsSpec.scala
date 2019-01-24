@@ -23,7 +23,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  val inspector          = deployConnector.testFacilities.inspector
   var project: Project   = Project(id = serviceId, schema = Schema.empty)
   lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
   def isMySql            = slickDatabase.isMySql
@@ -984,13 +983,14 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       clientDbQueries = deployConnector.clientDBQueries(project),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true
+      isActive = true,
+      deployConnector = deployConnector
     )
 
     mutation.execute.await
   }
 
   def inspect: DatabaseSchema = {
-    deployConnector.testFacilities.inspector.inspect(serviceId).await()
+    deployConnector.databaseInspector.inspect(serviceId).await()
   }
 }
