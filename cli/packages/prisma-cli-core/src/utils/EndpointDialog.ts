@@ -374,6 +374,7 @@ export class EndpointDialog {
               : `Connecting to database`,
           )
           const client = new PGClient(this.replaceLocalDockerHost(credentials))
+          await client.connect()
           const connector = new PostgresConnector(client)
           let schemas
           try {

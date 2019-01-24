@@ -1,9 +1,16 @@
-import { RelationalConnector, ITable, IColumn, ITableRelation, IIndex } from '../relationalConnector'
+import {
+  RelationalConnector,
+  ITable,
+  IColumn,
+  ITableRelation,
+  IIndex,
+} from '../relationalConnector'
 import * as _ from 'lodash'
-import { Client } from 'pg';
-import { TypeIdentifier, DatabaseType } from 'prisma-datamodel';
+import { Client } from 'pg'
+import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
 import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
-import { RelationalIntrospectionResult } from '../relationalIntrospectionResult';
+import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
+import { PrismaDBClient } from '../../prisma/prismaDBClient'
 
 // Documentation: https://www.prisma.io/docs/data-model-and-migrations/introspection-mapping-to-existing-db-soi1/
 
@@ -14,7 +21,10 @@ export class PostgresConnector extends RelationalConnector {
   constructor(client: Client) {
     super()
 
-    if (!(client instanceof Client)) {
+    if (
+      !(client instanceof Client) &&
+      !((client as any) instanceof PrismaDBClient)
+    ) {
       throw new Error('Postgres instance needed for initialization.')
     }
 
@@ -25,7 +35,10 @@ export class PostgresConnector extends RelationalConnector {
     return DatabaseType.postgres
   }
 
-  protected createIntrospectionResult(models: ITable[], relations: ITableRelation[]): RelationalIntrospectionResult {
+  protected createIntrospectionResult(
+    models: ITable[],
+    relations: ITableRelation[],
+  ): RelationalIntrospectionResult {
     return new PostgresIntrospectionResult(models, relations)
   }
 
@@ -33,14 +46,17 @@ export class PostgresConnector extends RelationalConnector {
     return (await this.client.query(query, params)).rows
   }
 
-
   public async listSchemas(): Promise<string[]> {
     const schemas = await super.listSchemas()
     return schemas.filter(schema => !schema.startsWith('pg_'))
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(schemaName: string, tableName: string, columnName: string) {
+  protected async queryColumnComment(
+    schemaName: string,
+    tableName: string,
+    columnName: string,
+  ) {
     const commentQuery = `
       SELECT
       (
@@ -58,9 +74,13 @@ export class PostgresConnector extends RelationalConnector {
         cols.table_name    = $2::text AND
         cols.column_name   = $3::text;
     `
-    const [comment] = (await this.query(commentQuery, [schemaName, tableName, columnName])).map(row => row.column_comment as string)
+    const [comment] = (await this.query(commentQuery, [
+      schemaName,
+      tableName,
+      columnName,
+    ])).map(row => row.column_comment as string)
 
-    if(comment === undefined) {
+    if (comment === undefined) {
       return null
     } else {
       return comment
@@ -105,13 +125,15 @@ export class PostgresConnector extends RelationalConnector {
           rawIndex.indisunique,
           rawIndex.indisprimary
     `
-    return (await this.query(indexQuery, [schemaName, tableName])).map(row => { return {
-      tableName: row.table_name as string,
-      name: row.index_name as string,
-      fields: this.parseIndexColumns(row.column_names),
-      unique: row.is_unique as boolean,
-      isPrimaryKey: row.is_primary_key as boolean
-    }})
+    return (await this.query(indexQuery, [schemaName, tableName])).map(row => {
+      return {
+        tableName: row.table_name as string,
+        name: row.index_name as string,
+        fields: this.parseIndexColumns(row.column_names),
+        unique: row.is_unique as boolean,
+        isPrimaryKey: row.is_primary_key as boolean,
+      }
+    })
   }
 
   private parseIndexColumns(arrayAsString: string): string[] {

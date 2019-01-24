@@ -139,10 +139,6 @@ export default class IntrospectCommand extends Command {
       notProvidedArgs.length > 0 &&
       notProvidedArgs.length < pgArgsEntries.length
     ) {
-      console.log({
-        pgArgsEntriesLength: pgArgsEntries.length,
-        notProvidedArgsLength: notProvidedArgs.length,
-      })
       throw new Error(
         `If you provide one of the pg- arguments, you need to provide all of them. The arguments ${notProvidedArgs
           .map(([k]) => k)
@@ -159,6 +155,7 @@ export default class IntrospectCommand extends Command {
         database: pgDb,
         ssl: pgSsl,
       })
+      await client.connect()
       connector = new PostgresConnector(client)
       databaseType = DatabaseType.postgres
     }
@@ -174,6 +171,7 @@ export default class IntrospectCommand extends Command {
 
       if (await this.hasExecuteRaw()) {
         client = new PrismaDBClient(this.definition)
+        await client.connect()
         connector = new PostgresConnector(client)
         databaseType = DatabaseType.postgres
       }
@@ -198,6 +196,7 @@ export default class IntrospectCommand extends Command {
     try {
       schemas = await connector!.listSchemas()
     } catch (e) {
+      console.error(e.stack)
       throw new Error(`Could not connect to database. ${e.message}`)
     }
     /**
