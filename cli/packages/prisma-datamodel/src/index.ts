@@ -4,6 +4,7 @@ export {
   IGQLField,
   IComment,
   IDirectiveInfo,
+  IIndexInfo,
   IArguments,
   GQLFieldBase,
   GQLOneRelationField,

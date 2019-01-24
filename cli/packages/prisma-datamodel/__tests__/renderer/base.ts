@@ -34,7 +34,7 @@ describe(`Renderer test`, () => {
     const listField = new GQLScalarField('roles', 'Int')
     listField.isList = true
 
-    const model = {
+    const model: IGQLType = {
       fields: [
         new GQLScalarField('name', 'String'),
         new GQLScalarField('age', 'int'),
@@ -44,8 +44,12 @@ describe(`Renderer test`, () => {
       ],
       name: 'User',
       isEmbedded: false,
-      isEnum: false
-    } as IGQLType
+      isEnum: false,
+      indices: [],
+      directives: [],
+      comments: [],
+      databaseName: null
+    }
 
     const res = renderer.render({
       types: [model]
@@ -90,7 +94,10 @@ describe(`Renderer test`, () => {
       isEnum: false,
       fields: [
         scalarField, arrayField
-      ]
+      ],
+      comments: [],
+      indices: [],
+      databaseName: null
     }
 
 

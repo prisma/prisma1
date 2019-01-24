@@ -10,20 +10,20 @@ export abstract class IntrospectionResult {
     this.databaseType = databaseType
   }
 
-  public abstract getDatamodel() : Promise<ISDL>
+  public abstract getDatamodel(): ISDL
   
-  public async renderToDatamodelString() : Promise<string> {
-    return this.renderer.render(await this.getDatamodel())
+  public renderToDatamodelString() : string {
+    return this.renderer.render(this.getDatamodel())
   }
 
-  public async getNormalizedDatamodel(baseModel: ISDL | null = null) : Promise<ISDL> {
-    const model = await this.getDatamodel()
+  public getNormalizedDatamodel(baseModel: ISDL | null = null) : ISDL {
+    const model = this.getDatamodel()
     new ModelNameAndDirectiveNormalizer(baseModel).normalize(model)
     return model
   }
 
-  public async renderToNormalizedDatamodelString(baseModel: ISDL | null = null) : Promise<string> {
-    return this.renderer.render(await this.getNormalizedDatamodel(baseModel))
+  public renderToNormalizedDatamodelString(baseModel: ISDL | null = null) : string {
+    return this.renderer.render(this.getNormalizedDatamodel(baseModel))
   }
 
 }

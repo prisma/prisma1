@@ -12,7 +12,7 @@ export default class ModelNameNormalizer {
   }
 
   protected assignName(obj: IGQLType | IGQLField, newName: string) {
-    if(obj.databaseName === undefined) {
+    if(obj.databaseName === null) {
       // If name was already changed, we don't touch it.
       if(newName !== obj.name) {
         // If name is already conforming to prisma, skip. 

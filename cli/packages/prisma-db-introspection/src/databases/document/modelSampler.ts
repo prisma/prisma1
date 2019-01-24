@@ -114,7 +114,11 @@ export class ModelMerger {
       fields: fields,
       isEmbedded: this.isEmbedded,
       name: this.name,
-      isEnum: false // No enum in mongo
+      isEnum: false, // No enum in mongo
+      comments: [],
+      directives: [],
+      databaseName: null,
+      indices: []
     }
   }
 
@@ -164,7 +168,7 @@ export class ModelMerger {
    * 
    * Creates error comments on inconsistency.
    */
-  private toIGQLField(info: FieldInfo) {
+  private toIGQLField(info: FieldInfo) : IGQLField {
     let type = ModelSampler.ErrorType
     let isArray = false
     let isRequired = false
@@ -243,8 +247,12 @@ export class ModelMerger {
       relationName: info.isRelationCandidate && !isId ? ModelSampler.ErrorType : null,
       relatedField: null,
       defaultValue: null,
-      comments: comments
-    } as IGQLField
+      comments: comments,
+      databaseName: null,
+      directives: [],
+      isCreatedAt: false,
+      isUpdatedAt: false
+    }
   }
 
   /**

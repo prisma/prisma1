@@ -1,4 +1,4 @@
-import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from "../model"
+import { ISDL, IGQLType, IDirectiveInfo, IGQLField, IIndexInfo } from "../model"
 import { GraphQLSchema } from "graphql/type/schema"
 import { GraphQLObjectType, GraphQLEnumType, GraphQLField, GraphQLFieldConfig } from "graphql/type/definition"
 import { GraphQLDirective } from "graphql/type/directives"
@@ -41,6 +41,34 @@ export default abstract class Renderer {
     return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }
   }
 
+  protected createIndexDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
+    if(type.indices != null) {
+      for(const index of type.indices) {
+        typeDirectives.push(this.createIndexDirective(index))
+      }
+    }
+  }
+
+  protected createIndexDirective(index: IIndexInfo) {
+    const directive: IDirectiveInfo = { 
+      name: DirectiveKeys.index,
+      arguments: { 
+        name: this.renderValue(TypeIdentifiers.string, index.name),
+        // Special rendering: We escape manually here to render an array. 
+        fields: `[${index.fields.map(x => this.renderValue(TypeIdentifiers.string, x.name)).join(', ')}]`,
+      }
+    }
+
+    if(!index.unique) {
+      directive.arguments = { 
+        ...directive.arguments,
+        unique: this.renderValue(TypeIdentifiers.boolean, index.unique)
+      }
+    }
+
+    return directive
+  }
+
   protected shouldCreateIsEmbeddedTypeDirective(type: IGQLType) {
     return type.isEmbedded
   }
@@ -49,10 +77,14 @@ export default abstract class Renderer {
     return type.databaseName && !type.isEmbedded
   }
 
+  protected shouldRenderIndexDirectives(type: IGQLType) {
+    return type.indices.length > 0
+  }
+
   protected createReservedTypeDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
     if(this.shouldCreateIsEmbeddedTypeDirective(type)) { typeDirectives.push(this.createIsEmbeddedTypeDirective(type)) }
     if(this.shouldCreateDatabaseNameTypeDirective(type)) { typeDirectives.push(this.createDatabaseNameTypeDirective(type)) }
-
+    if(this.shouldRenderIndexDirectives(type)) { this.createIndexDirectives(type, typeDirectives) }
   }
 
   protected renderType(type: IGQLType): string {
@@ -69,10 +101,9 @@ export default abstract class Renderer {
     `type ${type.name}`
 
     const { renderedComments, hasError } = this.renderComments(type, '')
-    const allFieldsHaveError = type.fields.every(x => x.comments !== undefined && x.comments.some(c => c.isError))
+    const allFieldsHaveError = type.fields.every(x => x.comments.some(c => c.isError))
 
     const commentPrefix = allFieldsHaveError ? `${comment} ` : ''
-
 
     if(renderedComments.length > 0) {
       return `${renderedComments}\n${commentPrefix}${renderedTypeName} {\n${renderedFields.join('\n')}\n${commentPrefix}}`
@@ -82,8 +113,8 @@ export default abstract class Renderer {
   }
 
   protected renderComments(type: IGQLType | IGQLField, spacing: string) {
-    const renderedComments = type.comments !== undefined ? type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n') : []
-    const hasError =  type.comments !== undefined ? type.comments.some(x => x.isError) : false
+    const renderedComments = type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n')
+    const hasError = type.comments.some(x => x.isError)
 
     return { renderedComments, hasError }
   }
@@ -141,7 +172,7 @@ export default abstract class Renderer {
   }
 
   protected shouldCreateDatabaseNameFieldDirective(field: IGQLField) {
-    return field.databaseName !== null && field.databaseName !== undefined
+    return field.databaseName !== null
   }
 
   protected createReservedFieldDirectives(field: IGQLField, fieldDirectives: IDirectiveInfo[]) {
@@ -237,12 +268,18 @@ export default abstract class Renderer {
 
     // Merge with same name
     for(const name of Object.keys(grouped)) {
-      merged.push({
-        name,
-        arguments: grouped[name].reduce((r, a) => {
-          return {...a.arguments, ...r.arguments}
-        }, {})
-      })
+      if(name === DirectiveKeys.index) { // Do not summarize index directives
+        for(const directive of grouped[name]) {
+          merged.push(directive)
+        }
+      } else {
+        merged.push({
+          name,
+          arguments: grouped[name].reduce((r, a) => {
+            return {...a.arguments, ...r.arguments}
+          }, {})
+        })
+      }
     }
 
     return merged
