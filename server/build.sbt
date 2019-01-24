@@ -49,7 +49,7 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
     }
 
     new Dockerfile {
-      from(s"${baseImage}:${tag}}")
+      from(s"${baseImage}:${tag}")
       copy(appDir, targetDir)
       libraries.foreach(f => copy(f._1, systemLibs))
       copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
