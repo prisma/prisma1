@@ -109,6 +109,76 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       "The underlying column for the field `title` has an incompatible type. The field has type `Int` and the column has type `String`.")
   }
 
+  "it should error if a column is required but the field is not required" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title text NOT NULL
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   title mediumtext NOT NULL
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String
+         |}
+       """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Blog")
+    error.field should be(Some("title"))
+    error.description should be(
+      "The underlying column for the field `title` is required but the field is declared optional. Please declare it as required: `title: String!`.")
+  }
+
+  "it should error if a column is not required but the field is required" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title text
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   title mediumtext
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |}
+       """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Blog")
+    error.field should be(Some("title"))
+    error.description should be(
+      "The underlying column for the field `title` is optional but the field is declared required. Please declare it as optional by removing the `!`: `title: String`.")
+  }
+
   "it should succeed if an id column has the right type" in {
     val postgres =
       s"""
