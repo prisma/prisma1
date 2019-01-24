@@ -192,8 +192,8 @@ export class Client {
 
     if (
       !selectionFromFragment &&
-      Array.isArray(pointer) &&
       Boolean(pointer) &&
+      Array.isArray(pointer) &&
       pointer.length > 0
     ) {
       /*
