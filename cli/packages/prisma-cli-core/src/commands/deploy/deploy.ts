@@ -474,7 +474,8 @@ ${chalk.gray(
       }
     }
 
-    const steps = payload.steps || payload.migration.steps || []
+    const steps =
+    payload.steps || (payload.migration && payload.migration.steps) || []
 
     if (steps.length === 0) {
       if (dryRun) {
