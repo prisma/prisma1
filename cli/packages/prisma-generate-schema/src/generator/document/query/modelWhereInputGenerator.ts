@@ -11,4 +11,8 @@ export default class ModelWhereInputGenerator extends RelationalModelWhereInputG
       return null
     }
   }
+
+  protected getSupportedLogicalOperators() {
+    return ['AND']
+  }
 }

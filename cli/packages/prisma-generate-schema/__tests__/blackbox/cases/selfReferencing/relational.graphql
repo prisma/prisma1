@@ -709,6 +709,7 @@ input MultiSelfReferencingCWithIdUpdateInput {
 input MultiSelfReferencingCWithIdUpdateManyWithoutAInput {
   create: [MultiSelfReferencingCWithIdCreateWithoutAInput!]
   connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  set: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutAInput!]
@@ -719,6 +720,7 @@ input MultiSelfReferencingCWithIdUpdateManyWithoutAInput {
 input MultiSelfReferencingCWithIdUpdateManyWithoutBInput {
   create: [MultiSelfReferencingCWithIdCreateWithoutBInput!]
   connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  set: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutBInput!]
@@ -1848,6 +1850,7 @@ input SelfReferencingBWithIdUpdateManyDataInput {
 input SelfReferencingBWithIdUpdateManyInput {
   create: [SelfReferencingBWithIdCreateInput!]
   connect: [SelfReferencingBWithIdWhereUniqueInput!]
+  set: [SelfReferencingBWithIdWhereUniqueInput!]
   disconnect: [SelfReferencingBWithIdWhereUniqueInput!]
   delete: [SelfReferencingBWithIdWhereUniqueInput!]
   update: [SelfReferencingBWithIdUpdateWithWhereUniqueNestedInput!]
@@ -2206,6 +2209,7 @@ input SelfReferencingCUpdateManyDataInput {
 input SelfReferencingCUpdateManyInput {
   create: [SelfReferencingCCreateInput!]
   connect: [SelfReferencingCWhereUniqueInput!]
+  set: [SelfReferencingCWhereUniqueInput!]
   disconnect: [SelfReferencingCWhereUniqueInput!]
   delete: [SelfReferencingCWhereUniqueInput!]
   update: [SelfReferencingCUpdateWithWhereUniqueNestedInput!]

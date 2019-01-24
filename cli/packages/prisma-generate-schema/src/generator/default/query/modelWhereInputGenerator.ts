@@ -120,6 +120,10 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
 
   //#endregion
 
+  protected getSupportedLogicalOperators() {
+    return  ['AND', 'OR', 'NOT']
+  }
+
   protected generateFields(model: IGQLType, args: {}): GraphQLInputFieldConfigMap {
     let fields = {} as GraphQLInputFieldConfigMap
 
@@ -136,7 +140,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     }
 
     const recursiveFilter = ModelWhereInputGenerator.generateFiltersForSuffix(
-      ['AND', 'OR', 'NOT'],
+      this.getSupportedLogicalOperators(),
       null,
       this.generators.scalarTypeGenerator.wrapList(this.generate(model, {}))
     )

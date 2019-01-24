@@ -19,7 +19,7 @@ export default class ModelSubscriptionWhereInput extends ModelInputObjectTypeGen
     } as GraphQLInputFieldConfigMap
 
     const recursiveFilter = ModelWhereInputGenerator.generateFiltersForSuffix(
-      ['AND', 'OR', 'NOT'],
+      this.getSupportedLogicalOperators(),
       null,
       this.generators.scalarTypeGenerator.wrapList(this.generators.modelSubscriptionWhereInput.generate(model, {}))
     )
@@ -28,4 +28,10 @@ export default class ModelSubscriptionWhereInput extends ModelInputObjectTypeGen
 
     return fields
   }
+
+  protected getSupportedLogicalOperators() {
+    return  ['AND', 'OR', 'NOT']
+  }
+
+
 }

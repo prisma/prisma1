@@ -251,14 +251,6 @@ input OnlyDateSubscriptionWhereInput {
   """
   AND: [OnlyDateSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyDateSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyDateSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -279,6 +271,7 @@ input OnlyDateSubscriptionWhereInput {
 
 input OnlyDateUpdateManyInput {
   connect: [OnlyDateWhereUniqueInput!]
+  set: [OnlyDateWhereUniqueInput!]
   disconnect: [OnlyDateWhereUniqueInput!]
   delete: [OnlyDateWhereUniqueInput!]
   deleteMany: [OnlyDateScalarWhereInput!]
@@ -289,14 +282,6 @@ input OnlyDateWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyDateWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyDateWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyDateWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -454,14 +439,6 @@ input OnlyIdAndARelation2SubscriptionWhereInput {
   """
   AND: [OnlyIdAndARelation2SubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyIdAndARelation2SubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyIdAndARelation2SubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -489,14 +466,6 @@ input OnlyIdAndARelation2WhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdAndARelation2WhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyIdAndARelation2WhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyIdAndARelation2WhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -550,6 +519,7 @@ input OnlyIdAndARelation2WhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  ref: OnlyIdWhereInput
 }
 
 input OnlyIdAndARelation2WhereUniqueInput {
@@ -611,14 +581,6 @@ input OnlyIdAndARelationSubscriptionWhereInput {
   """
   AND: [OnlyIdAndARelationSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyIdAndARelationSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyIdAndARelationSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -646,14 +608,6 @@ input OnlyIdAndARelationWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdAndARelationWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyIdAndARelationWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyIdAndARelationWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -707,6 +661,7 @@ input OnlyIdAndARelationWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  ref: OnlyIdWhereInput
 }
 
 input OnlyIdAndARelationWhereUniqueInput {
@@ -768,14 +723,6 @@ input OnlyIdSubscriptionWhereInput {
   """
   AND: [OnlyIdSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyIdSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -809,14 +756,6 @@ input OnlyIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -946,14 +885,6 @@ input OnlyRelationASubscriptionWhereInput {
   """
   AND: [OnlyRelationASubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyRelationASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyRelationASubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -997,14 +928,6 @@ input OnlyRelationAWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyRelationAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyRelationAWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1058,6 +981,7 @@ input OnlyRelationAWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  ref: OnlyRelationAWhereInput
 }
 
 input OnlyRelationAWhereUniqueInput {
@@ -1129,14 +1053,6 @@ input OnlyRelationBSubscriptionWhereInput {
   """
   AND: [OnlyRelationBSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyRelationBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyRelationBSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1182,14 +1098,6 @@ input OnlyRelationBWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyRelationBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyRelationBWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1243,6 +1151,7 @@ input OnlyRelationBWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  ref: OnlyRelationBWhereInput
 }
 
 input OnlyRelationBWhereUniqueInput {
@@ -1304,14 +1213,6 @@ input OnlyRelationSubscriptionWhereInput {
   """
   AND: [OnlyRelationSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyRelationSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyRelationSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1339,14 +1240,6 @@ input OnlyRelationWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OnlyRelationWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OnlyRelationWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1400,6 +1293,7 @@ input OnlyRelationWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  ref_some: OnlyDateWhereInput
 }
 
 input OnlyRelationWhereUniqueInput {
