@@ -234,7 +234,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       s"""
          |type Blog @db(name: "blog"){
          |  id: Int! @id
-         |  author: Author! @relation(link: INLINE)
+         |  author: Author @relation(link: INLINE)
          |}
          |
          |type Author @db(name: "author"){
@@ -243,6 +243,98 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
        """.stripMargin
 
     deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+  }
+
+  "it should error if an inline relation field is required but the column is optional" in {
+    val postgres =
+      s"""
+         | CREATE TABLE author (
+         |   id SERIAL PRIMARY KEY
+         | );
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   author int references author(id)
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES author(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  author: Author! @relation(link: INLINE)
+         |}
+         |
+         |type Author @db(name: "author"){
+         |  id: Int! @id
+         |}
+       """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Blog")
+    error.field should be(Some("author"))
+    error.description should be(
+      "The underlying column for the field `author` is optional but the field is declared required. Please declare it as optional by removing the `!`: `author: Author`.")
+  }
+
+  "it should error if an inline relation field is optional but the column is required" in {
+    val postgres =
+      s"""
+         | CREATE TABLE author (
+         |   id SERIAL PRIMARY KEY
+         | );
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   author int NOT NULL references author(id)
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int NOT NULL, FOREIGN KEY (author) REFERENCES author(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  author: Author @relation(link: INLINE)
+         |}
+         |
+         |type Author @db(name: "author"){
+         |  id: Int! @id
+         |}
+       """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Blog")
+    error.field should be(Some("author"))
+    error.description should be(
+      "The underlying column for the field `author` is required but the field is declared optional. Please declare it as required: `author: Author!`.")
   }
 
   "it should error if the column for an inline relation field is missing" in {

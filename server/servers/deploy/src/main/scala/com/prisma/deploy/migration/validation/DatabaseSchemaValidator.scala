@@ -36,13 +36,9 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
             s"The underlying column for the field `${field.name}` has an incompatible type. The field has type `${field.typeIdentifier.userFriendlyTypeName}` and the column has type `${column.typeIdentifier.userFriendlyTypeName}`."
           )
         case Some(column) if column.isRequired && !field.isRequired =>
-          Some(
-            s"The underlying column for the field `${field.name}` is required but the field is declared optional. Please declare it as required: `${field.name}: ${field.typeIdentifier.userFriendlyTypeName}!`."
-          )
+          Some(fieldMustBeRequired(field))
         case Some(column) if !column.isRequired && field.isRequired =>
-          Some(
-            s"The underlying column for the field `${field.name}` is optional but the field is declared required. Please declare it as optional by removing the `!`: `${field.name}: ${field.typeIdentifier.userFriendlyTypeName}`."
-          )
+          Some(fieldMustBeOptional(field))
         case None =>
           Some(s"Could not find the column for the field `${field.name}` in the database.")
         case _ =>
@@ -88,10 +84,10 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
         Some(
           s"The column for the inline relation field `${field.name}` is not referencing a valid column. Those columns must always reference the column of the id field of related model. So it should reference `${field.relatedModel_!.dbNameOfIdField_!}` instead of `${fk.column}`."
         )
-      case Some(Column.withForeignKey(_)) =>
-        None // the FK constraint is fine
-      case _ =>
-        Some(s"The column for the inline relation field `${field.name}` is missing a foreign key constraint.")
+      case Some(column) if column.isRequired && !field.isRequired => Some(fieldMustBeRequired(field))
+      case Some(column) if !column.isRequired && field.isRequired => Some(fieldMustBeOptional(field))
+      case Some(Column.withForeignKey(_))                         => None // the FK constraint is fine
+      case _                                                      => Some(s"The column for the inline relation field `${field.name}` is missing a foreign key constraint.")
     }
     errorMessage.map { msg =>
       DeployError(model.name, field.name, msg)
@@ -139,4 +135,17 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
 
   private def table(model: Model): Option[Table]   = databaseSchema.table(model.dbName)
   private def column(field: Field): Option[Column] = table(field.model).flatMap(_.column(field.dbName))
+
+  private def fieldMustBeRequired(field: Field) = {
+    s"The underlying column for the field `${field.name}` is required but the field is declared optional. Please declare it as required: `${field.name}: ${userFriendlyTypeName(field)}!`."
+  }
+
+  private def fieldMustBeOptional(field: Field) = {
+    s"The underlying column for the field `${field.name}` is optional but the field is declared required. Please declare it as optional by removing the `!`: `${field.name}: ${userFriendlyTypeName(field)}`."
+  }
+
+  private def userFriendlyTypeName(field: Field) = field match {
+    case f: ScalarField   => f.typeIdentifier.userFriendlyTypeName
+    case f: RelationField => f.relatedModel_!.name
+  }
 }
