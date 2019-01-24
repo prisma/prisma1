@@ -5,6 +5,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
 
+mod project;
 mod schema;
 mod config;
 mod protobuf;
@@ -15,7 +16,6 @@ use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::NO_PARAMS;
 use serde_yaml;
-use serde_json;
 use prost::Message;
 
 use std::{
