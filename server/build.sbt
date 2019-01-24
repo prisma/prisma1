@@ -1,3 +1,5 @@
+import java.io.File
+
 import sbt.Keys.{name, scalacOptions}
 import sbt._
 import SbtUtils._
@@ -437,7 +439,14 @@ lazy val cache = libProject("cache")
     ))
 
 lazy val prismaRsBinding = libProject("prisma-rs-binding")
+  .enablePlugins(ProtocPlugin)
   .settings(
+    ProtocPlugin.protobufGlobalSettings,
+    PB.protocVersion := "-v261",
+    PB.protoSources in Compile := Seq(new File("protobuf")),
+    PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value
+    ),
     libraryDependencies ++= Seq(jna),
     unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar")
   )

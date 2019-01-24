@@ -13,7 +13,7 @@ buildNativeLib := {
   if ((Process(Seq("bash", "build.sh"), nativePath, "CARGO_FLAGS"-> cargoFlags) ! logger) != 0) {
     sys.error("Prisma library build failed.")
   }
-}
+} 
 
 compile in Compile := {
   buildNativeLib.value
