@@ -38,8 +38,8 @@ for(const parser of parsersToTest) {
     test('Parse a type with multiple index directives correctly.', () => {
       const model = `
       type User @db(name: "user") 
-          @index(name: "NameIndex", fields: ["firstName", "lastName"], unique: false)
-          @index(name: "PrimaryIndex", fields: ["id"]) {
+          @indexes(value: [{ name: "NameIndex", fields: ["firstName", "lastName"], unique: false },
+          { name: "PrimaryIndex", fields: ["id"] }]) {
         id: Int! @id
         createdAt: DateTime! @createdAt
         updatedAt: DateTime! @updatedAt

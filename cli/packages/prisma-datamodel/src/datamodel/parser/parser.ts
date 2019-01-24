@@ -163,12 +163,30 @@ export default abstract class Parser {
   }
 
   /**
-   * Parses a single index directive, resolves all field references. 
+   * Returns the value of an object field.
    */
-  protected parseIndex(directive: any, fields: IGQLField[]) : IIndexInfo {
-    const fieldsArgument = this.getDirectiveArgument(directive, 'fields')
-    const nameArgument = this.getDirectiveArgument(directive, 'name')
-    const uniqueArgument = this.getDirectiveArgument(directive, 'unique')
+  protected getObjectFieldValue(obj: any, name: string) {
+    if (obj && obj.fields) {
+      const nameArgument = obj.fields.find(
+        a => a.name.value === name,
+      )
+      if(nameArgument) {
+        // Fallback from single value to list value.
+        return nameArgument.value.value !== undefined ? nameArgument.value.value : nameArgument.value.values
+      }
+    }
+
+    return null
+  }
+
+
+  /**
+   * Parses a single index directive input object, resolves all field references. 
+   */
+  protected parseIndex(indexObject: any, fields: IGQLField[]) : IIndexInfo {
+    const fieldsArgument = this.getObjectFieldValue(indexObject, 'fields')
+    const nameArgument = this.getObjectFieldValue(indexObject, 'name')
+    const uniqueArgument = this.getObjectFieldValue(indexObject, 'unique')
   
     const indexFields = fieldsArgument.map(fieldArgument => {
       const [field] = fields.filter(f => f.name === fieldArgument.value)
@@ -192,9 +210,13 @@ export default abstract class Parser {
    * Parses all index directives on the given type. 
    */
   protected parseIndices(type: any, fields: IGQLField[]) : IIndexInfo[] {
-    const indexDirectives = this.getDirectivesByName(type, DirectiveKeys.index)
+    const indexDirective = this.getDirectiveByName(type, DirectiveKeys.indexes)
+    if(indexDirective === null) {
+      return []
+    }
+    const subIndexes = this.getDirectiveArgument(indexDirective, 'value')
 
-    return indexDirectives.map(directive => this.parseIndex(directive, fields))
+    return subIndexes.map(directive => this.parseIndex(directive, fields))
   }
 
   /**

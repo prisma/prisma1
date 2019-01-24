@@ -42,10 +42,17 @@ export default abstract class Renderer {
   }
 
   protected createIndexDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
-    if(type.indices != null) {
+    if(type.indices.length > 0) {
+      const indexDescriptions: string[] = []
       for(const index of type.indices) {
-        typeDirectives.push(this.createIndexDirective(index))
+        indexDescriptions.push(this.createIndexDirective(index))
       }
+      typeDirectives.push({
+        name: DirectiveKeys.indexes,
+        arguments: {
+          value: `[${indexDescriptions.join(', ')}]`
+        }
+      })
     }
   }
 
@@ -66,7 +73,8 @@ export default abstract class Renderer {
       }
     }
 
-    return directive
+    // If we switch back to single index declarations later, simply return the directive here. 
+    return `{${Object.keys(directive.arguments).map(x  => `${x}: ${directive.arguments[x]}`).join(', ')}}`
   }
 
   protected shouldCreateIsEmbeddedTypeDirective(type: IGQLType) {
