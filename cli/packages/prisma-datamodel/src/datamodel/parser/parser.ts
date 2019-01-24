@@ -146,6 +146,25 @@ export default abstract class Parser {
   }
 
   /**
+   * Gets a fields relation name. If no directive
+   * exists, returns null.
+   * @param field
+   */
+  protected getDatabaseFieldName(field: IGQLField): string | null {
+    return this.getDatabaseName(field)
+  }
+
+  /**
+   * Gets a types relation name. If no directive
+   * exists, returns null.
+   * @param field
+   */
+
+  protected getDatabaseTypeName(type: IGQLType): string | null {
+    return this.getDatabaseName(type)
+  }
+
+  /**
    * Returns the value of a directive argument.
    */
   protected getDirectiveArgument(directive: any, name: string) {
@@ -273,7 +292,7 @@ export default abstract class Parser {
     const isCreatedAt = this.isCreatedAtField(field)
     const defaultValue = this.getDefaultValue(field)
     const relationName = this.getRelationName(field)
-    const databaseName = this.getDatabaseName(field)
+    const databaseName = this.getDatabaseFieldName(field)
     const directives = this.parseDirectives(field)
 
     return {
@@ -314,7 +333,7 @@ export default abstract class Parser {
       }
     }
 
-    const databaseName = this.getDatabaseName(type)
+    const databaseName = this.getDatabaseTypeName(type)
     const isEmbedded = this.isEmbedded(type)
     const directives = this.parseDirectives(type)
     const indices = this.parseIndices(type, fields)
