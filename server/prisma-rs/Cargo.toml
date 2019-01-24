@@ -24,6 +24,7 @@ rusqlite = "0.16"
 serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.8"
+serde_json = "1.0"
 url = "1.7"
 url_serde = "0.2"
 

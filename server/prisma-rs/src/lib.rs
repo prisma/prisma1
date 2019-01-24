@@ -5,6 +5,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
 
+mod project;
+mod schema;
 mod config;
 mod protobuf;
 
@@ -14,12 +16,13 @@ use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::NO_PARAMS;
 use serde_yaml;
+use prost::Message;
+
 use std::{
     fs::File,
     env,
     slice,
 };
-use prost::Message;
 
 const SQLITE: &'static str = "sqlite";
 
@@ -35,6 +38,7 @@ lazy_static! {
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         }
     };
+
     pub static ref CONFIG: PrismaConfig = {
         let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
         let path = format!("{}/prisma-rs/config/prisma.yml", root);
@@ -62,36 +66,4 @@ pub extern "C" fn get_node_by_where(data: *mut u8, len: usize) {
     let payload = unsafe { slice::from_raw_parts_mut(data, len) };
     let params = GetNodeByWhere::decode(payload).unwrap();
     dbg!(params);
-}
-
-#[cfg(test)]
-mod test {
-    use crate::config::PrismaDatabase;
-    use rusqlite::NO_PARAMS;
-
-    #[test]
-    fn test_basic_select() {
-        let conn = super::SQLITE_POOL.get().unwrap();
-        let mut stmt = conn.prepare("SELECT 1").unwrap();
-
-        let rows = stmt.query_map(NO_PARAMS, |row| row.get(0)).unwrap();
-
-        for val in rows {
-            let value: i32 = val.unwrap();
-
-            assert_eq!(1, value);
-        }
-    }
-
-    #[test]
-    fn the_config() {
-        assert_eq!(Some(4466), super::CONFIG.port);
-
-        match super::CONFIG.databases.get("default") {
-            Some(PrismaDatabase::File(config)) => {
-                assert_eq!("./test.db", config.file);
-            }
-            _ => panic!("Unsupported database"),
-        }
-    }
 }
