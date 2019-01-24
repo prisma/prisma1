@@ -3,7 +3,11 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
 
+#[macro_use]
+extern crate prost_derive;
+
 mod config;
+mod protobuf;
 
 use config::{ConnectionLimit, PrismaConfig, PrismaDatabase};
 use r2d2;
@@ -14,6 +18,7 @@ use std::{
     fs::File,
     env,
 };
+//use prost::Message;
 
 const SQLITE: &'static str = "sqlite";
 

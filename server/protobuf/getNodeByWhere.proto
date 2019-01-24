@@ -1,0 +1,18 @@
+syntax="proto2";
+package prisma;
+
+message Header {
+    required string type_name = 1;
+}
+
+message Rpc {
+    required Header header = 1;
+}
+
+message GetNodeByWhere {
+    required Header header       = 1;
+    required bytes  project_json = 2;
+    required string model_name   = 3;
+    required string field_name   = 4;
+    required bytes  prisma_value = 5;
+}

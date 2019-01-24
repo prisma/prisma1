@@ -9,7 +9,8 @@ object NodeSelector {
   def forGCValue(model: Model, field: ScalarField, value: GCValue) = NodeSelector(model, field, value)
 }
 
-case class NodeSelector(model: Model, field: ScalarField, fieldGCValue: GCValue) {
+case class NodeSelector(model: Model, field: ScalarField,
+: GCValue) {
   require(field.isUnique, s"NodeSelectors may be only instantiated for unique fields! ${field.name} on ${model.name} is not unique.")
   lazy val value         = fieldGCValue.value
   lazy val fieldName     = field.name

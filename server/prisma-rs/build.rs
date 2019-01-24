@@ -1,12 +1,10 @@
-// use prost_build;
+use prost_build;
 
 fn main() {
-    /*
     prost_build::compile_protos(
         &[
-            "protobuf/rpc.proto",
+            "protobuf/getNodeByWhere.proto",
         ],
         &["protobuf/"]
     ).unwrap();
-    */
 }

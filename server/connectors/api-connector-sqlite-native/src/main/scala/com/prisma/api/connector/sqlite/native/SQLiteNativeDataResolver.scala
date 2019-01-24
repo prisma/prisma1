@@ -4,15 +4,20 @@ import com.prisma.api.connector._
 import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
 import com.prisma.rs.NativeBinding
 import com.prisma.shared.models.{Model, Project, RelationField, ScalarField}
+import play.api.libs.json.Json
 
 import scala.concurrent.Future
 
 case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolver {
-  override def project: Project = ???
+  import com.prisma.shared.models.ProjectJsonFormatter._
+
+  override def project: Project = forwarder.project
 
   override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = ???
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
+    val projectJson = Json.toJson(project)
+
     println(NativeBinding.select_1())
     Future.successful(None)
   }
