@@ -18,7 +18,7 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   private lazy val dbDriver = new org.postgresql.Driver
 
-  def getDatabase(dbToUse: String, schemaToUse: String): Databases = {
+  private def getDatabase(dbToUse: String, schemaToUse: String): Databases = {
     val config        = typeSafeConfigFromDatabaseConfig(dbToUse, schemaToUse, dbConfig)
     val masterDb      = Database.forConfig("database", config, driver = dbDriver)
     val slickDatabase = SlickDatabase(PostgresProfile, masterDb)
@@ -26,7 +26,7 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig) {
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
-  def typeSafeConfigFromDatabaseConfig(database: String, schema: String, dbConfig: DatabaseConfig): Config = {
+  private def typeSafeConfigFromDatabaseConfig(database: String, schema: String, dbConfig: DatabaseConfig): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
 
     ConfigFactory
