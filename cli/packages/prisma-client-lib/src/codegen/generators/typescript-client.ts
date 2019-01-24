@@ -398,7 +398,9 @@ export const prisma = new Prisma()`
   ) {
     const { args } = field
     const hasArgs = args.length > 0
-
+    if (!hasArgs) {
+      return ``
+    }
     const allOptional = args.reduce((acc, curr) => {
       if (!acc) {
         return false
@@ -609,10 +611,6 @@ export const prisma = new Prisma()`
     isSubscription?: boolean
     operation: boolean
     embedded: boolean
-    // node: boolean = true,
-    // input: boolean = false,
-    // partial: boolean = false,
-    // renderFunction: boolean = true,
   }) {
     const { type } = field
     const deepType = this.getDeepType(type)
@@ -620,8 +618,7 @@ export const prisma = new Prisma()`
     const isOptional = !(isNonNullType(type) || isNonNullType(type.ofType))
     const isScalar = isScalarType(deepType) || isEnumType(deepType)
     const isInput = field.astNode.kind === 'InputValueDefinition'
-    // const isObject = isObjectType(deepType)
-
+    
     let typeString = this.getInternalTypeName(type)
 
     if (typeString === 'DateTime') {
