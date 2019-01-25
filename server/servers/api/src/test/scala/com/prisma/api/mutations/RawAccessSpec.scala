@@ -10,7 +10,7 @@ import org.jooq.conf.{ParamType, Settings}
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
 import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsString, JsValue}
 import sangria.util.StringUtil
 
 class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
@@ -75,6 +75,36 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     val readResult = executeRaw(sql.select().from(modelTable))
     readResult.pathAsJsValue("data.executeRaw") should equal(
       s"""[{"$idColumn":"id1","$titleColumn":"title1"},{"$idColumn":"id2","$titleColumn":"title2"}]""".parseJson)
+  }
+
+  "postgres arrays" should "work" in {
+    if (isPostgres) {
+      val query =
+        """
+          |SELECT
+          |    array_agg(columnInfos.attname) as postgres_array
+          |FROM
+          |    pg_attribute columnInfos;
+        """.stripMargin
+
+      val result = server.query(
+        s"""mutation {
+           |  executeRaw(
+           |    query: "${StringUtil.escapeString(query)}"
+           |  )
+           |}
+        """.stripMargin,
+        project
+      )
+
+      val postgresArray = result.pathAsJsArray("data.executeRaw").value.head.pathAsJsArray("postgres_array").value
+      postgresArray should not(be(empty))
+      val allAreStrings = postgresArray.forall {
+        case _: JsString => true
+        case _           => false
+      }
+      allAreStrings should be(true)
+    }
   }
 
   "syntactic errors" should "bubble through to the user" in {
