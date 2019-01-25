@@ -3,7 +3,7 @@ import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.specutils.PassiveDeploySpecBase
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, IntrospectionCapability, MigrationsCapability, RelationLinkTableCapability}
+import com.prisma.shared.models.ConnectorCapability._
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase {
@@ -753,6 +753,126 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error2.field should be(Some("blog"))
     error2.description should be(
       "The column `blog` of the relation table `blog_to_author` is not referencing the right table. It should reference the table of model `Blog` but is referencing the table `wrong_table`.")
+  }
+
+  "it should succeed if the underlying table for a legacy scalar list field does exist" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY
+         | );
+         | CREATE TABLE blog_tags (
+         |   "nodeId" varchar(25) NOT NULL,
+         |   "position" int4 NOT NULL,
+         |   "value" text NOT NULL,
+         |   PRIMARY KEY ("nodeId","position")
+         | )
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_tags (
+         |   `nodeId` char(25) NOT NULL,
+         |   `position` int NOT NULL,
+         |   `value` mediumtext NOT NULL,
+         |   PRIMARY KEY (`nodeId`,`position`)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  tags: [Json]
+         |}
+       """.stripMargin
+
+    deploy(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
+  }
+
+  "it should error if the underlying table for a legacy scalar list field does not exist" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY
+         | );
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  tags: [String]
+         |}
+       """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Blog")
+    error.field should be(Some("tags"))
+    error.description should be("Could not find the underlying table for the scalar list field `tags`.")
+  }
+
+  "it should error if the columns in underlying table for a legacy scalar list field have the wrong type" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY
+         | );
+         | CREATE TABLE blog_tags (
+         |   "nodeId" boolean NOT NULL,
+         |   "position" boolean NOT NULL,
+         |   "value" boolean NOT NULL,
+         |   PRIMARY KEY ("nodeId","position")
+         | );
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_tags (
+         |   `nodeId` bool NOT NULL,
+         |   `position` bool NOT NULL,
+         |   `value` bool NOT NULL,
+         |   PRIMARY KEY (`nodeId`,`position`)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  tags: [String]
+         |}
+       """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
+    errors should have(size(3))
+    errors.forall(_.`type` == "Blog") should be(true)
+    errors.forall(_.field == Some("tags")) should be(true)
+    val (error1, error2, error3) = (errors(0), errors(1), errors(2))
+    error1.description should be(
+      "The column `nodeId` in the underlying table for the scalar list field `tags` has the wrong type. It has the type `Boolean` but it should have the type `String`.")
+    error2.description should be(
+      "The column `position` in the underlying table for the scalar list field `tags` has the wrong type. It has the type `Boolean` but it should have the type `Int`.")
+    error3.description should be(
+      "The column `value` in the underlying table for the scalar list field `tags` has the wrong type. It has the type `Boolean` but it should have the type `String`.")
   }
 
   private def deployThatMustError(dataModel: String, capabilities: ConnectorCapabilities): Vector[DeployError] = {

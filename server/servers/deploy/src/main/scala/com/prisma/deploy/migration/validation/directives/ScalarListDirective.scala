@@ -36,7 +36,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
         } else if (capabilities.has(NonEmbeddedScalarListCapability)) {
           ScalarListBehaviour(ScalarListStrategy.Relation)
         } else {
-          sys.error("should not happen")
+          sys.error("This connector does not have the scalar lists capability.")
         }
     }
     fieldDef.isList.toOption {
