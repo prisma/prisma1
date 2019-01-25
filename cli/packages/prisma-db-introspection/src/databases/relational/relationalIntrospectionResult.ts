@@ -47,6 +47,35 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
               }
 
               fieldA.type = typeB
+              
+              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint.
+
+              // Add back connecting field
+              const connectorFieldAtB: IGQLField = {
+                // TODO - how do we name that field? 
+                // Problems: 
+                // * Conflicts
+                // * Need to identify field in existing datamodel to fix naming, fix cardinality or hide
+                name: camelCase(typeA.name),
+                databaseName: null,
+                defaultValue: null,
+                isList: fieldA.isUnique,
+                isCreatedAt: false,
+                isUpdatedAt: false,
+                isId: false,
+                isReadOnly: false,
+                isRequired: fieldA.isRequired, // TODO: Not sure if that makes sense
+                isUnique: false,
+                relatedField: fieldA,
+                type: typeA,
+                relationName: null,
+                comments: [],
+                directives: []
+              }
+              
+              // Hook up connector fields
+              fieldA.relatedField = connectorFieldAtB
+              typeB.fields.push(connectorFieldAtB)
               return
             }
           }
@@ -57,6 +86,13 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     GQLAssert.raise(`Failed to resolve FK constraint ${relation.sourceTable}.${relation.sourceColumn} -> ${relation.targetTable}.${relation.targetColumn}.`)
   }
   
+  /**
+   * TODO: This is not captured yet by unit tests.
+   */
+  protected hideScalarListTypes(types: IGQLType[]) {
+
+  }
+
   /**
    * Removes all types which are only there for NM relations
    * @param types

@@ -7,6 +7,7 @@ exports[`Introspector test schema - 2504 1`] = `
   City: String
   Country: String
   Email: String
+  employee: Employee
   Fax: String
   FirstName: String!
   HireDate: DateTime

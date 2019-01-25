@@ -2,6 +2,7 @@
 
 exports[`Introspector large example database 1`] = `
 "type Actor @indexes(value: [{name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"], unique: false}]) @pgTable(name: \\"actor\\") {
+  film_actor: Film_actor!
   first_name: String!
   id: Int! @pgColumn(name: \\"actor_id\\")
   last_name: String!
@@ -12,20 +13,25 @@ type Address @pgTable(name: \\"address\\") {
   address: String!
   address2: String
   city_id: City!
+  customer: Customer!
   district: String!
   id: Int! @pgColumn(name: \\"address_id\\")
   last_update: DateTime!
   phone: String!
   postal_code: String
+  staff: Staff!
+  store: Store!
 }
 
 type Category @pgTable(name: \\"category\\") {
+  film_category: Film_category!
   id: Int! @pgColumn(name: \\"category_id\\")
   last_update: DateTime!
   name: String!
 }
 
 type City @pgTable(name: \\"city\\") {
+  address: Address!
   city: String!
   country_id: Country!
   id: Int! @pgColumn(name: \\"city_id\\")
@@ -33,6 +39,7 @@ type City @pgTable(name: \\"city\\") {
 }
 
 type Country @pgTable(name: \\"country\\") {
+  city: City!
   country: String!
   id: Int! @pgColumn(name: \\"country_id\\")
   last_update: DateTime!
@@ -48,14 +55,19 @@ type Customer @indexes(value: [{name: \\"idx_fk_store_id\\", fields: [\\"store_i
   id: Int! @pgColumn(name: \\"customer_id\\")
   last_name: String!
   last_update: DateTime
+  payment: Payment!
+  rental: Rental!
   store_id: Int!
 }
 
 type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"], unique: false}, {name: \\"idx_title\\", fields: [\\"title\\"], unique: false}]) @pgTable(name: \\"film\\") {
   description: String
+  film_actor: Film_actor!
+  film_category: Film_category!
   # Type tsvector is not supported
   # fulltext: tsvector!
   id: Int! @pgColumn(name: \\"film_id\\")
+  inventory: Inventory!
   language_id: Language!
   last_update: DateTime!
   length: Int
@@ -91,10 +103,12 @@ type Inventory @indexes(value: [{name: \\"idx_store_id_film_id\\", fields: [\\"f
   film_id: Film!
   id: Int! @pgColumn(name: \\"inventory_id\\")
   last_update: DateTime!
+  rental: Rental!
   store_id: Int!
 }
 
 type Language @pgTable(name: \\"language\\") {
+  film: Film!
   id: Int! @pgColumn(name: \\"language_id\\")
   last_update: DateTime!
   name: String!
@@ -114,6 +128,7 @@ type Rental @indexes(value: [{name: \\"idx_unq_rental_rental_date_inventory_id_c
   id: Int! @pgColumn(name: \\"rental_id\\")
   inventory_id: Inventory!
   last_update: DateTime!
+  payment: Payment!
   rental_date: DateTime!
   return_date: DateTime
   staff_id: Staff!
@@ -128,8 +143,11 @@ type Staff @pgTable(name: \\"staff\\") {
   last_name: String!
   last_update: DateTime!
   password: String
+  payment: Payment!
   # Type bytea is not supported
   # picture: bytea
+  rental: Rental!
+  store: Store!
   store_id: Int!
   username: String!
 }

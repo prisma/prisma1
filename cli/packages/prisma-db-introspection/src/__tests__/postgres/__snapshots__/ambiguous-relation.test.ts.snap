@@ -9,6 +9,8 @@ exports[`Introspector test schema - 2504 1`] = `
 }
 
 type User @pgTable(name: \\"users\\") {
+  direct_messages: Direct_message
+  direct_messages: Direct_message
   id: Int!
   name: String!
 }"

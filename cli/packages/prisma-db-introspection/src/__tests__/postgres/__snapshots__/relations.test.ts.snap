@@ -8,6 +8,7 @@ exports[`Introspector relation with inline relation column 1`] = `
 }
 
 type Product @pgTable(name: \\"product\\") {
+  bill: Bill
   description: String!
   id: Int!
 }"
@@ -21,6 +22,7 @@ exports[`Introspector relation with inline relation column NOT NULL 1`] = `
 }
 
 type Product @pgTable(name: \\"product\\") {
+  bill: Bill!
   description: String!
   id: Int!
 }"
@@ -43,6 +45,7 @@ type Product @pgTable(name: \\"product\\") {
 exports[`Introspector relation with relation table with extra column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
+  bill_product: Bill_product
   id: Int!
 }
 
@@ -53,6 +56,7 @@ type Bill_product @pgTable(name: \\"bill_product\\") {
 }
 
 type Product @pgTable(name: \\"product\\") {
+  bill_product: Bill_product
   id: Int!
   product: String!
 }"

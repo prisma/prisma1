@@ -5,9 +5,11 @@ exports[`Introspector large example database 1`] = `
   ArtistId: Artist!
   id: Int! @pgColumn(name: \\"AlbumId\\")
   Title: String!
+  track: Track
 }
 
 type Artist {
+  album: Album!
   id: Int! @pgColumn(name: \\"ArtistId\\")
   Name: String
 }
@@ -21,6 +23,7 @@ type Customer {
   Fax: String
   FirstName: String!
   id: Int! @pgColumn(name: \\"CustomerId\\")
+  invoice: Invoice!
   LastName: String!
   Phone: String
   PostalCode: String
@@ -33,7 +36,9 @@ type Employee {
   BirthDate: DateTime
   City: String
   Country: String
+  customer: Customer
   Email: String
+  employee: Employee
   Fax: String
   FirstName: String!
   HireDate: DateTime
@@ -49,6 +54,7 @@ type Employee {
 type Genre {
   id: Int! @pgColumn(name: \\"GenreId\\")
   Name: String
+  track: Track
 }
 
 type Invoice {
@@ -60,6 +66,7 @@ type Invoice {
   CustomerId: Customer!
   id: Int! @pgColumn(name: \\"InvoiceId\\")
   InvoiceDate: DateTime!
+  invoiceLine: InvoiceLine!
   Total: Float!
 }
 
@@ -74,6 +81,7 @@ type InvoiceLine {
 type MediaType {
   id: Int! @pgColumn(name: \\"MediaTypeId\\")
   Name: String
+  track: Track!
 }
 
 type Playlist {
@@ -88,6 +96,7 @@ type Track {
   Composer: String
   GenreId: Genre
   id: Int! @pgColumn(name: \\"TrackId\\")
+  invoiceLine: InvoiceLine!
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!
