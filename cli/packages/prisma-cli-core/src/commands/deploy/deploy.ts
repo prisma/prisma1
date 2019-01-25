@@ -152,6 +152,7 @@ ${chalk.gray(
       if (
         workspace &&
         !workspace.startsWith('public-') &&
+        !process.env.PRISMA_MANAGEMENT_API_SECRET &&
         (!this.env.cloudSessionKey || this.env.cloudSessionKey === '')
       ) {
         await this.client.login()
