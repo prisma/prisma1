@@ -1,6 +1,27 @@
 import { IntrospectionResult } from '../../common/introspectionResult'
 import { ITable, IColumn, IIndex, ITableRelation } from './relationalConnector'
 import { ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase } from 'prisma-datamodel'
+import { TypeIdentifiers } from '../../../../prisma-datamodel/dist/datamodel/scalar';
+
+/*
+Relational Introspector changes
+ [x] Inline relations 1:1 vs 1:n (via unique constraint)
+ [ ] Inline relations 1:1 vs 1:n (via data inspection)
+ [x] Always add back relations for inline relations
+ [x] Correctly handle scalar list tables
+ [ ] Add unit test for scalar list table handling 
+Postgres introspector changes
+ [x] Turn string field with isId into ID field
+Renderer changes
+ [ ] Remove `@relation` if only one relation from A to B
+Normalizer changes
+ [ ] db/pgColumn directive not picked up correctly
+ [ ] preserve order of fields and types
+ [ ] hide createdAt/updatedAt if also hidden in the reference datamodel
+ [ ] hide back relations if also hidden in the reference datamodel
+ [ ] in v1: handle join tables for 1:n or 1:1 relations correclty, e.g. do no show a n:n relation in this case
+ [ ] migrating v1 to v2: In the case above, add a @relation(link: TABLE) directive.
+*/
 
 export abstract class RelationalIntrospectionResult extends IntrospectionResult {
 
@@ -48,7 +69,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
 
               fieldA.type = typeB
               
-              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint.
+              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint. Tell Tim.
 
               // Add back connecting field
               const connectorFieldAtB: IGQLField = {
@@ -89,8 +110,61 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
   /**
    * TODO: This is not captured yet by unit tests.
    */
-  protected hideScalarListTypes(types: IGQLType[]) {
+  protected hideScalarListTypes(types: IGQLType[]): IGQLType[] {
 
+    const scalarListTypes: IGQLType[] = []
+
+    for(const type of types) {
+      for(const field of type.fields) {
+        for(const candidate of types) {
+          // A type is only a scalar list iff it has
+          // * name of ${type.name}_${field.name}
+          // * Has exactly three fields
+          //     * nodeId: typeof type!
+          //     * position: Int!
+          //     * value: ?
+          // TODO: Tim mentioned, but not observed in the wild.
+          // * compound index over nodeId and position
+
+          if(candidate.fields.length !== 3)
+            continue
+
+          if(candidate.name === `${type.name}_${field.name}`)
+            continue
+
+          const [nodeId] = candidate.fields.filter(field => 
+            field.name === 'nodeId' && 
+            field.type === type && 
+            field.isRequired == true && 
+            field.isList === false)
+
+          const [position] = candidate.fields.filter(field => 
+            field.name === 'position' && 
+            field.type === TypeIdentifiers.integer && 
+            field.isRequired == true && 
+            field.isList === false)
+
+
+          const [value] = candidate.fields.filter(field => 
+            field.name === 'value' && 
+            field.isRequired == true && 
+            field.isList === false)
+
+          if(nodeId === undefined || position === undefined || value === undefined) 
+            continue
+
+          // If we got so far, we have found a scalar list type. Hurray!
+          scalarListTypes.push(candidate)
+          
+          // Update the field to show a scalar list
+          field.type = value.type
+          field.isList = true
+        }
+      }
+    }
+    
+    // Filter out scalar list types
+    return types.filter(type => !scalarListTypes.includes(type))
   }
 
   /**
@@ -191,11 +265,14 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
   protected infer(model: ITable[], relations: ITableRelation[]): ISDL {
     // TODO: Enums? 
 
+    // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
+    // Ask tim, this is an important descision for the SDK
     let types = model.map(x => this.inferObjectType(x))
     types = this.resolveRelations(types, relations)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
     types = this.hideIndicesOnRelatedFields(types)
+    types = this.hideJoinTypes(types)
 
     return {
       comments: [],
