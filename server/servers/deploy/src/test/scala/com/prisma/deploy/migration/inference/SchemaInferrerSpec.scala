@@ -436,7 +436,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     relation.modelAName should equal("List")
     relation.modelBName should equal("Todo")
 
-    val expectedManifestation = RelationTable(table = "ListToTodo", modelAColumn = "A", modelBColumn = "B")
+    val expectedManifestation = RelationTable(table = "_ListToTodo", modelAColumn = "A", modelBColumn = "B")
     relation.manifestation should equal(Some(expectedManifestation))
   }
 
@@ -524,7 +524,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |""".stripMargin
     val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
-    val expectedManifestation = RelationTable(table = "CommentToTodo", modelAColumn = "A", modelBColumn = "B")
+    val expectedManifestation = RelationTable(table = "_CommentToTodo", modelAColumn = "A", modelBColumn = "B")
     relationField.relation.manifestation should be(Some(expectedManifestation))
   }
 
