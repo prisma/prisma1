@@ -366,7 +366,7 @@ case class SchemaInferrerImpl(
                 idColumn = relationTable.scalarFields.find(_.isId).map(_.finalDbName)
               ))
           case None =>
-            Some(RelationTable(table = relationName, modelAColumn = "A", modelBColumn = "B"))
+            Some(RelationTable(table = "_" + relationName, modelAColumn = "A", modelBColumn = "B"))
         }
     }
   }
