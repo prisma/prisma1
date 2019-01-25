@@ -13,7 +13,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json.{JsString, JsValue}
 import sangria.util.StringUtil
 
-class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
+class ExecuteRawSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def doNotRunForPrototypes: Boolean                   = true
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
