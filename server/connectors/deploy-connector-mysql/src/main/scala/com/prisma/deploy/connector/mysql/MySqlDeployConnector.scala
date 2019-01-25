@@ -36,7 +36,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
-  override def databaseInspector: DatabaseInspector               = DatabaseInspectorImpl(internalDatabaseDefs.databases(root = true).primary)
+  override def databaseInspector: DatabaseInspector               = DatabaseInspectorImpl(managementDatabase)
 
   override def capabilities = {
     if (isPrototype) {

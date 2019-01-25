@@ -76,12 +76,14 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
       case v: java.sql.Timestamp   => JsString(v.toString)
       case v: java.sql.Time        => JsString(v.toString)
       case v: java.sql.Date        => JsString(v.toString)
-      case v: java.sql.Array       => ??? //JsArray(v.getArray.map(untypedValueToJson))
       case v: java.sql.Blob        => ???
       case v: java.sql.NClob       => ???
       case v: java.sql.Clob        => ???
       case v: java.sql.RowId       => ???
       case v: java.sql.SQLXML      => JsString(v.getString)
+      case v: java.sql.Array =>
+        val array = v.getArray.asInstanceOf[Array[AnyRef]]
+        JsArray(array.map(untypedValueToJson))
     }
   }
 

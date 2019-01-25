@@ -4,8 +4,6 @@ import java.sql.Driver
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
-import com.zaxxer.hikari.HikariDataSource
-import slick.jdbc.hikaricp.HikariCPJdbcDataSource
 import slick.jdbc.{DataSourceJdbcDataSource, DriverDataSource, PostgresProfile}
 
 case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig, driver: Driver) {
@@ -19,14 +17,14 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig, driver: Driver
   lazy val managementSchemaName = dbConfig.managementSchema.getOrElse("management")
   lazy val managementDatabase   = getDatabase(dbName, managementSchemaName)
 
-  def getDatabase(dbToUse: String, schemaToUse: String): Databases = {
+  private def getDatabase(dbToUse: String, schemaToUse: String): Databases = {
     val masterDb      = databaseForConfig(dbToUse, schemaToUse)
     val slickDatabase = SlickDatabase(PostgresProfile, masterDb)
 
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
-  def databaseForConfig(database: String, schema: String) = {
+  private def databaseForConfig(database: String, schema: String) = {
     val source         = simpleDataSource(database, schema)
     val poolName       = "database"
     val numThreads     = 1
@@ -35,7 +33,7 @@ case class PostgresInternalDatabaseDefs(dbConfig: DatabaseConfig, driver: Driver
     Database.forSource(source, executor)
   }
 
-  def simpleDataSource(database: String, schema: String) = {
+  private def simpleDataSource(database: String, schema: String) = {
     new DataSourceJdbcDataSource(
       new DriverDataSource(
         url =
