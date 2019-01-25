@@ -1,0 +1,7 @@
+syntax="proto2";
+package prisma;
+
+message PrismaNode {
+    required Header header = 1;
+    required bytes   = 2;
+}

@@ -64,6 +64,9 @@ pub extern "C" fn select_1() -> i32 {
 #[no_mangle]
 pub extern "C" fn get_node_by_where(data: *mut u8, len: usize) {
     let payload = unsafe { slice::from_raw_parts_mut(data, len) };
-    let params = GetNodeByWhere::decode(payload).unwrap();
-    dbg!(params);
+    let params: GetNodeByWhere = GetNodeByWhere::decode(payload).unwrap();
+    // dbg!(params);
+
+    let conn = SQLITE_POOL.get().unwrap();
+    dbg!(conn.execute("SELECT 1", NO_PARAMS).unwrap());
 }
