@@ -5,7 +5,7 @@ import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListS
 import org.scalatest.{Matchers, WordSpecLike}
 
 class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
-  "@scalarList should be optional" in {
+  "should be optional if the embedded scalar lists are supported" in {
     val dataModelString =
       """
         |type Model {
@@ -13,14 +13,35 @@ class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelV
         |  tags: [String]
         |}
       """.stripMargin
-    val dataModel = validate(dataModelString, Set(NonEmbeddedScalarListCapability))
-    dataModel.type_!("Model").scalarField_!("tags").behaviour should be(Some(ScalarListBehaviour(ScalarListStrategy.Relation)))
-
     val dataModel2 = validate(dataModelString, Set(EmbeddedScalarListsCapability))
     dataModel2.type_!("Model").scalarField_!("tags").behaviour should be(Some(ScalarListBehaviour(ScalarListStrategy.Embedded)))
+
+    val errors = validateThatMustError(dataModelString, Set(NonEmbeddedScalarListCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.field should be(Some("tags"))
+    error.description should be("Valid values for the strategy argument of `@scalarList` are: RELATION.")
   }
 
-  "@scalarList must fail if an invalid argument is provided" in {
+  "must fail if scalar lists are not supported at all" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  tags: [String]
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString)
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.field should be(Some("tags"))
+    error.description should be("This connector does not support scalar lists.")
+  }
+
+  "must fail if an invalid argument is provided" in {
     val dataModelString =
       """
         |type Model {
@@ -29,6 +50,7 @@ class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelV
         |}
       """.stripMargin
 
+    println(validateThatMustError(dataModelString, Set(EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability)))
     val error = validateThatMustError(dataModelString, Set(EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability)).head
     error.`type` should equal("Model")
     error.field should equal(Some("tags"))
