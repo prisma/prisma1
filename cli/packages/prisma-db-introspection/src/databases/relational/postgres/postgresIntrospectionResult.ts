@@ -11,7 +11,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   protected isTypeReserved(type: IGQLType): boolean {
     return type.name == '_RelayId'
   }
-  protected toTypeIdentifyer(typeName: string): TypeIdentifier | null {
+  protected toTypeIdentifyer(typeName: string, fieldInfo: IGQLField): TypeIdentifier | null {
     switch(typeName) {
       case 'int1':
       case 'int2':
@@ -23,7 +23,8 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
       case 'varchar':
       case 'bpchar':
       case '_text':
-      case 'text': return TypeIdentifiers.string
+      // If we have a text type on an ID field, we map to the ID type.
+      case 'text': return fieldInfo.isId ? TypeIdentifiers.id : TypeIdentifiers.string
       case 'bool': return TypeIdentifiers.boolean
       case 'jsonb':
       case 'json': return TypeIdentifiers.json
@@ -57,7 +58,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
     
     // If the field is not a string field, 
     // and the default val is not a boolean or a number, we assume a function call or sequence reference. 
-    if(type !== TypeIdentifiers.string) {
+    if(type !== TypeIdentifiers.string && type != TypeIdentifiers.id) {
       if(isNaN(val as any) && val.toLowerCase() !== 'true' && val.toLowerCase() !== 'false') {
         return null
       }

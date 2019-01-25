@@ -213,6 +213,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       }
     }
 
+    // We need info about indices for resolving the exact type, as String is mapped to ID.
+    // Also, we need info about the actual type before we resolve default values.
+    for(const field of fields) {
+      this.inferFieldTypeAndDefaultValue(field)
+    }
+
     return {
       name: model.name,
       isEmbedded: false, // Never
@@ -236,23 +242,13 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       })
     }
 
-    let type: string | null = this.toTypeIdentifyer(field.type)
-
-    if(type === null) {
-      comments.push({
-        text: `Type ${field.type} is not supported`,
-        isError: true
-      })
-      type = field.type
-    }
-
-    return {
+    const gqlField: IGQLField = {
       name: field.name,
       isUnique: field.isUnique,
       isRequired: !field.isNullable,
-      defaultValue: field.defaultValue !== null ? this.parseDefaultValue(field.defaultValue, type) : null,
+      defaultValue: field.defaultValue,
       isList: field.isList,
-      type: type as string,
+      type: field.type,
       isId: false, // Will resolve later, from indices
       relatedField: null,
       relationName: null,
@@ -263,6 +259,28 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       directives: [],
       databaseName: null
     }
+
+    return gqlField
+  }
+
+  protected inferFieldTypeAndDefaultValue(field: IGQLField) {
+    GQLAssert.raiseIf(typeof field.type !== 'string', 'Must be called before resolving relations')
+    let type: string | null = this.toTypeIdentifyer(field.type as string, field)
+
+    if(type === null) {
+      field.comments.push({
+        text: `Type ${field.type} is not supported`,
+        isError: true
+      })
+      // Keep native type and register an error.
+    } else {
+      field.type = type
+    }
+
+    if(field.defaultValue !== null) {
+      GQLAssert.raiseIf(typeof field.defaultValue !== 'string', 'Must be called with unparsed default values.')
+      field.defaultValue = this.parseDefaultValue(field.defaultValue as string, field.type as string)
+    }
   }
 
   /**
@@ -270,7 +288,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
    * field is marked with an error comment.
    * @param typeName 
    */
-  protected abstract toTypeIdentifyer(typeName: string): TypeIdentifier | null
+  protected abstract toTypeIdentifyer(typeName: string, fieldInfo: IGQLField): TypeIdentifier | null
 
   protected abstract parseDefaultValue(defaultValueString: string, type: string): string | null
 }

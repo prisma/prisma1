@@ -69,7 +69,7 @@ exports[`Introspector text columns 1`] = `
   f: String!
   g: UUID
   h: UUID!
-  id: String! @pgColumn(name: \\"pk\\")
+  id: ID! @pgColumn(name: \\"pk\\")
 }"
 `;
 
