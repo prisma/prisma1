@@ -14,12 +14,14 @@ Postgres introspector changes
  [x] Turn string field with isId into ID field
 Renderer changes
  [ ] Remove `@relation` if only one relation from A to B
+ [ ] Make sorting in renderer optional by parameter
 Normalizer changes
  [ ] db/pgColumn directive not picked up correctly
- [ ] preserve order of fields and types
+ [x] preserve order of fields and types in respect to ref datamodel
+ [ ] Add unit tests for postgres introspection with existing ref datamodel
  [ ] hide createdAt/updatedAt if also hidden in the reference datamodel
  [ ] hide back relations if also hidden in the reference datamodel
- [ ] in v1: handle join tables for 1:n or 1:1 relations correclty, e.g. do no show a n:n relation in this case
+ [ ] in v1: handle join tables for 1:n or 1:1 relations correclty, e.g. do not generate a n:n relation in this case
  [ ] migrating v1 to v2: In the case above, add a @relation(link: TABLE) directive.
 */
 
