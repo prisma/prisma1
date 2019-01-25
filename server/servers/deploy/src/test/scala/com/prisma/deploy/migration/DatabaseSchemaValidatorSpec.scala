@@ -787,7 +787,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       s"""
          |type Blog @db(name: "blog"){
          |  id: Int! @id
-         |  tags: [Json]
+         |  tags: [Json] @scalarList(strategy: RELATION)
          |}
        """.stripMargin
 
@@ -814,7 +814,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       s"""
          |type Blog @db(name: "blog"){
          |  id: Int! @id
-         |  tags: [String]
+         |  tags: [String] @scalarList(strategy: RELATION)
          |}
        """.stripMargin
 
@@ -858,7 +858,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       s"""
          |type Blog @db(name: "blog"){
          |  id: Int! @id
-         |  tags: [String]
+         |  tags: [String] @scalarList(strategy: RELATION)
          |}
        """.stripMargin
 
