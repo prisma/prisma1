@@ -27,6 +27,7 @@ serde_yaml = "0.8"
 serde_json = "1.0"
 url = "1.7"
 url_serde = "0.2"
+chrono = { version = "0.4", features = ["serde"] }
 
 [build-dependencies]
 prost-build = "0.4"
