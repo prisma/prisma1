@@ -14,6 +14,8 @@ pub struct Sqlite {
 }
 
 impl Sqlite {
+    /// Creates a new SQLite pool. The database file is created automatically if
+    /// it doesn't exist yet.
     pub fn new(database_file: &str, connection_limit: u32) -> Result<Sqlite, Error> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
