@@ -1,6 +1,6 @@
 use std::error::Error as StdError;
 
-type Cause = Box<StdError>;
+type Cause = Box<dyn StdError>;
 
 #[derive(Debug)]
 pub enum Error {
