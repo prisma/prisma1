@@ -17,12 +17,15 @@ use protobuf::prisma::GetNodeByWhere;
 use serde_yaml;
 use prost::Message;
 use connector::{Connector, Sqlite};
+use error::Error;
 
 use std::{
     fs::File,
     env,
     slice,
 };
+
+type PrismaResult<T> = Result<T, Error>;
 
 lazy_static! {
     pub static ref SQLITE: Sqlite = {
