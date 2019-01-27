@@ -1,6 +1,6 @@
 use std::error::Error as StdError;
 
-type Cause = Box<StdError + Send + Sync>;
+type Cause = Box<StdError>;
 
 #[derive(Debug)]
 pub enum Error {
@@ -31,10 +31,10 @@ impl StdError for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::ConnectionError(_, cause) => {
-                cause.as_ref().map(|cause| &**cause as &StdError)
+                cause.as_ref().map(|cause| &**cause)
             }
             Error::QueryError(_, cause) => {
-                cause.as_ref().map(|cause| &**cause as &StdError)
+                cause.as_ref().map(|cause| &**cause)
             }
             _ => None,
         }
