@@ -32,7 +32,7 @@ export class Generator {
     // tslint:disable-next-line:prefer-conditional-expression
     if (match) {
       return Generator.replaceEnv(
-        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}}${str.slice(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
           match[0].length + match.index,
         )}`,
       )
