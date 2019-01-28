@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.{Column, DatabaseSchema, Table}
+import com.prisma.shared.models.FieldBehaviour.{ScalarListBehaviour, ScalarListStrategy}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
@@ -16,6 +17,8 @@ object DatabaseSchemaValidatorImpl extends DatabaseSchemaValidator {
 }
 
 case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseSchema) extends BooleanUtils {
+  val TI = TypeIdentifier
+
   def check = modelErrors ++ fieldErrors ++ relationErrors
 
   val modelErrors = schema.models.flatMap { model =>
@@ -30,33 +33,74 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
       field <- model.scalarFields
       _     <- table(model).toVector // only run the validation if the table exists
     } yield {
-      val errorMessage = column(field) match {
-        case Some(column) if !typesAreCompatible(field.typeIdentifier, column.typeIdentifier) =>
-          Some(
-            s"The underlying column for the field `${field.name}` has an incompatible type. The field has type `${field.typeIdentifier.userFriendlyTypeName}` and the column has type `${column.typeIdentifier.userFriendlyTypeName}`."
-          )
-        case Some(column) if column.isRequired && !field.isRequired =>
-          Some(fieldMustBeRequired(field))
-        case Some(column) if !column.isRequired && field.isRequired =>
-          Some(fieldMustBeOptional(field))
-        case None =>
-          Some(s"Could not find the column for the field `${field.name}` in the database.")
-        case _ =>
-          None
-      }
-
-      errorMessage.map { msg =>
-        DeployError(model.name, field.name, msg)
+      if (field.isScalarNonList) {
+        validateScalarNonListField(field).toVector
+      } else {
+        validateScalarListField(field)
       }
     }
 
     tmp.flatten
   }
 
+  def validateScalarNonListField(field: ScalarField) = {
+    require(field.isScalarNonList)
+    val errorMessage = column(field) match {
+      case Some(column) if !typesAreCompatible(field.typeIdentifier, column.typeIdentifier) =>
+        Some(
+          s"The underlying column for the field `${field.name}` has an incompatible type. The field has type `${field.typeIdentifier.userFriendlyTypeName}` and the column has type `${column.typeIdentifier.userFriendlyTypeName}`."
+        )
+      case Some(column) if column.isRequired && !field.isRequired =>
+        Some(fieldMustBeRequired(field))
+      case Some(column) if !column.isRequired && field.isRequired =>
+        Some(fieldMustBeOptional(field))
+      case None =>
+        Some(s"Could not find the column for the field `${field.name}` in the database.")
+      case _ =>
+        None
+    }
+
+    errorMessage.map { msg =>
+      DeployError(field.model.name, field.name, msg)
+    }
+  }
+
+  def validateScalarListField(field: ScalarField) = {
+    require(field.isScalarList)
+    val errors = field.behaviour match {
+      case Some(ScalarListBehaviour(ScalarListStrategy.Relation)) =>
+        validateScalarListFieldWithRelationStrategy(field)
+      case _ =>
+        Vector.empty
+    }
+
+    errors.map(err => DeployError(field.model.name, field.name, err)).toVector
+  }
+
+  def validateScalarListFieldWithRelationStrategy(field: ScalarField) = {
+    val tableName = field.model.dbName + "_" + field.dbName
+    databaseSchema.table(tableName) match {
+      case None =>
+        Vector(s"Could not find the underlying table for the scalar list field `${field.name}`.")
+      case Some(table) =>
+        def columnError(columnName: String, typeIdentifier: TypeIdentifier) = table.column(columnName) match {
+          case None =>
+            Some(s"The underlying table for the scalar list field `${field.name}` is missing the required column `$columnName`.")
+          case Some(column) if !typesAreCompatible(typeIdentifier, column.typeIdentifier) =>
+            Some(
+              s"The column `$columnName` in the underlying table for the scalar list field `${field.name}` has the wrong type. It has the type `${column.typeIdentifier.userFriendlyTypeName}` but it should have the type `${typeIdentifier.userFriendlyTypeName}`.")
+          case _ =>
+            None
+        }
+        columnError("nodeId", TI.String) ++ columnError("position", TI.Int) ++ columnError("value", field.typeIdentifier)
+    }
+  }
+
   def typesAreCompatible(field: TypeIdentifier, column: TypeIdentifier): Boolean = {
     val TI = TypeIdentifier
     (field, column) match {
       case (TI.Cuid, TI.String) => true
+      case (TI.Json, TI.String) => true
       case _                    => field == column
     }
   }

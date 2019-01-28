@@ -118,6 +118,7 @@ object ConnectorCapabilities extends BooleanUtils {
       IntrospectionCapability,
       SupportsExistingDatabasesCapability,
       IntIdCapability,
+      NonEmbeddedScalarListCapability,
     )
   }
 
