@@ -3,6 +3,183 @@ import { Client } from './Client'
 import { Model } from './types'
 import { print } from 'graphql'
 
+test('unpacking extract payload - nested array', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      houses: [House!]!
+    }
+
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload(
+    {
+      user: {
+        houses: [
+          {
+            id: '1',
+            name: 'My House',
+          },
+          {
+            id: '2',
+            name: 'Summer House',
+          },
+        ],
+      },
+    },
+    [{}, {}],
+  )
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('unpacking extract payload - nested object', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      house: House
+    }
+
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload(
+    {
+      user: {
+        house: {
+          id: '1',
+          name: 'My House',
+        },
+      },
+    },
+    [{}, {}],
+  )
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('unpacking extract payload - array', t => {
+  const typeDefs = `
+    type Query {
+      users(where: UserWhereInput): [User]
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload(
+    { users: [{ id: '1', name: 'Alice' }, { id: '2', name: 'Bob' }] },
+    [{}],
+  )
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('unpacking extract payload - null from server', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereUniqueInput!): User
+    }
+
+    input UserWhereUniqueInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload({ user: null }, [{}])
+
+  t.snapshot(JSON.stringify(payload))
+})
+
 test('automatic non-scalar sub selection for a connection without scalars', t => {
   const typeDefs = `
     type Query {
@@ -158,9 +335,87 @@ test('automatic non-scalar sub selection for relation', t => {
     models,
   })
 
-  client.house({
-    id: "id"
-  }).user()
+  client
+    .house({
+      id: 'id',
+    })
+    .user()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection and enums', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      type: UserType!
+    }
+
+    enum UserType {
+      NORMAL
+      ADMIN
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().type()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection and scalars', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().name()
 
   const document = client.getDocumentForInstructions(
     Object.keys(client._currentInstructions)[0],
