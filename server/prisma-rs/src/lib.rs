@@ -5,25 +5,22 @@ extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
 
-mod project;
-mod schema;
 mod config;
-mod protobuf;
 mod connector;
 mod error;
+mod project;
+mod protobuf;
+mod querying;
+mod schema;
 
 use config::{ConnectionLimit, PrismaConfig, PrismaDatabase};
-use protobuf::prisma::GetNodeByWhere;
-use serde_yaml;
-use prost::Message;
 use connector::{Connector, Sqlite};
 use error::Error;
+use prost::Message;
+use protobuf::prisma::GetNodeByWhere;
+use serde_yaml;
 
-use std::{
-    fs::File,
-    env,
-    slice,
-};
+use std::{env, fs::File, slice};
 
 type PrismaResult<T> = Result<T, Error>;
 
@@ -31,12 +28,11 @@ lazy_static! {
     pub static ref SQLITE: Sqlite = {
         match CONFIG.databases.get("default") {
             Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite" => {
-                connector::Sqlite::new(&config.file, config.limit()).unwrap()
+                connector::Sqlite::new(config.limit()).unwrap()
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         }
     };
-
     pub static ref CONFIG: PrismaConfig = {
         let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
         let path = format!("{}/prisma-rs/config/prisma.yml", root);

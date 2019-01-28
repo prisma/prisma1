@@ -24,18 +24,14 @@ impl StdError for Error {
         match self {
             Error::ConnectionError(message, _) => message,
             Error::QueryError(message, _) => message,
-            Error::NoResultsError => "No results"
+            Error::NoResultsError => "No results",
         }
     }
 
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Error::ConnectionError(_, cause) => {
-                cause.as_ref().map(|cause| &**cause)
-            }
-            Error::QueryError(_, cause) => {
-                cause.as_ref().map(|cause| &**cause)
-            }
+            Error::ConnectionError(_, cause) => cause.as_ref().map(|cause| &**cause),
+            Error::QueryError(_, cause) => cause.as_ref().map(|cause| &**cause),
             _ => None,
         }
     }
@@ -43,18 +39,12 @@ impl StdError for Error {
 
 impl From<r2d2::Error> for Error {
     fn from(e: r2d2::Error) -> Error {
-        Error::ConnectionError(
-            "Error creating database connection",
-            Some(Box::new(e)),
-        )
+        Error::ConnectionError("Error creating database connection", Some(Box::new(e)))
     }
 }
 
 impl From<rusqlite::Error> for Error {
     fn from(e: rusqlite::Error) -> Error {
-        Error::QueryError(
-            "Error querying SQLite database",
-            Some(Box::new(e)),
-        )
+        Error::QueryError("Error querying SQLite database", Some(Box::new(e)))
     }
 }

@@ -1,6 +1,4 @@
-use std::{
-    mem,
-};
+use std::mem;
 
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
@@ -37,10 +35,7 @@ impl From<Vec<u8>> for ProtoBuf {
         let data = v.as_mut_ptr();
 
         mem::forget(v);
-        
-        ProtoBuf {
-            data,
-            len,
-        }
+
+        ProtoBuf { data, len }
     }
 }
