@@ -348,6 +348,82 @@ test('automatic non-scalar sub selection for relation', t => {
   t.snapshot(print(document))
 })
 
+test('automatic non-scalar sub selection and enums', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      type: UserType!
+    }
+
+    enum UserType {
+      NORMAL
+      ADMIN
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().type()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection and scalars', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().name()
+
+  const document = client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+
+  t.snapshot(print(document))
+})
+
 test('automatic non-scalar sub selection', t => {
   const typeDefs = `
     type Query {
