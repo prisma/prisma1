@@ -43,7 +43,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
     val queries = tables.map(tableName => {
-      changeDatabaseQueryToDBIO(sql.deleteFrom(DSL.table(DSL.name(project.id, tableName))))()
+      changeDatabaseQueryToDBIO(sql.deleteFrom(DSL.table(s"""${qualify(project.dbName, tableName)}""")))()
     })
 
     DBIO.seq(sqlu"PRAGMA foreign_keys=off" +: queries :+ sqlu"PRAGMA foreign_keys=on": _*)
