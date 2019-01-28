@@ -55,6 +55,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
 
   private def validateListField(field: PrismaField, capabilities: ConnectorCapabilities): Option[DeployError] = {
     require(field.isList)
+    // we can call .get here because the value method guarantees that the behaviour is set in case of list fields
     val strategy = field match {
       case f: ScalarPrismaField => f.behaviour.collect { case ScalarListBehaviour(strategy) => strategy }.get
       case f: EnumPrismaField   => f.behaviour.collect { case ScalarListBehaviour(strategy) => strategy }.get
