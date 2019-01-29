@@ -87,8 +87,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   }
 
   def renameScalarListTable(project: Project, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    val query = sql.alterTable(name(project.dbName, s"${modelName}_$fieldName")).renameTo(name(project.id, s"${newModelName}_$newFieldName"))
-    changeDatabaseQueryToDBIO(query)()
+    renameTable(project, s"${modelName}_$fieldName", s"${newModelName}_$newFieldName")
   }
 
 //  def renameTable(project: Project, currentName: String, newName: String) = {
