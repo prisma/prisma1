@@ -47,28 +47,24 @@ class Relation(
     case _                       => None
   }
 
-  // TODO: cleanup. Don't use template.manifestation anymore
   lazy val manifestation: RelationLinkManifestation = template.manifestation match {
     case Some(mani) => mani
-    case None       => RelationTable(relationTableName, modelAColumn, modelBColumn, Some("id"))
+    case None       => RelationTable(table = "_" + name, modelAColumn = "A", modelBColumn = "B", idColumn = Some("id"))
   }
 
-  lazy val relationTableName = template.manifestation match {
-    case Some(m: RelationTable)        => m.table
-    case Some(m: EmbeddedRelationLink) => schema.getModelByName_!(m.inTableOfModelName).dbName
-    case None                          => "_" + name
+  lazy val relationTableName: String = manifestation match {
+    case m: RelationTable        => m.table
+    case m: EmbeddedRelationLink => schema.getModelByName_!(m.inTableOfModelName).dbName
   }
 
-  lazy val modelAColumn: String = template.manifestation match {
-    case Some(m: RelationTable)        => m.modelAColumn
-    case Some(m: EmbeddedRelationLink) => if (m.inTableOfModelName == modelAName && !isSelfRelation) modelA.idField_!.dbName else m.referencingColumn
-    case None                          => "A"
+  lazy val modelAColumn: String = manifestation match {
+    case m: RelationTable        => m.modelAColumn
+    case m: EmbeddedRelationLink => if (m.inTableOfModelName == modelAName && !isSelfRelation) modelA.idField_!.dbName else m.referencingColumn
   }
 
-  lazy val modelBColumn: String = template.manifestation match {
-    case Some(m: RelationTable)        => m.modelBColumn
-    case Some(m: EmbeddedRelationLink) => if (m.inTableOfModelName == modelBName) modelB.idField_!.dbName else m.referencingColumn
-    case None                          => "B"
+  lazy val modelBColumn: String = manifestation match {
+    case m: RelationTable        => m.modelBColumn
+    case m: EmbeddedRelationLink => if (m.inTableOfModelName == modelBName) modelB.idField_!.dbName else m.referencingColumn
   }
 
   lazy val isManyToMany: Boolean = {
@@ -77,7 +73,7 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
-  lazy val relationTableHas3Columns = idColumn.isDefined
+  lazy val relationTableHas3Columns: Boolean = idColumn.isDefined
 
   lazy val idColumn_! : String = idColumn.get
 
