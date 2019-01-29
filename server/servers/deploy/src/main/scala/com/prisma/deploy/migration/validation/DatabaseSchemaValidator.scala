@@ -107,9 +107,9 @@ case class DatabaseSchemaValidatorImpl(schema: Schema, databaseSchema: DatabaseS
 
   val relationErrors = schema.relations.flatMap { relation =>
     relation.manifestation match {
-      case Some(link: EmbeddedRelationLink)   => validateEmbeddedRelationLink(link)
-      case Some(relationTable: RelationTable) => validateRelationTable(relation, relationTable)
-      case _                                  => None // can't happen because the new SchemaInferrer always sets it
+      case link: EmbeddedRelationLink   => validateEmbeddedRelationLink(link)
+      case relationTable: RelationTable => validateRelationTable(relation, relationTable)
+      case _                            => None // can't happen because the new SchemaInferrer always sets it
     }
   }
 

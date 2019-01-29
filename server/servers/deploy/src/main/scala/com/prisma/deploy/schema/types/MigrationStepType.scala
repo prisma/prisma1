@@ -169,7 +169,7 @@ object MigrationStepType {
       RelationManifestationType,
       resolve = { ctx =>
         val relation = ctx.value.schema.getRelationByName_!(ctx.value.step.name)
-        relation.manifestation.get
+        relation.manifestation
       }
     ),
   )
@@ -182,7 +182,7 @@ object MigrationStepType {
       RelationManifestationType,
       resolve = { ctx =>
         val relation = ctx.value.previous.getRelationByName_!(ctx.value.step.name)
-        relation.manifestation.get
+        relation.manifestation
       }
     ),
     Field(
@@ -190,7 +190,7 @@ object MigrationStepType {
       RelationManifestationType,
       resolve = { ctx =>
         val relation = ctx.value.schema.getRelationByName_!(ctx.value.step.finalName)
-        relation.manifestation.get
+        relation.manifestation
       }
     ),
   )

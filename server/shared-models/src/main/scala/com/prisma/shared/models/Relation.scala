@@ -35,29 +35,37 @@ class Relation(
 ) {
   import template._
 
-  lazy val bothSidesCascade: Boolean                         = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
-  lazy val modelA: Model                                     = schema.getModelByName_!(modelAName)
-  lazy val modelB: Model                                     = schema.getModelByName_!(modelBName)
-  lazy val modelAField: RelationField                        = modelA.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.A)).get
-  lazy val modelBField: RelationField                        = modelB.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.B)).get
-  lazy val hasManifestation: Boolean                         = manifestation.isDefined
-  lazy val isInlineRelation: Boolean                         = manifestation.exists(_.isInstanceOf[EmbeddedRelationLink])
-  lazy val isRelationTable: Boolean                          = !isInlineRelation
-  lazy val inlineManifestation: Option[EmbeddedRelationLink] = manifestation.collect { case x: EmbeddedRelationLink => x }
+  lazy val bothSidesCascade: Boolean  = modelAOnDelete == OnDelete.Cascade && modelBOnDelete == OnDelete.Cascade
+  lazy val modelA: Model              = schema.getModelByName_!(modelAName)
+  lazy val modelB: Model              = schema.getModelByName_!(modelBName)
+  lazy val modelAField: RelationField = modelA.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.A)).get
+  lazy val modelBField: RelationField = modelB.relationFields.find(_.isRelationWithNameAndSide(name, RelationSide.B)).get
+  lazy val isInlineRelation: Boolean  = manifestation.isInstanceOf[EmbeddedRelationLink]
+  lazy val isRelationTable: Boolean   = !isInlineRelation
+  lazy val inlineManifestation: Option[EmbeddedRelationLink] = manifestation match {
+    case x: EmbeddedRelationLink => Some(x)
+    case _                       => None
+  }
 
-  lazy val relationTableName = manifestation match {
+  // TODO: cleanup. Don't use template.manifestation anymore
+  lazy val manifestation: RelationLinkManifestation = template.manifestation match {
+    case Some(mani) => mani
+    case None       => RelationTable(relationTableName, modelAColumn, modelBColumn, Some("id"))
+  }
+
+  lazy val relationTableName = template.manifestation match {
     case Some(m: RelationTable)        => m.table
     case Some(m: EmbeddedRelationLink) => schema.getModelByName_!(m.inTableOfModelName).dbName
     case None                          => "_" + name
   }
 
-  lazy val modelAColumn: String = manifestation match {
+  lazy val modelAColumn: String = template.manifestation match {
     case Some(m: RelationTable)        => m.modelAColumn
     case Some(m: EmbeddedRelationLink) => if (m.inTableOfModelName == modelAName && !isSelfRelation) modelA.idField_!.dbName else m.referencingColumn
     case None                          => "A"
   }
 
-  lazy val modelBColumn: String = manifestation match {
+  lazy val modelBColumn: String = template.manifestation match {
     case Some(m: RelationTable)        => m.modelBColumn
     case Some(m: EmbeddedRelationLink) => if (m.inTableOfModelName == modelBName) modelB.idField_!.dbName else m.referencingColumn
     case None                          => "B"
@@ -74,9 +82,8 @@ class Relation(
   lazy val idColumn_! : String = idColumn.get
 
   lazy val idColumn: Option[String] = manifestation match {
-    case None                                         => Some("id")
-    case Some(RelationTable(_, _, _, Some(idColumn))) => Some(idColumn)
-    case _                                            => None
+    case RelationTable(_, _, _, Some(idColumn)) => Some(idColumn)
+    case _                                      => None
   }
 
   def columnForRelationSide(relationSide: RelationSide.Value): String = if (relationSide == RelationSide.A) modelAColumn else modelBColumn

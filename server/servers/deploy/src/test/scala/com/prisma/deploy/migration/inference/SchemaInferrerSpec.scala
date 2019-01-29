@@ -573,7 +573,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
     val relation = schema.relations.head
     relation.name should be("ModelToModelRelation")
-    val manifestation = relation.manifestation.get.asInstanceOf[RelationTable]
+    val manifestation = relation.manifestation.asInstanceOf[RelationTable]
     manifestation.modelAColumn should be("firstColumn")
     manifestation.modelBColumn should be("secondColumn")
     manifestation.idColumn should be(None)
@@ -596,7 +596,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
     val relation = schema.relations.head
     relation.name should be("ModelToModelRelation")
-    val manifestation = relation.manifestation.get.asInstanceOf[RelationTable]
+    val manifestation = relation.manifestation.asInstanceOf[RelationTable]
     manifestation.modelAColumn should be("firstColumn")
     manifestation.modelBColumn should be("secondColumn")
     manifestation.idColumn should be(Some("id_column"))

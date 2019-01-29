@@ -31,7 +31,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   //Fixme how does this work with self relations?
   private def createRelationTable(project: Project, relation: Relation) = {
     val mutaction = relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) if dependencies.deployConnector.capabilities.hasNot(RelationLinkListCapability) =>
+      case m: EmbeddedRelationLink if dependencies.deployConnector.capabilities.hasNot(RelationLinkListCapability) =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)

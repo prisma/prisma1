@@ -108,9 +108,8 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
       """
 
     relation.manifestation match {
-      case None                                         => legacyTableCreate("id")
-      case Some(RelationTable(_, _, _, Some(idColumn))) => legacyTableCreate(idColumn)
-      case _                                            => modernTableCreate
+      case RelationTable(_, _, _, Some(idColumn)) => legacyTableCreate(idColumn)
+      case _                                      => modernTableCreate
     }
   }
 
