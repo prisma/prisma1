@@ -163,7 +163,7 @@ object MigrationStepType {
   lazy val CreateRelationType = fieldsHelper[CreateRelation](
     Field("name", StringType, resolve = _.value.step.name),
     Field("leftModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelAName),
-    Field("rightModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelAName),
+    Field("rightModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelBName),
     Field(
       "after",
       RelationManifestationType,
