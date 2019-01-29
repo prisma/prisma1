@@ -88,7 +88,7 @@ case class DeployMutation(
       isMigratingFromV1ToV2 = project.schema.version.isEmpty && inferredNextSchema.version.contains(Schema.version.v2)
       v1ToV2Warning = isMigratingFromV1ToV2.toOption {
         DeployWarning.global(
-          "You are migrating from the old datamodel syntax to the new one. Make sure that you perform a dry run first to understand the changes. Then perform the deployment with `--force`.")
+          "You are migrating from the old datamodel syntax to the new one. Make sure that you understand the listed changes because the semantics are different now. Then perform the deployment with the `--force` flag.")
       }
       warnings = validationResult.warnings ++ destructiveWarnings ++ v1ToV2Warning
 
