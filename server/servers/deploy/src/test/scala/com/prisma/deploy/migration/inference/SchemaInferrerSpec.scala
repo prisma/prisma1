@@ -107,7 +107,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       val relation = schema.getRelationByName_!("CommentToTodo")
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Todo")
-      relation.manifestation should be(Some(EmbeddedRelationLink("Todo", "comments")))
+      relation.manifestation should be(EmbeddedRelationLink("Todo", "comments"))
 
       val field1 = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
       field1.isList should be(true)
@@ -437,7 +437,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     relation.modelBName should equal("Todo")
 
     val expectedManifestation = RelationTable(table = "_ListToTodo", modelAColumn = "A", modelBColumn = "B")
-    relation.manifestation should equal(Some(expectedManifestation))
+    relation.manifestation should equal(expectedManifestation)
   }
 
   "handle inline relation manifestations on Mongo" in {
@@ -459,7 +459,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
     val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list")
-    relation.manifestation should equal(Some(expectedManifestation))
+    relation.manifestation should equal(expectedManifestation)
   }
 
   "handle inline relation manifestations on the SQL" in {
@@ -481,7 +481,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
     val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list")
-    relation.manifestation should equal(Some(expectedManifestation))
+    relation.manifestation should equal(expectedManifestation)
   }
 
   "Do not add hidden fields if isActive is true" in {
@@ -525,7 +525,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
     val expectedManifestation = RelationTable(table = "_CommentToTodo", modelAColumn = "A", modelBColumn = "B")
-    relationField.relation.manifestation should be(Some(expectedManifestation))
+    relationField.relation.manifestation should be(expectedManifestation)
   }
 
   "should not blow up when no @relation is used on Mongo" in {
@@ -543,7 +543,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkListCapability))
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
     val expectedManifestation = EmbeddedRelationLink("Todo", "comments")
-    relationField.relation.manifestation should be(Some(expectedManifestation))
+    relationField.relation.manifestation should be(expectedManifestation)
   }
 
   "should make a field tagged with @id unique" in {
@@ -573,7 +573,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
     val relation = schema.relations.head
     relation.name should be("ModelToModelRelation")
-    val manifestation = relation.manifestation.get.asInstanceOf[RelationTable]
+    val manifestation = relation.manifestation.asInstanceOf[RelationTable]
     manifestation.modelAColumn should be("firstColumn")
     manifestation.modelBColumn should be("secondColumn")
     manifestation.idColumn should be(None)
@@ -596,7 +596,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
     val relation = schema.relations.head
     relation.name should be("ModelToModelRelation")
-    val manifestation = relation.manifestation.get.asInstanceOf[RelationTable]
+    val manifestation = relation.manifestation.asInstanceOf[RelationTable]
     manifestation.modelAColumn should be("firstColumn")
     manifestation.modelBColumn should be("secondColumn")
     manifestation.idColumn should be(Some("id_column"))

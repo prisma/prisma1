@@ -100,27 +100,23 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       val nextManifestation     = nextRelation.manifestation
 
       val manifestationChange = (previousManifestation, nextManifestation) match {
-        case (Some(_: EmbeddedRelationLink), Some(_: RelationTable)) =>
+        case (_: EmbeddedRelationLink, _: RelationTable) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
-        case (Some(_: RelationTable), Some(_: EmbeddedRelationLink)) =>
+        case (_: RelationTable, _: EmbeddedRelationLink) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
 
-        case (Some(_: EmbeddedRelationLink), Some(_: EmbeddedRelationLink)) =>
+        case (_: EmbeddedRelationLink, _: EmbeddedRelationLink) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
-        case (Some(_: RelationTable), Some(_: RelationTable)) =>
-          Vector(
-            UpdateRelationTable(project, previousRelation, nextRelation)
-          )
-        case (None, None) => // this is the case for the legacy data model where we always have relation tables
+        case (_: RelationTable, _: RelationTable) =>
           Vector(
             UpdateRelationTable(project, previousRelation, nextRelation)
           )
@@ -140,7 +136,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
   def deleteRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) =>
+      case m: EmbeddedRelationLink =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
@@ -153,7 +149,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
   def createRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) =>
+      case m: EmbeddedRelationLink =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)

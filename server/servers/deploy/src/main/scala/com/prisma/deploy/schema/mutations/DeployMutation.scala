@@ -14,6 +14,7 @@ import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.ConnectorCapability.{IntrospectionCapability, LegacyDataModelCapability}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
+import com.prisma.utils.boolean.BooleanUtils
 import com.prisma.utils.future.FutureUtils.FutureOr
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.Document
@@ -43,7 +44,8 @@ case class DeployMutation(
 )(
     implicit ec: ExecutionContext
 ) extends Mutation[DeployMutationPayload]
-    with AwaitUtils {
+    with AwaitUtils
+    with BooleanUtils {
 
   val databaseInspector = deployConnector.databaseInspector
 
@@ -54,6 +56,7 @@ case class DeployMutation(
     isActive
   }
   val actsAsPassive = !actsAsActive
+  val isNotDryRun   = !args.dryRun.getOrElse(false)
 
   val graphQlSdl: Document = QueryParser.parse(args.types) match {
     case Success(res) => res
@@ -79,10 +82,16 @@ case class DeployMutation(
           } else {
             FutureOr(checkProjectSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
           }
-      functions           <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
-      steps               <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
-      destructiveWarnings <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
-      warnings            = validationResult.warnings ++ destructiveWarnings
+      functions             <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
+      steps                 <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
+      destructiveWarnings   <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      isMigratingFromV1ToV2 = project.schema.version.isEmpty && inferredNextSchema.version.contains(Schema.version.v2)
+      v1ToV2Warning = (isNotDryRun && isMigratingFromV1ToV2).toOption { // fixme: remove once change in CLI is implemented
+        DeployWarning.global(
+          "You are migrating from the old datamodel syntax to the new one. Make sure that you perform a dry run first to understand the changes. Then perform the deployment with `--force`.")
+      }
+      _        = steps.foreach(println)
+      warnings = validationResult.warnings ++ destructiveWarnings ++ v1ToV2Warning
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
                  case (_, true)     => FutureOr(performDeployment(inferredNextSchema, steps, functions))
@@ -188,7 +197,6 @@ case class DeployMutation(
 
   private def handleMigration(nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function]): Future[Option[Migration]] = {
     val migrationNeeded = steps.nonEmpty || functions.nonEmpty || project.schema != nextSchema
-    val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
       migrator.schedule(project, nextSchema, steps, functions, args.types).map(Some(_))
