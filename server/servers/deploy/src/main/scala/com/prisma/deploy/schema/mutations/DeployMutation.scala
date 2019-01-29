@@ -86,11 +86,10 @@ case class DeployMutation(
       steps                 <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings   <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
       isMigratingFromV1ToV2 = project.schema.version.isEmpty && inferredNextSchema.version.contains(Schema.version.v2)
-      v1ToV2Warning = (isNotDryRun && isMigratingFromV1ToV2).toOption { // fixme: remove once change in CLI is implemented
+      v1ToV2Warning = isMigratingFromV1ToV2.toOption {
         DeployWarning.global(
           "You are migrating from the old datamodel syntax to the new one. Make sure that you perform a dry run first to understand the changes. Then perform the deployment with `--force`.")
       }
-      _        = steps.foreach(println)
       warnings = validationResult.warnings ++ destructiveWarnings ++ v1ToV2Warning
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
