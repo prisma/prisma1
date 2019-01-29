@@ -7,16 +7,15 @@ import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.gc_values.NullGCValue
 import com.prisma.shared.models.ScalarField
 import org.mongodb.scala.bson.collection.mutable.Document
-import org.mongodb.scala.bson.{BsonArray, conversions}
+import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
 //relationfilters depend on relationtype
 // embedded -> use dot notation to go deeper in tree
-// nonEmbedded -> not supported, Inputtypes for filter should not be generated in api
+// nonEmbedded -> have to use AggregationQueryBuilder
 //field_every:  $not $elemMatch ($not nested)
 //field_some:   $elemMatch (nested)
 //field_none:   $not $elemMatch (nested)
-
 trait FilterConditionBuilder {
   def buildConditionForFilter(filter: Option[Filter]): conversions.Bson = filter match {
     case Some(filter) => buildConditionForFilter("", filter)

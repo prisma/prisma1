@@ -14,19 +14,6 @@ export class MigrationPrinter {
     this.out = out
   }
   printMessages(steps: MigrationStep[]) {
-    // group types,
-    // const groupedByType = groupBy(steps, m => m.type)
-    // Object.keys(groupedByType).forEach(type => {
-    //   const typeMessages = groupedByType[type]
-    //   this.out.log('\n' + printType(type) + '\n')
-    //   const groupedByName = groupBy(typeMessages, m => m.name.split('.')[0])
-    //   Object.keys(groupedByName).forEach(name => {
-    //     this.out.log(`  ${chalk.bold(name)}`)
-    //     const nameMessages = groupedByName[name]
-    //     nameMessages.forEach(this.printMigrationMessage, this)
-    //   })
-    // })
-    // this.out.log('')
     this.printTypes(steps)
     this.printEnums(steps)
     this.printRelations(steps)

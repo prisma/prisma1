@@ -21,6 +21,12 @@ export interface DeployPayload {
   errors: SchemaError[]
   warnings: SchemaError[]
   migration: Migration
+  steps?: MigrationStep[]
+}
+
+export interface AuthenticationPayload {
+  isAuthenticated: boolean
+  account: User | null
 }
 
 export interface SchemaError {

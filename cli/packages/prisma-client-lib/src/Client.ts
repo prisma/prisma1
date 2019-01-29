@@ -41,27 +41,32 @@ export interface Instruction {
 }
 
 export class Client {
-  // subscription: SubscriptionMap
-  _types: any
+  /**
+   * These properties are exposed through the Client API
+   */
   query: any
+  mutation: any
   $subscribe: any
   $graphql: any
   $exists: any
-  debug
-  mutation: any
+  /**
+   * These are internal properties used by the Client implementation
+   */
+  _types: any
+  _debug
   _endpoint: string
   _secret?: string
   _client: BatchedGraphQLClient
   _subscriptionClient: SubscriptionClient
-  schema: GraphQLSchema
+  _schema: GraphQLSchema
   _token: string
   _currentInstructions: InstructionsMap = {}
   _models: Model[] = []
   _promises: InstructionPromiseMap = {}
 
   constructor({ typeDefs, endpoint, secret, debug, models }: ClientOptions) {
-    this.debug = debug
-    this.schema = buildSchema(typeDefs)
+    this._debug = debug
+    this._schema = buildSchema(typeDefs)
     this._endpoint = endpoint
     this._secret = secret
     this._models = models
@@ -140,7 +145,7 @@ export class Client {
     const document = this.getDocumentForInstructions(id)
     const operation = this.getOperation(instructions) as OperationTypeNode
 
-    if (this.debug) {
+    if (this._debug) {
       console.log(`\nQuery:`)
       const query = print(document)
       console.log(query)
@@ -181,6 +186,38 @@ export class Client {
       count++
     }
     log('unpack it')
+
+    const lastInstruction = instructions[count - 1]
+    const selectionFromFragment = Boolean(lastInstruction.fragment)
+
+    if (
+      !selectionFromFragment &&
+      Boolean(pointer) &&
+      Array.isArray(pointer) &&
+      pointer.length > 0
+    ) {
+      /*
+        As per the spec: https://github.com/prisma/prisma/issues/3309
+        We need to remove objects of the shape {__typename: <type>} 
+        from the output (except when fragment). Checking one element
+        is enough, as they will have the same shape.
+      */
+      if (
+        Object.keys(pointer[0]).length === 1 &&
+        Object.keys(pointer[0])[0] === '__typename'
+      ) {
+        pointer = new Array(pointer.length).fill({})
+      }
+    }
+
+    if (Boolean(pointer) && !selectionFromFragment && !Array.isArray(pointer)) {
+      if (
+        Object.keys(pointer).length === 1 &&
+        Object.keys(pointer)[0] === '__typename'
+      ) {
+        pointer = {}
+      }
+    }
 
     return pointer
   }
@@ -332,6 +369,17 @@ export class Client {
         node.selectionSet.selections.push(acc)
       }
 
+      if (node.selectionSet.selections.length === 0 && type instanceof GraphQLObjectType) {
+        node.selectionSet.selections = [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: '__typename' },
+            arguments: [],
+            directives: [],
+          },
+        ]
+      }
+
       return node
     }, null)
 
@@ -444,7 +492,7 @@ export class Client {
   }
 
   getTypes() {
-    const typeMap = this.schema.getTypeMap()
+    const typeMap = this._schema.getTypeMap()
     const types = Object.entries(typeMap)
       .map(([name, type]) => {
         let value = {
@@ -553,7 +601,7 @@ export class Client {
   }
 
   private buildExists(): Exists {
-    const queryType = this.schema.getQueryType()
+    const queryType = this._schema.getQueryType()
     if (!queryType) {
       return {}
     }

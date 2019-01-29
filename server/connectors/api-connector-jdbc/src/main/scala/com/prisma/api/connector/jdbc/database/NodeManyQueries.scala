@@ -24,7 +24,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
   }
 
   def countFromModel(model: Model, queryArguments: QueryArguments): DBIO[Int] = {
-    val baseQuery = modelQuery(model, queryArguments, SelectedFields(Set(model.idField_!)))
+    val baseQuery = modelQuery(model, queryArguments, SelectedFields(Set(SelectedScalarField(model.idField_!))))
     val query     = sql.selectCount().from(baseQuery)
 
     queryToDBIO(query)(
@@ -69,7 +69,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
 
-    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.scalarDbFields ++ Set(fromField))
+    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.fields ++ Set(SelectedRelationField.empty(fromField)))
 
     if (isMySql && queryArguments.isWithPagination) {
       selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, queryArguments, selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))

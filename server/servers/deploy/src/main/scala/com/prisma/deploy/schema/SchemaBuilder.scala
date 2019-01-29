@@ -97,7 +97,7 @@ case class SchemaBuilderImpl(
 
   val listProjectsField: Field[SystemUserContext, Unit] = Field(
     "listProjects",
-    ListType(ProjectType.Type(projectIdEncoder)),
+    ListType(ProjectType.Type(projectIdEncoder, migrationPersistence)),
     description = Some("Shows all projects the caller has access to."),
     resolve = (ctx) => {
       // Only accessible via */* token, like the one the Cloud API uses
@@ -124,7 +124,7 @@ case class SchemaBuilderImpl(
 
   val projectField: Field[SystemUserContext, Unit] = Field(
     "project",
-    ProjectType.Type(projectIdEncoder),
+    ProjectType.Type(projectIdEncoder, migrationPersistence),
     arguments = projectIdArguments,
     description = Some("Gets a project by name and stage."),
     resolve = (ctx) => {
@@ -178,7 +178,8 @@ case class SchemaBuilderImpl(
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("errors", ListType(DeployErrorType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.errors),
         Field("migration", OptionType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration),
-        Field("warnings", ListType(DeployWarningType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.warnings)
+        Field("warnings", ListType(DeployWarningType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.warnings),
+        Field("steps", ListType(MigrationStepType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.steps),
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -215,9 +216,11 @@ case class SchemaBuilderImpl(
       typeName = "AddProject",
       inputFields = AddProjectField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, AddProjectMutationPayload](
-        Field("project",
-              OptionType(ProjectType.Type(projectIdEncoder)),
-              resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project)
+        Field(
+          "project",
+          OptionType(ProjectType.Type(projectIdEncoder, migrationPersistence)),
+          resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project
+        )
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -240,9 +243,11 @@ case class SchemaBuilderImpl(
       typeName = "DeleteProject",
       inputFields = DeleteProjectField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, DeleteProjectMutationPayload](
-        Field("project",
-              OptionType(ProjectType.Type(projectIdEncoder)),
-              resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project)
+        Field(
+          "project",
+          OptionType(ProjectType.Type(projectIdEncoder, migrationPersistence)),
+          resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project
+        )
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {

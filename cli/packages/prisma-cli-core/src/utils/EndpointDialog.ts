@@ -151,15 +151,27 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    const folderName = path.basename(this.config.definitionDir)
-    const loggedIn = await this.client.isAuthenticated()
+    let folderName = path.basename(this.config.definitionDir)
+    folderName =
+      folderName === 'prisma'
+        ? path.basename(path.join(this.config.definitionDir, '../'))
+        : folderName
+
+    if (/^\d+/.test(folderName)) {
+      folderName = `service-${folderName}`
+    }
+
+    const authenticationPayload = await this.client.isAuthenticated()
+    const loggedIn = authenticationPayload.isAuthenticated
     const clusters = this.getCloudClusters()
     const files = this.listFiles()
     const hasDockerComposeYml = files.includes('docker-compose.yml')
+
     const question = this.getClusterQuestion(
       !loggedIn && !localClusterRunning,
       hasDockerComposeYml,
       clusters,
+      loggedIn,
     )
 
     const { choice } = await this.out.prompt(question)
@@ -285,6 +297,9 @@ export class EndpointDialog {
           choice === 'Create new database'
             ? await this.askForDatabaseType()
             : 'mysql'
+        if (type === 'mongo') {
+          datamodel = defaultMongoDataModel
+        }
         const defaultHosts = {
           mysql: 'mysql',
           mongo: 'mongo',
@@ -315,31 +330,37 @@ export class EndpointDialog {
           const before = Date.now()
           this.out.action.start(`Connecting to database`)
           const client = await this.connectToMongo(credentials)
-          const connector = new MongoConnector(client)
-          const introspection = await connector.introspect(
-            credentials.database!,
-          )
-          const sdl = await introspection.getDatamodel()
-          const numCollections = sdl.types.length
-          const renderedSdl = introspection.renderer.render(sdl)
-          await client.close()
 
-          if (numCollections === 0) {
-            this.out.log(
-              chalk.red(
-                `\n${chalk.bold(
-                  'Error: ',
-                )}The provided database doesn't contain any collection. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
-              ),
+          // Only introspect, if there is already data
+          if (credentials.alreadyData) {
+            const connector = new MongoConnector(client)
+            const introspection = await connector.introspect(
+              credentials.database!,
             )
-            this.out.exit(1)
-          }
+            const sdl = await introspection.getDatamodel()
+            const numCollections = sdl.types.length
+            const renderedSdl = introspection.renderer.render(sdl)
+            await client.close()
 
-          this.out.action.stop(prettyTime(Date.now() - before))
-          this.out.log(
-            `Created datamodel definition based on ${numCollections} Mongo collections.`,
-          )
-          datamodel = renderedSdl
+            if (numCollections === 0) {
+              this.out.log(
+                chalk.red(
+                  `\n${chalk.bold(
+                    'Error: ',
+                  )}The provided database doesn't contain any collection. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
+                ),
+              )
+              this.out.exit(1)
+            }
+
+            this.out.action.stop(prettyTime(Date.now() - before))
+            this.out.log(
+              `Created datamodel definition based on ${numCollections} Mongo collections.`,
+            )
+            datamodel = renderedSdl
+          } else {
+            this.out.action.stop(prettyTime(Date.now() - before))
+          }
           credentials.uri = this.replaceMongoHost(credentials.uri!)
           /**
            * All non-mongo databases
@@ -524,6 +545,7 @@ export class EndpointDialog {
           `Existing MySQL databases with data are not yet supported.`,
         )
       }
+      credentials.alreadyData = alreadyData
       credentials.host = await this.ask({
         message: 'Enter database host',
         key: 'host',
@@ -545,9 +567,7 @@ export class EndpointDialog {
       credentials.database =
         type === 'postgres'
           ? await this.ask({
-              message: alreadyData
-                ? `Enter name of existing database`
-                : `Enter database name`,
+              message: `Enter database name (the database includes the schema)`,
               key: 'database',
             })
           : null
@@ -557,11 +577,13 @@ export class EndpointDialog {
               message: 'Use SSL?',
               inputType: 'confirm',
               key: 'ssl',
+              defaultValue: !credentials.host.includes('localhost'),
             })
           : undefined
+      // list all schemas at this point
       credentials.schema = askForSchema
         ? await this.ask({
-            message: `Enter name of existing schema`,
+            message: `Enter name of existing schema (e.g. default$default)`,
             key: 'schema',
           })
         : undefined
@@ -570,7 +592,8 @@ export class EndpointDialog {
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
-      const alreadyData = await this.askForExistingDataMongo()
+      const alreadyData =
+        introspection || (await this.askForExistingDataMongo())
       if (alreadyData) {
         credentials.database = await this.ask({
           message: `Enter name of existing database`,
@@ -647,6 +670,7 @@ export class EndpointDialog {
     fromScratch: boolean,
     hasDockerComposeYml: boolean,
     clusters: Cluster[],
+    isAuthenticated: boolean,
   ) {
     const sandboxChoices = [
       [
@@ -692,13 +716,16 @@ export class EndpointDialog {
         clusters.length > 0
           ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
           : sandboxChoices
+
       const rawChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
         ...clusterChoices,
         [
           'Demo server',
-          'Hosted demo environment incl. database (requires login)',
+          `Hosted demo environment incl. database${
+            !isAuthenticated ? ` (requires login)` : ``
+          }`,
         ],
         [
           'Use other server',
@@ -746,7 +773,8 @@ export class EndpointDialog {
   }
 
   private async getDemoCluster(): Promise<Cluster | null> {
-    const isAuthenticated = await this.client.isAuthenticated()
+    const authenticationPayload = await this.client.isAuthenticated()
+    const isAuthenticated = authenticationPayload.isAuthenticated
     if (!isAuthenticated) {
       await this.client.login()
     }
@@ -975,7 +1003,7 @@ export class EndpointDialog {
   }: {
     message: string
     key: string
-    defaultValue?: string
+    defaultValue?: string | boolean
     validate?: (value: string) => boolean | string
     required?: boolean
     inputType?: string

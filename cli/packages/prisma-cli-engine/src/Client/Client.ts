@@ -12,16 +12,22 @@ import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace, Service } from './types'
+import {
+  User,
+  Migration,
+  DeployPayload,
+  Workspace,
+  Service,
+  AuthenticationPayload,
+} from './types'
 import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
+import { IntrospectionQuery } from 'graphql'
+import { hasTypeWithField } from '../utils/graphql-schema'
 
 const debug = require('debug')('client')
 
-const MIGRATION_FRAGMENT = `
-fragment MigrationFragment on Migration {
-  revision
-  steps {
+const STEP_FRAGMENT = `
     type
     __typename
     ... on CreateEnum {
@@ -81,6 +87,13 @@ fragment MigrationFragment on Migration {
       name
       um_newName: newName
     }
+`
+
+const MIGRATION_FRAGMENT = `
+fragment MigrationFragment on Migration {
+  revision
+  steps {
+    ${STEP_FRAGMENT}
   }
 }
 `
@@ -439,9 +452,9 @@ export class Client {
   }
 
   async ensureAuth(): Promise<void> {
-    const authenticated = await this.isAuthenticated()
+    const authenticationPayload = await this.isAuthenticated()
 
-    if (!authenticated) {
+    if (!authenticationPayload.isAuthenticated) {
       await this.login()
     }
   }
@@ -452,9 +465,13 @@ export class Client {
     if (key) {
       this.env.globalRC.cloudSessionKey = key
     }
-    const authenticated = await this.isAuthenticated()
+    let authenticationPayload = await this.isAuthenticated()
+    const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
+      this.out.log(
+        `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+      )
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -467,13 +484,11 @@ export class Client {
 
     this.out.log(`Opening ${url} in the browser\n`)
 
-    try {
-      opn(url).catch(e => {
-        throw e
-      })
-    } catch (e) {
-      this.out.log(`Could not open url. Please open ${url} manually`)
-    }
+    opn(url).catch(e => {
+      console.error(
+        `Could not open the authentication link, maybe this is an environment without a browser. Please open this url in your browser to authenticate: ${url}`,
+      )
+    })
 
     while (!token) {
       const cloud = await this.cloudTokenRequest(secret)
@@ -483,8 +498,12 @@ export class Client {
       await new Promise(r => setTimeout(r, 500))
     }
     this.env.globalRC.cloudSessionKey = token
-
     this.out.action.stop()
+
+    authenticationPayload = await this.isAuthenticated()
+    await this.out.log(
+      `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+    )
 
     this.env.saveGlobalRC()
     await this.env.getClusters()
@@ -578,10 +597,11 @@ export class Client {
     return clusterToken
   }
 
-  async isAuthenticated(): Promise<boolean> {
+  async isAuthenticated(): Promise<AuthenticationPayload> {
     let authenticated = false
+    let account: User | null = null
     try {
-      const account = await this.getAccount()
+      account = await this.getAccount()
       if (account) {
         authenticated = Boolean(account)
       }
@@ -589,7 +609,10 @@ export class Client {
       //
     }
 
-    return authenticated
+    return {
+      isAuthenticated: authenticated,
+      account,
+    }
   }
 
   async getWorkspaces(): Promise<Workspace[]> {
@@ -704,6 +727,14 @@ export class Client {
     }
   }
 
+  async hasStepsApi() {
+    const result: IntrospectionQuery = await this.client.request(
+      introspectionQuery,
+    )
+
+    return hasTypeWithField(result, 'DeployPayload', 'steps')
+  }
+
   async deploy(
     name: string,
     stage: string,
@@ -712,7 +743,7 @@ export class Client {
     subscriptions: FunctionInput[],
     secrets: string[] | null,
     force?: boolean,
-  ): Promise<any> {
+  ): Promise<DeployPayload> {
     const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
@@ -735,6 +766,9 @@ export class Client {
       }
       ${MIGRATION_FRAGMENT}
     `
+
+    const hasStepsApi = await this.hasStepsApi()
+    const steps = hasStepsApi ? `steps { ${STEP_FRAGMENT} }` : ''
 
     const newMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
@@ -760,6 +794,8 @@ export class Client {
           migration {
             ...MigrationFragment
           }
+          
+          ${steps}
         }
       }
       ${MIGRATION_FRAGMENT}

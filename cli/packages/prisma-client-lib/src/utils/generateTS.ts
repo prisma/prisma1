@@ -1,6 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import { TypescriptGenerator } from '../codegen/typescript-client'
+import { TypescriptGenerator } from '../codegen/generators/typescript-client'
 import { buildSchema } from 'graphql'
 import { codeComment } from './codeComment'
 

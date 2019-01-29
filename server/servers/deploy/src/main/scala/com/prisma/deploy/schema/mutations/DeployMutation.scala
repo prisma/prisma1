@@ -8,6 +8,7 @@ import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.InvalidQuery
+import com.prisma.deploy.schema.types.MigrationStepType.MigrationStepAndSchema
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
@@ -52,7 +53,7 @@ case class DeployMutation(
   override def execute: Future[MutationResult[DeployMutationPayload]] = {
     internalExecute.map {
       case Good(payload) => MutationSuccess(payload)
-      case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty))
+      case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty, steps = Vector.empty))
     }
   }
 
@@ -68,9 +69,18 @@ case class DeployMutation(
       warnings           <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
-                 case (_, true)      => FutureOr(performDeployment(inferredNextSchema, steps, functions))
-                 case (true, false)  => FutureOr(performDeployment(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
-                 case (false, false) => FutureOr(Future.successful(Good(DeployMutationPayload(args.clientMutationId, None, errors = Vector.empty, warnings))))
+                 case (_, true)     => FutureOr(performDeployment(inferredNextSchema, steps, functions))
+                 case (true, false) => FutureOr(performDeployment(inferredNextSchema, steps, functions)).map(_.copy(warnings = warnings))
+                 case (false, false) =>
+                   FutureOr(Future.successful(Good {
+                     DeployMutationPayload(
+                       clientMutationId = args.clientMutationId,
+                       migration = None,
+                       errors = Vector.empty,
+                       warnings = warnings,
+                       steps = convertStepsToCorrectType(steps, inferredNextSchema)
+                     )
+                   }))
                }
     } yield result
 
@@ -126,7 +136,14 @@ case class DeployMutation(
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
     } yield {
       invalidationPublisher.publish(Only(project.id), project.id)
-      Good(DeployMutationPayload(args.clientMutationId, migration, errors = Vector.empty, warnings = Vector.empty))
+      Good(
+        DeployMutationPayload(
+          clientMutationId = args.clientMutationId,
+          migration = migration,
+          errors = Vector.empty,
+          warnings = Vector.empty,
+          steps = convertStepsToCorrectType(steps, nextSchema)
+        ))
     }
   }
 
@@ -143,13 +160,17 @@ case class DeployMutation(
     val isNotDryRun     = !args.dryRun.getOrElse(false)
     if (migrationNeeded && isNotDryRun) {
       invalidateSchema()
-      migrator.schedule(project.id, nextSchema, steps, functions).map(Some(_))
+      migrator.schedule(project.id, nextSchema, steps, functions, args.types).map(Some(_))
     } else {
       Future.successful(None)
     }
   }
 
   private def invalidateSchema(): Unit = invalidationPublisher.publish(Only(project.id), project.id)
+
+  private def convertStepsToCorrectType(steps: Vector[MigrationStep], nextSchema: Schema): Vector[MigrationStepAndSchema[MigrationStep]] = {
+    steps.map(step => MigrationStepAndSchema(step = step, schema = nextSchema, previous = project.schema))
+  }
 }
 
 case class DeployMutationInput(
@@ -179,5 +200,6 @@ case class DeployMutationPayload(
     clientMutationId: Option[String],
     migration: Option[Migration],
     errors: Seq[DeployError],
-    warnings: Seq[DeployWarning]
+    warnings: Seq[DeployWarning],
+    steps: Vector[MigrationStepAndSchema[MigrationStep]]
 ) extends sangria.relay.Mutation

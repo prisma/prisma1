@@ -68,7 +68,7 @@ export default class IntrospectCommand extends Command {
     const pgSchema = this.flags['pg-schema']
 
     const mongoUri = this.flags['mongo-uri']
-    const mongoDb = this.flags['mongo-db']
+    let mongoDb = this.flags['mongo-db']
 
     const endpointDialog = new EndpointDialog({
       out: this.out,
@@ -172,6 +172,7 @@ export default class IntrospectCommand extends Command {
       } else if (credentials.type === 'mongo') {
         client = await this.connectToMongo(credentials)
         connector = new MongoConnector(client)
+        mongoDb = credentials.database
       }
     }
 
@@ -203,7 +204,7 @@ export default class IntrospectCommand extends Command {
       } else if (mongoDb) {
         if (!schemas.includes(mongoDb)) {
           throw new Error(
-            `The provided Mongo Databse ${mongoDb} does not exist. Choose one of ${schemas.join(
+            `The provided Mongo Database ${mongoDb} does not exist. Choose one of ${schemas.join(
               ', ',
             )}`,
           )
@@ -259,7 +260,9 @@ ${chalk.bold(
 
   ${chalk.cyan(fileName)}
 `)
-      if (!this.definition.definition!.datamodel) {
+
+      if (!this.definition.definition || !this.definition.definition!.datamodel) {
+        await this.definition.load(this.flags)
         this.definition.addDatamodel(fileName)
         this.out.log(
           `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
