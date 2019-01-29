@@ -461,6 +461,32 @@ ${chalk.gray(
       this.out.exit(1)
     }
 
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
+
+    if (
+      steps.length === 0 &&
+      (!payload.warnings || payload.warnings.length === 0)
+    ) {
+      if (dryRun) {
+        this.out.log('There are no changes.')
+      } else {
+        this.out.log('Service is already up to date.')
+      }
+      return
+    }
+
+    if (steps.length > 0) {
+      const areChangesPotential =
+        dryRun || (payload.warnings && payload.warnings.length > 0)
+      this.out.log(
+        '\n' +
+          chalk.bold(areChangesPotential ? 'Potential changes:' : 'Changes:'),
+      )
+      this.out.migration.printMessages(steps)
+      this.out.log('')
+    }
+
     if (payload.warnings && payload.warnings.length > 0) {
       this.out.log(`${chalk.bold.yellow('\nWarnings:')}`)
       this.out.migration.printWarnings(payload.warnings)
@@ -478,27 +504,6 @@ ${chalk.gray(
         )
         this.out.exit(1)
       }
-    }
-
-    const steps =
-      payload.steps || (payload.migration && payload.migration.steps) || []
-
-    if (steps.length === 0) {
-      if (dryRun) {
-        this.out.log('There are no changes.')
-      } else {
-        this.out.log('Service is already up to date.')
-      }
-      return
-    }
-
-    if (steps.length > 0) {
-      // this.out.migrati
-      this.out.log(
-        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
-      )
-      this.out.migration.printMessages(steps)
-      this.out.log('')
     }
   }
 
