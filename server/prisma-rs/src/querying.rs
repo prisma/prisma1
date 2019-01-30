@@ -12,7 +12,7 @@ pub enum PrismaValue {
     String(String),
     Float(f64),
     Boolean(bool),
-    Null,
+    #[allow(dead_code)] Null,
     DateTime(DateTime<Utc>),
     Int(i64),
     Enum(String),
@@ -57,6 +57,7 @@ pub struct NodeSelector<'a> {
 }
 
 impl<'a> NodeSelector<'a> {
+    #[allow(dead_code)]
     pub fn new(
         database: &'a str,
         model: &'a Model,

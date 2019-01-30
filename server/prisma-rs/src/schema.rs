@@ -39,12 +39,6 @@ pub struct Model {
     pub fields: Vec<Field>,
 }
 
-impl Model {
-    pub fn table_name(&self, database: &str) -> String {
-        format!("{}_{}", database, self.name)
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Field {
