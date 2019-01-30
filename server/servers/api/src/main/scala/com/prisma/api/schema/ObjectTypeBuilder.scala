@@ -242,8 +242,9 @@ class ObjectTypeBuilder(
         f.relationIsInlinedInParent match {
           case true =>
             item.data.map.get(f.name) match {
-              case Some(id: IdGCValue) => OneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
-              case _                   => None
+              case Some(id: IdGCValue) =>
+                OneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
+              case _ => None
             }
 
           case false =>

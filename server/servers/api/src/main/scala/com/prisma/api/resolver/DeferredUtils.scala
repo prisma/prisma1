@@ -10,7 +10,11 @@ object DeferredUtils {
     }
   }
 
-  def groupModelDeferred[T <: ModelDeferred[Any]](modelDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
+  def groupModelWhereDeferred(oneDeferred: Vector[OrderedDeferred[OneDeferred]]): Map[_, Vector[OrderedDeferred[OneDeferred]]] = {
+    oneDeferred.groupBy(ordered => (ordered.deferred.where.model, ordered.deferred.where.field))
+  }
+
+  def groupModelArgsDeferred[T <: ModelDeferred[Any]](modelDeferred: Vector[OrderedDeferred[T]]): Map[_, Vector[OrderedDeferred[T]]] = {
     modelDeferred.groupBy(ordered => (ordered.deferred.model, ordered.deferred.args))
   }
 
