@@ -14,6 +14,7 @@ import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
+import { SchemaError } from 'prisma-cli-engine/dist/Client/types'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -447,10 +448,27 @@ ${chalk.gray(
     return false
   }
 
+  private addCustomHelpMessage(errors: SchemaError[]) {
+    const hasIdError = errors.find(e =>
+      e.description.includes(
+        'must be marked as the id field with the `@id` directive.',
+      ),
+    )
+    if (hasIdError) {
+      this.out.log(
+        chalk.bold(
+          '\nNote: The Prisma server you are deploying against runs with the new datamodel v2, which requires the @id directive.',
+        ),
+      )
+    }
+  }
+
   private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
+    this.out.log(this.out.getStyledJSON(payload))
     if (payload.errors && payload.errors.length > 0) {
-      this.out.log(`${chalk.bold.red('\nErrors:')}`)
+      this.out.log(chalk.bold.red('\nErrors:'))
       this.out.migration.printErrors(payload.errors)
+      this.addCustomHelpMessage(payload.errors)
       this.out.log(
         '\nDeployment canceled. Please fix the above errors to continue deploying.',
       )

@@ -22,9 +22,6 @@ export class MigrationPrinter {
     this.out = out
   }
   printMessages(steps: MigrationStep[]) {
-    const relevantSteps = steps.filter(s =>
-      ['CreateRelation', 'UpdateRelation'].includes(s.type),
-    )
     this.printTypes(steps)
     this.printEnums(steps)
     this.printRelations(steps)
@@ -201,6 +198,18 @@ export class MigrationPrinter {
 
             const before = step.before!
             const after = step.ur_after!
+
+            if (before.type === 'LinkTable' && after.type === 'LinkTable') {
+              if (before.idColumn && !after.idColumn) {
+                this.out.log(
+                  `${pad}${this.getSymbol('delete')} The id column ${b(
+                    before.idColumn,
+                  )} in link table ${b(
+                    before.table,
+                  )} has been removed.\n${pad}  It was a Prisma legacy column that is not in use anymore.`,
+                )
+              }
+            }
 
             if (before.type === 'LinkTable' && after.type === 'Inline') {
               this.out.log(
