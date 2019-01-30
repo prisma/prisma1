@@ -92,7 +92,7 @@ case class SchemaBuilderImpl(
   }
 
   def buildSubscription(): Option[ObjectType[ApiUserContext, Unit]] = {
-    val subscriptionFields = project.models.map(getSubscriptionField)
+    val subscriptionFields = project.nonEmbeddedModels.map(getSubscriptionField)
 
     if (subscriptionFields.isEmpty) None
     else Some(ObjectType("Subscription", subscriptionFields))

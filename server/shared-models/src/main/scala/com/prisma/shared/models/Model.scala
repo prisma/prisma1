@@ -36,6 +36,7 @@ class Model(
   lazy val scalarNonListFields: List[ScalarField]        = scalarFields.filter(!_.isList)
   lazy val visibleScalarNonListFields: List[ScalarField] = scalarNonListFields.filter(_.isVisible)
   lazy val relationFields: List[RelationField]           = fields.collect { case f: RelationField => f }
+  lazy val embeddedRelationFields: List[RelationField]   = fields.collect { case f: RelationField if f.relatedModel_!.isEmbedded => f }
   lazy val relationListFields: List[RelationField]       = relationFields.filter(_.isList)
   lazy val relationNonListFields: List[RelationField]    = relationFields.filter(!_.isList)
   lazy val visibleRelationFields: List[RelationField]    = relationFields.filter(_.isVisible)
