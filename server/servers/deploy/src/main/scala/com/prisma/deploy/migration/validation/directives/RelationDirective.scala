@@ -40,7 +40,8 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   override def postValidate(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
     validateIfRequiredStrategyIsProvided(dataModel, capabilities) ++
       validateBackRelationFields(dataModel, capabilities) ++
-      validateStrategyIsProvidedExactlyOnce(dataModel, capabilities)
+      validateStrategyIsProvidedExactlyOnce(dataModel, capabilities) ++
+      validateIfProvidedStrategiesAreSupported(dataModel, capabilities)
   }
 
   private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
@@ -67,7 +68,6 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
   }
 
   private def validateIfRequiredStrategyIsProvided(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
-    val isMongo = capabilities.has(RelationLinkListCapability)
     for {
       modelType     <- dataModel.modelTypes
       relationField <- modelType.relationFields
@@ -75,13 +75,33 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       relatedField  = relationField.relatedField
       strategies    = relationField.strategy ++ relatedField.flatMap(_.strategy)
       if strategies.isEmpty
-      if isMongo || relationField.hasOneToOneRelation
+      if capabilities.has(RelationLinkListCapability) || relationField.hasOneToOneRelation
       if modelType.isNotEmbedded && relatedType.isNotEmbedded
     } yield {
       val inlineMode = capabilities.has(JoinRelationLinksCapability).toOption("`@relation(link: INLINE)`")
       val tableMode  = capabilities.has(RelationLinkTableCapability).toOption("`@relation(link: TABLE)`")
       val validModes = (tableMode ++ inlineMode).toVector
       DeployErrors.missingRelationStrategy(relationField, validModes)
+    }
+  }
+
+  private def validateIfProvidedStrategiesAreSupported(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
+    for {
+      modelType     <- dataModel.modelTypes
+      relationField <- modelType.relationFields
+      if relationField.isList
+      if relationField.strategy.contains(RelationStrategy.Inline)
+      if capabilities.hasNot(RelationLinkListCapability)
+    } yield {
+      val hint = relationField.relatedField match {
+        case Some(relatedField) if relatedField.isOne =>
+          s"You could fix this by putting `link: INLINE` on the opposite field `${relatedField.name}` in the model `${relatedField.tpe.name}`."
+        case _ =>
+          // currently a connector either supports Relation Link Lists or Link Tables. So we know it is available in this case.
+          require(capabilities.has(RelationLinkTableCapability))
+          s"You could fix this by using the strategy `TABLE` instead."
+      }
+      DeployError(modelType.name, relationField.name, s"This connector does not support the `INLINE` strategy for list relation fields. $hint")
     }
   }
 
