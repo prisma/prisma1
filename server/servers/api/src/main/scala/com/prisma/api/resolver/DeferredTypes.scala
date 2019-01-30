@@ -27,7 +27,7 @@ object DeferredTypes {
       selectedFields: SelectedFields
   ) extends ModelDeferred[RelayConnectionOutputType]
 
-  case class ToOneDeferred(
+  case class OneDeferred(
       model: Model,
       where: NodeSelector,
       selectedFields: SelectedFields
@@ -44,7 +44,7 @@ object DeferredTypes {
     def args: QueryArguments
   }
 
-  case class FromOneDeferred(
+  case class ToOneDeferred(
       relationField: RelationField,
       parentNodeId: IdGCValue,
       args: QueryArguments,

@@ -242,12 +242,12 @@ class ObjectTypeBuilder(
         f.relationIsInlinedInParent match {
           case true =>
             item.data.map.get(f.name) match {
-              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
+              case Some(id: IdGCValue) => OneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
               case _                   => None
             }
 
           case false =>
-            FromOneDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
+            ToOneDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
@@ -262,7 +262,7 @@ class ObjectTypeBuilder(
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        FromOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        ToOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
     }
   }
 
