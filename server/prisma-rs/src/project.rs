@@ -24,6 +24,7 @@ pub struct Project {
 }
 
 impl Project {
+    #[allow(dead_code)]
     pub fn db_name(&self) -> &str {
         self.manifestation
             .schema

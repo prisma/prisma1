@@ -1,9 +1,10 @@
 [lib]
+name = "prisma"
 crate-type = ["dylib", "staticlib"]
 path = "src/lib.rs"
 
 [[bin]]
-name = "prisma"
+name = "prisma-server"
 path = "src/main.rs"
 
 [package]
@@ -20,7 +21,7 @@ bytes = "0.4"
 lazy_static = "1.2"
 r2d2 = "0.8"
 r2d2_sqlite = "0.8"
-rusqlite = "0.16"
+rusqlite = { version = "0.16", features = ["chrono"] }
 serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.8"

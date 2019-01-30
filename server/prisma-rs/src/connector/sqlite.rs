@@ -1,13 +1,15 @@
+use crate::{
+    connector::Connector,
+    error::Error,
+    querying::{NodeSelector, PrismaValue},
+    schema::{Field, TypeIdentifier},
+    PrismaResult,
+};
+use arc_swap::ArcSwap;
 use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{types::ToSql, NO_PARAMS};
-
+use rusqlite::{types::ToSql, Row, NO_PARAMS};
 use std::{collections::HashSet, sync::Arc};
-use arc_swap::ArcSwap;
-
-use crate::{
-    connector::Connector, error::Error, project::Project, querying::NodeSelector, PrismaResult,
-};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Databases = ArcSwap<HashSet<String>>;
@@ -27,7 +29,7 @@ impl Sqlite {
         let mut conn = pool.get()?;
         let databases = ArcSwap::from(Arc::new(HashSet::new()));
         let this = Sqlite { pool, databases };
-        
+
         this.update_databases(&mut conn)?;
 
         Ok(this)
@@ -79,6 +81,24 @@ impl Sqlite {
 
         f(conn)
     }
+
+    fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
+        match typ {
+            TypeIdentifier::String => PrismaValue::String(row.get(i)),
+            TypeIdentifier::UUID => PrismaValue::Uuid(row.get(i)),
+            TypeIdentifier::Float => PrismaValue::Float(row.get(i)),
+            TypeIdentifier::Int => PrismaValue::Int(row.get(i)),
+            TypeIdentifier::Boolean => PrismaValue::Boolean(row.get(i)),
+            TypeIdentifier::Enum => PrismaValue::Enum(row.get(i)),
+            TypeIdentifier::Json => PrismaValue::Json(row.get(i)),
+            TypeIdentifier::DateTime => PrismaValue::DateTime(row.get(i)),
+            TypeIdentifier::GraphQLID => PrismaValue::GraphQLID(row.get(i)),
+            TypeIdentifier::Relation => {
+                let value: i64 = row.get(i);
+                PrismaValue::Relation(value as u64)
+            }
+        }
+    }
 }
 
 impl Connector for Sqlite {
@@ -95,21 +115,107 @@ impl Connector for Sqlite {
 
     fn get_node_by_where(
         &self,
-        project: &Project,
+        database_name: &str,
         selector: &NodeSelector,
-    ) -> PrismaResult<String> {
-        self.with_connection(&project.db_name(), |conn| {
-            let mut stmt = conn.prepare("SELECT * FROM :table WHERE :field = :value")?;
+    ) -> PrismaResult<Vec<PrismaValue>> {
+        self.with_connection(database_name, |conn| {
+            let mut result = Vec::new();
+            let select_fields: &[Field] = &selector.selected_fields;
+            let field_names: Vec<&str> = select_fields
+                .iter()
+                .map(|field| field.name.as_ref())
+                .collect();
 
-            let params = vec![
-                (":table", (&selector.table as &ToSql)),
-                (":field", (&selector.field as &ToSql)),
-                (":value", (selector.value as &ToSql)),
-            ];
+            // TODO: Implement with a proper DSL. This here is an SQL Injection bug.
+            let query = dbg!(format!(
+                "SELECT {} FROM {} WHERE {} = ?1",
+                field_names.join(","),
+                selector.table,
+                selector.field.name
+            ));
 
-            stmt.query_map_named(&params, |_| String::from("TODO"))?;
+            let params = vec![(selector.value as &ToSql)];
 
-            Ok(String::from("TODO"))
+            conn.query_row(&query, params.as_slice(), |row| {
+                for (i, field) in selector.model.fields.iter().enumerate() {
+                    result.push(Self::fetch_value(field.type_identifier, row, i));
+                }
+            })?;
+
+            Ok(result)
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{connector::Connector, querying::*, schema::*};
+
+    #[test]
+    fn test_select_1() {
+        let sqlite = Sqlite::new(1).unwrap();
+        assert_eq!(1, sqlite.select_1().unwrap());
+    }
+
+    #[test]
+    fn test_simple_select_by_where() {
+        let sqlite = Sqlite::new(1).unwrap();
+        let db_name = "graphcool";
+
+        // Create a simple schema
+        sqlite
+            .with_connection(db_name, |conn| {
+                conn.execute_batch(
+                    "BEGIN;
+                 DROP TABLE IF EXISTS graphcool.user;
+                 CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL);
+                 INSERT INTO graphcool.user (name) values ('Musti');
+                 COMMIT;",
+                )
+                .unwrap();
+                Ok(())
+            })
+            .unwrap();
+
+        let fields = vec![
+            Field {
+                name: String::from("id"),
+                type_identifier: TypeIdentifier::Int,
+                is_required: true,
+                is_list: false,
+                is_unique: true,
+                is_hidden: false,
+                is_readonly: true,
+                is_auto_generated: true,
+            },
+            Field {
+                name: String::from("name"),
+                type_identifier: TypeIdentifier::String,
+                is_required: true,
+                is_list: false,
+                is_unique: false,
+                is_hidden: false,
+                is_readonly: false,
+                is_auto_generated: false,
+            },
+        ];
+
+        let model = Model {
+            name: String::from("User"),
+            stable_identifier: String::from("user"),
+            is_embedded: false,
+            fields: fields,
+        };
+
+        let find_by = PrismaValue::String(String::from("Musti"));
+        let selector =
+            NodeSelector::new(db_name, &model, &model.fields[1], &find_by, &model.fields);
+
+        let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
+
+        assert_eq!(2, result.len());
+        assert_eq!(PrismaValue::Int(1), result[0]);
+        assert_eq!(PrismaValue::String(String::from("Musti")), result[1]);
     }
 }

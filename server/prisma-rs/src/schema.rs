@@ -39,6 +39,12 @@ pub struct Model {
     pub fields: Vec<Field>,
 }
 
+impl Model {
+    pub fn table_name(&self, database: &str) -> String {
+        format!("{}_{}", database, self.name)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Field {
@@ -52,7 +58,7 @@ pub struct Field {
     pub is_auto_generated: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum TypeIdentifier {
     String,
     Float,
