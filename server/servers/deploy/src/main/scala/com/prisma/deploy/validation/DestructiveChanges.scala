@@ -60,8 +60,11 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
         clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
-              DeployError(`type` = model.name,
-                          description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
+              DeployError(
+                `type` = model.name,
+                field = field.name,
+                description = s"You are creating a required field but there are already nodes present that would violate that constraint."
+              ))
           case false => Vector.empty
         }
 
@@ -79,6 +82,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
               Vector(
                 DeployError(
                   `type` = model.name,
+                  field = field.name,
                   description =
                     s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
                 ))
