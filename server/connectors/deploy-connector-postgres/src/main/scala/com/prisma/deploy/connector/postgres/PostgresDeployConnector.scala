@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector.postgres
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
@@ -7,7 +9,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeplo
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.deploy.connector.postgres.database._
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
 import slick.dbio.{DBIOAction, NoStream}
@@ -18,14 +20,22 @@ import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
-    isActive: Boolean
+    driver: Driver,
+    isActive: Boolean,
+    isPrototype: Boolean
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: ConnectorCapabilities           = ConnectorCapabilities.postgres(isActive)
+  override def capabilities: ConnectorCapabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.postgresPrototype
+    } else {
+      ConnectorCapabilities.postgres(isActive = isActive)
+    }
+  }
 
-  lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
+  lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig, driver)
   lazy val setupDatabases      = internalDatabases.setupDatabase
   lazy val managementDatabases = internalDatabases.managementDatabase
   lazy val projectDatabases    = internalDatabases.managementDatabase
@@ -36,14 +46,15 @@ case class PostgresDeployConnector(
   lazy val postgresTypeMapper = PostgresTypeMapper()
   lazy val mutationBuilder    = PostgresJdbcDeployDatabaseMutationBuilder(managementDatabases.primary, postgresTypeMapper)
 
-  override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary)
+  override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary, dbConfig)
   override lazy val migrationPersistence: MigrationPersistence       = JdbcMigrationPersistence(managementDatabases.primary)
   override lazy val cloudSecretPersistence: CloudSecretPersistence   = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence       = JdbcTelemetryPersistence(managementDatabases.primary)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
+  override lazy val databaseInspector: DatabaseInspector             = DatabaseInspectorImpl(projectDatabases.primary)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -93,7 +104,7 @@ case class PostgresDeployConnector(
     if (isActive) {
       EmptyDatabaseIntrospectionInferrer
     } else {
-      val schema = dbConfig.schema.getOrElse(projectId).toLowerCase
+      val schema = dbConfig.schema.getOrElse(projectId)
       DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
     }
   }
@@ -122,6 +133,4 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
-
-  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabase))
 }

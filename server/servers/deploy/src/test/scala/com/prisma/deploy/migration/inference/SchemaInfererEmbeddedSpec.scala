@@ -4,7 +4,7 @@ import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, RelationLinkListCapability}
-import com.prisma.shared.models.Manifestations.EmbeddedRelationLink
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Schema}
 import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
@@ -36,7 +36,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       todo.isEmbedded should be(false)
       val comment = schema.getModelByName_!("Comment")
       comment.isEmbedded should be(true)
-      relation.manifestation should be(None)
+      relation.template.manifestation should be(None)
     }
 
     "work if one with a relation from embedded to non-parent non embedded type" in {
@@ -61,12 +61,12 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       val relation = schema.getRelationByName_!("MyRelationName")
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Todo")
-      relation.manifestation should be(None)
+      relation.template.manifestation should be(None)
 
       val relation2 = schema.getRelationByName_!("MyOtherRelationName")
       relation2.modelAName should equal("Comment")
       relation2.modelBName should equal("Other")
-      relation2.manifestation should be(Some(EmbeddedRelationLink("Comment", "other")))
+      relation2.manifestation should be(EmbeddedRelationLink("Comment", "other"))
 
       schema.models should have(size(3))
       val todo = schema.getModelByName_!("Todo")
@@ -99,12 +99,12 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       val relation = schema.getRelationByName_!("MyRelationName")
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Todo")
-      relation.manifestation should be(None)
+      relation.template.manifestation should be(None)
 
       val relation2 = schema.getRelationByName_!("MyOtherRelationName")
       relation2.modelAName should equal("Comment")
       relation2.modelBName should equal("Other")
-      relation2.manifestation should be(None)
+      relation2.template.manifestation should be(None)
 
       schema.models should have(size(3))
       val todo = schema.getModelByName_!("Todo")
@@ -137,12 +137,12 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
       val relation = schema.relations.head
       relation.modelAName should equal("Comment")
       relation.modelBName should equal("Other")
-      relation.manifestation should be(None)
+      relation.template.manifestation should be(None)
 
       val relation2 = schema.relations.reverse.head
       relation2.modelAName should equal("Comment")
       relation2.modelBName should equal("Todo")
-      relation2.manifestation should be(None)
+      relation2.template.manifestation should be(None)
 
       schema.models should have(size(3))
       val todo = schema.getModelByName_!("Todo")
@@ -164,7 +164,7 @@ class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBa
 //  embedded types on connector without embedded types capability
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
-    val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get
+    val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get.dataModel
     SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
   }
 }

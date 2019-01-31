@@ -6,9 +6,7 @@ import com.prisma.deploy.connector.mongo.database.NoAction
 object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMutaction] {
   override def execute(mutaction: DeployMutaction) = {
     mutaction match {
-      case x: CreateProject         => CreateProjectInterpreter.execute(x)
       case x: TruncateProject       => TruncateProjectInterpreter.execute(x)
-      case x: DeleteProject         => DeleteProjectInterpreter.execute(x)
       case x: CreateColumn          => CreateColumnInterpreter.execute(x)
       case x: UpdateColumn          => UpdateColumnInterpreter.execute(x)
       case x: DeleteColumn          => DeleteColumnInterpreter.execute(x)
@@ -28,9 +26,7 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
 
   override def rollback(mutaction: DeployMutaction) = {
     mutaction match {
-      case x: CreateProject         => CreateProjectInterpreter.rollback(x)
       case x: TruncateProject       => TruncateProjectInterpreter.rollback(x)
-      case x: DeleteProject         => DeleteProjectInterpreter.rollback(x)
       case x: CreateColumn          => CreateColumnInterpreter.execute(x)
       case x: UpdateColumn          => UpdateColumnInterpreter.execute(x)
       case x: DeleteColumn          => DeleteColumnInterpreter.execute(x)

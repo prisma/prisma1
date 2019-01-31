@@ -14,6 +14,7 @@ import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
+import { SchemaError } from 'prisma-cli-engine/dist/Client/types'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -53,6 +54,9 @@ ${chalk.gray(
       char: 'j',
       description: 'Json Output',
     }),
+    'no-migrate': flags.boolean({
+      description: 'Disable migrations. Prisma 1.26 and above needed',
+    }),
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
@@ -69,6 +73,7 @@ ${chalk.gray(
     const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
+    const noMigrate = this.flags['no-migrate']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -148,6 +153,7 @@ ${chalk.gray(
       if (
         workspace &&
         !workspace.startsWith('public-') &&
+        !process.env.PRISMA_MANAGEMENT_API_SECRET &&
         (!this.env.cloudSessionKey || this.env.cloudSessionKey === '')
       ) {
         await this.client.login()
@@ -174,6 +180,7 @@ ${chalk.gray(
       dryRun,
       projectNew,
       workspace!,
+      noMigrate,
     )
   }
 
@@ -229,6 +236,7 @@ ${chalk.gray(
     dryRun: boolean,
     projectNew: boolean,
     workspace: string | null,
+    noMigrate: boolean,
   ): Promise<void> {
     this.deploying = true
     let before = Date.now()
@@ -243,8 +251,6 @@ ${chalk.gray(
       )}`,
     )
 
-    const hasStepsApi = await this.client.hasStepsApi()
-
     const migrationResult: DeployPayload = await this.client.deploy(
       concatName(cluster, serviceName, workspace),
       stageName,
@@ -253,6 +259,7 @@ ${chalk.gray(
       this.definition.getSubscriptions(),
       this.definition.secrets,
       force,
+      noMigrate,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
     this.printResult(migrationResult, force, dryRun)
@@ -441,10 +448,26 @@ ${chalk.gray(
     return false
   }
 
+  private addCustomHelpMessage(errors: SchemaError[]) {
+    const hasIdError = errors.find(e =>
+      e.description.includes(
+        'must be marked as the id field with the `@id` directive.',
+      ),
+    )
+    if (hasIdError) {
+      this.out.log(
+        chalk.bold(
+          '\nNote: The Prisma server you are deploying against runs with the new datamodel v2, which requires the @id directive.',
+        ),
+      )
+    }
+  }
+
   private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
     if (payload.errors && payload.errors.length > 0) {
-      this.out.log(`${chalk.bold.red('\nErrors:')}`)
+      this.out.log(chalk.bold.red('\nErrors:'))
       this.out.migration.printErrors(payload.errors)
+      this.addCustomHelpMessage(payload.errors)
       this.out.log(
         '\nDeployment canceled. Please fix the above errors to continue deploying.',
       )
@@ -453,6 +476,32 @@ ${chalk.gray(
       )
 
       this.out.exit(1)
+    }
+
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
+
+    if (
+      steps.length === 0 &&
+      (!payload.warnings || payload.warnings.length === 0)
+    ) {
+      if (dryRun) {
+        this.out.log('There are no changes.')
+      } else {
+        this.out.log('Service is already up to date.')
+      }
+      return
+    }
+
+    if (steps.length > 0) {
+      const areChangesPotential =
+        dryRun || (payload.warnings && payload.warnings.length > 0)
+      this.out.log(
+        '\n' +
+          chalk.bold(areChangesPotential ? 'Potential changes:' : 'Changes:'),
+      )
+      this.out.migration.printMessages(steps)
+      this.out.log('')
     }
 
     if (payload.warnings && payload.warnings.length > 0) {
@@ -472,27 +521,6 @@ ${chalk.gray(
         )
         this.out.exit(1)
       }
-    }
-
-    const steps =
-    payload.steps || (payload.migration && payload.migration.steps) || []
-
-    if (steps.length === 0) {
-      if (dryRun) {
-        this.out.log('There are no changes.')
-      } else {
-        this.out.log('Service is already up to date.')
-      }
-      return
-    }
-
-    if (steps.length > 0) {
-      // this.out.migrati
-      this.out.log(
-        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
-      )
-      this.out.migration.printMessages(steps)
-      this.out.log('')
     }
   }
 

@@ -17,7 +17,7 @@ const simpleModel =
 }`
 
 const modelWithDirectives =
-`type Test @dummyDirective(isDummy: true) @embedded {
+`type Test @dummyDirective(isDummy: true) {
   test: String @relation(link: INLINE)
   test2: Int @defaultValue(value: 10) @relation(name: "TestRelation")
 }`
@@ -34,7 +34,7 @@ describe(`Renderer test`, () => {
     const listField = new GQLScalarField('roles', 'Int')
     listField.isList = true
 
-    const model = {
+    const model: IGQLType = {
       fields: [
         new GQLScalarField('name', 'String'),
         new GQLScalarField('age', 'int'),
@@ -44,8 +44,12 @@ describe(`Renderer test`, () => {
       ],
       name: 'User',
       isEmbedded: false,
-      isEnum: false
-    } as IGQLType
+      isEnum: false,
+      indices: [],
+      directives: [],
+      comments: [],
+      databaseName: null
+    }
 
     const res = renderer.render({
       types: [model]
@@ -85,12 +89,15 @@ describe(`Renderer test`, () => {
 
     const type: IGQLType = {
       name: "Test", 
-      isEmbedded: true,
+      isEmbedded: false,
       directives: typeDirectives,
       isEnum: false,
       fields: [
         scalarField, arrayField
-      ]
+      ],
+      comments: [],
+      indices: [],
+      databaseName: null
     }
 
 

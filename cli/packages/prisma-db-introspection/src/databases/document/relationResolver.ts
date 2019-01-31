@@ -150,7 +150,7 @@ class RelationResolveContext<Type> {
   }
 
   private hasError(obj: IGQLField | IGQLType) {
-    return obj.comments !== undefined && obj.comments.some(x => x.isError)
+    return obj.comments.some(x => x.isError)
   }
 
   /**
@@ -270,11 +270,7 @@ class RelationResolveContext<Type> {
                 link: 'INLINE',
               }
 
-              if (field.directives === undefined) {
-                field.directives = [relationDirective]
-              } else {
-                field.directives.push(relationDirective)
-              }
+              field.directives.push(relationDirective)
             }
             // We always remove the fields <unknown> relation tag.
             field.relationName = null

@@ -84,7 +84,7 @@ object MongoDeployDatabaseMutationBuilder {
 //    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
-  def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
+  def renameCollection(project: Project, collectionName: String, newName: String) = DeployMongoAction { database =>
     Future.successful(())
 
 //    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
@@ -186,6 +186,7 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
+    // TODO: explain this magic calculation
     val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
 
     unique match {

@@ -6,9 +6,8 @@ object LogKey extends Enumeration {
   val RequestNew      = Value("request/new")
   val RequestQuery    = Value("request/query")
   val RequestComplete = Value("request/complete")
-
-  val UnhandledError = Value("error/unhandled")
-  val HandledError   = Value("error/handled")
+  val UnhandledError  = Value("error/unhandled")
+  val HandledError    = Value("error/handled")
 }
 
 case class LogData(

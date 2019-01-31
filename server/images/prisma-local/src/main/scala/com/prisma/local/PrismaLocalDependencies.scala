@@ -4,21 +4,24 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import com.prisma.akkautil.http.SimpleHttpClient
 import com.prisma.api.ApiDependencies
+import com.prisma.api.connector.jdbc.JdbcApiMetrics
 import com.prisma.api.mutactions.{DatabaseMutactionVerifierImpl, SideEffectMutactionExecutorImpl}
 import com.prisma.api.project.{CachedProjectFetcherImpl, ProjectFetcher}
 import com.prisma.api.schema.{CachedSchemaBuilder, SchemaBuilder}
-import com.prisma.auth.AuthImpl
+import com.prisma.cache.factory.{CacheFactory, CaffeineCacheFactory}
 import com.prisma.config.{ConfigLoader, PrismaConfig}
-import com.prisma.connectors.utils.ConnectorLoader
+import com.prisma.connectors.utils.{ConnectorLoader, SupportedDrivers}
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.migration.migrator.{AsyncMigrator, Migrator}
 import com.prisma.deploy.server.TelemetryActor
-import com.prisma.deploy.server.auth.{AsymmetricManagementAuth, DummyManagementAuth, SymmetricManagementAuth}
 import com.prisma.image.{Converters, FunctionValidatorImpl, SingleServerProjectFetcher}
+import com.prisma.jwt.jna.JnaAuth
+import com.prisma.jwt.{Algorithm, NoAuth}
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.inmemory.InMemoryAkkaPubSub
 import com.prisma.messagebus.queue.inmemory.InMemoryAkkaQueue
 import com.prisma.metrics.MetricsRegistry
+import com.prisma.metrics.micrometer.MicrometerMetricsRegistry
 import com.prisma.shared.messages.{SchemaInvalidated, SchemaInvalidatedMessage}
 import com.prisma.shared.models.ProjectIdEncoder
 import com.prisma.subscriptions.{SubscriptionDependencies, Webhook}
@@ -32,22 +35,30 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     with ApiDependencies
     with WorkerDependencies
     with SubscriptionDependencies {
-  override implicit def self = this
 
-  val config: PrismaConfig = ConfigLoader.load()
+  implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
+    SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
+    SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+  )
 
-  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub)
+  override implicit def self                                    = this
+  override implicit lazy val executionContext: ExecutionContext = system.dispatcher
+
+  val config: PrismaConfig       = ConfigLoader.load()
+  val managementSecret           = config.managementApiSecret.getOrElse("")
+  val cacheFactory: CacheFactory = new CaffeineCacheFactory()
+
+  override lazy val apiSchemaBuilder = CachedSchemaBuilder(SchemaBuilder(), invalidationPubSub, cacheFactory)
   override lazy val projectFetcher: ProjectFetcher = {
     val fetcher = SingleServerProjectFetcher(projectPersistence)
-    CachedProjectFetcherImpl(fetcher, invalidationPubSub)(system.dispatcher)
+    CachedProjectFetcherImpl(fetcher, invalidationPubSub, cacheFactory)(system.dispatcher)
   }
 
   override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
   override lazy val managementAuth = {
-    (config.managementApiSecret, config.legacySecret) match {
-      case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricManagementAuth(jwtSecret)
-      case (_, Some(publicKey)) if publicKey.nonEmpty => AsymmetricManagementAuth(publicKey)
-      case _                                          => DummyManagementAuth()
+    config.managementApiSecret match {
+      case Some(jwtSecret) if jwtSecret.nonEmpty => JnaAuth(Algorithm.HS256)
+      case _                                     => println("[Warning] Management authentication is disabled. Enable it in your Prisma config to secure your server."); NoAuth
     }
   }
 
@@ -67,7 +78,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val webhookPublisher  = webhooksQueue
   override lazy val webhooksConsumer  = webhooksQueue.map[WorkerWebhook](Converters.apiWebhook2WorkerWebhook)
   override lazy val httpClient        = SimpleHttpClient()
-  override lazy val apiAuth           = AuthImpl
+  override lazy val auth              = JnaAuth(Algorithm.HS256)
   override lazy val deployConnector   = ConnectorLoader.loadDeployConnector(config)
   override lazy val functionValidator = FunctionValidatorImpl()
 
@@ -75,11 +86,14 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   override lazy val apiConnector                  = ConnectorLoader.loadApiConnector(config)
   override lazy val sideEffectMutactionExecutor   = SideEffectMutactionExecutorImpl()
   override lazy val mutactionVerifier             = DatabaseMutactionVerifierImpl
+  override val metricsRegistry: MetricsRegistry   = MicrometerMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
 
   lazy val telemetryActor = system.actorOf(Props(TelemetryActor(deployConnector)))
 
-  override def initialize()(implicit ec: ExecutionContext): Unit = {
-    super.initialize()(ec)
-    MetricsRegistry.init(deployConnector.cloudSecretPersistence)
+  def initialize()(implicit system: ActorSystem): Unit = {
+    JdbcApiMetrics.init(metricsRegistry) // Todo lacking a better init structure for now
+    initializeDeployDependencies()
+    initializeApiDependencies()
+    initializeSubscriptionDependencies()
   }
 }

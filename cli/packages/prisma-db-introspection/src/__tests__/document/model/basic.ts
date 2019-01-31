@@ -25,8 +25,8 @@ describe('Basic document model inferring', () => {
     expect(type.isEmbedded).toBe(false)
     expect(type.isEnum).toBe(false)
 
-    expect(type.directives).toBeUndefined()
-    expect(type.comments).toBeUndefined()
+    expect(type.directives).toHaveLength(0)
+    expect(type.comments).toHaveLength(0)
 
     expect(type.fields).toHaveLength(4)
 

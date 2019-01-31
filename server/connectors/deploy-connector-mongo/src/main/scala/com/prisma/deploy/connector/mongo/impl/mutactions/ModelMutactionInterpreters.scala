@@ -33,6 +33,6 @@ object RenameModelInterpreter extends MongoMutactionInterpreter[RenameTable] {
   override def rollback(mutaction: RenameTable) = NoAction.unit //setName(mutaction, mutaction.nextName, mutaction.previousName)
 
   private def setName(mutaction: RenameTable, previousName: String, nextName: String) = {
-    MongoDeployDatabaseMutationBuilder.renameCollection(projectId = mutaction.projectId, collectionName = previousName, newName = nextName)
+    MongoDeployDatabaseMutationBuilder.renameCollection(mutaction.project, collectionName = previousName, newName = nextName)
   }
 }

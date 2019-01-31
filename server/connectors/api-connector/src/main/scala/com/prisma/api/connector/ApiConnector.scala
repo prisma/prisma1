@@ -29,5 +29,5 @@ case class MutactionResults(results: Vector[DatabaseMutactionResult]) {
 trait DatabaseMutactionExecutor {
   def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
   def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
-  def executeRaw(query: String): Future[JsValue]
+  def executeRaw(project: Project, query: String): Future[JsValue]
 }

@@ -14,7 +14,8 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    connectorCapabilities: ConnectorCapabilities
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
@@ -26,10 +27,16 @@ case class AddProjectMutation(
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
 
+    val schema = if (connectorCapabilities.isDataModelV2) {
+      Schema.empty.copy(version = Some(Schema.version.v2))
+    } else {
+      Schema.empty
+    }
+
     val newProject = Project(
       id = projectId,
       secrets = args.secrets,
-      schema = Schema()
+      schema = schema
     )
 
     val migration = Migration(
@@ -40,15 +47,20 @@ case class AddProjectMutation(
       status = MigrationStatus.Success,
       steps = Vector.empty,
       errors = Vector.empty,
-      schema = Schema.empty,
+      schema = schema,
       functions = Vector.empty,
-      previousSchema = Schema.empty,
+      previousSchema = schema,
       rawDataModel = ""
     )
 
     for {
       _ <- projectPersistence.create(newProject)
-      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+//      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+      _ <- if (connectorCapabilities.isDataModelV2) {
+            deployConnector.createProjectDatabase(newProject.id)
+          } else {
+            if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+          }
       _ <- migrationPersistence.create(migration)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
   }

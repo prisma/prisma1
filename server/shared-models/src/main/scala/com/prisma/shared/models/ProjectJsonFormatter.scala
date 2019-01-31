@@ -190,7 +190,8 @@ object ProjectJsonFormatter {
   val relationTableManifestationFormat: OFormat[RelationTable] = (
     (JsPath \ "table").format[String] and
       (JsPath \ "modelAColumn").format[String] and
-      (JsPath \ "modelBColumn").format[String]
+      (JsPath \ "modelBColumn").format[String] and
+      (JsPath \ "idColumn").formatNullable[String]
   )(RelationTable.apply, unlift(RelationTable.unapply))
 
   implicit lazy val relationManifestation = new Format[RelationLinkManifestation] {
@@ -348,7 +349,6 @@ object ProjectJsonFormatter {
   )(s => (s.modelTemplates, s.relationTemplates, s.enums, s.version))
 
   implicit lazy val schemaFormat          = Format(schemaReads, schemaWrites)
-  implicit lazy val projectFormat         = Json.format[Project]
   implicit lazy val migrationStatusFormat = JsonUtils.enumFormat(MigrationStatus)
 
   val migrationReads: Reads[Migration] = for {

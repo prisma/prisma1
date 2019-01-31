@@ -1,4 +1,4 @@
-import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from "../model"
+import { ISDL, IGQLType, IDirectiveInfo, IGQLField, IIndexInfo } from "../model"
 import { GraphQLSchema } from "graphql/type/schema"
 import { GraphQLObjectType, GraphQLEnumType, GraphQLField, GraphQLFieldConfig } from "graphql/type/definition"
 import { GraphQLDirective } from "graphql/type/directives"
@@ -8,7 +8,7 @@ import { TypeIdentifiers } from "../scalar";
 const indent = '  '
 const comment = '#'
 
-export default class Renderer {
+export default abstract class Renderer {
   public render(input: ISDL): string {
 
     // Sort alphabetically. Enums last. 
@@ -33,13 +33,74 @@ export default class Renderer {
     }).join(`\n\n`)
   }
 
+  protected createIsEmbeddedTypeDirective(type: IGQLType) {
+    return { name: DirectiveKeys.isEmbedded, arguments: {} }
+  }
+
+  protected createDatabaseNameTypeDirective(type: IGQLType) {
+    return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }
+  }
+
+  protected createIndexDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
+    if(type.indices.length > 0) {
+      const indexDescriptions: string[] = []
+      for(const index of type.indices) {
+        indexDescriptions.push(this.createIndexDirective(index))
+      }
+      typeDirectives.push({
+        name: DirectiveKeys.indexes,
+        arguments: {
+          value: `[${indexDescriptions.join(', ')}]`
+        }
+      })
+    }
+  }
+
+  protected createIndexDirective(index: IIndexInfo) {
+    const directive: IDirectiveInfo = { 
+      name: DirectiveKeys.index,
+      arguments: { 
+        name: this.renderValue(TypeIdentifiers.string, index.name),
+        // Special rendering: We escape manually here to render an array. 
+        fields: `[${index.fields.map(x => this.renderValue(TypeIdentifiers.string, x.name)).join(', ')}]`,
+      }
+    }
+
+    if(!index.unique) {
+      directive.arguments = { 
+        ...directive.arguments,
+        unique: this.renderValue(TypeIdentifiers.boolean, index.unique)
+      }
+    }
+
+    // If we switch back to single index declarations later, simply return the directive here. 
+    return `{${Object.keys(directive.arguments).map(x  => `${x}: ${directive.arguments[x]}`).join(', ')}}`
+  }
+
+  protected shouldCreateIsEmbeddedTypeDirective(type: IGQLType) {
+    return type.isEmbedded
+  }
+
+  protected shouldCreateDatabaseNameTypeDirective(type: IGQLType) {
+    return type.databaseName && !type.isEmbedded
+  }
+
+  protected shouldRenderIndexDirectives(type: IGQLType) {
+    return type.indices.length > 0
+  }
+
+  protected createReservedTypeDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
+    if(this.shouldCreateIsEmbeddedTypeDirective(type)) { typeDirectives.push(this.createIsEmbeddedTypeDirective(type)) }
+    if(this.shouldCreateDatabaseNameTypeDirective(type)) { typeDirectives.push(this.createDatabaseNameTypeDirective(type)) }
+    if(this.shouldRenderIndexDirectives(type)) { this.createIndexDirectives(type, typeDirectives) }
+  }
+
   protected renderType(type: IGQLType): string {
-    const typedirectives: IDirectiveInfo[] = type.directives || []
+    const typeDirectives: IDirectiveInfo[] = type.directives || []
 
-    // TODO Move direction magic to superclass
-    if(type.isEmbedded) { typedirectives.push({ name: DirectiveKeys.isEmbedded, arguments: {} }) }
+    this.createReservedTypeDirectives(type, typeDirectives)
 
-    const renderedDirectives = this.renderDirectives(typedirectives)
+    const renderedDirectives = this.renderDirectives(typeDirectives)
     const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
     const renderedFields = sortedFields.map(x => this.renderField(x))
 
@@ -48,10 +109,9 @@ export default class Renderer {
     `type ${type.name}`
 
     const { renderedComments, hasError } = this.renderComments(type, '')
-    const allFieldsHaveError = type.fields.every(x => x.comments !== undefined && x.comments.some(c => c.isError))
+    const allFieldsHaveError = type.fields.every(x => x.comments.some(c => c.isError))
 
     const commentPrefix = allFieldsHaveError ? `${comment} ` : ''
-
 
     if(renderedComments.length > 0) {
       return `${renderedComments}\n${commentPrefix}${renderedTypeName} {\n${renderedFields.join('\n')}\n${commentPrefix}}`
@@ -61,20 +121,82 @@ export default class Renderer {
   }
 
   protected renderComments(type: IGQLType | IGQLField, spacing: string) {
-    const renderedComments = type.comments !== undefined ? type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n') : []
-    const hasError =  type.comments !== undefined ? type.comments.some(x => x.isError) : false
+    const renderedComments = type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n')
+    const hasError = type.comments.some(x => x.isError)
 
     return { renderedComments, hasError }
+  }
+
+  protected createDefaultValueFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}
+  }
+
+  protected createIsUniqueFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.isUnique, arguments: {} }
+  }
+
+  protected createRelationNameFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.relation, arguments: { name: this.renderValue(TypeIdentifiers.string, field.relationName) } }
+  }
+
+  protected createIsIdfFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.isId, arguments: { } }
+  }
+
+  protected createIsCreatedAtFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.isCreatedAt, arguments: { } } 
+  }
+
+  protected createIsUpdatedAtFieldDirctive(field: IGQLField) {
+    return { name: DirectiveKeys.isUpdatedAt, arguments: { } } 
+  }
+
+  protected createDatabaseNameFieldDirective(field: IGQLField) {
+    return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }
+  }
+
+  protected shouldCreateDefaultValueFieldDirective(field: IGQLField) {
+    return field.defaultValue !== null
+  }
+
+  protected shouldCreateIsUniqueFieldDirective(field: IGQLField) {
+    return field.isUnique && !field.isId
+  }
+
+  protected shouldCreateRelationNameFieldDirective(field: IGQLField) {
+    return field.relationName !== null
+  }
+  
+  protected shouldCreateIsIdFieldDirective(field: IGQLField) {
+    return field.isId
+  }
+
+  protected shouldCreateCreatedAtFieldDirective(field: IGQLField) {
+    return field.isCreatedAt
+  }
+
+  protected shouldCreateUpdatedAtFieldDirective(field: IGQLField) {
+    return field.isUpdatedAt
+  }
+
+  protected shouldCreateDatabaseNameFieldDirective(field: IGQLField) {
+    return field.databaseName !== null
+  }
+
+  protected createReservedFieldDirectives(field: IGQLField, fieldDirectives: IDirectiveInfo[]) {
+    if(this.shouldCreateDefaultValueFieldDirective(field)) { fieldDirectives.push(this.createDefaultValueFieldDirective(field)) }
+    if(this.shouldCreateIsUniqueFieldDirective(field)) { fieldDirectives.push(this.createIsUniqueFieldDirective(field)) }
+    if(this.shouldCreateRelationNameFieldDirective(field)) { fieldDirectives.push(this.createRelationNameFieldDirective(field)) }
+    if(this.shouldCreateIsIdFieldDirective(field)) { fieldDirectives.push(this.createIsIdfFieldDirective(field)) }
+    if(this.shouldCreateCreatedAtFieldDirective(field)) { fieldDirectives.push(this.createIsCreatedAtFieldDirective(field)) }
+    if(this.shouldCreateUpdatedAtFieldDirective(field)) { fieldDirectives.push(this.createIsUpdatedAtFieldDirctive(field)) }
+    if(this.shouldCreateDatabaseNameFieldDirective(field)) { fieldDirectives.push(this.createDatabaseNameFieldDirective(field)) }
   }
 
   protected renderField(field: IGQLField) : string {
     const fieldDirectives: IDirectiveInfo[] = field.directives || []
 
-    // TODO Move direction magic to superclass
-    if(field.defaultValue !== null) { fieldDirectives.push({ name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) }}) }
-    if(field.isUnique) { fieldDirectives.push({ name: DirectiveKeys.isUnique, arguments: {} }) }
-    if(field.relationName !== null) { fieldDirectives.push({ name: DirectiveKeys.relation, arguments: { name: field.relationName } }) }
-    if(field.isId) { fieldDirectives.push({ name: DirectiveKeys.isId, arguments: { } }) } 
+    this.createReservedFieldDirectives(field, fieldDirectives)
 
     const renderedDirectives = this.renderDirectives(fieldDirectives)
     
@@ -140,7 +262,7 @@ export default class Renderer {
 
   /**
    * Merges directives by summarizing arguments of
-   * directives with equal name.
+   * directives with equal name. That saves work when adding directives. 
    */
   protected mergeDirectives(directives: IDirectiveInfo[]): IDirectiveInfo[] {
     // Group by name
@@ -154,12 +276,18 @@ export default class Renderer {
 
     // Merge with same name
     for(const name of Object.keys(grouped)) {
-      merged.push({
-        name,
-        arguments: grouped[name].reduce((r, a) => {
-          return {...a.arguments, ...r.arguments}
-        }, {})
-      })
+      if(name === DirectiveKeys.index) { // Do not summarize index directives
+        for(const directive of grouped[name]) {
+          merged.push(directive)
+        }
+      } else {
+        merged.push({
+          name,
+          arguments: grouped[name].reduce((r, a) => {
+            return {...a.arguments, ...r.arguments}
+          }, {})
+        })
+      }
     }
 
     return merged

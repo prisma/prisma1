@@ -1,6 +1,6 @@
 package com.prisma.api.schema
 
-import com.prisma.cache.Cache
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.messagebus.PubSubSubscriber
 import com.prisma.messagebus.pubsub.{Everything, Message}
 import com.prisma.shared.models.Project
@@ -8,9 +8,10 @@ import sangria.schema.Schema
 
 case class CachedSchemaBuilder(
     schemaBuilder: SchemaBuilder,
-    schemaInvalidationSubscriber: PubSubSubscriber[String]
+    schemaInvalidationSubscriber: PubSubSubscriber[String],
+    cacheFactory: CacheFactory
 ) extends SchemaBuilder {
-  private val cache = Cache.lfu[String, Schema[ApiUserContext, Unit]](initialCapacity = 16, maxCapacity = 50)
+  private val cache = cacheFactory.lfu[String, Schema[ApiUserContext, Unit]](initialCapacity = 16, maxCapacity = 50)
 
   schemaInvalidationSubscriber.subscribe(
     Everything,

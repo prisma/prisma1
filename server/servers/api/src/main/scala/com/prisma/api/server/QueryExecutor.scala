@@ -2,12 +2,11 @@ package com.prisma.api.server
 
 import com.prisma.api.ApiDependencies
 import com.prisma.api.schema.{ApiUserContext, UserFacingError}
-import com.prisma.cache.Cache
 import com.prisma.messagebus.pubsub.{Everything, Message}
 import com.prisma.sangria.utils.ErrorHandler
 import com.prisma.shared.messages.SchemaInvalidatedMessage
 import com.prisma.shared.models.Project
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.JsValue
 import sangria.ast.Document
 import sangria.execution.{Executor, QueryAnalysisError}
 import sangria.schema.Schema
@@ -19,7 +18,8 @@ import scala.concurrent.Future
 case class QueryExecutor()(implicit apiDependencies: ApiDependencies) {
   import apiDependencies.system.dispatcher
   import com.prisma.api.server.JsonMarshalling._
-  val queryValidationCache = Cache.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
+
+  val queryValidationCache = apiDependencies.cacheFactory.lfu[(String, Document), Vector[Violation]](sangriaMinimumCacheSize, sangriaMaximumCacheSize)
 
   apiDependencies.invalidationSubscriber.subscribe(Everything, (msg: Message[SchemaInvalidatedMessage]) => {
     queryValidationCache.removeAll(key => key._1 == msg.topic)

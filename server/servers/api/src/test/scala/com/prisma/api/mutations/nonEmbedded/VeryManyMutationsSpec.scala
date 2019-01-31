@@ -33,50 +33,50 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
     def createTop(int: Int): Unit = {
       val query =
         s"""mutation a {createTop(data: {
-         |  int: $int
-         |  middles: {create: [
-         |  {int: ${int}1},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: ${int}20},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: ${int}40}
-         |  ]}
-         |}) {int}}"""
+           |  int: $int
+           |  middles: {create: [
+           |  {int: ${int}1},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: ${int}20},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: ${int}40}
+           |  ]}
+           |}) {int}}"""
 
       server.query(query, project)
     }
@@ -205,10 +205,10 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
       val b = s"{int: 1, cs: {create:[$c,$c,$c,$c,$c,$c,$c,$c,$c,$c]}}"
 
       val as = s"""
-                        |mutation {createA(data:{
-                        |   int: $int
-                        |   bs: {create:[$b,$b,$b,$b,$b,$b,$b,$b,$b,$b]}
-                        |}){int}}"""
+                  |mutation {createA(data:{
+                  |   int: $int
+                  |   bs: {create:[$b,$b,$b,$b,$b,$b,$b,$b,$b,$b]}
+                  |}){int}}"""
 
       server.query(as.stripMargin, project)
     }

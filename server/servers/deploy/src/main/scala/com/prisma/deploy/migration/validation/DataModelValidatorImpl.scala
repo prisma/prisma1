@@ -18,7 +18,7 @@ object DataModelValidatorImpl extends DataModelValidator {
       dataModel: String,
       fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities
-  ): PrismaSdl Or Vector[DeployError] = {
+  ): DataModelValidationResult Or Vector[DeployError] = {
     DataModelValidatorImpl(dataModel, fieldRequirements, capabilities).validate
   }
 }
@@ -34,20 +34,38 @@ case class DataModelValidatorImpl(
   val result   = GraphQlSdlParser.parse(dataModel)
   lazy val doc = result.get
 
-  def validate: PrismaSdl Or Vector[DeployError] = {
+  def validate: DataModelValidationResult Or Vector[DeployError] = {
     val syntaxErrors = validateSyntax
     if (syntaxErrors.isEmpty) {
       val dataModel = generateSDL
-      val semanticErrors = FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct ++
-        TypeDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
+      val semanticErrors =
+        FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct ++
+          TypeDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
+
       if (semanticErrors.isEmpty) {
-        Good(dataModel)
+        Good(DataModelValidationResult(dataModel, warnings = createWarnings(dataModel)))
       } else {
         Bad(semanticErrors)
       }
     } else {
       Bad(syntaxErrors.toVector)
     }
+  }
+
+  def createWarnings(dataModel: PrismaSdl): Vector[DeployWarning] = {
+    val relationTableWarnings = for {
+      relationTable <- dataModel.relationTables
+      if relationTable.scalarFields.exists(_.isId)
+    } yield {
+      DeployWarning(
+        `type` = relationTable.name,
+        description =
+          "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column.",
+        field = relationTable.scalarFields.find(_.isId).map(_.name)
+      )
+    }
+
+    relationTableWarnings
   }
 
   def generateSDL: PrismaSdl = {

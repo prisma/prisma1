@@ -49,7 +49,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
     }
 
     if (needsAggregation(updatedQueryArgs.filter)) {
-      aggregationQuery(database, model, updatedQueryArgs, SelectedFields.all(model))
+      aggregationQuery(database, model, updatedQueryArgs, selectedFields)
     } else {
 
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)

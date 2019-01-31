@@ -9,7 +9,8 @@ case class Project(
     secrets: Vector[String] = Vector.empty,
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
-    functions: List[Function] = List.empty
+    functions: List[Function] = List.empty,
+    manifestation: ProjectManifestation = ProjectManifestation.empty
 ) {
   def models            = schema.models
   def relations         = schema.relations
@@ -17,4 +18,15 @@ case class Project(
   def nonEmbeddedModels = schema.models.filterNot(_.isEmbedded)
 
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
+
+  val dbName: String = manifestation match {
+    case ProjectManifestation(_, Some(schema)) => schema
+//    case ProjectManifestation(Some(database), _) => database
+    case _ => id
+  }
 }
+
+object ProjectManifestation {
+  val empty = ProjectManifestation(None, None)
+}
+case class ProjectManifestation(database: Option[String], schema: Option[String])

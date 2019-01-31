@@ -1,4 +1,5 @@
 import { Renderer, DatabaseType, ISDL, DefaultRenderer } from 'prisma-datamodel'
+import ModelNameAndDirectiveNormalizer from './modelNameAndDirectiveNormalizer';
 
 export abstract class IntrospectionResult {
   public renderer: Renderer
@@ -9,9 +10,20 @@ export abstract class IntrospectionResult {
     this.databaseType = databaseType
   }
 
-  public abstract getDatamodel() : Promise<ISDL>
+  public abstract getDatamodel(): ISDL
   
-  public async renderToDatamodelString() : Promise<string> {
-    return this.renderer.render(await this.getDatamodel())
+  public renderToDatamodelString() : string {
+    return this.renderer.render(this.getDatamodel())
   }
+
+  public getNormalizedDatamodel(baseModel: ISDL | null = null) : ISDL {
+    const model = this.getDatamodel()
+    new ModelNameAndDirectiveNormalizer(baseModel).normalize(model)
+    return model
+  }
+
+  public renderToNormalizedDatamodelString(baseModel: ISDL | null = null) : string {
+    return this.renderer.render(this.getNormalizedDatamodel(baseModel))
+  }
+
 }

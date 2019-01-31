@@ -5,9 +5,8 @@ import { PostgresConnector } from '../../databases/relational/postgres/postgresC
 import { DatabaseType } from 'prisma-datamodel'
 import { connect } from 'tls';
 
-async function introspect() {
-  const client = new Client(connectionDetails)
-  return (await Connectors.create(DatabaseType.postgres, client).introspect('DatabaseIntrospector')).renderToDatamodelString()
+async function introspect(client: Client) {
+  return (await Connectors.create(DatabaseType.postgres, client).introspect('databaseintrospector')).renderToNormalizedDatamodelString()
 }
 
 async function testSchema(sql: string) {
@@ -19,7 +18,7 @@ async function testSchema(sql: string) {
   await client.query('SET search_path TO DatabaseIntrospector;')
   await client.query(sql)
 
-  expect(await introspect()).toMatchSnapshot()
+  expect(await introspect(client)).toMatchSnapshot()
 
   await client.end()
 }
@@ -87,6 +86,7 @@ SET default_with_oids = false;
 
 CREATE TABLE DatabaseIntrospector.direct_messages (
     id integer NOT NULL,
+    text VARCHAR(25) NOT NULL,
     receiver_id integer,
     sender_id integer
 );
@@ -119,7 +119,8 @@ ALTER SEQUENCE DatabaseIntrospector.direct_messages_id_seq OWNED BY DatabaseIntr
 --
 
 CREATE TABLE DatabaseIntrospector.users (
-    id integer NOT NULL
+    id integer NOT NULL,
+    name VARCHAR(25) NOT NULL
 );
 
 
