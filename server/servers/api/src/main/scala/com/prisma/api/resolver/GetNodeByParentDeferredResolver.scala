@@ -6,7 +6,7 @@ import com.prisma.shared.models.Project
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ToOneDeferredResolver(dataResolver: DataResolver) {
+class GetNodeByParentDeferredResolver(dataResolver: DataResolver) {
   def resolve(
       orderedDeferreds: Vector[OrderedDeferred[GetNodeByParentDeferred]]
   )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[GetNodeDeferredResultType]] = {

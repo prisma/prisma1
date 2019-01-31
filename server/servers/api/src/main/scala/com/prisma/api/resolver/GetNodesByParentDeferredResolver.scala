@@ -7,7 +7,7 @@ import com.prisma.tracing.Tracing
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
+class GetNodesByParentDeferredResolver(dataResolver: DataResolver) extends Tracing {
   def resolve(
       orderedDeferreds: Vector[OrderedDeferred[GetNodesByParentDeferred]]
   )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[GetNodesDeferredResultType]] = {
