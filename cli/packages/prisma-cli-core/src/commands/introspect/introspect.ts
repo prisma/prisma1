@@ -11,6 +11,9 @@ import { prettyTime } from '../../util'
 import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
+import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
+import { IConnector } from 'prisma-db-introspection/dist/common/connector'
+import { TmpRelationalRendererV2 } from './TmpRelationalRendererV2'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -55,10 +58,18 @@ export default class IntrospectCommand extends Command {
     ['mongo-db']: flags.string({
       description: 'Mongo database',
     }),
+
+    /**
+     * Temporary flag needed to test Datamodel v2
+     */
+    ['prototype']: flags.boolean({
+      description:
+        'Output Datamodel v2. Note: This is a temporary flag for debugging',
+    }),
   }
   static hidden = false
   async run() {
-    const { interactive } = this.flags
+    const { interactive, prototype } = this.flags
     const pgHost = this.flags['pg-host']
     const pgPort = this.flags['pg-port']
     const pgUser = this.flags['pg-user']
@@ -80,7 +91,8 @@ export default class IntrospectCommand extends Command {
     })
 
     let client
-    let connector
+    let connector: IConnector
+    let databaseType: DatabaseType
 
     /**
      * Handle MongoDB CLI args
@@ -105,6 +117,7 @@ export default class IntrospectCommand extends Command {
         database: mongoDb!,
       })
       connector = new MongoConnector(client)
+      databaseType = DatabaseType.mongo
     }
 
     /**
@@ -126,10 +139,6 @@ export default class IntrospectCommand extends Command {
       notProvidedArgs.length > 0 &&
       notProvidedArgs.length < pgArgsEntries.length
     ) {
-      console.log({
-        pgArgsEntriesLength: pgArgsEntries.length,
-        notProvidedArgsLength: notProvidedArgs.length,
-      })
       throw new Error(
         `If you provide one of the pg- arguments, you need to provide all of them. The arguments ${notProvidedArgs
           .map(([k]) => k)
@@ -146,7 +155,9 @@ export default class IntrospectCommand extends Command {
         database: pgDb,
         ssl: pgSsl,
       })
+      await client.connect()
       connector = new PostgresConnector(client)
+      databaseType = DatabaseType.postgres
     }
 
     if (!interactive) {
@@ -160,27 +171,32 @@ export default class IntrospectCommand extends Command {
 
       if (await this.hasExecuteRaw()) {
         client = new PrismaDBClient(this.definition)
+        await client.connect()
         connector = new PostgresConnector(client)
+        databaseType = DatabaseType.postgres
       }
     }
 
-    if (!client || !connector) {
+    if (!client || !connector!) {
       const credentials = await endpointDialog.getDatabase(true)
       if (credentials.type === 'postgres') {
         client = new PGClient(credentials)
         connector = new PostgresConnector(client)
+        databaseType = DatabaseType.postgres
       } else if (credentials.type === 'mongo') {
         client = await this.connectToMongo(credentials)
         connector = new MongoConnector(client)
         mongoDb = credentials.database
+        databaseType = DatabaseType.mongo
       }
     }
 
     let schemas
     const before = Date.now()
     try {
-      schemas = await connector.listSchemas()
+      schemas = await connector!.listSchemas()
     } catch (e) {
+      console.error(e.stack)
       throw new Error(`Could not connect to database. ${e.message}`)
     }
     /**
@@ -223,12 +239,20 @@ export default class IntrospectCommand extends Command {
             )
       }
 
+      const ParserInstance = Parser.create(databaseType!)
+      const datamodel = ParserInstance.parseFromSchemaString(
+        this.definition.typesString!,
+      )
+
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
 
-      const introspection = await connector.introspect(schema)
-      const sdl = await introspection.getDatamodel()
+      const introspection = await connector!.introspect(schema)
+      const sdl = await introspection.getNormalizedDatamodel(datamodel)
       const numTables = sdl.types.length
-      const renderedSdl = introspection.renderer.render(sdl)
+
+      const renderedSdl = prototype
+        ? await new TmpRelationalRendererV2().render(sdl)
+        : await introspection.renderToDatamodelString()
 
       // Mongo has .close, Postgres .end
       if (typeof client.close === 'function') {
@@ -246,7 +270,8 @@ export default class IntrospectCommand extends Command {
         )
         this.out.exit(1)
       }
-      const fileName = `datamodel-${new Date().getTime()}.prisma`
+      const prototypeFileName = prototype ? '-prototype' : ''
+      const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
       const fullFileName = path.join(this.config.definitionDir, fileName)
       fs.writeFileSync(fullFileName, renderedSdl)
       this.out.action.stop(prettyTime(Date.now() - before))
@@ -261,7 +286,10 @@ ${chalk.bold(
   ${chalk.cyan(fileName)}
 `)
 
-      if (!this.definition.definition || !this.definition.definition!.datamodel) {
+      if (
+        !this.definition.definition ||
+        !this.definition.definition!.datamodel
+      ) {
         await this.definition.load(this.flags)
         this.definition.addDatamodel(fileName)
         this.out.log(

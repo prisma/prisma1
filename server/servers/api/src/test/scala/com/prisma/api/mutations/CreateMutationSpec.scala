@@ -166,7 +166,8 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
-    server.query(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
-    server.queryThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
+    val mutation = s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}"""
+    server.query(mutation, project)
+    server.queryThatMustFail(mutation, project, errorCode = 3010)
   }
 }

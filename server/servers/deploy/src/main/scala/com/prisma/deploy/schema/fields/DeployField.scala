@@ -12,7 +12,8 @@ object DeployField {
     InputField("dryRun", OptionInputType(BooleanType)),
     InputField("secrets", OptionInputType(ListInputType(StringType))),
     InputField("subscriptions", OptionInputType(ListInputType(functionInputType))),
-    InputField("force", OptionInputType(BooleanType))
+    InputField("force", OptionInputType(BooleanType)),
+    InputField("noMigration", OptionInputType(BooleanType)),
   )
 
   lazy val functionInputType = InputObjectType(
@@ -45,6 +46,7 @@ object DeployField {
         dryRun = node.optionalArgAsBoolean("dryRun"),
         force = node.optionalArgAsBoolean("force"),
         secrets = node.optionalArgAs[Vector[String]]("secrets").getOrElse(Vector.empty),
+        noMigration = node.optionalArgAsBoolean("noMigration"),
         functions = {
           val functionNodes = node.optionalArgAs[Vector[marshaller.Node]]("subscriptions").getOrElse(Vector.empty)
           functionNodes.map { functionNode =>

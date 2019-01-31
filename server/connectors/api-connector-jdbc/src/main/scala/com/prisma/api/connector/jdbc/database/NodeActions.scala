@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector.PrismaArgs
+import com.prisma.api.schema.APIErrors.FieldCannotBeNull
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
 import com.prisma.shared.models.{Model, TypeIdentifier}
@@ -19,6 +20,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       .insertInto(modelTable(model))
       .columns(fields.map(modelColumn): _*)
       .values(placeHolders(fields))
+      .returning(modelColumn(model.idField_!))
 
     insertReturningGeneratedKeysToDBIO(query)(
       setParams = { pp =>
@@ -53,13 +55,19 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     if (args.isEmpty || ids.isEmpty) {
       dbioUnit
     } else {
-      val aliasedTable = modelTable(model).as(topLevelAlias)
+      val aliasedTable = modelTable(model)
 
-      val columns = args.rootGCMap.map { case (k, _) => model.getFieldByName_!(k).dbName }.toList
+      val columns = args.rootGCMap.map {
+        case (k, v) =>
+          val field = model.getFieldByName_!(k)
+          if (field.isRequired && v == NullGCValue) throw FieldCannotBeNull(field.name)
+          field.dbName
+      }.toList
+
       val query = sql
         .update(aliasedTable)
         .setColumnsWithPlaceHolders(columns)
-        .where(aliasColumn(model.dbNameOfIdField_!).in(placeHolders(ids)))
+        .where(idField(model).in(placeHolders(ids)))
 
       updateToDBIO(query)(
         setParams = pp => {

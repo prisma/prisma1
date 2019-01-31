@@ -10,6 +10,9 @@ export function hasTypeWithField(
     if (foundType.kind === 'OBJECT') {
       return foundType.fields.some(f => f.name === field)
     }
+    if (foundType.kind === 'INPUT_OBJECT') {
+      return foundType.inputFields.some(f => f.name === field)
+    }
   }
 
   return false

@@ -11,7 +11,7 @@ object Manifestations {
     def inTableOfModel(relation: Relation)  = if (relation.modelAName == inTableOfModelName) relation.modelA else relation.modelB
     def referencedModel(relation: Relation) = if (relation.modelAName == inTableOfModelName) relation.modelB else relation.modelA
   }
-  case class RelationTable(table: String, modelAColumn: String, modelBColumn: String) extends RelationLinkManifestation
+  case class RelationTable(table: String, modelAColumn: String, modelBColumn: String, idColumn: Option[String] = None) extends RelationLinkManifestation
 }
 
 sealed trait FieldBehaviour
@@ -23,6 +23,9 @@ object FieldBehaviour {
   case class ScalarListBehaviour(strategy: ScalarListStrategy)                    extends FieldBehaviour
 
   case class Sequence(name: String, initialValue: Int, allocationSize: Int)
+  object Sequence {
+    def default(model: String, field: String) = Sequence(s"${model}_${field}_seq", initialValue = 1, allocationSize = 100)
+  }
 
   sealed abstract class IdStrategy(override val entryName: String) extends EnumEntry
   object IdStrategy extends Enumeratum[IdStrategy] {

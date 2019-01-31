@@ -26,6 +26,7 @@ object InMemoryQueueingMessages {
 }
 
 case class RouterActor[T](backoff: BackoffStrategy) extends Actor {
+  import context.system
   import context.dispatcher
 
   var router = Router(RoundRobinRoutingLogic(), Vector.empty)

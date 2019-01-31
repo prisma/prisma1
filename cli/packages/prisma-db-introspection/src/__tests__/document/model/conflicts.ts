@@ -102,7 +102,6 @@ describe('Document model inferring, conflict resolution', () => {
       }
     }
 
-
     const merger = new ModelMerger('User', false, new MockDocumentDataSource({}))
 
     merger.analyze(user1)

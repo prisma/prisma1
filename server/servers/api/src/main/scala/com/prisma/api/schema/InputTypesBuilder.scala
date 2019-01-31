@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.cache.Cache
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.shared.models._
 import sangria.schema.{Field => _, _}
 
@@ -14,10 +15,10 @@ trait InputTypesBuilder {
   def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]]
 }
 
-case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
+case class CachedInputTypesBuilder(project: Project, cacheFactory: CacheFactory) extends UncachedInputTypesBuilder(project) {
   import java.lang.{StringBuilder => JStringBuilder}
 
-  val cache: Cache[String, Option[InputObjectType[Any]]] = Cache.unbounded[String, Option[InputObjectType[Any]]]()
+  val cache: Cache[String, Option[InputObjectType[Any]]] = cacheFactory.unbounded[String, Option[InputObjectType[Any]]]()
 
   override def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
     cache.getOrUpdate(cacheKey("cachedInputObjectTypeForCreate", model, parentField), { () =>

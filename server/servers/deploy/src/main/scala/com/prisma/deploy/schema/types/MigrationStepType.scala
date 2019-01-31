@@ -3,6 +3,7 @@ package com.prisma.deploy.schema.types
 import com.prisma.deploy.schema.SystemUserContext
 import com.prisma.shared.models.{Field => _, _}
 import com.prisma.shared.models
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationLinkManifestation, RelationTable}
 import sangria.schema
 import sangria.schema.{Field, _}
 import com.prisma.util.Diff._
@@ -24,7 +25,9 @@ object MigrationStepType {
     CreateRelationType,
     UpdateRelationType,
     DeleteRelationType,
-    UpdateSecretsType
+    UpdateSecretsType,
+    RelationTableManifestation,
+    InlineManifestation
   )
 
   case class MigrationStepAndSchema[T <: MigrationStep](step: T, schema: models.Schema, previous: models.Schema)
@@ -160,12 +163,75 @@ object MigrationStepType {
   lazy val CreateRelationType = fieldsHelper[CreateRelation](
     Field("name", StringType, resolve = _.value.step.name),
     Field("leftModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelAName),
-    Field("rightModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelAName)
+    Field("rightModel", StringType, resolve = ctx => ctx.value.schema.getRelationByName_!(ctx.value.step.name).modelBName),
+    Field(
+      "after",
+      RelationManifestationType,
+      resolve = { ctx =>
+        val relation = ctx.value.schema.getRelationByName_!(ctx.value.step.name)
+        relation.manifestation
+      }
+    ),
   )
 
   lazy val UpdateRelationType = fieldsHelper[UpdateRelation](
     Field("name", StringType, resolve = _.value.step.name),
-    Field("newName", OptionType(StringType), resolve = _.value.step.newName)
+    Field("newName", OptionType(StringType), resolve = _.value.step.newName),
+    Field(
+      "before",
+      RelationManifestationType,
+      resolve = { ctx =>
+        val relation = ctx.value.previous.getRelationByName_!(ctx.value.step.name)
+        relation.manifestation
+      }
+    ),
+    Field(
+      "after",
+      RelationManifestationType,
+      resolve = { ctx =>
+        val relation = ctx.value.schema.getRelationByName_!(ctx.value.step.finalName)
+        relation.manifestation
+      }
+    ),
+  )
+
+  lazy val RelationManifestationType: InterfaceType[SystemUserContext, RelationLinkManifestation] = InterfaceType(
+    "RelationManifestation",
+    "This stores details about how a relation is manifested in the underlying database.",
+    fields[SystemUserContext, RelationLinkManifestation](
+      Field(
+        "type",
+        StringType,
+        resolve = { ctx =>
+          ctx.value match {
+            case _: RelationTable        => "LinkTable"
+            case _: EmbeddedRelationLink => "Inline"
+          }
+        }
+      )
+    )
+  )
+
+  lazy val RelationTableManifestation: ObjectType[SystemUserContext, RelationTable] = ObjectType(
+    "LinkTable",
+    "This is a link table.",
+    interfaces = interfaces[SystemUserContext, RelationTable](RelationManifestationType),
+    fields[SystemUserContext, RelationTable](
+      Field("table", StringType, resolve = _.value.table),
+      Field("modelAColumn", StringType, resolve = _.value.modelAColumn),
+      Field("modelBColumn", StringType, resolve = _.value.modelBColumn),
+      Field("idColumn", OptionType(StringType), resolve = _.value.idColumn),
+    )
+  )
+
+  lazy val InlineManifestation: ObjectType[SystemUserContext, EmbeddedRelationLink] = ObjectType(
+    "Inline",
+    "This is an inline manifestation.",
+    interfaces = interfaces[SystemUserContext, EmbeddedRelationLink](RelationManifestationType),
+    fields[SystemUserContext, EmbeddedRelationLink](
+      Field("model", StringType, resolve = _.value.inTableOfModelName),
+      Field("column", StringType, resolve = _.value.referencingColumn),
+    )
   )
 
   lazy val DeleteRelationType = fieldsHelper[DeleteRelation](

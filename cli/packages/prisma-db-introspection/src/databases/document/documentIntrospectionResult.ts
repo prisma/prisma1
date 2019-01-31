@@ -1,4 +1,4 @@
-import { ISDL, DatabaseType, Renderer } from 'prisma-datamodel'
+import { ISDL, DatabaseType, Renderer, cloneSchema } from 'prisma-datamodel'
 import { IntrospectionResult } from '../../common/introspectionResult'
 
 /**
@@ -15,7 +15,8 @@ export class DocumentIntrospectionResult extends IntrospectionResult {
     this.model = model
   }
 
-  public async getDatamodel(): Promise<ISDL> {
-    return this.model
+  public getDatamodel(): ISDL {
+    // Return a copy - object is muteable.
+    return cloneSchema(this.model)
   }
 }

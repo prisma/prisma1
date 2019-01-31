@@ -5,9 +5,8 @@ import { PostgresConnector } from '../../databases/relational/postgres/postgresC
 import { DatabaseType } from 'prisma-datamodel'
 import { connect } from 'tls'
 
-async function introspect() {
-  const client = new Client(connectionDetails)
-  return (await Connectors.create(DatabaseType.postgres, client).introspect('DatabaseIntrospector')).renderToDatamodelString()
+async function introspect(client: Client) {
+  return (await Connectors.create(DatabaseType.postgres, client).introspect('databaseintrospector')).renderToNormalizedDatamodelString()
 }
 
 async function testSchema(sql: string) {
@@ -18,7 +17,7 @@ async function testSchema(sql: string) {
   await client.query('SET search_path TO DatabaseIntrospector;')
   await client.query(sql)
 
-  expect(await introspect()).toMatchSnapshot()
+  expect(await introspect(client)).toMatchSnapshot()
 
   await client.end()
 }

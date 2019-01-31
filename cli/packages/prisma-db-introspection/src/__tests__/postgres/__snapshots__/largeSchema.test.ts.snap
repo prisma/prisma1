@@ -1,221 +1,143 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector large example database 1`] = `
-"type Store @pgTable(name: \\"store\\") {
-  manager_staff: Staff @pgRelation(column: \\"manager_staff_id\\")
-  last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"store_id\\")
-  address: Address @pgRelation(column: \\"address_id\\")
-}
-
-type Staff_list @pgTable(name: \\"staff_list\\") {
-  zip code: String
-  sid: Int
-  phone: String
-  name: String
-  id: Int
-  country: String
-  city: String
-  address: String
-}
-
-type Staff @pgTable(name: \\"staff\\") {
-  username: String!
-  stores: [Store!]!
-  store_id: Int!
-  rentals: [Rental!]!
-  # Type 'bytea' is not yet supported.
-  # picture: <Unknown>
-  payments: [Payment!]!
-  password: String
-  last_update: DateTime!
-  last_name: String!
-  id: Int! @unique @pgColumn(name: \\"staff_id\\")
+"type Actor @indexes(value: [{name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"], unique: false}]) @pgTable(name: \\"actor\\") {
   first_name: String!
-  email: String
-  address: Address @pgRelation(column: \\"address_id\\")
-  active: Boolean! @default(value: true)
-}
-
-type Sales_by_store @pgTable(name: \\"sales_by_store\\") {
-  total_sales: Float
-  store: String
-  manager: String
-}
-
-type Sales_by_film_category @pgTable(name: \\"sales_by_film_category\\") {
-  total_sales: Float
-  category: String
-}
-
-type Rental @pgTable(name: \\"rental\\") {
-  staff: Staff @pgRelation(column: \\"staff_id\\")
-  return_date: DateTime
-  rental_date: DateTime!
-  payments: [Payment!]!
-  last_update: DateTime!
-  inventory: Inventory @pgRelation(column: \\"inventory_id\\")
-  id: Int! @unique @pgColumn(name: \\"rental_id\\")
-  customer: Customer @pgRelation(column: \\"customer_id\\")
-}
-
-type Payment @pgTable(name: \\"payment\\") {
-  staff: Staff @pgRelation(column: \\"staff_id\\")
-  rental: Rental @pgRelation(column: \\"rental_id\\")
-  payment_date: DateTime!
-  id: Int! @unique @pgColumn(name: \\"payment_id\\")
-  customer: Customer @pgRelation(column: \\"customer_id\\")
-  amount: Float!
-}
-
-type Nicer_but_slower_film_list @pgTable(name: \\"nicer_but_slower_film_list\\") {
-  title: String
-  # Type 'USER-DEFINED' is not yet supported.
-  # rating: <Unknown>
-  price: Float
-  length: Int
-  fid: Int
-  description: String
-  category: String
-  actors: String
-}
-
-type Language @pgTable(name: \\"language\\") {
-  name: String!
-  last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"language_id\\")
-  films: [Film!]!
-}
-
-type Inventory @pgTable(name: \\"inventory\\") {
-  store_id: Int!
-  rentals: [Rental!]!
-  last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"inventory_id\\")
-  film: Film @pgRelation(column: \\"film_id\\")
-}
-
-type Film_list @pgTable(name: \\"film_list\\") {
-  title: String
-  # Type 'USER-DEFINED' is not yet supported.
-  # rating: <Unknown>
-  price: Float
-  length: Int
-  fid: Int
-  description: String
-  category: String
-  actors: String
-}
-
-type Film_category @pgTable(name: \\"film_category\\") {
-  last_update: DateTime!
-  film: Film @pgRelation(column: \\"film_id\\")
-  category: Category @pgRelation(column: \\"category_id\\")
-}
-
-type Film_actor @pgTable(name: \\"film_actor\\") {
-  last_update: DateTime!
-  film: Film @pgRelation(column: \\"film_id\\")
-  actor: Actor @pgRelation(column: \\"actor_id\\")
-}
-
-type Film @pgTable(name: \\"film\\") {
-  title: String!
-  # Type 'ARRAY' is not yet supported.
-  # special_features: <Unknown>
-  replacement_cost: Float! @default(value: 19.99)
-  rental_rate: Float! @default(value: 4.99)
-  rental_duration: Int! @default(value: 3)
-  release_year: Int
-  # Type 'USER-DEFINED' is not yet supported.
-  # rating: <Unknown> @default(value: G)
-  length: Int
-  last_update: DateTime!
-  language: Language @pgRelation(column: \\"language_id\\")
-  inventories: [Inventory!]!
-  id: Int! @unique @pgColumn(name: \\"film_id\\")
-  # Type 'tsvector' is not yet supported.
-  # fulltext: <Unknown>!
-  film_categories: [Film_category!]!
-  film_actors: [Film_actor!]!
-  description: String
-}
-
-type Customer_list @pgTable(name: \\"customer_list\\") {
-  zip code: String
-  sid: Int
-  phone: String
-  notes: String
-  name: String
-  id: Int
-  country: String
-  city: String
-  address: String
-}
-
-type Customer @pgTable(name: \\"customer\\") {
-  store_id: Int!
-  rentals: [Rental!]!
-  payments: [Payment!]!
-  last_update: DateTime
+  id: Int! @pgColumn(name: \\"actor_id\\")
   last_name: String!
-  id: Int! @unique @pgColumn(name: \\"customer_id\\")
-  first_name: String!
-  email: String
-  create_date: DateTime!
-  address: Address @pgRelation(column: \\"address_id\\")
-  activebool: Boolean! @default(value: true)
-  active: Int
-}
-
-type Country @pgTable(name: \\"country\\") {
   last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"country_id\\")
-  country: String!
-  cities: [City!]!
-}
-
-type City @pgTable(name: \\"city\\") {
-  last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"city_id\\")
-  country: Country @pgRelation(column: \\"country_id\\")
-  city: String!
-  addresses: [Address!]!
-}
-
-type Category @pgTable(name: \\"category\\") {
-  name: String!
-  last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"category_id\\")
-  film_categories: [Film_category!]!
 }
 
 type Address @pgTable(name: \\"address\\") {
-  stores: [Store!]!
-  staffs: [Staff!]!
-  postal_code: String
-  phone: String!
-  last_update: DateTime!
-  id: Int! @unique @pgColumn(name: \\"address_id\\")
-  district: String!
-  customers: [Customer!]!
-  city: City @pgRelation(column: \\"city_id\\")
-  address2: String
   address: String!
-}
-
-type Actor_info @pgTable(name: \\"actor_info\\") {
-  last_name: String
-  first_name: String
-  film_info: String
-  actor_id: Int
-}
-
-type Actor @pgTable(name: \\"actor\\") {
+  address2: String
+  city_id: City!
+  district: String!
+  id: Int! @pgColumn(name: \\"address_id\\")
   last_update: DateTime!
-  last_name: String!
-  id: Int! @unique @pgColumn(name: \\"actor_id\\")
+  phone: String!
+  postal_code: String
+}
+
+type Category @pgTable(name: \\"category\\") {
+  id: Int! @pgColumn(name: \\"category_id\\")
+  last_update: DateTime!
+  name: String!
+}
+
+type City @pgTable(name: \\"city\\") {
+  city: String!
+  country_id: Country!
+  id: Int! @pgColumn(name: \\"city_id\\")
+  last_update: DateTime!
+}
+
+type Country @pgTable(name: \\"country\\") {
+  country: String!
+  id: Int! @pgColumn(name: \\"country_id\\")
+  last_update: DateTime!
+}
+
+type Customer @indexes(value: [{name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"], unique: false}, {name: \\"idx_last_name\\", fields: [\\"last_name\\"], unique: false}]) @pgTable(name: \\"customer\\") {
+  active: Int
+  activebool: Boolean! @default(value: true)
+  address_id: Address!
+  create_date: DateTime!
+  email: String
   first_name: String!
-  film_actors: [Film_actor!]!
+  id: Int! @pgColumn(name: \\"customer_id\\")
+  last_name: String!
+  last_update: DateTime
+  store_id: Int!
+}
+
+type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"], unique: false}, {name: \\"idx_title\\", fields: [\\"title\\"], unique: false}]) @pgTable(name: \\"film\\") {
+  description: String
+  # Type tsvector is not supported
+  # fulltext: tsvector!
+  id: Int! @pgColumn(name: \\"film_id\\")
+  language_id: Language!
+  last_update: DateTime!
+  length: Int
+  # Type mpaa_rating is not supported
+  # rating: mpaa_rating
+  release_year: Int
+  rental_duration: Int! @default(value: 3)
+  rental_rate: Float! @default(value: 4.99)
+  replacement_cost: Float! @default(value: 19.99)
+  special_features: String
+  title: String!
+}
+
+type Film_actor @pgTable(name: \\"film_actor\\") {
+  # Multiple ID fields (compound indices) are not supported
+  # Multiple ID fields (compound indices) are not supported
+  # ID field must be called \\"id\\" in relational models.
+  # actor_id: Actor!
+  film_id: Film!
+  last_update: DateTime!
+}
+
+type Film_category @pgTable(name: \\"film_category\\") {
+  category_id: Category!
+  # Multiple ID fields (compound indices) are not supported
+  # Multiple ID fields (compound indices) are not supported
+  # ID field must be called \\"id\\" in relational models.
+  # film_id: Film!
+  last_update: DateTime!
+}
+
+type Inventory @indexes(value: [{name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"], unique: false}]) @pgTable(name: \\"inventory\\") {
+  film_id: Film!
+  id: Int! @pgColumn(name: \\"inventory_id\\")
+  last_update: DateTime!
+  store_id: Int!
+}
+
+type Language @pgTable(name: \\"language\\") {
+  id: Int! @pgColumn(name: \\"language_id\\")
+  last_update: DateTime!
+  name: String!
+}
+
+type Payment @pgTable(name: \\"payment\\") {
+  amount: Float!
+  customer_id: Customer!
+  id: Int! @pgColumn(name: \\"payment_id\\")
+  payment_date: DateTime!
+  rental_id: Rental!
+  staff_id: Staff!
+}
+
+type Rental @indexes(value: [{name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"]}]) @pgTable(name: \\"rental\\") {
+  customer_id: Customer!
+  id: Int! @pgColumn(name: \\"rental_id\\")
+  inventory_id: Inventory!
+  last_update: DateTime!
+  rental_date: DateTime!
+  return_date: DateTime
+  staff_id: Staff!
+}
+
+type Staff @pgTable(name: \\"staff\\") {
+  active: Boolean! @default(value: true)
+  address_id: Address!
+  email: String
+  first_name: String!
+  id: Int! @pgColumn(name: \\"staff_id\\")
+  last_name: String!
+  last_update: DateTime!
+  password: String
+  # Type bytea is not supported
+  # picture: bytea
+  store_id: Int!
+  username: String!
+}
+
+type Store @pgTable(name: \\"store\\") {
+  address_id: Address!
+  id: Int! @pgColumn(name: \\"store_id\\")
+  last_update: DateTime!
+  manager_staff_id: Staff!
 }"
 `;

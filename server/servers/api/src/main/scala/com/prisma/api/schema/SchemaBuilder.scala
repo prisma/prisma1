@@ -8,7 +8,7 @@ import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnectio
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.StringIdGCValue
 import com.prisma.shared.models.ConnectorCapability.NodeQueryCapability
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model, Project}
+import com.prisma.shared.models.{Field => _, Schema => _, _}
 import com.prisma.util.coolArgs.CoolArgs
 import com.prisma.utils.boolean.BooleanUtils._
 import org.atteo.evo.inflector.English
@@ -26,7 +26,7 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, apiDependencies: ApiDependencies): SchemaBuilder = { project: Project =>
+  def apply()(implicit apiDependencies: ApiDependencies): SchemaBuilder = { (project: Project) =>
     SchemaBuilderImpl(
       project = project,
       capabilities = apiDependencies.capabilities,
@@ -39,9 +39,9 @@ case class SchemaBuilderImpl(
     project: Project,
     capabilities: ConnectorCapabilities = ConnectorCapabilities.empty,
     enableRawAccess: Boolean = false
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem)
+)(implicit apiDependencies: ApiDependencies)
     extends SangriaExtensions {
-  import system.dispatcher
+  import apiDependencies.executionContext
 
   val argumentsBuilder                     = ArgumentsBuilder(project = project)
   val dataResolver                         = apiDependencies.dataResolver(project)
@@ -280,9 +280,8 @@ case class SchemaBuilderImpl(
           Argument("query", StringType)
         ),
         resolve = ctx => {
-          val query    = ctx.arg[String]("query")
-          val database = ctx.argOpt[String]("database") //Fixme is this intentional?
-          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(query)
+          val query = ctx.arg[String]("query")
+          apiDependencies.apiConnector.databaseMutactionExecutor.executeRaw(project, query)
         }
       )
     }
@@ -306,12 +305,13 @@ case class SchemaBuilderImpl(
       for {
         _         <- Future.unit
         idGcValue = StringIdGCValue(id)
-        modelOpt  <- dataResolver.getModelForGlobalId(idGcValue)
-        resultOpt <- modelOpt match {
-                      case Some(model) => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model))
-                      case None        => Future.successful(None)
-                    }
-      } yield resultOpt
+        modelsWithStringIds = project.models.filter { model =>
+          val ti = model.idField_!.typeIdentifier
+          ti == TypeIdentifier.String || ti == TypeIdentifier.Cuid || ti == TypeIdentifier.UUID
+        }
+        results = modelsWithStringIds.map(model => dataResolver.getNodeByWhere(NodeSelector.forId(model, idGcValue), ctx.getSelectedFields(model)))
+        results <- Future.sequence(results)
+      } yield results.flatten.headOption
     },
     possibleTypes = {
       objectTypes.values.flatMap { o =>

@@ -1,6 +1,5 @@
 package com.prisma.deploy.schema
 
-import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
@@ -10,12 +9,15 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.fields._
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.schema.types._
+import com.prisma.jwt.JwtGrant
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 case class SystemUserContext(authorizationHeader: Option[String])
 
@@ -24,15 +26,15 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, dependencies: DeployDependencies): SchemaBuilder =
+  def apply()(implicit dependencies: DeployDependencies): SchemaBuilder =
     (userContext: SystemUserContext) => { SchemaBuilderImpl(userContext).build() }
 }
 
 case class SchemaBuilderImpl(
     userContext: SystemUserContext
-)(implicit system: ActorSystem, dependencies: DeployDependencies) {
+)(implicit dependencies: DeployDependencies) {
   import ManualMarshallerHelpers._
-  import system.dispatcher
+  import dependencies.executionContext
 
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
@@ -42,6 +44,8 @@ case class SchemaBuilderImpl(
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
   val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder
+  val projectTokenExpiration                         = 1.day.toSeconds
+  val managementSecret                               = dependencies.managementSecret
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](
@@ -164,7 +168,15 @@ case class SchemaBuilderImpl(
         projectOpt <- projectPersistence.load(projectId)
         project    = projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
       } yield {
-        dependencies.apiAuth.createToken(project.secrets)
+        project.secrets.headOption match {
+          case Some(secret) =>
+            dependencies.auth.createToken(secret, Some(projectTokenExpiration)) match {
+              case Success(token) => token
+              case Failure(err)   => throw AuthFailure(err.getMessage)
+            }
+
+          case None => ""
+        }
       }
     }
   )
@@ -202,7 +214,8 @@ case class SchemaBuilderImpl(
                        clientDbQueries = deployConnector.clientDBQueries(project),
                        databaseIntrospectionInferrer = deployConnector.databaseIntrospectionInferrer(project.id),
                        fieldRequirements = deployConnector.fieldRequirements,
-                       isActive = deployConnector.isActive
+                       isActive = deployConnector.isActive,
+                       deployConnector = deployConnector
                      ).execute
           } yield result
       }
@@ -230,7 +243,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            deployConnector = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector,
+            connectorCapabilities = dependencies.deployConnector.capabilities
           ).execute
       }
     )
@@ -256,7 +270,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             invalidationPubSub = dependencies.invalidationPublisher,
-            deployConnector = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector,
+            connectorCapabilities = dependencies.deployConnector.capabilities
           ).execute
       }
     )
@@ -291,6 +306,10 @@ case class SchemaBuilderImpl(
   }
 
   private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
-    dependencies.managementAuth.verify(name, stage, authHeader).get
+    val auth  = dependencies.managementAuth
+    val token = auth.extractToken(authHeader)
+    val grant = Some(JwtGrant(name, stage, "*"))
+
+    auth.verifyToken(token, Vector(managementSecret), expectedGrant = grant).get
   }
 }
