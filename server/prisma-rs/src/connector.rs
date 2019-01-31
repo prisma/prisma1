@@ -2,10 +2,7 @@ mod sqlite;
 
 pub use sqlite::Sqlite;
 
-use crate::{
-    querying::{NodeSelector, PrismaValue},
-    PrismaResult,
-};
+use crate::{querying::NodeSelector, PrismaResult, PrismaValue};
 
 pub trait Connector {
     /// A test function to try out the database connection. Triggers `SELECT 1`.

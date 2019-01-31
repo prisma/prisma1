@@ -6,6 +6,12 @@ pub struct Schema {
     pub enums: Vec<PrismaEnum>,
 }
 
+impl Schema {
+    pub fn find_model(&self, name: &str) -> Option<&Model> {
+        self.models.iter().find(|model| model.name == name)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OnDelete {
@@ -37,6 +43,12 @@ pub struct Model {
     pub stable_identifier: String,
     pub is_embedded: bool,
     pub fields: Vec<Field>,
+}
+
+impl Model {
+    pub fn find_field(&self, name: &str) -> Option<&Field> {
+        self.fields.iter().find(|field| field.name == name)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
