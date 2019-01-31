@@ -22,6 +22,7 @@ export default class ModelOrderNormalizer {
   }
 
   protected orderComparer<T extends IGQLField | IGQLType>(ref: T[], a: T, b: T): number {
+    // Should we also compare for enum?
     const ia = ref.findIndex(x => x.name === a.name)
     const ib = ref.findIndex(x => x.name === b.name)
 

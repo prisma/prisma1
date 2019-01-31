@@ -53,7 +53,7 @@ describe(`Renderer test`, () => {
 
     const res = renderer.render({
       types: [model]
-    })
+    }, true)
 
     expect(res).toEqual(simpleModel)
   })
@@ -104,14 +104,14 @@ describe(`Renderer test`, () => {
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
 
   test('Render a single type consistently with the parser', () => {
     const parsed = parser.parseFromSchemaString(simpleModel);
-    const rendered = renderer.render(parsed)
+    const rendered = renderer.render(parsed, true)
 
     expect(rendered).toEqual(simpleModel)
   })

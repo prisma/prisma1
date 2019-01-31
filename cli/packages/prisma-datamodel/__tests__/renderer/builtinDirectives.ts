@@ -43,7 +43,7 @@ describe(`Renderer directives test`, () => {
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
@@ -84,7 +84,7 @@ describe(`Renderer directives test`, () => {
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
@@ -128,7 +128,7 @@ describe(`Renderer directives test`, () => {
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
