@@ -1,7 +1,7 @@
 import { RelationalParser, ISDL, IGQLField, IGQLType } from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
-export class SpecialFieldNormalizer implements INormalizer {
+export class HideReservedFields implements INormalizer {
   protected baseModel: ISDL
 
   constructor(baseModel: ISDL) {

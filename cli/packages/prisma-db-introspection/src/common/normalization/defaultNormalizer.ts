@@ -2,7 +2,8 @@ import NormalizerGroup from './normalizerGroup'
 import ModelNameAndDirectiveNormalizer from './modelNameAndDirectiveNormalizer'
 import ModelOrderNormalizer from './modelOrderNormalizer'
 import { ISDL, DatabaseType } from 'prisma-datamodel'
-import { SpecialFieldNormalizer } from './specialFieldNormalizer'
+import { HideReservedFields } from './hideReservedFields'
+import { RemoveRelationName } from './removeRelationNames'
 
 export default abstract class DefaultNormalizer {
   public static create(databaseType: DatabaseType, baseModel: ISDL | null) {
@@ -16,11 +17,13 @@ export default abstract class DefaultNormalizer {
   public static createWithoutBaseModel(databaseType: DatabaseType) {
     if(databaseType === DatabaseType.mongo) {
       return new NormalizerGroup([
-        new ModelNameAndDirectiveNormalizer(null)
+        new ModelNameAndDirectiveNormalizer(null),
+        new RemoveRelationName(null)
       ])
     } else {
       return new NormalizerGroup([
-        new ModelNameAndDirectiveNormalizer(null)
+        new ModelNameAndDirectiveNormalizer(null),
+        new RemoveRelationName(null)
       ])
     }
   }
@@ -29,13 +32,15 @@ export default abstract class DefaultNormalizer {
     if(databaseType === DatabaseType.mongo) {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
-        new ModelOrderNormalizer(baseModel)
+        new ModelOrderNormalizer(baseModel),
+        new RemoveRelationName(null)
       ])
     } else {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
-        new SpecialFieldNormalizer(baseModel)
+        new HideReservedFields(baseModel),
+        new RemoveRelationName(null)
       ])
     }
   }

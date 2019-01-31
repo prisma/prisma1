@@ -87,7 +87,7 @@ type MediaType {
 type Playlist {
   id: Int! @pgColumn(name: \\"PlaylistId\\")
   Name: String
-  Track: [Track!]! @relation(name: \\"PlaylistTrack\\")
+  Track: [Track!]!
 }
 
 type Track {
@@ -100,7 +100,7 @@ type Track {
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!
-  Playlist: [Playlist!]! @relation(name: \\"PlaylistTrack\\")
+  Playlist: [Playlist!]!
   UnitPrice: Float!
 }"
 `;

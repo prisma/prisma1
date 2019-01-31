@@ -156,4 +156,70 @@ describe('Schema normalization from existing mongo schema', () => {
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
+
+  it('Should remove ambigous relation names.', () => {
+    const schemaFromDb = `
+      type User {
+        email: String! @id
+        posts: [Post!]! @relation(name: "PostToUser")
+      }
+      
+      type Post {
+        likes: Int!
+        text: String!
+        user: User! @relation(name: "PostToUser")
+      }`
+
+    const existingSchema = `type User { 
+      email: String! @id
+    }`
+
+    const expectedResultSchema = dedent(`
+      type User {
+        email: String! @id
+        posts: [Post!]!
+      }
+      
+      type Post {
+        likes: Int!
+        text: String!
+        user: User!
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
+
+  it('Should not remove non-ambigous relation names.', () => {
+    const schemaFromDb = `
+      type User {
+        email: String! @id
+        likedPosts: [Post!]! @relation(name: "LikedPosts")
+        posts: [Post!]! @relation(name: "PostToUser")
+      }
+      
+      type Post {
+        likes: Int!
+        likedBy: [User!]! @relation(name: "LikedPosts")
+        user: User! @relation(name: "PostToUser")
+      }`
+
+    const existingSchema = `type User { 
+        email: String! @id
+      }`
+
+    const expectedResultSchema = dedent(`
+      type User {
+        email: String! @id
+        likedPosts: [Post!]! @relation(name: "LikedPosts")
+        posts: [Post!]! @relation(name: "PostToUser")
+      }
+      
+      type Post {
+        likedBy: [User!]! @relation(name: "LikedPosts")
+        likes: Int!
+        user: User! @relation(name: "PostToUser")
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
 })

@@ -32,11 +32,11 @@ exports[`Introspector relation with relation table 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
   id: Int!
-  product: [Product!]! @relation(name: \\"bill_product\\")
+  product: [Product!]!
 }
 
 type Product @pgTable(name: \\"product\\") {
-  bill: [Bill!]! @relation(name: \\"bill_product\\")
+  bill: [Bill!]!
   id: Int!
   product: String!
 }"

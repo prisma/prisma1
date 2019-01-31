@@ -239,7 +239,7 @@ export default abstract class Parser {
    * Gets all reserved directive keys. 
    */
   protected getReservedDirectiveNames() {
-    return [DirectiveKeys.default, DirectiveKeys.isEmbedded, DirectiveKeys.db, DirectiveKeys.isCreatedAt, DirectiveKeys.isUpdatedAt, DirectiveKeys.isUnique, DirectiveKeys.isId, DirectiveKeys.index]
+    return [DirectiveKeys.default, DirectiveKeys.isEmbedded, DirectiveKeys.db, DirectiveKeys.isCreatedAt, DirectiveKeys.isUpdatedAt, DirectiveKeys.isUnique, DirectiveKeys.isId, DirectiveKeys.index, DirectiveKeys.relation]
   }
 
   /**
@@ -251,7 +251,7 @@ export default abstract class Parser {
     const reservedDirectiveNames = this.getReservedDirectiveNames()
 
     for(const directive of fieldOrType.directives) {
-      if(reservedDirectiveNames.includes(directive.name)) {
+      if(reservedDirectiveNames.includes(directive.name.value)) {
         continue
       }
 
