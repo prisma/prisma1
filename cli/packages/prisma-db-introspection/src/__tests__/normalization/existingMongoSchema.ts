@@ -222,4 +222,40 @@ describe('Schema normalization from existing mongo schema', () => {
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
+
+  it('Should not remove ambigous relation names when they are explicitely named in the existing schema.', () => {
+    const schemaFromDb = `
+      type User {
+        email: String! @id
+        posts: [Post!]! @relation(name: "PostToUser")
+      }
+      
+      type Post {
+        likes: Int!
+        text: String!
+        user: User! @relation(name: "PostToUser")
+      }`
+
+    const existingSchema = `type User {
+      posts: [Post!]! @relation(name: "PostToUser")
+    }
+    
+    type Post {
+      user: User! @relation(name: "PostToUser")
+    }`
+
+    const expectedResultSchema = dedent(`
+      type User {
+        posts: [Post!]! @relation(name: "PostToUser")
+        email: String! @id
+      }
+      
+      type Post {
+        user: User! @relation(name: "PostToUser")
+        likes: Int!
+        text: String!
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
 })

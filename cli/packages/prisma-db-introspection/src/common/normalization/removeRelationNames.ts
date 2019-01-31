@@ -24,7 +24,7 @@ export class RemoveRelationName implements INormalizer {
 
         if(ref !== undefined) {
           const refField = ref.fields.find(x => x.name === field.name)
-          if(refField !== undefined && refField.databaseName !== null)
+          if(refField !== undefined && refField.relationName !== null)
             continue // Ref model has database name
         }
 

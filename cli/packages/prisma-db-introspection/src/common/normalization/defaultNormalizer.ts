@@ -33,14 +33,14 @@ export default abstract class DefaultNormalizer {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
-        new RemoveRelationName(null)
+        new RemoveRelationName(baseModel)
       ])
     } else {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new HideReservedFields(baseModel),
-        new RemoveRelationName(null)
+        new RemoveRelationName(baseModel)
       ])
     }
   }
