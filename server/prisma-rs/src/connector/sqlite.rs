@@ -150,7 +150,7 @@ impl Connector for Sqlite {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{connector::Connector, querying::*, schema::*};
+    use crate::{connector::Connector, schema::*};
 
     #[test]
     fn test_select_1() {
