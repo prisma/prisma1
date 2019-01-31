@@ -11,6 +11,12 @@ use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{types::ToSql, Row, NO_PARAMS};
 use std::{collections::HashSet, sync::Arc};
 
+use sql::{
+    prelude::*,
+    grammar::operation::eq::Equable,
+};
+
+
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Databases = ArcSwap<HashSet<String>>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -126,13 +132,13 @@ impl Connector for Sqlite {
                 .map(|field| field.name.as_ref())
                 .collect();
 
-            // TODO: Implement with a proper DSL. This here is an SQL Injection bug.
-            let query = dbg!(format!(
-                "SELECT {} FROM {} WHERE {} = ?1",
-                field_names.join(","),
-                selector.table,
-                selector.field.name
-            ));
+            let query = dbg!(
+                select_from(&selector.table)
+                    .columns(field_names.as_slice())
+                    .so_that(selector.field.name.equals(DatabaseValue::Parameter))
+                    .compile()
+                    .unwrap()
+            );
 
             let params = vec![(selector.value as &ToSql)];
 

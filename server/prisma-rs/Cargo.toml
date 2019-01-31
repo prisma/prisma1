@@ -31,6 +31,7 @@ url_serde = "0.2"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = "0.7"
 arc-swap = "0.3"
+sql = { git = "https://github.com/prisma/sql.git", branch = "equals" }
 
 [build-dependencies]
 prost-build = "0.4"
