@@ -1,8 +1,9 @@
 package com.prisma.rs
 
 import com.prisma.rs.jna.JnaRustBridge
-import com.sun.jna.{Memory, Native}
+import com.sun.jna.{Memory, Native, Pointer}
 import prisma.getNodeByWhere.GetNodeByWhere
+import scalapb.GeneratedMessage
 
 object NativeBinding {
   val library: JnaRustBridge = {
@@ -15,13 +16,19 @@ object NativeBinding {
   def select_1(): Int = library.select_1()
 
   def get_node_by_where(getNodeByWhere: GetNodeByWhere): Unit = {
-    val length       = getNodeByWhere.serializedSize
-    val serialized   = GetNodeByWhere.toByteArray(getNodeByWhere)
+    val (pointer, length) = writeBuffer(getNodeByWhere)
+    val callResult        = library.get_node_by_where(pointer, length)
+
+  }
+
+  def writeBuffer[T](msg: GeneratedMessage): (Pointer, Int) = {
+    val length       = msg.serializedSize
+    val serialized   = msg.toByteArray
     val nativeMemory = new Memory(length)
 
     nativeMemory.write(0, serialized, 0, length)
-
-    // todo error protocol?
-    library.get_node_by_where(nativeMemory, length)
+    (nativeMemory, length)
   }
+
+//  def destroy()
 }

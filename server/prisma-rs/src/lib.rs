@@ -51,6 +51,16 @@ pub extern "C" fn select_1() -> i32 {
 #[no_mangle]
 pub extern "C" fn get_node_by_where(data: *mut u8, len: usize) {
     let payload = unsafe { slice::from_raw_parts_mut(data, len) };
+
+    // Q: Does this mean that the JVM-owned memory is freed when this is dropped? That would cause a double-free.
     let params = GetNodeByWhere::decode(payload).unwrap();
+
     dbg!(params);
+}
+
+#[no_mangle]
+pub extern "C" fn destroy(buffer: mut *ProtoBufEnvelope) {
+    unsafe {
+        Box::from_raw(buffer)
+    };
 }

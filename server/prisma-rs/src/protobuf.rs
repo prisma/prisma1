@@ -6,7 +6,7 @@ pub mod prisma {
 
 #[repr(C)]
 #[no_mangle]
-pub struct ProtoBuf {
+pub struct ProtoBufEnvelope {
     pub data: *mut u8,
     pub len: usize,
 }
@@ -19,7 +19,7 @@ impl ProtoBuf {
 }
 */
 
-impl Drop for ProtoBuf {
+impl Drop for ProtoBufEnvelope {
     fn drop(&mut self) {
         if self.len > 0 {
             unsafe {
@@ -29,13 +29,12 @@ impl Drop for ProtoBuf {
     }
 }
 
-impl From<Vec<u8>> for ProtoBuf {
+impl From<Vec<u8>> for ProtoBufEnvelope {
     fn from(mut v: Vec<u8>) -> Self {
         let len = v.len();
         let data = v.as_mut_ptr();
 
         mem::forget(v);
-
-        ProtoBuf { data, len }
+        ProtoBufEnvelope { data, len }
     }
 }
