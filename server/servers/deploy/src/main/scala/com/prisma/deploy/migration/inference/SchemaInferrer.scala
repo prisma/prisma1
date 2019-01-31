@@ -295,7 +295,7 @@ case class SchemaInferrerImpl(
             case (None, None) if relationField.isList => manifestationForField(relatedField.tpe, relatedField, relationName)
             case (_, None)                            => manifestationForField(prismaType, relationField, relationName)
             case (None, _)                            => manifestationForField(relatedField.tpe, relatedField, relationName)
-            case (_, _)                               => sys.error("must not happen")
+            case (_, _)                               => sys.error("Must not happen.")
           }
 
         case None =>
@@ -316,17 +316,11 @@ case class SchemaInferrerImpl(
 
   private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationLinkManifestation] = {
     val activeStrategy = relationField.strategy match {
-      case Some(strat) => strat
-      case None =>
-        if (capabilities.has(RelationLinkListCapability)) {
-          RelationStrategy.Inline
-        } else if (relationField.hasManyToManyRelation) {
-          RelationStrategy.Table
-        } else if (relationField.hasOneToManyRelation && relationField.isOne) {
-          RelationStrategy.Inline
-        } else {
-          sys.error("One to one relations must not have the AUTO strategy")
-        }
+      case Some(strat)                                                       => strat
+      case None if prismaSdl.relationTable(relationName).isDefined           => RelationStrategy.Table
+      case None if relationField.hasManyToManyRelation                       => RelationStrategy.Table
+      case None if relationField.hasOneToManyRelation && relationField.isOne => RelationStrategy.Inline
+      case None                                                              => sys.error("The datamodel validation should have required an explicit strategy here.")
     }
 
     activeStrategy match {

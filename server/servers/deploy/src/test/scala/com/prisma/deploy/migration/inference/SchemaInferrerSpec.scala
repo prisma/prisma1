@@ -416,30 +416,6 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
   }
 
-  "handle relation table manifestations" in {
-    val types =
-      """|type Todo {
-         |  id: ID! @id
-         |  name: String!
-         |  list: List!
-         |}
-         |
-         |type List {
-         |  id: ID! @id
-         |  todos: [Todo] @relation(link: TABLE)
-         |}
-         |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
-
-    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
-    // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
-    relation.modelAName should equal("List")
-    relation.modelBName should equal("Todo")
-
-    val expectedManifestation = RelationTable(table = "_ListToTodo", modelAColumn = "A", modelBColumn = "B")
-    relation.manifestation should equal(expectedManifestation)
-  }
-
   "handle inline relation manifestations on Mongo" in {
     val types =
       """
@@ -557,12 +533,58 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     idField.isUnique should be(true)
   }
 
-  "should support link tables" in {
+  "should support link tables in the most explicit notation" in {
     val types =
       """
         |type Model {
         |  id: ID! @id
         |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  firstColumn: Model!
+        |  secondColumn: Model!
+        |}
+      """.stripMargin
+    val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
+    val relation = schema.relations.head
+    relation.name should be("ModelToModelRelation")
+    val manifestation = relation.manifestation.asInstanceOf[RelationTable]
+    manifestation.modelAColumn should be("firstColumn")
+    manifestation.modelBColumn should be("secondColumn")
+    manifestation.idColumn should be(None)
+  }
+
+  "should support forcing link tables with only the link argument" in {
+    val types =
+      """|type Todo {
+         |  id: ID! @id
+         |  name: String!
+         |  list: List!
+         |}
+         |
+         |type List {
+         |  id: ID! @id
+         |  todos: [Todo] @relation(link: TABLE)
+         |}
+         |""".stripMargin
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
+
+    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
+    // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
+    relation.modelAName should equal("List")
+    relation.modelBName should equal("Todo")
+
+    val expectedManifestation = RelationTable(table = "_ListToTodo", modelAColumn = "A", modelBColumn = "B")
+    relation.manifestation should equal(expectedManifestation)
+  }
+
+  "should support link tables if the link argument is missing by matching relation name and link table name" in {
+    val types =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
         |type ModelToModelRelation @linkTable {
