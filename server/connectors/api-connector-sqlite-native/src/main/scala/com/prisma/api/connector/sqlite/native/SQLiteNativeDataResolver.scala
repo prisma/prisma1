@@ -3,34 +3,33 @@ package com.prisma.api.connector.sqlite.native
 import com.google.protobuf.ByteString
 import com.prisma.api.connector._
 import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
-import com.prisma.rs.NativeBinding
+import com.prisma.rs.{NativeBinding, NodeResult}
 import com.prisma.shared.models.{Model, Project, RelationField, ScalarField}
 import play.api.libs.json.Json
-import prisma.getNodeByWhere.Header
+import prisma.getNodeByWhere.ValueContainer.PrismaValue
+import prisma.getNodeByWhere.{Header, ValueContainer}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolver {
+case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: ExecutionContext) extends DataResolver {
   import com.prisma.shared.models.ProjectJsonFormatter._
 
   override def project: Project = forwarder.project
 
   override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = forwarder.getModelForGlobalId(globalId)
 
-  override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
+  override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = Future {
     val projectJson = Json.toJson(project)
-    val gcValueJson = Json.toJson(where.fieldGCValue)
-
     val input = prisma.getNodeByWhere.GetNodeByWhere(
       Header("GetNodeByWhere"),
       ByteString.copyFromUtf8(projectJson.toString()),
       where.model.name,
       where.fieldName,
-      ByteString.copyFromUtf8(gcValueJson.toString())
+      ValueContainer(PrismaValue(where.fieldGCValue.value))
     )
 
-    NativeBinding.get_node_by_where(input)
-    Future.successful(None)
+    val nodeResult: Option[NodeResult] = NativeBinding.get_node_by_where(input)
+    nodeResult.map(prismaNodeFromNodeResult)
   }
 
   override def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] =
@@ -54,4 +53,6 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolve
   override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = countByTable(table, whereFilter)
 
   override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = countByModel(model, queryArguments)
+
+  def prismaNodeFromNodeResult(nodeResult: NodeResult): PrismaNode = PrismaNode(nodeResult.id, nodeResult.data)
 }

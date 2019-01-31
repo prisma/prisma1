@@ -439,6 +439,7 @@ lazy val cache = libProject("cache")
     ))
 
 lazy val prismaRsBinding = libProject("prisma-rs-binding")
+  .dependsOn(sharedModels)
   .enablePlugins(ProtocPlugin)
   .settings(
     ProtocPlugin.protobufGlobalSettings,

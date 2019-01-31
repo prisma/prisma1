@@ -181,7 +181,7 @@ mod tests {
         let fields = vec![
             Field {
                 name: String::from("id"),
-                type_identifier: TypeIdentifier::Int,
+                type_identifier: TypeIdentifier::GraphQLID,
                 is_required: true,
                 is_list: false,
                 is_unique: true,
