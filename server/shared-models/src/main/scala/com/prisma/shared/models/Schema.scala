@@ -17,6 +17,7 @@ case class Schema(
     version: Option[String] = None
 ) {
   val isLegacy                              = version.isEmpty
+  val isV2                                  = version.contains(Schema.version.v2)
   val models                                = modelTemplates.map(_.build(this))
   val relations                             = relationTemplates.map(_.build(this))
   val allFields: Seq[Field]                 = models.flatMap(_.fields)

@@ -2,6 +2,7 @@ package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.{ClientDbQueries, DeployConnector}
 import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
+import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
@@ -10,7 +11,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
-  val previousSchema = project.schema
+  val previousSchema        = project.schema
+  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
 
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
     checkAgainstExistingData.map { results =>
@@ -107,17 +109,38 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def deleteFieldValidation(x: DeleteField) = {
-    val model    = previousSchema.getModelByName_!(x.model)
-    val isScalar = model.fields.find(_.name == x.name).get.isScalar
+    val model = previousSchema.getModelByName_!(x.model)
+    val field = model.getFieldByName_!(x.name)
 
-    if (isScalar) {
+    val accidentalRemovalError = field match {
+      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.createdAtFieldName =>
+        Some(
+          DeployWarning(
+            model.name,
+            field.name,
+            s"You are removing the field `${ReservedFields.createdAtFieldName}` while migrating to the new datamodel. Please add the field `createdAt: DateTime! @createdAt` explicitly to your model to keep this functionality."
+          ))
+      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.updatedAtFieldName =>
+        Some(
+          DeployWarning(
+            model.name,
+            field.name,
+            s"You are removing the field `${ReservedFields.updatedAtFieldName}` while migrating to the new datamodel. Please add the field `updatedAt: DateTime! @updatedAt` explicitly to your model to keep this functionality."
+          ))
+      case _ =>
+        None
+    }
+
+    val dataLossError = if (field.isScalar) {
       clientDbQueries.existsByModel(model).map {
-        case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
+        case true  => Vector(DeployWarnings.dataLossField(model.name, field.name))
         case false => Vector.empty
       }
     } else {
       validationSuccessful
     }
+
+    dataLossError.map(errors => errors ++ accidentalRemovalError)
   }
 
   private def updateFieldValidation(x: UpdateField) = {
