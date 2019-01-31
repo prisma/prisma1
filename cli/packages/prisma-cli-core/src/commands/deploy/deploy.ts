@@ -464,7 +464,6 @@ ${chalk.gray(
   }
 
   private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
-    this.out.log(this.out.getStyledJSON(payload))
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(chalk.bold.red('\nErrors:'))
       this.out.migration.printErrors(payload.errors)
