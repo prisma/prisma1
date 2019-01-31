@@ -42,12 +42,12 @@ case class SubscriptionQueryValidator(project: Project)(implicit dependencies: A
   }
 
   def validateSubscriptionQuery(queryDoc: Document, model: Model): Unit Or Seq[SubscriptionQueryError] = {
-    val schema     = SubscriptionSchema(model, project, None, ModelMutationType.Created, None, externalSchema = true).build
-    val violations = QueryValidator.default.validateQuery(schema, queryDoc)
-    if (violations.nonEmpty) {
-      Bad(violations.map(v => SubscriptionQueryError(v.errorMessage)))
+    if (model.isEmbedded) {
+      Bad(Seq(SubscriptionQueryError("Subscriptions on embedded types are not allowed.")))
     } else {
-      Good(())
+      val schema     = SubscriptionSchema(model, project, None, ModelMutationType.Created, None, externalSchema = true).build
+      val violations = QueryValidator.default.validateQuery(schema, queryDoc)
+      if (violations.nonEmpty) Bad(violations.map(v => SubscriptionQueryError(v.errorMessage))) else Good(())
     }
   }
 }
