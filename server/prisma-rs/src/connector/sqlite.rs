@@ -1,15 +1,26 @@
+use arc_swap::ArcSwap;
+use r2d2;
+use r2d2_sqlite::SqliteConnectionManager;
+use std::{collections::HashSet, sync::Arc};
+
 use crate::{
     connector::Connector,
     error::Error,
     querying::NodeSelector,
     schema::{Field, TypeIdentifier},
     PrismaResult, PrismaValue,
+    protobuf::prisma::{
+        GraphqlId,
+        graphql_id::IdValue,
+    },
 };
-use arc_swap::ArcSwap;
-use r2d2;
-use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{types::ToSql, Row, NO_PARAMS};
-use std::{collections::HashSet, sync::Arc};
+
+use rusqlite::{
+    types::{Null, ToSql, ToSqlOutput, FromSql, ValueRef, FromSqlResult, },
+    Error as RusqlError,
+    Row,
+    NO_PARAMS
+};
 
 use sql::{grammar::operation::eq::Equable, prelude::*};
 
@@ -147,6 +158,42 @@ impl Connector for Sqlite {
     }
 }
 
+impl ToSql for PrismaValue {
+    fn to_sql(&self) -> Result<ToSqlOutput, RusqlError> {
+        let value = match self {
+            PrismaValue::String(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Float(value) => ToSqlOutput::from(*value as f64),
+            PrismaValue::Int(value) => ToSqlOutput::from(*value),
+            PrismaValue::Relation(value) => ToSqlOutput::from(*value as i64),
+            PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
+            PrismaValue::DateTime(value) => value.to_sql().unwrap(),
+            PrismaValue::Null(_) => ToSqlOutput::from(Null),
+            PrismaValue::GraphqlId(value) => match value.id_value {
+                Some(IdValue::String(ref value)) => ToSqlOutput::from(value.as_ref() as &str),
+                Some(IdValue::Int(value)) => ToSqlOutput::from(value),
+                None => panic!("We got an empty ID value here. Tsk tsk.")
+            },
+        };
+
+        Ok(value)
+    }
+}
+
+impl FromSql for GraphqlId {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        value.as_str()
+            .map(|strval| {
+                GraphqlId{ id_value: Some(IdValue::String(strval.to_string())) }
+            })
+            .or_else(|_| value.as_i64().map(|intval| {
+                GraphqlId{ id_value: Some(IdValue::Int(intval)) }
+            }))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -181,7 +228,7 @@ mod tests {
         let fields = vec![
             Field {
                 name: String::from("id"),
-                type_identifier: TypeIdentifier::Int,
+                type_identifier: TypeIdentifier::GraphQLID,
                 is_required: true,
                 is_list: false,
                 is_unique: true,
@@ -215,7 +262,7 @@ mod tests {
         let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
 
         assert_eq!(2, result.len());
-        assert_eq!(PrismaValue::Int(1), result[0]);
+        assert_eq!(PrismaValue::GraphqlId(GraphqlId { id_value: Some(IdValue::Int(1)) }), result[0]);
         assert_eq!(PrismaValue::String(String::from("Musti")), result[1]);
     }
 }
