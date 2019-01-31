@@ -1,7 +1,8 @@
 import { singular } from 'pluralize'
 import { IGQLType, IGQLField, ISDL, capitalize, plural, toposort } from 'prisma-datamodel'
+import { INormalizer } from './normalizer';
 
-export default class ModelNameNormalizer {
+export default class ModelNameNormalizer implements INormalizer {
   public normalize(model: ISDL) {
     // We need to sort types according to topological order for name normalization.
     // Otherwise embedded type naming might break as embedded types depend on 

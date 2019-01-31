@@ -1,7 +1,8 @@
 import { singular } from 'pluralize'
 import { IGQLType, IGQLField, ISDL, capitalize, plural, toposort } from 'prisma-datamodel'
+import { INormalizer } from './normalizer';
 
-export default class ModelOrderNormalizer {
+export default class ModelOrderNormalizer implements INormalizer {
   private baseModel: ISDL
 
   public constructor(baseModel: ISDL) {

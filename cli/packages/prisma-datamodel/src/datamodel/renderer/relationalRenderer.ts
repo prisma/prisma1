@@ -1,5 +1,5 @@
 import Renderer from './renderer'
-import { idFieldName, createdAtFieldName, updatedAtFieldName } from "../parser/relationalParser"
+import RelationalParser from '../parser/relationalParser'
 import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from '../model'
 import GQLAssert from '../../util/gqlAssert'
 import { TypeIdentifiers } from '../scalar'
@@ -45,14 +45,14 @@ export default class RelationalRenderer extends Renderer {
 
   // Assert some basic rules
   protected renderField(field: IGQLField): string {
-    if(field.isId && field.name !== idFieldName) {
-      field.comments.push({ text: `ID field must be called "${idFieldName}" in relational models.`, isError: true})
+    if(field.isId && field.name !== RelationalParser.idFieldName) {
+      field.comments.push({ text: `ID field must be called "${RelationalParser.idFieldName}" in relational models.`, isError: true})
     }
-    if(field.isCreatedAt && field.name !== createdAtFieldName) {
-      field.comments.push({ text: `CreatedAt field must be called "${createdAtFieldName}" in relational models.`, isError: true})
+    if(field.isCreatedAt && field.name !== RelationalParser.createdAtFieldName) {
+      field.comments.push({ text: `CreatedAt field must be called "${RelationalParser.createdAtFieldName}" in relational models.`, isError: true})
     }
-    if(field.isUpdatedAt && field.name !== updatedAtFieldName) {
-      field.comments.push({ text: `UpdatedAt field must be called "${updatedAtFieldName}" in relational models.`, isError: true})
+    if(field.isUpdatedAt && field.name !== RelationalParser.updatedAtFieldName) {
+      field.comments.push({ text: `UpdatedAt field must be called "${RelationalParser.updatedAtFieldName}" in relational models.`, isError: true})
     }
 
     return super.renderField(field)

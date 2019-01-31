@@ -26,3 +26,10 @@ export { default as Renderers } from './datamodel/renderer'
 export {
   default as RelationalRendererV2,
 } from './datamodel/renderer/relationalRendererV2'
+
+export {
+  default as RelationalRenderer,
+} from './datamodel/renderer/relationalRenderer'
+export {
+  default as RelationalParser,
+} from './datamodel/parser/relationalParser'

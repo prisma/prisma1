@@ -1,5 +1,5 @@
 import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
-import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
+import ModelNameAndDirectiveNormalizer from '../../common/normalization/modelNameAndDirectiveNormalizer'
 
 function testNormalization(schemaFromDb, expectedResultSchema) {
   const parser = Parser.create(DatabaseType.mongo)

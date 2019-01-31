@@ -1,6 +1,5 @@
 import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
-import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
-import ModelOrderNormalizer from '../../common/modelOrderNormalizer';
+import DefaultNormalizer from '../../common/normalization/defaultNormalizer'
 
 function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
   const parser = Parser.create(DatabaseType.mongo)
@@ -8,11 +7,7 @@ function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
   const fromDb = parser.parseFromSchemaString(schemaFromDb)
   const existing = parser.parseFromSchemaString(existingSchema)
 
-  const normalizer = new ModelNameAndDirectiveNormalizer(existing)
-  const orderNormalizer = new ModelOrderNormalizer(existing)
-
-  normalizer.normalize(fromDb)
-  orderNormalizer.normalize(fromDb)
+  DefaultNormalizer.create(DatabaseType.mongo, existing).normalize(fromDb)
 
   const renderer = DefaultRenderer.create(DatabaseType.mongo)
   const resultSchema = renderer.render(fromDb)
@@ -20,9 +15,8 @@ function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
   expect(resultSchema).toEqual(expectedResultSchema)
 }
 
-describe('Schema normalization from existing schema', () => {
+describe('Schema normalization from existing mongo schema', () => {
   it('Should copy names and directives from an existing schema.', () => {
-
     const schemaFromDb = `
       type useru {
         age: Int!
