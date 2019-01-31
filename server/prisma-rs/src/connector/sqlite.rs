@@ -1,3 +1,4 @@
+use std::env;
 use arc_swap::ArcSwap;
 use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -70,7 +71,8 @@ impl Sqlite {
     }
 
     fn create_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
-        let path = format!("db/{}", db_name);
+        let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
+        let path = format!("{}/db/{}", root, db_name);
         dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
 
         Ok(())
@@ -249,7 +251,7 @@ mod tests {
         ];
 
         let model = Model {
-            name: String::from("User"),
+            name: String::from("user"),
             stable_identifier: String::from("user"),
             is_embedded: false,
             fields: fields,

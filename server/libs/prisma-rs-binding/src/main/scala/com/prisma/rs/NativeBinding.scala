@@ -1,14 +1,13 @@
 package com.prisma.rs
 
-import java.util.UUID
-
 import com.prisma.gc_values._
 import com.prisma.rs.jna.{JnaRustBridge, ProtobufEnvelope}
 import com.sun.jna.{Memory, Native, Pointer}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
+import prisma.getNodeByWhere.GraphqlId.IdValue
 import prisma.getNodeByWhere.ValueContainer.PrismaValue
-import prisma.getNodeByWhere.{GetNodeByWhere, GetNodeByWhereResponse, ValueContainer}
+import prisma.getNodeByWhere.{GetNodeByWhere, GetNodeByWhereResponse, GraphqlId, ValueContainer}
 import scalapb.GeneratedMessage
 
 case class NodeResult(id: IdGCValue, data: RootGCValue)
@@ -49,18 +48,23 @@ object NativeBinding {
 
   def toGcValue(value: ValueContainer.PrismaValue): GCValue = {
     value match {
-      case PrismaValue.Empty                 => NullGCValue
-      case PrismaValue.Boolean(b: Boolean)   => BooleanGCValue(b)
-      case PrismaValue.DateTime(dt: String)  => DateTimeGCValue(DateTime.parse(dt))
-      case PrismaValue.Enum(e: String)       => EnumGCValue(e)
-      case PrismaValue.Float(f: Float)       => FloatGCValue(f)
-      case PrismaValue.GraphqlId(id: String) => StringIdGCValue(id)
-      case PrismaValue.Int(i: Int)           => IntGCValue(i)
-      case PrismaValue.Json(j: String)       => JsonGCValue(Json.parse(j))
-      case PrismaValue.Null(_)               => NullGCValue
-      case PrismaValue.Relation(r: Long)     => ??? // What are we supposed to do here?
-      case PrismaValue.String(s: String)     => StringGCValue(s)
-      case PrismaValue.Uuid(uuid: String)    => UuidGCValue(UUID.fromString(uuid))
+      case PrismaValue.Empty                => NullGCValue
+      case PrismaValue.Boolean(b: Boolean)  => BooleanGCValue(b)
+      case PrismaValue.DateTime(dt: String) => DateTimeGCValue(DateTime.parse(dt))
+      case PrismaValue.Enum(e: String)      => EnumGCValue(e)
+      case PrismaValue.Float(f: Float)      => FloatGCValue(f)
+      case PrismaValue.GraphqlId(id: GraphqlId) =>
+        id.idValue match {
+          case IdValue.String(s) => StringIdGCValue(s)
+          case IdValue.Int(i)    => IntGCValue(i.toInt)
+          case _                 => sys.error("empty protobuf")
+        }
+      case PrismaValue.Int(i: Int)        => IntGCValue(i)
+      case PrismaValue.Json(j: String)    => JsonGCValue(Json.parse(j))
+      case PrismaValue.Null(_)            => NullGCValue
+      case PrismaValue.Relation(r: Long)  => ??? // What are we supposed to do here?
+      case PrismaValue.String(s: String)  => StringGCValue(s)
+      case PrismaValue.Uuid(uuid: String) => UuidGCValue.parse(uuid).get
     }
   }
 

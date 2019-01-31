@@ -26,7 +26,7 @@ impl<'a> NodeSelector<'a> {
         value: &'a PrismaValue,
         selected_fields: &'a [Field],
     ) -> NodeSelector<'a> {
-        let table = format!("{}.{}", database, model.stable_identifier);
+        let table = format!("{}.{}", database, model.name);
 
         NodeSelector {
             model,
