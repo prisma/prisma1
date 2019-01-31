@@ -258,4 +258,41 @@ describe('Schema normalization from existing mongo schema', () => {
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
+
+
+  it('Should remove back relations if they are missing in the reference schema.', () => {
+    const schemaFromDb = `
+      type User {
+        email: String! @id
+        posts: [Post!]!
+      }
+      
+      type Post {
+        likes: Int!
+        text: String!
+        user: User!
+      }`
+
+    const existingSchema = `type User {
+      posts: [Post!]
+    }
+    
+    type Post {
+      likes: Int!
+      text: String!
+    }`
+
+    const expectedResultSchema = dedent(`
+      type User {
+        posts: [Post!]!
+        email: String! @id
+      }
+      
+      type Post {
+        likes: Int!
+        text: String!
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
 })

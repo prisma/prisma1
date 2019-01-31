@@ -4,6 +4,7 @@ import ModelOrderNormalizer from './modelOrderNormalizer'
 import { ISDL, DatabaseType } from 'prisma-datamodel'
 import { HideReservedFields } from './hideReservedFields'
 import { RemoveRelationName } from './removeRelationNames'
+import { RemoveBackRelation } from './removeBackRelations'
 
 export default abstract class DefaultNormalizer {
   public static create(databaseType: DatabaseType, baseModel: ISDL | null) {
@@ -33,14 +34,16 @@ export default abstract class DefaultNormalizer {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
-        new RemoveRelationName(baseModel)
+        new RemoveRelationName(baseModel),
+        new RemoveBackRelation(baseModel)
       ])
     } else {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new HideReservedFields(baseModel),
-        new RemoveRelationName(baseModel)
+        new RemoveRelationName(baseModel),
+        new RemoveBackRelation(baseModel)
       ])
     }
   }
