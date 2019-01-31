@@ -35,9 +35,6 @@ export default abstract class Parser {
 
     this.resolveRelations(types)
 
-    // Sort types alphabetically
-    types.sort(({ name: a }, { name: b }) => (a > b ? 1 : -1))
-
     // That's it.
     // We could check our model here, if we wanted to.
     // Possible checks:

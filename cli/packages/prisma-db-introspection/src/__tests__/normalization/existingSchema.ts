@@ -1,5 +1,6 @@
 import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
 import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
+import ModelOrderNormalizer from '../../common/modelOrderNormalizer';
 
 function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
   const parser = Parser.create(DatabaseType.mongo)
@@ -8,8 +9,10 @@ function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
   const existing = parser.parseFromSchemaString(existingSchema)
 
   const normalizer = new ModelNameAndDirectiveNormalizer(existing)
+  const orderNormalizer = new ModelOrderNormalizer(existing)
 
   normalizer.normalize(fromDb)
+  orderNormalizer.normalize(fromDb)
 
   const renderer = DefaultRenderer.create(DatabaseType.mongo)
   const resultSchema = renderer.render(fromDb)
@@ -47,10 +50,10 @@ describe('Schema normalization from existing schema', () => {
     const expectedResultSchema = dedent(`
       type User @db(name: "useru") {
         age: Int!
-        birthday: Date! @db(name: "birthdaydate")
         name: String!
-        posts: [UserPost!]!
+        birthday: Date! @db(name: "birthdaydate")
         signedUp: Date! @createdAt @db(name: "signUpDate")
+        posts: [UserPost!]!
       }
 
       type UserPost @embedded {
@@ -79,9 +82,82 @@ describe('Schema normalization from existing schema', () => {
 
     const expectedResultSchema = dedent(`
       type User @db(name: "useru") {
-        age: Int!
         email: String! @id
         name: String!
+        age: Int!
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
+
+  it('Should respect the ordering from an existing schema.', () => {
+
+    const schemaFromDb = `
+      type User {
+        age: Int!
+        name: String!
+        birthdaydate: Date!
+        posts: [Post!]!
+        signUpDate: Date!
+      }
+
+      type Post @embedded {
+        text: String!
+        likes: Int!
+        comments: [Comment!]!
+      }
+      
+      type Comment @embedded {
+        text: String!
+        likes: Int!
+      }
+      
+      type Vehicle {
+        brand: String!
+        wheelCount: Int!
+        horsePower: Float!
+      }
+      `
+
+    // User has renamed a few types, but post is missing 
+    const existingSchema = `
+      type Vehicle {
+        wheelCount: Int!
+        brand: String!
+        horsePower: Float!
+      }
+      
+      type User {
+        age: Int!
+        name: String!
+        signUpDate: Date!
+      }`
+
+    // The expected result schema
+    const expectedResultSchema = dedent(`
+      type Vehicle {
+        wheelCount: Int!
+        brand: String!
+        horsePower: Float!
+      }
+      
+      type User {
+        age: Int!
+        name: String!
+        signUpDate: Date!
+        birthdaydate: Date!
+        posts: [UserPost!]!
+      }
+
+      type UserPost @embedded {
+        comments: [UserPostComment!]!
+        likes: Int!
+        text: String!
+      }
+      
+      type UserPostComment @embedded {
+        likes: Int!
+        text: String!
       }`)
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
