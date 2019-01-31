@@ -7,8 +7,8 @@ import scala.concurrent.ExecutionContext
 
 class ManyModelDeferredResolver(resolver: DataResolver) {
   def resolve(
-      orderedDeferreds: Vector[OrderedDeferred[ManyModelDeferred]]
-  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
+      orderedDeferreds: Vector[OrderedDeferred[GetNodesDeferred]]
+  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[GetNodesDeferredResultType]] = {
     val deferreds             = orderedDeferreds.map(_.deferred)
     val headDeferred          = deferreds.head
     val model                 = headDeferred.model
@@ -22,7 +22,7 @@ class ManyModelDeferredResolver(resolver: DataResolver) {
     }
   }
 
-  def mapToConnectionOutputType(input: ResolverResult[PrismaNode], deferred: ManyModelDeferred): RelayConnectionOutputType = {
+  def mapToConnectionOutputType(input: ResolverResult[PrismaNode], deferred: GetNodesDeferred): GetNodesDeferredResultType = {
     DefaultIdBasedConnection(
       PageInfo(
         hasNextPage = input.hasNextPage,

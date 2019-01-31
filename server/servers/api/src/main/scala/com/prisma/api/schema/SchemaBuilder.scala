@@ -3,7 +3,7 @@ package com.prisma.api.schema
 import akka.actor.ActorSystem
 import com.prisma.api.connector._
 import com.prisma.api.mutations._
-import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, ManyModelDeferred}
+import com.prisma.api.resolver.DeferredTypes.{IdBasedConnectionDeferred, GetNodesDeferred}
 import com.prisma.api.resolver.{ConnectionParentElement, DefaultIdBasedConnection}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.gc_values.StringIdGCValue
@@ -105,7 +105,7 @@ case class SchemaBuilderImpl(
       arguments = objectTypeBuilder.mapToListConnectionArguments(model),
       resolve = ctx => {
         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-        DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
+        DeferredValue(GetNodesDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
       }
     )
   }
@@ -132,7 +132,7 @@ case class SchemaBuilderImpl(
           )
           DeferredValue(IdBasedConnectionDeferred(connection))
         } else {
-          DeferredValue(ManyModelDeferred(model, arguments, ctx.getSelectedFields(model)))
+          DeferredValue(GetNodesDeferred(model, arguments, ctx.getSelectedFields(model)))
         }
       }
     )

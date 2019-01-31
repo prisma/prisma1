@@ -21,27 +21,27 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
     val orderedDeferred = DeferredUtils.tagDeferredByOrder(deferred)
 
     val oneDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: OneDeferred, order) =>
+      case OrderedDeferred(deferred: GetNodeDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
     val toOneDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: ToOneDeferred, order) =>
+      case OrderedDeferred(deferred: GetNodeByParentDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
     val manyModelDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: ManyModelDeferred, order) =>
+      case OrderedDeferred(deferred: GetNodesDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
     val toManyDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: ToManyDeferred, order) =>
+      case OrderedDeferred(deferred: GetNodesByParentDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
     val countManyModelDeferreds = orderedDeferred.collect {
-      case OrderedDeferred(deferred: CountManyModelDeferred, order) =>
+      case OrderedDeferred(deferred: CountNodesDeferred, order) =>
         OrderedDeferred(deferred, order)
     }
 
@@ -51,11 +51,11 @@ class DeferredResolverImpl[CtxType](dataResolver: DataResolver) extends Deferred
     }
 
     // for every group, further break them down by their arguments
-    val oneDeferredMap             = DeferredUtils.groupModelWhereDeferred(oneDeferreds)
-    val toOneDeferredMap           = DeferredUtils.groupRelatedDeferred[ToOneDeferred](toOneDeferreds)
-    val manyModelDeferredsMap      = DeferredUtils.groupModelArgsDeferred[ManyModelDeferred](manyModelDeferreds)
-    val toManyDeferredsMap         = DeferredUtils.groupRelatedDeferred[ToManyDeferred](toManyDeferreds)
-    val countManyModelDeferredsMap = DeferredUtils.groupModelArgsDeferred[CountManyModelDeferred](countManyModelDeferreds)
+    val oneDeferredMap             = DeferredUtils.groupGetNodeDeferreds(oneDeferreds)
+    val toOneDeferredMap           = DeferredUtils.groupRelatedDeferred[GetNodeByParentDeferred](toOneDeferreds)
+    val manyModelDeferredsMap      = DeferredUtils.groupGetNodesDeferreds[GetNodesDeferred](manyModelDeferreds)
+    val toManyDeferredsMap         = DeferredUtils.groupRelatedDeferred[GetNodesByParentDeferred](toManyDeferreds)
+    val countManyModelDeferredsMap = DeferredUtils.groupGetNodesDeferreds[CountNodesDeferred](countManyModelDeferreds)
     val scalarListDeferredsMap     = DeferredUtils.groupScalarListDeferreds(scalarListDeferreds)
 
 //    val oneFutureResults = oneDeferreds.map(deferred => oneDeferredResolver.resolve(deferred))

@@ -57,7 +57,8 @@ object SelectedFields {
   val empty                                                             = SelectedFields(Set.empty)
   def forRelationField(rf: RelationField)                               = SelectedFields(Set(SelectedRelationField.empty(rf)))
   def byFieldAndNodeAddress(field: RelationField, address: NodeAddress) = address.path.selectedFields(field)
-  def all(model: Model)                                                 = SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
+  def allScalarAndFlatRelationFields(model: Model) =
+    SelectedFields((model.scalarFields.map(SelectedScalarField) ++ model.relationFields.map(SelectedRelationField.empty)).toSet)
 }
 
 sealed trait SelectedField

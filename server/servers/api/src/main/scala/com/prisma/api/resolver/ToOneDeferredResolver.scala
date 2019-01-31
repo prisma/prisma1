@@ -1,22 +1,19 @@
 package com.prisma.api.resolver
 
 import com.prisma.api.connector.{DataResolver, PrismaNode, PrismaNodeWithParent, SelectedFields}
-import com.prisma.api.resolver.DeferredTypes.{ToOneDeferred, OneDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
+import com.prisma.api.resolver.DeferredTypes.{GetNodeByParentDeferred, GetNodeDeferredResultType, OrderedDeferred, OrderedDeferredFutureResult}
 import com.prisma.shared.models.Project
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ToOneDeferredResolver(dataResolver: DataResolver) {
   def resolve(
-      orderedDeferreds: Vector[OrderedDeferred[ToOneDeferred]]
-  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[OneDeferredResultType]] = {
+      orderedDeferreds: Vector[OrderedDeferred[GetNodeByParentDeferred]]
+  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[GetNodeDeferredResultType]] = {
     val deferreds = orderedDeferreds.map(_.deferred)
 
-    // check if we really can satisfy all deferreds with one database query
-    DeferredUtils.checkSimilarityOfRelatedDeferredsAndThrow(deferreds)
-
     val headDeferred   = deferreds.head
-    val relatedField   = headDeferred.relationField
+    val relatedField   = headDeferred.parentField
     val args           = headDeferred.args
     val selectedFields = deferreds.foldLeft(SelectedFields.empty)(_ ++ _.selectedFields)
 
@@ -30,15 +27,17 @@ class ToOneDeferredResolver(dataResolver: DataResolver) {
     // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { nodes =>
+        OrderedDeferredFutureResult[GetNodeDeferredResultType](futurePrismaNodes.map { nodes =>
           prismaNodesToToOneDeferredResultType(dataResolver.project, deferred, nodes)
         }, order)
     }
   }
 
-  private def prismaNodesToToOneDeferredResultType(project: Project, deferred: ToOneDeferred, nodes: Vector[PrismaNodeWithParent]): Option[PrismaNode] = {
+  private def prismaNodesToToOneDeferredResultType(project: Project,
+                                                   deferred: GetNodeByParentDeferred,
+                                                   nodes: Vector[PrismaNodeWithParent]): Option[PrismaNode] = {
     def matchesRelation(prismaNodeWithParent: PrismaNodeWithParent, relationSide: String) = prismaNodeWithParent.parentId == deferred.parentNodeId
 
-    nodes.find(node => matchesRelation(node, deferred.relationField.relationSide.toString)).map(_.prismaNode)
+    nodes.find(node => matchesRelation(node, deferred.parentField.relationSide.toString)).map(_.prismaNode)
   }
 }

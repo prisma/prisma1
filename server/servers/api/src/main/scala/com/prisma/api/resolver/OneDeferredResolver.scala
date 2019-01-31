@@ -7,8 +7,8 @@ import com.prisma.shared.models.Project
 import scala.concurrent.ExecutionContext
 
 class OneDeferredResolver(resolver: DataResolver) {
-  def resolve(orderedDeferreds: Vector[OrderedDeferred[OneDeferred]])(
-      implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[OneDeferredResultType]] = {
+  def resolve(orderedDeferreds: Vector[OrderedDeferred[GetNodeDeferred]])(
+      implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[GetNodeDeferredResultType]] = {
 
     val deferreds      = orderedDeferreds.map(_.deferred)
     val headDeferred   = deferreds.head
@@ -23,13 +23,13 @@ class OneDeferredResolver(resolver: DataResolver) {
     // assign the prismaNode that was requested by each deferred
     orderedDeferreds.map {
       case OrderedDeferred(deferred, order) =>
-        OrderedDeferredFutureResult[OneDeferredResultType](futurePrismaNodes.map { nodes =>
+        OrderedDeferredFutureResult[GetNodeDeferredResultType](futurePrismaNodes.map { nodes =>
           prismaNodesToOneDeferredResultType(resolver.project, deferred, nodes)
         }, order)
     }
   }
 
-  private def prismaNodesToOneDeferredResultType(project: Project, deferred: OneDeferred, nodes: Vector[PrismaNode]): Option[PrismaNode] = {
+  private def prismaNodesToOneDeferredResultType(project: Project, deferred: GetNodeDeferred, nodes: Vector[PrismaNode]): Option[PrismaNode] = {
     def matchesWhere(prismaNode: PrismaNode) = prismaNode.data.map(deferred.where.fieldName) == deferred.where.fieldGCValue
     nodes.find(node => matchesWhere(node))
   }

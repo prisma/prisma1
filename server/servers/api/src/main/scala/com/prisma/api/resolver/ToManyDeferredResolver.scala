@@ -9,11 +9,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
   def resolve(
-      orderedDeferreds: Vector[OrderedDeferred[ToManyDeferred]]
-  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[RelayConnectionOutputType]] = {
+      orderedDeferreds: Vector[OrderedDeferred[GetNodesByParentDeferred]]
+  )(implicit ec: ExecutionContext): Vector[OrderedDeferredFutureResult[GetNodesDeferredResultType]] = {
     val deferreds      = orderedDeferreds.map(_.deferred)
     val headDeferred   = deferreds.head
-    val relatedField   = headDeferred.relationField
+    val relatedField   = headDeferred.parentField
     val args           = headDeferred.args
     val selectedFields = deferreds.foldLeft(SelectedFields.empty)(_ ++ _.selectedFields)
 
@@ -50,7 +50,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
     }
   }
 
-  private def mapToConnectionOutputType(input: ResolverResult[PrismaNodeWithParent], deferred: ToManyDeferred): RelayConnectionOutputType = {
+  private def mapToConnectionOutputType(input: ResolverResult[PrismaNodeWithParent], deferred: GetNodesByParentDeferred): GetNodesDeferredResultType = {
     DefaultIdBasedConnection(
       PageInfo(
         hasNextPage = input.hasNextPage,
@@ -59,7 +59,7 @@ class ToManyDeferredResolver(dataResolver: DataResolver) extends Tracing {
         input.nodes.map(_.prismaNode).lastOption.map(_.id)
       ),
       input.nodes.map(_.prismaNode).map(x => DefaultEdge(x, x.id)),
-      ConnectionParentElement(nodeId = Some(deferred.parentNodeId), field = Some(deferred.relationField), args = deferred.args)
+      ConnectionParentElement(nodeId = Some(deferred.parentNodeId), field = Some(deferred.parentField), args = deferred.args)
     )
   }
 }
