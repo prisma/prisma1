@@ -17,13 +17,33 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
     checkAgainstExistingData.map { results =>
       val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
-      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError     => error }
-      if (inconsistencyErrors.isEmpty) {
+      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError => error }
+      val errors                                     = inconsistencyErrors ++ missingCreatedAtOrUpdatedAtDirectives
+      if (errors.isEmpty) {
         Good(destructiveWarnings)
       } else {
-        Bad(inconsistencyErrors)
+        Bad(errors)
       }
     }
+  }
+
+  private def missingCreatedAtOrUpdatedAtDirectives = {
+    def errorMessage(fieldName: String) = {
+      s"You are migrating to the new datamodel with the field `$fieldName` but is missing the directive `@$fieldName`. Please specify the field as `$fieldName: DateTime! @$fieldName` to keep its original behaviour."
+    }
+    for {
+      model <- nextSchema.models
+      field <- model.scalarFields
+      if isMigrationFromV1ToV2
+      error <- field.name match {
+                case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
+                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.createdAtFieldName)))
+                case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
+                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.updatedAtFieldName)))
+                case _ =>
+                  None
+              }
+    } yield error
   }
 
   private def checkAgainstExistingData: Future[Vector[DeployResult]] = {
@@ -115,17 +135,17 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     val accidentalRemovalError = field match {
       case f if isMigrationFromV1ToV2 && f.name == ReservedFields.createdAtFieldName =>
         Some(
-          DeployWarning(
+          DeployError(
             model.name,
             field.name,
-            s"You are removing the field `${ReservedFields.createdAtFieldName}` while migrating to the new datamodel. Please add the field `createdAt: DateTime! @createdAt` explicitly to your model to keep this functionality."
+            s"You are removing the field `${ReservedFields.createdAtFieldName}` while migrating to the new datamodel. Add the field `createdAt: DateTime! @createdAt` explicitly to your model to keep this functionality."
           ))
       case f if isMigrationFromV1ToV2 && f.name == ReservedFields.updatedAtFieldName =>
         Some(
-          DeployWarning(
+          DeployError(
             model.name,
             field.name,
-            s"You are removing the field `${ReservedFields.updatedAtFieldName}` while migrating to the new datamodel. Please add the field `updatedAt: DateTime! @updatedAt` explicitly to your model to keep this functionality."
+            s"You are removing the field `${ReservedFields.updatedAtFieldName}` while migrating to the new datamodel. Add the field `updatedAt: DateTime! @updatedAt` explicitly to your model to keep this functionality."
           ))
       case _ =>
         None
