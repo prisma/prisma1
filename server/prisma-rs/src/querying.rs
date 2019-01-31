@@ -3,6 +3,8 @@ use rusqlite::{
     Error as RusqlError,
 };
 
+pub mod query_builder;
+
 pub enum PrismaValue {
     String(String),
     Float(f64),

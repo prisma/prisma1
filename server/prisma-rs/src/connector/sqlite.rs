@@ -2,8 +2,8 @@ use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{types::ToSql, NO_PARAMS};
 
-use std::{collections::HashSet, sync::Arc};
 use arc_swap::ArcSwap;
+use std::{collections::HashSet, sync::Arc};
 
 use crate::{
     connector::Connector, error::Error, project::Project, querying::NodeSelector, PrismaResult,
@@ -27,7 +27,7 @@ impl Sqlite {
         let mut conn = pool.get()?;
         let databases = ArcSwap::from(Arc::new(HashSet::new()));
         let this = Sqlite { pool, databases };
-        
+
         this.update_databases(&mut conn)?;
 
         Ok(this)
