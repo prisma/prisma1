@@ -15,7 +15,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolve
 
   override def project: Project = forwarder.project
 
-  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = ???
+  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = forwarder.getModelForGlobalId(globalId)
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val projectJson = Json.toJson(project)
@@ -33,20 +33,25 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver) extends DataResolve
     Future.successful(None)
   }
 
-  override def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = ???
+  override def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] =
+    forwarder.getNodes(model, queryArguments, selectedFields)
 
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: QueryArguments,
-                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = ???
+                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] =
+    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
 
-  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] = ???
+  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =
+    forwarder.getScalarListValues(model, listField, queryArguments)
 
-  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = ???
+  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] =
+    forwarder.getScalarListValuesByNodeIds(model, listField, nodeIds)
 
-  override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] = ???
+  override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] =
+    forwarder.getRelationNodes(relationTableName, queryArguments)
 
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = ???
+  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = countByTable(table, whereFilter)
 
-  override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = ???
+  override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = countByModel(model, queryArguments)
 }
