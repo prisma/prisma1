@@ -15,12 +15,23 @@ pub struct Project {
 
     #[serde(default)]
     pub secrets: Vec<String>,
-     
+
     #[serde(default)]
     pub allow_queries: DefaultTrue,
-    
+
     #[serde(default)]
     pub allow_mutations: DefaultTrue,
+}
+
+impl Project {
+    #[allow(dead_code)]
+    pub fn db_name(&self) -> &str {
+        self.manifestation
+            .schema
+            .as_ref()
+            .or_else(|| self.manifestation.database.as_ref())
+            .unwrap_or(&self.id)
+    }
 }
 
 /// Timeout in seconds.

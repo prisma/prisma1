@@ -52,7 +52,7 @@ pub struct Field {
     pub is_auto_generated: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum TypeIdentifier {
     String,
     Float,

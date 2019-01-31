@@ -1,4 +1,4 @@
-use super::{WithMigrations, ConnectionLimit};
+use super::{ConnectionLimit, WithMigrations};
 use url::Url;
 
 #[derive(Deserialize, Debug)]

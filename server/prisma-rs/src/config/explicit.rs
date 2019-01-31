@@ -1,4 +1,4 @@
-use super::{WithMigrations, ConnectionLimit};
+use super::{ConnectionLimit, WithMigrations};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]

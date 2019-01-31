@@ -5,40 +5,34 @@ extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
 
-mod project;
-mod schema;
 mod config;
+mod connector;
+mod error;
+mod project;
 mod protobuf;
+mod querying;
+mod schema;
 
 use config::{ConnectionLimit, PrismaConfig, PrismaDatabase};
-use protobuf::prisma::GetNodeByWhere;
-use r2d2;
-use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::NO_PARAMS;
-use serde_yaml;
+use connector::{Connector, Sqlite};
+use error::Error;
 use prost::Message;
+use protobuf::prisma::GetNodeByWhere;
+use serde_yaml;
 
-use std::{
-    fs::File,
-    env,
-    slice,
-};
+use std::{env, fs::File, slice};
 
-const SQLITE: &'static str = "sqlite";
+type PrismaResult<T> = Result<T, Error>;
 
 lazy_static! {
-    pub static ref SQLITE_POOL: r2d2::Pool<SqliteConnectionManager> = {
+    pub static ref SQLITE: Sqlite = {
         match CONFIG.databases.get("default") {
-            Some(PrismaDatabase::File(ref config)) if config.connector == SQLITE => {
-                r2d2::Pool::builder()
-                    .max_size(config.limit())
-                    .build(SqliteConnectionManager::file(&config.file))
-                    .unwrap()
+            Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite" => {
+                connector::Sqlite::new(config.limit()).unwrap()
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         }
     };
-
     pub static ref CONFIG: PrismaConfig = {
         let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
         let path = format!("{}/prisma-rs/config/prisma.yml", root);
@@ -51,14 +45,7 @@ lazy_static! {
 
 #[no_mangle]
 pub extern "C" fn select_1() -> i32 {
-    let conn = SQLITE_POOL.get().unwrap();
-    let mut stmt = conn.prepare("SELECT 1").unwrap();
-    let mut rows = stmt.query_map(NO_PARAMS, |row| row.get(0)).unwrap();
-
-    match rows.next() {
-        Some(r) => r.unwrap(),
-        None => panic!("No result"),
-    }
+    SQLITE.select_1().unwrap()
 }
 
 #[no_mangle]
