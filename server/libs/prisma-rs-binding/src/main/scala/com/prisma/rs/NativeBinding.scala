@@ -30,5 +30,5 @@ object NativeBinding {
     (nativeMemory, length)
   }
 
-//  def destroy()
+  //  def destroy()
 }
