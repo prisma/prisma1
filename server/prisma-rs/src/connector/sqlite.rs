@@ -1,9 +1,9 @@
 use crate::{
     connector::Connector,
     error::Error,
-    querying::{NodeSelector, PrismaValue},
+    querying::NodeSelector,
     schema::{Field, TypeIdentifier},
-    PrismaResult,
+    PrismaResult, PrismaValue,
 };
 use arc_swap::ArcSwap;
 use r2d2;
@@ -11,11 +11,7 @@ use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{types::ToSql, Row, NO_PARAMS};
 use std::{collections::HashSet, sync::Arc};
 
-use sql::{
-    prelude::*,
-    grammar::operation::eq::Equable,
-};
-
+use sql::{grammar::operation::eq::Equable, prelude::*};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Databases = ArcSwap<HashSet<String>>;
@@ -91,17 +87,17 @@ impl Sqlite {
     fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
         match typ {
             TypeIdentifier::String => PrismaValue::String(row.get(i)),
+            TypeIdentifier::GraphQLID => PrismaValue::GraphqlId(row.get(i)),
             TypeIdentifier::UUID => PrismaValue::Uuid(row.get(i)),
-            TypeIdentifier::Float => PrismaValue::Float(row.get(i)),
             TypeIdentifier::Int => PrismaValue::Int(row.get(i)),
             TypeIdentifier::Boolean => PrismaValue::Boolean(row.get(i)),
             TypeIdentifier::Enum => PrismaValue::Enum(row.get(i)),
             TypeIdentifier::Json => PrismaValue::Json(row.get(i)),
             TypeIdentifier::DateTime => PrismaValue::DateTime(row.get(i)),
-            TypeIdentifier::GraphQLID => PrismaValue::GraphQLID(row.get(i)),
-            TypeIdentifier::Relation => {
-                let value: i64 = row.get(i);
-                PrismaValue::Relation(value as u64)
+            TypeIdentifier::Relation => PrismaValue::Relation(row.get(i)),
+            TypeIdentifier::Float => {
+                let v: f64 = row.get(i);
+                PrismaValue::Float(v as f32)
             }
         }
     }
@@ -132,13 +128,11 @@ impl Connector for Sqlite {
                 .map(|field| field.name.as_ref())
                 .collect();
 
-            let query = dbg!(
-                select_from(&selector.table)
-                    .columns(field_names.as_slice())
-                    .so_that(selector.field.name.equals(DatabaseValue::Parameter))
-                    .compile()
-                    .unwrap()
-            );
+            let query = dbg!(select_from(&selector.table)
+                .columns(field_names.as_slice())
+                .so_that(selector.field.name.equals(DatabaseValue::Parameter))
+                .compile()
+                .unwrap());
 
             let params = vec![(selector.value as &ToSql)];
 
@@ -156,7 +150,7 @@ impl Connector for Sqlite {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{connector::Connector, querying::*, schema::*};
+    use crate::{connector::Connector, schema::*};
 
     #[test]
     fn test_select_1() {
@@ -175,7 +169,7 @@ mod tests {
                 conn.execute_batch(
                     "BEGIN;
                  DROP TABLE IF EXISTS graphcool.user;
-                 CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL);
+                 CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT);
                  INSERT INTO graphcool.user (name) values ('Musti');
                  COMMIT;",
                 )

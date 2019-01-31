@@ -9,60 +9,31 @@ message Rpc {
     required Header header = 1;
 }
 
-message StringGc {
-    required string value = 1;
-}
-
-message FloatGc {
-    required double value = 1;
-}
-
-message BooleanGc {
-    required bool value = 1;
-}
-
-message DateTimeGc {
-    required string value = 1;
-}
-
-message EnumGc {
-    required string value = 1;
-}
-
-message JsonGc {
-    required string value = 1;
-}
-
-message StringIdGc {
-    required string value = 1;
-}
-
-message UuidGc {
-    required string value = 1;
-}
-
-message IntGc {
-    required int32 value = 1;
-}
-
-message GCValue {
-    oneof gc_value {
-        StringGc   string    = 1;
-        FloatGc    float     = 2;
-        BooleanGc  boolean   = 3;
-        DateTimeGc date_time = 4;
-        EnumGc     enum      = 5;
-        JsonGc     json      = 6;
-        StringIdGc string_id = 7;
-        UuidGc     uuid      = 8;
-        IntGc      int       = 9;
+message ValueContainer {
+    oneof prisma_value {
+        string string     = 1;
+        float  float      = 2;
+        bool   boolean    = 3;
+        string date_time  = 4;
+        string enum       = 5;
+        string json       = 6;
+        int32  int        = 7;
+        int64  relation   = 8;
+        bool   null       = 9;
+        string uuid       = 10;
+        string graphql_id = 11;
     }
 }
 
 message GetNodeByWhere {
-    required Header  header       = 1;
-    required bytes   project_json = 2;
-    required string  model_name   = 3;
-    required string  field_name   = 4;
-    required GCValue prisma_value = 5;
+    required Header         header       = 1;
+    required bytes          project_json = 2;
+    required string         model_name   = 3;
+    required string         field_name   = 4;
+    required ValueContainer value        = 5;
+}
+
+message GetNodeByWhereResponse {
+    required Header         header       = 1;
+    repeated ValueContainer response     = 2;
 }

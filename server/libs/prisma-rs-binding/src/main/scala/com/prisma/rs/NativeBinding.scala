@@ -19,6 +19,7 @@ object NativeBinding {
     val (pointer, length) = writeBuffer(getNodeByWhere)
     val callResult        = library.get_node_by_where(pointer, length)
 
+    library.destroy(callResult)
   }
 
   def writeBuffer[T](msg: GeneratedMessage): (Pointer, Int) = {

@@ -1,46 +1,7 @@
-use crate::schema::{Field, Model};
-
-use rusqlite::{
-    types::{Null, ToSql, ToSqlOutput},
-    Error as RusqlError,
+use crate::{
+    schema::{Field, Model},
+    PrismaValue,
 };
-
-use chrono::{DateTime, Utc};
-
-#[derive(Debug, PartialEq)]
-pub enum PrismaValue {
-    String(String),
-    Float(f64),
-    Boolean(bool),
-    #[allow(dead_code)] Null,
-    DateTime(DateTime<Utc>),
-    Int(i64),
-    Enum(String),
-    Json(String),
-    GraphQLID(String),
-    Uuid(String),
-    Relation(u64),
-}
-
-impl ToSql for PrismaValue {
-    fn to_sql(&self) -> Result<ToSqlOutput, RusqlError> {
-        let value = match self {
-            PrismaValue::String(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::GraphQLID(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Float(value) => ToSqlOutput::from(*value),
-            PrismaValue::Int(value) => ToSqlOutput::from(*value),
-            PrismaValue::Relation(value) => ToSqlOutput::from(*value as i64),
-            PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
-            PrismaValue::DateTime(value) => value.to_sql().unwrap(),
-            PrismaValue::Null => ToSqlOutput::from(Null),
-        };
-
-        Ok(value)
-    }
-}
 
 /// A helper struct for selecting data.
 pub struct NodeSelector<'a> {
