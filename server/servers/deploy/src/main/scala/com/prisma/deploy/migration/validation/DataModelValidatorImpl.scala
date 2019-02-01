@@ -259,14 +259,9 @@ case class DataModelValidatorImpl(
     }
   }
 
-  private def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
-  private def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
-  private def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
-
-  private def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
-  private def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
-
-  private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.isEnumType(fieldDef.typeName)
+  private def isRelationField(fieldDef: FieldDefinition): Boolean = !isScalarField(fieldDef) && !isEnumField(fieldDef)
+  private def isScalarField(fieldDef: FieldDefinition): Boolean   = fieldDef.hasScalarType
+  private def isEnumField(fieldDef: FieldDefinition): Boolean     = doc.isEnumType(fieldDef.typeName)
 }
 
 case class GlobalValidations(doc: Document) {
@@ -403,6 +398,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
         None
     }
 
+    val allowOnlyValidNamesInRelationDirectives = relationFieldsWithRelationDirective.flatMap {
+      case thisType if thisType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(thisType.fieldDef.relationName.get) =>
+        Some(DeployErrors.relationDirectiveHasInvalidName(thisType))
+      case _ =>
+        None
+    }
+
     /**
       * The validation below must be only applied to fields that specify the relation directive.
       * And it can only occur for relation that specify both sides of a relation.
@@ -428,7 +430,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
           Iterable.empty
       }
 
-    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
+    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous ++ allowOnlyValidNamesInRelationDirectives
   }
 
   def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {
