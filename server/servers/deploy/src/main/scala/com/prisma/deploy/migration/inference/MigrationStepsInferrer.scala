@@ -114,7 +114,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextField         <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, nextField.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
-      didSomethingChange = didSomethingChange(previousField.template, nextField.template)(
+      didSomethingChangeInTheField = didSomethingChange(previousField.template, nextField.template)(
         _.name,
         _.typeIdentifier,
         _.isUnique,
@@ -141,7 +141,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       } else {
         previousField.behaviour != nextField.behaviour
       }
-      if didSomethingChange || didBehaviourChange
+      if didSomethingChangeInTheField || didBehaviourChange
     } yield {
       UpdateField(
         model = previousModelName,
