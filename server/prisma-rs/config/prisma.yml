@@ -4,3 +4,4 @@ databases:
     connector: sqlite
     migrations: true
     file: /tmp/foo.db
+    testMode: true
