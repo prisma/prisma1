@@ -1,14 +1,14 @@
-use arc_swap::ArcSwap;
-use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
-use std::{collections::HashSet, sync::Arc};
+use chrono::{
+    DateTime,
+    Utc,
+};
 
 use crate::{
     connector::Connector,
     querying::NodeSelector,
     schema::{Field, TypeIdentifier},
     PrismaResult, PrismaValue,
-    error::Error,
     protobuf::prisma::{
         GraphqlId,
         graphql_id::IdValue,
@@ -20,18 +20,17 @@ use rusqlite::{
     types::{Null, ToSql, ToSqlOutput, FromSql, ValueRef, FromSqlResult, },
     Error as RusqlError,
     Row,
-    NO_PARAMS
+    NO_PARAMS,
 };
 
+use std::collections::HashSet;
 use sql::{grammar::operation::eq::Equable, prelude::*};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
-type Databases = ArcSwap<HashSet<String>>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
 
 pub struct Sqlite {
     pool: Pool,
-    databases: Databases,
 }
 
 impl Sqlite {
@@ -43,17 +42,12 @@ impl Sqlite {
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
-        let mut conn = pool.get()?;
-        let databases = ArcSwap::from(Arc::new(HashSet::new()));
-        let this = Sqlite { pool, databases };
-
-        this.update_databases(&mut conn)?;
-
-        Ok(this)
+        Ok(Sqlite { pool })
     }
 
-    /// Updates the set of existing databases for caching purposes.
-    fn update_databases(&self, conn: &mut Connection) -> PrismaResult<()> {
+    /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
+    /// from the SERVER_ROOT.
+    fn create_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
         let mut stmt = conn.prepare("PRAGMA database_list")?;
 
         let databases: HashSet<String> = stmt
@@ -64,42 +58,29 @@ impl Sqlite {
             .map(|res| res.unwrap())
             .collect();
 
-        self.databases.store(Arc::new(databases));
+        if !databases.contains(db_name) {
+            let path = format!("{}/db/{}", *SERVER_ROOT, db_name);
+            dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
+        }
 
         Ok(())
     }
 
-    /// Is the database already created and we cached the result.
-    fn has_database(&self, db_name: &str) -> bool {
-        self.databases.load().contains(db_name)
-    }
 
-    /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
-    /// from the SERVER_ROOT.
-    fn create_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
-        let path = format!("{}/db/{}", *SERVER_ROOT, db_name);
-        dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
-
-        Ok(())
-    }
 
     /// Take a new connection from the pool and create the database if it
     /// doesn't exist yet.
     fn with_connection<F, T>(&self, db_name: &str, mut f: F) -> PrismaResult<T>
     where
-        F: FnMut(Connection) -> PrismaResult<T>,
+        F: FnMut(&Connection) -> PrismaResult<T>,
     {
         let mut conn = dbg!(self.pool.get()?);
+        Self::create_database(&mut conn, db_name)?;
 
-        if !self.has_database(db_name) {
-            // We might have a race if having more clients for the same
-            // databases. Create will silently fail and we'll get the database
-            // name to our bookkeeping.
-            Self::create_database(&mut conn, db_name)?;
-            self.update_databases(&mut conn)?;
-        }
+        let res = f(&conn);
 
-        f(conn)
+        conn.execute("DETACH DATABASE ?", &[db_name])?;
+        res
     }
 
     /// Converter function to wrap the limited set of types in SQLite to a
@@ -113,7 +94,15 @@ impl Sqlite {
             TypeIdentifier::Boolean   => PrismaValue::Boolean(row.get(i)),
             TypeIdentifier::Enum      => PrismaValue::Enum(row.get(i)),
             TypeIdentifier::Json      => PrismaValue::Json(row.get(i)),
-            TypeIdentifier::DateTime  => PrismaValue::DateTime(row.get(i)),
+            TypeIdentifier::DateTime  => {
+                let ts: i64 = row.get(i);
+                let nsecs = ((ts % 1000) * 1_000_000) as u32;
+                let secs = (ts / 1000) as i64;
+                let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
+                let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+
+                PrismaValue::DateTime(datetime.to_rfc3339())
+            },
             TypeIdentifier::Relation  => panic!("We should not have a Relation here!"),
             TypeIdentifier::Float => {
                 let v: f64 = row.get(i);
@@ -151,17 +140,13 @@ impl Connector for Sqlite {
             let params = vec![(selector.value as &ToSql)];
             let mut result = Vec::new();
 
-            let query_result = conn.query_row(&query, params.as_slice(), |row| {
+            conn.query_row(&query, params.as_slice(), |row| {
                 for (i, field) in selector.model.fields.iter().enumerate() {
                     result.push(Self::fetch_value(field.type_identifier, row, i));
                 }
-            });
+            })?;
 
-            match query_result {
-                Err(RusqlError::QueryReturnedNoRows) => Ok(result),
-                Err(error) => Err(Error::from(error)),
-                Ok(_) => Ok(result)
-            }
+            Ok(result)
         })
     }
 }

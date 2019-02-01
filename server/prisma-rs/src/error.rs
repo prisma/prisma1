@@ -16,6 +16,8 @@ pub enum Error {
     JsonDecodeError(&'static str, Option<Cause>),
     /// Input from Scala was not good
     InvalidInputError(String),
+    /// No result returned from query
+    NoResultError,
 }
 
 impl std::fmt::Display for Error {
@@ -38,6 +40,7 @@ impl StdError for Error {
             Error::ProtobufDecodeError(message, _) => message,
             Error::JsonDecodeError(message, _)     => message,
             Error::InvalidInputError(message)      => message,
+            Error::NoResultError                   => "Query returned no results",
         }
     }
 
@@ -60,6 +63,7 @@ impl Into<prisma::error::Value> for Error {
             Error::ProtobufDecodeError(message, _) => prisma::error::Value::ProtobufDecodeError(message.to_string()),
             Error::JsonDecodeError(message, _)     => prisma::error::Value::JsonDecodeError(message.to_string()),
             Error::InvalidInputError(message)      => prisma::error::Value::InvalidInputError(message.to_string()),
+            e @ Error::NoResultError               => prisma::error::Value::NoResultsError(e.description().to_string()),
         }
     }
 }
@@ -72,7 +76,10 @@ impl From<r2d2::Error> for Error {
 
 impl From<rusqlite::Error> for Error {
     fn from(e: rusqlite::Error) -> Error {
-        Error::QueryError("Error querying SQLite database", Some(Box::new(e)))
+        match e {
+            rusqlite::Error::QueryReturnedNoRows => Error::NoResultError,
+            _                                    => Error::QueryError("Error querying SQLite database", Some(Box::new(e))),
+        }
     }
 }
 

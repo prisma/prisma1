@@ -52,8 +52,6 @@ impl From<Vec<u8>> for ProtoBufEnvelope {
     }
 }
 
-// impl<T> From<PrismaResult<Vec<PrismaValue>> for
-
 pub struct ProtobufInterface {
     connector: Box<dyn Connector + Send + Sync + 'static>,
 }
@@ -75,17 +73,35 @@ impl ProtobufInterface {
         F: FnOnce() -> PrismaResult<Vec<u8>>
     {
         f().unwrap_or_else(|error| {
-            let error_response = prisma::RpcResponse {
-                header: prisma::Header {
-                    type_name: String::from("RpcResponse"),
+            match error {
+                Error::NoResultError => {
+                    let response = prisma::RpcResponse {
+                        header: prisma::Header {
+                            type_name: String::from("RpcResponse"),
+                        },
+                        response: Some(rpc::Response::Result(
+                            prisma::Result { value: None }
+                        )),
+                    };
+
+                    let mut response_payload = Vec::new();
+                    response.encode(&mut response_payload).unwrap();
+                    response_payload
                 },
-                response: Some(rpc::Response::Error(prisma::Error { value: Some(error.into()) }))
-            };
+                _ => {
+                    dbg!(&error);
+                    let error_response = prisma::RpcResponse {
+                        header: prisma::Header {
+                            type_name: String::from("RpcResponse"),
+                        },
+                        response: Some(rpc::Response::Error(prisma::Error { value: Some(error.into()) }))
+                    };
 
-            let mut payload = Vec::new();
-            error_response.encode(&mut payload).unwrap();
-
-            payload
+                    let mut payload = Vec::new();
+                    error_response.encode(&mut payload).unwrap();
+                    payload
+                },
+            }
         })
     }
 
@@ -119,9 +135,6 @@ impl ProtobufInterface {
             );
 
             let result = self.connector.get_node_by_where(project.db_name(), &node_selector)?;
-
-            // ------------
-
             let response_values: Vec<prisma::ValueContainer> = result
                 .into_iter()
                 .map(|value| prisma::ValueContainer {
