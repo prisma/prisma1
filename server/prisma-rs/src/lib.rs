@@ -30,13 +30,9 @@ type PrismaResult<T> = Result<T, Error>;
 
 lazy_static! {
     pub static ref PBI: ProtobufInterface = ProtobufInterface::new(&CONFIG);
-
+    pub static ref SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
     pub static ref CONFIG: PrismaConfig = {
-        let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
-        let path = format!("{}/prisma-rs/config/prisma.yml", root);
-
-        dbg!(&path);
-
+        let path = format!("{}/prisma-rs/config/prisma.yml", *SERVER_ROOT);
         serde_yaml::from_reader(File::open(path).unwrap()).unwrap()
     };
 }

@@ -49,6 +49,10 @@ impl Model {
     pub fn find_field(&self, name: &str) -> Option<&Field> {
         self.fields.iter().find(|field| field.name == name)
     }
+    
+    pub fn scalar_fields(&self) -> Vec<&Field> {
+        self.fields.iter().filter(|field| field.type_identifier != TypeIdentifier::Relation).collect()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,7 +68,7 @@ pub struct Field {
     pub is_auto_generated: bool,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub enum TypeIdentifier {
     String,
     Float,

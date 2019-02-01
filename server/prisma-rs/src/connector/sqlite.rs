@@ -1,4 +1,3 @@
-use std::env;
 use arc_swap::ArcSwap;
 use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -14,6 +13,7 @@ use crate::{
         GraphqlId,
         graphql_id::IdValue,
     },
+    SERVER_ROOT,
 };
 
 use rusqlite::{
@@ -35,6 +35,9 @@ pub struct Sqlite {
 }
 
 impl Sqlite {
+    /// Creates a new SQLite pool connected into local memory. By querying from
+    /// different databases, it will try to create them to
+    /// `$SERVER_ROOT/db/db_name` if they do not exists yet.
     pub fn new(connection_limit: u32) -> PrismaResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
@@ -66,13 +69,15 @@ impl Sqlite {
         Ok(())
     }
 
+    /// Is the database already created and we cached the result.
     fn has_database(&self, db_name: &str) -> bool {
         self.databases.load().contains(db_name)
     }
 
+    /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
+    /// from the SERVER_ROOT.
     fn create_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
-        let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
-        let path = format!("{}/db/{}", root, db_name);
+        let path = format!("{}/db/{}", *SERVER_ROOT, db_name);
         dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
 
         Ok(())
@@ -97,6 +102,8 @@ impl Sqlite {
         f(conn)
     }
 
+    /// Converter function to wrap the limited set of types in SQLite to a
+    /// richer PrismaValue.
     fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
         match typ {
             TypeIdentifier::String    => PrismaValue::String(row.get(i)),
@@ -107,12 +114,17 @@ impl Sqlite {
             TypeIdentifier::Enum      => PrismaValue::Enum(row.get(i)),
             TypeIdentifier::Json      => PrismaValue::Json(row.get(i)),
             TypeIdentifier::DateTime  => PrismaValue::DateTime(row.get(i)),
-            TypeIdentifier::Relation  => PrismaValue::Relation(row.get(i)),
+            TypeIdentifier::Relation  => panic!("We should not have a Relation here!"),
             TypeIdentifier::Float => {
                 let v: f64 = row.get(i);
                 PrismaValue::Float(v as f32)
             }
         }
+    }
+
+    /// Helper to namespace different databases.
+    fn table_location(database: &str, table: &str) -> String {
+        format!("{}.{}", database, table)
     }
 }
 
@@ -123,13 +135,14 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let select_fields: &[Field] = &selector.selected_fields;
+            let select_fields: &[&Field] = selector.selected_fields;
             let field_names: Vec<&str> = select_fields
                 .iter()
                 .map(|field| field.name.as_ref())
                 .collect();
+            let table_location = Self::table_location(database_name, selector.model.name.as_ref());
 
-            let query = dbg!(select_from(&selector.table)
+            let query = dbg!(select_from(&table_location)
                 .columns(field_names.as_slice())
                 .so_that(selector.field.name.equals(DatabaseValue::Parameter))
                 .compile()
@@ -162,7 +175,6 @@ impl ToSql for PrismaValue {
             PrismaValue::Uuid(value)     => ToSqlOutput::from(value.as_ref() as &str),
             PrismaValue::Float(value)    => ToSqlOutput::from(*value as f64),
             PrismaValue::Int(value)      => ToSqlOutput::from(*value),
-            PrismaValue::Relation(value) => ToSqlOutput::from(*value as i64),
             PrismaValue::Boolean(value)  => ToSqlOutput::from(*value),
             PrismaValue::DateTime(value) => value.to_sql().unwrap(),
             PrismaValue::Null(_)         => ToSqlOutput::from(Null),
@@ -172,6 +184,8 @@ impl ToSql for PrismaValue {
                 Some(IdValue::Int(value))        => ToSqlOutput::from(value),
                 None                             => panic!("We got an empty ID value here. Tsk tsk.")
             },
+
+            PrismaValue::Relation(_) => panic!("We should not have a Relation value here."),
         };
 
         Ok(value)
@@ -246,8 +260,15 @@ mod tests {
         };
 
         let find_by = PrismaValue::String(String::from("Musti"));
-        let selector =
-            NodeSelector::new(db_name, &model, &model.fields[1], &find_by, &model.fields);
+        let scalars = model.scalar_fields();
+
+        let selector = NodeSelector::new(
+            db_name,
+            &model,
+            &model.fields[1],
+            &find_by,
+            &scalars
+        );
 
         let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
 

@@ -21,6 +21,7 @@ message Result {
 
 message NodesResult {
     repeated Node nodes = 1;
+    repeated string fields = 2;
 }
 
 message Node {
