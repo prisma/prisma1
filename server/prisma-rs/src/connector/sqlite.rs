@@ -107,7 +107,7 @@ impl Sqlite {
             TypeIdentifier::Enum      => PrismaValue::Enum(row.get(i)),
             TypeIdentifier::Json      => PrismaValue::Json(row.get(i)),
             TypeIdentifier::DateTime  => PrismaValue::DateTime(row.get(i)),
-            TypeIdentifier::Relation  => PrismaValue::Relation(row.get(i)),
+            TypeIdentifier::Relation  => panic!("We should not have a Relation here!"),
             TypeIdentifier::Float => {
                 let v: f64 = row.get(i);
                 PrismaValue::Float(v as f32)
@@ -162,7 +162,6 @@ impl ToSql for PrismaValue {
             PrismaValue::Uuid(value)     => ToSqlOutput::from(value.as_ref() as &str),
             PrismaValue::Float(value)    => ToSqlOutput::from(*value as f64),
             PrismaValue::Int(value)      => ToSqlOutput::from(*value),
-            PrismaValue::Relation(value) => ToSqlOutput::from(*value as i64),
             PrismaValue::Boolean(value)  => ToSqlOutput::from(*value),
             PrismaValue::DateTime(value) => value.to_sql().unwrap(),
             PrismaValue::Null(_)         => ToSqlOutput::from(Null),
@@ -172,6 +171,8 @@ impl ToSql for PrismaValue {
                 Some(IdValue::Int(value))        => ToSqlOutput::from(value),
                 None                             => panic!("We got an empty ID value here. Tsk tsk.")
             },
+
+            PrismaValue::Relation(_) => panic!("We should not have a Relation value here."),
         };
 
         Ok(value)
