@@ -5,10 +5,10 @@ import com.prisma.rs.jna.{JnaRustBridge, ProtobufEnvelope}
 import com.sun.jna.{Memory, Native, Pointer}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
-import prisma.getNodeByWhere.GraphqlId.IdValue
-import prisma.getNodeByWhere.ValueContainer.PrismaValue
-import prisma.getNodeByWhere.{GetNodeByWhere, GetNodeByWhereResponse, GraphqlId, ValueContainer}
-import scalapb.GeneratedMessage
+import prisma.protocol.GraphqlId.IdValue
+import prisma.protocol.ValueContainer.PrismaValue
+import prisma.protocol._
+import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 
 case class NodeResult(id: IdGCValue, data: RootGCValue)
 
@@ -22,20 +22,39 @@ object NativeBinding {
 
   def select_1(): Int = library.select_1()
 
-  def get_node_by_where(getNodeByWhere: GetNodeByWhere): Option[NodeResult] = {
-    val (pointer, length)                        = writeBuffer(getNodeByWhere)
-    val callResult: ProtobufEnvelope.ByReference = library.get_node_by_where(pointer, length)
-    val buffer                                   = callResult.data.getByteArray(0, callResult.len.intValue())
+  def get_node_by_where(getNodeByWhere: GetNodeByWhereInput): Option[Node] = {
+    val (pointer, length) = writeBuffer(getNodeByWhere)
 
-    // todo add error handling
-    // todo make sure destroy is always called on nonFatal
-    library.destroy(callResult)
+    handleProtoResult(library.get_node_by_where(pointer, length)) { nodes: Seq[Node] =>
+      nodes.headOption
+    }
+  }
 
-    val response = GetNodeByWhereResponse.parseFrom(buffer)
-    if (response.response.isEmpty) {
-      None
-    } else {
-      Some(toNodeResult(response.response.map(_.prismaValue)))
+  def handleProtoResult[U, T](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U) = {
+    val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
+    library.destroy(envelope)
+
+    val decodedMessage = RpcResponse.parseFrom(messageContent)
+    decodedMessage.response match {
+      // Success cases
+      case RpcResponse.Response.Result(Result(value: Result.Value)) =>
+        value match {
+          case Result.Value.NodesResult(NodesResult(nodes: Seq[Node])) => processMessage(nodes)
+          case Result.Value.Empty                                      => sys.error("Empty RPC response result value")
+        }
+      // Error cases
+      case RpcResponse.Response.Error(error: Error) =>
+        error.value match {
+          case Error.Value.ConnectionError(str)     => ???
+          case Error.Value.InvalidInputError(str)   => ???
+          case Error.Value.JsonDecodeError(str)     => ???
+          case Error.Value.NoResultsError(str)      => ???
+          case Error.Value.ProtobufDecodeError(str) => ???
+          case Error.Value.QueryError(str)          => ???
+          case Error.Value.Empty                    => sys.error("Empty RPC response error value")
+
+        }
+      case RpcResponse.Response.Empty => sys.error("Empty RPC response value")
     }
   }
 

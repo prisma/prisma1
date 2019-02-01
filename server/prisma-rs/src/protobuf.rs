@@ -14,7 +14,10 @@ pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
 }
 
-use prisma::get_node_by_where_response::Response;
+use prisma::{
+    result,
+    rpc_response as rpc,
+};
 
 #[repr(C)]
 #[no_mangle]
@@ -49,6 +52,8 @@ impl From<Vec<u8>> for ProtoBufEnvelope {
     }
 }
 
+// impl<T> From<PrismaResult<Vec<PrismaValue>> for
+
 pub struct ProtobufInterface {
     connector: Box<dyn Connector + Send + Sync + 'static>,
 }
@@ -61,32 +66,32 @@ impl ProtobufInterface {
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
-        
+
         ProtobufInterface { connector: Box::new(connector), }
     }
-    
+
     fn protobuf_result<F>(f: F) -> Vec<u8>
     where
         F: FnOnce() -> PrismaResult<Vec<u8>>
     {
         f().unwrap_or_else(|error| {
-            let error_response = prisma::GetNodeByWhereResponse {
+            let error_response = prisma::RpcResponse {
                 header: prisma::Header {
-                    type_name: String::from("GetNodeByWhereResponse"),
+                    type_name: String::from("RpcResponse"),
                 },
-                response: Some(Response::Error(prisma::Error { value: Some(error.into()) }))
+                response: Some(rpc::Response::Error(prisma::Error { value: Some(error.into()) }))
             };
-            
+
             let mut payload = Vec::new();
             error_response.encode(&mut payload).unwrap();
-            
+
             payload
         })
     }
-    
+
     pub fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
-            let params = prisma::GetNodeByWhere::decode(payload)?;
+            let params = prisma::GetNodeByWhereInput::decode(payload)?;
             let project: Project = serde_json::from_reader(params.project_json.as_slice())?;
 
             let model = project
@@ -113,25 +118,31 @@ impl ProtobufInterface {
 
             let result = self.connector.get_node_by_where(project.db_name(), &node_selector)?;
 
-            let response_values = result
+            // ------------
+
+            let response_values: Vec<prisma::ValueContainer> = result
                 .into_iter()
                 .map(|value| prisma::ValueContainer {
                     prisma_value: Some(value),
                 })
                 .collect();
 
-            let response = prisma::GetNodeByWhereResponse {
+            let response = prisma::RpcResponse {
                 header: prisma::Header {
-                    type_name: String::from("GetNodeByWhereResponse"),
+                    type_name: String::from("RpcResponse"),
                 },
-                response: Some(Response::Result(prisma::Result {
-                    values: response_values,
-                })),
+                response: Some(rpc::Response::Result(
+                    prisma::Result {
+                        value: Some(result::Value::NodesResult(prisma::NodesResult {
+                            nodes: vec![prisma::Node { values: response_values }],
+                        }))
+                    }
+                )),
             };
 
             let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();
-            
+
             Ok(response_payload)
         })
     }

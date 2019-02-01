@@ -1,19 +1,30 @@
 syntax="proto2";
 package prisma;
 
+message RpcResponse {
+    required Header header = 1;
+    oneof response {
+        Result result = 2;
+        Error  error  = 3;
+    }
+}
+
 message Header {
     required string type_name = 1;
 }
 
-message Rpc {
-    required Header header = 1;
+message Result {
+    oneof value {
+        NodesResult nodes_result = 1;
+    }
 }
 
-message GraphqlId {
-    oneof id_value {
-        string string = 1;
-        int64  int    = 2;
-    }
+message NodesResult {
+    repeated Node nodes = 1;
+}
+
+message Node {
+    repeated ValueContainer values = 1;
 }
 
 message ValueContainer {
@@ -32,8 +43,11 @@ message ValueContainer {
     }
 }
 
-message Result {
-    repeated ValueContainer values = 1;
+message GraphqlId {
+    oneof id_value {
+        string string = 1;
+        int64  int    = 2;
+    }
 }
 
 message Error {
@@ -47,19 +61,10 @@ message Error {
     }
 }
 
-message GetNodeByWhere {
+message GetNodeByWhereInput {
     required Header         header       = 1;
     required bytes          project_json = 2;
     required string         model_name   = 3;
     required string         field_name   = 4;
     required ValueContainer value        = 5;
-}
-
-message GetNodeByWhereResponse {
-    required Header header = 1;
-
-    oneof response {
-        Result result = 2;
-        Error  error  = 3;
-    }
 }
