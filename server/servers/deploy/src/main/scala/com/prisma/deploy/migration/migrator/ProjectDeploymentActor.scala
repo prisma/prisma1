@@ -5,6 +5,8 @@ import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.deploy.connector.{DeployConnector, MigrationStepMapperImpl}
 import com.prisma.deploy.schema.DeploymentInProgress
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.messagebus.pubsub.Only
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -32,7 +34,8 @@ object DeploymentProtocol {
 case class ProjectDeploymentActor(
     project: Project,
     migrationPersistence: MigrationPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    invalidationPublisher: PubSubPublisher[String]
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
@@ -156,6 +159,7 @@ case class ProjectDeploymentActor(
           if (result.succeeded) {
             activeSchema = nextMigration.schema
           }
+          invalidationPublisher.publish(Only(project.id), project.id)
         }
 
       case Failure(err) =>

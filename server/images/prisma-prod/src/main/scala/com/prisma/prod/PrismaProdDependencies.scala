@@ -46,7 +46,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     CachedProjectFetcherImpl(fetcher, invalidationPubSub)
   }
 
-  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
+  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector, invalidationPublisher)
   override lazy val managementAuth = {
     (config.managementApiSecret, config.legacySecret) match {
       case (Some(jwtSecret), _) if jwtSecret.nonEmpty => SymmetricManagementAuth(jwtSecret)
