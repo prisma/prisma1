@@ -1,4 +1,3 @@
-use std::env;
 use arc_swap::ArcSwap;
 use r2d2;
 use r2d2_sqlite::SqliteConnectionManager;
@@ -14,6 +13,7 @@ use crate::{
         GraphqlId,
         graphql_id::IdValue,
     },
+    SERVER_ROOT,
 };
 
 use rusqlite::{
@@ -35,6 +35,9 @@ pub struct Sqlite {
 }
 
 impl Sqlite {
+    /// Creates a new SQLite pool connected into local memory. By querying from
+    /// different databases, it will try to create them to
+    /// `$SERVER_ROOT/database` if they do not exists yet.
     pub fn new(connection_limit: u32) -> PrismaResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
@@ -71,8 +74,7 @@ impl Sqlite {
     }
 
     fn create_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
-        let root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
-        let path = format!("{}/db/{}", root, db_name);
+        let path = format!("{}/db/{}", *SERVER_ROOT, db_name);
         dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
 
         Ok(())
