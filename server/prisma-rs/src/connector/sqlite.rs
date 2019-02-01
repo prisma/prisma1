@@ -6,7 +6,6 @@ use std::{collections::HashSet, sync::Arc};
 
 use crate::{
     connector::Connector,
-    error::Error,
     querying::NodeSelector,
     schema::{Field, TypeIdentifier},
     PrismaResult, PrismaValue,
@@ -99,15 +98,15 @@ impl Sqlite {
 
     fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
         match typ {
-            TypeIdentifier::String => PrismaValue::String(row.get(i)),
+            TypeIdentifier::String    => PrismaValue::String(row.get(i)),
             TypeIdentifier::GraphQLID => PrismaValue::GraphqlId(row.get(i)),
-            TypeIdentifier::UUID => PrismaValue::Uuid(row.get(i)),
-            TypeIdentifier::Int => PrismaValue::Int(row.get(i)),
-            TypeIdentifier::Boolean => PrismaValue::Boolean(row.get(i)),
-            TypeIdentifier::Enum => PrismaValue::Enum(row.get(i)),
-            TypeIdentifier::Json => PrismaValue::Json(row.get(i)),
-            TypeIdentifier::DateTime => PrismaValue::DateTime(row.get(i)),
-            TypeIdentifier::Relation => PrismaValue::Relation(row.get(i)),
+            TypeIdentifier::UUID      => PrismaValue::Uuid(row.get(i)),
+            TypeIdentifier::Int       => PrismaValue::Int(row.get(i)),
+            TypeIdentifier::Boolean   => PrismaValue::Boolean(row.get(i)),
+            TypeIdentifier::Enum      => PrismaValue::Enum(row.get(i)),
+            TypeIdentifier::Json      => PrismaValue::Json(row.get(i)),
+            TypeIdentifier::DateTime  => PrismaValue::DateTime(row.get(i)),
+            TypeIdentifier::Relation  => PrismaValue::Relation(row.get(i)),
             TypeIdentifier::Float => {
                 let v: f64 = row.get(i);
                 PrismaValue::Float(v as f32)
@@ -117,17 +116,6 @@ impl Sqlite {
 }
 
 impl Connector for Sqlite {
-    fn select_1(&self) -> PrismaResult<i32> {
-        let conn = self.pool.get()?;
-        let mut stmt = conn.prepare("SELECT 1")?;
-        let mut rows = stmt.query_map(NO_PARAMS, |row| row.get(0))?;
-
-        match rows.next() {
-            Some(r) => Ok(r?),
-            None => Err(Error::NoResultsError),
-        }
-    }
-
     fn get_node_by_where(
         &self,
         database_name: &str,
@@ -163,20 +151,21 @@ impl Connector for Sqlite {
 impl ToSql for PrismaValue {
     fn to_sql(&self) -> Result<ToSqlOutput, RusqlError> {
         let value = match self {
-            PrismaValue::String(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Float(value) => ToSqlOutput::from(*value as f64),
-            PrismaValue::Int(value) => ToSqlOutput::from(*value),
+            PrismaValue::String(value)   => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Enum(value)     => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Json(value)     => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Uuid(value)     => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Float(value)    => ToSqlOutput::from(*value as f64),
+            PrismaValue::Int(value)      => ToSqlOutput::from(*value),
             PrismaValue::Relation(value) => ToSqlOutput::from(*value as i64),
-            PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
+            PrismaValue::Boolean(value)  => ToSqlOutput::from(*value),
             PrismaValue::DateTime(value) => value.to_sql().unwrap(),
-            PrismaValue::Null(_) => ToSqlOutput::from(Null),
+            PrismaValue::Null(_)         => ToSqlOutput::from(Null),
+
             PrismaValue::GraphqlId(value) => match value.id_value {
                 Some(IdValue::String(ref value)) => ToSqlOutput::from(value.as_ref() as &str),
-                Some(IdValue::Int(value)) => ToSqlOutput::from(value),
-                None => panic!("We got an empty ID value here. Tsk tsk.")
+                Some(IdValue::Int(value))        => ToSqlOutput::from(value),
+                None                             => panic!("We got an empty ID value here. Tsk tsk.")
             },
         };
 
@@ -200,12 +189,6 @@ impl FromSql for GraphqlId {
 mod tests {
     use super::*;
     use crate::{connector::Connector, schema::*};
-
-    #[test]
-    fn test_select_1() {
-        let sqlite = Sqlite::new(1).unwrap();
-        assert_eq!(1, sqlite.select_1().unwrap());
-    }
 
     #[test]
     fn test_simple_select_by_where() {
