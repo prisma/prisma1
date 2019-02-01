@@ -125,7 +125,7 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let select_fields: &[Field] = &selector.selected_fields;
+            let select_fields: &[&Field] = selector.selected_fields;
             let field_names: Vec<&str> = select_fields
                 .iter()
                 .map(|field| field.name.as_ref())

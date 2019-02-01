@@ -14,7 +14,7 @@ pub struct NodeSelector<'a> {
     /// The value of the field, should be in the corresponding type.
     pub value: &'a PrismaValue,
     /// Fields to select from the table
-    pub selected_fields: &'a [Field],
+    pub selected_fields: &'a [&'a Field],
 }
 
 impl<'a> NodeSelector<'a> {
@@ -24,7 +24,7 @@ impl<'a> NodeSelector<'a> {
         model: &'a Model,
         field: &'a Field,
         value: &'a PrismaValue,
-        selected_fields: &'a [Field],
+        selected_fields: &'a [&'a Field],
     ) -> NodeSelector<'a> {
         let table = format!("{}.{}", database, model.name);
 
