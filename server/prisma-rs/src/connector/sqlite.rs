@@ -7,7 +7,7 @@ use chrono::{
 use crate::{
     connector::Connector,
     querying::NodeSelector,
-    schema::{Field, TypeIdentifier},
+    schema::TypeIdentifier,
     PrismaResult, PrismaValue,
     protobuf::prisma::{
         GraphqlId,
@@ -49,7 +49,7 @@ impl Sqlite {
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
     /// from the SERVER_ROOT.
     fn create_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
-        let mut stmt = conn.prepare("PRAGMA database_list")?;
+        let mut stmt = dbg!(conn.prepare("PRAGMA database_list")?);
 
         let databases: HashSet<String> = stmt
             .query_map(NO_PARAMS, |row| {
@@ -79,7 +79,7 @@ impl Sqlite {
         Self::create_database(&mut conn, db_name)?;
 
         let result = f(&conn);
-        if self.test_mode { conn.execute("DETACH DATABASE ?", &[db_name])?; }
+        if self.test_mode { dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?); }
 
         result
     }
@@ -125,8 +125,7 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let select_fields: &[&Field] = selector.selected_fields;
-            let field_names: Vec<&str> = select_fields
+            let field_names: Vec<&str> = selector.selected_fields
                 .iter()
                 .map(|field| field.name.as_ref())
                 .collect();
@@ -206,8 +205,8 @@ mod tests {
                 conn.execute_batch(
                     "BEGIN;
                  DROP TABLE IF EXISTS graphcool.user;
-                 CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT);
-                 INSERT INTO graphcool.user (name) values ('Musti');
+                 CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, updated_at datetime(3));
+                 INSERT INTO graphcool.user (name, updated_at) values ('Musti', 1549046025567);
                  COMMIT;",
                 )
                 .unwrap();
@@ -236,6 +235,16 @@ mod tests {
                 is_readonly: false,
                 is_auto_generated: false,
             },
+            Field {
+                name: String::from("updated_at"),
+                type_identifier: TypeIdentifier::DateTime,
+                is_required: false,
+                is_list: false,
+                is_unique: false,
+                is_hidden: false,
+                is_readonly: false,
+                is_auto_generated: false,
+            },
         ];
 
         let model = Model {
@@ -258,8 +267,14 @@ mod tests {
 
         let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
 
-        assert_eq!(2, result.len());
+        let datetime: DateTime<Utc> = DateTime::from_utc(
+            chrono::NaiveDateTime::from_timestamp(1549046025, 567000000),
+            Utc
+        );
+
+        assert_eq!(3, result.len());
         assert_eq!(PrismaValue::GraphqlId(GraphqlId { id_value: Some(IdValue::Int(1)) }), result[0]);
         assert_eq!(PrismaValue::String(String::from("Musti")), result[1]);
+        assert_eq!(PrismaValue::DateTime(datetime.to_rfc3339()), result[2]);
     }
 }
