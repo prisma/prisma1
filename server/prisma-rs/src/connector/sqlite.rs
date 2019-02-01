@@ -31,18 +31,19 @@ type Pool = r2d2::Pool<SqliteConnectionManager>;
 
 pub struct Sqlite {
     pool: Pool,
+    test_mode: bool,
 }
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory. By querying from
     /// different databases, it will try to create them to
     /// `$SERVER_ROOT/db/db_name` if they do not exists yet.
-    pub fn new(connection_limit: u32) -> PrismaResult<Sqlite> {
+    pub fn new(connection_limit: u32, test_mode: bool) -> PrismaResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
-        Ok(Sqlite { pool })
+        Ok(Sqlite { pool, test_mode, })
     }
 
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
@@ -77,10 +78,10 @@ impl Sqlite {
         let mut conn = dbg!(self.pool.get()?);
         Self::create_database(&mut conn, db_name)?;
 
-        let res = f(&conn);
+        let result = f(&conn);
+        if self.test_mode { conn.execute("DETACH DATABASE ?", &[db_name])?; }
 
-        conn.execute("DETACH DATABASE ?", &[db_name])?;
-        res
+        result
     }
 
     /// Converter function to wrap the limited set of types in SQLite to a
@@ -196,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_simple_select_by_where() {
-        let sqlite = Sqlite::new(1).unwrap();
+        let sqlite = Sqlite::new(1, true).unwrap();
         let db_name = "graphcool";
 
         // Create a simple schema

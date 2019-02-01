@@ -60,7 +60,7 @@ impl ProtobufInterface {
     pub fn new(config: &PrismaConfig) -> ProtobufInterface {
         let connector = match config.databases.get("default") {
             Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite" => {
-                Sqlite::new(config.limit()).unwrap()
+                Sqlite::new(config.limit(), config.test_mode).unwrap()
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };

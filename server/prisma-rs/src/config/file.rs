@@ -6,6 +6,9 @@ pub struct FileConfig {
     pub connector: String,
     pub file: String,
 
+    #[serde(default)]
+    pub test_mode: bool,
+
     pub database: Option<String>,
     pub connection_limit: Option<u32>,
     pub pooled: Option<bool>,
