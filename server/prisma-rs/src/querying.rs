@@ -5,10 +5,10 @@ use crate::{
 
 /// A helper struct for selecting data.
 pub struct NodeSelector<'a> {
+    /// The database of the model
+    pub database: &'a str,
     /// The model to select from
     pub model: &'a Model,
-    /// The table to look into
-    pub table: String,
     /// The name of the field to filtering
     pub field: &'a Field,
     /// The value of the field, should be in the corresponding type.
@@ -26,11 +26,9 @@ impl<'a> NodeSelector<'a> {
         value: &'a PrismaValue,
         selected_fields: &'a [&'a Field],
     ) -> NodeSelector<'a> {
-        let table = format!("{}.{}", database, model.name);
-
         NodeSelector {
+            database,
             model,
-            table,
             field,
             value,
             selected_fields,

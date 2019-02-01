@@ -116,6 +116,10 @@ impl Sqlite {
             }
         }
     }
+
+    fn table_location(database: &str, table: &str) -> String {
+        format!("{}.{}", database, table)
+    }
 }
 
 impl Connector for Sqlite {
@@ -130,8 +134,9 @@ impl Connector for Sqlite {
                 .iter()
                 .map(|field| field.name.as_ref())
                 .collect();
+            let table_location = Self::table_location(database_name, selector.model.name.as_ref());
 
-            let query = dbg!(select_from(&selector.table)
+            let query = dbg!(select_from(&table_location)
                 .columns(field_names.as_slice())
                 .so_that(selector.field.name.equals(DatabaseValue::Parameter))
                 .compile()
@@ -249,8 +254,15 @@ mod tests {
         };
 
         let find_by = PrismaValue::String(String::from("Musti"));
-        let selector =
-            NodeSelector::new(db_name, &model, &model.fields[1], &find_by, &model.fields);
+        let scalars = model.scalar_fields();
+
+        let selector = NodeSelector::new(
+            db_name,
+            &model,
+            &model.fields[1],
+            &find_by,
+            &scalars
+        );
 
         let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
 
