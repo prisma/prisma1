@@ -4,6 +4,10 @@ import com.prisma.shared.errors.SharedErrors
 
 object Schema {
   val empty = Schema()
+
+  object version {
+    val v2 = "v2"
+  }
 }
 
 case class Schema(

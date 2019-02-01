@@ -271,7 +271,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
 
     val result        = deploy(dataModel)
-    val relationTable = result.table_!("AToB")
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
@@ -296,7 +296,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
 
     val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
-    val relationTable = result.table_!("AToB")
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.Int)
@@ -326,7 +326,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
 
     val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
-    val relationTable = result.table_!("AToB")
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
@@ -617,7 +617,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result = deploy(dataModel, capas)
     result.table("CustomLinkTable").isDefined should be(false)
-    val relationTable = result.table_!("AToB")
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
@@ -793,7 +793,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result = deploy(newDataModel, capas)
     result.table_!("A").column("b").isDefined should be(false)
-    result.table("AToB").isDefined should be(true)
+    result.table("_AToB").isDefined should be(true)
   }
 
   "converting a link table to an inline relation should work" in {
@@ -814,7 +814,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     {
       val result = deploy(initialDataModel, capas)
       result.table_!("A").column("b").isDefined should be(false)
-      result.table("AToB").isDefined should be(true)
+      result.table("_AToB").isDefined should be(true)
     }
 
     val newDataModel =

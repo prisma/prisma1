@@ -5,6 +5,7 @@ import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPer
 import com.prisma.deploy.connector.DeployConnector
 import org.slf4j.LoggerFactory
 import com.prisma.shared.models.Project
+import com.prisma.messagebus.PubSubPublisher
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -12,7 +13,8 @@ import scala.util.{Failure, Success}
 case class DeploymentSchedulerActor(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    invalidationPublisher: PubSubPublisher[String]
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
@@ -80,7 +82,7 @@ case class DeploymentSchedulerActor(
   }
 
   def workerForProject(project: Project): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(project, migrationPersistence, deployConnector)))
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(project, migrationPersistence, deployConnector, invalidationPublisher)))
 
     context.watch(newWorker)
     projectWorkers += (project -> newWorker)

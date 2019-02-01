@@ -126,9 +126,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                         );"""
 
     val tableCreate = relation.manifestation match {
-      case None                                         => legacyTableCreate("id")
-      case Some(RelationTable(_, _, _, Some(idColumn))) => legacyTableCreate(idColumn)
-      case _                                            => modernTableCreate
+      case RelationTable(_, _, _, Some(idColumn)) => legacyTableCreate(idColumn)
+      case _                                      => modernTableCreate
     }
 
     // we do not create an index on A because queries for the A column can be satisfied with the combined index as well

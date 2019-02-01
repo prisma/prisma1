@@ -48,7 +48,7 @@ case class SchemaInferrerImpl(
       modelTemplates = nextModels.toList,
       relationTemplates = nextRelations.toList,
       enums = nextEnums.toList,
-      version = if (isLegacy) None else Some("v2")
+      version = if (isLegacy) None else Some(Schema.version.v2)
     )
     val schemaWithOptionalBackRelations = MissingBackRelations.add(schemaWithOutOptionalBackrelations)
     schemaWithOptionalBackRelations
@@ -366,7 +366,7 @@ case class SchemaInferrerImpl(
                 idColumn = relationTable.scalarFields.find(_.isId).map(_.finalDbName)
               ))
           case None =>
-            Some(RelationTable(table = relationName, modelAColumn = "A", modelBColumn = "B"))
+            Some(RelationTable(table = "_" + relationName, modelAColumn = "A", modelBColumn = "B"))
         }
     }
   }

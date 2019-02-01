@@ -27,10 +27,16 @@ case class AddProjectMutation(
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
 
+    val schema = if (connectorCapabilities.isDataModelV2) {
+      Schema.empty.copy(version = Some(Schema.version.v2))
+    } else {
+      Schema.empty
+    }
+
     val newProject = Project(
       id = projectId,
       secrets = args.secrets,
-      schema = Schema()
+      schema = schema
     )
 
     val migration = Migration(
@@ -41,9 +47,9 @@ case class AddProjectMutation(
       status = MigrationStatus.Success,
       steps = Vector.empty,
       errors = Vector.empty,
-      schema = Schema.empty,
+      schema = schema,
       functions = Vector.empty,
-      previousSchema = Schema.empty,
+      previousSchema = schema,
       rawDataModel = ""
     )
 

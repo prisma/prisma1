@@ -161,19 +161,19 @@ case class RelationField(
   override def userFriendlyTypeName = relatedModel_!.name
 
   lazy val dbName: String = relation.manifestation match {
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && relationSide == RelationSide.A                            => this.name
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name                                                   => m.referencingColumn
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == relatedModel_!.name                                          => this.name
-    case _                                                                                                                     => this.name
+    case m: EmbeddedRelationLink if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
+    case m: EmbeddedRelationLink if relation.isSelfRelation && relationSide == RelationSide.A                            => this.name
+    case m: EmbeddedRelationLink if m.inTableOfModelName == model.name                                                   => m.referencingColumn
+    case m: EmbeddedRelationLink if m.inTableOfModelName == relatedModel_!.name                                          => this.name
+    case _                                                                                                               => this.name
   }
 
   lazy val relationIsInlinedInParent = relation.manifestation match {
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && relationSide == RelationSide.A                            => false
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name                                                   => true
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == relatedModel_!.name                                          => false
-    case _                                                                                                                     => false
+    case m: EmbeddedRelationLink if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
+    case m: EmbeddedRelationLink if relation.isSelfRelation && relationSide == RelationSide.A                            => false
+    case m: EmbeddedRelationLink if m.inTableOfModelName == model.name                                                   => true
+    case m: EmbeddedRelationLink if m.inTableOfModelName == relatedModel_!.name                                          => false
+    case _                                                                                                               => false
   }
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)

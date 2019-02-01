@@ -83,7 +83,7 @@ export const prisma = new Prisma()`
       return FlowGenerator.replaceEnv(
         `${str.slice(0, match.index)}$\{process.env['${
           match[1]
-        }'] || ""}}${str.slice(match[0].length + match.index)}`,
+        }'] || ""}${str.slice(match[0].length + match.index)}`,
       )
     } else {
       return `\`${str}\``

@@ -24,79 +24,12 @@ import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 import { IntrospectionQuery } from 'graphql'
 import { hasTypeWithField } from '../utils/graphql-schema'
+import {
+  renderMigrationFragment,
+  renderStepFragment,
+} from './migrationFragment'
 
 const debug = require('debug')('client')
-
-const STEP_FRAGMENT = `
-    type
-    __typename
-    ... on CreateEnum {
-      name
-      ce_values: values
-    }
-    ... on CreateField {
-      model
-      name
-      cf_typeName: typeName
-      cf_isRequired: isRequired
-      cf_isList: isList
-      cf_isUnique: unique
-      cf_relation: relation
-      cf_defaultValue: default
-      cf_enum: enum
-    }
-    ... on CreateModel {
-      name
-    }
-    ... on CreateRelation {
-      name
-      leftModel
-      rightModel
-    }
-    ... on DeleteEnum {
-      name
-    }
-    ... on DeleteField {
-      model
-      name
-    }
-    ... on DeleteModel {
-      name
-    }
-    ... on DeleteRelation {
-      name
-    }
-    ... on UpdateEnum {
-      name
-      newName
-      values
-    }
-    ... on UpdateField {
-      model
-      name
-      newName
-      typeName
-      isRequired
-      isList
-      isUnique: unique
-      relation
-      default
-      enum
-    }
-    ... on UpdateModel {
-      name
-      um_newName: newName
-    }
-`
-
-const MIGRATION_FRAGMENT = `
-fragment MigrationFragment on Migration {
-  revision
-  steps {
-    ${STEP_FRAGMENT}
-  }
-}
-`
 
 export class Client {
   config: Config
@@ -765,7 +698,7 @@ export class Client {
           }
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(false)}
     `
 
     const introspectionResult: IntrospectionQuery = await this.client.request(
@@ -776,7 +709,16 @@ export class Client {
       'DeployPayload',
       'steps',
     )
-    const steps = hasStepsApi ? `steps { ${STEP_FRAGMENT} }` : ''
+
+    const hasRelationManifestationApi = hasTypeWithField(
+      introspectionResult,
+      'CreateRelation',
+      'after',
+    )
+
+    const steps = hasStepsApi
+      ? `steps { ${renderStepFragment(hasRelationManifestationApi)} }`
+      : ''
 
     if (
       noMigration &&
@@ -817,7 +759,7 @@ export class Client {
           ${steps}
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(hasRelationManifestationApi)}
     `
 
     try {

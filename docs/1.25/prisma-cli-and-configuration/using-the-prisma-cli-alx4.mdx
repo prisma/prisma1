@@ -1,0 +1,130 @@
+export const meta = {
+  title: "Using the Prisma CLI",
+  position: 10,
+}
+
+## Overview
+
+The Prisma command line interface (CLI) is the primary tool to deploy and manage your Prisma services.
+
+The Prisma CLI helps you in areas such as:
+
+- Bootstraping service configuration files for new services
+- Deploying services to Prisma _servers_
+- Generating authentication tokens
+- Seeding, importing and exporting data
+- ...and more
+
+To get detailled information about all CLI commands, read the [**command reference**](xcv9).
+
+## Installation
+
+The Prisma CLI can be installed from the [NPM registry](https://docs.npmjs.com/misc/registry).
+
+### Homebrew
+
+```bash copy
+brew install prisma
+brew tap 
+```
+
+### NPM
+
+```bash copy
+npm install -g prisma
+```
+
+### Yarn
+
+```bash copy
+yarn global add prisma
+```
+
+## Synopsis
+
+```
+$ prisma
+
+GraphQL Database Gateway (https://www.prisma.io)
+    
+Usage: prisma COMMAND
+
+Service:
+  init            Initialize a new service
+  deploy          Deploy service changes (or new service)
+  introspect      Introspect database schema(s) of service
+  info            Display service information (endpoints, cluster, ...)
+  token           Create a new service token
+  list            List all deployed services
+  delete          Delete an existing service
+
+Data workflows:
+  playground      Open service endpoints in GraphQL Playground
+  seed            Seed a service with data specified in the prisma.yml
+  import          Import data into a service
+  export          Export service data to local file
+  reset           Reset the stage data
+
+Cloud:
+  login           Login or signup to the Prisma Cloud
+  logout          Logout from Prisma Cloud
+  console         Open Prisma Console in browser
+  account         Display account information
+
+Use prisma help [command] for more information about a command.
+Docs can be found here: https://bit.ly/prisma-cli-commands
+
+Examples:
+
+- Initialize files for a new Prisma service
+  $ prisma init
+
+- Deploy service changes (or new service)
+  $ prisma deploy
+```
+
+## Quickstart
+
+Once installed, execute the following commands to get your Prisma API up-and-running and start sending queries and mutations to it:
+
+```bash
+prisma init hello-world
+# Select a *Demo server* from the interactive prompt
+cd hello-world
+prisma deploy
+prisma playground
+```
+
+You can now start sending queries and mutations to your Prisma API. For a more comprehensive walkthrough, check out the [Get Started](a001) section.
+
+## Usage with `graphql-config`
+
+The Prisma CLI integrates with [`graphql-config`](https://github.com/prismagraphql/graphql-config). If your project uses a `.graphqlconfig.yml`-file, you can use the `prisma` extension and point it to your prisma.yml:
+
+```yml
+projects:
+  prisma:
+    schemaPath: prisma.graphql
+    extensions:
+      prisma: prisma.yml
+```
+
+## Using a HTTP proxy for the CLI
+
+The Prisma CLI supports [custom HTTP proxies](https://github.com/graphcool/prisma/issues/618). This is particularly relevant when being behind a corporate firewall.
+
+To activate the proxy, provide the environment variables `HTTP_PROXY` and `HTTPS_PROXY`. The behavior is very similar to how the [`npm` CLI handles this](https://docs.npmjs.com/misc/config#https-proxy).
+
+The following environment variables can be provided:
+
+- `HTTP_PROXY` or `http_proxy`: Proxy URL for http traffic, for example `http://localhost:8080`
+- `HTTPS_PROXY` or `https_proxy`: Proxy URL for https traffic, for example `https://localhost:8080`
+- `NO_PROXY` or `no_proxy`: To disable the proxying for certain URLs, please provide a glob for `NO_PROXY`, for example `*`.
+
+To get a simple local proxy, you can use the [`proxy` module](https://www.npmjs.com/package/proxy):
+
+```bash
+npm install -g proxy
+DEBUG="*" proxy -p 8080
+HTTP_PROXY=http://localhost:8080 HTTPS_PROXY=https://localhost:8080 prisma deploy
+```

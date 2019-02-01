@@ -193,6 +193,7 @@ export class Client {
 
     if (
       !selectionFromFragment &&
+      Boolean(pointer) &&
       Array.isArray(pointer) &&
       pointer.length > 0
     ) {
@@ -210,7 +211,7 @@ export class Client {
       }
     }
 
-    if (!selectionFromFragment && !Array.isArray(pointer)) {
+    if (Boolean(pointer) && !selectionFromFragment && !Array.isArray(pointer)) {
       if (
         Object.keys(pointer).length === 1 &&
         Object.keys(pointer)[0] === '__typename'
@@ -373,7 +374,7 @@ export class Client {
         node.selectionSet.selections.push(acc)
       }
 
-      if (node.selectionSet.selections.length === 0) {
+      if (node.selectionSet.selections.length === 0 && type instanceof GraphQLObjectType) {
         node.selectionSet.selections = [
           {
             kind: 'Field',
