@@ -10,7 +10,7 @@ const parser = Parser.create(DatabaseType.postgres)
 const simpleModel = 
 `type User {
   age: int
-  isAdmin: Boolean @default(value: false)
+  isAdmin: Boolean @default(value: "false")
   name: String
   nationality: String @default(value: "DE")
   roles: [Int!]!

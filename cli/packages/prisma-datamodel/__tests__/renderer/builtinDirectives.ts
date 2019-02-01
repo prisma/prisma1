@@ -54,7 +54,7 @@ describe(`Renderer directives test`, () => {
     const modelWithDirectives = dedent(`
       type Test @pgTable(name: "testType") {
         createdAt: DateTime
-        id: Int
+        id: Int @unique
         mappedField: String @pgColumn(name: "dbField") @relation(name: "typeRelation")
         updatedAt: DateTime
       }`)
@@ -93,7 +93,7 @@ describe(`Renderer directives test`, () => {
     const renderer = Renderer.create(DatabaseType.mongo)
     
     const modelWithDirectives = dedent(`
-      type User @indexes(value: [{name: "NameIndex", fields: ["firstName", "lastName"], unique: false}, {name: "PrimaryIndex", fields: ["id"]}]) {
+      type User @indexes(value: [{name: "NameIndex", fields: ["firstName", "lastName"], unique: "false"}, {name: "PrimaryIndex", fields: ["id"]}]) {
         createdAt: DateTime! @createdAt
         firstName: String!
         id: Int! @id
