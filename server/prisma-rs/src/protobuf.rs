@@ -102,6 +102,8 @@ impl ProtobufInterface {
                 .value
                 .prisma_value
                 .ok_or_else(|| Error::InvalidInputError(String::from("Search value cannot be empty.")))?;
+            
+            let selected_fields = model.fields.as_slice();
 
             let node_selector = NodeSelector::new(
                 project.db_name(),
@@ -126,6 +128,7 @@ impl ProtobufInterface {
                 },
                 response: Some(Response::Result(prisma::Result {
                     values: response_values,
+                    fields: selected_fields.iter().map(|field| field.name.clone()).collect()
                 })),
             };
 
