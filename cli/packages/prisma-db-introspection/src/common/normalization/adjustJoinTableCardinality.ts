@@ -10,8 +10,8 @@ export class AdjustJoinTableCardinality implements INormalizer {
 
   public normalizeType(type: IGQLType, ref: IGQLType) { 
     for(const field of type.fields) {
+      // Only look at n:n relations.
       if(typeof field.type !== 'string' && field.isList) {
-
         // TODO: Subclass
         // Fid the reference field.
         const refField = ref.fields.find(x => x.name === field.name)

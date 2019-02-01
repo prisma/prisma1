@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$relationNames; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$relationNames; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$relationNames";
 
-
-ALTER SCHEMA "schema-generator$relationNames" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: A; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: A; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."A" (
@@ -39,10 +37,8 @@ CREATE TABLE "schema-generator$relationNames"."A" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."A" OWNER TO prisma;
-
 --
--- Name: B; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: B; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."B" (
@@ -52,10 +48,8 @@ CREATE TABLE "schema-generator$relationNames"."B" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."B" OWNER TO prisma;
-
 --
--- Name: C; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: C; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."C" (
@@ -65,10 +59,8 @@ CREATE TABLE "schema-generator$relationNames"."C" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."C" OWNER TO prisma;
-
 --
--- Name: _AToC; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."_AToC" (
@@ -78,10 +70,8 @@ CREATE TABLE "schema-generator$relationNames"."_AToC" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."_AToC" OWNER TO prisma;
-
 --
--- Name: _BToC; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."_BToC" (
@@ -91,10 +81,8 @@ CREATE TABLE "schema-generator$relationNames"."_BToC" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."_BToC" OWNER TO prisma;
-
 --
--- Name: _RaToB; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."_RaToB" (
@@ -104,10 +92,8 @@ CREATE TABLE "schema-generator$relationNames"."_RaToB" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."_RaToB" OWNER TO prisma;
-
 --
--- Name: _RaToB2; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."_RaToB2" (
@@ -117,10 +103,8 @@ CREATE TABLE "schema-generator$relationNames"."_RaToB2" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."_RaToB2" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE TABLE "schema-generator$relationNames"."_RelayId" (
@@ -129,74 +113,8 @@ CREATE TABLE "schema-generator$relationNames"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$relationNames"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: A; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."A" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: B; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."B" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: C; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."C" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _AToC; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."_AToC" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _BToC; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."_BToC" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RaToB; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."_RaToB" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RaToB2; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."_RaToB2" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$relationNames; Owner: prisma
---
-
-COPY "schema-generator$relationNames"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: A A_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: A A_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."A"
@@ -204,7 +122,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."A"
 
 
 --
--- Name: B B_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: B B_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."B"
@@ -212,7 +130,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."B"
 
 
 --
--- Name: C C_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: C C_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."C"
@@ -220,7 +138,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."C"
 
 
 --
--- Name: _AToC _AToC_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC _AToC_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
@@ -228,7 +146,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
 
 
 --
--- Name: _BToC _BToC_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC _BToC_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
@@ -236,7 +154,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
 
 
 --
--- Name: _RaToB2 _RaToB2_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2 _RaToB2_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
@@ -244,7 +162,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
 
 
 --
--- Name: _RaToB _RaToB_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB _RaToB_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB"
@@ -252,7 +170,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RelayId"
@@ -260,91 +178,91 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_RelayId"
 
 
 --
--- Name: _AToC_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_AToC_A" ON "schema-generator$relationNames"."_AToC" USING btree ("A");
 
 
 --
--- Name: _AToC_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE UNIQUE INDEX "_AToC_AB_unique" ON "schema-generator$relationNames"."_AToC" USING btree ("A", "B");
 
 
 --
--- Name: _AToC_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_AToC_B" ON "schema-generator$relationNames"."_AToC" USING btree ("B");
 
 
 --
--- Name: _BToC_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_BToC_A" ON "schema-generator$relationNames"."_BToC" USING btree ("A");
 
 
 --
--- Name: _BToC_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE UNIQUE INDEX "_BToC_AB_unique" ON "schema-generator$relationNames"."_BToC" USING btree ("A", "B");
 
 
 --
--- Name: _BToC_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_BToC_B" ON "schema-generator$relationNames"."_BToC" USING btree ("B");
 
 
 --
--- Name: _RaToB2_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_RaToB2_A" ON "schema-generator$relationNames"."_RaToB2" USING btree ("A");
 
 
 --
--- Name: _RaToB2_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE UNIQUE INDEX "_RaToB2_AB_unique" ON "schema-generator$relationNames"."_RaToB2" USING btree ("A", "B");
 
 
 --
--- Name: _RaToB2_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_RaToB2_B" ON "schema-generator$relationNames"."_RaToB2" USING btree ("B");
 
 
 --
--- Name: _RaToB_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB_A; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_RaToB_A" ON "schema-generator$relationNames"."_RaToB" USING btree ("A");
 
 
 --
--- Name: _RaToB_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB_AB_unique; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE UNIQUE INDEX "_RaToB_AB_unique" ON "schema-generator$relationNames"."_RaToB" USING btree ("A", "B");
 
 
 --
--- Name: _RaToB_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB_B; Type: INDEX; Schema: schema-generator$relationNames; Owner: -
 --
 
 CREATE INDEX "_RaToB_B" ON "schema-generator$relationNames"."_RaToB" USING btree ("B");
 
 
 --
--- Name: _AToC _AToC_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC _AToC_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
@@ -352,7 +270,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
 
 
 --
--- Name: _AToC _AToC_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _AToC _AToC_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
@@ -360,7 +278,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
 
 
 --
--- Name: _BToC _BToC_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC _BToC_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
@@ -368,7 +286,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
 
 
 --
--- Name: _BToC _BToC_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _BToC _BToC_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
@@ -376,7 +294,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
 
 
 --
--- Name: _RaToB2 _RaToB2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2 _RaToB2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
@@ -384,7 +302,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
 
 
 --
--- Name: _RaToB2 _RaToB2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB2 _RaToB2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
@@ -392,7 +310,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
 
 
 --
--- Name: _RaToB _RaToB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB _RaToB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB"
@@ -400,7 +318,7 @@ ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB"
 
 
 --
--- Name: _RaToB _RaToB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: prisma
+-- Name: _RaToB _RaToB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB"

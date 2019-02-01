@@ -3,6 +3,7 @@ import RelationalParser from '../parser/relationalParser'
 import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from '../model'
 import GQLAssert from '../../util/gqlAssert'
 import { TypeIdentifiers } from '../scalar'
+import { DirectiveKeys } from '../directives';
 /**
  * Renderer implementation for relational models. 
  */
@@ -22,7 +23,7 @@ export default class RelationalRenderer extends Renderer {
   }
 
   protected shouldCreateIsUniqueFieldDirective(field: IGQLField) {
-    return field.isUnique
+    return field.isUnique || field.isId
   }
 
   // Avoid embedded types
@@ -56,5 +57,10 @@ export default class RelationalRenderer extends Renderer {
     }
 
     return super.renderField(field)
+  }
+
+  // Remove @relation(link: TABLE) directive.
+  protected renderDirectives(directives: IDirectiveInfo[]) {
+    return super.renderDirectives(directives.filter(dir => dir.name !== DirectiveKeys.relation || dir.arguments.link !== 'TABLE' ))
   }
 }

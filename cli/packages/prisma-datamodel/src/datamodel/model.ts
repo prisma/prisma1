@@ -271,7 +271,7 @@ function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField |
 }
 
 // 21st of Dec: Start: 8:00 - end: 9:45
-function cloneField(field: IGQLField): IGQLField {
+export function cloneField(field: IGQLField): IGQLField {
   const copy = {
     ...field
   }
@@ -281,7 +281,7 @@ function cloneField(field: IGQLField): IGQLField {
   return copy
 }
 
-function cloneType(type: IGQLType): IGQLType {
+export function cloneType(type: IGQLType): IGQLType {
   const copy = {
     ...type
   }

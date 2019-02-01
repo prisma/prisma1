@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$airbnb; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$airbnb; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$airbnb";
 
-
-ALTER SCHEMA "schema-generator$airbnb" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: Amenities; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Amenities; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Amenities" (
@@ -79,10 +77,8 @@ CREATE TABLE "schema-generator$airbnb"."Amenities" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Amenities" OWNER TO prisma;
-
 --
--- Name: Booking; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Booking; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Booking" (
@@ -94,10 +90,8 @@ CREATE TABLE "schema-generator$airbnb"."Booking" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Booking" OWNER TO prisma;
-
 --
--- Name: City; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: City; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."City" (
@@ -108,10 +102,8 @@ CREATE TABLE "schema-generator$airbnb"."City" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."City" OWNER TO prisma;
-
 --
--- Name: CreditCardInformation; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: CreditCardInformation; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."CreditCardInformation" (
@@ -129,10 +121,8 @@ CREATE TABLE "schema-generator$airbnb"."CreditCardInformation" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."CreditCardInformation" OWNER TO prisma;
-
 --
--- Name: Experience; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Experience; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Experience" (
@@ -145,10 +135,8 @@ CREATE TABLE "schema-generator$airbnb"."Experience" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Experience" OWNER TO prisma;
-
 --
--- Name: ExperienceCategory; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: ExperienceCategory; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."ExperienceCategory" (
@@ -160,10 +148,8 @@ CREATE TABLE "schema-generator$airbnb"."ExperienceCategory" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."ExperienceCategory" OWNER TO prisma;
-
 --
--- Name: GuestRequirements; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: GuestRequirements; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."GuestRequirements" (
@@ -176,10 +162,8 @@ CREATE TABLE "schema-generator$airbnb"."GuestRequirements" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."GuestRequirements" OWNER TO prisma;
-
 --
--- Name: HouseRules; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: HouseRules; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."HouseRules" (
@@ -195,10 +179,8 @@ CREATE TABLE "schema-generator$airbnb"."HouseRules" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."HouseRules" OWNER TO prisma;
-
 --
--- Name: Location; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Location; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Location" (
@@ -212,10 +194,8 @@ CREATE TABLE "schema-generator$airbnb"."Location" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Location" OWNER TO prisma;
-
 --
--- Name: Message; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Message; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Message" (
@@ -227,10 +207,8 @@ CREATE TABLE "schema-generator$airbnb"."Message" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Message" OWNER TO prisma;
-
 --
--- Name: Neighbourhood; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Neighbourhood; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Neighbourhood" (
@@ -244,10 +222,8 @@ CREATE TABLE "schema-generator$airbnb"."Neighbourhood" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Neighbourhood" OWNER TO prisma;
-
 --
--- Name: Notification; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Notification; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Notification" (
@@ -260,10 +236,8 @@ CREATE TABLE "schema-generator$airbnb"."Notification" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Notification" OWNER TO prisma;
-
 --
--- Name: Payment; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Payment; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Payment" (
@@ -276,10 +250,8 @@ CREATE TABLE "schema-generator$airbnb"."Payment" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Payment" OWNER TO prisma;
-
 --
--- Name: PaymentAccount; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: PaymentAccount; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."PaymentAccount" (
@@ -290,10 +262,8 @@ CREATE TABLE "schema-generator$airbnb"."PaymentAccount" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."PaymentAccount" OWNER TO prisma;
-
 --
--- Name: PaypalInformation; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: PaypalInformation; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."PaypalInformation" (
@@ -304,10 +274,8 @@ CREATE TABLE "schema-generator$airbnb"."PaypalInformation" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."PaypalInformation" OWNER TO prisma;
-
 --
--- Name: Picture; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Picture; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Picture" (
@@ -318,10 +286,8 @@ CREATE TABLE "schema-generator$airbnb"."Picture" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Picture" OWNER TO prisma;
-
 --
--- Name: Place; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Place; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Place" (
@@ -341,10 +307,8 @@ CREATE TABLE "schema-generator$airbnb"."Place" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Place" OWNER TO prisma;
-
 --
--- Name: Policies; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Policies; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Policies" (
@@ -357,10 +321,8 @@ CREATE TABLE "schema-generator$airbnb"."Policies" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Policies" OWNER TO prisma;
-
 --
--- Name: Pricing; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Pricing; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Pricing" (
@@ -382,10 +344,8 @@ CREATE TABLE "schema-generator$airbnb"."Pricing" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Pricing" OWNER TO prisma;
-
 --
--- Name: Restaurant; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Restaurant; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Restaurant" (
@@ -400,10 +360,8 @@ CREATE TABLE "schema-generator$airbnb"."Restaurant" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Restaurant" OWNER TO prisma;
-
 --
--- Name: Review; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Review; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Review" (
@@ -421,10 +379,8 @@ CREATE TABLE "schema-generator$airbnb"."Review" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Review" OWNER TO prisma;
-
 --
--- Name: User; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: User; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."User" (
@@ -442,10 +398,8 @@ CREATE TABLE "schema-generator$airbnb"."User" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."User" OWNER TO prisma;
-
 --
--- Name: Views; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Views; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."Views" (
@@ -456,10 +410,8 @@ CREATE TABLE "schema-generator$airbnb"."Views" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."Views" OWNER TO prisma;
-
 --
--- Name: _AmenitiesToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_AmenitiesToPlace" (
@@ -469,10 +421,8 @@ CREATE TABLE "schema-generator$airbnb"."_AmenitiesToPlace" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_AmenitiesToPlace" OWNER TO prisma;
-
 --
--- Name: _BookingToPayment; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_BookingToPayment" (
@@ -482,10 +432,8 @@ CREATE TABLE "schema-generator$airbnb"."_BookingToPayment" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_BookingToPayment" OWNER TO prisma;
-
 --
--- Name: _BookingToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_BookingToPlace" (
@@ -495,10 +443,8 @@ CREATE TABLE "schema-generator$airbnb"."_BookingToPlace" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_BookingToPlace" OWNER TO prisma;
-
 --
--- Name: _BookingToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_BookingToUser" (
@@ -508,10 +454,8 @@ CREATE TABLE "schema-generator$airbnb"."_BookingToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_BookingToUser" OWNER TO prisma;
-
 --
--- Name: _CityToNeighbourhood; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_CityToNeighbourhood" (
@@ -521,10 +465,8 @@ CREATE TABLE "schema-generator$airbnb"."_CityToNeighbourhood" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_CityToNeighbourhood" OWNER TO prisma;
-
 --
--- Name: _CreditCardInformationToPaymentAccount; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" (
@@ -534,10 +476,8 @@ CREATE TABLE "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" 
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" OWNER TO prisma;
-
 --
--- Name: _ExperienceToExperienceCategory; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_ExperienceToExperienceCategory" (
@@ -547,10 +487,8 @@ CREATE TABLE "schema-generator$airbnb"."_ExperienceToExperienceCategory" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_ExperienceToExperienceCategory" OWNER TO prisma;
-
 --
--- Name: _ExperienceToLocation; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_ExperienceToLocation" (
@@ -560,10 +498,8 @@ CREATE TABLE "schema-generator$airbnb"."_ExperienceToLocation" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_ExperienceToLocation" OWNER TO prisma;
-
 --
--- Name: _ExperienceToPicture; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_ExperienceToPicture" (
@@ -573,10 +509,8 @@ CREATE TABLE "schema-generator$airbnb"."_ExperienceToPicture" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_ExperienceToPicture" OWNER TO prisma;
-
 --
--- Name: _ExperienceToReview; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_ExperienceToReview" (
@@ -586,10 +520,8 @@ CREATE TABLE "schema-generator$airbnb"."_ExperienceToReview" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_ExperienceToReview" OWNER TO prisma;
-
 --
--- Name: _ExperienceToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_ExperienceToUser" (
@@ -599,10 +531,8 @@ CREATE TABLE "schema-generator$airbnb"."_ExperienceToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_ExperienceToUser" OWNER TO prisma;
-
 --
--- Name: _GuestRequirementsToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_GuestRequirementsToPlace" (
@@ -612,10 +542,8 @@ CREATE TABLE "schema-generator$airbnb"."_GuestRequirementsToPlace" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_GuestRequirementsToPlace" OWNER TO prisma;
-
 --
--- Name: _HouseRulesToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_HouseRulesToPlace" (
@@ -625,10 +553,8 @@ CREATE TABLE "schema-generator$airbnb"."_HouseRulesToPlace" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_HouseRulesToPlace" OWNER TO prisma;
-
 --
--- Name: _LocationToNeighbourhood; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_LocationToNeighbourhood" (
@@ -638,10 +564,8 @@ CREATE TABLE "schema-generator$airbnb"."_LocationToNeighbourhood" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_LocationToNeighbourhood" OWNER TO prisma;
-
 --
--- Name: _LocationToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_LocationToPlace" (
@@ -651,10 +575,8 @@ CREATE TABLE "schema-generator$airbnb"."_LocationToPlace" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_LocationToPlace" OWNER TO prisma;
-
 --
--- Name: _LocationToRestaurant; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_LocationToRestaurant" (
@@ -664,10 +586,8 @@ CREATE TABLE "schema-generator$airbnb"."_LocationToRestaurant" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_LocationToRestaurant" OWNER TO prisma;
-
 --
--- Name: _LocationToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_LocationToUser" (
@@ -677,10 +597,8 @@ CREATE TABLE "schema-generator$airbnb"."_LocationToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_LocationToUser" OWNER TO prisma;
-
 --
--- Name: _NeighbourhoodToPicture; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_NeighbourhoodToPicture" (
@@ -690,10 +608,8 @@ CREATE TABLE "schema-generator$airbnb"."_NeighbourhoodToPicture" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_NeighbourhoodToPicture" OWNER TO prisma;
-
 --
--- Name: _NotificationToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_NotificationToUser" (
@@ -703,10 +619,8 @@ CREATE TABLE "schema-generator$airbnb"."_NotificationToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_NotificationToUser" OWNER TO prisma;
-
 --
--- Name: _PaymentAccountToPaypalInformation; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" (
@@ -716,10 +630,8 @@ CREATE TABLE "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" OWNER TO prisma;
-
 --
--- Name: _PaymentAccountToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PaymentAccountToUser" (
@@ -729,10 +641,8 @@ CREATE TABLE "schema-generator$airbnb"."_PaymentAccountToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PaymentAccountToUser" OWNER TO prisma;
-
 --
--- Name: _PaymentToPaymentAccount; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PaymentToPaymentAccount" (
@@ -742,10 +652,8 @@ CREATE TABLE "schema-generator$airbnb"."_PaymentToPaymentAccount" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PaymentToPaymentAccount" OWNER TO prisma;
-
 --
--- Name: _PictureToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PictureToPlace" (
@@ -755,10 +663,8 @@ CREATE TABLE "schema-generator$airbnb"."_PictureToPlace" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PictureToPlace" OWNER TO prisma;
-
 --
--- Name: _PictureToRestaurant; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PictureToRestaurant" (
@@ -768,10 +674,8 @@ CREATE TABLE "schema-generator$airbnb"."_PictureToRestaurant" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PictureToRestaurant" OWNER TO prisma;
-
 --
--- Name: _PictureToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PictureToUser" (
@@ -781,10 +685,8 @@ CREATE TABLE "schema-generator$airbnb"."_PictureToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PictureToUser" OWNER TO prisma;
-
 --
--- Name: _PlaceToPolicies; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PlaceToPolicies" (
@@ -794,10 +696,8 @@ CREATE TABLE "schema-generator$airbnb"."_PlaceToPolicies" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PlaceToPolicies" OWNER TO prisma;
-
 --
--- Name: _PlaceToPricing; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PlaceToPricing" (
@@ -807,10 +707,8 @@ CREATE TABLE "schema-generator$airbnb"."_PlaceToPricing" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PlaceToPricing" OWNER TO prisma;
-
 --
--- Name: _PlaceToReview; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PlaceToReview" (
@@ -820,10 +718,8 @@ CREATE TABLE "schema-generator$airbnb"."_PlaceToReview" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PlaceToReview" OWNER TO prisma;
-
 --
--- Name: _PlaceToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PlaceToUser" (
@@ -833,10 +729,8 @@ CREATE TABLE "schema-generator$airbnb"."_PlaceToUser" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PlaceToUser" OWNER TO prisma;
-
 --
--- Name: _PlaceToViews; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_PlaceToViews" (
@@ -846,10 +740,8 @@ CREATE TABLE "schema-generator$airbnb"."_PlaceToViews" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_PlaceToViews" OWNER TO prisma;
-
 --
--- Name: _ReceivedMessages; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_ReceivedMessages" (
@@ -859,10 +751,8 @@ CREATE TABLE "schema-generator$airbnb"."_ReceivedMessages" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_ReceivedMessages" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_RelayId" (
@@ -871,10 +761,8 @@ CREATE TABLE "schema-generator$airbnb"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_RelayId" OWNER TO prisma;
-
 --
--- Name: _SentMessages; Type: TABLE; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages; Type: TABLE; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE TABLE "schema-generator$airbnb"."_SentMessages" (
@@ -884,458 +772,8 @@ CREATE TABLE "schema-generator$airbnb"."_SentMessages" (
 );
 
 
-ALTER TABLE "schema-generator$airbnb"."_SentMessages" OWNER TO prisma;
-
 --
--- Data for Name: Amenities; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Amenities" (id, elevator, "petsAllowed", internet, kitchen, "wirelessInternet", "familyKidFriendly", "freeParkingOnPremises", "hotTub", pool, "smokingAllowed", "wheelchairAccessible", breakfast, "cableTv", "suitableForEvents", dryer, washer, "indoorFireplace", tv, heating, hangers, iron, "hairDryer", doorman, "paidParkingOffPremises", "freeParkingOnStreet", gym, "airConditioning", shampoo, essentials, "laptopFriendlyWorkspace", "privateEntrance", "buzzerWirelessIntercom", "babyBath", "babyMonitor", "babysitterRecommendations", bathtub, "changingTable", "childrensBooksAndToys", "childrensDinnerware", crib, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Booking; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Booking" (id, "createdAt", "startDate", "endDate", "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: City; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."City" (id, name, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: CreditCardInformation; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."CreditCardInformation" (id, "createdAt", "cardNumber", "expiresOnMonth", "expiresOnYear", "securityCode", "firstName", "lastName", "postalCode", country, "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Experience; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Experience" (id, title, "pricePerPerson", popularity, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: ExperienceCategory; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."ExperienceCategory" (id, "mainColor", name, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: GuestRequirements; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."GuestRequirements" (id, "govIssuedId", "recommendationsFromOtherHosts", "guestTripInformation", "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: HouseRules; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."HouseRules" (id, "createdAt", "updatedAt", "suitableForChildren", "suitableForInfants", "petsAllowed", "smokingAllowed", "partiesAndEventsAllowed", "additionalRules") FROM stdin;
-\.
-
-
---
--- Data for Name: Location; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Location" (id, lat, lng, address, directions, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Message; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Message" (id, "createdAt", "deliveredAt", "readAt", "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Neighbourhood; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Neighbourhood" (id, name, slug, featured, popularity, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Notification; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Notification" (id, "createdAt", type, link, "readDate", "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Payment; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Payment" (id, "createdAt", "serviceFee", "placePrice", "totalPrice", "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: PaymentAccount; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."PaymentAccount" (id, "createdAt", type, "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: PaypalInformation; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."PaypalInformation" (id, "createdAt", email, "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Picture; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Picture" (id, url, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Place; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Place" (id, name, size, "shortDescription", description, slug, "maxGuests", "numBedrooms", "numBeds", "numBaths", popularity, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Policies; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Policies" (id, "createdAt", "updatedAt", "checkInStartTime", "checkInEndTime", "checkoutTime") FROM stdin;
-\.
-
-
---
--- Data for Name: Pricing; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Pricing" (id, "monthlyDiscount", "weeklyDiscount", "perNight", "smartPricing", "basePrice", "averageWeekly", "averageMonthly", "cleaningFee", "securityDeposit", "extraGuests", "weekendPricing", currency, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Restaurant; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Restaurant" (id, "createdAt", title, "avgPricePerPerson", "isCurated", slug, popularity, "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Review; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Review" (id, "createdAt", text, stars, accuracy, location, "checkIn", value, cleanliness, communication, "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: User; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."User" (id, "createdAt", "updatedAt", "firstName", "lastName", email, password, phone, "responseRate", "responseTime", "isSuperHost") FROM stdin;
-\.
-
-
---
--- Data for Name: Views; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."Views" (id, "lastWeek", "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _AmenitiesToPlace; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_AmenitiesToPlace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _BookingToPayment; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_BookingToPayment" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _BookingToPlace; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_BookingToPlace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _BookingToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_BookingToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _CityToNeighbourhood; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_CityToNeighbourhood" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _CreditCardInformationToPaymentAccount; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ExperienceToExperienceCategory; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_ExperienceToExperienceCategory" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ExperienceToLocation; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_ExperienceToLocation" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ExperienceToPicture; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_ExperienceToPicture" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ExperienceToReview; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_ExperienceToReview" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ExperienceToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_ExperienceToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _GuestRequirementsToPlace; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_GuestRequirementsToPlace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _HouseRulesToPlace; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_HouseRulesToPlace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _LocationToNeighbourhood; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_LocationToNeighbourhood" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _LocationToPlace; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_LocationToPlace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _LocationToRestaurant; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_LocationToRestaurant" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _LocationToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_LocationToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _NeighbourhoodToPicture; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_NeighbourhoodToPicture" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _NotificationToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_NotificationToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PaymentAccountToPaypalInformation; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PaymentAccountToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PaymentAccountToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PaymentToPaymentAccount; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PaymentToPaymentAccount" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PictureToPlace; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PictureToPlace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PictureToRestaurant; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PictureToRestaurant" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PictureToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PictureToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PlaceToPolicies; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PlaceToPolicies" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PlaceToPricing; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PlaceToPricing" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PlaceToReview; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PlaceToReview" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PlaceToUser; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PlaceToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PlaceToViews; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_PlaceToViews" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ReceivedMessages; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_ReceivedMessages" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Data for Name: _SentMessages; Type: TABLE DATA; Schema: schema-generator$airbnb; Owner: prisma
---
-
-COPY "schema-generator$airbnb"."_SentMessages" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Name: Amenities Amenities_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Amenities Amenities_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Amenities"
@@ -1343,7 +781,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Amenities"
 
 
 --
--- Name: Booking Booking_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Booking Booking_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Booking"
@@ -1351,7 +789,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Booking"
 
 
 --
--- Name: City City_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: City City_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."City"
@@ -1359,7 +797,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."City"
 
 
 --
--- Name: CreditCardInformation CreditCardInformation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: CreditCardInformation CreditCardInformation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."CreditCardInformation"
@@ -1367,7 +805,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."CreditCardInformation"
 
 
 --
--- Name: ExperienceCategory ExperienceCategory_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: ExperienceCategory ExperienceCategory_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."ExperienceCategory"
@@ -1375,7 +813,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."ExperienceCategory"
 
 
 --
--- Name: Experience Experience_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Experience Experience_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Experience"
@@ -1383,7 +821,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Experience"
 
 
 --
--- Name: GuestRequirements GuestRequirements_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: GuestRequirements GuestRequirements_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."GuestRequirements"
@@ -1391,7 +829,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."GuestRequirements"
 
 
 --
--- Name: HouseRules HouseRules_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: HouseRules HouseRules_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."HouseRules"
@@ -1399,7 +837,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."HouseRules"
 
 
 --
--- Name: Location Location_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Location Location_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Location"
@@ -1407,7 +845,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Location"
 
 
 --
--- Name: Message Message_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Message Message_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Message"
@@ -1415,7 +853,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Message"
 
 
 --
--- Name: Neighbourhood Neighbourhood_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Neighbourhood Neighbourhood_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Neighbourhood"
@@ -1423,7 +861,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Neighbourhood"
 
 
 --
--- Name: Notification Notification_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Notification Notification_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Notification"
@@ -1431,7 +869,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Notification"
 
 
 --
--- Name: PaymentAccount PaymentAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: PaymentAccount PaymentAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."PaymentAccount"
@@ -1439,7 +877,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."PaymentAccount"
 
 
 --
--- Name: Payment Payment_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Payment Payment_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Payment"
@@ -1447,7 +885,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Payment"
 
 
 --
--- Name: PaypalInformation PaypalInformation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: PaypalInformation PaypalInformation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."PaypalInformation"
@@ -1455,7 +893,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."PaypalInformation"
 
 
 --
--- Name: Picture Picture_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Picture Picture_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Picture"
@@ -1463,7 +901,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Picture"
 
 
 --
--- Name: Place Place_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Place Place_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Place"
@@ -1471,7 +909,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Place"
 
 
 --
--- Name: Policies Policies_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Policies Policies_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Policies"
@@ -1479,7 +917,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Policies"
 
 
 --
--- Name: Pricing Pricing_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Pricing Pricing_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Pricing"
@@ -1487,7 +925,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Pricing"
 
 
 --
--- Name: Restaurant Restaurant_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Restaurant Restaurant_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Restaurant"
@@ -1495,7 +933,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Restaurant"
 
 
 --
--- Name: Review Review_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Review Review_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Review"
@@ -1503,7 +941,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Review"
 
 
 --
--- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."User"
@@ -1511,7 +949,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."User"
 
 
 --
--- Name: Views Views_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: Views Views_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."Views"
@@ -1519,7 +957,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."Views"
 
 
 --
--- Name: _AmenitiesToPlace _AmenitiesToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace _AmenitiesToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_AmenitiesToPlace"
@@ -1527,7 +965,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_AmenitiesToPlace"
 
 
 --
--- Name: _BookingToPayment _BookingToPayment_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment _BookingToPayment_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPayment"
@@ -1535,7 +973,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPayment"
 
 
 --
--- Name: _BookingToPlace _BookingToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace _BookingToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPlace"
@@ -1543,7 +981,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPlace"
 
 
 --
--- Name: _BookingToUser _BookingToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser _BookingToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToUser"
@@ -1551,7 +989,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToUser"
 
 
 --
--- Name: _CityToNeighbourhood _CityToNeighbourhood_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood _CityToNeighbourhood_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_CityToNeighbourhood"
@@ -1559,7 +997,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_CityToNeighbourhood"
 
 
 --
--- Name: _CreditCardInformationToPaymentAccount _CreditCardInformationToPaymentAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount _CreditCardInformationToPaymentAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount"
@@ -1567,7 +1005,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccou
 
 
 --
--- Name: _ExperienceToExperienceCategory _ExperienceToExperienceCategory_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory _ExperienceToExperienceCategory_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToExperienceCategory"
@@ -1575,7 +1013,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToExperienceCategory"
 
 
 --
--- Name: _ExperienceToLocation _ExperienceToLocation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation _ExperienceToLocation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToLocation"
@@ -1583,7 +1021,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToLocation"
 
 
 --
--- Name: _ExperienceToPicture _ExperienceToPicture_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture _ExperienceToPicture_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToPicture"
@@ -1591,7 +1029,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToPicture"
 
 
 --
--- Name: _ExperienceToReview _ExperienceToReview_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview _ExperienceToReview_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToReview"
@@ -1599,7 +1037,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToReview"
 
 
 --
--- Name: _ExperienceToUser _ExperienceToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser _ExperienceToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToUser"
@@ -1607,7 +1045,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToUser"
 
 
 --
--- Name: _GuestRequirementsToPlace _GuestRequirementsToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace _GuestRequirementsToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_GuestRequirementsToPlace"
@@ -1615,7 +1053,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_GuestRequirementsToPlace"
 
 
 --
--- Name: _HouseRulesToPlace _HouseRulesToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace _HouseRulesToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_HouseRulesToPlace"
@@ -1623,7 +1061,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_HouseRulesToPlace"
 
 
 --
--- Name: _LocationToNeighbourhood _LocationToNeighbourhood_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood _LocationToNeighbourhood_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToNeighbourhood"
@@ -1631,7 +1069,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToNeighbourhood"
 
 
 --
--- Name: _LocationToPlace _LocationToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace _LocationToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToPlace"
@@ -1639,7 +1077,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToPlace"
 
 
 --
--- Name: _LocationToRestaurant _LocationToRestaurant_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant _LocationToRestaurant_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToRestaurant"
@@ -1647,7 +1085,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToRestaurant"
 
 
 --
--- Name: _LocationToUser _LocationToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser _LocationToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToUser"
@@ -1655,7 +1093,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToUser"
 
 
 --
--- Name: _NeighbourhoodToPicture _NeighbourhoodToPicture_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture _NeighbourhoodToPicture_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_NeighbourhoodToPicture"
@@ -1663,7 +1101,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_NeighbourhoodToPicture"
 
 
 --
--- Name: _NotificationToUser _NotificationToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser _NotificationToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_NotificationToUser"
@@ -1671,7 +1109,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_NotificationToUser"
 
 
 --
--- Name: _PaymentAccountToPaypalInformation _PaymentAccountToPaypalInformation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation _PaymentAccountToPaypalInformation_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation"
@@ -1679,7 +1117,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation"
 
 
 --
--- Name: _PaymentAccountToUser _PaymentAccountToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser _PaymentAccountToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToUser"
@@ -1687,7 +1125,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToUser"
 
 
 --
--- Name: _PaymentToPaymentAccount _PaymentToPaymentAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount _PaymentToPaymentAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentToPaymentAccount"
@@ -1695,7 +1133,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentToPaymentAccount"
 
 
 --
--- Name: _PictureToPlace _PictureToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace _PictureToPlace_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToPlace"
@@ -1703,7 +1141,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToPlace"
 
 
 --
--- Name: _PictureToRestaurant _PictureToRestaurant_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant _PictureToRestaurant_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToRestaurant"
@@ -1711,7 +1149,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToRestaurant"
 
 
 --
--- Name: _PictureToUser _PictureToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser _PictureToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToUser"
@@ -1719,7 +1157,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToUser"
 
 
 --
--- Name: _PlaceToPolicies _PlaceToPolicies_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies _PlaceToPolicies_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPolicies"
@@ -1727,7 +1165,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPolicies"
 
 
 --
--- Name: _PlaceToPricing _PlaceToPricing_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing _PlaceToPricing_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPricing"
@@ -1735,7 +1173,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPricing"
 
 
 --
--- Name: _PlaceToReview _PlaceToReview_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview _PlaceToReview_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToReview"
@@ -1743,7 +1181,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToReview"
 
 
 --
--- Name: _PlaceToUser _PlaceToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser _PlaceToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToUser"
@@ -1751,7 +1189,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToUser"
 
 
 --
--- Name: _PlaceToViews _PlaceToViews_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews _PlaceToViews_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToViews"
@@ -1759,7 +1197,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToViews"
 
 
 --
--- Name: _ReceivedMessages _ReceivedMessages_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages _ReceivedMessages_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ReceivedMessages"
@@ -1767,7 +1205,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ReceivedMessages"
 
 
 --
--- Name: _SentMessages _SentMessages_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages _SentMessages_pkey; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_SentMessages"
@@ -1775,7 +1213,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_SentMessages"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_RelayId"
@@ -1783,686 +1221,686 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_RelayId"
 
 
 --
--- Name: _AmenitiesToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_AmenitiesToPlace_A" ON "schema-generator$airbnb"."_AmenitiesToPlace" USING btree ("A");
 
 
 --
--- Name: _AmenitiesToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_AmenitiesToPlace_AB_unique" ON "schema-generator$airbnb"."_AmenitiesToPlace" USING btree ("A", "B");
 
 
 --
--- Name: _AmenitiesToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_AmenitiesToPlace_B" ON "schema-generator$airbnb"."_AmenitiesToPlace" USING btree ("B");
 
 
 --
--- Name: _BookingToPayment_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_BookingToPayment_A" ON "schema-generator$airbnb"."_BookingToPayment" USING btree ("A");
 
 
 --
--- Name: _BookingToPayment_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_BookingToPayment_AB_unique" ON "schema-generator$airbnb"."_BookingToPayment" USING btree ("A", "B");
 
 
 --
--- Name: _BookingToPayment_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_BookingToPayment_B" ON "schema-generator$airbnb"."_BookingToPayment" USING btree ("B");
 
 
 --
--- Name: _BookingToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_BookingToPlace_A" ON "schema-generator$airbnb"."_BookingToPlace" USING btree ("A");
 
 
 --
--- Name: _BookingToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_BookingToPlace_AB_unique" ON "schema-generator$airbnb"."_BookingToPlace" USING btree ("A", "B");
 
 
 --
--- Name: _BookingToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_BookingToPlace_B" ON "schema-generator$airbnb"."_BookingToPlace" USING btree ("B");
 
 
 --
--- Name: _BookingToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_BookingToUser_A" ON "schema-generator$airbnb"."_BookingToUser" USING btree ("A");
 
 
 --
--- Name: _BookingToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_BookingToUser_AB_unique" ON "schema-generator$airbnb"."_BookingToUser" USING btree ("A", "B");
 
 
 --
--- Name: _BookingToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_BookingToUser_B" ON "schema-generator$airbnb"."_BookingToUser" USING btree ("B");
 
 
 --
--- Name: _CityToNeighbourhood_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_CityToNeighbourhood_A" ON "schema-generator$airbnb"."_CityToNeighbourhood" USING btree ("A");
 
 
 --
--- Name: _CityToNeighbourhood_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_CityToNeighbourhood_AB_unique" ON "schema-generator$airbnb"."_CityToNeighbourhood" USING btree ("A", "B");
 
 
 --
--- Name: _CityToNeighbourhood_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_CityToNeighbourhood_B" ON "schema-generator$airbnb"."_CityToNeighbourhood" USING btree ("B");
 
 
 --
--- Name: _CreditCardInformationToPaymentAccount_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_CreditCardInformationToPaymentAccount_A" ON "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" USING btree ("A");
 
 
 --
--- Name: _CreditCardInformationToPaymentAccount_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_CreditCardInformationToPaymentAccount_AB_unique" ON "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" USING btree ("A", "B");
 
 
 --
--- Name: _CreditCardInformationToPaymentAccount_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_CreditCardInformationToPaymentAccount_B" ON "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount" USING btree ("B");
 
 
 --
--- Name: _ExperienceToExperienceCategory_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToExperienceCategory_A" ON "schema-generator$airbnb"."_ExperienceToExperienceCategory" USING btree ("A");
 
 
 --
--- Name: _ExperienceToExperienceCategory_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ExperienceToExperienceCategory_AB_unique" ON "schema-generator$airbnb"."_ExperienceToExperienceCategory" USING btree ("A", "B");
 
 
 --
--- Name: _ExperienceToExperienceCategory_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToExperienceCategory_B" ON "schema-generator$airbnb"."_ExperienceToExperienceCategory" USING btree ("B");
 
 
 --
--- Name: _ExperienceToLocation_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToLocation_A" ON "schema-generator$airbnb"."_ExperienceToLocation" USING btree ("A");
 
 
 --
--- Name: _ExperienceToLocation_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ExperienceToLocation_AB_unique" ON "schema-generator$airbnb"."_ExperienceToLocation" USING btree ("A", "B");
 
 
 --
--- Name: _ExperienceToLocation_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToLocation_B" ON "schema-generator$airbnb"."_ExperienceToLocation" USING btree ("B");
 
 
 --
--- Name: _ExperienceToPicture_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToPicture_A" ON "schema-generator$airbnb"."_ExperienceToPicture" USING btree ("A");
 
 
 --
--- Name: _ExperienceToPicture_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ExperienceToPicture_AB_unique" ON "schema-generator$airbnb"."_ExperienceToPicture" USING btree ("A", "B");
 
 
 --
--- Name: _ExperienceToPicture_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToPicture_B" ON "schema-generator$airbnb"."_ExperienceToPicture" USING btree ("B");
 
 
 --
--- Name: _ExperienceToReview_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToReview_A" ON "schema-generator$airbnb"."_ExperienceToReview" USING btree ("A");
 
 
 --
--- Name: _ExperienceToReview_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ExperienceToReview_AB_unique" ON "schema-generator$airbnb"."_ExperienceToReview" USING btree ("A", "B");
 
 
 --
--- Name: _ExperienceToReview_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToReview_B" ON "schema-generator$airbnb"."_ExperienceToReview" USING btree ("B");
 
 
 --
--- Name: _ExperienceToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToUser_A" ON "schema-generator$airbnb"."_ExperienceToUser" USING btree ("A");
 
 
 --
--- Name: _ExperienceToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ExperienceToUser_AB_unique" ON "schema-generator$airbnb"."_ExperienceToUser" USING btree ("A", "B");
 
 
 --
--- Name: _ExperienceToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ExperienceToUser_B" ON "schema-generator$airbnb"."_ExperienceToUser" USING btree ("B");
 
 
 --
--- Name: _GuestRequirementsToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_GuestRequirementsToPlace_A" ON "schema-generator$airbnb"."_GuestRequirementsToPlace" USING btree ("A");
 
 
 --
--- Name: _GuestRequirementsToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_GuestRequirementsToPlace_AB_unique" ON "schema-generator$airbnb"."_GuestRequirementsToPlace" USING btree ("A", "B");
 
 
 --
--- Name: _GuestRequirementsToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_GuestRequirementsToPlace_B" ON "schema-generator$airbnb"."_GuestRequirementsToPlace" USING btree ("B");
 
 
 --
--- Name: _HouseRulesToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_HouseRulesToPlace_A" ON "schema-generator$airbnb"."_HouseRulesToPlace" USING btree ("A");
 
 
 --
--- Name: _HouseRulesToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_HouseRulesToPlace_AB_unique" ON "schema-generator$airbnb"."_HouseRulesToPlace" USING btree ("A", "B");
 
 
 --
--- Name: _HouseRulesToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_HouseRulesToPlace_B" ON "schema-generator$airbnb"."_HouseRulesToPlace" USING btree ("B");
 
 
 --
--- Name: _LocationToNeighbourhood_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToNeighbourhood_A" ON "schema-generator$airbnb"."_LocationToNeighbourhood" USING btree ("A");
 
 
 --
--- Name: _LocationToNeighbourhood_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_LocationToNeighbourhood_AB_unique" ON "schema-generator$airbnb"."_LocationToNeighbourhood" USING btree ("A", "B");
 
 
 --
--- Name: _LocationToNeighbourhood_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToNeighbourhood_B" ON "schema-generator$airbnb"."_LocationToNeighbourhood" USING btree ("B");
 
 
 --
--- Name: _LocationToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToPlace_A" ON "schema-generator$airbnb"."_LocationToPlace" USING btree ("A");
 
 
 --
--- Name: _LocationToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_LocationToPlace_AB_unique" ON "schema-generator$airbnb"."_LocationToPlace" USING btree ("A", "B");
 
 
 --
--- Name: _LocationToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToPlace_B" ON "schema-generator$airbnb"."_LocationToPlace" USING btree ("B");
 
 
 --
--- Name: _LocationToRestaurant_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToRestaurant_A" ON "schema-generator$airbnb"."_LocationToRestaurant" USING btree ("A");
 
 
 --
--- Name: _LocationToRestaurant_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_LocationToRestaurant_AB_unique" ON "schema-generator$airbnb"."_LocationToRestaurant" USING btree ("A", "B");
 
 
 --
--- Name: _LocationToRestaurant_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToRestaurant_B" ON "schema-generator$airbnb"."_LocationToRestaurant" USING btree ("B");
 
 
 --
--- Name: _LocationToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToUser_A" ON "schema-generator$airbnb"."_LocationToUser" USING btree ("A");
 
 
 --
--- Name: _LocationToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_LocationToUser_AB_unique" ON "schema-generator$airbnb"."_LocationToUser" USING btree ("A", "B");
 
 
 --
--- Name: _LocationToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_LocationToUser_B" ON "schema-generator$airbnb"."_LocationToUser" USING btree ("B");
 
 
 --
--- Name: _NeighbourhoodToPicture_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_NeighbourhoodToPicture_A" ON "schema-generator$airbnb"."_NeighbourhoodToPicture" USING btree ("A");
 
 
 --
--- Name: _NeighbourhoodToPicture_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_NeighbourhoodToPicture_AB_unique" ON "schema-generator$airbnb"."_NeighbourhoodToPicture" USING btree ("A", "B");
 
 
 --
--- Name: _NeighbourhoodToPicture_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_NeighbourhoodToPicture_B" ON "schema-generator$airbnb"."_NeighbourhoodToPicture" USING btree ("B");
 
 
 --
--- Name: _NotificationToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_NotificationToUser_A" ON "schema-generator$airbnb"."_NotificationToUser" USING btree ("A");
 
 
 --
--- Name: _NotificationToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_NotificationToUser_AB_unique" ON "schema-generator$airbnb"."_NotificationToUser" USING btree ("A", "B");
 
 
 --
--- Name: _NotificationToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_NotificationToUser_B" ON "schema-generator$airbnb"."_NotificationToUser" USING btree ("B");
 
 
 --
--- Name: _PaymentAccountToPaypalInformation_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PaymentAccountToPaypalInformation_A" ON "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" USING btree ("A");
 
 
 --
--- Name: _PaymentAccountToPaypalInformation_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PaymentAccountToPaypalInformation_AB_unique" ON "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" USING btree ("A", "B");
 
 
 --
--- Name: _PaymentAccountToPaypalInformation_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PaymentAccountToPaypalInformation_B" ON "schema-generator$airbnb"."_PaymentAccountToPaypalInformation" USING btree ("B");
 
 
 --
--- Name: _PaymentAccountToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PaymentAccountToUser_A" ON "schema-generator$airbnb"."_PaymentAccountToUser" USING btree ("A");
 
 
 --
--- Name: _PaymentAccountToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PaymentAccountToUser_AB_unique" ON "schema-generator$airbnb"."_PaymentAccountToUser" USING btree ("A", "B");
 
 
 --
--- Name: _PaymentAccountToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PaymentAccountToUser_B" ON "schema-generator$airbnb"."_PaymentAccountToUser" USING btree ("B");
 
 
 --
--- Name: _PaymentToPaymentAccount_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PaymentToPaymentAccount_A" ON "schema-generator$airbnb"."_PaymentToPaymentAccount" USING btree ("A");
 
 
 --
--- Name: _PaymentToPaymentAccount_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PaymentToPaymentAccount_AB_unique" ON "schema-generator$airbnb"."_PaymentToPaymentAccount" USING btree ("A", "B");
 
 
 --
--- Name: _PaymentToPaymentAccount_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PaymentToPaymentAccount_B" ON "schema-generator$airbnb"."_PaymentToPaymentAccount" USING btree ("B");
 
 
 --
--- Name: _PictureToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PictureToPlace_A" ON "schema-generator$airbnb"."_PictureToPlace" USING btree ("A");
 
 
 --
--- Name: _PictureToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PictureToPlace_AB_unique" ON "schema-generator$airbnb"."_PictureToPlace" USING btree ("A", "B");
 
 
 --
--- Name: _PictureToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PictureToPlace_B" ON "schema-generator$airbnb"."_PictureToPlace" USING btree ("B");
 
 
 --
--- Name: _PictureToRestaurant_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PictureToRestaurant_A" ON "schema-generator$airbnb"."_PictureToRestaurant" USING btree ("A");
 
 
 --
--- Name: _PictureToRestaurant_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PictureToRestaurant_AB_unique" ON "schema-generator$airbnb"."_PictureToRestaurant" USING btree ("A", "B");
 
 
 --
--- Name: _PictureToRestaurant_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PictureToRestaurant_B" ON "schema-generator$airbnb"."_PictureToRestaurant" USING btree ("B");
 
 
 --
--- Name: _PictureToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PictureToUser_A" ON "schema-generator$airbnb"."_PictureToUser" USING btree ("A");
 
 
 --
--- Name: _PictureToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PictureToUser_AB_unique" ON "schema-generator$airbnb"."_PictureToUser" USING btree ("A", "B");
 
 
 --
--- Name: _PictureToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PictureToUser_B" ON "schema-generator$airbnb"."_PictureToUser" USING btree ("B");
 
 
 --
--- Name: _PlaceToPolicies_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToPolicies_A" ON "schema-generator$airbnb"."_PlaceToPolicies" USING btree ("A");
 
 
 --
--- Name: _PlaceToPolicies_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PlaceToPolicies_AB_unique" ON "schema-generator$airbnb"."_PlaceToPolicies" USING btree ("A", "B");
 
 
 --
--- Name: _PlaceToPolicies_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToPolicies_B" ON "schema-generator$airbnb"."_PlaceToPolicies" USING btree ("B");
 
 
 --
--- Name: _PlaceToPricing_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToPricing_A" ON "schema-generator$airbnb"."_PlaceToPricing" USING btree ("A");
 
 
 --
--- Name: _PlaceToPricing_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PlaceToPricing_AB_unique" ON "schema-generator$airbnb"."_PlaceToPricing" USING btree ("A", "B");
 
 
 --
--- Name: _PlaceToPricing_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToPricing_B" ON "schema-generator$airbnb"."_PlaceToPricing" USING btree ("B");
 
 
 --
--- Name: _PlaceToReview_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToReview_A" ON "schema-generator$airbnb"."_PlaceToReview" USING btree ("A");
 
 
 --
--- Name: _PlaceToReview_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PlaceToReview_AB_unique" ON "schema-generator$airbnb"."_PlaceToReview" USING btree ("A", "B");
 
 
 --
--- Name: _PlaceToReview_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToReview_B" ON "schema-generator$airbnb"."_PlaceToReview" USING btree ("B");
 
 
 --
--- Name: _PlaceToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToUser_A" ON "schema-generator$airbnb"."_PlaceToUser" USING btree ("A");
 
 
 --
--- Name: _PlaceToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PlaceToUser_AB_unique" ON "schema-generator$airbnb"."_PlaceToUser" USING btree ("A", "B");
 
 
 --
--- Name: _PlaceToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToUser_B" ON "schema-generator$airbnb"."_PlaceToUser" USING btree ("B");
 
 
 --
--- Name: _PlaceToViews_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToViews_A" ON "schema-generator$airbnb"."_PlaceToViews" USING btree ("A");
 
 
 --
--- Name: _PlaceToViews_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PlaceToViews_AB_unique" ON "schema-generator$airbnb"."_PlaceToViews" USING btree ("A", "B");
 
 
 --
--- Name: _PlaceToViews_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_PlaceToViews_B" ON "schema-generator$airbnb"."_PlaceToViews" USING btree ("B");
 
 
 --
--- Name: _ReceivedMessages_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ReceivedMessages_A" ON "schema-generator$airbnb"."_ReceivedMessages" USING btree ("A");
 
 
 --
--- Name: _ReceivedMessages_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ReceivedMessages_AB_unique" ON "schema-generator$airbnb"."_ReceivedMessages" USING btree ("A", "B");
 
 
 --
--- Name: _ReceivedMessages_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_ReceivedMessages_B" ON "schema-generator$airbnb"."_ReceivedMessages" USING btree ("B");
 
 
 --
--- Name: _SentMessages_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages_A; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_SentMessages_A" ON "schema-generator$airbnb"."_SentMessages" USING btree ("A");
 
 
 --
--- Name: _SentMessages_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages_AB_unique; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SentMessages_AB_unique" ON "schema-generator$airbnb"."_SentMessages" USING btree ("A", "B");
 
 
 --
--- Name: _SentMessages_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages_B; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE INDEX "_SentMessages_B" ON "schema-generator$airbnb"."_SentMessages" USING btree ("B");
 
 
 --
--- Name: schema-generator$airbnb.User.email._UNIQUE; Type: INDEX; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: schema-generator$airbnb.User.email._UNIQUE; Type: INDEX; Schema: schema-generator$airbnb; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$airbnb.User.email._UNIQUE" ON "schema-generator$airbnb"."User" USING btree (email);
 
 
 --
--- Name: _AmenitiesToPlace _AmenitiesToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace _AmenitiesToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_AmenitiesToPlace"
@@ -2470,7 +1908,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_AmenitiesToPlace"
 
 
 --
--- Name: _AmenitiesToPlace _AmenitiesToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _AmenitiesToPlace _AmenitiesToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_AmenitiesToPlace"
@@ -2478,7 +1916,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_AmenitiesToPlace"
 
 
 --
--- Name: _BookingToPayment _BookingToPayment_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment _BookingToPayment_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPayment"
@@ -2486,7 +1924,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPayment"
 
 
 --
--- Name: _BookingToPayment _BookingToPayment_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPayment _BookingToPayment_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPayment"
@@ -2494,7 +1932,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPayment"
 
 
 --
--- Name: _BookingToPlace _BookingToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace _BookingToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPlace"
@@ -2502,7 +1940,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPlace"
 
 
 --
--- Name: _BookingToPlace _BookingToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToPlace _BookingToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPlace"
@@ -2510,7 +1948,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToPlace"
 
 
 --
--- Name: _BookingToUser _BookingToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser _BookingToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToUser"
@@ -2518,7 +1956,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToUser"
 
 
 --
--- Name: _BookingToUser _BookingToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _BookingToUser _BookingToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToUser"
@@ -2526,7 +1964,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_BookingToUser"
 
 
 --
--- Name: _CityToNeighbourhood _CityToNeighbourhood_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood _CityToNeighbourhood_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_CityToNeighbourhood"
@@ -2534,7 +1972,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_CityToNeighbourhood"
 
 
 --
--- Name: _CityToNeighbourhood _CityToNeighbourhood_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CityToNeighbourhood _CityToNeighbourhood_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_CityToNeighbourhood"
@@ -2542,7 +1980,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_CityToNeighbourhood"
 
 
 --
--- Name: _CreditCardInformationToPaymentAccount _CreditCardInformationToPaymentAccount_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount _CreditCardInformationToPaymentAccount_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount"
@@ -2550,7 +1988,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccou
 
 
 --
--- Name: _CreditCardInformationToPaymentAccount _CreditCardInformationToPaymentAccount_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _CreditCardInformationToPaymentAccount _CreditCardInformationToPaymentAccount_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccount"
@@ -2558,7 +1996,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_CreditCardInformationToPaymentAccou
 
 
 --
--- Name: _ExperienceToExperienceCategory _ExperienceToExperienceCategory_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory _ExperienceToExperienceCategory_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToExperienceCategory"
@@ -2566,7 +2004,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToExperienceCategory"
 
 
 --
--- Name: _ExperienceToExperienceCategory _ExperienceToExperienceCategory_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToExperienceCategory _ExperienceToExperienceCategory_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToExperienceCategory"
@@ -2574,7 +2012,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToExperienceCategory"
 
 
 --
--- Name: _ExperienceToLocation _ExperienceToLocation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation _ExperienceToLocation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToLocation"
@@ -2582,7 +2020,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToLocation"
 
 
 --
--- Name: _ExperienceToLocation _ExperienceToLocation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToLocation _ExperienceToLocation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToLocation"
@@ -2590,7 +2028,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToLocation"
 
 
 --
--- Name: _ExperienceToPicture _ExperienceToPicture_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture _ExperienceToPicture_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToPicture"
@@ -2598,7 +2036,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToPicture"
 
 
 --
--- Name: _ExperienceToPicture _ExperienceToPicture_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToPicture _ExperienceToPicture_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToPicture"
@@ -2606,7 +2044,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToPicture"
 
 
 --
--- Name: _ExperienceToReview _ExperienceToReview_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview _ExperienceToReview_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToReview"
@@ -2614,7 +2052,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToReview"
 
 
 --
--- Name: _ExperienceToReview _ExperienceToReview_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToReview _ExperienceToReview_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToReview"
@@ -2622,7 +2060,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToReview"
 
 
 --
--- Name: _ExperienceToUser _ExperienceToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser _ExperienceToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToUser"
@@ -2630,7 +2068,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToUser"
 
 
 --
--- Name: _ExperienceToUser _ExperienceToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ExperienceToUser _ExperienceToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToUser"
@@ -2638,7 +2076,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ExperienceToUser"
 
 
 --
--- Name: _GuestRequirementsToPlace _GuestRequirementsToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace _GuestRequirementsToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_GuestRequirementsToPlace"
@@ -2646,7 +2084,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_GuestRequirementsToPlace"
 
 
 --
--- Name: _GuestRequirementsToPlace _GuestRequirementsToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _GuestRequirementsToPlace _GuestRequirementsToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_GuestRequirementsToPlace"
@@ -2654,7 +2092,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_GuestRequirementsToPlace"
 
 
 --
--- Name: _HouseRulesToPlace _HouseRulesToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace _HouseRulesToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_HouseRulesToPlace"
@@ -2662,7 +2100,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_HouseRulesToPlace"
 
 
 --
--- Name: _HouseRulesToPlace _HouseRulesToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _HouseRulesToPlace _HouseRulesToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_HouseRulesToPlace"
@@ -2670,7 +2108,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_HouseRulesToPlace"
 
 
 --
--- Name: _LocationToNeighbourhood _LocationToNeighbourhood_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood _LocationToNeighbourhood_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToNeighbourhood"
@@ -2678,7 +2116,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToNeighbourhood"
 
 
 --
--- Name: _LocationToNeighbourhood _LocationToNeighbourhood_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToNeighbourhood _LocationToNeighbourhood_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToNeighbourhood"
@@ -2686,7 +2124,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToNeighbourhood"
 
 
 --
--- Name: _LocationToPlace _LocationToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace _LocationToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToPlace"
@@ -2694,7 +2132,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToPlace"
 
 
 --
--- Name: _LocationToPlace _LocationToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToPlace _LocationToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToPlace"
@@ -2702,7 +2140,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToPlace"
 
 
 --
--- Name: _LocationToRestaurant _LocationToRestaurant_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant _LocationToRestaurant_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToRestaurant"
@@ -2710,7 +2148,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToRestaurant"
 
 
 --
--- Name: _LocationToRestaurant _LocationToRestaurant_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToRestaurant _LocationToRestaurant_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToRestaurant"
@@ -2718,7 +2156,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToRestaurant"
 
 
 --
--- Name: _LocationToUser _LocationToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser _LocationToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToUser"
@@ -2726,7 +2164,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToUser"
 
 
 --
--- Name: _LocationToUser _LocationToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _LocationToUser _LocationToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToUser"
@@ -2734,7 +2172,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_LocationToUser"
 
 
 --
--- Name: _NeighbourhoodToPicture _NeighbourhoodToPicture_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture _NeighbourhoodToPicture_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_NeighbourhoodToPicture"
@@ -2742,7 +2180,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_NeighbourhoodToPicture"
 
 
 --
--- Name: _NeighbourhoodToPicture _NeighbourhoodToPicture_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NeighbourhoodToPicture _NeighbourhoodToPicture_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_NeighbourhoodToPicture"
@@ -2750,7 +2188,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_NeighbourhoodToPicture"
 
 
 --
--- Name: _NotificationToUser _NotificationToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser _NotificationToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_NotificationToUser"
@@ -2758,7 +2196,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_NotificationToUser"
 
 
 --
--- Name: _NotificationToUser _NotificationToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _NotificationToUser _NotificationToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_NotificationToUser"
@@ -2766,7 +2204,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_NotificationToUser"
 
 
 --
--- Name: _PaymentAccountToPaypalInformation _PaymentAccountToPaypalInformation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation _PaymentAccountToPaypalInformation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation"
@@ -2774,7 +2212,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation"
 
 
 --
--- Name: _PaymentAccountToPaypalInformation _PaymentAccountToPaypalInformation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToPaypalInformation _PaymentAccountToPaypalInformation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation"
@@ -2782,7 +2220,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToPaypalInformation"
 
 
 --
--- Name: _PaymentAccountToUser _PaymentAccountToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser _PaymentAccountToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToUser"
@@ -2790,7 +2228,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToUser"
 
 
 --
--- Name: _PaymentAccountToUser _PaymentAccountToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentAccountToUser _PaymentAccountToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToUser"
@@ -2798,7 +2236,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentAccountToUser"
 
 
 --
--- Name: _PaymentToPaymentAccount _PaymentToPaymentAccount_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount _PaymentToPaymentAccount_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentToPaymentAccount"
@@ -2806,7 +2244,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentToPaymentAccount"
 
 
 --
--- Name: _PaymentToPaymentAccount _PaymentToPaymentAccount_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PaymentToPaymentAccount _PaymentToPaymentAccount_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentToPaymentAccount"
@@ -2814,7 +2252,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PaymentToPaymentAccount"
 
 
 --
--- Name: _PictureToPlace _PictureToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace _PictureToPlace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToPlace"
@@ -2822,7 +2260,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToPlace"
 
 
 --
--- Name: _PictureToPlace _PictureToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToPlace _PictureToPlace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToPlace"
@@ -2830,7 +2268,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToPlace"
 
 
 --
--- Name: _PictureToRestaurant _PictureToRestaurant_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant _PictureToRestaurant_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToRestaurant"
@@ -2838,7 +2276,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToRestaurant"
 
 
 --
--- Name: _PictureToRestaurant _PictureToRestaurant_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToRestaurant _PictureToRestaurant_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToRestaurant"
@@ -2846,7 +2284,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToRestaurant"
 
 
 --
--- Name: _PictureToUser _PictureToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser _PictureToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToUser"
@@ -2854,7 +2292,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToUser"
 
 
 --
--- Name: _PictureToUser _PictureToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PictureToUser _PictureToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToUser"
@@ -2862,7 +2300,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PictureToUser"
 
 
 --
--- Name: _PlaceToPolicies _PlaceToPolicies_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies _PlaceToPolicies_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPolicies"
@@ -2870,7 +2308,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPolicies"
 
 
 --
--- Name: _PlaceToPolicies _PlaceToPolicies_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPolicies _PlaceToPolicies_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPolicies"
@@ -2878,7 +2316,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPolicies"
 
 
 --
--- Name: _PlaceToPricing _PlaceToPricing_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing _PlaceToPricing_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPricing"
@@ -2886,7 +2324,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPricing"
 
 
 --
--- Name: _PlaceToPricing _PlaceToPricing_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToPricing _PlaceToPricing_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPricing"
@@ -2894,7 +2332,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToPricing"
 
 
 --
--- Name: _PlaceToReview _PlaceToReview_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview _PlaceToReview_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToReview"
@@ -2902,7 +2340,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToReview"
 
 
 --
--- Name: _PlaceToReview _PlaceToReview_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToReview _PlaceToReview_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToReview"
@@ -2910,7 +2348,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToReview"
 
 
 --
--- Name: _PlaceToUser _PlaceToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser _PlaceToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToUser"
@@ -2918,7 +2356,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToUser"
 
 
 --
--- Name: _PlaceToUser _PlaceToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToUser _PlaceToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToUser"
@@ -2926,7 +2364,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToUser"
 
 
 --
--- Name: _PlaceToViews _PlaceToViews_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews _PlaceToViews_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToViews"
@@ -2934,7 +2372,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToViews"
 
 
 --
--- Name: _PlaceToViews _PlaceToViews_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _PlaceToViews _PlaceToViews_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToViews"
@@ -2942,7 +2380,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_PlaceToViews"
 
 
 --
--- Name: _ReceivedMessages _ReceivedMessages_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages _ReceivedMessages_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ReceivedMessages"
@@ -2950,7 +2388,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ReceivedMessages"
 
 
 --
--- Name: _ReceivedMessages _ReceivedMessages_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _ReceivedMessages _ReceivedMessages_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_ReceivedMessages"
@@ -2958,7 +2396,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_ReceivedMessages"
 
 
 --
--- Name: _SentMessages _SentMessages_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages _SentMessages_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_SentMessages"
@@ -2966,7 +2404,7 @@ ALTER TABLE ONLY "schema-generator$airbnb"."_SentMessages"
 
 
 --
--- Name: _SentMessages _SentMessages_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: prisma
+-- Name: _SentMessages _SentMessages_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$airbnb; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$airbnb"."_SentMessages"

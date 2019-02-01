@@ -6,6 +6,7 @@ import { HideReservedFields } from './hideReservedFields'
 import { RemoveRelationName } from './removeRelationNames'
 import { RemoveBackRelation } from './removeBackRelations'
 import { AdjustJoinTableCardinality } from './adjustJoinTableCardinality'
+import { CopyEnums } from './copyEnums'
 
 export default abstract class DefaultNormalizer {
   public static create(databaseType: DatabaseType, baseModel: ISDL | null) {
@@ -36,18 +37,20 @@ export default abstract class DefaultNormalizer {
     if(databaseType === DatabaseType.mongo) {
       // Document normalization with base model
       return new NormalizerGroup([
+        new CopyEnums(baseModel),
+        new RemoveRelationName(baseModel),
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
-        new RemoveRelationName(baseModel),
         new RemoveBackRelation(baseModel)
       ])
     } else {
       // Relational normalization with base model
       return new NormalizerGroup([
+        new CopyEnums(baseModel),
+        new RemoveRelationName(baseModel),
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new HideReservedFields(baseModel),
-        new RemoveRelationName(baseModel),
         new AdjustJoinTableCardinality(baseModel),
         new RemoveBackRelation(baseModel)
       ])

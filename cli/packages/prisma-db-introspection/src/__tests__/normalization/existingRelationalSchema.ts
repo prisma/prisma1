@@ -9,7 +9,7 @@ function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
 
   DefaultNormalizer.create(DatabaseType.postgres, existing).normalize(fromDb)
 
-  const renderer = DefaultRenderer.create(DatabaseType.postgres)
+  const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
   const resultSchema = renderer.render(fromDb)
 
   expect(resultSchema).toEqual(expectedResultSchema)
@@ -36,7 +36,7 @@ describe('Schema normalization from existing postgres schema', () => {
     // The expected result schema
     const expectedResultSchema = dedent(`
     type User {
-      id: Id! @unique
+      id: Id! @id
       age: Int!
       name: String!
     }`)
@@ -73,12 +73,12 @@ describe('Schema normalization from existing postgres schema', () => {
     // The expected result schema
     const expectedResultSchema = dedent(`
       type User {
-        id: Id! @unique
+        id: Id! @id
         posts: [Post!]! @relation(link: TABLE)
       }
       
       type Post {
-        id: Id! @unique
+        id: Id! @id
         text: String!
         user: User! @relation(link: TABLE)
       }`)
@@ -116,12 +116,12 @@ describe('Schema normalization from existing postgres schema', () => {
     // The expected result schema
     const expectedResultSchema = dedent(`
       type User {
-        id: Id! @unique
+        id: Id! @id
         posts: Post! @relation(link: TABLE)
       }
       
       type Post {
-        id: Id! @unique
+        id: Id! @id
         text: String!
         user: User! @relation(link: TABLE)
       }`)

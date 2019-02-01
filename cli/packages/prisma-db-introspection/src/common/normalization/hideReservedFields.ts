@@ -4,12 +4,18 @@ import { INormalizer } from './normalizer'
 export class HideReservedFields implements INormalizer {
   protected baseModel: ISDL
 
+  static reservedFields = [
+    RelationalParser.createdAtFieldName, 
+    RelationalParser.updatedAtFieldName, 
+    RelationalParser.idFieldName
+  ]
+
   constructor(baseModel: ISDL) {
     this.baseModel = baseModel
   }
 
   public normalizeType(type: IGQLType, ref: IGQLType) { 
-    for(const reservedField of [RelationalParser.createdAtFieldName, RelationalParser.updatedAtFieldName]) {
+    for(const reservedField of HideReservedFields.reservedFields) {
       const field = type.fields.find(x => x.name === reservedField)
       const refField = ref.fields.find(x => x.name === reservedField)
 

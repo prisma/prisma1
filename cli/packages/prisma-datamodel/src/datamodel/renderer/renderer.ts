@@ -301,7 +301,8 @@ export default abstract class Renderer {
     if (
       strType === TypeIdentifiers.string ||
       strType === TypeIdentifiers.json ||
-      strType === TypeIdentifiers.dateTime
+      strType === TypeIdentifiers.dateTime ||
+      strType === TypeIdentifiers.boolean
     ) {
       return `"${value}"`
     } else {

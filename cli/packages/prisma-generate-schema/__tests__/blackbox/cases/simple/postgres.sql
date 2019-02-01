@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$simple; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$simple; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$simple";
 
-
-ALTER SCHEMA "schema-generator$simple" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: User; Type: TABLE; Schema: schema-generator$simple; Owner: prisma
+-- Name: User; Type: TABLE; Schema: schema-generator$simple; Owner: -
 --
 
 CREATE TABLE "schema-generator$simple"."User" (
@@ -40,10 +38,8 @@ CREATE TABLE "schema-generator$simple"."User" (
 );
 
 
-ALTER TABLE "schema-generator$simple"."User" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$simple; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$simple; Owner: -
 --
 
 CREATE TABLE "schema-generator$simple"."_RelayId" (
@@ -52,26 +48,8 @@ CREATE TABLE "schema-generator$simple"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$simple"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: User; Type: TABLE DATA; Schema: schema-generator$simple; Owner: prisma
---
-
-COPY "schema-generator$simple"."User" (id, name, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$simple; Owner: prisma
---
-
-COPY "schema-generator$simple"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$simple; Owner: prisma
+-- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$simple; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$simple"."User"
@@ -79,7 +57,7 @@ ALTER TABLE ONLY "schema-generator$simple"."User"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$simple; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$simple; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$simple"."_RelayId"

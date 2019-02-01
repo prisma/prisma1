@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$todo; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$todo; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$todo";
 
-
-ALTER SCHEMA "schema-generator$todo" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: Todo; Type: TABLE; Schema: schema-generator$todo; Owner: prisma
+-- Name: Todo; Type: TABLE; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE TABLE "schema-generator$todo"."Todo" (
@@ -41,10 +39,8 @@ CREATE TABLE "schema-generator$todo"."Todo" (
 );
 
 
-ALTER TABLE "schema-generator$todo"."Todo" OWNER TO prisma;
-
 --
--- Name: User; Type: TABLE; Schema: schema-generator$todo; Owner: prisma
+-- Name: User; Type: TABLE; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE TABLE "schema-generator$todo"."User" (
@@ -55,10 +51,8 @@ CREATE TABLE "schema-generator$todo"."User" (
 );
 
 
-ALTER TABLE "schema-generator$todo"."User" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$todo; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE TABLE "schema-generator$todo"."_RelayId" (
@@ -67,10 +61,8 @@ CREATE TABLE "schema-generator$todo"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$todo"."_RelayId" OWNER TO prisma;
-
 --
--- Name: _TodoToUser; Type: TABLE; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser; Type: TABLE; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE TABLE "schema-generator$todo"."_TodoToUser" (
@@ -80,42 +72,8 @@ CREATE TABLE "schema-generator$todo"."_TodoToUser" (
 );
 
 
-ALTER TABLE "schema-generator$todo"."_TodoToUser" OWNER TO prisma;
-
 --
--- Data for Name: Todo; Type: TABLE DATA; Schema: schema-generator$todo; Owner: prisma
---
-
-COPY "schema-generator$todo"."Todo" (id, text, done, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: User; Type: TABLE DATA; Schema: schema-generator$todo; Owner: prisma
---
-
-COPY "schema-generator$todo"."User" (id, name, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$todo; Owner: prisma
---
-
-COPY "schema-generator$todo"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Data for Name: _TodoToUser; Type: TABLE DATA; Schema: schema-generator$todo; Owner: prisma
---
-
-COPY "schema-generator$todo"."_TodoToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Name: Todo Todo_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: prisma
+-- Name: Todo Todo_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$todo"."Todo"
@@ -123,7 +81,7 @@ ALTER TABLE ONLY "schema-generator$todo"."Todo"
 
 
 --
--- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: prisma
+-- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$todo"."User"
@@ -131,7 +89,7 @@ ALTER TABLE ONLY "schema-generator$todo"."User"
 
 
 --
--- Name: _TodoToUser _TodoToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser _TodoToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$todo"."_TodoToUser"
@@ -139,7 +97,7 @@ ALTER TABLE ONLY "schema-generator$todo"."_TodoToUser"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$todo"."_RelayId"
@@ -147,28 +105,28 @@ ALTER TABLE ONLY "schema-generator$todo"."_RelayId"
 
 
 --
--- Name: _TodoToUser_A; Type: INDEX; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser_A; Type: INDEX; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE INDEX "_TodoToUser_A" ON "schema-generator$todo"."_TodoToUser" USING btree ("A");
 
 
 --
--- Name: _TodoToUser_AB_unique; Type: INDEX; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser_AB_unique; Type: INDEX; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE UNIQUE INDEX "_TodoToUser_AB_unique" ON "schema-generator$todo"."_TodoToUser" USING btree ("A", "B");
 
 
 --
--- Name: _TodoToUser_B; Type: INDEX; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser_B; Type: INDEX; Schema: schema-generator$todo; Owner: -
 --
 
 CREATE INDEX "_TodoToUser_B" ON "schema-generator$todo"."_TodoToUser" USING btree ("B");
 
 
 --
--- Name: _TodoToUser _TodoToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser _TodoToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$todo; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$todo"."_TodoToUser"
@@ -176,7 +134,7 @@ ALTER TABLE ONLY "schema-generator$todo"."_TodoToUser"
 
 
 --
--- Name: _TodoToUser _TodoToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$todo; Owner: prisma
+-- Name: _TodoToUser _TodoToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$todo; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$todo"."_TodoToUser"

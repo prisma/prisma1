@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$withAndWithoutId; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$withAndWithoutId; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$withAndWithoutId";
 
-
-ALTER SCHEMA "schema-generator$withAndWithoutId" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: TypeWithId; Type: TABLE; Schema: schema-generator$withAndWithoutId; Owner: prisma
+-- Name: TypeWithId; Type: TABLE; Schema: schema-generator$withAndWithoutId; Owner: -
 --
 
 CREATE TABLE "schema-generator$withAndWithoutId"."TypeWithId" (
@@ -40,10 +38,8 @@ CREATE TABLE "schema-generator$withAndWithoutId"."TypeWithId" (
 );
 
 
-ALTER TABLE "schema-generator$withAndWithoutId"."TypeWithId" OWNER TO prisma;
-
 --
--- Name: TypeWithoutId; Type: TABLE; Schema: schema-generator$withAndWithoutId; Owner: prisma
+-- Name: TypeWithoutId; Type: TABLE; Schema: schema-generator$withAndWithoutId; Owner: -
 --
 
 CREATE TABLE "schema-generator$withAndWithoutId"."TypeWithoutId" (
@@ -54,10 +50,8 @@ CREATE TABLE "schema-generator$withAndWithoutId"."TypeWithoutId" (
 );
 
 
-ALTER TABLE "schema-generator$withAndWithoutId"."TypeWithoutId" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$withAndWithoutId; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$withAndWithoutId; Owner: -
 --
 
 CREATE TABLE "schema-generator$withAndWithoutId"."_RelayId" (
@@ -66,34 +60,8 @@ CREATE TABLE "schema-generator$withAndWithoutId"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$withAndWithoutId"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: TypeWithId; Type: TABLE DATA; Schema: schema-generator$withAndWithoutId; Owner: prisma
---
-
-COPY "schema-generator$withAndWithoutId"."TypeWithId" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: TypeWithoutId; Type: TABLE DATA; Schema: schema-generator$withAndWithoutId; Owner: prisma
---
-
-COPY "schema-generator$withAndWithoutId"."TypeWithoutId" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$withAndWithoutId; Owner: prisma
---
-
-COPY "schema-generator$withAndWithoutId"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: TypeWithId TypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$withAndWithoutId; Owner: prisma
+-- Name: TypeWithId TypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$withAndWithoutId; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$withAndWithoutId"."TypeWithId"
@@ -101,7 +69,7 @@ ALTER TABLE ONLY "schema-generator$withAndWithoutId"."TypeWithId"
 
 
 --
--- Name: TypeWithoutId TypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$withAndWithoutId; Owner: prisma
+-- Name: TypeWithoutId TypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$withAndWithoutId; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$withAndWithoutId"."TypeWithoutId"
@@ -109,7 +77,7 @@ ALTER TABLE ONLY "schema-generator$withAndWithoutId"."TypeWithoutId"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$withAndWithoutId; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$withAndWithoutId; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$withAndWithoutId"."_RelayId"

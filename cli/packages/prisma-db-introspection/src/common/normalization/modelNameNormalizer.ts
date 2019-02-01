@@ -8,7 +8,7 @@ export default class ModelNameNormalizer implements INormalizer {
     // Otherwise embedded type naming might break as embedded types depend on 
     // their parent type. 
     for(const type of toposort(model.types)) {
-      this.normalizeType(type)
+      this.normalizeType(type, model)
     } 
   }
 
@@ -23,19 +23,23 @@ export default class ModelNameNormalizer implements INormalizer {
     }
   }
 
-  protected normalizeType(type: IGQLType) {
-    this.assignName(type, capitalize(singular(type.name)))
+  protected normalizeType(type: IGQLType, parentModel: ISDL, forceNoRename: boolean = false) {
+    
+    if(!forceNoRename) {
+      this.assignName(type, capitalize(singular(type.name)))
+    }
 
     for(const field of type.fields) {
-      this.normalizeField(field, type)
+      this.normalizeField(field, type, parentModel)
     }
   }
 
-  protected normalizeField(field: IGQLField, parentType: IGQLType) {
+  protected normalizeField(field: IGQLField, parentType: IGQLType, parentModel: ISDL) {
     // Make embedded type names pretty
     if(typeof field.type !== 'string' && field.type.isEmbedded) {
       if(!field.type.databaseName)
         field.type.databaseName = field.type.name
+
       field.type.name = parentType.name + capitalize(singular(field.name))
     }
   }

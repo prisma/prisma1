@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$emptyTypes; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$emptyTypes; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$emptyTypes";
 
-
-ALTER SCHEMA "schema-generator$emptyTypes" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: OnlyDate; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyDate; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyDate" (
@@ -39,10 +37,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyDate" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyDate" OWNER TO prisma;
-
 --
--- Name: OnlyId; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyId; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyId" (
@@ -52,10 +48,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyId" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyId" OWNER TO prisma;
-
 --
--- Name: OnlyIdAndARelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyIdAndARelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyIdAndARelation" (
@@ -65,10 +59,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyIdAndARelation" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyIdAndARelation" OWNER TO prisma;
-
 --
--- Name: OnlyIdAndARelation2; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyIdAndARelation2; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyIdAndARelation2" (
@@ -78,10 +70,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyIdAndARelation2" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyIdAndARelation2" OWNER TO prisma;
-
 --
--- Name: OnlyRelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyRelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyRelation" (
@@ -91,10 +81,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyRelation" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyRelation" OWNER TO prisma;
-
 --
--- Name: OnlyRelationA; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyRelationA; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyRelationA" (
@@ -104,10 +92,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyRelationA" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyRelationA" OWNER TO prisma;
-
 --
--- Name: OnlyRelationB; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyRelationB; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."OnlyRelationB" (
@@ -117,10 +103,8 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyRelationB" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."OnlyRelationB" OWNER TO prisma;
-
 --
--- Name: _OnlyDateToOnlyRelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" (
@@ -130,10 +114,8 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" OWNER TO prisma;
-
 --
--- Name: _OnlyIdToOnlyIdAndARelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" (
@@ -143,10 +125,8 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" OWNER TO prisma;
-
 --
--- Name: _OnlyIdToOnlyIdAndARelation2; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" (
@@ -156,10 +136,8 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" OWNER TO prisma;
-
 --
--- Name: _OnlyRelationAToOnlyRelationA; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" (
@@ -169,10 +147,8 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" OWNER TO prisma;
-
 --
--- Name: _OnlyRelationBToOnlyRelationB; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" (
@@ -182,10 +158,8 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_RelayId" (
@@ -194,114 +168,8 @@ CREATE TABLE "schema-generator$emptyTypes"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$emptyTypes"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: OnlyDate; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyDate" (id, "createdAt", "updatedAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OnlyId; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyId" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OnlyIdAndARelation; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyIdAndARelation" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OnlyIdAndARelation2; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyIdAndARelation2" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OnlyRelation; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyRelation" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OnlyRelationA; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyRelationA" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OnlyRelationB; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."OnlyRelationB" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _OnlyDateToOnlyRelation; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _OnlyIdToOnlyIdAndARelation; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _OnlyIdToOnlyIdAndARelation2; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _OnlyRelationAToOnlyRelationA; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _OnlyRelationBToOnlyRelationB; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$emptyTypes; Owner: prisma
---
-
-COPY "schema-generator$emptyTypes"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: OnlyDate OnlyDate_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyDate OnlyDate_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyDate"
@@ -309,7 +177,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyDate"
 
 
 --
--- Name: OnlyIdAndARelation2 OnlyIdAndARelation2_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyIdAndARelation2 OnlyIdAndARelation2_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyIdAndARelation2"
@@ -317,7 +185,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyIdAndARelation2"
 
 
 --
--- Name: OnlyIdAndARelation OnlyIdAndARelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyIdAndARelation OnlyIdAndARelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyIdAndARelation"
@@ -325,7 +193,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyIdAndARelation"
 
 
 --
--- Name: OnlyId OnlyId_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyId OnlyId_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyId"
@@ -333,7 +201,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyId"
 
 
 --
--- Name: OnlyRelationA OnlyRelationA_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyRelationA OnlyRelationA_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelationA"
@@ -341,7 +209,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelationA"
 
 
 --
--- Name: OnlyRelationB OnlyRelationB_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyRelationB OnlyRelationB_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelationB"
@@ -349,7 +217,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelationB"
 
 
 --
--- Name: OnlyRelation OnlyRelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: OnlyRelation OnlyRelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelation"
@@ -357,7 +225,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelation"
 
 
 --
--- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
@@ -365,7 +233,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
@@ -373,7 +241,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
@@ -381,7 +249,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
 
 
 --
--- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
@@ -389,7 +257,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
 
 
 --
--- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB"
@@ -397,7 +265,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_RelayId"
@@ -405,112 +273,112 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_RelayId"
 
 
 --
--- Name: _OnlyDateToOnlyRelation_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyDateToOnlyRelation_A" ON "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" USING btree ("A");
 
 
 --
--- Name: _OnlyDateToOnlyRelation_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OnlyDateToOnlyRelation_AB_unique" ON "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" USING btree ("A", "B");
 
 
 --
--- Name: _OnlyDateToOnlyRelation_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyDateToOnlyRelation_B" ON "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" USING btree ("B");
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation2_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyIdToOnlyIdAndARelation2_A" ON "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" USING btree ("A");
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation2_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OnlyIdToOnlyIdAndARelation2_AB_unique" ON "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" USING btree ("A", "B");
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation2_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyIdToOnlyIdAndARelation2_B" ON "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" USING btree ("B");
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyIdToOnlyIdAndARelation_A" ON "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" USING btree ("A");
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OnlyIdToOnlyIdAndARelation_AB_unique" ON "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" USING btree ("A", "B");
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyIdToOnlyIdAndARelation_B" ON "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" USING btree ("B");
 
 
 --
--- Name: _OnlyRelationAToOnlyRelationA_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyRelationAToOnlyRelationA_A" ON "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" USING btree ("A");
 
 
 --
--- Name: _OnlyRelationAToOnlyRelationA_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OnlyRelationAToOnlyRelationA_AB_unique" ON "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" USING btree ("A", "B");
 
 
 --
--- Name: _OnlyRelationAToOnlyRelationA_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyRelationAToOnlyRelationA_B" ON "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" USING btree ("B");
 
 
 --
--- Name: _OnlyRelationBToOnlyRelationB_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB_A; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyRelationBToOnlyRelationB_A" ON "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" USING btree ("A");
 
 
 --
--- Name: _OnlyRelationBToOnlyRelationB_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB_AB_unique; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OnlyRelationBToOnlyRelationB_AB_unique" ON "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" USING btree ("A", "B");
 
 
 --
--- Name: _OnlyRelationBToOnlyRelationB_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB_B; Type: INDEX; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 CREATE INDEX "_OnlyRelationBToOnlyRelationB_B" ON "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" USING btree ("B");
 
 
 --
--- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
@@ -518,7 +386,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
 
 
 --
--- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
@@ -526,7 +394,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
@@ -534,7 +402,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
@@ -542,7 +410,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
@@ -550,7 +418,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
 
 
 --
--- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
@@ -558,7 +426,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
 
 
 --
--- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
@@ -566,7 +434,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
 
 
 --
--- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
@@ -574,7 +442,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
 
 
 --
--- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB"
@@ -582,7 +450,7 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB"
 
 
 --
--- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: prisma
+-- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB"

@@ -1,4 +1,3 @@
-import { singular } from 'pluralize'
 import { IGQLType, IGQLField, ISDL, capitalize, plural, toposort } from 'prisma-datamodel'
 import { INormalizer } from './normalizer';
 

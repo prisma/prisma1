@@ -1,11 +1,11 @@
-import { ITable, ITableRelation } from "../relationalConnector"
+import { ITable, ITableRelation, IEnum } from "../relationalConnector"
 import { RelationalIntrospectionResult } from "../relationalIntrospectionResult"
 import { ISDL, IGQLField, IGQLType, IDirectiveInfo, plural, camelCase, capitalize, DatabaseType, Renderer, TypeIdentifier, TypeIdentifiers } from 'prisma-datamodel'
 import * as _ from 'lodash'
 
 export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
-  constructor(model: ITable[], relations: ITableRelation[], renderer?: Renderer) {
-    super(model, relations, DatabaseType.postgres, renderer)
+  constructor(model: ITable[], relations: ITableRelation[], enums: IEnum[], renderer?: Renderer) {
+    super(model, relations, enums, DatabaseType.postgres, renderer)
   }
 
   protected isTypeReserved(type: IGQLType): boolean {

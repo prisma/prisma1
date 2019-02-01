@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$prisma-3143; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$prisma-3143; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$prisma-3143";
 
-
-ALTER SCHEMA "schema-generator$prisma-3143" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: Story; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: Story; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE TABLE "schema-generator$prisma-3143"."Story" (
@@ -39,10 +37,8 @@ CREATE TABLE "schema-generator$prisma-3143"."Story" (
 );
 
 
-ALTER TABLE "schema-generator$prisma-3143"."Story" OWNER TO prisma;
-
 --
--- Name: UserSpace; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: UserSpace; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE TABLE "schema-generator$prisma-3143"."UserSpace" (
@@ -52,10 +48,8 @@ CREATE TABLE "schema-generator$prisma-3143"."UserSpace" (
 );
 
 
-ALTER TABLE "schema-generator$prisma-3143"."UserSpace" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE TABLE "schema-generator$prisma-3143"."_RelayId" (
@@ -64,10 +58,8 @@ CREATE TABLE "schema-generator$prisma-3143"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$prisma-3143"."_RelayId" OWNER TO prisma;
-
 --
--- Name: _StoriesByUserSpace; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace; Type: TABLE; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE TABLE "schema-generator$prisma-3143"."_StoriesByUserSpace" (
@@ -77,42 +69,8 @@ CREATE TABLE "schema-generator$prisma-3143"."_StoriesByUserSpace" (
 );
 
 
-ALTER TABLE "schema-generator$prisma-3143"."_StoriesByUserSpace" OWNER TO prisma;
-
 --
--- Data for Name: Story; Type: TABLE DATA; Schema: schema-generator$prisma-3143; Owner: prisma
---
-
-COPY "schema-generator$prisma-3143"."Story" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: UserSpace; Type: TABLE DATA; Schema: schema-generator$prisma-3143; Owner: prisma
---
-
-COPY "schema-generator$prisma-3143"."UserSpace" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$prisma-3143; Owner: prisma
---
-
-COPY "schema-generator$prisma-3143"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Data for Name: _StoriesByUserSpace; Type: TABLE DATA; Schema: schema-generator$prisma-3143; Owner: prisma
---
-
-COPY "schema-generator$prisma-3143"."_StoriesByUserSpace" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Name: Story Story_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: Story Story_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."Story"
@@ -120,7 +78,7 @@ ALTER TABLE ONLY "schema-generator$prisma-3143"."Story"
 
 
 --
--- Name: UserSpace UserSpace_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: UserSpace UserSpace_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."UserSpace"
@@ -128,7 +86,7 @@ ALTER TABLE ONLY "schema-generator$prisma-3143"."UserSpace"
 
 
 --
--- Name: _StoriesByUserSpace _StoriesByUserSpace_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace _StoriesByUserSpace_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."_StoriesByUserSpace"
@@ -136,7 +94,7 @@ ALTER TABLE ONLY "schema-generator$prisma-3143"."_StoriesByUserSpace"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."_RelayId"
@@ -144,28 +102,28 @@ ALTER TABLE ONLY "schema-generator$prisma-3143"."_RelayId"
 
 
 --
--- Name: _StoriesByUserSpace_A; Type: INDEX; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace_A; Type: INDEX; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE INDEX "_StoriesByUserSpace_A" ON "schema-generator$prisma-3143"."_StoriesByUserSpace" USING btree ("A");
 
 
 --
--- Name: _StoriesByUserSpace_AB_unique; Type: INDEX; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace_AB_unique; Type: INDEX; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE UNIQUE INDEX "_StoriesByUserSpace_AB_unique" ON "schema-generator$prisma-3143"."_StoriesByUserSpace" USING btree ("A", "B");
 
 
 --
--- Name: _StoriesByUserSpace_B; Type: INDEX; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace_B; Type: INDEX; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 CREATE INDEX "_StoriesByUserSpace_B" ON "schema-generator$prisma-3143"."_StoriesByUserSpace" USING btree ("B");
 
 
 --
--- Name: _StoriesByUserSpace _StoriesByUserSpace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace _StoriesByUserSpace_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."_StoriesByUserSpace"
@@ -173,7 +131,7 @@ ALTER TABLE ONLY "schema-generator$prisma-3143"."_StoriesByUserSpace"
 
 
 --
--- Name: _StoriesByUserSpace _StoriesByUserSpace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: prisma
+-- Name: _StoriesByUserSpace _StoriesByUserSpace_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."_StoriesByUserSpace"

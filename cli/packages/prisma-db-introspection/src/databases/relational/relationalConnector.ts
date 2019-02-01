@@ -10,9 +10,14 @@ export interface IInternalIndexInfo {
   isPrimaryKey: boolean
 }
 
+export interface IInternalEnumInfo {
+  name: string
+  values: string[]
+}
+
 export abstract class RelationalConnector implements IConnector {
   abstract getDatabaseType(): DatabaseType
-  protected abstract createIntrospectionResult(models: ITable[], relations: ITableRelation[]) : RelationalIntrospectionResult 
+  protected abstract createIntrospectionResult(models: ITable[], relations: ITableRelation[], enums: IEnum[]) : RelationalIntrospectionResult 
   protected abstract async query(query: string, params?: any[]): Promise<any[]>
 
   /**
@@ -25,8 +30,14 @@ export abstract class RelationalConnector implements IConnector {
    */
   protected abstract async queryIndices(schemaName: string, tableName: string): Promise<IInternalIndexInfo[]>
 
+  protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
+
   public async introspect(schema: string): Promise<RelationalIntrospectionResult> {
-    return this.createIntrospectionResult(await this.listModels(schema), await this.listRelations(schema))
+    return this.createIntrospectionResult(await this.listModels(schema), await this.listRelations(schema), await this.listEnums(schema))
+  }
+
+  public async listEnums(schemaName: string): Promise<IEnum[]> {
+    return await this.queryEnums(schemaName)
   }
 
   /**
@@ -49,6 +60,7 @@ export abstract class RelationalConnector implements IConnector {
     const allTables = await this.queryTables(schemaName)
     for(const tableName of allTables) {
       const columns = await this.queryColumns(schemaName, tableName)
+      
       for(const column of columns) {
         column.comment = await this.queryColumnComment(schemaName, tableName, column.name)
       }
@@ -154,6 +166,12 @@ export abstract class RelationalConnector implements IConnector {
       targetTable: row.referencedTableName as string
     }}) 
   }
+}
+
+
+export interface IEnum {
+  name: string
+  values: string[]
 }
 
 export interface ITable {

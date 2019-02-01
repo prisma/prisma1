@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$selfReferencing; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$selfReferencing; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$selfReferencing";
 
-
-ALTER SCHEMA "schema-generator$selfReferencing" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: MultiSelfReferencingB; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingB; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingB" (
@@ -39,10 +37,8 @@ CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingB" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."MultiSelfReferencingB" OWNER TO prisma;
-
 --
--- Name: MultiSelfReferencingBWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingBWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingBWithId" (
@@ -52,10 +48,8 @@ CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingBWithId" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."MultiSelfReferencingBWithId" OWNER TO prisma;
-
 --
--- Name: MultiSelfReferencingC; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingC; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingC" (
@@ -65,10 +59,8 @@ CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingC" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."MultiSelfReferencingC" OWNER TO prisma;
-
 --
--- Name: MultiSelfReferencingCWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingCWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingCWithId" (
@@ -78,10 +70,8 @@ CREATE TABLE "schema-generator$selfReferencing"."MultiSelfReferencingCWithId" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."MultiSelfReferencingCWithId" OWNER TO prisma;
-
 --
--- Name: SelfReferencingA; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingA; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingA" (
@@ -92,10 +82,8 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingA" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."SelfReferencingA" OWNER TO prisma;
-
 --
--- Name: SelfReferencingAWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingAWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingAWithId" (
@@ -106,10 +94,8 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingAWithId" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."SelfReferencingAWithId" OWNER TO prisma;
-
 --
--- Name: SelfReferencingB; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingB; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingB" (
@@ -120,10 +106,8 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingB" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."SelfReferencingB" OWNER TO prisma;
-
 --
--- Name: SelfReferencingBWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingBWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingBWithId" (
@@ -134,10 +118,8 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingBWithId" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."SelfReferencingBWithId" OWNER TO prisma;
-
 --
--- Name: SelfReferencingC; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingC; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingC" (
@@ -148,10 +130,8 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingC" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."SelfReferencingC" OWNER TO prisma;
-
 --
--- Name: SelfReferencingCWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingCWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingCWithId" (
@@ -162,10 +142,8 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingCWithId" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."SelfReferencingCWithId" OWNER TO prisma;
-
 --
--- Name: _AToA; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_AToA" (
@@ -175,10 +153,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_AToA" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_AToA" OWNER TO prisma;
-
 --
--- Name: _AToA2; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_AToA2" (
@@ -188,10 +164,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_AToA2" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_AToA2" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_RelayId" (
@@ -200,10 +174,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_RelayId" OWNER TO prisma;
-
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" (
@@ -213,10 +185,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferenc
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" OWNER TO prisma;
-
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" (
@@ -226,10 +196,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfRe
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" OWNER TO prisma;
-
 --
--- Name: _SelfReferencingBToSelfReferencingB; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" (
@@ -239,10 +207,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferenc
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" OWNER TO prisma;
-
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" (
@@ -252,10 +218,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfRe
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" OWNER TO prisma;
-
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" (
@@ -265,10 +229,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfRe
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" OWNER TO prisma;
-
 --
--- Name: _SelfReferencingCToSelfReferencingC; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" (
@@ -278,10 +240,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferenc
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" OWNER TO prisma;
-
 --
--- Name: _WithIdAToA; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA" (
@@ -291,10 +251,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_WithIdAToA" OWNER TO prisma;
-
 --
--- Name: _WithIdAToA2; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2; Type: TABLE; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA2" (
@@ -304,178 +262,8 @@ CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA2" (
 );
 
 
-ALTER TABLE "schema-generator$selfReferencing"."_WithIdAToA2" OWNER TO prisma;
-
 --
--- Data for Name: MultiSelfReferencingB; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."MultiSelfReferencingB" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: MultiSelfReferencingBWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."MultiSelfReferencingBWithId" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: MultiSelfReferencingC; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."MultiSelfReferencingC" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: MultiSelfReferencingCWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."MultiSelfReferencingCWithId" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: SelfReferencingA; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."SelfReferencingA" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: SelfReferencingAWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."SelfReferencingAWithId" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: SelfReferencingB; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."SelfReferencingB" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: SelfReferencingBWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."SelfReferencingBWithId" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: SelfReferencingC; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."SelfReferencingC" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: SelfReferencingCWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."SelfReferencingCWithId" (id, field, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _AToA; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_AToA" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _AToA2; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_AToA2" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Data for Name: _SelfReferencingAToSelfReferencingAWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _SelfReferencingAWithIdToSelfReferencingAWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _SelfReferencingBToSelfReferencingB; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _SelfReferencingBWithIdToSelfReferencingBWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _SelfReferencingBWithIdToSelfReferencingCWithId; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _SelfReferencingCToSelfReferencingC; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _WithIdAToA; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_WithIdAToA" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _WithIdAToA2; Type: TABLE DATA; Schema: schema-generator$selfReferencing; Owner: prisma
---
-
-COPY "schema-generator$selfReferencing"."_WithIdAToA2" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Name: MultiSelfReferencingBWithId MultiSelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingBWithId MultiSelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingBWithId"
@@ -483,7 +271,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingBWithId
 
 
 --
--- Name: MultiSelfReferencingB MultiSelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingB MultiSelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingB"
@@ -491,7 +279,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingB"
 
 
 --
--- Name: MultiSelfReferencingCWithId MultiSelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingCWithId MultiSelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingCWithId"
@@ -499,7 +287,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingCWithId
 
 
 --
--- Name: MultiSelfReferencingC MultiSelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: MultiSelfReferencingC MultiSelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingC"
@@ -507,7 +295,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."MultiSelfReferencingC"
 
 
 --
--- Name: SelfReferencingAWithId SelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingAWithId SelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingAWithId"
@@ -515,7 +303,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingAWithId"
 
 
 --
--- Name: SelfReferencingA SelfReferencingA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingA SelfReferencingA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingA"
@@ -523,7 +311,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingA"
 
 
 --
--- Name: SelfReferencingBWithId SelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingBWithId SelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingBWithId"
@@ -531,7 +319,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingBWithId"
 
 
 --
--- Name: SelfReferencingB SelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingB SelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingB"
@@ -539,7 +327,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingB"
 
 
 --
--- Name: SelfReferencingCWithId SelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingCWithId SelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingCWithId"
@@ -547,7 +335,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingCWithId"
 
 
 --
--- Name: SelfReferencingC SelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: SelfReferencingC SelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingC"
@@ -555,7 +343,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingC"
 
 
 --
--- Name: _AToA2 _AToA2_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2 _AToA2_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
@@ -563,7 +351,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
 
 
 --
--- Name: _AToA _AToA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA _AToA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
@@ -571,7 +359,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
 
 
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId"
@@ -579,7 +367,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfRefe
 
 
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId"
@@ -587,7 +375,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSe
 
 
 --
--- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB"
@@ -595,7 +383,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfRefe
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId"
@@ -603,7 +391,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSe
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId"
@@ -611,7 +399,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSe
 
 
 --
--- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC"
@@ -619,7 +407,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfRefe
 
 
 --
--- Name: _WithIdAToA2 _WithIdAToA2_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2 _WithIdAToA2_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
@@ -627,7 +415,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
 
 
 --
--- Name: _WithIdAToA _WithIdAToA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA _WithIdAToA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA"
@@ -635,7 +423,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_RelayId"
@@ -643,217 +431,217 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_RelayId"
 
 
 --
--- Name: _AToA2_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_AToA2_A" ON "schema-generator$selfReferencing"."_AToA2" USING btree ("A");
 
 
 --
--- Name: _AToA2_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_AToA2_AB_unique" ON "schema-generator$selfReferencing"."_AToA2" USING btree ("A", "B");
 
 
 --
--- Name: _AToA2_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_AToA2_B" ON "schema-generator$selfReferencing"."_AToA2" USING btree ("B");
 
 
 --
--- Name: _AToA_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_AToA_A" ON "schema-generator$selfReferencing"."_AToA" USING btree ("A");
 
 
 --
--- Name: _AToA_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_AToA_AB_unique" ON "schema-generator$selfReferencing"."_AToA" USING btree ("A", "B");
 
 
 --
--- Name: _AToA_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_AToA_B" ON "schema-generator$selfReferencing"."_AToA" USING btree ("B");
 
 
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingAToSelfReferencingAWithId_A" ON "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" USING btree ("A");
 
 
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SelfReferencingAToSelfReferencingAWithId_AB_unique" ON "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" USING btree ("A", "B");
 
 
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingAToSelfReferencingAWithId_B" ON "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" USING btree ("B");
 
 
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingAWithIdToSelfReferencingAWithId_A" ON "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" USING btree ("A");
 
 
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SelfReferencingAWithIdToSelfReferencingAWithId_AB_unique" ON "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" USING btree ("A", "B");
 
 
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingAWithIdToSelfReferencingAWithId_B" ON "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" USING btree ("B");
 
 
 --
--- Name: _SelfReferencingBToSelfReferencingB_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingBToSelfReferencingB_A" ON "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" USING btree ("A");
 
 
 --
--- Name: _SelfReferencingBToSelfReferencingB_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SelfReferencingBToSelfReferencingB_AB_unique" ON "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" USING btree ("A", "B");
 
 
 --
--- Name: _SelfReferencingBToSelfReferencingB_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingBToSelfReferencingB_B" ON "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" USING btree ("B");
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingBWithIdToSelfReferencingBWithId_A" ON "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" USING btree ("A");
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SelfReferencingBWithIdToSelfReferencingBWithId_AB_unique" ON "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" USING btree ("A", "B");
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingBWithIdToSelfReferencingBWithId_B" ON "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" USING btree ("B");
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingBWithIdToSelfReferencingCWithId_A" ON "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" USING btree ("A");
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SelfReferencingBWithIdToSelfReferencingCWithId_AB_unique" ON "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" USING btree ("A", "B");
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingBWithIdToSelfReferencingCWithId_B" ON "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" USING btree ("B");
 
 
 --
--- Name: _SelfReferencingCToSelfReferencingC_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingCToSelfReferencingC_A" ON "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" USING btree ("A");
 
 
 --
--- Name: _SelfReferencingCToSelfReferencingC_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_SelfReferencingCToSelfReferencingC_AB_unique" ON "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" USING btree ("A", "B");
 
 
 --
--- Name: _SelfReferencingCToSelfReferencingC_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_SelfReferencingCToSelfReferencingC_B" ON "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" USING btree ("B");
 
 
 --
--- Name: _WithIdAToA2_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_WithIdAToA2_A" ON "schema-generator$selfReferencing"."_WithIdAToA2" USING btree ("A");
 
 
 --
--- Name: _WithIdAToA2_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_WithIdAToA2_AB_unique" ON "schema-generator$selfReferencing"."_WithIdAToA2" USING btree ("A", "B");
 
 
 --
--- Name: _WithIdAToA2_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_WithIdAToA2_B" ON "schema-generator$selfReferencing"."_WithIdAToA2" USING btree ("B");
 
 
 --
--- Name: _WithIdAToA_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA_A; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_WithIdAToA_A" ON "schema-generator$selfReferencing"."_WithIdAToA" USING btree ("A");
 
 
 --
--- Name: _WithIdAToA_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA_AB_unique; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE UNIQUE INDEX "_WithIdAToA_AB_unique" ON "schema-generator$selfReferencing"."_WithIdAToA" USING btree ("A", "B");
 
 
 --
--- Name: _WithIdAToA_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA_B; Type: INDEX; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 CREATE INDEX "_WithIdAToA_B" ON "schema-generator$selfReferencing"."_WithIdAToA" USING btree ("B");
 
 
 --
--- Name: _AToA2 _AToA2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2 _AToA2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
@@ -861,7 +649,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
 
 
 --
--- Name: _AToA2 _AToA2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA2 _AToA2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
@@ -869,7 +657,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
 
 
 --
--- Name: _AToA _AToA_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA _AToA_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
@@ -877,7 +665,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
 
 
 --
--- Name: _AToA _AToA_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _AToA _AToA_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
@@ -885,7 +673,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
 
 
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId"
@@ -893,7 +681,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfRefe
 
 
 --
--- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId"
@@ -901,7 +689,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfRefe
 
 
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId"
@@ -909,7 +697,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSe
 
 
 --
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId"
@@ -917,7 +705,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSe
 
 
 --
--- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB"
@@ -925,7 +713,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfRefe
 
 
 --
--- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB"
@@ -933,7 +721,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfRefe
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId"
@@ -941,7 +729,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSe
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId"
@@ -949,7 +737,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSe
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId"
@@ -957,7 +745,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSe
 
 
 --
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId"
@@ -965,7 +753,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSe
 
 
 --
--- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC"
@@ -973,7 +761,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfRefe
 
 
 --
--- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC"
@@ -981,7 +769,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfRefe
 
 
 --
--- Name: _WithIdAToA2 _WithIdAToA2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2 _WithIdAToA2_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
@@ -989,7 +777,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
 
 
 --
--- Name: _WithIdAToA2 _WithIdAToA2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA2 _WithIdAToA2_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
@@ -997,7 +785,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
 
 
 --
--- Name: _WithIdAToA _WithIdAToA_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA _WithIdAToA_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA"
@@ -1005,7 +793,7 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA"
 
 
 --
--- Name: _WithIdAToA _WithIdAToA_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: prisma
+-- Name: _WithIdAToA _WithIdAToA_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA"

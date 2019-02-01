@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$embedded; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$embedded; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$embedded";
 
-
-ALTER SCHEMA "schema-generator$embedded" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: Child; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Child; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."Child" (
@@ -40,10 +38,8 @@ CREATE TABLE "schema-generator$embedded"."Child" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."Child" OWNER TO prisma;
-
 --
--- Name: Friend; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Friend; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."Friend" (
@@ -55,10 +51,8 @@ CREATE TABLE "schema-generator$embedded"."Friend" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."Friend" OWNER TO prisma;
-
 --
--- Name: Joint; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Joint; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."Joint" (
@@ -69,10 +63,8 @@ CREATE TABLE "schema-generator$embedded"."Joint" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."Joint" OWNER TO prisma;
-
 --
--- Name: Parent; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Parent; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."Parent" (
@@ -83,10 +75,8 @@ CREATE TABLE "schema-generator$embedded"."Parent" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."Parent" OWNER TO prisma;
-
 --
--- Name: _ChildToFriend; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."_ChildToFriend" (
@@ -96,10 +86,8 @@ CREATE TABLE "schema-generator$embedded"."_ChildToFriend" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."_ChildToFriend" OWNER TO prisma;
-
 --
--- Name: _ChildToJoint; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."_ChildToJoint" (
@@ -109,10 +97,8 @@ CREATE TABLE "schema-generator$embedded"."_ChildToJoint" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."_ChildToJoint" OWNER TO prisma;
-
 --
--- Name: _ChildToParent; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."_ChildToParent" (
@@ -122,10 +108,8 @@ CREATE TABLE "schema-generator$embedded"."_ChildToParent" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."_ChildToParent" OWNER TO prisma;
-
 --
--- Name: _JointToParent; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."_JointToParent" (
@@ -135,10 +119,8 @@ CREATE TABLE "schema-generator$embedded"."_JointToParent" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."_JointToParent" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE TABLE "schema-generator$embedded"."_RelayId" (
@@ -147,82 +129,8 @@ CREATE TABLE "schema-generator$embedded"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$embedded"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: Child; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."Child" (id, c, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Friend; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."Friend" (id, f, test, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Joint; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."Joint" (id, j, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Parent; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."Parent" (id, p, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _ChildToFriend; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."_ChildToFriend" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ChildToJoint; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."_ChildToJoint" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _ChildToParent; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."_ChildToParent" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _JointToParent; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."_JointToParent" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$embedded; Owner: prisma
---
-
-COPY "schema-generator$embedded"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: Child Child_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Child Child_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."Child"
@@ -230,7 +138,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."Child"
 
 
 --
--- Name: Friend Friend_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Friend Friend_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."Friend"
@@ -238,7 +146,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."Friend"
 
 
 --
--- Name: Joint Joint_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Joint Joint_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."Joint"
@@ -246,7 +154,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."Joint"
 
 
 --
--- Name: Parent Parent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: Parent Parent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."Parent"
@@ -254,7 +162,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."Parent"
 
 
 --
--- Name: _ChildToFriend _ChildToFriend_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend _ChildToFriend_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
@@ -262,7 +170,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
 
 
 --
--- Name: _ChildToJoint _ChildToJoint_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint _ChildToJoint_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
@@ -270,7 +178,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
 
 
 --
--- Name: _ChildToParent _ChildToParent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent _ChildToParent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
@@ -278,7 +186,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
 
 
 --
--- Name: _JointToParent _JointToParent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent _JointToParent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_JointToParent"
@@ -286,7 +194,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_JointToParent"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_RelayId"
@@ -294,112 +202,112 @@ ALTER TABLE ONLY "schema-generator$embedded"."_RelayId"
 
 
 --
--- Name: _ChildToFriend_A; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend_A; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_ChildToFriend_A" ON "schema-generator$embedded"."_ChildToFriend" USING btree ("A");
 
 
 --
--- Name: _ChildToFriend_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ChildToFriend_AB_unique" ON "schema-generator$embedded"."_ChildToFriend" USING btree ("A", "B");
 
 
 --
--- Name: _ChildToFriend_B; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend_B; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_ChildToFriend_B" ON "schema-generator$embedded"."_ChildToFriend" USING btree ("B");
 
 
 --
--- Name: _ChildToJoint_A; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint_A; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_ChildToJoint_A" ON "schema-generator$embedded"."_ChildToJoint" USING btree ("A");
 
 
 --
--- Name: _ChildToJoint_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ChildToJoint_AB_unique" ON "schema-generator$embedded"."_ChildToJoint" USING btree ("A", "B");
 
 
 --
--- Name: _ChildToJoint_B; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint_B; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_ChildToJoint_B" ON "schema-generator$embedded"."_ChildToJoint" USING btree ("B");
 
 
 --
--- Name: _ChildToParent_A; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent_A; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_ChildToParent_A" ON "schema-generator$embedded"."_ChildToParent" USING btree ("A");
 
 
 --
--- Name: _ChildToParent_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "_ChildToParent_AB_unique" ON "schema-generator$embedded"."_ChildToParent" USING btree ("A", "B");
 
 
 --
--- Name: _ChildToParent_B; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent_B; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_ChildToParent_B" ON "schema-generator$embedded"."_ChildToParent" USING btree ("B");
 
 
 --
--- Name: _JointToParent_A; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent_A; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_JointToParent_A" ON "schema-generator$embedded"."_JointToParent" USING btree ("A");
 
 
 --
--- Name: _JointToParent_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent_AB_unique; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "_JointToParent_AB_unique" ON "schema-generator$embedded"."_JointToParent" USING btree ("A", "B");
 
 
 --
--- Name: _JointToParent_B; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent_B; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE INDEX "_JointToParent_B" ON "schema-generator$embedded"."_JointToParent" USING btree ("B");
 
 
 --
--- Name: schema-generator$embedded.Child.c._UNIQUE; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: schema-generator$embedded.Child.c._UNIQUE; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$embedded.Child.c._UNIQUE" ON "schema-generator$embedded"."Child" USING btree (c);
 
 
 --
--- Name: schema-generator$embedded.Friend.f._UNIQUE; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: schema-generator$embedded.Friend.f._UNIQUE; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$embedded.Friend.f._UNIQUE" ON "schema-generator$embedded"."Friend" USING btree (f);
 
 
 --
--- Name: schema-generator$embedded.Parent.p._UNIQUE; Type: INDEX; Schema: schema-generator$embedded; Owner: prisma
+-- Name: schema-generator$embedded.Parent.p._UNIQUE; Type: INDEX; Schema: schema-generator$embedded; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$embedded.Parent.p._UNIQUE" ON "schema-generator$embedded"."Parent" USING btree (p);
 
 
 --
--- Name: _ChildToFriend _ChildToFriend_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend _ChildToFriend_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
@@ -407,7 +315,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
 
 
 --
--- Name: _ChildToFriend _ChildToFriend_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToFriend _ChildToFriend_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
@@ -415,7 +323,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
 
 
 --
--- Name: _ChildToJoint _ChildToJoint_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint _ChildToJoint_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
@@ -423,7 +331,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
 
 
 --
--- Name: _ChildToJoint _ChildToJoint_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToJoint _ChildToJoint_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
@@ -431,7 +339,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
 
 
 --
--- Name: _ChildToParent _ChildToParent_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent _ChildToParent_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
@@ -439,7 +347,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
 
 
 --
--- Name: _ChildToParent _ChildToParent_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _ChildToParent _ChildToParent_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
@@ -447,7 +355,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
 
 
 --
--- Name: _JointToParent _JointToParent_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent _JointToParent_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_JointToParent"
@@ -455,7 +363,7 @@ ALTER TABLE ONLY "schema-generator$embedded"."_JointToParent"
 
 
 --
--- Name: _JointToParent _JointToParent_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: prisma
+-- Name: _JointToParent _JointToParent_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$embedded; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$embedded"."_JointToParent"

@@ -1,7 +1,6 @@
 import { IntrospectionResult } from '../../common/introspectionResult'
-import { ITable, IColumn, IIndex, ITableRelation } from './relationalConnector'
-import { ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase } from 'prisma-datamodel'
-import { TypeIdentifiers } from '../../../../prisma-datamodel/dist/datamodel/scalar';
+import { ITable, IColumn, IIndex, ITableRelation, IEnum } from './relationalConnector'
+import { ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase, TypeIdentifiers } from 'prisma-datamodel'
 
 /*
 Relational Introspector changes
@@ -29,16 +28,18 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
 
   protected model: ITable[]
   protected relations: ITableRelation[]
+  protected enums: IEnum[]
 
-  constructor(model: ITable[], relations: ITableRelation[], databaseType: DatabaseType, renderer?: Renderer) {
+  constructor(model: ITable[], relations: ITableRelation[], enums: IEnum[], databaseType: DatabaseType, renderer?: Renderer) {
     super(databaseType, renderer)
 
     this.model = model
     this.relations = relations
+    this.enums = enums
   }
 
   public getDatamodel(): ISDL {
-    return this.infer(this.model, this.relations)
+    return this.infer(this.model, this.enums, this.relations)
   }
 
   protected resolveRelations(types: IGQLType[], relations: ITableRelation[]) {
@@ -53,6 +54,14 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       return obj.databaseName
     } else {
       return obj.name
+    }
+  }
+
+  protected normalizeRelatioName(name: string) {
+    if(name.startsWith('_')) {
+      return name.substring(1) // This is most likely a prisma relation name
+    } else {
+      return name
     }
   }
 
@@ -207,7 +216,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           defaultValue: null,
           relatedField: null,
           databaseName: null,
-          relationName: type.name
+          relationName: this.normalizeRelatioName(type.name)
         }
 
         const relatedFieldForB: IGQLField = {
@@ -225,7 +234,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           defaultValue: null,
           relatedField: relatedFieldForA,
           databaseName: null,
-          relationName: type.name
+          relationName: this.normalizeRelatioName(type.name)
         }
 
         relatedFieldForA.relatedField = relatedFieldForB
@@ -258,21 +267,36 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types
   }
 
+  /**
+   * Hides unique inidices and marks the corresponding fields as unique instead.
+   * @param types 
+   */
+  protected hideUniqueIndices(types: IGQLType[]) {
+    for(const type of types) {
+      const uniqueIndices = type.indices.filter(index => index.fields.length === 1 && index.unique)
+
+      for(const uniqueIndex of uniqueIndices) {
+        uniqueIndex.fields[0].isUnique = true
+        type.indices = type.indices.filter(x => x !== uniqueIndex)
+      }
+    }
+    return types
+  }
+
   protected abstract isTypeReserved(type: IGQLType): boolean
 
   protected hideReservedTypes(types: IGQLType[]) {
     return types.filter(x => !this.isTypeReserved(x))
   }
 
-  protected infer(model: ITable[], relations: ITableRelation[]): ISDL {
-    // TODO: Enums? 
-
+  protected infer(model: ITable[], enums: IEnum[], relations: ITableRelation[]): ISDL {
     // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
     // Ask tim, this is an important descision for the SDK
-    let types = model.map(x => this.inferObjectType(x))
+    let types = [...model.map(x => this.inferObjectType(x)), ...enums.map(x => this.inferEnumType(x))]
     types = this.resolveRelations(types, relations)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
+    types = this.hideUniqueIndices(types)
     types = this.hideIndicesOnRelatedFields(types)
     types = this.hideJoinTypes(types)
 
@@ -289,6 +313,37 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       fields: fieldCandidates,
       name: index.name,
       unique: index.unique
+    }
+  }
+
+  protected inferEnumType(model: IEnum): IGQLType {
+    const values = model.values.map((x: string): IGQLField => ({
+      name: x,
+      isCreatedAt: false,
+      isId: false,
+      isList: false,
+      isReadOnly: false,
+      isRequired: false,
+      isUnique: false,
+      isUpdatedAt: false,
+      relatedField: null,
+      relationName: null,
+      type: TypeIdentifiers.string,
+      defaultValue: null,
+      databaseName: null,
+      directives: [],
+      comments: []
+    }))
+
+    return {
+      name: model.name,
+      fields: values,
+      isEnum: true,
+      isEmbedded: false,
+      databaseName: null,
+      comments: [],
+      directives: [],
+      indices: []
     }
   }
 

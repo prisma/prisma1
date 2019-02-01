@@ -3,14 +3,14 @@
 exports[`Introspector large example database 1`] = `
 "type Album {
   ArtistId: Artist!
-  id: Int! @pgColumn(name: \\"AlbumId\\")
+  id: Int! @pgColumn(name: \\"AlbumId\\") @unique
   Title: String!
   track: Track
 }
 
 type Artist {
   album: Album!
-  id: Int! @pgColumn(name: \\"ArtistId\\")
+  id: Int! @pgColumn(name: \\"ArtistId\\") @unique
   Name: String
 }
 
@@ -22,7 +22,7 @@ type Customer {
   Email: String!
   Fax: String
   FirstName: String!
-  id: Int! @pgColumn(name: \\"CustomerId\\")
+  id: Int! @pgColumn(name: \\"CustomerId\\") @unique
   invoice: Invoice!
   LastName: String!
   Phone: String
@@ -42,7 +42,7 @@ type Employee {
   Fax: String
   FirstName: String!
   HireDate: DateTime
-  id: Int! @pgColumn(name: \\"EmployeeId\\")
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   LastName: String!
   Phone: String
   PostalCode: String
@@ -52,7 +52,7 @@ type Employee {
 }
 
 type Genre {
-  id: Int! @pgColumn(name: \\"GenreId\\")
+  id: Int! @pgColumn(name: \\"GenreId\\") @unique
   Name: String
   track: Track
 }
@@ -64,14 +64,14 @@ type Invoice {
   BillingPostalCode: String
   BillingState: String
   CustomerId: Customer!
-  id: Int! @pgColumn(name: \\"InvoiceId\\")
+  id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
   InvoiceDate: DateTime!
   invoiceLine: InvoiceLine!
   Total: Float!
 }
 
 type InvoiceLine {
-  id: Int! @pgColumn(name: \\"InvoiceLineId\\")
+  id: Int! @pgColumn(name: \\"InvoiceLineId\\") @unique
   InvoiceId: Invoice!
   Quantity: Int!
   TrackId: Track!
@@ -79,13 +79,13 @@ type InvoiceLine {
 }
 
 type MediaType {
-  id: Int! @pgColumn(name: \\"MediaTypeId\\")
+  id: Int! @pgColumn(name: \\"MediaTypeId\\") @unique
   Name: String
   track: Track!
 }
 
 type Playlist {
-  id: Int! @pgColumn(name: \\"PlaylistId\\")
+  id: Int! @pgColumn(name: \\"PlaylistId\\") @unique
   Name: String
   Track: [Track!]!
 }
@@ -95,7 +95,7 @@ type Track {
   Bytes: Int
   Composer: String
   GenreId: Genre
-  id: Int! @pgColumn(name: \\"TrackId\\")
+  id: Int! @pgColumn(name: \\"TrackId\\") @unique
   invoiceLine: InvoiceLine!
   MediaTypeId: MediaType!
   Milliseconds: Int!

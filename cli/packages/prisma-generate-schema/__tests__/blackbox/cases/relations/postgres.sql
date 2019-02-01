@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$relations; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$relations; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$relations";
 
-
-ALTER SCHEMA "schema-generator$relations" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: BillingInfo; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: BillingInfo; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."BillingInfo" (
@@ -40,10 +38,8 @@ CREATE TABLE "schema-generator$relations"."BillingInfo" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."BillingInfo" OWNER TO prisma;
-
 --
--- Name: BillingInfoWithoutConnection; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: BillingInfoWithoutConnection; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."BillingInfoWithoutConnection" (
@@ -54,10 +50,8 @@ CREATE TABLE "schema-generator$relations"."BillingInfoWithoutConnection" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."BillingInfoWithoutConnection" OWNER TO prisma;
-
 --
--- Name: OptionalDetails; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: OptionalDetails; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."OptionalDetails" (
@@ -68,10 +62,8 @@ CREATE TABLE "schema-generator$relations"."OptionalDetails" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."OptionalDetails" OWNER TO prisma;
-
 --
--- Name: OptionalDetailsWithoutConnection; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: OptionalDetailsWithoutConnection; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."OptionalDetailsWithoutConnection" (
@@ -82,10 +74,8 @@ CREATE TABLE "schema-generator$relations"."OptionalDetailsWithoutConnection" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."OptionalDetailsWithoutConnection" OWNER TO prisma;
-
 --
--- Name: Post; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: Post; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."Post" (
@@ -97,10 +87,8 @@ CREATE TABLE "schema-generator$relations"."Post" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."Post" OWNER TO prisma;
-
 --
--- Name: PostWithoutConnection; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: PostWithoutConnection; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."PostWithoutConnection" (
@@ -112,10 +100,8 @@ CREATE TABLE "schema-generator$relations"."PostWithoutConnection" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."PostWithoutConnection" OWNER TO prisma;
-
 --
--- Name: User; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: User; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."User" (
@@ -126,10 +112,8 @@ CREATE TABLE "schema-generator$relations"."User" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."User" OWNER TO prisma;
-
 --
--- Name: _BillingInfoToUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_BillingInfoToUser" (
@@ -139,10 +123,8 @@ CREATE TABLE "schema-generator$relations"."_BillingInfoToUser" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."_BillingInfoToUser" OWNER TO prisma;
-
 --
--- Name: _BillingInfoWithoutConnectionToUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" (
@@ -152,10 +134,8 @@ CREATE TABLE "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" 
 );
 
 
-ALTER TABLE "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" OWNER TO prisma;
-
 --
--- Name: _LikesByUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_LikesByUser" (
@@ -165,10 +145,8 @@ CREATE TABLE "schema-generator$relations"."_LikesByUser" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."_LikesByUser" OWNER TO prisma;
-
 --
--- Name: _OptionalDetailsToUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_OptionalDetailsToUser" (
@@ -178,10 +156,8 @@ CREATE TABLE "schema-generator$relations"."_OptionalDetailsToUser" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."_OptionalDetailsToUser" OWNER TO prisma;
-
 --
--- Name: _OptionalDetailsWithoutConnectionToUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" (
@@ -191,10 +167,8 @@ CREATE TABLE "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUs
 );
 
 
-ALTER TABLE "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" OWNER TO prisma;
-
 --
--- Name: _PostWithoutConnectionToUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_PostWithoutConnectionToUser" (
@@ -204,10 +178,8 @@ CREATE TABLE "schema-generator$relations"."_PostWithoutConnectionToUser" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."_PostWithoutConnectionToUser" OWNER TO prisma;
-
 --
--- Name: _PostsByUser; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_PostsByUser" (
@@ -217,10 +189,8 @@ CREATE TABLE "schema-generator$relations"."_PostsByUser" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."_PostsByUser" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$relations; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE TABLE "schema-generator$relations"."_RelayId" (
@@ -229,130 +199,8 @@ CREATE TABLE "schema-generator$relations"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$relations"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: BillingInfo; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."BillingInfo" (id, account, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: BillingInfoWithoutConnection; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."BillingInfoWithoutConnection" (id, account, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OptionalDetails; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."OptionalDetails" (id, text, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: OptionalDetailsWithoutConnection; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."OptionalDetailsWithoutConnection" (id, text, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: Post; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."Post" (id, text, count, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: PostWithoutConnection; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."PostWithoutConnection" (id, text, count, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: User; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."User" (id, name, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _BillingInfoToUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_BillingInfoToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _BillingInfoWithoutConnectionToUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _LikesByUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_LikesByUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _OptionalDetailsToUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_OptionalDetailsToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _OptionalDetailsWithoutConnectionToUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PostWithoutConnectionToUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_PostWithoutConnectionToUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _PostsByUser; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_PostsByUser" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$relations; Owner: prisma
---
-
-COPY "schema-generator$relations"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: BillingInfoWithoutConnection BillingInfoWithoutConnection_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: BillingInfoWithoutConnection BillingInfoWithoutConnection_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."BillingInfoWithoutConnection"
@@ -360,7 +208,7 @@ ALTER TABLE ONLY "schema-generator$relations"."BillingInfoWithoutConnection"
 
 
 --
--- Name: BillingInfo BillingInfo_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: BillingInfo BillingInfo_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."BillingInfo"
@@ -368,7 +216,7 @@ ALTER TABLE ONLY "schema-generator$relations"."BillingInfo"
 
 
 --
--- Name: OptionalDetailsWithoutConnection OptionalDetailsWithoutConnection_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: OptionalDetailsWithoutConnection OptionalDetailsWithoutConnection_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."OptionalDetailsWithoutConnection"
@@ -376,7 +224,7 @@ ALTER TABLE ONLY "schema-generator$relations"."OptionalDetailsWithoutConnection"
 
 
 --
--- Name: OptionalDetails OptionalDetails_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: OptionalDetails OptionalDetails_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."OptionalDetails"
@@ -384,7 +232,7 @@ ALTER TABLE ONLY "schema-generator$relations"."OptionalDetails"
 
 
 --
--- Name: PostWithoutConnection PostWithoutConnection_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: PostWithoutConnection PostWithoutConnection_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."PostWithoutConnection"
@@ -392,7 +240,7 @@ ALTER TABLE ONLY "schema-generator$relations"."PostWithoutConnection"
 
 
 --
--- Name: Post Post_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: Post Post_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."Post"
@@ -400,7 +248,7 @@ ALTER TABLE ONLY "schema-generator$relations"."Post"
 
 
 --
--- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: User User_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."User"
@@ -408,7 +256,7 @@ ALTER TABLE ONLY "schema-generator$relations"."User"
 
 
 --
--- Name: _BillingInfoToUser _BillingInfoToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser _BillingInfoToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
@@ -416,7 +264,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
 
 
 --
--- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUser"
@@ -424,7 +272,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUs
 
 
 --
--- Name: _LikesByUser _LikesByUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser _LikesByUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
@@ -432,7 +280,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
 
 
 --
--- Name: _OptionalDetailsToUser _OptionalDetailsToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser _OptionalDetailsToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
@@ -440,7 +288,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
 
 
 --
--- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser"
@@ -448,7 +296,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnection
 
 
 --
--- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
@@ -456,7 +304,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
 
 
 --
--- Name: _PostsByUser _PostsByUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser _PostsByUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_PostsByUser"
@@ -464,7 +312,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_PostsByUser"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_RelayId"
@@ -472,154 +320,154 @@ ALTER TABLE ONLY "schema-generator$relations"."_RelayId"
 
 
 --
--- Name: _BillingInfoToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_BillingInfoToUser_A" ON "schema-generator$relations"."_BillingInfoToUser" USING btree ("A");
 
 
 --
--- Name: _BillingInfoToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_BillingInfoToUser_AB_unique" ON "schema-generator$relations"."_BillingInfoToUser" USING btree ("A", "B");
 
 
 --
--- Name: _BillingInfoToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_BillingInfoToUser_B" ON "schema-generator$relations"."_BillingInfoToUser" USING btree ("B");
 
 
 --
--- Name: _BillingInfoWithoutConnectionToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_BillingInfoWithoutConnectionToUser_A" ON "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" USING btree ("A");
 
 
 --
--- Name: _BillingInfoWithoutConnectionToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_BillingInfoWithoutConnectionToUser_AB_unique" ON "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" USING btree ("A", "B");
 
 
 --
--- Name: _BillingInfoWithoutConnectionToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_BillingInfoWithoutConnectionToUser_B" ON "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" USING btree ("B");
 
 
 --
--- Name: _LikesByUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_LikesByUser_A" ON "schema-generator$relations"."_LikesByUser" USING btree ("A");
 
 
 --
--- Name: _LikesByUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_LikesByUser_AB_unique" ON "schema-generator$relations"."_LikesByUser" USING btree ("A", "B");
 
 
 --
--- Name: _LikesByUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_LikesByUser_B" ON "schema-generator$relations"."_LikesByUser" USING btree ("B");
 
 
 --
--- Name: _OptionalDetailsToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_OptionalDetailsToUser_A" ON "schema-generator$relations"."_OptionalDetailsToUser" USING btree ("A");
 
 
 --
--- Name: _OptionalDetailsToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OptionalDetailsToUser_AB_unique" ON "schema-generator$relations"."_OptionalDetailsToUser" USING btree ("A", "B");
 
 
 --
--- Name: _OptionalDetailsToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_OptionalDetailsToUser_B" ON "schema-generator$relations"."_OptionalDetailsToUser" USING btree ("B");
 
 
 --
--- Name: _OptionalDetailsWithoutConnectionToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_OptionalDetailsWithoutConnectionToUser_A" ON "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" USING btree ("A");
 
 
 --
--- Name: _OptionalDetailsWithoutConnectionToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_OptionalDetailsWithoutConnectionToUser_AB_unique" ON "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" USING btree ("A", "B");
 
 
 --
--- Name: _OptionalDetailsWithoutConnectionToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_OptionalDetailsWithoutConnectionToUser_B" ON "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" USING btree ("B");
 
 
 --
--- Name: _PostWithoutConnectionToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_PostWithoutConnectionToUser_A" ON "schema-generator$relations"."_PostWithoutConnectionToUser" USING btree ("A");
 
 
 --
--- Name: _PostWithoutConnectionToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PostWithoutConnectionToUser_AB_unique" ON "schema-generator$relations"."_PostWithoutConnectionToUser" USING btree ("A", "B");
 
 
 --
--- Name: _PostWithoutConnectionToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_PostWithoutConnectionToUser_B" ON "schema-generator$relations"."_PostWithoutConnectionToUser" USING btree ("B");
 
 
 --
--- Name: _PostsByUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser_A; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_PostsByUser_A" ON "schema-generator$relations"."_PostsByUser" USING btree ("A");
 
 
 --
--- Name: _PostsByUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser_AB_unique; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE UNIQUE INDEX "_PostsByUser_AB_unique" ON "schema-generator$relations"."_PostsByUser" USING btree ("A", "B");
 
 
 --
--- Name: _PostsByUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser_B; Type: INDEX; Schema: schema-generator$relations; Owner: -
 --
 
 CREATE INDEX "_PostsByUser_B" ON "schema-generator$relations"."_PostsByUser" USING btree ("B");
 
 
 --
--- Name: _BillingInfoToUser _BillingInfoToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser _BillingInfoToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
@@ -627,7 +475,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
 
 
 --
--- Name: _BillingInfoToUser _BillingInfoToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoToUser _BillingInfoToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
@@ -635,7 +483,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
 
 
 --
--- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUser"
@@ -643,7 +491,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUs
 
 
 --
--- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUser"
@@ -651,7 +499,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUs
 
 
 --
--- Name: _LikesByUser _LikesByUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser _LikesByUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
@@ -659,7 +507,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
 
 
 --
--- Name: _LikesByUser _LikesByUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _LikesByUser _LikesByUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
@@ -667,7 +515,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
 
 
 --
--- Name: _OptionalDetailsToUser _OptionalDetailsToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser _OptionalDetailsToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
@@ -675,7 +523,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
 
 
 --
--- Name: _OptionalDetailsToUser _OptionalDetailsToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsToUser _OptionalDetailsToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
@@ -683,7 +531,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
 
 
 --
--- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser"
@@ -691,7 +539,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnection
 
 
 --
--- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser"
@@ -699,7 +547,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnection
 
 
 --
--- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
@@ -707,7 +555,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
 
 
 --
--- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
@@ -715,7 +563,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
 
 
 --
--- Name: _PostsByUser _PostsByUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser _PostsByUser_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_PostsByUser"
@@ -723,7 +571,7 @@ ALTER TABLE ONLY "schema-generator$relations"."_PostsByUser"
 
 
 --
--- Name: _PostsByUser _PostsByUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: prisma
+-- Name: _PostsByUser _PostsByUser_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$relations; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$relations"."_PostsByUser"

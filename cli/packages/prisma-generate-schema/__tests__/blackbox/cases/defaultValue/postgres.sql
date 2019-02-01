@@ -16,20 +16,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: schema-generator$defaultValue; Type: SCHEMA; Schema: -; Owner: prisma
+-- Name: schema-generator$defaultValue; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA "schema-generator$defaultValue";
 
-
-ALTER SCHEMA "schema-generator$defaultValue" OWNER TO prisma;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: A; Type: TABLE; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: A; Type: TABLE; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE TABLE "schema-generator$defaultValue"."A" (
@@ -43,10 +41,8 @@ CREATE TABLE "schema-generator$defaultValue"."A" (
 );
 
 
-ALTER TABLE "schema-generator$defaultValue"."A" OWNER TO prisma;
-
 --
--- Name: AWithId; Type: TABLE; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: AWithId; Type: TABLE; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE TABLE "schema-generator$defaultValue"."AWithId" (
@@ -60,10 +56,8 @@ CREATE TABLE "schema-generator$defaultValue"."AWithId" (
 );
 
 
-ALTER TABLE "schema-generator$defaultValue"."AWithId" OWNER TO prisma;
-
 --
--- Name: B; Type: TABLE; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: B; Type: TABLE; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE TABLE "schema-generator$defaultValue"."B" (
@@ -73,10 +67,8 @@ CREATE TABLE "schema-generator$defaultValue"."B" (
 );
 
 
-ALTER TABLE "schema-generator$defaultValue"."B" OWNER TO prisma;
-
 --
--- Name: _AToB; Type: TABLE; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB; Type: TABLE; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE TABLE "schema-generator$defaultValue"."_AToB" (
@@ -86,10 +78,8 @@ CREATE TABLE "schema-generator$defaultValue"."_AToB" (
 );
 
 
-ALTER TABLE "schema-generator$defaultValue"."_AToB" OWNER TO prisma;
-
 --
--- Name: _AWithIdToB; Type: TABLE; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB; Type: TABLE; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE TABLE "schema-generator$defaultValue"."_AWithIdToB" (
@@ -99,10 +89,8 @@ CREATE TABLE "schema-generator$defaultValue"."_AWithIdToB" (
 );
 
 
-ALTER TABLE "schema-generator$defaultValue"."_AWithIdToB" OWNER TO prisma;
-
 --
--- Name: _RelayId; Type: TABLE; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _RelayId; Type: TABLE; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE TABLE "schema-generator$defaultValue"."_RelayId" (
@@ -111,58 +99,8 @@ CREATE TABLE "schema-generator$defaultValue"."_RelayId" (
 );
 
 
-ALTER TABLE "schema-generator$defaultValue"."_RelayId" OWNER TO prisma;
-
 --
--- Data for Name: A; Type: TABLE DATA; Schema: schema-generator$defaultValue; Owner: prisma
---
-
-COPY "schema-generator$defaultValue"."A" (id, a, b, c, d, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: AWithId; Type: TABLE DATA; Schema: schema-generator$defaultValue; Owner: prisma
---
-
-COPY "schema-generator$defaultValue"."AWithId" (id, a, b, c, d, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: B; Type: TABLE DATA; Schema: schema-generator$defaultValue; Owner: prisma
---
-
-COPY "schema-generator$defaultValue"."B" (id, "updatedAt", "createdAt") FROM stdin;
-\.
-
-
---
--- Data for Name: _AToB; Type: TABLE DATA; Schema: schema-generator$defaultValue; Owner: prisma
---
-
-COPY "schema-generator$defaultValue"."_AToB" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _AWithIdToB; Type: TABLE DATA; Schema: schema-generator$defaultValue; Owner: prisma
---
-
-COPY "schema-generator$defaultValue"."_AWithIdToB" (id, "A", "B") FROM stdin;
-\.
-
-
---
--- Data for Name: _RelayId; Type: TABLE DATA; Schema: schema-generator$defaultValue; Owner: prisma
---
-
-COPY "schema-generator$defaultValue"."_RelayId" (id, "stableModelIdentifier") FROM stdin;
-\.
-
-
---
--- Name: AWithId AWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: AWithId AWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."AWithId"
@@ -170,7 +108,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."AWithId"
 
 
 --
--- Name: A A_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: A A_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."A"
@@ -178,7 +116,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."A"
 
 
 --
--- Name: B B_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: B B_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."B"
@@ -186,7 +124,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."B"
 
 
 --
--- Name: _AToB _AToB_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB _AToB_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
@@ -194,7 +132,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
 
 
 --
--- Name: _AWithIdToB _AWithIdToB_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB _AWithIdToB_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_AWithIdToB"
@@ -202,7 +140,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."_AWithIdToB"
 
 
 --
--- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _RelayId pk_RelayId; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_RelayId"
@@ -210,77 +148,77 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."_RelayId"
 
 
 --
--- Name: _AToB_A; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB_A; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE INDEX "_AToB_A" ON "schema-generator$defaultValue"."_AToB" USING btree ("A");
 
 
 --
--- Name: _AToB_AB_unique; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB_AB_unique; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE UNIQUE INDEX "_AToB_AB_unique" ON "schema-generator$defaultValue"."_AToB" USING btree ("A", "B");
 
 
 --
--- Name: _AToB_B; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB_B; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE INDEX "_AToB_B" ON "schema-generator$defaultValue"."_AToB" USING btree ("B");
 
 
 --
--- Name: _AWithIdToB_A; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB_A; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE INDEX "_AWithIdToB_A" ON "schema-generator$defaultValue"."_AWithIdToB" USING btree ("A");
 
 
 --
--- Name: _AWithIdToB_AB_unique; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB_AB_unique; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE UNIQUE INDEX "_AWithIdToB_AB_unique" ON "schema-generator$defaultValue"."_AWithIdToB" USING btree ("A", "B");
 
 
 --
--- Name: _AWithIdToB_B; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB_B; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE INDEX "_AWithIdToB_B" ON "schema-generator$defaultValue"."_AWithIdToB" USING btree ("B");
 
 
 --
--- Name: schema-generator$defaultValue.A.a._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: schema-generator$defaultValue.A.a._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$defaultValue.A.a._UNIQUE" ON "schema-generator$defaultValue"."A" USING btree (a);
 
 
 --
--- Name: schema-generator$defaultValue.A.c._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: schema-generator$defaultValue.A.c._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$defaultValue.A.c._UNIQUE" ON "schema-generator$defaultValue"."A" USING btree (c);
 
 
 --
--- Name: schema-generator$defaultValue.AWithId.a._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: schema-generator$defaultValue.AWithId.a._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$defaultValue.AWithId.a._UNIQUE" ON "schema-generator$defaultValue"."AWithId" USING btree (a);
 
 
 --
--- Name: schema-generator$defaultValue.AWithId.c._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: schema-generator$defaultValue.AWithId.c._UNIQUE; Type: INDEX; Schema: schema-generator$defaultValue; Owner: -
 --
 
 CREATE UNIQUE INDEX "schema-generator$defaultValue.AWithId.c._UNIQUE" ON "schema-generator$defaultValue"."AWithId" USING btree (c);
 
 
 --
--- Name: _AToB _AToB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB _AToB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
@@ -288,7 +226,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
 
 
 --
--- Name: _AToB _AToB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AToB _AToB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
@@ -296,7 +234,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
 
 
 --
--- Name: _AWithIdToB _AWithIdToB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB _AWithIdToB_A_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_AWithIdToB"
@@ -304,7 +242,7 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."_AWithIdToB"
 
 
 --
--- Name: _AWithIdToB _AWithIdToB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: prisma
+-- Name: _AWithIdToB _AWithIdToB_B_fkey; Type: FK CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
 --
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."_AWithIdToB"
