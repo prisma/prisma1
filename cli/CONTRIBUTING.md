@@ -1,7 +1,7 @@
 ## Local Development
 
 ```sh
-$ git clone git@github.com:graphcool/prisma.git
+$ git clone git@github.com:prisma/prisma.git
 $ cd prisma/cli
 $ ./scripts/build.sh
 $ node dist/index.js

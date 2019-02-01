@@ -10,13 +10,13 @@
     "api",
     "server"
   ],
-  "homepage": "https://github.com/graphcool/prisma",
+  "homepage": "https://github.com/prisma/prisma",
   "repository": {
     "type": "git",
-    "url": "https://github.com/graphcool/prisma.git"
+    "url": "https://github.com/prisma/prisma.git"
   },
   "bugs": {
-    "url": "https://github.com/graphcool/prisma/issues"
+    "url": "https://github.com/prisma/prisma/issues"
   },
   "main": "dist/index.js",
   "bin": {
