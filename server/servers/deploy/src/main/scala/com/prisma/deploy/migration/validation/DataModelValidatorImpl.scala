@@ -381,7 +381,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     }
 
     val allowOnlyValidNamesInRelationDirectives = relationFieldsWithRelationDirective.flatMap {
-      case thisType if !NameConstraints.isValidRelationName(thisType.fieldDef.relationName.get) =>
+      case thisType if thisType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(thisType.fieldDef.relationName.get) =>
         Some(DeployErrors.relationDirectiveHasInvalidName(thisType))
       case _ =>
         None

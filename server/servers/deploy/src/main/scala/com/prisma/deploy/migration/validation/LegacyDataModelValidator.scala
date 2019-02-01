@@ -400,7 +400,8 @@ case class LegacyDataModelValidator(
     }
 
     def ensureRelationDirectivesHaveValidNames(fieldAndType: FieldAndType): Option[DeployError] = {
-      if (fieldAndType.fieldDef.hasRelationDirectiveWithNameArg && !NameConstraints.isValidRelationName(fieldAndType.fieldDef.name)) {
+      if (fieldAndType.fieldDef.hasRelationDirectiveWithNameArg && fieldAndType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(
+            fieldAndType.fieldDef.relationName.get)) {
         Some(DeployErrors.relationDirectiveHasInvalidName(fieldAndType))
       } else {
         None
