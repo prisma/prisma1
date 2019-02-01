@@ -43,4 +43,89 @@ describe('Schema normalization from existing postgres schema', () => {
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
+
+  it('Should adjust n:n relations and fall back to 1:n if a 1:n relation is given in the reference datamodel.', () => {
+    const schemaFromDb = `
+      type User {
+        id: Id! @unique
+        posts: [Post!]!
+      }
+      
+      type Post {
+        id: Id! @unique
+        text: String!
+        user: [User!]!
+      }`
+
+    // User has renamed a few types, but post is missing 
+    const existingSchema = `
+      type User {
+        id: Id! @unique
+        posts: [Post!]!
+      }
+      
+      type Post {
+        id: Id! @unique
+        text: String!
+        user: User!
+      }`
+
+    // The expected result schema
+    const expectedResultSchema = dedent(`
+      type User {
+        id: Id! @unique
+        posts: [Post!]! @relation(link: TABLE)
+      }
+      
+      type Post {
+        id: Id! @unique
+        text: String!
+        user: User! @relation(link: TABLE)
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
+
+
+  it('Should adjust n:n relations and fall back to 1:1 if a 1:1 relation is given in the reference datamodel.', () => {
+    const schemaFromDb = `
+      type User {
+        id: Id! @unique
+        posts: [Post!]!
+      }
+      
+      type Post {
+        id: Id! @unique
+        text: String!
+        user: [User!]!
+      }`
+
+    // User has renamed a few types, but post is missing 
+    const existingSchema = `
+      type User {
+        id: Id! @unique
+        posts: Post!
+      }
+      
+      type Post {
+        id: Id! @unique
+        text: String!
+        user: User!
+      }`
+
+    // The expected result schema
+    const expectedResultSchema = dedent(`
+      type User {
+        id: Id! @unique
+        posts: Post! @relation(link: TABLE)
+      }
+      
+      type Post {
+        id: Id! @unique
+        text: String!
+        user: User! @relation(link: TABLE)
+      }`)
+
+    testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
+  })
 })

@@ -5,6 +5,7 @@ import { ISDL, DatabaseType } from 'prisma-datamodel'
 import { HideReservedFields } from './hideReservedFields'
 import { RemoveRelationName } from './removeRelationNames'
 import { RemoveBackRelation } from './removeBackRelations'
+import { AdjustJoinTableCardinality } from './adjustJoinTableCardinality'
 
 export default abstract class DefaultNormalizer {
   public static create(databaseType: DatabaseType, baseModel: ISDL | null) {
@@ -17,11 +18,13 @@ export default abstract class DefaultNormalizer {
 
   public static createWithoutBaseModel(databaseType: DatabaseType) {
     if(databaseType === DatabaseType.mongo) {
+      // Document normalization
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null)
       ])
     } else {
+      // Relational normalization
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null)
@@ -31,6 +34,7 @@ export default abstract class DefaultNormalizer {
 
   public static createWithBaseModel(databaseType: DatabaseType, baseModel: ISDL) {
     if(databaseType === DatabaseType.mongo) {
+      // Document normalization with base model
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
@@ -38,11 +42,13 @@ export default abstract class DefaultNormalizer {
         new RemoveBackRelation(baseModel)
       ])
     } else {
+      // Relational normalization with base model
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new HideReservedFields(baseModel),
         new RemoveRelationName(baseModel),
+        new AdjustJoinTableCardinality(baseModel),
         new RemoveBackRelation(baseModel)
       ])
     }

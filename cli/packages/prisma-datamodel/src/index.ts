@@ -1,3 +1,5 @@
+export { DirectiveKeys } from './datamodel/directives';
+
 export {
   ISDL,
   IGQLType,
