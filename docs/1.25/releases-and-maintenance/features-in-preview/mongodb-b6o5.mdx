@@ -529,7 +529,7 @@ This first creates a new document in the `users` collection and then retrieves a
 
 ## Using the Mongo shell
 
-Yopu can always connect to your MongoDB server using the [Mongo shell](https://docs.mongodb.com/manual/mongo/). Be careful with performing write-operations through the Mongo shell when using MongoDB with Prisma since you're loosing the guarantee that the stored data continues to adhere to the schema of the defined Prisma [datamodel](knun). It it recommended to only perform write-operations through the Prisma API to ensure data integrity.
+You can always connect to your MongoDB server using the [Mongo shell](https://docs.mongodb.com/manual/mongo/). Be careful with performing write-operations through the Mongo shell when using MongoDB with Prisma since you're loosing the guarantee that the stored data continues to adhere to the schema of the defined Prisma [datamodel](knun). It it recommended to only perform write-operations through the Prisma API to ensure data integrity.
 
 When using MongoDB with Prisma following the setup in the ["Get started with a new database"-section](#get-started-with-a-new-database), you can use the Mongo shell to connect to the MongoDB server that's running with Docker. The following steps explain how to do so.
 
