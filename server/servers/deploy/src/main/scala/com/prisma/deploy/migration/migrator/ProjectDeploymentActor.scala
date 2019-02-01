@@ -4,6 +4,8 @@ import akka.actor.{Actor, Stash}
 import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.deploy.connector.{DeployConnector, MigrationStepMapperImpl}
 import com.prisma.deploy.schema.DeploymentInProgress
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.messagebus.pubsub.Only
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
 
 import scala.concurrent.Future
@@ -32,7 +34,8 @@ object DeploymentProtocol {
 case class ProjectDeploymentActor(
     projectId: String,
     migrationPersistence: MigrationPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    invalidationPublisher: PubSubPublisher[String]
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
@@ -150,6 +153,7 @@ case class ProjectDeploymentActor(
           if (result.succeeded) {
             activeSchema = nextMigration.schema
           }
+          invalidationPublisher.publish(Only(projectId), projectId)
         }
 
       case Failure(err) =>
