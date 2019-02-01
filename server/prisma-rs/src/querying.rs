@@ -18,7 +18,6 @@ pub struct NodeSelector<'a> {
 }
 
 impl<'a> NodeSelector<'a> {
-    #[allow(dead_code)]
     pub fn new(
         database: &'a str,
         model: &'a Model,
