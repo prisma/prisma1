@@ -9,6 +9,7 @@ use crate::{
     querying::NodeSelector,
     schema::{Field, TypeIdentifier},
     PrismaResult, PrismaValue,
+    error::Error,
     protobuf::prisma::{
         GraphqlId,
         graphql_id::IdValue,
@@ -122,7 +123,6 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let mut result = Vec::new();
             let select_fields: &[Field] = &selector.selected_fields;
             let field_names: Vec<&str> = select_fields
                 .iter()
@@ -136,14 +136,19 @@ impl Connector for Sqlite {
                 .unwrap());
 
             let params = vec![(selector.value as &ToSql)];
+            let mut result = Vec::new();
 
-            conn.query_row(&query, params.as_slice(), |row| {
+            let query_result = conn.query_row(&query, params.as_slice(), |row| {
                 for (i, field) in selector.model.fields.iter().enumerate() {
                     result.push(Self::fetch_value(field.type_identifier, row, i));
                 }
-            })?;
+            });
 
-            Ok(result)
+            match query_result {
+                Err(RusqlError::QueryReturnedNoRows) => Ok(result),
+                Err(error) => Err(Error::from(error)),
+                Ok(_) => Ok(result)
+            }
         })
     }
 }
