@@ -44,8 +44,8 @@ export default async function blackBoxTest(name: string) {
   const renderedWithReference = renderer.render(normalizedWithReference)
 
   expect(renderedWithReference).toEqual(model)
-  //expect(normalizedWithoutReference).toMatchSnapshot()
-  //expect(unnormalized).toMatchSnapshot()
+  //expect(renderer.render(normalizedWithoutReference)).toMatchSnapshot()
+  //expect(renderer.render(unnormalized)).toMatchSnapshot()
 
   await client.end()
 
