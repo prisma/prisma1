@@ -9,11 +9,9 @@ class ToOneDeferredResolver(resolver: DataResolver) {
   def resolve(
       deferred: OrderedDeferred[ToOneDeferred]
   )(implicit ec: ExecutionContext): OrderedDeferredFutureResult[OneDeferredResultType] = {
-    val model                 = deferred.deferred.model
     val where                 = deferred.deferred.where
-    val futureResolverResults = resolver.getNodeByWhere(where, SelectedFields.all(model))
+    val futureResolverResults = resolver.getNodeByWhere(where, deferred.deferred.selectedFields)
 
     OrderedDeferredFutureResult(futureResolverResults, deferred.order)
-
   }
 }
