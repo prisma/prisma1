@@ -4,9 +4,9 @@ import akka.actor.{Actor, Stash}
 import com.prisma.deploy.connector.persistence.MigrationPersistence
 import com.prisma.deploy.connector.{DeployConnector, MigrationStepMapperImpl}
 import com.prisma.deploy.schema.DeploymentInProgress
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

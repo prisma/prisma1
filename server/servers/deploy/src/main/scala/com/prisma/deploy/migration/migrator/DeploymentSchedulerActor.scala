@@ -1,11 +1,12 @@
 package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
-import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
-import org.slf4j.LoggerFactory
-import com.prisma.shared.models.Project
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.messagebus.PubSubPublisher
+import com.prisma.shared.models.Project
+import org.slf4j.LoggerFactory
+
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

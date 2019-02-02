@@ -4,12 +4,13 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
-import org.slf4j.LoggerFactory
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
 import com.prisma.messagebus.PubSubPublisher
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
+import org.slf4j.LoggerFactory
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
