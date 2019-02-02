@@ -1,8 +1,9 @@
 package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
-import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
+import com.prisma.messagebus.PubSubPublisher
 import com.prisma.shared.models.Project
 
 import scala.collection.mutable
@@ -12,7 +13,8 @@ import scala.util.{Failure, Success}
 case class DeploymentSchedulerActor(
     migrationPersistence: MigrationPersistence,
     projectPersistence: ProjectPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    invalidationPublisher: PubSubPublisher[String]
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
@@ -70,6 +72,7 @@ case class DeploymentSchedulerActor(
     workerRef.tell(scheduleMsg, sender)
   }
 
+<<<<<<< HEAD
   def workerForProject(projectId: String) = {
     projectPersistence.load(projectId).onComplete {
       case Success(Some(project)) => this.context.self ! project
@@ -79,6 +82,10 @@ case class DeploymentSchedulerActor(
 
   def workerForProject(project: Project): ActorRef = {
     val newWorker = context.actorOf(Props(ProjectDeploymentActor(project, migrationPersistence, deployConnector)))
+=======
+  def workerForProject(projectId: String): ActorRef = {
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, deployConnector, invalidationPublisher)))
+>>>>>>> master
 
     context.watch(newWorker)
     projectWorkers += (project -> newWorker)

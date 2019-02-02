@@ -1,8 +1,7 @@
 package com.prisma.deploy.schema.mutations
 
-import com.prisma.deploy.DeployDependencies
-import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.migration._
 import com.prisma.deploy.migration.inference._
 import com.prisma.deploy.migration.migrator.Migrator
@@ -144,7 +143,6 @@ case class DeployMutation(
       secretsStep <- updateSecretsIfNecessary()
       migration   <- handleMigration(nextSchema, steps ++ secretsStep, functions)
     } yield {
-      invalidationPublisher.publish(Only(project.id), project.id)
       Good(
         DeployMutationPayload(
           clientMutationId = args.clientMutationId,
