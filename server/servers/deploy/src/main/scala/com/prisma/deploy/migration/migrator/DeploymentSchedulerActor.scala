@@ -72,7 +72,6 @@ case class DeploymentSchedulerActor(
     workerRef.tell(scheduleMsg, sender)
   }
 
-<<<<<<< HEAD
   def workerForProject(projectId: String) = {
     projectPersistence.load(projectId).onComplete {
       case Success(Some(project)) => this.context.self ! project
@@ -81,11 +80,7 @@ case class DeploymentSchedulerActor(
   }
 
   def workerForProject(project: Project): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(project, migrationPersistence, deployConnector)))
-=======
-  def workerForProject(projectId: String): ActorRef = {
-    val newWorker = context.actorOf(Props(ProjectDeploymentActor(projectId, migrationPersistence, deployConnector, invalidationPublisher)))
->>>>>>> master
+    val newWorker = context.actorOf(Props(ProjectDeploymentActor(project, migrationPersistence, deployConnector, invalidationPublisher)))
 
     context.watch(newWorker)
     projectWorkers += (project -> newWorker)

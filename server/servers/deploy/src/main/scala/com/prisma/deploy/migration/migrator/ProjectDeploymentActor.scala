@@ -159,7 +159,7 @@ case class ProjectDeploymentActor(
           if (result.succeeded) {
             activeSchema = nextMigration.schema
           }
-          invalidationPublisher.publish(Only(projectId), projectId)
+          invalidationPublisher.publish(Only(project.id), project.id)
         }
 
       case Failure(err) =>
