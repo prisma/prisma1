@@ -67,8 +67,10 @@ export class GoGenerator extends Generator {
       typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
     }
 
-    if (fieldType.isList) {
+    if (fieldType.isList && fieldType.isNonNull) {
       typ = '[]' + typ
+    } else if (fieldType.isList) {
+      typ = '*[]' + typ
     } else if (!fieldType.isNonNull) {
       typ = '*' + typ
     }
