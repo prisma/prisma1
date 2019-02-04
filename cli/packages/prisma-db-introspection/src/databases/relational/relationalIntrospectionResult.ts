@@ -404,7 +404,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           }
           pkField.isId = true
           pkField.comments.push({
-            text: `Multiple ID fields (compound indices) are not supported`,
+            text: `Multiple ID fields (compound indexes) are not supported`,
             isError: true
           })
         }

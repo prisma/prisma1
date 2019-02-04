@@ -81,8 +81,8 @@ type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\
 }
 
 type Film_actor @pgTable(name: \\"film_actor\\") {
-  # Multiple ID fields (compound indices) are not supported
-  # Multiple ID fields (compound indices) are not supported
+  # Multiple ID fields (compound indexes) are not supported
+  # Multiple ID fields (compound indexes) are not supported
   # ID field must be called \\"id\\" in relational models.
   # actor_id: Actor! @unique
   film_id: Film!
@@ -91,8 +91,8 @@ type Film_actor @pgTable(name: \\"film_actor\\") {
 
 type Film_category @pgTable(name: \\"film_category\\") {
   category_id: Category!
-  # Multiple ID fields (compound indices) are not supported
-  # Multiple ID fields (compound indices) are not supported
+  # Multiple ID fields (compound indexes) are not supported
+  # Multiple ID fields (compound indexes) are not supported
   # ID field must be called \\"id\\" in relational models.
   # film_id: Film! @unique
   last_update: DateTime!
