@@ -112,10 +112,11 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
           )
 
         case (previousLink: EmbeddedRelationLink, nextLink: EmbeddedRelationLink) =>
-          // FIXME: this should not delete in all cases
-          val tableChanged  = previousRelation.relationTableName != nextRelation.relationTableName
-          val columnChanged = previousLink.referencingColumn != nextLink.referencingColumn
-          if (!tableChanged && columnChanged) {
+          val previousModel     = previousSchema.getModelByName_!(previousLink.inTableOfModelName)
+          val nextModel         = nextSchema.getModelByName_!(nextLink.inTableOfModelName)
+          val tableDidNotChange = previousModel.stableIdentifier == nextModel.stableIdentifier
+
+          if (tableDidNotChange) {
             Vector(
               UpdateInlineRelation(project, previousRelation, nextRelation)
             )
@@ -125,6 +126,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
               createRelation(nextRelation)
             )
           }
+
         case (_: RelationTable, _: RelationTable) =>
           Vector(
             UpdateRelationTable(project, previousRelation, nextRelation)
