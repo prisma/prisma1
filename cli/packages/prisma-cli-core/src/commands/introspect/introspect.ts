@@ -76,7 +76,8 @@ export default class IntrospectCommand extends Command {
     const pgPassword = this.flags['pg-password']
     const pgDb = this.flags['pg-db']
     const pgSsl = this.flags['pg-ssl']
-    const pgSchema = this.flags['pg-schema']
+    // we need to be able to override it later with the interactive flow
+    let pgSchema = this.flags['pg-schema']
 
     const mongoUri = this.flags['mongo-uri']
     let mongoDb = this.flags['mongo-db']
@@ -160,21 +161,30 @@ export default class IntrospectCommand extends Command {
       databaseType = DatabaseType.postgres
     }
 
-    if (!interactive) {
-      await this.definition.load(this.flags)
-      const service = this.definition.service!
-      const stage = this.definition.stage!
-      const cluster = this.definition.getCluster()
-      const workspace = this.definition.getWorkspace()
-      this.env.setActiveCluster(cluster!)
-      await this.client.initClusterClient(cluster!, service!, stage, workspace!)
+    try {
+      if (!interactive) {
+        await this.definition.load(this.flags)
+        const service = this.definition.service!
+        const stage = this.definition.stage!
+        const cluster = this.definition.getCluster()
+        const workspace = this.definition.getWorkspace()
+        this.env.setActiveCluster(cluster!)
+        await this.client.initClusterClient(
+          cluster!,
+          service!,
+          stage,
+          workspace!,
+        )
 
-      if (await this.hasExecuteRaw()) {
-        client = new PrismaDBClient(this.definition)
-        await client.connect()
-        connector = new PostgresConnector(client)
-        databaseType = DatabaseType.postgres
+        if (await this.hasExecuteRaw()) {
+          client = new PrismaDBClient(this.definition)
+          await client.connect()
+          connector = new PostgresConnector(client)
+          databaseType = DatabaseType.postgres
+        }
       }
+    } catch (e) {
+      //
     }
 
     if (!client || !connector!) {
@@ -183,11 +193,14 @@ export default class IntrospectCommand extends Command {
         client = new PGClient(credentials)
         connector = new PostgresConnector(client)
         databaseType = DatabaseType.postgres
+        await client.connect()
+        pgSchema = credentials.schema
       } else if (credentials.type === 'mongo') {
         client = await this.connectToMongo(credentials)
         connector = new MongoConnector(client)
         mongoDb = credentials.database
         databaseType = DatabaseType.mongo
+        await client.connect()
       }
     }
 
@@ -196,7 +209,6 @@ export default class IntrospectCommand extends Command {
     try {
       schemas = await connector!.listSchemas()
     } catch (e) {
-      console.error(e.stack)
       throw new Error(`Could not connect to database. ${e.message}`)
     }
     /**
@@ -239,15 +251,20 @@ export default class IntrospectCommand extends Command {
             )
       }
 
-      const ParserInstance = Parser.create(databaseType!)
-      const datamodel = ParserInstance.parseFromSchemaString(
-        this.definition.typesString!,
-      )
+      let datamodel
+      if (this.definition.typesString) {
+        const ParserInstance = Parser.create(databaseType!)
+        datamodel = ParserInstance.parseFromSchemaString(
+          this.definition.typesString!,
+        )
+      }
 
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
 
       const introspection = await connector!.introspect(schema)
-      const sdl = await introspection.getNormalizedDatamodel(datamodel)
+      const sdl = datamodel
+        ? await introspection.getNormalizedDatamodel(datamodel)
+        : await introspection.getDatamodel()
       const numTables = sdl.types.length
 
       const renderedSdl = prototype
@@ -287,7 +304,7 @@ ${chalk.bold(
 `)
 
       if (
-        !this.definition.definition ||
+        this.definition.definition &&
         !this.definition.definition!.datamodel
       ) {
         await this.definition.load(this.flags)
