@@ -270,7 +270,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel)
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability))
     val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
@@ -295,7 +295,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
+    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability, RelationLinkTableCapability))
     val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
