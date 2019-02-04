@@ -6,25 +6,25 @@ exports[`Introspector Type with scalar lists 1`] = `
   id: ID! @unique
   name: String!
   updatedAt: DateTime!
-  User: [User!]!
+  User: [User]
 }
 
 type House {
   createdAt: DateTime!
   id: ID! @unique
   updatedAt: DateTime!
-  User: [User!]!
+  User: [User]
   windows: Int!
 }
 
 type User {
-  Car: [Car!]!
+  Car: [Car]
   createdAt: DateTime!
-  House: [House!]!
+  House: [House]
   id: ID! @unique
   name355: String!
-  scalarIntList: [Int!]!
-  scalarStringList: [String!]!
+  scalarIntList: [Int]
+  scalarStringList: [String]
   updatedAt: DateTime!
 }"
 `;

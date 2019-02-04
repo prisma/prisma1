@@ -13,7 +13,7 @@ const simpleModel =
   isAdmin: Boolean @default(value: "false")
   name: String
   nationality: String @default(value: "DE")
-  roles: [Int!]!
+  roles: [Int]
 }`
 
 const modelWithDirectives =

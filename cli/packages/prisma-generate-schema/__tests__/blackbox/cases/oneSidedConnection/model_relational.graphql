@@ -21,8 +21,8 @@ type B {
 }
 
 type C {
-  x: [TypeWithId!]!
-  y: [TypeWithoutId!]!
+  x: [TypeWithId]
+  y: [TypeWithoutId]
 }
 
 type D {
@@ -39,6 +39,6 @@ type E {
 
 type F {
   id: ID! @unique
-  x: [TypeWithId!]!
-  y: [TypeWithoutId!]!
+  x: [TypeWithId]
+  y: [TypeWithoutId]
 }

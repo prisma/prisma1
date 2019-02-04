@@ -17,12 +17,12 @@ type LotsOfRequiredScalars {
 }
 
 type LotsOfScalarLists {
-    int: [Int!]!
-    string: [String!]!
-    float: [Float!]!
-    dateTime: [DateTime!]!
-    json: [Json!]!
-    boolean: [Boolean!]!
+    int: [Int]
+    string: [String]
+    float: [Float]
+    dateTime: [DateTime]
+    json: [Json]
+    boolean: [Boolean]
 }
 
 type LotsOfScalarsWithID {
@@ -47,10 +47,10 @@ type LotsOfRequiredScalarsWithID {
 
 type LotsOfScalarListsWithID {
     id: ID! @unique
-    int: [Int!]!
-    string: [String!]!
-    float: [Float!]!
-    dateTime: [DateTime!]!
-    json: [Json!]!
-    boolean: [Boolean!]!
+    int: [Int]
+    string: [String]
+    float: [Float]
+    dateTime: [DateTime]
+    json: [Json]
+    boolean: [Boolean]
 }

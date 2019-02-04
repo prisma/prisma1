@@ -48,20 +48,20 @@ describe('Schema normalization from existing postgres schema', () => {
     const schemaFromDb = `
       type User {
         id: Id! @unique
-        posts: [Post!]!
+        posts: [Post]
       }
       
       type Post {
         id: Id! @unique
         text: String!
-        user: [User!]!
+        user: [User]
       }`
 
     // User has renamed a few types, but post is missing 
     const existingSchema = `
       type User {
         id: Id! @unique
-        posts: [Post!]!
+        posts: [Post]
       }
       
       type Post {
@@ -74,7 +74,7 @@ describe('Schema normalization from existing postgres schema', () => {
     const expectedResultSchema = dedent(`
       type User {
         id: Id! @id
-        posts: [Post!]! @relation(link: TABLE)
+        posts: [Post] @relation(link: TABLE)
       }
       
       type Post {
@@ -91,13 +91,13 @@ describe('Schema normalization from existing postgres schema', () => {
     const schemaFromDb = `
       type User {
         id: Id! @unique
-        posts: [Post!]!
+        posts: [Post]
       }
       
       type Post {
         id: Id! @unique
         text: String!
-        user: [User!]!
+        user: [User]
       }`
 
     // User has renamed a few types, but post is missing 

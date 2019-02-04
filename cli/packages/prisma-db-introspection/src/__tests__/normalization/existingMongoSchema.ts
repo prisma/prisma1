@@ -22,7 +22,7 @@ describe('Schema normalization from existing mongo schema', () => {
         age: Int!
         name: String!
         birthdaydate: Date!
-        posts: [post!]!
+        posts: [post]
         signUpDate: Date!
       }
 
@@ -47,7 +47,7 @@ describe('Schema normalization from existing mongo schema', () => {
         name: String!
         birthday: Date! @db(name: "birthdaydate")
         signedUp: Date! @createdAt @db(name: "signUpDate")
-        posts: [UserPost!]!
+        posts: [UserPost]
       }
 
       type UserPost @embedded {
@@ -91,14 +91,14 @@ describe('Schema normalization from existing mongo schema', () => {
         age: Int!
         name: String!
         birthdaydate: Date!
-        posts: [Post!]!
+        posts: [Post]
         signUpDate: Date!
       }
 
       type Post @embedded {
         text: String!
         likes: Int!
-        comments: [Comment!]!
+        comments: [Comment]
       }
       
       type Comment @embedded {
@@ -140,11 +140,11 @@ describe('Schema normalization from existing mongo schema', () => {
         name: String!
         signUpDate: Date!
         birthdaydate: Date!
-        posts: [UserPost!]!
+        posts: [UserPost]
       }
 
       type UserPost @embedded {
-        comments: [UserPostComment!]!
+        comments: [UserPostComment]
         likes: Int!
         text: String!
       }
@@ -161,7 +161,7 @@ describe('Schema normalization from existing mongo schema', () => {
     const schemaFromDb = `
       type User {
         email: String! @id
-        posts: [Post!]! @relation(name: "PostToUser")
+        posts: [Post] @relation(name: "PostToUser")
       }
       
       type Post {
@@ -177,7 +177,7 @@ describe('Schema normalization from existing mongo schema', () => {
     const expectedResultSchema = dedent(`
       type User {
         email: String! @id
-        posts: [Post!]!
+        posts: [Post]
       }
       
       type Post {
@@ -193,13 +193,13 @@ describe('Schema normalization from existing mongo schema', () => {
     const schemaFromDb = `
       type User {
         email: String! @id
-        likedPosts: [Post!]! @relation(name: "LikedPosts")
-        posts: [Post!]! @relation(name: "PostToUser")
+        likedPosts: [Post] @relation(name: "LikedPosts")
+        posts: [Post] @relation(name: "PostToUser")
       }
       
       type Post {
         likes: Int!
-        likedBy: [User!]! @relation(name: "LikedPosts")
+        likedBy: [User] @relation(name: "LikedPosts")
         user: User! @relation(name: "PostToUser")
       }`
 
@@ -210,12 +210,12 @@ describe('Schema normalization from existing mongo schema', () => {
     const expectedResultSchema = dedent(`
       type User {
         email: String! @id
-        likedPosts: [Post!]! @relation(name: "LikedPosts")
-        posts: [Post!]! @relation(name: "PostToUser")
+        likedPosts: [Post] @relation(name: "LikedPosts")
+        posts: [Post] @relation(name: "PostToUser")
       }
       
       type Post {
-        likedBy: [User!]! @relation(name: "LikedPosts")
+        likedBy: [User] @relation(name: "LikedPosts")
         likes: Int!
         user: User! @relation(name: "PostToUser")
       }`)
@@ -227,7 +227,7 @@ describe('Schema normalization from existing mongo schema', () => {
     const schemaFromDb = `
       type User {
         email: String! @id
-        posts: [Post!]! @relation(name: "PostToUser")
+        posts: [Post] @relation(name: "PostToUser")
       }
       
       type Post {
@@ -237,7 +237,7 @@ describe('Schema normalization from existing mongo schema', () => {
       }`
 
     const existingSchema = `type User {
-      posts: [Post!]! @relation(name: "PostToUser")
+      posts: [Post] @relation(name: "PostToUser")
     }
     
     type Post {
@@ -246,7 +246,7 @@ describe('Schema normalization from existing mongo schema', () => {
 
     const expectedResultSchema = dedent(`
       type User {
-        posts: [Post!]! @relation(name: "PostToUser")
+        posts: [Post] @relation(name: "PostToUser")
         email: String! @id
       }
       
@@ -264,7 +264,7 @@ describe('Schema normalization from existing mongo schema', () => {
     const schemaFromDb = `
       type User {
         email: String! @id
-        posts: [Post!]!
+        posts: [Post]
       }
       
       type Post {
@@ -284,7 +284,7 @@ describe('Schema normalization from existing mongo schema', () => {
 
     const expectedResultSchema = dedent(`
       type User {
-        posts: [Post!]!
+        posts: [Post]
         email: String! @id
       }
       

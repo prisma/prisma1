@@ -198,7 +198,7 @@ export default abstract class Renderer {
     let type = this.extractTypeIdentifier(field.type)
     if(field.isList) {
       // Lists are always required in Prisma
-      type = `[${type}!]!`
+      type = `[${type}]`
     }
     else if(field.isRequired) {
       type = `${type}!`
