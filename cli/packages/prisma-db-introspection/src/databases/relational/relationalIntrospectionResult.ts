@@ -118,59 +118,65 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     GQLAssert.raise(`Failed to resolve FK constraint ${relation.sourceTable}.${relation.sourceColumn} -> ${relation.targetTable}.${relation.targetColumn}.`)
   }
   
-  /**
-   * TODO: This is not captured yet by unit tests.
-   */
   protected hideScalarListTypes(types: IGQLType[]): IGQLType[] {
 
     const scalarListTypes: IGQLType[] = []
 
     for(const type of types) {
       for(const field of type.fields) {
-        for(const candidate of types) {
-          // A type is only a scalar list iff it has
-          // * name of ${type.name}_${field.name}
-          // * Has exactly three fields
-          //     * nodeId: typeof type!
-          //     * position: Int!
-          //     * value: ?
-          // TODO: Tim mentioned, but not observed in the wild.
-          // * compound index over nodeId and position
+        if(typeof field.type === 'string')
+          continue
 
-          if(candidate.fields.length !== 3)
-            continue
+        const candidate = field.type
+        // A type is only a scalar list iff it has
+        // * name of ${type.name}_${field.name}
+        // * Has exactly three fields
+        //     * nodeId: typeof type!
+        //     * position: Int!
+        //     * value: ?
+        // TODO: Tim mentioned, but not observed in the wild.
+        // * compound index over nodeId and position
 
-          if(candidate.name === `${type.name}_${field.name}`)
-            continue
+        if(candidate.fields.length !== 3)
+          continue
 
-          const [nodeId] = candidate.fields.filter(field => 
-            field.name === 'nodeId' && 
-            field.type === type && 
-            field.isRequired == true && 
-            field.isList === false)
+        if(candidate.name === `${type.name}_${field.name}`)
+          continue
 
-          const [position] = candidate.fields.filter(field => 
-            field.name === 'position' && 
-            field.type === TypeIdentifiers.integer && 
-            field.isRequired == true && 
-            field.isList === false)
+        const [nodeId] = candidate.fields.filter(field => 
+          field.name === 'nodeId' && 
+          field.type === type && 
+          field.isRequired == true && 
+          field.isList === false)
+
+        const [position] = candidate.fields.filter(field => 
+          field.name === 'position' && 
+          field.type === TypeIdentifiers.integer && 
+          field.isRequired == true && 
+          field.isList === false)
 
 
-          const [value] = candidate.fields.filter(field => 
-            field.name === 'value' && 
-            field.isRequired == true && 
-            field.isList === false)
+        const [value] = candidate.fields.filter(field => 
+          field.name === 'value' && 
+          field.isRequired == true && 
+          field.isList === false)
 
-          if(nodeId === undefined || position === undefined || value === undefined) 
-            continue
+        if(nodeId === undefined || position === undefined || value === undefined) 
+          continue
 
-          // If we got so far, we have found a scalar list type. Hurray!
-          scalarListTypes.push(candidate)
-          
-          // Update the field to show a scalar list
-          field.type = value.type
-          field.isList = true
+        // If we got so far, we have found a scalar list type. Hurray!
+        scalarListTypes.push(candidate)
+        
+        // Update the field to show a scalar list
+        field.type = value.type
+        field.isList = true
+
+        // Update the name, if it follows prisma conventions
+        // e.g. user_scalarIntList => scalarIntList
+        if(field.name.startsWith(`${camelCase(type.name)}_`)) {
+          field.name = field.name.substring(type.name.length + 1)
         }
+      
       }
     }
     
@@ -296,6 +302,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     types = this.resolveRelations(types, relations)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
+    types = this.hideScalarListTypes(types)
     types = this.hideUniqueIndices(types)
     types = this.hideIndicesOnRelatedFields(types)
     types = this.hideJoinTypes(types)

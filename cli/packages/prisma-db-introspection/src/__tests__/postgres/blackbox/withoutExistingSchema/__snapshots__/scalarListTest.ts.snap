@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector Type with scalar lists 1`] = `
+"type Car {
+  createdAt: DateTime!
+  id: ID! @unique
+  name: String!
+  updatedAt: DateTime!
+  User: [User!]!
+}
+
+type House {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  User: [User!]!
+  windows: Int!
+}
+
+type User {
+  Car: [Car!]!
+  createdAt: DateTime!
+  House: [House!]!
+  id: ID! @unique
+  name355: String!
+  scalarIntList: [Int!]!
+  scalarStringList: [String!]!
+  updatedAt: DateTime!
+}"
+`;
