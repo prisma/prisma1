@@ -4,6 +4,7 @@ use crate::{
     error::Error,
     project::Project,
     querying::NodeSelector,
+    project::Renameable,
     PrismaResult,
 };
 
@@ -127,7 +128,6 @@ impl ProtobufInterface {
             let selected_fields = model.scalar_fields();
 
             let node_selector = NodeSelector::new(
-                project.db_name(),
                 model,
                 field,
                 &value,
@@ -150,7 +150,7 @@ impl ProtobufInterface {
                     prisma::Result {
                         value: Some(result::Value::NodesResult(prisma::NodesResult {
                             nodes: vec![prisma::Node { values: response_values }],
-                            fields: selected_fields.iter().map(|field| field.name.clone()).collect()
+                            fields: selected_fields.iter().map(|field| field.db_name().to_string()).collect()
                         }))
                     }
                 )),

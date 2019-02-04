@@ -1,32 +1,28 @@
 use crate::{
-    schema::{Field, Model},
+    schema::{ScalarField, Model},
     PrismaValue,
 };
 
 /// A helper struct for selecting data.
 pub struct NodeSelector<'a> {
-    /// The database of the model
-    pub database: &'a str,
     /// The model to select from
     pub model: &'a Model,
     /// The name of the field to filtering
-    pub field: &'a Field,
+    pub field: &'a ScalarField,
     /// The value of the field, should be in the corresponding type.
     pub value: &'a PrismaValue,
     /// Fields to select from the table
-    pub selected_fields: &'a [&'a Field],
+    pub selected_fields: &'a [&'a ScalarField],
 }
 
 impl<'a> NodeSelector<'a> {
     pub fn new(
-        database: &'a str,
         model: &'a Model,
-        field: &'a Field,
+        field: &'a ScalarField,
         value: &'a PrismaValue,
-        selected_fields: &'a [&'a Field],
+        selected_fields: &'a [&'a ScalarField],
     ) -> NodeSelector<'a> {
         NodeSelector {
-            database,
             model,
             field,
             value,

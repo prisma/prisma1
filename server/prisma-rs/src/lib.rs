@@ -5,13 +5,13 @@ extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
 
-mod config;
-mod connector;
-mod error;
-mod project;
-mod protobuf;
-mod querying;
-mod schema;
+pub mod config;
+pub mod connector;
+pub mod error;
+pub mod project;
+pub mod protobuf;
+pub mod querying;
+pub mod schema;
 
 use config::PrismaConfig;
 use error::Error;
@@ -51,3 +51,4 @@ pub extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
         Box::from_raw(buffer)
     };
 }
+

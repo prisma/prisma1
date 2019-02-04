@@ -8,6 +8,7 @@ use crate::{
     connector::Connector,
     querying::NodeSelector,
     schema::TypeIdentifier,
+    project::Renameable,
     PrismaResult, PrismaValue,
     protobuf::prisma::{
         GraphqlId,
@@ -127,13 +128,13 @@ impl Connector for Sqlite {
         self.with_connection(database_name, |conn| {
             let field_names: Vec<&str> = selector.selected_fields
                 .iter()
-                .map(|field| field.name.as_ref())
+                .map(|field| field.db_name().as_ref())
                 .collect();
-            let table_location = Self::table_location(database_name, selector.model.name.as_ref());
+            let table_location = Self::table_location(database_name, selector.model.db_name().as_ref());
 
             let query = dbg!(select_from(&table_location)
                 .columns(field_names.as_slice())
-                .so_that(selector.field.name.equals(DatabaseValue::Parameter))
+                .so_that(selector.field.db_name().equals(DatabaseValue::Parameter))
                 .compile()
                 .unwrap());
 
@@ -141,7 +142,7 @@ impl Connector for Sqlite {
             let mut result = Vec::new();
 
             conn.query_row(&query, params.as_slice(), |row| {
-                for (i, field) in selector.model.fields.iter().enumerate() {
+                for (i, field) in selector.model.scalar_fields().iter().enumerate() {
                     result.push(Self::fetch_value(field.type_identifier, row, i));
                 }
             })?;
@@ -204,10 +205,10 @@ mod tests {
             .with_connection(db_name, |conn| {
                 conn.execute_batch(
                     "BEGIN;
-                 DROP TABLE IF EXISTS graphcool.user;
-                 CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, updated_at datetime(3));
-                 INSERT INTO graphcool.user (name, updated_at) values ('Musti', 1549046025567);
-                 COMMIT;",
+                     DROP TABLE IF EXISTS graphcool.user;
+                     CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, updated_at datetime(3));
+                     INSERT INTO graphcool.user (name, updated_at) values ('Musti', 1549046025567);
+                     COMMIT;",
                 )
                 .unwrap();
                 Ok(())
@@ -215,7 +216,7 @@ mod tests {
             .unwrap();
 
         let fields = vec![
-            Field {
+            Field::Scalar(ScalarField {
                 name: String::from("id"),
                 type_identifier: TypeIdentifier::GraphQLID,
                 is_required: true,
@@ -224,9 +225,10 @@ mod tests {
                 is_hidden: false,
                 is_readonly: true,
                 is_auto_generated: true,
-            },
-            Field {
-                name: String::from("name"),
+                manifestation: None,
+            }),
+            Field::Scalar(ScalarField {
+                name: String::from("old_name"),
                 type_identifier: TypeIdentifier::String,
                 is_required: true,
                 is_list: false,
@@ -234,8 +236,9 @@ mod tests {
                 is_hidden: false,
                 is_readonly: false,
                 is_auto_generated: false,
-            },
-            Field {
+                manifestation: Some(FieldManifestation { db_name: String::from("name") }),
+            }),
+            Field::Scalar(ScalarField {
                 name: String::from("updated_at"),
                 type_identifier: TypeIdentifier::DateTime,
                 is_required: false,
@@ -244,7 +247,8 @@ mod tests {
                 is_hidden: false,
                 is_readonly: false,
                 is_auto_generated: false,
-            },
+                manifestation: None,
+            }),
         ];
 
         let model = Model {
@@ -252,15 +256,15 @@ mod tests {
             stable_identifier: String::from("user"),
             is_embedded: false,
             fields: fields,
+            manifestation: None,
         };
 
         let find_by = PrismaValue::String(String::from("Musti"));
         let scalars = model.scalar_fields();
 
         let selector = NodeSelector::new(
-            db_name,
             &model,
-            &model.fields[1],
+            &model.find_field("name").unwrap(),
             &find_by,
             &scalars
         );

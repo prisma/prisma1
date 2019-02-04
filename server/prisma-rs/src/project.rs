@@ -1,5 +1,9 @@
 pub use crate::schema::*;
 
+pub trait Renameable {
+    fn db_name(&self) -> &str;
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Project {
@@ -23,14 +27,13 @@ pub struct Project {
     pub allow_mutations: DefaultTrue,
 }
 
-impl Project {
-    #[allow(dead_code)]
-    pub fn db_name(&self) -> &str {
-        self.manifestation
-            .schema
-            .as_ref()
-            .or_else(|| self.manifestation.database.as_ref())
-            .unwrap_or(&self.id)
+impl Renameable for Project {
+    fn db_name(&self) -> &str {
+        match self.manifestation {
+            ProjectManifestation { database: _, schema: Some(ref schema) }   => schema,
+            ProjectManifestation { database: Some(ref database), schema: _ } => database,
+            _                                                                => self.id.as_ref(),
+        }
     }
 }
 
