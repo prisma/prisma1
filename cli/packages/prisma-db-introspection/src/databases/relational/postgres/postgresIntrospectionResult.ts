@@ -16,6 +16,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
       case 'int1':
       case 'int2':
       case 'int4': 
+      case '_int4': 
       case 'int8': return TypeIdentifiers.integer
       case 'numeric':
       case 'float4':
@@ -30,7 +31,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
       case 'json': return TypeIdentifiers.json
       case '_date':
       case 'date':
-      case 'timestampz':
+      case 'timestamptz':
       case 'timestamp': return TypeIdentifiers.dateTime
       case 'uuid': return TypeIdentifiers.uuid
       default: return null

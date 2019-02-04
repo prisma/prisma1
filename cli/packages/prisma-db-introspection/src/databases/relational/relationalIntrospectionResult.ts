@@ -65,6 +65,26 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     }
   }
 
+  protected resolveEnumTypes(types: IGQLType[]) {
+    for(const enumType of types) {
+      if(!enumType.isEnum)
+        continue
+
+      for(const type of types) {
+        for(const field of type.fields) {
+          if(typeof field.type === 'string') {
+            if(field.type === enumType.name) {
+              // Remove type error hint and set enum type
+              field.comments = field.comments.filter(comment => comment.text !== `Type ${field.type} is not supported`)
+              field.type = enumType
+            }
+          }
+        }
+      }
+    }
+    return types
+  }
+
   protected resolveRelation(types: IGQLType[], relation: ITableRelation) { 
     // Correctly sets field types according to given FK constraints.
     for(const typeA of types) {
@@ -300,6 +320,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     // Ask tim, this is an important descision for the SDK
     let types = [...model.map(x => this.inferObjectType(x)), ...enums.map(x => this.inferEnumType(x))]
     types = this.resolveRelations(types, relations)
+    types = this.resolveEnumTypes(types)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
     types = this.hideScalarListTypes(types)

@@ -71,8 +71,7 @@ type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\
   language_id: Language!
   last_update: DateTime!
   length: Int
-  # Type mpaa_rating is not supported
-  # rating: mpaa_rating
+  rating: Mpaa_rating
   release_year: Int
   rental_duration: Int! @default(value: 3)
   rental_rate: Float! @default(value: 4.99)
