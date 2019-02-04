@@ -672,4 +672,63 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
       """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friends":[{"name":"Buddy"},{"name":"Buddy2"}]},{"name":"Daughter2","friends":[{"name":"Buddy3"},{"name":"Buddy4"}]}]}}}""")
   }
 
+  "Triple nested create" should "work " in {
+
+    val project = SchemaDsl.fromString() {
+      """
+        |type MealPlan {
+        |
+        |id: ID! @unique
+        |
+        |menuItem: MenuItem @relation(name: "TEST", link: INLINE)
+        |
+        |subtotal: Int
+        |
+        |}
+        |
+        |type MenuItem {
+        |
+        |id: ID! @unique
+        |
+        |name: String
+        |
+        |image: [menuImage]
+        |
+        |}
+        |
+        |type menuImage @embedded {
+        |
+        |name: String
+        |
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+  createMealPlan(
+    data: {
+      subtotal: 123
+      menuItem: {
+        create: {
+          name: "asd"
+          image: { create: [{ name: "adsw"}] }
+        }
+      }
+    }
+  ) {
+    menuItem{
+      image{
+        name
+      }
+    }
+  }
+}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createMealPlan":{"menuItem":{"image":[{"name":"adsw"}]}}}}""")
+  }
+
 }
