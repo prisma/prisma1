@@ -2,9 +2,9 @@ use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
     connector::{Connector, Sqlite},
     error::Error,
-    project::Project,
-    querying::NodeSelector,
     project::Renameable,
+    project::{Project, ProjectTemplate},
+    querying::NodeSelector,
     PrismaResult,
 };
 
@@ -15,10 +15,7 @@ pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
 }
 
-use prisma::{
-    result,
-    rpc_response as rpc,
-};
+use prisma::{result, rpc_response as rpc};
 
 #[repr(C)]
 #[no_mangle]
@@ -66,42 +63,42 @@ impl ProtobufInterface {
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
-        ProtobufInterface { connector: Box::new(connector), }
+        ProtobufInterface {
+            connector: Box::new(connector),
+        }
     }
 
     fn protobuf_result<F>(f: F) -> Vec<u8>
     where
-        F: FnOnce() -> PrismaResult<Vec<u8>>
+        F: FnOnce() -> PrismaResult<Vec<u8>>,
     {
-        f().unwrap_or_else(|error| {
-            match error {
-                Error::NoResultError => {
-                    let response = prisma::RpcResponse {
-                        header: prisma::Header {
-                            type_name: String::from("RpcResponse"),
-                        },
-                        response: Some(rpc::Response::Result(
-                            prisma::Result { value: None }
-                        )),
-                    };
+        f().unwrap_or_else(|error| match error {
+            Error::NoResultError => {
+                let response = prisma::RpcResponse {
+                    header: prisma::Header {
+                        type_name: String::from("RpcResponse"),
+                    },
+                    response: Some(rpc::Response::Result(prisma::Result { value: None })),
+                };
 
-                    let mut response_payload = Vec::new();
-                    response.encode(&mut response_payload).unwrap();
-                    response_payload
-                },
-                _ => {
-                    dbg!(&error);
-                    let error_response = prisma::RpcResponse {
-                        header: prisma::Header {
-                            type_name: String::from("RpcResponse"),
-                        },
-                        response: Some(rpc::Response::Error(prisma::Error { value: Some(error.into()) }))
-                    };
+                let mut response_payload = Vec::new();
+                response.encode(&mut response_payload).unwrap();
+                response_payload
+            }
+            _ => {
+                dbg!(&error);
+                let error_response = prisma::RpcResponse {
+                    header: prisma::Header {
+                        type_name: String::from("RpcResponse"),
+                    },
+                    response: Some(rpc::Response::Error(prisma::Error {
+                        value: Some(error.into()),
+                    })),
+                };
 
-                    let mut payload = Vec::new();
-                    error_response.encode(&mut payload).unwrap();
-                    payload
-                },
+                let mut payload = Vec::new();
+                error_response.encode(&mut payload).unwrap();
+                payload
             }
         })
     }
@@ -109,32 +106,33 @@ impl ProtobufInterface {
     pub fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let params = prisma::GetNodeByWhereInput::decode(payload)?;
-            let project: Project = serde_json::from_reader(params.project_json.as_slice())?;
+            let project_template: ProjectTemplate =
+                serde_json::from_reader(params.project_json.as_slice())?;
+            let project: Project = project_template.into();
 
-            let model = project
-                .schema
-                .find_model(&params.model_name)
-                .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", params.model_name)))?;
+            let schema = project.schema.borrow();
 
-            let field = model
-                .find_field(&params.field_name)
-                .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", params.field_name)))?;
+            let model = schema.find_model(&params.model_name).ok_or_else(|| {
+                Error::InvalidInputError(format!("Model not found: {}", params.model_name))
+            })?;
 
-            let value = params
-                .value
-                .prisma_value
-                .ok_or_else(|| Error::InvalidInputError(String::from("Search value cannot be empty.")))?;
+            let model_borrow = model.borrow();
+            let field = model_borrow.find_field(&params.field_name).ok_or_else(|| {
+                Error::InvalidInputError(format!("Field not found: {}", params.field_name))
+            })?;
 
-            let selected_fields = model.scalar_fields();
+            let value = params.value.prisma_value.ok_or_else(|| {
+                Error::InvalidInputError(String::from("Search value cannot be empty."))
+            })?;
 
-            let node_selector = NodeSelector::new(
-                model,
-                field,
-                &value,
-                selected_fields.as_slice(),
-            );
+            let selected_fields = model_borrow.scalar_fields();
 
-            let result = self.connector.get_node_by_where(project.db_name(), &node_selector)?;
+            let node_selector =
+                NodeSelector::new(model.clone(), field, &value, selected_fields.as_slice());
+
+            let result = self
+                .connector
+                .get_node_by_where(project.db_name(), &node_selector)?;
             let response_values: Vec<prisma::ValueContainer> = result
                 .into_iter()
                 .map(|value| prisma::ValueContainer {
@@ -146,14 +144,17 @@ impl ProtobufInterface {
                 header: prisma::Header {
                     type_name: String::from("RpcResponse"),
                 },
-                response: Some(rpc::Response::Result(
-                    prisma::Result {
-                        value: Some(result::Value::NodesResult(prisma::NodesResult {
-                            nodes: vec![prisma::Node { values: response_values }],
-                            fields: selected_fields.iter().map(|field| field.db_name().to_string()).collect()
-                        }))
-                    }
-                )),
+                response: Some(rpc::Response::Result(prisma::Result {
+                    value: Some(result::Value::NodesResult(prisma::NodesResult {
+                        nodes: vec![prisma::Node {
+                            values: response_values,
+                        }],
+                        fields: selected_fields
+                            .iter()
+                            .map(|field| field.db_name().to_string())
+                            .collect(),
+                    })),
+                })),
             };
 
             let mut response_payload = Vec::new();

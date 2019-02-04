@@ -1,3 +1,5 @@
+#![recursion_limit = "128"]
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -17,10 +19,7 @@ use config::PrismaConfig;
 use error::Error;
 use serde_yaml;
 
-use protobuf::{
-    ProtoBufEnvelope,
-    ProtobufInterface,
-};
+use protobuf::{ProtoBufEnvelope, ProtobufInterface};
 
 pub use protobuf::prisma::value_container::PrismaValue;
 
@@ -30,7 +29,8 @@ type PrismaResult<T> = Result<T, Error>;
 
 lazy_static! {
     pub static ref PBI: ProtobufInterface = ProtobufInterface::new(&CONFIG);
-    pub static ref SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
+    pub static ref SERVER_ROOT: String =
+        env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
     pub static ref CONFIG: PrismaConfig = {
         let path = format!("{}/prisma-rs/config/prisma.yml", *SERVER_ROOT);
         serde_yaml::from_reader(File::open(path).unwrap()).unwrap()
@@ -47,8 +47,5 @@ pub extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut ProtoBufE
 
 #[no_mangle]
 pub extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
-    unsafe {
-        Box::from_raw(buffer)
-    };
+    unsafe { Box::from_raw(buffer) };
 }
-

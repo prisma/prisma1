@@ -1,5 +1,5 @@
-use std::error::Error as StdError;
 use crate::protobuf::prisma;
+use std::error::Error as StdError;
 
 type Cause = Box<dyn StdError>;
 
@@ -35,21 +35,21 @@ impl Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match self {
-            Error::ConnectionError(message, _)     => message,
-            Error::QueryError(message, _)          => message,
+            Error::ConnectionError(message, _) => message,
+            Error::QueryError(message, _) => message,
             Error::ProtobufDecodeError(message, _) => message,
-            Error::JsonDecodeError(message, _)     => message,
-            Error::InvalidInputError(message)      => message,
-            Error::NoResultError                   => "Query returned no results",
+            Error::JsonDecodeError(message, _) => message,
+            Error::InvalidInputError(message) => message,
+            Error::NoResultError => "Query returned no results",
         }
     }
 
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Error::ConnectionError(_, cause)     => Self::fetch_cause(&cause),
-            Error::QueryError(_, cause)          => Self::fetch_cause(&cause),
+            Error::ConnectionError(_, cause) => Self::fetch_cause(&cause),
+            Error::QueryError(_, cause) => Self::fetch_cause(&cause),
             Error::ProtobufDecodeError(_, cause) => Self::fetch_cause(&cause),
-            Error::JsonDecodeError(_, cause)     => Self::fetch_cause(&cause),
+            Error::JsonDecodeError(_, cause) => Self::fetch_cause(&cause),
             _ => None,
         }
     }
@@ -58,12 +58,22 @@ impl StdError for Error {
 impl Into<prisma::error::Value> for Error {
     fn into(self) -> prisma::error::Value {
         match self {
-            Error::ConnectionError(message, _)     => prisma::error::Value::ConnectionError(message.to_string()),
-            Error::QueryError(message, _)          => prisma::error::Value::QueryError(message.to_string()),
-            Error::ProtobufDecodeError(message, _) => prisma::error::Value::ProtobufDecodeError(message.to_string()),
-            Error::JsonDecodeError(message, _)     => prisma::error::Value::JsonDecodeError(message.to_string()),
-            Error::InvalidInputError(message)      => prisma::error::Value::InvalidInputError(message.to_string()),
-            e @ Error::NoResultError               => prisma::error::Value::NoResultsError(e.description().to_string()),
+            Error::ConnectionError(message, _) => {
+                prisma::error::Value::ConnectionError(message.to_string())
+            }
+            Error::QueryError(message, _) => prisma::error::Value::QueryError(message.to_string()),
+            Error::ProtobufDecodeError(message, _) => {
+                prisma::error::Value::ProtobufDecodeError(message.to_string())
+            }
+            Error::JsonDecodeError(message, _) => {
+                prisma::error::Value::JsonDecodeError(message.to_string())
+            }
+            Error::InvalidInputError(message) => {
+                prisma::error::Value::InvalidInputError(message.to_string())
+            }
+            e @ Error::NoResultError => {
+                prisma::error::Value::NoResultsError(e.description().to_string())
+            }
         }
     }
 }
@@ -78,7 +88,7 @@ impl From<rusqlite::Error> for Error {
     fn from(e: rusqlite::Error) -> Error {
         match e {
             rusqlite::Error::QueryReturnedNoRows => Error::NoResultError,
-            _                                    => Error::QueryError("Error querying SQLite database", Some(Box::new(e))),
+            _ => Error::QueryError("Error querying SQLite database", Some(Box::new(e))),
         }
     }
 }

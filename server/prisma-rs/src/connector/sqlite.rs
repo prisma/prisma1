@@ -1,31 +1,22 @@
+use chrono::{DateTime, Utc};
 use r2d2_sqlite::SqliteConnectionManager;
-use chrono::{
-    DateTime,
-    Utc,
-};
 
 use crate::{
     connector::Connector,
+    project::Renameable,
+    protobuf::prisma::{graphql_id::IdValue, GraphqlId},
     querying::NodeSelector,
     schema::TypeIdentifier,
-    project::Renameable,
-    PrismaResult, PrismaValue,
-    protobuf::prisma::{
-        GraphqlId,
-        graphql_id::IdValue,
-    },
-    SERVER_ROOT,
+    PrismaResult, PrismaValue, SERVER_ROOT,
 };
 
 use rusqlite::{
-    types::{Null, ToSql, ToSqlOutput, FromSql, ValueRef, FromSqlResult, },
-    Error as RusqlError,
-    Row,
-    NO_PARAMS,
+    types::{FromSql, FromSqlResult, Null, ToSql, ToSqlOutput, ValueRef},
+    Error as RusqlError, Row, NO_PARAMS,
 };
 
-use std::collections::HashSet;
 use sql::{grammar::operation::eq::Equable, prelude::*};
+use std::collections::HashSet;
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -44,7 +35,7 @@ impl Sqlite {
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
-        Ok(Sqlite { pool, test_mode, })
+        Ok(Sqlite { pool, test_mode })
     }
 
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
@@ -68,8 +59,6 @@ impl Sqlite {
         Ok(())
     }
 
-
-
     /// Take a new connection from the pool and create the database if it
     /// doesn't exist yet.
     fn with_connection<F, T>(&self, db_name: &str, mut f: F) -> PrismaResult<T>
@@ -80,7 +69,9 @@ impl Sqlite {
         Self::create_database(&mut conn, db_name)?;
 
         let result = f(&conn);
-        if self.test_mode { dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?); }
+        if self.test_mode {
+            dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
+        }
 
         result
     }
@@ -89,14 +80,14 @@ impl Sqlite {
     /// richer PrismaValue.
     fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
         match typ {
-            TypeIdentifier::String    => PrismaValue::String(row.get(i)),
+            TypeIdentifier::String => PrismaValue::String(row.get(i)),
             TypeIdentifier::GraphQLID => PrismaValue::GraphqlId(row.get(i)),
-            TypeIdentifier::UUID      => PrismaValue::Uuid(row.get(i)),
-            TypeIdentifier::Int       => PrismaValue::Int(row.get(i)),
-            TypeIdentifier::Boolean   => PrismaValue::Boolean(row.get(i)),
-            TypeIdentifier::Enum      => PrismaValue::Enum(row.get(i)),
-            TypeIdentifier::Json      => PrismaValue::Json(row.get(i)),
-            TypeIdentifier::DateTime  => {
+            TypeIdentifier::UUID => PrismaValue::Uuid(row.get(i)),
+            TypeIdentifier::Int => PrismaValue::Int(row.get(i)),
+            TypeIdentifier::Boolean => PrismaValue::Boolean(row.get(i)),
+            TypeIdentifier::Enum => PrismaValue::Enum(row.get(i)),
+            TypeIdentifier::Json => PrismaValue::Json(row.get(i)),
+            TypeIdentifier::DateTime => {
                 let ts: i64 = row.get(i);
                 let nsecs = ((ts % 1000) * 1_000_000) as u32;
                 let secs = (ts / 1000) as i64;
@@ -104,8 +95,8 @@ impl Sqlite {
                 let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
                 PrismaValue::DateTime(datetime.to_rfc3339())
-            },
-            TypeIdentifier::Relation  => panic!("We should not have a Relation here!"),
+            }
+            TypeIdentifier::Relation => panic!("We should not have a Relation here!"),
             TypeIdentifier::Float => {
                 let v: f64 = row.get(i);
                 PrismaValue::Float(v as f32)
@@ -126,11 +117,14 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let field_names: Vec<&str> = selector.selected_fields
+            let field_names: Vec<&str> = selector
+                .selected_fields
                 .iter()
                 .map(|field| field.db_name().as_ref())
                 .collect();
-            let table_location = Self::table_location(database_name, selector.model.db_name().as_ref());
+
+            let table_location =
+                Self::table_location(database_name, selector.model.borrow().db_name().as_ref());
 
             let query = dbg!(select_from(&table_location)
                 .columns(field_names.as_slice())
@@ -142,7 +136,7 @@ impl Connector for Sqlite {
             let mut result = Vec::new();
 
             conn.query_row(&query, params.as_slice(), |row| {
-                for (i, field) in selector.model.scalar_fields().iter().enumerate() {
+                for (i, field) in selector.model.borrow().scalar_fields().iter().enumerate() {
                     result.push(Self::fetch_value(field.type_identifier, row, i));
                 }
             })?;
@@ -155,20 +149,20 @@ impl Connector for Sqlite {
 impl ToSql for PrismaValue {
     fn to_sql(&self) -> Result<ToSqlOutput, RusqlError> {
         let value = match self {
-            PrismaValue::String(value)   => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Enum(value)     => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Json(value)     => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Uuid(value)     => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Float(value)    => ToSqlOutput::from(*value as f64),
-            PrismaValue::Int(value)      => ToSqlOutput::from(*value),
-            PrismaValue::Boolean(value)  => ToSqlOutput::from(*value),
+            PrismaValue::String(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
+            PrismaValue::Float(value) => ToSqlOutput::from(*value as f64),
+            PrismaValue::Int(value) => ToSqlOutput::from(*value),
+            PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
             PrismaValue::DateTime(value) => value.to_sql().unwrap(),
-            PrismaValue::Null(_)         => ToSqlOutput::from(Null),
+            PrismaValue::Null(_) => ToSqlOutput::from(Null),
 
             PrismaValue::GraphqlId(value) => match value.id_value {
                 Some(IdValue::String(ref value)) => ToSqlOutput::from(value.as_ref() as &str),
-                Some(IdValue::Int(value))        => ToSqlOutput::from(value),
-                None                             => panic!("We got an empty ID value here. Tsk tsk.")
+                Some(IdValue::Int(value)) => ToSqlOutput::from(value),
+                None => panic!("We got an empty ID value here. Tsk tsk."),
             },
 
             PrismaValue::Relation(_) => panic!("We should not have a Relation value here."),
@@ -180,20 +174,25 @@ impl ToSql for PrismaValue {
 
 impl FromSql for GraphqlId {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        value.as_str()
-            .map(|strval| {
-                GraphqlId{ id_value: Some(IdValue::String(strval.to_string())) }
+        value
+            .as_str()
+            .map(|strval| GraphqlId {
+                id_value: Some(IdValue::String(strval.to_string())),
             })
-            .or_else(|_| value.as_i64().map(|intval| {
-                GraphqlId{ id_value: Some(IdValue::Int(intval)) }
-            }))
+            .or_else(|_| {
+                value.as_i64().map(|intval| GraphqlId {
+                    id_value: Some(IdValue::Int(intval)),
+                })
+            })
     }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
-    use crate::{connector::Connector, schema::*};
+    use crate::{connector::Connector, project::*};
+    use serde_json::{self, json};
 
     #[test]
     fn test_simple_select_by_where() {
@@ -215,69 +214,89 @@ mod tests {
             })
             .unwrap();
 
-        let fields = vec![
-            Field::Scalar(ScalarField {
-                name: String::from("id"),
-                type_identifier: TypeIdentifier::GraphQLID,
-                is_required: true,
-                is_list: false,
-                is_unique: true,
-                is_hidden: false,
-                is_readonly: true,
-                is_auto_generated: true,
-                manifestation: None,
-            }),
-            Field::Scalar(ScalarField {
-                name: String::from("old_name"),
-                type_identifier: TypeIdentifier::String,
-                is_required: true,
-                is_list: false,
-                is_unique: false,
-                is_hidden: false,
-                is_readonly: false,
-                is_auto_generated: false,
-                manifestation: Some(FieldManifestation { db_name: String::from("name") }),
-            }),
-            Field::Scalar(ScalarField {
-                name: String::from("updated_at"),
-                type_identifier: TypeIdentifier::DateTime,
-                is_required: false,
-                is_list: false,
-                is_unique: false,
-                is_hidden: false,
-                is_readonly: false,
-                is_auto_generated: false,
-                manifestation: None,
-            }),
-        ];
+        let project_json = json!({
+            "id": "Musti",
+            "functions": [],
+            "schema": {
+                "models": [
+                    {
+                        "name": "user",
+                        "stableIdentifier": "user",
+                        "isEmbedded": false,
+                        "fields": [
+                            {
+                                "name": "id",
+                                "typeIdentifier": "GraphQLID",
+                                "isRequired": true,
+                                "isList": false,
+                                "isUnique": true,
+                                "isHidden": false,
+                                "isReadonly": true,
+                                "isAutoGenerated": true
+                            },
+                            {
+                                "name": "old_name",
+                                "typeIdentifier": "String",
+                                "isRequired": true,
+                                "isList": false,
+                                "isUnique": true,
+                                "isHidden": false,
+                                "isReadonly": false,
+                                "isAutoGenerated": false,
+                                "manifestation": {
+                                    "dbName": "name"
+                                }
+                            },
+                            {
+                                "name": "updated_at",
+                                "typeIdentifier": "DateTime",
+                                "isRequired": false,
+                                "isList": false,
+                                "isUnique": false,
+                                "isHidden": false,
+                                "isReadonly": false,
+                                "isAutoGenerated": false
+                            }
+                        ],
+                    }
+                ],
+                "relations": [],
+                "enums": [],
+            }
+        });
 
-        let model = Model {
-            name: String::from("user"),
-            stable_identifier: String::from("user"),
-            is_embedded: false,
-            fields: fields,
-            manifestation: None,
-        };
+        let project_template: ProjectTemplate = serde_json::from_value(project_json).unwrap();
+        let project: Project = project_template.into();
+        let schema = project.schema.borrow();
+        let model = schema.models[0].clone();
 
         let find_by = PrismaValue::String(String::from("Musti"));
-        let scalars = model.scalar_fields();
+
+        let m = model.clone();
+        let m = m.borrow();
+        let scalars = m.scalar_fields();
 
         let selector = NodeSelector::new(
-            &model,
-            &model.find_field("name").unwrap(),
+            model.clone(),
+            m.find_field("name").unwrap(),
             &find_by,
-            &scalars
+            &scalars,
         );
 
         let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
 
         let datetime: DateTime<Utc> = DateTime::from_utc(
             chrono::NaiveDateTime::from_timestamp(1549046025, 567000000),
-            Utc
+            Utc,
         );
 
         assert_eq!(3, result.len());
-        assert_eq!(PrismaValue::GraphqlId(GraphqlId { id_value: Some(IdValue::Int(1)) }), result[0]);
+        assert_eq!(
+            PrismaValue::GraphqlId(GraphqlId {
+                id_value: Some(IdValue::Int(1))
+            }),
+            result[0]
+        );
         assert_eq!(PrismaValue::String(String::from("Musti")), result[1]);
         assert_eq!(PrismaValue::DateTime(datetime.to_rfc3339()), result[2]);
     }
