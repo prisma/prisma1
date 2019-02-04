@@ -52,6 +52,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: DeleteRelationTable   => DeleteRelationInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: CreateInlineRelation  => CreateInlineRelationInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: DeleteInlineRelation  => DeleteInlineRelationInterpreter(builder).execute(x, schemaBeforeMigration)
+      case x: UpdateInlineRelation  => UpdateInlineRelationInterpreter(builder).execute(x, schemaBeforeMigration)
     }
 
     runAttached(mutaction.project, action)
@@ -74,6 +75,7 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: DeleteRelationTable   => DeleteRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: CreateInlineRelation  => CreateInlineRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: DeleteInlineRelation  => DeleteInlineRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
+      case x: UpdateInlineRelation  => UpdateInlineRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
     }
 
     runAttached(mutaction.project, action)

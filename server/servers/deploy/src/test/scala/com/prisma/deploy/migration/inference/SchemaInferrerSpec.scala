@@ -47,7 +47,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           |  created_by: User! @relation(name: "CallRequester")
           |  members: [User] @relation(name: "CallMembers")
           |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
 
       val relation = schema.getRelationByName_!("CallRequester")
       relation.modelAName should equal("Call")
@@ -276,7 +276,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
            |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -288,6 +288,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     }
 
     "keep assignments after renames" in {
+      val capas = ConnectorCapabilities(RelationLinkTableCapability)
       val types =
         """|type Technology {
            |  id: ID! @id
@@ -295,7 +296,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
            |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
            |}""".stripMargin.trim()
-      val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
+      val schema = infer(emptyProject.schema, types, capabilities = capas)
 
       schema.relations should have(size(1))
       val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -318,7 +319,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
           Vector(FieldMapping(previousModel = "Technology", previousField = "childTechnologies", nextModel = "NewTechnology", nextField = "xTechnologies"))
       )
 
-      val newSchema = infer(schema, newTypes, renames, capabilities = ConnectorCapabilities.empty)
+      val newSchema = infer(schema, newTypes, renames, capabilities = capas)
       newSchema.relations.foreach(println(_))
 
       val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
@@ -336,6 +337,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   "repair invalid assignments" in {
+    val capas = ConnectorCapabilities(RelationLinkTableCapability)
     val types =
       """|type Technology {
          |  id: ID! @id
@@ -343,7 +345,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  childTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = capas)
 
     schema.relations should have(size(1))
     val relation = schema.getRelationByName_!("ChildTechnologies")
@@ -360,7 +362,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     )
     val invalidSchema = schema.copy(modelTemplates = List(updatedModel))
 
-    val newSchema = infer(invalidSchema, types, capabilities = ConnectorCapabilities.empty)
+    val newSchema = infer(invalidSchema, types, capabilities = capas)
     newSchema.relations.foreach(println(_))
 
     val newRelation = newSchema.getRelationByName_!("ChildTechnologies")
@@ -383,7 +385,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  name: String! @unique
          |  childTechnologies: [Technology]
          |}""".stripMargin.trim()
-    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
 
     schema.relations should have(size(1))
     val relation = schema.relations.head
@@ -414,30 +416,6 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
     val field = schema.getModelByName_!("Todo").getScalarFieldByName_!("name")
     field.manifestation should equal(Some(FieldManifestation("my_name_column")))
-  }
-
-  "handle relation table manifestations" in {
-    val types =
-      """|type Todo {
-         |  id: ID! @id
-         |  name: String!
-         |  list: List!
-         |}
-         |
-         |type List {
-         |  id: ID! @id
-         |  todos: [Todo] @relation(link: TABLE)
-         |}
-         |""".stripMargin
-    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
-
-    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
-    // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
-    relation.modelAName should equal("List")
-    relation.modelBName should equal("Todo")
-
-    val expectedManifestation = RelationTable(table = "_ListToTodo", modelAColumn = "A", modelBColumn = "B")
-    relation.manifestation should equal(expectedManifestation)
   }
 
   "handle inline relation manifestations on Mongo" in {
@@ -522,7 +500,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
          |  text: String
          |}
          |""".stripMargin
-    val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities.empty)
+    val schema                = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
     val relationField         = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
     val expectedManifestation = RelationTable(table = "_CommentToTodo", modelAColumn = "A", modelBColumn = "B")
     relationField.relation.manifestation should be(expectedManifestation)
@@ -557,12 +535,58 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
     idField.isUnique should be(true)
   }
 
-  "should support link tables" in {
+  "should support link tables in the most explicit notation" in {
     val types =
       """
         |type Model {
         |  id: ID! @id
         |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
+        |}
+        |
+        |type ModelToModelRelation @linkTable {
+        |  firstColumn: Model!
+        |  secondColumn: Model!
+        |}
+      """.stripMargin
+    val schema   = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
+    val relation = schema.relations.head
+    relation.name should be("ModelToModelRelation")
+    val manifestation = relation.manifestation.asInstanceOf[RelationTable]
+    manifestation.modelAColumn should be("firstColumn")
+    manifestation.modelBColumn should be("secondColumn")
+    manifestation.idColumn should be(None)
+  }
+
+  "should support forcing link tables with only the link argument" in {
+    val types =
+      """|type Todo {
+         |  id: ID! @id
+         |  name: String!
+         |  list: List!
+         |}
+         |
+         |type List {
+         |  id: ID! @id
+         |  todos: [Todo] @relation(link: TABLE)
+         |}
+         |""".stripMargin
+    val schema = infer(emptyProject.schema, types, capabilities = ConnectorCapabilities(RelationLinkTableCapability))
+
+    val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
+    // assert model ids to make sure that the generated manifestation refers to the right modelAColumn/modelBColumn
+    relation.modelAName should equal("List")
+    relation.modelBName should equal("Todo")
+
+    val expectedManifestation = RelationTable(table = "_ListToTodo", modelAColumn = "A", modelBColumn = "B")
+    relation.manifestation should equal(expectedManifestation)
+  }
+
+  "should support link tables if the link argument is missing by matching relation name and link table name" in {
+    val types =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
         |type ModelToModelRelation @linkTable {

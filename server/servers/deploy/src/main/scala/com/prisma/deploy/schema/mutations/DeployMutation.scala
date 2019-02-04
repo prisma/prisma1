@@ -85,7 +85,7 @@ case class DeployMutation(
       functions             <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps                 <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings   <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
-      isMigratingFromV1ToV2 = project.schema.version.isEmpty && inferredNextSchema.version.contains(Schema.version.v2)
+      isMigratingFromV1ToV2 = project.schema.isLegacy && inferredNextSchema.isV2
       v1ToV2Warning = isMigratingFromV1ToV2.toOption {
         DeployWarning.global(
           "You are migrating from the old datamodel syntax to the new one. Make sure that you understand the listed changes because the semantics are different now. Then perform the deployment with the `--force` flag.")

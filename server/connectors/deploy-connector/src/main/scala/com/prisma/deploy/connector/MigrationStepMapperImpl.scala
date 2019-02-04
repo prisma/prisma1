@@ -111,11 +111,22 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
             createRelation(nextRelation)
           )
 
-        case (_: EmbeddedRelationLink, _: EmbeddedRelationLink) =>
-          Vector(
-            deleteRelation(previousRelation),
-            createRelation(nextRelation)
-          )
+        case (previousLink: EmbeddedRelationLink, nextLink: EmbeddedRelationLink) =>
+          val previousModel     = previousSchema.getModelByName_!(previousLink.inTableOfModelName)
+          val nextModel         = nextSchema.getModelByName_!(nextLink.inTableOfModelName)
+          val tableDidNotChange = previousModel.stableIdentifier == nextModel.stableIdentifier
+
+          if (tableDidNotChange) {
+            Vector(
+              UpdateInlineRelation(project, previousRelation, nextRelation)
+            )
+          } else {
+            Vector(
+              deleteRelation(previousRelation),
+              createRelation(nextRelation)
+            )
+          }
+
         case (_: RelationTable, _: RelationTable) =>
           Vector(
             UpdateRelationTable(project, previousRelation, nextRelation)

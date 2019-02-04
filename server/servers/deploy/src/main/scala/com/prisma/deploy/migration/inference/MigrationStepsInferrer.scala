@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
+import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -18,6 +19,8 @@ object MigrationStepsInferrer {
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
   import com.prisma.util.Diff._
+
+  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
 
   /**
     * The following evaluation order considers all interdependencies:
@@ -111,13 +114,34 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextField         <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, nextField.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
-      if didSomethingChange(previousField.template, nextField.template)(_.name,
-                                                                        _.typeIdentifier,
-                                                                        _.isUnique,
-                                                                        _.isRequired,
-                                                                        _.isList,
-                                                                        _.manifestation,
-                                                                        _.behaviour)
+      didSomethingChangeInTheField = didSomethingChange(previousField.template, nextField.template)(
+        _.name,
+        _.typeIdentifier,
+        _.isUnique,
+        _.isRequired,
+        _.isList,
+        _.manifestation
+      )
+      didBehaviourChange = if (isMigrationFromV1ToV2) {
+        // this block just exists to ignore phantom changes that are only inferred during migration from v1 to v2
+        // TODO: remove this special casing once we remove the suppport for migrating from v1 to v2. Then we can just do the same things as with the checks above.
+        import ReservedFields._
+        () match {
+          case _ if previousField.name == createdAtFieldName && nextField.behaviour.contains(CreatedAtBehaviour) =>
+            false
+          case _ if previousField.name == updatedAtFieldName && nextField.behaviour.contains(UpdatedAtBehaviour) =>
+            false
+          case _ if previousField.name == idFieldName && nextField.behaviour.contains(IdBehaviour(IdStrategy.Auto)) =>
+            false
+          case _ if previousField.isScalarList && nextField.behaviour.contains(ScalarListBehaviour(ScalarListStrategy.Relation)) =>
+            false
+          case _ =>
+            previousField.behaviour != nextField.behaviour
+        }
+      } else {
+        previousField.behaviour != nextField.behaviour
+      }
+      if didSomethingChangeInTheField || didBehaviourChange
     } yield {
       UpdateField(
         model = previousModelName,

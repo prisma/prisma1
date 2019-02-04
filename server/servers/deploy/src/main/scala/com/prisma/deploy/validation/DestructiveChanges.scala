@@ -2,6 +2,7 @@ package com.prisma.deploy.validation
 
 import com.prisma.deploy.connector.{ClientDbQueries, DeployConnector}
 import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
+import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
 import org.scalactic.{Bad, Good, Or}
@@ -10,18 +11,39 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
-  val previousSchema = project.schema
+  val previousSchema        = project.schema
+  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
 
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
     checkAgainstExistingData.map { results =>
       val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
-      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError     => error }
-      if (inconsistencyErrors.isEmpty) {
+      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError => error }
+      val errors                                     = inconsistencyErrors ++ missingCreatedAtOrUpdatedAtDirectives
+      if (errors.isEmpty) {
         Good(destructiveWarnings)
       } else {
-        Bad(inconsistencyErrors)
+        Bad(errors)
       }
     }
+  }
+
+  private def missingCreatedAtOrUpdatedAtDirectives = {
+    def errorMessage(fieldName: String) = {
+      s"You are migrating to the new datamodel with the field `$fieldName` but is missing the directive `@$fieldName`. Please specify the field as `$fieldName: DateTime! @$fieldName` to keep its original behaviour."
+    }
+    for {
+      model <- nextSchema.models
+      field <- model.scalarFields
+      if isMigrationFromV1ToV2
+      error <- field.name match {
+                case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
+                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.createdAtFieldName)))
+                case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
+                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.updatedAtFieldName)))
+                case _ =>
+                  None
+              }
+    } yield error
   }
 
   private def checkAgainstExistingData: Future[Vector[DeployResult]] = {
@@ -60,8 +82,11 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
         clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
-              DeployError(`type` = model.name,
-                          description = s"You are creating a required field but there are already nodes present that would violate that constraint."))
+              DeployError(
+                `type` = model.name,
+                field = field.name,
+                description = s"You are creating a required field but there are already nodes present that would violate that constraint."
+              ))
           case false => Vector.empty
         }
 
@@ -79,6 +104,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
               Vector(
                 DeployError(
                   `type` = model.name,
+                  field = field.name,
                   description =
                     s"You are adding a singular backrelation field to a type but there are already pairs in the relation that would violate that constraint."
                 ))
@@ -103,17 +129,38 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
   }
 
   private def deleteFieldValidation(x: DeleteField) = {
-    val model    = previousSchema.getModelByName_!(x.model)
-    val isScalar = model.fields.find(_.name == x.name).get.isScalar
+    val model = previousSchema.getModelByName_!(x.model)
+    val field = model.getFieldByName_!(x.name)
 
-    if (isScalar) {
+    val accidentalRemovalError = field match {
+      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.createdAtFieldName =>
+        Some(
+          DeployError(
+            model.name,
+            field.name,
+            s"You are removing the field `${ReservedFields.createdAtFieldName}` while migrating to the new datamodel. Add the field `createdAt: DateTime! @createdAt` explicitly to your model to keep this functionality."
+          ))
+      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.updatedAtFieldName =>
+        Some(
+          DeployError(
+            model.name,
+            field.name,
+            s"You are removing the field `${ReservedFields.updatedAtFieldName}` while migrating to the new datamodel. Add the field `updatedAt: DateTime! @updatedAt` explicitly to your model to keep this functionality."
+          ))
+      case _ =>
+        None
+    }
+
+    val dataLossError = if (field.isScalar) {
       clientDbQueries.existsByModel(model).map {
-        case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
+        case true  => Vector(DeployWarnings.dataLossField(model.name, field.name))
         case false => Vector.empty
       }
     } else {
       validationSuccessful
     }
+
+    dataLossError.map(errors => errors ++ accidentalRemovalError)
   }
 
   private def updateFieldValidation(x: UpdateField) = {
