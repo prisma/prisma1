@@ -26,3 +26,4 @@ case class UpdateRelationTable(project: Project, previousRelation: Relation, nex
 
 case class CreateInlineRelation(project: Project, relation: Relation, model: Model, references: Model, column: String) extends DeployMutaction
 case class DeleteInlineRelation(project: Project, relation: Relation, model: Model, references: Model, column: String) extends DeployMutaction
+case class UpdateInlineRelation(project: Project, previous: Relation, next: Relation)                                  extends DeployMutaction
