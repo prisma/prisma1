@@ -49,6 +49,7 @@
       "/node_modules/",
       "helpers.ts",
       "connectionDetails.ts",
+      "/document/",
       "/data/",
       "dist"
     ],

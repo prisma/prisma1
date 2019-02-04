@@ -4,6 +4,8 @@ import {
   IColumn,
   ITableRelation,
   IIndex,
+  IInternalEnumInfo,
+  IEnum,
 } from '../relationalConnector'
 import * as _ from 'lodash'
 import { Client } from 'pg'
@@ -38,8 +40,9 @@ export class PostgresConnector extends RelationalConnector {
   protected createIntrospectionResult(
     models: ITable[],
     relations: ITableRelation[],
+    enums: IEnum[]
   ): RelationalIntrospectionResult {
-    return new PostgresIntrospectionResult(models, relations)
+    return new PostgresIntrospectionResult(models, relations, enums)
   }
 
   protected async query(query: string, params?: any[]): Promise<any[]> {
@@ -129,14 +132,38 @@ export class PostgresConnector extends RelationalConnector {
       return {
         tableName: row.table_name as string,
         name: row.index_name as string,
-        fields: this.parseIndexColumns(row.column_names),
+        fields: this.parseJoinedArray(row.column_names),
         unique: row.is_unique as boolean,
         isPrimaryKey: row.is_primary_key as boolean,
       }
     })
   }
 
-  private parseIndexColumns(arrayAsString: string): string[] {
+  private parseJoinedArray(arrayAsString: string): string[] {
+    if(arrayAsString === null || arrayAsString === undefined) {
+      return []
+    }
     return arrayAsString.split(',').map(x => x.trim())
+  }
+
+
+  protected async queryEnums(schemaName: string): Promise<IInternalEnumInfo[]> {
+    const enumQuery = `
+      SELECT
+        t.typname AS "enumName",  
+        array_to_string(array_agg(e.enumlabel), ',') AS "enumValues"
+      FROM pg_type t 
+        JOIN pg_enum e ON t.oid = e.enumtypid  
+        JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+      WHERE 
+          n.nspname = $1::text
+      GROUP BY t.typname`
+
+      return (await this.query(enumQuery, [schemaName])).map(row => {
+        return {
+          name: row.enumName as string,
+          values: this.parseJoinedArray(row.enumValues)
+        }
+      })
   }
 }

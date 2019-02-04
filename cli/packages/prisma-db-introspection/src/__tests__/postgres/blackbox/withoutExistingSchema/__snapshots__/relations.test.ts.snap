@@ -3,39 +3,41 @@
 exports[`Introspector relation with inline relation column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  id: Int! @unique
   product_id: Product
 }
 
 type Product @pgTable(name: \\"product\\") {
+  bill: Bill
   description: String!
-  id: Int!
+  id: Int! @unique
 }"
 `;
 
 exports[`Introspector relation with inline relation column NOT NULL 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  id: Int! @unique
   product_id: Product!
 }
 
 type Product @pgTable(name: \\"product\\") {
+  bill: Bill!
   description: String!
-  id: Int!
+  id: Int! @unique
 }"
 `;
 
 exports[`Introspector relation with relation table 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
-  product: [Product!]! @relation(name: \\"bill_product\\")
+  id: Int! @unique
+  product: [Product!]!
 }
 
 type Product @pgTable(name: \\"product\\") {
-  bill: [Bill!]! @relation(name: \\"bill_product\\")
-  id: Int!
+  bill: [Bill!]!
+  id: Int! @unique
   product: String!
 }"
 `;
@@ -43,7 +45,8 @@ type Product @pgTable(name: \\"product\\") {
 exports[`Introspector relation with relation table with extra column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   bill: String!
-  id: Int!
+  bill_product: Bill_product
+  id: Int! @unique
 }
 
 type Bill_product @pgTable(name: \\"bill_product\\") {
@@ -53,7 +56,8 @@ type Bill_product @pgTable(name: \\"bill_product\\") {
 }
 
 type Product @pgTable(name: \\"product\\") {
-  id: Int!
+  bill_product: Bill_product
+  id: Int! @unique
   product: String!
 }"
 `;

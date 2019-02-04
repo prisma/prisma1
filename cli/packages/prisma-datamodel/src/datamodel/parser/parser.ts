@@ -35,9 +35,6 @@ export default abstract class Parser {
 
     this.resolveRelations(types)
 
-    // Sort types alphabetically
-    types.sort(({ name: a }, { name: b }) => (a > b ? 1 : -1))
-
     // That's it.
     // We could check our model here, if we wanted to.
     // Possible checks:
@@ -242,7 +239,7 @@ export default abstract class Parser {
    * Gets all reserved directive keys. 
    */
   protected getReservedDirectiveNames() {
-    return [DirectiveKeys.default, DirectiveKeys.isEmbedded, DirectiveKeys.db, DirectiveKeys.isCreatedAt, DirectiveKeys.isUpdatedAt, DirectiveKeys.isUnique, DirectiveKeys.isId, DirectiveKeys.index]
+    return [DirectiveKeys.default, DirectiveKeys.isEmbedded, DirectiveKeys.db, DirectiveKeys.isCreatedAt, DirectiveKeys.isUpdatedAt, DirectiveKeys.isUnique, DirectiveKeys.isId, DirectiveKeys.index, DirectiveKeys.relation]
   }
 
   /**
@@ -254,7 +251,7 @@ export default abstract class Parser {
     const reservedDirectiveNames = this.getReservedDirectiveNames()
 
     for(const directive of fieldOrType.directives) {
-      if(reservedDirectiveNames.includes(directive.name)) {
+      if(reservedDirectiveNames.includes(directive.name.value)) {
         continue
       }
 

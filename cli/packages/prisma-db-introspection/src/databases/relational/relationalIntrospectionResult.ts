@@ -1,21 +1,45 @@
 import { IntrospectionResult } from '../../common/introspectionResult'
-import { ITable, IColumn, IIndex, ITableRelation } from './relationalConnector'
-import { ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase } from 'prisma-datamodel'
+import { ITable, IColumn, IIndex, ITableRelation, IEnum } from './relationalConnector'
+import { ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase, TypeIdentifiers } from 'prisma-datamodel'
+
+/*
+Relational Introspector changes
+ [x] Inline relations 1:1 vs 1:n (via unique constraint)
+ [ ] Inline relations 1:1 vs 1:n (via data inspection)
+ [x] Always add back relations for inline relations
+ [x] Correctly handle scalar list tables
+ [ ] Add unit test for scalar list table handling 
+Postgres introspector changes
+ [x] Turn string field with isId into ID field
+Renderer changes
+ [ ] Remove `@relation` if only one relation from A to B
+ [ ] Make sorting in renderer optional by parameter
+Normalizer changes
+ [ ] db/pgColumn directive not picked up correctly
+ [x] preserve order of fields and types in respect to ref datamodel
+ [ ] Add unit tests for postgres introspection with existing ref datamodel
+ [ ] hide createdAt/updatedAt if also hidden in the reference datamodel
+ [ ] hide back relations if also hidden in the reference datamodel
+ [ ] in v1: handle join tables for 1:n or 1:1 relations correclty, e.g. do not generate a n:n relation in this case
+ [ ] migrating v1 to v2: In the case above, add a @relation(link: TABLE) directive.
+*/
 
 export abstract class RelationalIntrospectionResult extends IntrospectionResult {
 
   protected model: ITable[]
   protected relations: ITableRelation[]
+  protected enums: IEnum[]
 
-  constructor(model: ITable[], relations: ITableRelation[], databaseType: DatabaseType, renderer?: Renderer) {
+  constructor(model: ITable[], relations: ITableRelation[], enums: IEnum[], databaseType: DatabaseType, renderer?: Renderer) {
     super(databaseType, renderer)
 
     this.model = model
     this.relations = relations
+    this.enums = enums
   }
 
   public getDatamodel(): ISDL {
-    return this.infer(this.model, this.relations)
+    return this.infer(this.model, this.enums, this.relations)
   }
 
   protected resolveRelations(types: IGQLType[], relations: ITableRelation[]) {
@@ -33,6 +57,14 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     }
   }
 
+  protected normalizeRelatioName(name: string) {
+    if(name.startsWith('_')) {
+      return name.substring(1) // This is most likely a prisma relation name
+    } else {
+      return name
+    }
+  }
+
   protected resolveRelation(types: IGQLType[], relation: ITableRelation) { 
     // Correctly sets field types according to given FK constraints.
     for(const typeA of types) {
@@ -47,6 +79,35 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
               }
 
               fieldA.type = typeB
+              
+              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint. Tell Tim.
+
+              // Add back connecting field
+              const connectorFieldAtB: IGQLField = {
+                // TODO - how do we name that field? 
+                // Problems: 
+                // * Conflicts
+                // * Need to identify field in existing datamodel to fix naming, fix cardinality or hide
+                name: camelCase(typeA.name),
+                databaseName: null,
+                defaultValue: null,
+                isList: fieldA.isUnique,
+                isCreatedAt: false,
+                isUpdatedAt: false,
+                isId: false,
+                isReadOnly: false,
+                isRequired: fieldA.isRequired, // TODO: Not sure if that makes sense
+                isUnique: false,
+                relatedField: fieldA,
+                type: typeA,
+                relationName: null,
+                comments: [],
+                directives: []
+              }
+              
+              // Hook up connector fields
+              fieldA.relatedField = connectorFieldAtB
+              typeB.fields.push(connectorFieldAtB)
               return
             }
           }
@@ -57,6 +118,66 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     GQLAssert.raise(`Failed to resolve FK constraint ${relation.sourceTable}.${relation.sourceColumn} -> ${relation.targetTable}.${relation.targetColumn}.`)
   }
   
+  /**
+   * TODO: This is not captured yet by unit tests.
+   */
+  protected hideScalarListTypes(types: IGQLType[]): IGQLType[] {
+
+    const scalarListTypes: IGQLType[] = []
+
+    for(const type of types) {
+      for(const field of type.fields) {
+        for(const candidate of types) {
+          // A type is only a scalar list iff it has
+          // * name of ${type.name}_${field.name}
+          // * Has exactly three fields
+          //     * nodeId: typeof type!
+          //     * position: Int!
+          //     * value: ?
+          // TODO: Tim mentioned, but not observed in the wild.
+          // * compound index over nodeId and position
+
+          if(candidate.fields.length !== 3)
+            continue
+
+          if(candidate.name === `${type.name}_${field.name}`)
+            continue
+
+          const [nodeId] = candidate.fields.filter(field => 
+            field.name === 'nodeId' && 
+            field.type === type && 
+            field.isRequired == true && 
+            field.isList === false)
+
+          const [position] = candidate.fields.filter(field => 
+            field.name === 'position' && 
+            field.type === TypeIdentifiers.integer && 
+            field.isRequired == true && 
+            field.isList === false)
+
+
+          const [value] = candidate.fields.filter(field => 
+            field.name === 'value' && 
+            field.isRequired == true && 
+            field.isList === false)
+
+          if(nodeId === undefined || position === undefined || value === undefined) 
+            continue
+
+          // If we got so far, we have found a scalar list type. Hurray!
+          scalarListTypes.push(candidate)
+          
+          // Update the field to show a scalar list
+          field.type = value.type
+          field.isList = true
+        }
+      }
+    }
+    
+    // Filter out scalar list types
+    return types.filter(type => !scalarListTypes.includes(type))
+  }
+
   /**
    * Removes all types which are only there for NM relations
    * @param types
@@ -95,7 +216,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           defaultValue: null,
           relatedField: null,
           databaseName: null,
-          relationName: type.name
+          relationName: this.normalizeRelatioName(type.name)
         }
 
         const relatedFieldForB: IGQLField = {
@@ -113,7 +234,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           defaultValue: null,
           relatedField: relatedFieldForA,
           databaseName: null,
-          relationName: type.name
+          relationName: this.normalizeRelatioName(type.name)
         }
 
         relatedFieldForA.relatedField = relatedFieldForB
@@ -146,20 +267,38 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types
   }
 
+  /**
+   * Hides unique inidices and marks the corresponding fields as unique instead.
+   * @param types 
+   */
+  protected hideUniqueIndices(types: IGQLType[]) {
+    for(const type of types) {
+      const uniqueIndices = type.indices.filter(index => index.fields.length === 1 && index.unique)
+
+      for(const uniqueIndex of uniqueIndices) {
+        uniqueIndex.fields[0].isUnique = true
+        type.indices = type.indices.filter(x => x !== uniqueIndex)
+      }
+    }
+    return types
+  }
+
   protected abstract isTypeReserved(type: IGQLType): boolean
 
   protected hideReservedTypes(types: IGQLType[]) {
     return types.filter(x => !this.isTypeReserved(x))
   }
 
-  protected infer(model: ITable[], relations: ITableRelation[]): ISDL {
-    // TODO: Enums? 
-
-    let types = model.map(x => this.inferObjectType(x))
+  protected infer(model: ITable[], enums: IEnum[], relations: ITableRelation[]): ISDL {
+    // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
+    // Ask tim, this is an important descision for the SDK
+    let types = [...model.map(x => this.inferObjectType(x)), ...enums.map(x => this.inferEnumType(x))]
     types = this.resolveRelations(types, relations)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
+    types = this.hideUniqueIndices(types)
     types = this.hideIndicesOnRelatedFields(types)
+    types = this.hideJoinTypes(types)
 
     return {
       comments: [],
@@ -174,6 +313,37 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       fields: fieldCandidates,
       name: index.name,
       unique: index.unique
+    }
+  }
+
+  protected inferEnumType(model: IEnum): IGQLType {
+    const values = model.values.map((x: string): IGQLField => ({
+      name: x,
+      isCreatedAt: false,
+      isId: false,
+      isList: false,
+      isReadOnly: false,
+      isRequired: false,
+      isUnique: false,
+      isUpdatedAt: false,
+      relatedField: null,
+      relationName: null,
+      type: TypeIdentifiers.string,
+      defaultValue: null,
+      databaseName: null,
+      directives: [],
+      comments: []
+    }))
+
+    return {
+      name: model.name,
+      fields: values,
+      isEnum: true,
+      isEmbedded: false,
+      databaseName: null,
+      comments: [],
+      directives: [],
+      indices: []
     }
   }
 
@@ -213,6 +383,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       }
     }
 
+    // We need info about indices for resolving the exact type, as String is mapped to ID.
+    // Also, we need info about the actual type before we resolve default values.
+    for(const field of fields) {
+      this.inferFieldTypeAndDefaultValue(field)
+    }
+
     return {
       name: model.name,
       isEmbedded: false, // Never
@@ -236,23 +412,13 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       })
     }
 
-    let type: string | null = this.toTypeIdentifyer(field.type)
-
-    if(type === null) {
-      comments.push({
-        text: `Type ${field.type} is not supported`,
-        isError: true
-      })
-      type = field.type
-    }
-
-    return {
+    const gqlField: IGQLField = {
       name: field.name,
       isUnique: field.isUnique,
       isRequired: !field.isNullable,
-      defaultValue: field.defaultValue !== null ? this.parseDefaultValue(field.defaultValue, type) : null,
+      defaultValue: field.defaultValue,
       isList: field.isList,
-      type: type as string,
+      type: field.type,
       isId: false, // Will resolve later, from indices
       relatedField: null,
       relationName: null,
@@ -263,6 +429,28 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       directives: [],
       databaseName: null
     }
+
+    return gqlField
+  }
+
+  protected inferFieldTypeAndDefaultValue(field: IGQLField) {
+    GQLAssert.raiseIf(typeof field.type !== 'string', 'Must be called before resolving relations')
+    let type: string | null = this.toTypeIdentifyer(field.type as string, field)
+
+    if(type === null) {
+      field.comments.push({
+        text: `Type ${field.type} is not supported`,
+        isError: true
+      })
+      // Keep native type and register an error.
+    } else {
+      field.type = type
+    }
+
+    if(field.defaultValue !== null) {
+      GQLAssert.raiseIf(typeof field.defaultValue !== 'string', 'Must be called with unparsed default values.')
+      field.defaultValue = this.parseDefaultValue(field.defaultValue as string, field.type as string)
+    }
   }
 
   /**
@@ -270,7 +458,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
    * field is marked with an error comment.
    * @param typeName 
    */
-  protected abstract toTypeIdentifyer(typeName: string): TypeIdentifier | null
+  protected abstract toTypeIdentifyer(typeName: string, fieldInfo: IGQLField): TypeIdentifier | null
 
   protected abstract parseDefaultValue(defaultValueString: string, type: string): string | null
 }

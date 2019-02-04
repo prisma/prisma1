@@ -1,22 +1,22 @@
 import Parser from './parser'
 import { IGQLField, IGQLType } from '../model'
 
-export const idFieldName = 'id'
-export const createdAtFieldName = 'createdAt'
-export const updatedAtFieldName = 'updatedAt'
-
 /**
  * Parser implementation for related models. 
  */
 export default class RelationalParser extends Parser {
+  public static idFieldName = 'id'
+  public static createdAtFieldName = 'createdAt'
+  public static updatedAtFieldName = 'updatedAt'
+
   protected isIdField(field: any): boolean {
-    return field.name.value === idFieldName
+    return field.name.value === RelationalParser.idFieldName
   }
   protected isCreatedAtField(field: any): boolean {
-    return field.name.value === createdAtFieldName
+    return field.name.value === RelationalParser.createdAtFieldName
   }
   protected isUpdatedAtField(field: any): boolean {
-    return field.name.value === updatedAtFieldName
+    return field.name.value === RelationalParser.updatedAtFieldName
   }
   protected isEmbedded(type: any): boolean {
     // Related models are never embedded

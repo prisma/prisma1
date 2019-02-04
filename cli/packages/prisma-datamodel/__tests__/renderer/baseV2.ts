@@ -37,7 +37,7 @@ describe(`Renderer datamodel v2 test`, () => {
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })

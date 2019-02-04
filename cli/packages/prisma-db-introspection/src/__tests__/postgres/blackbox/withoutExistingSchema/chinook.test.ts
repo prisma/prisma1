@@ -1,9 +1,8 @@
-import Connectors from '../../connectors'
+import Connectors from '../../../../connectors'
 import { Client } from 'pg'
-import { connectionDetails } from './connectionDetails'
-import { PostgresConnector } from '../../databases/relational/postgres/postgresConnector'
+import { connectionDetails } from '../connectionDetails'
+import { PostgresConnector } from '../../../../databases/relational/postgres/postgresConnector'
 import { DatabaseType } from 'prisma-datamodel'
-import { connect } from 'tls';
 
 async function introspect(client: Client) {
   return (await Connectors.create(DatabaseType.postgres, client).introspect('databaseintrospector')).renderToNormalizedDatamodelString()

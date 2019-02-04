@@ -1,5 +1,5 @@
 import { Renderer, DatabaseType, ISDL, DefaultRenderer } from 'prisma-datamodel'
-import ModelNameAndDirectiveNormalizer from './modelNameAndDirectiveNormalizer';
+import DefaultNormalizer from './normalization/defaultNormalizer'
 
 export abstract class IntrospectionResult {
   public renderer: Renderer
@@ -13,17 +13,26 @@ export abstract class IntrospectionResult {
   public abstract getDatamodel(): ISDL
   
   public renderToDatamodelString() : string {
-    return this.renderer.render(this.getDatamodel())
+    return this.renderer.render(this.getDatamodel(), true)
   }
 
   public getNormalizedDatamodel(baseModel: ISDL | null = null) : ISDL {
     const model = this.getDatamodel()
-    new ModelNameAndDirectiveNormalizer(baseModel).normalize(model)
+    
+    DefaultNormalizer.create(this.databaseType, baseModel).normalize(model)
+
     return model
   }
 
+  /**
+   * Performs name normalization and order normalization.
+   * 
+   * If a base model is given, order and additional directives are taken
+   * from the base model.
+   * @param baseModel 
+   */
   public renderToNormalizedDatamodelString(baseModel: ISDL | null = null) : string {
-    return this.renderer.render(this.getNormalizedDatamodel(baseModel))
+    return this.renderer.render(this.getNormalizedDatamodel(baseModel), baseModel === null)
   }
 
 }

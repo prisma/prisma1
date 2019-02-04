@@ -1,9 +1,4 @@
 import Renderer from './renderer'
-import {
-  idFieldName,
-  createdAtFieldName,
-  updatedAtFieldName,
-} from '../parser/relationalParser'
 import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from '../model'
 import GQLAssert from '../../util/gqlAssert'
 /**

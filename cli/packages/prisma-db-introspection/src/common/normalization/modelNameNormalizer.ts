@@ -1,13 +1,14 @@
 import { singular } from 'pluralize'
 import { IGQLType, IGQLField, ISDL, capitalize, plural, toposort } from 'prisma-datamodel'
+import { INormalizer } from './normalizer';
 
-export default class ModelNameNormalizer {
+export default class ModelNameNormalizer implements INormalizer {
   public normalize(model: ISDL) {
     // We need to sort types according to topological order for name normalization.
     // Otherwise embedded type naming might break as embedded types depend on 
     // their parent type. 
     for(const type of toposort(model.types)) {
-      this.normalizeType(type)
+      this.normalizeType(type, model)
     } 
   }
 
@@ -22,19 +23,23 @@ export default class ModelNameNormalizer {
     }
   }
 
-  protected normalizeType(type: IGQLType) {
-    this.assignName(type, capitalize(singular(type.name)))
+  protected normalizeType(type: IGQLType, parentModel: ISDL, forceNoRename: boolean = false) {
+    
+    if(!forceNoRename) {
+      this.assignName(type, capitalize(singular(type.name)))
+    }
 
     for(const field of type.fields) {
-      this.normalizeField(field, type)
+      this.normalizeField(field, type, parentModel)
     }
   }
 
-  protected normalizeField(field: IGQLField, parentType: IGQLType) {
+  protected normalizeField(field: IGQLField, parentType: IGQLType, parentModel: ISDL) {
     // Make embedded type names pretty
     if(typeof field.type !== 'string' && field.type.isEmbedded) {
       if(!field.type.databaseName)
         field.type.databaseName = field.type.name
+
       field.type.name = parentType.name + capitalize(singular(field.name))
     }
   }

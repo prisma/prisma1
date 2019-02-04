@@ -9,7 +9,6 @@ type User {
   phone: String!
   responseRate: Float
   responseTime: Int
-
   isSuperHost: Boolean! @default(value: "false")
   ownedPlaces: [Place!]!
   location: Location

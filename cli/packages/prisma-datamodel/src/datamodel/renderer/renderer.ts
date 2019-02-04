@@ -9,20 +9,15 @@ const indent = '  '
 const comment = '#'
 
 export default abstract class Renderer {
-  public render(input: ISDL): string {
 
+  // We keep optional sorting support because
+  // it increases testability of this class.
+  private sortBeforeRendering: boolean
+
+  public render(input: ISDL, sortBeforeRendering: boolean = false): string {
+    this.sortBeforeRendering = sortBeforeRendering
     // Sort alphabetically. Enums last. 
-    const sortedTypes = [...input.types].sort(
-      (a, b) => {
-        if(a.isEnum === b.isEnum) {
-          return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
-        } else if(b.isEnum) {
-          return -1
-        } else {
-          return 1
-        }
-      }
-    )
+    const sortedTypes = this.sortTypes(input.types)
 
     return sortedTypes.map(t => {
       if(t.isEnum) {
@@ -101,7 +96,7 @@ export default abstract class Renderer {
     this.createReservedTypeDirectives(type, typeDirectives)
 
     const renderedDirectives = this.renderDirectives(typeDirectives)
-    const sortedFields = [...type.fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
+    const sortedFields = this.sortFields(type.fields)
     const renderedFields = sortedFields.map(x => this.renderField(x))
 
     const renderedTypeName = renderedDirectives.length > 0 ?
@@ -306,11 +301,38 @@ export default abstract class Renderer {
     if (
       strType === TypeIdentifiers.string ||
       strType === TypeIdentifiers.json ||
-      strType === TypeIdentifiers.dateTime
+      strType === TypeIdentifiers.dateTime ||
+      strType === TypeIdentifiers.boolean
     ) {
       return `"${value}"`
     } else {
       return value
+    }
+  }
+
+  protected sortTypes(types: IGQLType[]) {
+    if(!this.sortBeforeRendering) {
+      return types
+    } else {
+      return [...types].sort(
+        (a, b) => {
+          if(a.isEnum === b.isEnum) {
+            return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
+          } else if(b.isEnum) {
+            return -1
+          } else {
+            return 1
+          }
+        }
+      )
+    }
+  }
+
+  protected sortFields(fields: IGQLField[]) {
+    if(!this.sortBeforeRendering) {
+      return fields
+    } else {
+      return [...fields].sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1)
     }
   }
 }

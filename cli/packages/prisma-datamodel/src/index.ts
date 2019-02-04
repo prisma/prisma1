@@ -1,3 +1,5 @@
+export { DirectiveKeys } from './datamodel/directives';
+
 export {
   ISDL,
   IGQLType,
@@ -11,6 +13,9 @@ export {
   GQLMultiRelationField,
   GQLScalarField,
   cloneSchema,
+  cloneField, 
+  cloneIndices, 
+  cloneType
 } from './datamodel/model'
 export { default as Parser } from './datamodel/parser'
 export { default as Renderer } from './datamodel/renderer/renderer'
@@ -26,3 +31,10 @@ export { default as Renderers } from './datamodel/renderer'
 export {
   default as RelationalRendererV2,
 } from './datamodel/renderer/relationalRendererV2'
+
+export {
+  default as RelationalRenderer,
+} from './datamodel/renderer/relationalRenderer'
+export {
+  default as RelationalParser,
+} from './datamodel/parser/relationalParser'
