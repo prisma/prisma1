@@ -30,6 +30,7 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
       case 'json': return TypeIdentifiers.json
       case '_date':
       case 'date':
+      case 'timestampz':
       case 'timestamp': return TypeIdentifiers.dateTime
       case 'uuid': return TypeIdentifiers.uuid
       default: return null
