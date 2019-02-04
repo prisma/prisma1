@@ -251,8 +251,8 @@ export default class IntrospectCommand extends Command {
       const numTables = sdl.types.length
 
       const renderedSdl = prototype
-        ? await new TmpRelationalRendererV2().render(sdl)
-        : await introspection.renderToNormalizedDatamodelString()
+        ? await new TmpRelationalRendererV2().render(sdl) // TODO: Move tmp renderer back to datamodel
+        : await introspection.renderToNormalizedDatamodelString(datamodel)
 
       // Mongo has .close, Postgres .end
       if (typeof client.close === 'function') {
