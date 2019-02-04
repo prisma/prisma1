@@ -58,3 +58,21 @@ case class DeleteInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBu
     )
   }
 }
+
+case class UpdateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateInlineRelation] {
+  override def execute(mutaction: UpdateInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    builder.renameColumn(
+      project = mutaction.project,
+      tableName = mutaction.previous.relationTableName,
+      oldColumnName = mutaction.previous.inlineManifestation.get.referencingColumn,
+      newColumnName = mutaction.next.inlineManifestation.get.referencingColumn
+    )
+  }
+
+  override def rollback(mutaction: UpdateInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    execute(
+      UpdateInlineRelation(project = mutaction.project, previous = mutaction.next, next = mutaction.previous),
+      schemaBeforeMigration
+    )
+  }
+}

@@ -5,7 +5,7 @@ import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective,
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.RelationNameNeeded
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, RelationLinkListCapability}
+import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models.Manifestations._
 import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
@@ -304,7 +304,7 @@ case class SchemaInferrerImpl(
             case (None, None) if relationField.isList => manifestationForField(relatedField.tpe, relatedField, relationName)
             case (_, None)                            => manifestationForField(prismaType, relationField, relationName)
             case (None, _)                            => manifestationForField(relatedField.tpe, relatedField, relationName)
-            case (_, _)                               => sys.error("must not happen")
+            case (_, _)                               => sys.error("Must not happen.")
           }
 
         case None =>
@@ -325,17 +325,15 @@ case class SchemaInferrerImpl(
 
   private def manifestationForField(prismaType: PrismaType, relationField: RelationalPrismaField, relationName: String): Option[RelationLinkManifestation] = {
     val activeStrategy = relationField.strategy match {
-      case Some(strat) => strat
+      case Some(strat)                                                                                  => strat
+      case None if prismaSdl.relationTable(relationName).isDefined                                      => RelationStrategy.Table
+      case None if relationField.hasManyToManyRelation && capabilities.has(RelationLinkTableCapability) => RelationStrategy.Table
+      case None if relationField.hasManyToManyRelation && capabilities.has(RelationLinkListCapability)  => RelationStrategy.Inline
+      case None if relationField.hasOneToManyRelation && relationField.isOne                            => RelationStrategy.Inline
       case None =>
-        if (capabilities.has(RelationLinkListCapability)) {
-          RelationStrategy.Inline
-        } else if (relationField.hasManyToManyRelation) {
-          RelationStrategy.Table
-        } else if (relationField.hasOneToManyRelation && relationField.isOne) {
-          RelationStrategy.Inline
-        } else {
-          sys.error("One to one relations must not have the AUTO strategy")
-        }
+        sys.error(
+          s"The datamodel validation should have required an explicit strategy here. Relation field was ${relationField.name} and related field was ${relationField.relatedField
+            .map(_.name)}")
     }
 
     activeStrategy match {
