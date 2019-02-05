@@ -39,15 +39,17 @@ export class MysqlConnector extends RelationalConnector {
     return new MysqlIntrospectionResult(models, relations, enums)
   }
 
-  protected getIsNullableConstant() {
-    return "1"
-  }
-
-
   protected getTypeColumnName() {
     return 'COLUMN_TYPE'
   }
 
+  protected parameter(count: number, type: string) {
+    return `?`
+  }
+
+  protected hasReferentialConstraintsTableName() {
+    return true
+  }
 
   // TODO: Unit test for column comments
   protected async queryColumnComment(
@@ -61,9 +63,9 @@ export class MysqlConnector extends RelationalConnector {
       FROM 
         information_schema.columns
       WHERE 
-        table_schema = $1::text
-        AND table_name = $2::text
-        AND column_name = $3::text
+        table_schema = ?
+        AND table_name = ?
+        AND column_name = ?
     `
     const [comment] = (await this.query(commentQuery, [
       schemaName,
@@ -71,7 +73,7 @@ export class MysqlConnector extends RelationalConnector {
       columnName,
     ])).map(row => row.column_comment as string)
 
-    if (comment === undefined) {
+    if (comment === undefined  || comment === '') {
       return null
     } else {
       return comment
@@ -89,8 +91,8 @@ export class MysqlConnector extends RelationalConnector {
       FROM 
         information_schema.statistics
       WHERE
-        table_schema = $1::text
-        AND table_name = $2::text
+        table_schema = ?
+        AND table_name = ?
       GROUP BY
         table_name, index_name, non_unique
     `
@@ -120,7 +122,8 @@ export class MysqlConnector extends RelationalConnector {
       FROM
         information_schema.columns 
       WHERE 
-        column_type like 'enum(%'`
+        column_type like 'enum(%'      
+        AND table_schema = ?`
 
       return (await this.query(enumQuery, [schemaName])).map(row => {
         const enumValues = row.enumValues as string
@@ -133,5 +136,46 @@ export class MysqlConnector extends RelationalConnector {
           values: this.parseJoinedArray(strippedEnumValues)
         }
       })
+  }
+
+  /**
+   * We have extra join conditions in mysql.
+   * @param schemaName 
+   */
+  protected async listRelations(schemaName: string) : Promise<ITableRelation[]> {
+    const fkQuery = `  
+      SELECT 
+        keyColumn1.constraint_name AS "fkConstraintName",
+        keyColumn1.table_name AS "fkTableName", 
+        keyColumn1.column_name AS "fkColumnName", 
+        keyColumn2.constraint_name AS "referencedConstraintName",
+        keyColumn2.table_name AS "referencedTableName", 
+        keyColumn2.column_name AS "referencedColumnName" 
+      FROM 
+        information_schema.referential_constraints refConstraints
+      INNER JOIN
+        information_schema.key_column_usage AS keyColumn1
+        ON keyColumn1.constraint_catalog = refConstraints.constraint_catalog
+        AND keyColumn1.constraint_schema = refConstraints.constraint_schema
+        AND keyColumn1.constraint_name = refConstraints.constraint_name
+        -- Extra join needed in mysql
+        AND keyColumn1.table_name = refConstraints.table_name
+      INNER JOIN
+        information_schema.key_column_usage AS keyColumn2
+        ON keyColumn2.constraint_catalog = refConstraints.unique_constraint_catalog
+        AND keyColumn2.constraint_schema = refConstraints.unique_constraint_schema
+        AND keyColumn2.constraint_name = refConstraints.unique_constraint_name
+        AND keyColumn2.ordinal_position = keyColumn1.ordinal_position
+        -- Extra join needed in mysql
+        AND keyColumn2.table_name = refConstraints.referenced_table_name
+      WHERE
+        refConstraints.constraint_schema = ?`
+
+    return (await this.query(fkQuery, [schemaName])).map(row => { return {
+      sourceColumn: row.fkColumnName as string,
+      sourceTable: row.fkTableName as string,
+      targetColumn: row.referencedColumnName as string,
+      targetTable: row.referencedTableName as string
+    }}) 
   }
 }

@@ -41,10 +41,12 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
       // If we have a text type on an ID field, we map to the ID type.
       case 'smallblob': return fieldInfo.isId ? TypeIdentifiers.id : TypeIdentifiers.string
       case 'bool': 
+      case 'tinyint':
       case 'bit': return TypeIdentifiers.boolean
       case 'json': return TypeIdentifiers.json
       case 'date':
       case 'time':
+      case 'datetime':
       case 'timestamp': return TypeIdentifiers.dateTime
       case 'uuid': return TypeIdentifiers.uuid
       // Special case: For enum types we auto-generate some unique name.

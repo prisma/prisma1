@@ -44,13 +44,12 @@ export class PostgresConnector extends RelationalConnector {
     return schemas.filter(schema => !schema.startsWith('pg_'))
   }
 
-  protected getIsNullableConstant() {
-    return "'YES'"
-  }
-
-
   protected getTypeColumnName() {
     return 'udt_name'
+  }
+
+  protected parameter(count: number, type: string) {
+    return `$${count}::${type}`
   }
 
 

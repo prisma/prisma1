@@ -68,9 +68,10 @@ export abstract class RelationalConnector implements IConnector {
   protected async listModels(schemaName: string): Promise<ITable[]> {
     const tables: ITable[] = []
     const allTables = await this.queryTables(schemaName)
+  
     for(const tableName of allTables) {
       const columns = await this.queryColumns(schemaName, tableName)
-      
+     
       for(const column of columns) {
         column.comment = await this.queryColumnComment(schemaName, tableName, column.name)
       }
@@ -97,19 +98,12 @@ export abstract class RelationalConnector implements IConnector {
       FROM 
         information_schema.tables
       WHERE 
-        table_schema = $1::text
+        table_schema = ${this.parameter(1, 'text')}
         -- Views are not supported yet
         AND table_type = 'BASE TABLE'`
 
     return (await this.query(allTablesQuery, [schemaName])).map(row => row.table_name as string)
   }
-
-  /**
-   * Constant to check for when looking at information_schema.columns.is_nullable.
-   * 
-   * This might be different for each database.
-   */
-  protected abstract getIsNullableConstant()
 
   /**
    * The name of the type column in information_schema.columns.
@@ -118,6 +112,11 @@ export abstract class RelationalConnector implements IConnector {
    */
   protected abstract getTypeColumnName()
 
+  /**
+   * Generates a parameter expression for the given SQL dialect.
+   */
+  protected abstract parameter(count: number, type: string)
+
   protected async queryColumns(schemaName: string, tableName: string) {
     const allColumnsQuery = `
       SELECT
@@ -125,12 +124,12 @@ export abstract class RelationalConnector implements IConnector {
         cols.column_name,
         cols.${this.getTypeColumnName()} as udt_name,
         cols.column_default,
-        cols.is_nullable = ${this.getIsNullableConstant()} as is_nullable
+        cols.is_nullable = 'YES' as is_nullable
       FROM
         information_schema.columns AS cols
       WHERE
-        cols.table_schema = $1::text
-        AND cols.table_name  = $2::text`
+        cols.table_schema = ${this.parameter(1, 'text')}
+        AND cols.table_name  = ${this.parameter(2, 'text')}`
 
     return (await this.query(allColumnsQuery, [schemaName, tableName])).map(row => { return {
       name: row.column_name as string,
@@ -147,12 +146,12 @@ export abstract class RelationalConnector implements IConnector {
   protected async listRelations(schemaName: string) : Promise<ITableRelation[]> {
     const fkQuery = `  
       SELECT 
-          keyColumn1.constraint_name AS "fkConstraintName",
-          keyColumn1.table_name AS "fkTableName", 
-          keyColumn1.column_name AS "fkColumnName",
-          keyColumn2.constraint_name AS "referencedConstraintName",
-          keyColumn2.table_name AS "referencedTableName", 
-          keyColumn2.column_name AS "referencedColumnName" 
+        keyColumn1.constraint_name AS "fkConstraintName",
+        keyColumn1.table_name AS "fkTableName", 
+        keyColumn1.column_name AS "fkColumnName", 
+        keyColumn2.constraint_name AS "referencedConstraintName",
+        keyColumn2.table_name AS "referencedTableName", 
+        keyColumn2.column_name AS "referencedColumnName" 
       FROM 
         information_schema.referential_constraints refConstraints
       INNER JOIN
@@ -167,7 +166,7 @@ export abstract class RelationalConnector implements IConnector {
         AND keyColumn2.constraint_name = refConstraints.unique_constraint_name
         AND keyColumn2.ordinal_position = keyColumn1.ordinal_position
       WHERE
-        refConstraints.constraint_schema = $1::text`
+        refConstraints.constraint_schema = ${this.parameter(1, 'text')}`
 
     return (await this.query(fkQuery, [schemaName])).map(row => { return {
       sourceColumn: row.fkColumnName as string,
