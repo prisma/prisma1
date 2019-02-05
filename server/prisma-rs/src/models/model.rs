@@ -49,7 +49,7 @@ impl ModelTemplate {
             is_embedded: self.is_embedded,
             fields: Vec::new(),
             manifestation: self.manifestation,
-            schema: schema,
+            schema,
         }));
 
         self.fields
@@ -80,7 +80,7 @@ impl Model {
         self.scalar_fields()
             .iter()
             .find(|field| field.db_name() == name)
-            .map(|field| *field)
+            .cloned()
     }
 
     pub fn scalar_fields(&self) -> Vec<&ScalarField> {

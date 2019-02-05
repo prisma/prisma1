@@ -148,7 +148,7 @@ pub enum RelationSide {
 }
 
 impl RelationSide {
-    pub fn opposite(&self) -> RelationSide {
+    pub fn opposite(self) -> RelationSide {
         match self {
             RelationSide::A => RelationSide::B,
             RelationSide::B => RelationSide::A,
@@ -210,7 +210,7 @@ impl FieldTemplate {
                     is_auto_generated: st.is_auto_generated,
                     manifestation: st.manifestation,
                     behaviour: st.behaviour,
-                    model: model,
+                    model,
                 };
 
                 Field::Scalar(scalar)
@@ -228,7 +228,7 @@ impl FieldTemplate {
                     manifestation: rt.manifestation,
                     relation_name: rt.relation_name,
                     relation_side: rt.relation_side,
-                    model: model,
+                    model,
                 };
 
                 Field::Relation(relation)

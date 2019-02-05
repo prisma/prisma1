@@ -1,11 +1,5 @@
 [lib]
-name = "prisma"
 crate-type = ["dylib", "staticlib"]
-path = "src/lib.rs"
-
-[[bin]]
-name = "prisma-server"
-path = "src/main.rs"
 
 [package]
 name = "prisma"

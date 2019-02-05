@@ -35,14 +35,14 @@ lazy_static! {
 }
 
 #[no_mangle]
-pub extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
-    let payload = unsafe { slice::from_raw_parts_mut(data, len) };
+pub unsafe extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
+    let payload = slice::from_raw_parts_mut(data, len);
     let response_payload = PBI.get_node_by_where(payload);
 
     ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
 }
 
 #[no_mangle]
-pub extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
-    unsafe { Box::from_raw(buffer) };
+pub unsafe extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
+    Box::from_raw(buffer);
 }

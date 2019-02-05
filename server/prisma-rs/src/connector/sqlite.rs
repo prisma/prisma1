@@ -119,11 +119,11 @@ impl Connector for Sqlite {
             let field_names: Vec<&str> = selector
                 .selected_fields
                 .iter()
-                .map(|field| field.db_name().as_ref())
+                .map(|field| field.db_name())
                 .collect();
 
             let table_location =
-                Self::table_location(database_name, selector.model.borrow().db_name().as_ref());
+                Self::table_location(database_name, selector.model.borrow().db_name());
 
             let query = dbg!(select_from(&table_location)
                 .columns(field_names.as_slice())
@@ -152,7 +152,7 @@ impl ToSql for PrismaValue {
             PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
             PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
             PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Float(value) => ToSqlOutput::from(*value as f64),
+            PrismaValue::Float(value) => ToSqlOutput::from(f64::from(*value)),
             PrismaValue::Int(value) => ToSqlOutput::from(*value),
             PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
             PrismaValue::DateTime(value) => value.to_sql().unwrap(),

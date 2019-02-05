@@ -69,7 +69,7 @@ impl Schema {
         self.models
             .iter()
             .find(|model| model.borrow().name == name)
-            .map(|model| model.clone())
+            .cloned()
     }
 
     pub fn is_legacy(&self) -> bool {

@@ -58,12 +58,12 @@ impl Renameable for Project {
     fn db_name(&self) -> &str {
         match self.manifestation {
             ProjectManifestation {
-                database: _,
                 schema: Some(ref schema),
+                ..
             } => schema,
             ProjectManifestation {
                 database: Some(ref database),
-                schema: _,
+                ..
             } => database,
             _ => self.id.as_ref(),
         }
