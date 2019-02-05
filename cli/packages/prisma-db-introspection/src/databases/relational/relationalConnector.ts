@@ -1,6 +1,7 @@
 import { IConnector } from "../../common/connector"
 import { TypeIdentifier, DatabaseType } from "prisma-datamodel"
 import { RelationalIntrospectionResult } from "./relationalIntrospectionResult"
+import IDatabaseClient from "../IDatabaseClient";
 
 export interface IInternalIndexInfo {
   tableName: string,
@@ -16,9 +17,18 @@ export interface IInternalEnumInfo {
 }
 
 export abstract class RelationalConnector implements IConnector {
+  protected client: IDatabaseClient
+
+  constructor(client: IDatabaseClient) {
+    this.client = client
+  }
+
   abstract getDatabaseType(): DatabaseType
   protected abstract createIntrospectionResult(models: ITable[], relations: ITableRelation[], enums: IEnum[]) : RelationalIntrospectionResult 
-  protected abstract async query(query: string, params?: any[]): Promise<any[]>
+
+  protected async query(query: string, params: any[] = []): Promise<any[]> {
+    return (await this.client.query(query, params))
+  }
 
   /**
    * Column comments are DB specific
@@ -94,28 +104,28 @@ export abstract class RelationalConnector implements IConnector {
     return (await this.query(allTablesQuery, [schemaName])).map(row => row.table_name as string)
   }
 
+  /**
+   * Constant to check for when looking at information_schema.columns.is_nullable.
+   * 
+   * This might be different for each database.
+   */
+  protected abstract getIsNullableConstant()
+
+  /**
+   * The name of the type column in information_schema.columns.
+   * 
+   * The standardized DATA_TYPE field sitself is too unspecific.
+   */
+  protected abstract getTypeColumnName()
+
   protected async queryColumns(schemaName: string, tableName: string) {
     const allColumnsQuery = `
       SELECT
         cols.ordinal_position,
         cols.column_name,
-        cols.udt_name,
-        cols.is_updatable,
+        cols.${this.getTypeColumnName()} as udt_name,
         cols.column_default,
-        cols.is_nullable = 'YES' as is_nullable,
-        EXISTS(
-          SELECT * FROM
-            information_schema.constraint_column_usage columnConstraint
-          LEFT JOIN
-            information_schema.table_constraints tableConstraints  
-          ON 
-            columnConstraint.constraint_name = tableConstraints.constraint_name
-          WHERE 
-            cols.column_name = columnConstraint.column_name
-            AND cols.table_name = columnConstraint.table_name
-            AND cols.table_schema = columnConstraint.table_schema
-            AND tableConstraints.constraint_type = 'UNIQUE'
-          ) AS is_unique
+        cols.is_nullable = ${this.getIsNullableConstant()} as is_nullable
       FROM
         information_schema.columns AS cols
       WHERE
@@ -126,8 +136,8 @@ export abstract class RelationalConnector implements IConnector {
       name: row.column_name as string,
       type: row.udt_name as string,
       isList: false,
-      readOnly: !row.is_updateable as boolean,
-      isUnique: row.is_unique as boolean,
+      readOnly: false, // Thread nothing as read only for now.
+      isUnique: false, // Will resolve via unique indexes later.
       defaultValue: row.column_default as string,
       isNullable: row.is_nullable as boolean,
       comment: null as string | null

@@ -11,8 +11,8 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   protected isTypeReserved(type: IGQLType): boolean {
     return type.name == '_RelayId'
   }
-  protected toTypeIdentifyer(typeName: string, fieldInfo: IGQLField): TypeIdentifier | null {
-    switch(typeName) {
+  protected toTypeIdentifyer(fieldTypeName: string, fieldInfo: IGQLField, typeName: string): string | null {
+    switch(fieldTypeName) {
       case 'int1':
       case 'int2':
       case 'int4': 
