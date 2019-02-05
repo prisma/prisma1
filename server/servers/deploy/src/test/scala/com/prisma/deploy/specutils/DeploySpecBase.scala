@@ -94,8 +94,6 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   }
 
   def setup(sqls: SQLs): DatabaseSchema = {
-    deployConnector.deleteProjectDatabase(projectId).await()
-
     slickDatabase match {
       case db if db.isMySql    => setupWithRawSQL(sqls.mysql)
       case db if db.isPostgres => setupWithRawSQL(sqls.postgres)
@@ -105,41 +103,29 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
     inspect
   }
 
-  def setupWithRawSQL(sql: String)(implicit suite: Suite): Unit = {
-    setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
-  }
+  def setupWithRawSQL(sql: String)(implicit suite: Suite): Unit = setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
 
   private def setupProjectDatabaseForProject(schemaName: String, name: String, stage: String, sql: String): Unit = {
-
-    val (session, dropSchema, createSchema, defaultSchema) = deployConnector match {
+    val (session, defaultSchema) = deployConnector match {
       case c: PostgresDeployConnector =>
         val session = c.managementDatabase.createSession()
-        val drop    = s"""drop schema if exists "$schemaName" cascade;"""
-        val create  = s"""create schema if not exists "$schemaName";"""
         val default = s"""SET search_path TO "$schemaName";"""
-        (session, drop, create, default)
+        (session, default)
 
       case c: MySqlDeployConnector =>
         val session = c.managementDatabase.database.createSession()
-        val drop    = s"""drop database if exists `$schemaName`;"""
-        val create  = s"create database if not exists `$schemaName`;"
         val default = s"USE `$schemaName`;"
-        (session, drop, create, default)
+        (session, default)
 
       case c: SQLiteDeployConnector =>
         val session = c.managementDatabase.database.createSession()
-        val drop    = s"""drop database if exists `$schemaName`;"""
-        val create  = s"create database if not exists `$schemaName`;"
-        val default = s"USE `$schemaName`;"
-        (session, drop, create, default)
+        (session, "PRAGMA foreign_keys=on;") //Fixme this is a hack to have a idempotent statement that does nothing
 
       case x => sys.error(s"$x is not supported here")
     }
 
     val statement = session.createStatement()
-    statement.execute(dropSchema)
     addProject()
-    statement.execute(createSchema)
     statement.execute(defaultSchema)
     sql.split(';').foreach { sql =>
       val isNotOnlyWhiteSpace = sql.exists(c => c != '\n' && c != ' ')
