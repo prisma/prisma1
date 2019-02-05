@@ -107,14 +107,6 @@ input BillingInfoSubscriptionWhereInput {
   """
   AND: [BillingInfoSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BillingInfoSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BillingInfoSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -163,14 +155,6 @@ input BillingInfoWhereInput {
   Logical AND on all given filters.
   """
   AND: [BillingInfoWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BillingInfoWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BillingInfoWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -277,6 +261,7 @@ input BillingInfoWhereInput {
   All values not ending with the given string.
   """
   account_not_ends_with: String
+  user: UserWhereInput
 }
 
 input BillingInfoWhereUniqueInput {
@@ -351,14 +336,6 @@ input BillingInfoWithoutConnectionSubscriptionWhereInput {
   """
   AND: [BillingInfoWithoutConnectionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BillingInfoWithoutConnectionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BillingInfoWithoutConnectionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -406,14 +383,6 @@ input BillingInfoWithoutConnectionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BillingInfoWithoutConnectionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BillingInfoWithoutConnectionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BillingInfoWithoutConnectionWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -667,14 +636,6 @@ input OptionalDetailsSubscriptionWhereInput {
   """
   AND: [OptionalDetailsSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OptionalDetailsSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OptionalDetailsSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -725,14 +686,6 @@ input OptionalDetailsWhereInput {
   Logical AND on all given filters.
   """
   AND: [OptionalDetailsWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OptionalDetailsWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OptionalDetailsWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -839,6 +792,7 @@ input OptionalDetailsWhereInput {
   All values not ending with the given string.
   """
   text_not_ends_with: String
+  user: UserWhereInput
 }
 
 input OptionalDetailsWhereUniqueInput {
@@ -913,14 +867,6 @@ input OptionalDetailsWithoutConnectionSubscriptionWhereInput {
   """
   AND: [OptionalDetailsWithoutConnectionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [OptionalDetailsWithoutConnectionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OptionalDetailsWithoutConnectionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -970,14 +916,6 @@ input OptionalDetailsWithoutConnectionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OptionalDetailsWithoutConnectionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [OptionalDetailsWithoutConnectionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [OptionalDetailsWithoutConnectionWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -1356,14 +1294,6 @@ input PostSubscriptionWhereInput {
   """
   AND: [PostSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [PostSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PostSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1402,6 +1332,7 @@ input PostUpdateManyMutationInput {
 input PostUpdateManyWithoutLikesInput {
   create: [PostCreateWithoutLikesInput!]
   connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
   disconnect: [PostWhereUniqueInput!]
   delete: [PostWhereUniqueInput!]
   update: [PostUpdateWithWhereUniqueWithoutLikesInput!]
@@ -1413,6 +1344,7 @@ input PostUpdateManyWithoutLikesInput {
 input PostUpdateManyWithoutUserInput {
   create: [PostCreateWithoutUserInput!]
   connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
   disconnect: [PostWhereUniqueInput!]
   delete: [PostWhereUniqueInput!]
   update: [PostUpdateWithWhereUniqueWithoutUserInput!]
@@ -1465,14 +1397,6 @@ input PostWhereInput {
   Logical AND on all given filters.
   """
   AND: [PostWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PostWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PostWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1608,6 +1532,8 @@ input PostWhereInput {
   All values greater than or equal the given value.
   """
   count_gte: Int
+  user: UserWhereInput
+  likes_some: UserWhereInput
 }
 
 input PostWhereUniqueInput {
@@ -1837,14 +1763,6 @@ input PostWithoutConnectionSubscriptionWhereInput {
   """
   AND: [PostWithoutConnectionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [PostWithoutConnectionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PostWithoutConnectionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1881,6 +1799,7 @@ input PostWithoutConnectionUpdateManyDataInput {
 input PostWithoutConnectionUpdateManyInput {
   create: [PostWithoutConnectionCreateInput!]
   connect: [PostWithoutConnectionWhereUniqueInput!]
+  set: [PostWithoutConnectionWhereUniqueInput!]
   disconnect: [PostWithoutConnectionWhereUniqueInput!]
   delete: [PostWithoutConnectionWhereUniqueInput!]
   update: [PostWithoutConnectionUpdateWithWhereUniqueNestedInput!]
@@ -1915,14 +1834,6 @@ input PostWithoutConnectionWhereInput {
   Logical AND on all given filters.
   """
   AND: [PostWithoutConnectionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PostWithoutConnectionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PostWithoutConnectionWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -2365,14 +2276,6 @@ input UserSubscriptionWhereInput {
   """
   AND: [UserSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [UserSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -2413,6 +2316,7 @@ input UserUpdateManyMutationInput {
 input UserUpdateManyWithoutLikesInput {
   create: [UserCreateWithoutLikesInput!]
   connect: [UserWhereUniqueInput!]
+  set: [UserWhereUniqueInput!]
   disconnect: [UserWhereUniqueInput!]
   delete: [UserWhereUniqueInput!]
   update: [UserUpdateWithWhereUniqueWithoutLikesInput!]
@@ -2518,14 +2422,6 @@ input UserWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [UserWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -2632,6 +2528,13 @@ input UserWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  posts_some: PostWhereInput
+  postsWithoutConnection_some: PostWithoutConnectionWhereInput
+  billingInfo: BillingInfoWhereInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionWhereInput
+  likes_some: PostWhereInput
+  optionalDetails: OptionalDetailsWhereInput
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionWhereInput
 }
 
 input UserWhereUniqueInput {

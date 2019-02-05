@@ -1168,6 +1168,7 @@ input BookingUpdateManyMutationInput {
 input BookingUpdateManyWithoutBookeeInput {
   create: [BookingCreateWithoutBookeeInput!]
   connect: [BookingWhereUniqueInput!]
+  set: [BookingWhereUniqueInput!]
   disconnect: [BookingWhereUniqueInput!]
   delete: [BookingWhereUniqueInput!]
   update: [BookingUpdateWithWhereUniqueWithoutBookeeInput!]
@@ -1179,6 +1180,7 @@ input BookingUpdateManyWithoutBookeeInput {
 input BookingUpdateManyWithoutPlaceInput {
   create: [BookingCreateWithoutPlaceInput!]
   connect: [BookingWhereUniqueInput!]
+  set: [BookingWhereUniqueInput!]
   disconnect: [BookingWhereUniqueInput!]
   delete: [BookingWhereUniqueInput!]
   update: [BookingUpdateWithWhereUniqueWithoutPlaceInput!]
@@ -3048,6 +3050,7 @@ input ExperienceUpdateManyMutationInput {
 input ExperienceUpdateManyWithoutHostInput {
   create: [ExperienceCreateWithoutHostInput!]
   connect: [ExperienceWhereUniqueInput!]
+  set: [ExperienceWhereUniqueInput!]
   disconnect: [ExperienceWhereUniqueInput!]
   delete: [ExperienceWhereUniqueInput!]
   update: [ExperienceUpdateWithWhereUniqueWithoutHostInput!]
@@ -4421,6 +4424,7 @@ input LocationUpdateManyMutationInput {
 input LocationUpdateManyWithoutNeighbourHoodInput {
   create: [LocationCreateWithoutNeighbourHoodInput!]
   connect: [LocationWhereUniqueInput!]
+  set: [LocationWhereUniqueInput!]
   disconnect: [LocationWhereUniqueInput!]
   delete: [LocationWhereUniqueInput!]
   update: [LocationUpdateWithWhereUniqueWithoutNeighbourHoodInput!]
@@ -5098,6 +5102,7 @@ input MessageUpdateManyMutationInput {
 input MessageUpdateManyWithoutFromInput {
   create: [MessageCreateWithoutFromInput!]
   connect: [MessageWhereUniqueInput!]
+  set: [MessageWhereUniqueInput!]
   disconnect: [MessageWhereUniqueInput!]
   delete: [MessageWhereUniqueInput!]
   update: [MessageUpdateWithWhereUniqueWithoutFromInput!]
@@ -5109,6 +5114,7 @@ input MessageUpdateManyWithoutFromInput {
 input MessageUpdateManyWithoutToInput {
   create: [MessageCreateWithoutToInput!]
   connect: [MessageWhereUniqueInput!]
+  set: [MessageWhereUniqueInput!]
   disconnect: [MessageWhereUniqueInput!]
   delete: [MessageWhereUniqueInput!]
   update: [MessageUpdateWithWhereUniqueWithoutToInput!]
@@ -5838,6 +5844,7 @@ input NeighbourhoodUpdateManyMutationInput {
 input NeighbourhoodUpdateManyWithoutCityInput {
   create: [NeighbourhoodCreateWithoutCityInput!]
   connect: [NeighbourhoodWhereUniqueInput!]
+  set: [NeighbourhoodWhereUniqueInput!]
   disconnect: [NeighbourhoodWhereUniqueInput!]
   delete: [NeighbourhoodWhereUniqueInput!]
   update: [NeighbourhoodUpdateWithWhereUniqueWithoutCityInput!]
@@ -6461,6 +6468,7 @@ input NotificationUpdateManyMutationInput {
 input NotificationUpdateManyWithoutUserInput {
   create: [NotificationCreateWithoutUserInput!]
   connect: [NotificationWhereUniqueInput!]
+  set: [NotificationWhereUniqueInput!]
   disconnect: [NotificationWhereUniqueInput!]
   delete: [NotificationWhereUniqueInput!]
   update: [NotificationUpdateWithWhereUniqueWithoutUserInput!]
@@ -7005,6 +7013,7 @@ input PaymentAccountUpdateManyMutationInput {
 input PaymentAccountUpdateManyWithoutUserInput {
   create: [PaymentAccountCreateWithoutUserInput!]
   connect: [PaymentAccountWhereUniqueInput!]
+  set: [PaymentAccountWhereUniqueInput!]
   disconnect: [PaymentAccountWhereUniqueInput!]
   delete: [PaymentAccountWhereUniqueInput!]
   update: [PaymentAccountUpdateWithWhereUniqueWithoutUserInput!]
@@ -7545,6 +7554,7 @@ input PaymentUpdateManyMutationInput {
 input PaymentUpdateManyWithoutPaymentMethodInput {
   create: [PaymentCreateWithoutPaymentMethodInput!]
   connect: [PaymentWhereUniqueInput!]
+  set: [PaymentWhereUniqueInput!]
   disconnect: [PaymentWhereUniqueInput!]
   delete: [PaymentWhereUniqueInput!]
   update: [PaymentUpdateWithWhereUniqueWithoutPaymentMethodInput!]
@@ -9264,6 +9274,7 @@ input PlaceUpdateManyMutationInput {
 input PlaceUpdateManyWithoutHostInput {
   create: [PlaceCreateWithoutHostInput!]
   connect: [PlaceWhereUniqueInput!]
+  set: [PlaceWhereUniqueInput!]
   disconnect: [PlaceWhereUniqueInput!]
   delete: [PlaceWhereUniqueInput!]
   update: [PlaceUpdateWithWhereUniqueWithoutHostInput!]
@@ -12119,6 +12130,7 @@ input ReviewUpdateManyMutationInput {
 input ReviewUpdateManyWithoutExperienceInput {
   create: [ReviewCreateWithoutExperienceInput!]
   connect: [ReviewWhereUniqueInput!]
+  set: [ReviewWhereUniqueInput!]
   disconnect: [ReviewWhereUniqueInput!]
   delete: [ReviewWhereUniqueInput!]
   update: [ReviewUpdateWithWhereUniqueWithoutExperienceInput!]
@@ -12130,6 +12142,7 @@ input ReviewUpdateManyWithoutExperienceInput {
 input ReviewUpdateManyWithoutPlaceInput {
   create: [ReviewCreateWithoutPlaceInput!]
   connect: [ReviewWhereUniqueInput!]
+  set: [ReviewWhereUniqueInput!]
   disconnect: [ReviewWhereUniqueInput!]
   delete: [ReviewWhereUniqueInput!]
   update: [ReviewUpdateWithWhereUniqueWithoutPlaceInput!]

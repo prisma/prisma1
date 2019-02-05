@@ -155,6 +155,8 @@ export default class DefaultGenerator implements IGenerators {
     this.typeRegistry,
     this,
   )
+
+  modelRestrictedWhereInput = new ModelWhereInputGenerator(this.typeRegistry, this) // Dummy
   modelWhereInput = new ModelWhereInputGenerator(this.typeRegistry, this)
   modelScalarWhereInput = new ModelScalarWhereInputGenerator(this.typeRegistry, this)
   modelOrderByInput = new ModelOrderByInputGenerator(this.typeRegistry, this)
