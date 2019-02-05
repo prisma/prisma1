@@ -728,7 +728,7 @@ export class Client {
   }
 
   async hasStepsApi() {
-    const result: IntrospectionQuery = await this.client.request(
+    const result: IntrospectionQuery = await this.client.request<IntrospectionQuery>(
       introspectionQuery,
     )
 
@@ -768,7 +768,7 @@ export class Client {
       ${MIGRATION_FRAGMENT}
     `
 
-    const introspectionResult: IntrospectionQuery = await this.client.request(
+    const introspectionResult: IntrospectionQuery = await this.client.request<IntrospectionQuery>(
       introspectionQuery,
     )
     const hasStepsApi = hasTypeWithField(
