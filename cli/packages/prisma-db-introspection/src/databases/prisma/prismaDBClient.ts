@@ -6,7 +6,6 @@ const SERVICE_NAME = 'prisma-temporary-introspection-service'
 const SERVICE_STAGE = 'prisma-temporary-test-stage'
 const SERVICE_SECRET = 'prisma-instrospection-secret'
 
-
 export class PrismaDBClient implements IDatabaseClient {
   cluster: Cluster
   client: GraphQLClient
@@ -80,7 +79,7 @@ export class PrismaDBClient implements IDatabaseClient {
   }
 
   async connect() {
-    await this.cluster
+    const result = await this.cluster
       .request(
         `mutation($input: AddProjectInput!) {
       addProject(input: $input) {

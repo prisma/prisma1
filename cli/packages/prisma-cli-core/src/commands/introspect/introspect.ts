@@ -4,6 +4,8 @@ import {
   PostgresConnector,
   PrismaDBClient,
   MongoConnector,
+  Connectors,
+  MysqlConnector,
 } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -14,6 +16,8 @@ import { MongoClient } from 'mongodb'
 import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 import { TmpRelationalRendererV2 } from './TmpRelationalRendererV2'
+import { createConnection } from 'mysql'
+import { omit } from 'lodash'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -50,6 +54,26 @@ export default class IntrospectCommand extends Command {
     }),
 
     /**
+     * MySQL Params
+     */
+    ['mysql-host']: flags.string({
+      description: 'Name of the MySQL host',
+    }),
+    ['mysql-port']: flags.string({
+      description: 'The MySQL port. Default: 3306',
+      defaultValue: '3306',
+    }),
+    ['mysql-user']: flags.string({
+      description: 'The MySQL user',
+    }),
+    ['mysql-password']: flags.string({
+      description: 'The MySQL password',
+    }),
+    ['mysql-db']: flags.string({
+      description: 'The MySQL database',
+    }),
+
+    /**
      * Mongo Params
      */
     ['mongo-uri']: flags.string({
@@ -81,6 +105,12 @@ export default class IntrospectCommand extends Command {
 
     const mongoUri = this.flags['mongo-uri']
     let mongoDb = this.flags['mongo-db']
+
+    const mysqlHost = this.flags['mysql-host']
+    const mysqlPort = this.flags['mysql-port']
+    const mysqlUser = this.flags['mysql-user']
+    const mysqlPassword = this.flags['mysql-password']
+    let mysqlDb = this.flags['mysql-db']
 
     const endpointDialog = new EndpointDialog({
       out: this.out,
@@ -119,6 +149,33 @@ export default class IntrospectCommand extends Command {
       })
       connector = new MongoConnector(client)
       databaseType = DatabaseType.mongo
+    }
+
+    const mysqlFlagsProvided =
+      mysqlHost && mysqlPort && mysqlUser && mysqlPassword
+
+    if (mysqlFlagsProvided) {
+      client = createConnection({
+        host: mysqlHost,
+        port: parseInt(mysqlPort, 10),
+        user: mysqlUser,
+        password: mysqlPassword,
+        database: mysqlDb,
+        // multipleStatements: true
+      })
+
+      await new Promise((resolve, reject) => {
+        client.connect(err => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve()
+          }
+        })
+      })
+
+      connector = Connectors.create(DatabaseType.mysql, client)
+      databaseType = DatabaseType.mysql
     }
 
     /**
@@ -162,29 +219,28 @@ export default class IntrospectCommand extends Command {
     }
 
     try {
-      if (!interactive) {
-        await this.definition.load(this.flags)
-        const service = this.definition.service!
-        const stage = this.definition.stage!
-        const cluster = this.definition.getCluster()
-        const workspace = this.definition.getWorkspace()
-        this.env.setActiveCluster(cluster!)
-        await this.client.initClusterClient(
-          cluster!,
-          service!,
-          stage,
-          workspace!,
-        )
+      await this.definition.load(this.flags)
+      const service = this.definition.service!
+      const stage = this.definition.stage!
+      const cluster = this.definition.getCluster()
+      const workspace = this.definition.getWorkspace()
+      this.env.setActiveCluster(cluster!)
+      await this.client.initClusterClient(cluster!, service!, stage, workspace!)
+    } catch (e) {
+      //
+    }
 
-        if (await this.hasExecuteRaw()) {
+    try {
+      if (!interactive) {
+        if (!mysqlFlagsProvided && (await this.hasExecuteRaw())) {
           client = new PrismaDBClient(this.definition)
           await client.connect()
-          connector = new PostgresConnector(client)
-          databaseType = DatabaseType.postgres
+          connector = new MysqlConnector(client)
+          databaseType = DatabaseType.mysql
         }
       }
     } catch (e) {
-      //
+      // console.error(e)
     }
 
     if (!client || !connector!) {
@@ -195,6 +251,27 @@ export default class IntrospectCommand extends Command {
         databaseType = DatabaseType.postgres
         await client.connect()
         pgSchema = credentials.schema
+      } else if (credentials.type === 'mysql') {
+        // we omit ssl as the mysql driver uses the parameter differently and requires a string instead of a boolean
+        const credentialsWithoutSsl = omit<DatabaseCredentials, 'ssl'>(
+          credentials,
+          ['ssl'],
+        )
+        client = createConnection(credentialsWithoutSsl)
+
+        await new Promise((resolve, reject) => {
+          client.connect(err => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve()
+            }
+          })
+        })
+
+        connector = Connectors.create(DatabaseType.mysql, client)
+        databaseType = DatabaseType.mysql
+        mysqlDb = credentials.schema
       } else if (credentials.type === 'mongo') {
         client = await this.connectToMongo(credentials)
         connector = new MongoConnector(client)
@@ -229,6 +306,16 @@ export default class IntrospectCommand extends Command {
           )
         }
         schema = pgSchema
+      } else if (mysqlDb) {
+        const exists = schemas.includes(mysqlDb)
+        if (!exists) {
+          throw new Error(
+            `The provided MySQL Schema ${mysqlDb} does not exist. Choose one of ${schemas.join(
+              ', ',
+            )}`,
+          )
+        }
+        schema = mysqlDb
       } else if (mongoDb) {
         if (!schemas.includes(mongoDb)) {
           throw new Error(

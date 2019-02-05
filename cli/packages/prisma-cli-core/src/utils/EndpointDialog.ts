@@ -541,11 +541,6 @@ export class EndpointDialog {
     if (type === 'mysql' || type === 'postgres') {
       const alreadyData = introspection || (await this.askForExistingData())
       const askForSchema = introspection ? true : alreadyData ? true : false
-      if (type === 'mysql' && alreadyData) {
-        throw new Error(
-          `Existing MySQL databases with data are not yet supported.`,
-        )
-      }
       credentials.alreadyData = alreadyData
       credentials.host = await this.ask({
         message: 'Enter database host',
@@ -824,14 +819,11 @@ export class EndpointDialog {
   private async askForDatabaseType(introspect: boolean = false) {
     const choices: any[] = []
 
-    if (!introspect) {
-      choices.push({
-        value: 'mysql',
-        name:
-          'MySQL             MySQL compliant databases like MySQL or MariaDB',
-        short: 'MySQL',
-      })
-    }
+    choices.push({
+      value: 'mysql',
+      name: 'MySQL             MySQL compliant databases like MySQL or MariaDB',
+      short: 'MySQL',
+    })
 
     choices.push({
       value: 'postgres',
