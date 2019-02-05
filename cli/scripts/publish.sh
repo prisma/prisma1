@@ -21,10 +21,10 @@ set -x
 #
 
 if [[ -z "$CIRCLE_BRANCH" ]]; then
-  if [[ $CIRCLE_TAG == "*beta" ]]; then
+  if [[ $CIRCLE_TAG == *"beta" ]]; then
     export CIRCLE_BRANCH=beta
   fi
-  if [[ $CIRCLE_TAG == "*alpha" ]]; then
+  if [[ $CIRCLE_TAG == *"alpha" ]]; then
     export CIRCLE_BRANCH=alpha
   fi
 fi
