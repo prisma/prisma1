@@ -7,7 +7,6 @@ import slick.jdbc.SQLiteProfile
 import slick.jdbc.SQLiteProfile.api._
 
 object SQLiteDatabasesFactory {
-  private lazy val dbDriver = new org.sqlite.JDBC
 
   def initialize(dbConfig: DatabaseConfig): Databases = {
 //    val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
