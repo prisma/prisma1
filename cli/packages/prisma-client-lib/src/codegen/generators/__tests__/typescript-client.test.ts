@@ -18,3 +18,12 @@ test.only('typescript generator', t => {
   const result = generator.render()
   t.snapshot(result)
 })
+test.only('typescript generator definitions', t => {
+  const schema = buildSchema(typeDefs)
+  const generator = new TypescriptGenerator({
+    schema,
+    internalTypes: [],
+  })
+  const result = generator.renderTypedefs()
+  t.snapshot(result)
+})
