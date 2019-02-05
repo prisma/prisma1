@@ -115,10 +115,18 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
 
   public generateManyRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap {
     const type = this.generate(field.type as IGQLType, {})
-    return ModelWhereInputGenerator.generateFiltersForSuffix(['_every', '_some', '_none'], field, type)
+    return ModelWhereInputGenerator.generateFiltersForSuffix(this.getRelationaManyFilters(field.type as IGQLType), field, type)
   }
 
   //#endregion
+
+  protected getRelationaManyFilters(type: IGQLType): string[] {
+    return ['_every', '_some', '_none']
+  }
+
+  protected getLogicalOperators() : string[] {
+    return ['AND', 'OR', 'NOT']
+  }
 
   protected generateFields(model: IGQLType, args: {}): GraphQLInputFieldConfigMap {
     let fields = {} as GraphQLInputFieldConfigMap
@@ -136,7 +144,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     }
 
     const recursiveFilter = ModelWhereInputGenerator.generateFiltersForSuffix(
-      ['AND', 'OR', 'NOT'],
+      this.getLogicalOperators(),
       null,
       this.generators.scalarTypeGenerator.wrapList(this.generate(model, {}))
     )

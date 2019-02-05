@@ -511,6 +511,7 @@ export interface IGenerators {
   modelWhereUniqueInput: ModelInputObjectTypeGenerator
   modelScalarWhereInput: ModelInputObjectTypeGenerator
   modelWhereInput: ModelInputObjectTypeGenerator
+  modelRestrictedWhereInput: ModelInputObjectTypeGenerator
   modelOrderByInput: ModelEnumTypeGeneratorBase
   modelConnection: ModelObjectTypeGenerator
   modelEdge: ModelObjectTypeGenerator

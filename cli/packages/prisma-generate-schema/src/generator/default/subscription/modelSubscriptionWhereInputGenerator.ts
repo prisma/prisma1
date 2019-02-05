@@ -9,6 +9,10 @@ export default class ModelSubscriptionWhereInput extends ModelInputObjectTypeGen
     return `${input.name}SubscriptionWhereInput`
   }
 
+  protected getLogicalOperators() : string[] {
+    return ['AND', 'OR', 'NOT'];
+  }
+
   protected generateFields(model: IGQLType, args: {}): GraphQLInputFieldConfigMap {
     let fields = {
       'mutation_in': { type: new GraphQLList(new GraphQLNonNull(this.generators.mutationType.generate(null, {}))) },
@@ -19,7 +23,7 @@ export default class ModelSubscriptionWhereInput extends ModelInputObjectTypeGen
     } as GraphQLInputFieldConfigMap
 
     const recursiveFilter = ModelWhereInputGenerator.generateFiltersForSuffix(
-      ['AND', 'OR', 'NOT'],
+      this.getLogicalOperators(),
       null,
       this.generators.scalarTypeGenerator.wrapList(this.generators.modelSubscriptionWhereInput.generate(model, {}))
     )
