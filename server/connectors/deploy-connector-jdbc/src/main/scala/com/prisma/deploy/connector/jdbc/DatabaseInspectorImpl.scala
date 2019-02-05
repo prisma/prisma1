@@ -4,6 +4,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
+import slick.jdbc.GetResult
 import slick.jdbc.meta.{MColumn, MForeignKey, MIndexInfo, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,19 +15,163 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   override def inspect(schema: String): Future[DatabaseSchema] = db.database.run(action(schema))
 
   def action(schema: String): DBIO[DatabaseSchema] = {
+//    for {
+//      // we filter on catalog and schema at the same time, because:
+//      // 1. For MySQL only catalog will be populated.
+//      // 2. For Postgres only schema will be populated.
+//      // 3. It works when both are populated.
+//      potentialTables <- MTable.getTables(cat = Some(schema), schemaPattern = Some(schema), namePattern = None, types = None)
+//      // the line above does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
+//      // we therefore have one additional filter step in memory
+//      mTables = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
+//      tables  <- DBIO.sequence(mTables.map(mTableToModel))
+//    } yield {
+//      DatabaseSchema(tables)
+//    }
     for {
-      // we filter on catalog and schema at the same time, because:
-      // 1. For MySQL only catalog will be populated.
-      // 2. For Postgres only schema will be populated.
-      // 3. It works when both are populated.
-      potentialTables <- MTable.getTables(cat = Some(schema), schemaPattern = Some(schema), namePattern = None, types = None)
-      // the line above does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
-      // we therefore have one additional filter step in memory
-      mTables = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
-      tables  <- DBIO.sequence(mTables.map(mTableToModel))
+      tableNames <- getTableNames(schema)
+      _          = println(s"tableNames: $tableNames")
+      tables     <- DBIO.sequence(tableNames.map(name => getTable(schema, name)))
     } yield {
       DatabaseSchema(tables)
     }
+  }
+
+  private def getTable(schema: String, table: String): DBIO[Table] = {
+    for {
+      introspectedColumns     <- getColumns(schema, table)
+      _                       = println(s"getTable: $schema, $table")
+      introspectedForeignKeys <- foreignKeyConstraints(schema, table)
+      _                       = println(introspectedForeignKeys)
+    } yield {
+      val columns = introspectedColumns.map { col =>
+        // this needs to be extended further in the future if we support arbitrary SQL types
+        import java.sql.Types._
+        val typeIdentifier = col.udtName match {
+          case "varchar" | "string" | "text" => TypeIdentifier.String
+          case "numeric"                     => TypeIdentifier.Float
+          case "bool"                        => TypeIdentifier.Boolean
+          case "timestamp"                   => TypeIdentifier.DateTime
+          case "int4"                        => TypeIdentifier.Int
+          case "uuid"                        => TypeIdentifier.UUID
+//          case VARCHAR | CHAR | LONGVARCHAR        => TypeIdentifier.String
+//          case FLOAT | NUMERIC | DECIMAL           => TypeIdentifier.Float
+//          case BOOLEAN | BIT                       => TypeIdentifier.Boolean
+//          case TIMESTAMP                           => TypeIdentifier.DateTime
+//          case INTEGER                             => TypeIdentifier.Int
+//          case OTHER if mColumn.typeName == "uuid" => TypeIdentifier.UUID
+          case x => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
+        }
+        val fk = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
+          ForeignKey(fk.referencedTable, fk.referencedColumn)
+        }
+        Column(
+          name = col.name,
+          tpe = col.udtName,
+          typeIdentifier = typeIdentifier,
+          isRequired = !col.isNullable,
+          foreignKey = fk,
+          sequence = None
+        )(_)
+      }
+      Table(table, columns, indexes = Vector.empty)
+    }
+  }
+
+  private def getTableNames(schema: String): DBIO[Vector[String]] = {
+    sql"""
+         |SELECT
+         |        table_name
+         |      FROM
+         |        information_schema.tables
+         |      WHERE
+         |        table_schema = $schema
+         |        -- Views are not supported yet
+         |        AND table_type = 'BASE TABLE'
+       """.stripMargin.as[String]
+  }
+
+  case class IntrospectedColumn(name: String, udtName: String, isUpdatable: Boolean, default: String, isNullable: Boolean, isUnique: Boolean)
+
+  implicit lazy val introspectedColumnGetResult = GetResult { ps =>
+    IntrospectedColumn(
+      name = ps.rs.getString("column_name"),
+      udtName = ps.rs.getString("udt_name"),
+      isUpdatable = ps.rs.getBoolean("is_updatable"),
+      default = ps.rs.getString("column_default"),
+      isNullable = ps.rs.getBoolean("is_nullable"),
+      isUnique = ps.rs.getBoolean("is_unique")
+    )
+  }
+
+  private def getColumns(schema: String, table: String): DBIO[Vector[IntrospectedColumn]] = {
+    sql"""
+         |SELECT
+         |        cols.ordinal_position,
+         |        cols.column_name,
+         |        cols.udt_name,
+         |        cols.is_updatable,
+         |        cols.column_default,
+         |        cols.is_nullable = 'YES' as is_nullable,
+         |        EXISTS(
+         |          SELECT * FROM
+         |            information_schema.constraint_column_usage columnConstraint
+         |          LEFT JOIN
+         |            information_schema.table_constraints tableConstraints
+         |          ON
+         |            columnConstraint.constraint_name = tableConstraints.constraint_name
+         |          WHERE
+         |            cols.column_name = columnConstraint.column_name
+         |            AND cols.table_name = columnConstraint.table_name
+         |            AND cols.table_schema = columnConstraint.table_schema
+         |            AND tableConstraints.constraint_type = 'UNIQUE'
+         |          ) AS is_unique
+         |      FROM
+         |        information_schema.columns AS cols
+         |      WHERE
+         |        cols.table_schema = $schema
+         |        AND cols.table_name  = $table
+          """.stripMargin.as[IntrospectedColumn]
+  }
+
+  case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
+
+  implicit val introspectedForeignKeyGetResult = GetResult { ps =>
+    IntrospectedForeignKey(
+      name = ps.rs.getString("fkConstraintName"),
+      table = ps.rs.getString("fkTableName"),
+      column = ps.rs.getString("fkColumnName"),
+      referencedTable = ps.rs.getString("referencedTableName"),
+      referencedColumn = ps.rs.getString("referencedColumnName")
+    )
+  }
+
+  private def foreignKeyConstraints(schema: String, table: String): DBIO[Vector[IntrospectedForeignKey]] = {
+    sql"""
+         |SELECT
+         |          keyColumn1.constraint_name AS "fkConstraintName",
+         |          keyColumn1.table_name AS "fkTableName",
+         |          keyColumn1.column_name AS "fkColumnName",
+         |          keyColumn2.constraint_name AS "referencedConstraintName",
+         |          keyColumn2.table_name AS "referencedTableName",
+         |          keyColumn2.column_name AS "referencedColumnName"
+         |      FROM
+         |        information_schema.referential_constraints refConstraints
+         |      INNER JOIN
+         |        information_schema.key_column_usage AS keyColumn1
+         |        ON keyColumn1.constraint_catalog = refConstraints.constraint_catalog
+         |        AND keyColumn1.constraint_schema = refConstraints.constraint_schema
+         |        AND keyColumn1.constraint_name = refConstraints.constraint_name
+         |      INNER JOIN
+         |        information_schema.key_column_usage AS keyColumn2
+         |        ON keyColumn2.constraint_catalog = refConstraints.unique_constraint_catalog
+         |        AND keyColumn2.constraint_schema = refConstraints.unique_constraint_schema
+         |        AND keyColumn2.constraint_name = refConstraints.unique_constraint_name
+         |        AND keyColumn2.ordinal_position = keyColumn1.ordinal_position
+         |      WHERE
+         |        refConstraints.constraint_schema = $schema AND
+         |        keyColumn1.table_name = $table
+          """.stripMargin.as[IntrospectedForeignKey]
   }
 
   def mTableToModel(mTable: MTable): DBIO[Table] = {
