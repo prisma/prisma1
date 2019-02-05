@@ -2,7 +2,7 @@ use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
     connector::{Connector, Sqlite},
     error::Error,
-    models::{Renameable, Project, ProjectTemplate},
+    models::{Project, ProjectTemplate, Renameable},
     querying::NodeSelector,
     PrismaResult,
 };

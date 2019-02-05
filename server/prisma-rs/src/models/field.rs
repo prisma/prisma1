@@ -1,9 +1,4 @@
-use crate::{
-    models::{
-        ModelRef,
-        Renameable,
-    },
-};
+use crate::models::{ModelRef, Renameable};
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
@@ -54,7 +49,7 @@ pub enum Field {
     Relation(RelationField),
 }
 
-#[derive(Debug)]
+#[derive(DebugStub)]
 pub struct RelationField {
     pub name: String,
     pub type_identifier: TypeIdentifier,
@@ -67,11 +62,11 @@ pub struct RelationField {
     pub manifestation: Option<FieldManifestation>,
     pub relation_name: String,
     pub relation_side: RelationSide,
+    #[debug_stub = "#ModelRef#"]
     pub model: ModelRef,
 }
 
-
-#[derive(Debug)]
+#[derive(DebugStub)]
 pub struct ScalarField {
     pub name: String,
     pub type_identifier: TypeIdentifier,
@@ -83,6 +78,7 @@ pub struct ScalarField {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
+    #[debug_stub = "#ModelRef#"]
     pub model: ModelRef,
 }
 

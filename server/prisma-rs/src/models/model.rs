@@ -1,17 +1,6 @@
-use crate::{
-    models::{
-        ScalarField,
-        Field,
-        Renameable,
-        SchemaRef,
-        FieldTemplate
-    }
-};
+use crate::models::{Field, FieldTemplate, Renameable, ScalarField, SchemaRef};
 
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
 pub type ModelRef = Rc<RefCell<Model>>;
 
@@ -25,13 +14,14 @@ pub struct ModelTemplate {
     pub manifestation: Option<ModelManifestation>,
 }
 
-#[derive(Debug)]
+#[derive(DebugStub)]
 pub struct Model {
     pub name: String,
     pub stable_identifier: String,
     pub is_embedded: bool,
     pub fields: Vec<Field>,
     pub manifestation: Option<ModelManifestation>,
+    #[debug_stub = "#SchemaRef#"]
     pub schema: SchemaRef,
 }
 

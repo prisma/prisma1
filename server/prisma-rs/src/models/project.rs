@@ -1,8 +1,4 @@
-pub use crate::models::{
-    SchemaTemplate,
-    SchemaRef,
-    Renameable,
-};
+pub use crate::models::{Renameable, SchemaRef, SchemaTemplate};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

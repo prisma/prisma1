@@ -1,8 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{
-    models::{ModelRef, ModelTemplate},
-};
+use crate::models::{ModelRef, ModelTemplate};
 
 pub type SchemaRef = Rc<RefCell<Schema>>;
 

@@ -4,19 +4,21 @@
 extern crate serde_derive;
 #[macro_use]
 extern crate prost_derive;
+#[macro_use]
+extern crate debug_stub_derive;
 
 pub mod config;
 pub mod connector;
 pub mod error;
+pub mod models;
 pub mod protobuf;
 pub mod querying;
-pub mod models;
 
 use config::PrismaConfig;
 use error::Error;
-use serde_yaml;
-use protobuf::{ProtoBufEnvelope, ProtobufInterface};
 use lazy_static::lazy_static;
+use protobuf::{ProtoBufEnvelope, ProtobufInterface};
+use serde_yaml;
 
 pub use protobuf::prisma::value_container::PrismaValue;
 
