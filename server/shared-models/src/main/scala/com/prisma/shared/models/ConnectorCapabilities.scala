@@ -1,11 +1,5 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ConnectorCapability.{
-  EmbeddedScalarListsCapability,
-  LegacyDataModelCapability,
-  NonEmbeddedScalarListCapability,
-  ScalarListsCapability
-}
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -45,6 +39,8 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 }
 
 case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
+  import ConnectorCapability._
+
   def has(capability: ConnectorCapability): Boolean = capability match {
     case ScalarListsCapability => capabilities.contains(EmbeddedScalarListsCapability) || capabilities.contains(NonEmbeddedScalarListCapability)
     case x                     => capabilities.contains(x)
@@ -54,13 +50,14 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
 
   def isDataModelV2: Boolean = !capabilities.contains(LegacyDataModelCapability)
+  def isMongo: Boolean       = has(EmbeddedTypesCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
+  import ConnectorCapability._
+
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
-
-  import com.prisma.shared.models.ConnectorCapability._
 
   lazy val mysql: ConnectorCapabilities = {
     val capas = Set(
@@ -118,6 +115,7 @@ object ConnectorCapabilities extends BooleanUtils {
       IntrospectionCapability,
       SupportsExistingDatabasesCapability,
       IntIdCapability,
+      NonEmbeddedScalarListCapability,
     )
   }
 

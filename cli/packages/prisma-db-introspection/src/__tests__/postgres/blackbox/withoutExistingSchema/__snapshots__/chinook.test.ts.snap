@@ -1,0 +1,106 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector large example database 1`] = `
+"type Album {
+  ArtistId: Artist!
+  id: Int! @pgColumn(name: \\"AlbumId\\") @unique
+  Title: String!
+  track: Track
+}
+
+type Artist {
+  album: Album!
+  id: Int! @pgColumn(name: \\"ArtistId\\") @unique
+  Name: String
+}
+
+type Customer {
+  Address: String
+  City: String
+  Company: String
+  Country: String
+  Email: String!
+  Fax: String
+  FirstName: String!
+  id: Int! @pgColumn(name: \\"CustomerId\\") @unique
+  invoice: Invoice!
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  State: String
+  SupportRepId: Employee
+}
+
+type Employee {
+  Address: String
+  BirthDate: DateTime
+  City: String
+  Country: String
+  customer: Customer
+  Email: String
+  employee: Employee
+  Fax: String
+  FirstName: String!
+  HireDate: DateTime
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  ReportsTo: Employee
+  State: String
+  Title: String
+}
+
+type Genre {
+  id: Int! @pgColumn(name: \\"GenreId\\") @unique
+  Name: String
+  track: Track
+}
+
+type Invoice {
+  BillingAddress: String
+  BillingCity: String
+  BillingCountry: String
+  BillingPostalCode: String
+  BillingState: String
+  CustomerId: Customer!
+  id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
+  InvoiceDate: DateTime!
+  invoiceLine: InvoiceLine!
+  Total: Float!
+}
+
+type InvoiceLine {
+  id: Int! @pgColumn(name: \\"InvoiceLineId\\") @unique
+  InvoiceId: Invoice!
+  Quantity: Int!
+  TrackId: Track!
+  UnitPrice: Float!
+}
+
+type MediaType {
+  id: Int! @pgColumn(name: \\"MediaTypeId\\") @unique
+  Name: String
+  track: Track!
+}
+
+type Playlist {
+  id: Int! @pgColumn(name: \\"PlaylistId\\") @unique
+  Name: String
+  Track: [Track]
+}
+
+type Track {
+  AlbumId: Album
+  Bytes: Int
+  Composer: String
+  GenreId: Genre
+  id: Int! @pgColumn(name: \\"TrackId\\") @unique
+  invoiceLine: InvoiceLine!
+  MediaTypeId: MediaType!
+  Milliseconds: Int!
+  Name: String!
+  Playlist: [Playlist]
+  UnitPrice: Float!
+}"
+`;

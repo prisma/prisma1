@@ -59,6 +59,25 @@ export abstract class SdlExpect {
     return type
   }
 
+  static index(obj: IGQLType, name: string, fields: IGQLField[], unique: boolean) {
+    if(obj.indices === undefined) {
+      GQLAssert.raise(`Expected an index on type ${obj.name}, but found none.`)
+      return
+    }
+
+    const indices = obj.indices.filter(x => x.name === name)
+
+    if(indices.length !== 1) {
+      GQLAssert.raise(`Expected exactly one index with name ${name} on type ${obj.name}, but found ${indices.length}.`)
+    }
+
+    const index = indices[0]
+
+    expect(index.name).toBe(name)
+    expect(index.unique).toBe(unique)
+    expect(index.fields.sort()).toEqual(fields.sort())
+  }
+
   /**
    * Assertion helper for directives. 
    */

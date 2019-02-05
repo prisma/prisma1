@@ -11,6 +11,6 @@ type B {
 }
 
 type C {
-  toB: [B!]!
-  toA: [A!]!
+  toB: [B]
+  toA: [A]
 }

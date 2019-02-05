@@ -35,12 +35,15 @@ describe(`Renderer directives test`, () => {
       isEnum: false,
       fields: [
         field1, field2, field3, field4
-      ]
+      ],
+      directives: [],
+      comments: [],
+      indices: []
     }
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
@@ -49,10 +52,10 @@ describe(`Renderer directives test`, () => {
     const renderer = Renderer.create(DatabaseType.postgres)
 
     const modelWithDirectives = dedent(`
-      type Test @db(name: "testType") {
+      type Test @pgTable(name: "testType") {
         createdAt: DateTime
-        id: Int
-        mappedField: String @db(name: "dbField") @relation(name: "typeRelation")
+        id: Int @unique
+        mappedField: String @pgColumn(name: "dbField") @relation(name: "typeRelation")
         updatedAt: DateTime
       }`)
       
@@ -73,13 +76,61 @@ describe(`Renderer directives test`, () => {
       isEnum: false,
       fields: [
         field1, field2, field3, field4
-      ]
+      ],
+      directives: [],
+      comments: [],
+      indices: []
     }
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
+
+  test('Render built-in index directive correctly', () => {
+    const renderer = Renderer.create(DatabaseType.mongo)
+    
+    const modelWithDirectives = dedent(`
+      type User @indexes(value: [{name: "NameIndex", fields: ["firstName", "lastName"], unique: "false"}, {name: "PrimaryIndex", fields: ["id"]}]) {
+        createdAt: DateTime! @createdAt
+        firstName: String!
+        id: Int! @id
+        lastName: String!
+        updatedAt: DateTime! @updatedAt
+      }`)
+      
+    const createdAtField = new GQLScalarField('createdAt', 'DateTime', true)
+    createdAtField.isCreatedAt = true
+    const updatedAtField = new GQLScalarField('updatedAt', 'DateTime', true)
+    updatedAtField.isUpdatedAt = true
+    const idField = new GQLScalarField('id', 'Int', true)
+    idField.isId = true
+    const firstNameField = new GQLScalarField('firstName', 'String', true)
+    const lastNameField = new GQLScalarField('lastName', 'String', true)
+
+    const type: IGQLType = {
+      name: "User", 
+      isEmbedded: false,
+      isEnum: false,
+      fields: [
+        idField, createdAtField, updatedAtField, firstNameField, lastNameField
+      ],
+      indices: [
+        { name: 'NameIndex', fields: [firstNameField, lastNameField], unique: false},
+        { name: 'PrimaryIndex', fields: [idField], unique: true}
+      ],
+      directives: [],
+      comments: [],
+      databaseName: null
+    }
+
+    const res = renderer.render({
+      types: [type]
+    }, true)
+
+    expect(res).toEqual(modelWithDirectives)
+  })
+
 })

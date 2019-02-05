@@ -1,5 +1,6 @@
 package com.prisma.messagebus.queue.rabbit
 
+import akka.actor.ActorSystem
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.Conversions.ByteUnmarshaller
 import com.prisma.messagebus.QueueConsumer
@@ -45,8 +46,11 @@ case class RabbitQueueConsumer[T](
     backoff: BackoffStrategy,
     concurrency: Int,
     onShutdown: () => Unit = () => {}
-)(implicit val reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T])
-    extends QueueConsumer[T] {
+)(
+    implicit val reporter: ErrorReporter,
+    unmarshaller: ByteUnmarshaller[T],
+    system: ActorSystem
+) extends QueueConsumer[T] {
 
   val consumers: ArrayBuffer[Consumer] = ArrayBuffer[Consumer]()
 

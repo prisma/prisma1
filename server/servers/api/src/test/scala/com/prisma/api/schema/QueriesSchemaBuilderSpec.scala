@@ -81,7 +81,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
         schema.model("Todo")
       }
 
-      val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(NodeQueryCapability))(testDependencies, system)
+      val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(NodeQueryCapability))(testDependencies)
       val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
       schema should include("node(")
       schema should include("id: ID!): Node")
@@ -92,7 +92,7 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
         schema.model("Todo")
       }
 
-      val schemaBuilder = SchemaBuilderImpl(project)(testDependencies, system)
+      val schemaBuilder = SchemaBuilderImpl(project)(testDependencies)
       val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
       schema should not(include("node("))

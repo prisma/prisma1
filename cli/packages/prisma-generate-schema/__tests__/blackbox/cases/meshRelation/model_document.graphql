@@ -2,16 +2,16 @@ type A {
     field: Int!
     id: ID! @id
     a: A! @relation(link: INLINE)
-    b: [B!]! @relation(link: INLINE)
+    b: [B] @relation(link: INLINE)
     c: C @relation(link: INLINE)
-    e: [E!]! @relation(link: INLINE)
+    e: [E] @relation(link: INLINE)
 }
 
 type B {
     id: ID! @id
-    field: [String!]!
+    field: [String]
     c: C @relation(name: "BToC", link: INLINE)
-    b: [B!]!@relation(link: INLINE)
+    b: [B]@relation(link: INLINE)
     a: A!
     c2: C @relation(name: "BToC2", link: INLINE)
 }
@@ -20,7 +20,7 @@ type C {
     id: ID! @id
     expirationDate: DateTime
     c: C! @relation(link: INLINE)
-    b: [B!]! @relation(name: "BToC")
+    b: [B] @relation(name: "BToC")
     a: A
     b2: B @relation(name: "BToC2")
 }
@@ -31,7 +31,7 @@ type D {
     c: C! @relation(link: INLINE)
     b: B! @relation(link: INLINE)
     a: A! @relation(link: INLINE)
-    d: [D!]! @relation(link: INLINE)
+    d: [D] @relation(link: INLINE)
 }
 
 

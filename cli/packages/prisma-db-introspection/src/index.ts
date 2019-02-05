@@ -12,4 +12,4 @@ export { MongoConnector } from './databases/document/mongo/mongoConnector'
 
 export { PrismaDBClient } from './databases/prisma/prismaDBClient'
 
-export { default as ModelNameAndDirectiveNormalizer } from './common/modelNameAndDirectiveNormalizer'
+export { default as Normalizer } from './common/normalization/defaultNormalizer'

@@ -35,3 +35,14 @@ project/plugins/project/
 buildkite-script-*
 
 /prisma.yml
+
+**/libjdbc_native*
+**/libjwt_native*
+.buildkite/scripts/docker-native/prisma-native
+
+*svm-heapdump-*
+out
+
+# sqlite
+*.db
+/db/*

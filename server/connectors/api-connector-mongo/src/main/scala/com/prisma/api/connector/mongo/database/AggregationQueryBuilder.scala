@@ -23,7 +23,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
   def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[Seq[Document]] = {
     aggregationQueryForId(database, model, queryArguments).flatMap { ids =>
       val inFilter = in("_id", ids.map(GCToBson(_)): _*)
-      database.getCollection(model.dbName).find(inFilter).toFuture
+      database.getCollection(model.dbName).find(inFilter).projection(projectSelected(selectedFields)).toFuture
     }
   }
 

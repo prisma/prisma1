@@ -1,13 +1,13 @@
 type Parent {
   id: ID! @id
   p: String @unique
-  children: [Child!]!
-  j: [Joint!]! @relation(link: INLINE)
+  children: [Child]
+  j: [Joint] @relation(link: INLINE)
 }
 
 type Child @embedded {
   c: String
-  friendsOpt: [Friend!]! @mongoRelation(field: "friends")
+  friendsOpt: [Friend] @mongoRelation(field: "friends")
   jointOpt: Joint! @mongoRelation(field: "joint")
 }
 

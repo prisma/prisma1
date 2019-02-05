@@ -2,6 +2,7 @@ import RelationalParser from '../../src/datamodel/parser/relationalParser'
 import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
 import { SdlExpect } from '../../src/test-helpers' 
+import { TypeIdentifiers } from '../../src/datamodel/scalar';
 
 const parsersToTest = [{ name: 'relational', instance: new RelationalParser()}, { name: 'document', instance: new DocumentParser()}]
 
@@ -31,6 +32,31 @@ for(const parser of parsersToTest) {
       const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String', false, false)
       expect(mappedField.databaseName).toBe('dbField')
       expect(mappedField.relationName).toBe('typeRelation')
+    })
+
+
+    test('Parse a type with multiple index directives correctly.', () => {
+      const model = `
+      type User @db(name: "user") 
+          @indexes(value: [{ name: "NameIndex", fields: ["firstName", "lastName"], unique: false },
+          { name: "PrimaryIndex", fields: ["id"] }]) {
+        id: Int! @id
+        createdAt: DateTime! @createdAt
+        updatedAt: DateTime! @updatedAt
+        firstName: String!
+        lastName: String!
+      }`
+
+      const { types } = parser.instance.parseFromSchemaString(model)
+
+      const userType = SdlExpect.type(types, 'User')
+      const idField = SdlExpect.field(userType, 'id', true, false, 'Int', true, true)
+      const firstNameField = SdlExpect.field(userType, 'firstName', true, false, TypeIdentifiers.string)
+      const lastNameField = SdlExpect.field(userType, 'lastName', true, false, TypeIdentifiers.string)
+ 
+      SdlExpect.index(userType, 'NameIndex', [firstNameField, lastNameField], false)
+      // True is the default value
+      SdlExpect.index(userType, 'PrimaryIndex', [idField], true)
     })
 
     test('Parse a type with unknown directives correctly.', () => {

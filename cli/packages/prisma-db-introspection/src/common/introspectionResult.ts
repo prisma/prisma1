@@ -1,5 +1,5 @@
 import { Renderer, DatabaseType, ISDL, DefaultRenderer } from 'prisma-datamodel'
-import ModelNameAndDirectiveNormalizer from './modelNameAndDirectiveNormalizer';
+import DefaultNormalizer from './normalization/defaultNormalizer'
 
 export abstract class IntrospectionResult {
   public renderer: Renderer
@@ -10,20 +10,29 @@ export abstract class IntrospectionResult {
     this.databaseType = databaseType
   }
 
-  public abstract getDatamodel() : Promise<ISDL>
+  public abstract getDatamodel(): ISDL
   
-  public async renderToDatamodelString() : Promise<string> {
-    return this.renderer.render(await this.getDatamodel())
+  public renderToDatamodelString() : string {
+    return this.renderer.render(this.getDatamodel(), true)
   }
 
-  public async getNormalizedDatamodel(baseModel: ISDL | null = null) : Promise<ISDL> {
-    const model = await this.getDatamodel()
-    new ModelNameAndDirectiveNormalizer(baseModel).normalize(model)
+  public getNormalizedDatamodel(baseModel: ISDL | null = null) : ISDL {
+    const model = this.getDatamodel()
+    
+    DefaultNormalizer.create(this.databaseType, baseModel).normalize(model)
+
     return model
   }
 
-  public async renderToNormalizedDatamodelString(baseModel: ISDL | null = null) : Promise<string> {
-    return this.renderer.render(await this.getNormalizedDatamodel(baseModel))
+  /**
+   * Performs name normalization and order normalization.
+   * 
+   * If a base model is given, order and additional directives are taken
+   * from the base model.
+   * @param baseModel 
+   */
+  public renderToNormalizedDatamodelString(baseModel: ISDL | null = null) : string {
+    return this.renderer.render(this.getNormalizedDatamodel(baseModel), baseModel === null)
   }
 
 }

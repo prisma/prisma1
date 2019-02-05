@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector test schema - 2504 1`] = `
+"type Direct_message @pgTable(name: \\"direct_messages\\") {
+  id: Int! @unique
+  receiver_id: User
+  sender_id: User
+  text: String!
+}
+
+type User @pgTable(name: \\"users\\") {
+  direct_messages: Direct_message
+  direct_messages: Direct_message
+  id: Int! @unique
+  name: String!
+}"
+`;

@@ -33,10 +33,6 @@ input ChildCreateManyInput {
   create: [ChildCreateInput!]
 }
 
-type ChildPreviousValues {
-  c: String
-}
-
 input ChildRestrictedWhereInput {
   """
   Logical AND on all given filters.
@@ -163,37 +159,6 @@ input ChildScalarWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-}
-
-type ChildSubscriptionPayload {
-  mutation: MutationType!
-  node: Child
-  updatedFields: [String!]
-  previousValues: ChildPreviousValues
-}
-
-input ChildSubscriptionWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [ChildSubscriptionWhereInput!]
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: ChildWhereInput
 }
 
 input ChildUpdateManyDataInput {
@@ -1163,7 +1128,6 @@ type Query {
 
 type Subscription {
   parent(where: ParentSubscriptionWhereInput): ParentSubscriptionPayload
-  child(where: ChildSubscriptionWhereInput): ChildSubscriptionPayload
   joint(where: JointSubscriptionWhereInput): JointSubscriptionPayload
   friend(where: FriendSubscriptionWhereInput): FriendSubscriptionPayload
 }

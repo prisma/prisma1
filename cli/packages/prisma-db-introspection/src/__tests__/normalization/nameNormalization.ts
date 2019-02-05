@@ -1,5 +1,5 @@
 import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
-import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
+import ModelNameAndDirectiveNormalizer from '../../common/normalization/modelNameAndDirectiveNormalizer'
 
 function testNormalization(schemaFromDb, expectedResultSchema) {
   const parser = Parser.create(DatabaseType.mongo)
@@ -11,7 +11,7 @@ function testNormalization(schemaFromDb, expectedResultSchema) {
   normalizer.normalize(fromDb)
 
   const renderer = DefaultRenderer.create(DatabaseType.mongo)
-  const resultSchema = renderer.render(fromDb)
+  const resultSchema = renderer.render(fromDb, true)
 
   expect(resultSchema).toEqual(expectedResultSchema)
 }
@@ -23,7 +23,7 @@ describe('Schema normalization from database schema', () => {
         age: Int!
         name: String!
         birthday: Date!
-        posts: [post!]!
+        posts: [post]
         signedUp: Date!
       }
 
@@ -38,7 +38,7 @@ describe('Schema normalization from database schema', () => {
         age: Int!
         birthday: Date!
         name: String!
-        posts: [UserPost!]!
+        posts: [UserPost]
         signedUp: Date!
       }
 
@@ -55,7 +55,7 @@ describe('Schema normalization from database schema', () => {
     const schemaFromDb = `  
       type post @embedded {
         text: String!
-        comments: [comment!]!
+        comments: [comment]
       }
       
       type comment @embedded {
@@ -64,17 +64,17 @@ describe('Schema normalization from database schema', () => {
 
       type user {
         name: String!
-        posts: [post!]!
+        posts: [post]
       }`
 
     const expectedResultSchema = dedent(`
       type User @db(name: "user") {
         name: String!
-        posts: [UserPost!]!
+        posts: [UserPost]
       }
 
       type UserPost @embedded {
-        comments: [UserPostComment!]!
+        comments: [UserPostComment]
         text: String!
       }
       

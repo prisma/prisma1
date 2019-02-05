@@ -46,7 +46,7 @@ case class ProjectDeploymentActor(
     deployConnector.projectPersistence,
     MigrationStepMapperImpl(project),
     deployConnector.deployMutactionExecutor,
-    deployConnector.testFacilities.inspector
+    deployConnector.databaseInspector
   )
   var activeSchema: Schema = _
 

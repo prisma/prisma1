@@ -67,7 +67,7 @@ class ObjectTypeBuilder(
         SangriaField(
           "count",
           IntType,
-          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, ctx.value)
+          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountNodesDeferred(model, ctx.value)
         )
       )
     )
@@ -223,12 +223,12 @@ class ObjectTypeBuilder(
                 val existingFilter: Filter = arguments.filter.getOrElse(Filter.empty)
                 val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
                 val newQueryArguments      = arguments.copy(filter = Some(newFilter))
-                DeferredValue(ManyModelDeferred(f.relatedModel_!, newQueryArguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+                DeferredValue(GetNodesDeferred(f.relatedModel_!, newQueryArguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
               case _ => Vector.empty[PrismaNode]
             }
           case false =>
-            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+            DeferredValue(GetNodesByParentDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
         }
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
@@ -242,12 +242,13 @@ class ObjectTypeBuilder(
         f.relationIsInlinedInParent match {
           case true =>
             item.data.map.get(f.name) match {
-              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
-              case _                   => None
+              case Some(id: IdGCValue) =>
+                GetNodeDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
+              case _ => None
             }
 
           case false =>
-            FromOneDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
+            GetNodeByParentDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
@@ -258,11 +259,11 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+        DeferredValue(GetNodesByParentDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        FromOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        GetNodeByParentDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
     }
   }
 

@@ -47,7 +47,7 @@ type User {
   # Type String is currently not supported for id fields.
   _id: String! @id
   firstName: String
-  orders: [UserOrders!]!
+  orders: [UserOrders]
 }
 
 type UserOrders @embedded {

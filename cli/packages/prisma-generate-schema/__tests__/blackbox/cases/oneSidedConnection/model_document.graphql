@@ -25,8 +25,8 @@ type B {
 
 type C {
   id: ID! @id
-  x: [TypeWithId!]! @relation(link: INLINE)
-  y: [TypeWithoutId!]! @relation(link: INLINE)
+  x: [TypeWithId] @relation(link: INLINE)
+  y: [TypeWithoutId] @relation(link: INLINE)
 }
 
 type D {
@@ -43,6 +43,6 @@ type E {
 
 type F {
   id: ID! @id
-  x: [TypeWithId!]! @relation(link: INLINE)
-  y: [TypeWithoutId!]! @relation(link: INLINE)
+  x: [TypeWithId] @relation(link: INLINE)
+  y: [TypeWithoutId] @relation(link: INLINE)
 }

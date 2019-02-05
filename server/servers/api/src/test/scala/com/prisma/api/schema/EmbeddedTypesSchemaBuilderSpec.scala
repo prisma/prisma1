@@ -35,7 +35,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
     }
 
     val schemaBuilder =
-      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies, system)
+      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies)
     val build  = schemaBuilder.build()
     val schema = SchemaRenderer.renderSchema(build)
 
@@ -147,7 +147,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
     }
 
     val schemaBuilder =
-      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies, system)
+      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies)
     val build  = schemaBuilder.build()
     val schema = SchemaRenderer.renderSchema(build)
 
@@ -179,7 +179,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
     }
 
     val schemaBuilder =
-      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies, system)
+      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies)
     val build  = schemaBuilder.build()
     val schema = SchemaRenderer.renderSchema(build)
 

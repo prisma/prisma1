@@ -19,7 +19,7 @@ type OnlyDate {
 }
 
 type OnlyRelation {
-    ref: [OnlyDate!]!
+    ref: [OnlyDate]
 }
 
 type OnlyRelationA {

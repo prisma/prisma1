@@ -21,7 +21,7 @@ type OnlyDate {
 
 type OnlyRelation {
     id: ID! @id
-    ref: [OnlyDate!]! @relation(link: INLINE)
+    ref: [OnlyDate] @relation(link: INLINE)
 }
 
 type OnlyRelationA {
