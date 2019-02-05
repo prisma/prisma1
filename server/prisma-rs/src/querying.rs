@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    schema::{Model, ScalarField},
+    models::{Model, ScalarField},
     PrismaValue,
 };
 

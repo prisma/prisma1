@@ -1,9 +1,8 @@
-pub use crate::schema::*;
-use std::{cell::RefCell, rc::Rc};
-
-pub trait Renameable {
-    fn db_name(&self) -> &str;
-}
+pub use crate::models::{
+    SchemaTemplate,
+    SchemaRef,
+    Renameable,
+};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,7 +30,7 @@ pub struct ProjectTemplate {
 #[derive(Debug)]
 pub struct Project {
     pub id: String,
-    pub schema: Rc<RefCell<Schema>>,
+    pub schema: SchemaRef,
     pub functions: Vec<Function>,
     pub manifestation: ProjectManifestation,
     pub revision: Revision,

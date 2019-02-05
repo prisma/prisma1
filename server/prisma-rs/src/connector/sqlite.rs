@@ -3,10 +3,9 @@ use r2d2_sqlite::SqliteConnectionManager;
 
 use crate::{
     connector::Connector,
-    project::Renameable,
+    models::{Renameable, TypeIdentifier},
     protobuf::prisma::{graphql_id::IdValue, GraphqlId},
     querying::NodeSelector,
-    schema::TypeIdentifier,
     PrismaResult, PrismaValue, SERVER_ROOT,
 };
 
@@ -191,7 +190,7 @@ impl FromSql for GraphqlId {
 mod tests {
 
     use super::*;
-    use crate::{connector::Connector, project::*};
+    use crate::{connector::Connector, models::*};
     use serde_json::{self, json};
 
     #[test]
