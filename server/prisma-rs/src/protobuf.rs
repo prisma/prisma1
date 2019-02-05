@@ -105,8 +105,10 @@ impl ProtobufInterface {
     pub fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let params = prisma::GetNodeByWhereInput::decode(payload)?;
+
             let project_template: ProjectTemplate =
                 serde_json::from_reader(params.project_json.as_slice())?;
+
             let project: Project = project_template.into();
 
             let schema = project.schema.borrow();
@@ -132,6 +134,7 @@ impl ProtobufInterface {
             let result = self
                 .connector
                 .get_node_by_where(project.db_name(), &node_selector)?;
+
             let response_values: Vec<prisma::ValueContainer> = result
                 .into_iter()
                 .map(|value| prisma::ValueContainer {
