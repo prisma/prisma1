@@ -414,7 +414,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     // We need info about indices for resolving the exact type, as String is mapped to ID.
     // Also, we need info about the actual type before we resolve default values.
     for(const field of fields) {
-      this.inferFieldTypeAndDefaultValue(field)
+      this.inferFieldTypeAndDefaultValue(field, model.name)
     }
 
     return {
@@ -461,9 +461,9 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return gqlField
   }
 
-  protected inferFieldTypeAndDefaultValue(field: IGQLField) {
+  protected inferFieldTypeAndDefaultValue(field: IGQLField, typeName: string) {
     GQLAssert.raiseIf(typeof field.type !== 'string', 'Must be called before resolving relations')
-    let type: string | null = this.toTypeIdentifyer(field.type as string, field)
+    let type: string | null = this.toTypeIdentifyer(field.type as string, field, typeName)
 
     if(type === null) {
       field.comments.push({
@@ -486,7 +486,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
    * field is marked with an error comment.
    * @param typeName 
    */
-  protected abstract toTypeIdentifyer(typeName: string, fieldInfo: IGQLField): TypeIdentifier | null
+  protected abstract toTypeIdentifyer(fieldTypeName: string, fieldInfo: IGQLField, typeName: string): string | null
 
   protected abstract parseDefaultValue(defaultValueString: string, type: string): string | null
 }

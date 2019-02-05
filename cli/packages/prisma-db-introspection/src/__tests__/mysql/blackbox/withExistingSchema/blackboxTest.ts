@@ -2,10 +2,10 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { RelationalParser, RelationalRenderer, RelationalRendererV2 } from 'prisma-datamodel'
 
-import { Client } from 'pg'
+import * as mysql from 'mysql'
 import { connectionDetails } from '../connectionDetails'
-import { PostgresConnector } from '../../../../databases/relational/postgres/postgresConnector'
-import PostgresDatabaseClient from '../../../../databases/relational/postgres/postgresDatabaseClient'
+import { MysqlConnector } from '../../../../databases/relational/mysql/mysqlConnector';
+import MysqlClient from '../../../../databases/relational/mysql/mysqlDatabaseClient'
 
 // Tests are located in different module.
 const relativeTestCaseDir = path.join(__dirname, '../../../../../../prisma-generate-schema/__tests__/blackbox/cases/')
@@ -13,7 +13,7 @@ const relativeTestCaseDir = path.join(__dirname, '../../../../../../prisma-gener
 export default async function blackBoxTest(name: string) {
 
   const modelPath = path.join(relativeTestCaseDir, `${name}/model_relational.graphql`)
-  const sqlDumpPath = path.join(relativeTestCaseDir, `${name}/postgres.sql`)
+  const sqlDumpPath = path.join(relativeTestCaseDir, `${name}/mysql.sql`)
 
   expect(fs.existsSync(modelPath))
   expect(fs.existsSync(sqlDumpPath))
@@ -25,15 +25,19 @@ export default async function blackBoxTest(name: string) {
 
   const refModel = parser.parseFromSchemaString(model)
 
-  const client = new Client(connectionDetails)
+  connectionDetails.database = ``
+  connectionDetails.multipleStatements = true
+  const dbClient = mysql.createConnection(connectionDetails)
+  const wrappedClient = new MysqlClient(dbClient)
 
-  const connector = new PostgresConnector(client)
+  const connector = new MysqlConnector(wrappedClient)
+  await dbClient.connect()
+  await wrappedClient.query(`DROP DATABASE IF EXISTS \`schema-generator@${name}\`;`, [])
+  await wrappedClient.query(`CREATE DATABASE \`schema-generator@${name}\`;`, [])
+  await wrappedClient.query(`USE \`schema-generator@${name}\`;`, [])
+  await wrappedClient.query(sqlDump, [])
 
-  await client.connect()
-  await client.query(`DROP SCHEMA IF EXISTS "schema-generator$${name}" cascade;`)
-  await client.query(sqlDump)
-
-  const introspectionResult = await connector.introspect(`schema-generator$${name}`)
+  const introspectionResult = await connector.introspect(`schema-generator@${name}`)
 
   const unnormalized = introspectionResult.getDatamodel()
 
@@ -48,35 +52,13 @@ export default async function blackBoxTest(name: string) {
   //expect(renderer.render(normalizedWithoutReference)).toMatchSnapshot()
   //expect(renderer.render(unnormalized)).toMatchSnapshot()
 
-  await client.end()
-
-  /*
-
-  const { types } = Parser.create(databaseType).parseFromSchemaString(model)
-  const ourSchema = generator.schema.generate(types, {})
-
-  const ourPrintedSchema = printSchema(ourSchema)
-
-  // Write a copy of the generated schema to the FS, for debugging
-  fs.writeFileSync(
-    path.join(__dirname, `cases/${name}/generated_${databaseType}.graphql`),
-    ourPrintedSchema,
-    { encoding: 'UTF-8' },
-  )
-
-  // Check if our schema equals the prisma schema.
-  const prismaSchema = buildSchema(prisma)
-  AstTools.assertTypesEqual(prismaSchema, ourSchema, `${name}/${databaseType}`)
-
-  // Check if we can parse the schema we build (e.g. it's syntactically valid).
-  parse(ourPrintedSchema)
-  */
+  await dbClient.end()
 }
 
 const testNames = fs.readdirSync(relativeTestCaseDir)
 
 for (const testName of testNames) {
-  test(`Introspects ${testName}/relational correctly`, async () => {
+  test(`Introspects ${testName}/mysql correctly`, async () => {
     await blackBoxTest(testName)
   })
   break

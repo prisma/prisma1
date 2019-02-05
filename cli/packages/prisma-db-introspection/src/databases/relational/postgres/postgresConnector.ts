@@ -13,24 +13,18 @@ import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
 import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import { PrismaDBClient } from '../../prisma/prismaDBClient'
+import IDatabaseClient from '../../IDatabaseClient'
+import PostgresDatabaseClient from './postgresDatabaseClient';
 
 // Documentation: https://www.prisma.io/docs/data-model-and-migrations/introspection-mapping-to-existing-db-soi1/
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class PostgresConnector extends RelationalConnector {
-  client: Client
-
-  constructor(client: Client) {
-    super()
-
-    if (
-      !(client instanceof Client) &&
-      !((client as any) instanceof PrismaDBClient)
-    ) {
-      throw new Error('Postgres instance needed for initialization.')
+  constructor(client: IDatabaseClient | Client) {
+    if(client instanceof Client) {
+      client = new PostgresDatabaseClient(client)
     }
-
-    this.client = client
+    super(client)
   }
 
   public getDatabaseType(): DatabaseType {
@@ -45,14 +39,19 @@ export class PostgresConnector extends RelationalConnector {
     return new PostgresIntrospectionResult(models, relations, enums)
   }
 
-  protected async query(query: string, params?: any[]): Promise<any[]> {
-    return (await this.client.query(query, params)).rows
-  }
-
   public async listSchemas(): Promise<string[]> {
     const schemas = await super.listSchemas()
     return schemas.filter(schema => !schema.startsWith('pg_'))
   }
+
+  protected getTypeColumnName() {
+    return 'udt_name'
+  }
+
+  protected parameter(count: number, type: string) {
+    return `$${count}::${type}`
+  }
+
 
   // TODO: Unit test for column comments
   protected async queryColumnComment(
