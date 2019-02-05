@@ -17,7 +17,7 @@ pub mod querying;
 use config::PrismaConfig;
 use error::Error;
 use lazy_static::lazy_static;
-use protobuf::{ProtoBufEnvelope, ProtobufInterface};
+use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
 use serde_yaml;
 
 pub use protobuf::prisma::value_container::PrismaValue;
@@ -27,7 +27,7 @@ use std::{env, fs::File, slice};
 type PrismaResult<T> = Result<T, Error>;
 
 lazy_static! {
-    pub static ref PBI: ProtobufInterface = ProtobufInterface::new(&CONFIG);
+    pub static ref PBI: ProtoBufInterface = ProtoBufInterface::new(&CONFIG);
     pub static ref SERVER_ROOT: String =
         env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
     pub static ref CONFIG: PrismaConfig = {

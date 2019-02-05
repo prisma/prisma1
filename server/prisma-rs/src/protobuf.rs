@@ -1,168 +1,56 @@
-use crate::{
-    config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
-    connector::{Connector, Sqlite},
-    error::Error,
-    models::{Project, ProjectTemplate, Renameable},
-    querying::NodeSelector,
-    PrismaResult,
-};
+mod envelope;
+mod interface;
 
-use prost::Message;
-use std::mem;
+pub use envelope::ProtoBufEnvelope;
+pub use interface::ProtoBufInterface;
 
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
 }
 
-use prisma::{result, rpc_response as rpc};
+use prisma::{
+    RpcResponse,
+    rpc_response as rpc,
+    result,
+    Header,
+    Result,
+    Error as ProtoError,
+    NodesResult,
+};
 
-#[repr(C)]
-#[no_mangle]
-pub struct ProtoBufEnvelope {
-    pub data: *mut u8,
-    pub len: usize,
-}
+use crate::{Error as CrateError};
 
-impl ProtoBufEnvelope {
-    pub fn into_boxed_ptr(self) -> *mut ProtoBufEnvelope {
-        Box::into_raw(Box::new(self))
-    }
-}
-
-impl Drop for ProtoBufEnvelope {
-    fn drop(&mut self) {
-        if self.len > 0 {
-            unsafe {
-                drop(Box::from_raw(self.data));
-            };
-        }
-    }
-}
-
-impl From<Vec<u8>> for ProtoBufEnvelope {
-    fn from(mut v: Vec<u8>) -> Self {
-        let len = v.len();
-        let data = v.as_mut_ptr();
-
-        mem::forget(v);
-        ProtoBufEnvelope { data, len }
-    }
-}
-
-pub struct ProtobufInterface {
-    connector: Box<dyn Connector + Send + Sync + 'static>,
-}
-
-impl ProtobufInterface {
-    pub fn new(config: &PrismaConfig) -> ProtobufInterface {
-        let connector = match config.databases.get("default") {
-            Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite" => {
-                Sqlite::new(config.limit(), config.test_mode).unwrap()
-            }
-            _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
-        };
-
-        ProtobufInterface {
-            connector: Box::new(connector),
+impl RpcResponse {
+    pub fn header() -> Header {
+        Header {
+            type_name: String::from("RpcResponse")
         }
     }
 
-    fn protobuf_result<F>(f: F) -> Vec<u8>
-    where
-        F: FnOnce() -> PrismaResult<Vec<u8>>,
-    {
-        f().unwrap_or_else(|error| match error {
-            Error::NoResultError => {
-                let response = prisma::RpcResponse {
-                    header: prisma::Header {
-                        type_name: String::from("RpcResponse"),
-                    },
-                    response: Some(rpc::Response::Result(prisma::Result { value: None })),
-                };
-
-                let mut response_payload = Vec::new();
-                response.encode(&mut response_payload).unwrap();
-                response_payload
-            }
-            _ => {
-                dbg!(&error);
-                let error_response = prisma::RpcResponse {
-                    header: prisma::Header {
-                        type_name: String::from("RpcResponse"),
-                    },
-                    response: Some(rpc::Response::Error(prisma::Error {
-                        value: Some(error.into()),
-                    })),
-                };
-
-                let mut payload = Vec::new();
-                error_response.encode(&mut payload).unwrap();
-                payload
-            }
-        })
+    pub fn empty() -> RpcResponse {
+        RpcResponse {
+            header: Self::header(),
+            response: Some(rpc::Response::Result(Result { value: None })),
+        }
     }
 
-    pub fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
-        Self::protobuf_result(|| {
-            let params = prisma::GetNodeByWhereInput::decode(payload)?;
+    pub fn ok(result: NodesResult) -> RpcResponse {
+        RpcResponse {
+            header: Self::header(),
+            response: Some(rpc::Response::Result(
+                prisma::Result {
+                    value: Some(result::Value::NodesResult(result)),
+                }
+            ))
+        }
+    }
 
-            let project_template: ProjectTemplate =
-                serde_json::from_reader(params.project_json.as_slice())?;
-
-            let project: Project = project_template.into();
-
-            let schema = project.schema.borrow();
-
-            let model = schema.find_model(&params.model_name).ok_or_else(|| {
-                Error::InvalidInputError(format!("Model not found: {}", params.model_name))
-            })?;
-
-            let model_borrow = model.borrow();
-            let field = model_borrow.find_field(&params.field_name).ok_or_else(|| {
-                Error::InvalidInputError(format!("Field not found: {}", params.field_name))
-            })?;
-
-            let value = params.value.prisma_value.ok_or_else(|| {
-                Error::InvalidInputError(String::from("Search value cannot be empty."))
-            })?;
-
-            let selected_fields = model_borrow.scalar_fields();
-
-            let node_selector =
-                NodeSelector::new(model.clone(), field, &value, selected_fields.as_slice());
-
-            let result = self
-                .connector
-                .get_node_by_where(project.db_name(), &node_selector)?;
-
-            let response_values: Vec<prisma::ValueContainer> = result
-                .into_iter()
-                .map(|value| prisma::ValueContainer {
-                    prisma_value: Some(value),
-                })
-                .collect();
-
-            let response = prisma::RpcResponse {
-                header: prisma::Header {
-                    type_name: String::from("RpcResponse"),
-                },
-                response: Some(rpc::Response::Result(prisma::Result {
-                    value: Some(result::Value::NodesResult(prisma::NodesResult {
-                        nodes: vec![prisma::Node {
-                            values: response_values,
-                        }],
-                        fields: selected_fields
-                            .iter()
-                            .map(|field| field.db_name().to_string())
-                            .collect(),
-                    })),
-                })),
-            };
-
-            let mut response_payload = Vec::new();
-            response.encode(&mut response_payload).unwrap();
-
-            Ok(response_payload)
-        })
+    pub fn error(error: CrateError) -> RpcResponse {
+        RpcResponse {
+            header: Self::header(),
+            response: Some(rpc::Response::Error(ProtoError {
+                value: Some(error.into())
+            })),
+        }
     }
 }
