@@ -22,7 +22,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
     val invalidTypeError = (!fieldDef.isList).toOption {
       DeployError(typeDef, fieldDef, s"Fields that are marked as `@scalarList` must be lists, e.g. `[${fieldDef.typeName}]`.")
     }
-    val unsupportedError = (fieldDef.isScalarList && capabilities.hasNot(ScalarListsCapability)).toOption {
+    val unsupportedError = (fieldDef.isScalarList(document) && capabilities.hasNot(ScalarListsCapability)).toOption {
       DeployError(typeDef, fieldDef, s"This connector does not support scalar lists.")
     }
     invalidTypeError.toVector ++ unsupportedError
@@ -36,7 +36,7 @@ object ScalarListDirective extends FieldDirective[ScalarListBehaviour] {
       case None =>
         ScalarListBehaviour(ScalarListStrategy.Embedded)
     }
-    fieldDef.isScalarList.toOption {
+    fieldDef.isScalarList(document).toOption {
       behaviour
     }
   }
