@@ -1224,6 +1224,7 @@ input PostUpdateManyMutationInput {
 input PostUpdateManyWithoutLikesInput {
   create: [PostCreateWithoutLikesInput!]
   connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
   disconnect: [PostWhereUniqueInput!]
   delete: [PostWhereUniqueInput!]
   update: [PostUpdateWithWhereUniqueWithoutLikesInput!]
@@ -1235,6 +1236,7 @@ input PostUpdateManyWithoutLikesInput {
 input PostUpdateManyWithoutUserInput {
   create: [PostCreateWithoutUserInput!]
   connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
   disconnect: [PostWhereUniqueInput!]
   delete: [PostWhereUniqueInput!]
   update: [PostUpdateWithWhereUniqueWithoutUserInput!]
@@ -1711,6 +1713,7 @@ input PostWithoutConnectionUpdateManyDataInput {
 input PostWithoutConnectionUpdateManyInput {
   create: [PostWithoutConnectionCreateInput!]
   connect: [PostWithoutConnectionWhereUniqueInput!]
+  set: [PostWithoutConnectionWhereUniqueInput!]
   disconnect: [PostWithoutConnectionWhereUniqueInput!]
   delete: [PostWithoutConnectionWhereUniqueInput!]
   update: [PostWithoutConnectionUpdateWithWhereUniqueNestedInput!]
@@ -2244,6 +2247,7 @@ input UserUpdateManyMutationInput {
 input UserUpdateManyWithoutLikesInput {
   create: [UserCreateWithoutLikesInput!]
   connect: [UserWhereUniqueInput!]
+  set: [UserWhereUniqueInput!]
   disconnect: [UserWhereUniqueInput!]
   delete: [UserWhereUniqueInput!]
   update: [UserUpdateWithWhereUniqueWithoutLikesInput!]

@@ -25,6 +25,7 @@ export default class ModelUpdateManyWithoutRelatedInputTypeGenerator extends Rel
     if (!this.generators.modelWhereUniqueInput.wouldBeEmpty(model, args)) {
       fields.delete = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
       fields.connect = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
+      fields.set = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
       fields.disconnect = { type: this.generators.scalarTypeGenerator.wrapList(this.generators.modelWhereUniqueInput.generate(model, args)) }
     }
     if(!this.generators.modelUpdateWithWhereUniqueWithoutRelatedInput.wouldBeEmpty(model, args)) {
