@@ -2,21 +2,20 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RawAccessCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.jooq.Query
 import org.jooq.conf.{ParamType, Settings}
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
-import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpecLike}
 import play.api.libs.json.{JsString, JsValue}
 import sangria.util.StringUtil
 
 class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
 
-  override def doNotRunForPrototypes: Boolean                   = true
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability, RawAccessCapability)
 
   val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field("title", _.String)
