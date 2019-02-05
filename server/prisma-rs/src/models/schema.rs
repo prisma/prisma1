@@ -82,8 +82,42 @@ mod tests {
     use std::fs::File;
 
     #[test]
-    fn test_schema_json_deserialize() {
-        let _: SchemaTemplate =
-            serde_json::from_reader(File::open("./example_schema.json").unwrap()).unwrap();
+    fn test_schema_json_deserialize_legacy() {
+        let template: SchemaTemplate =
+            serde_json::from_reader(File::open("./legacy_schema.json").unwrap()).unwrap();
+
+        let schema: SchemaRef = template.into();
+        let schema = schema.borrow();
+
+        assert!(schema.is_legacy());
+
+        let model = schema.find_model("Subscription").unwrap();
+        let model = model.borrow();
+
+        assert!(model.is_legacy());
+
+        let id_field = model.find_field("id").unwrap();
+        assert!(id_field.is_id());
+        assert!(!id_field.is_created_at());
+        assert!(!id_field.is_updated_at());
+        assert!(!id_field.is_writable());
+
+        let title_field = model.find_field("title").unwrap();
+        assert!(!title_field.is_id());
+        assert!(!title_field.is_created_at());
+        assert!(!title_field.is_updated_at());
+        assert!(title_field.is_writable());
+
+        let created_at_field = model.find_field("createdAt").unwrap();
+        assert!(!created_at_field.is_id());
+        assert!(created_at_field.is_created_at());
+        assert!(!created_at_field.is_updated_at());
+        assert!(!created_at_field.is_writable());
+
+        let updated_at_field = model.find_field("updatedAt").unwrap();
+        assert!(!updated_at_field.is_id());
+        assert!(!updated_at_field.is_created_at());
+        assert!(updated_at_field.is_updated_at());
+        assert!(!updated_at_field.is_writable());
     }
 }

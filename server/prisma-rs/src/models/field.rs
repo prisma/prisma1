@@ -153,11 +153,16 @@ impl RelationSide {
 }
 
 impl ScalarField {
+    /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
+    /// or if the field has Id behaviour defined.
     pub fn is_id(&self) -> bool {
         if self.model.borrow().is_legacy() {
             self.name == ID_FIELD || self.name == EMBEDDED_ID_FIELD
         } else {
-            unimplemented!()
+            match self.behaviour {
+                Some(FieldBehaviour::Id { .. }) => true,
+                _ => false,
+            }
         }
     }
 
@@ -165,7 +170,10 @@ impl ScalarField {
         if self.model.borrow().is_legacy() {
             self.name == CREATED_AT_FIELD
         } else {
-            unimplemented!()
+            match self.behaviour {
+                Some(FieldBehaviour::CreatedAt) => true,
+                _ => false,
+            }
         }
     }
 
@@ -173,7 +181,10 @@ impl ScalarField {
         if self.model.borrow().is_legacy() {
             self.name == UPDATED_AT_FIELD
         } else {
-            unimplemented!()
+            match self.behaviour {
+                Some(FieldBehaviour::UpdatedAt) => true,
+                _ => false,
+            }
         }
     }
 
