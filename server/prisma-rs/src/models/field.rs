@@ -1,4 +1,5 @@
-use crate::models::{ModelRef, Renameable};
+use crate::models::{Model, ModelWeakRef, Renameable};
+use std::cell::Ref;
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
@@ -62,8 +63,8 @@ pub struct RelationField {
     pub manifestation: Option<FieldManifestation>,
     pub relation_name: String,
     pub relation_side: RelationSide,
-    #[debug_stub = "#ModelRef#"]
-    pub model: ModelRef,
+    #[debug_stub = "#ModelWeakRef#"]
+    pub model: ModelWeakRef,
 }
 
 #[derive(DebugStub)]
@@ -78,8 +79,8 @@ pub struct ScalarField {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
-    #[debug_stub = "#ModelRef#"]
-    pub model: ModelRef,
+    #[debug_stub = "#ModelWeakRef#"]
+    pub model: ModelWeakRef,
 }
 
 #[derive(Debug, Deserialize)]
@@ -153,39 +154,57 @@ impl RelationSide {
 }
 
 impl ScalarField {
+    fn with_model<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Ref<Model>) -> T,
+    {
+        match self.model.upgrade() {
+            Some(model) => f(model.borrow()),
+            None => panic!(
+                "Model does not exist anymore. Parent model is deleted without deleting the child fields."
+            )
+        }
+    }
+
     /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
     /// or if the field has Id behaviour defined.
     pub fn is_id(&self) -> bool {
-        if self.model.borrow().is_legacy() {
-            self.name == ID_FIELD || self.name == EMBEDDED_ID_FIELD
-        } else {
-            match self.behaviour {
-                Some(FieldBehaviour::Id { .. }) => true,
-                _ => false,
+        self.with_model(|model| {
+            if model.is_legacy() {
+                self.name == ID_FIELD || self.name == EMBEDDED_ID_FIELD
+            } else {
+                match self.behaviour {
+                    Some(FieldBehaviour::Id { .. }) => true,
+                    _ => false,
+                }
             }
-        }
+        })
     }
 
     pub fn is_created_at(&self) -> bool {
-        if self.model.borrow().is_legacy() {
-            self.name == CREATED_AT_FIELD
-        } else {
-            match self.behaviour {
-                Some(FieldBehaviour::CreatedAt) => true,
-                _ => false,
+        self.with_model(|model| {
+            if model.is_legacy() {
+                self.name == CREATED_AT_FIELD
+            } else {
+                match self.behaviour {
+                    Some(FieldBehaviour::CreatedAt) => true,
+                    _ => false,
+                }
             }
-        }
+        })
     }
 
     pub fn is_updated_at(&self) -> bool {
-        if self.model.borrow().is_legacy() {
-            self.name == UPDATED_AT_FIELD
-        } else {
-            match self.behaviour {
-                Some(FieldBehaviour::UpdatedAt) => true,
-                _ => false,
+        self.with_model(|model| {
+            if model.is_legacy() {
+                self.name == UPDATED_AT_FIELD
+            } else {
+                match self.behaviour {
+                    Some(FieldBehaviour::UpdatedAt) => true,
+                    _ => false,
+                }
             }
-        }
+        })
     }
 
     pub fn is_writable(&self) -> bool {
@@ -203,7 +222,7 @@ impl Renameable for ScalarField {
 }
 
 impl FieldTemplate {
-    pub fn build(self, model: ModelRef) -> Field {
+    pub fn build(self, model: ModelWeakRef) -> Field {
         match self {
             FieldTemplate::Scalar(st) => {
                 let scalar = ScalarField {

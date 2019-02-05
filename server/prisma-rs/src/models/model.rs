@@ -1,8 +1,12 @@
-use crate::models::{Field, FieldTemplate, Renameable, ScalarField, SchemaRef};
+use crate::models::{Field, FieldTemplate, Renameable, ScalarField, Schema, SchemaWeakRef};
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Ref, RefCell},
+    rc::{Rc, Weak},
+};
 
 pub type ModelRef = Rc<RefCell<Model>>;
+pub type ModelWeakRef = Weak<RefCell<Model>>;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,8 +25,8 @@ pub struct Model {
     pub is_embedded: bool,
     pub fields: Vec<Field>,
     pub manifestation: Option<ModelManifestation>,
-    #[debug_stub = "#SchemaRef#"]
-    pub schema: SchemaRef,
+    #[debug_stub = "#SchemaWeakRef#"]
+    pub schema: SchemaWeakRef,
 }
 
 #[derive(Debug, Deserialize)]
@@ -32,7 +36,7 @@ pub struct ModelManifestation {
 }
 
 impl ModelTemplate {
-    pub fn build(self, schema: SchemaRef) -> ModelRef {
+    pub fn build(self, schema: SchemaWeakRef) -> ModelRef {
         let model = Rc::new(RefCell::new(Model {
             name: self.name,
             stable_identifier: self.stable_identifier,
@@ -42,9 +46,12 @@ impl ModelTemplate {
             schema,
         }));
 
-        self.fields
-            .into_iter()
-            .for_each(|fi| model.borrow_mut().fields.push(fi.build(model.clone())));
+        self.fields.into_iter().for_each(|fi| {
+            model
+                .borrow_mut()
+                .fields
+                .push(fi.build(Rc::downgrade(&model)))
+        });
 
         model
     }
@@ -66,6 +73,18 @@ impl Renameable for Model {
 }
 
 impl Model {
+    fn with_schema<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Ref<Schema>) -> T,
+    {
+        match self.schema.upgrade() {
+            Some(model) => f(model.borrow()),
+            None => panic!(
+                "Schema does not exist anymore. Parent schema is deleted without deleting the child models."
+            )
+        }
+    }
+
     pub fn find_field(&self, name: &str) -> Option<&ScalarField> {
         self.scalar_fields()
             .iter()
@@ -84,6 +103,6 @@ impl Model {
     }
 
     pub fn is_legacy(&self) -> bool {
-        self.schema.borrow().is_legacy()
+        self.with_schema(|schema| schema.is_legacy())
     }
 }

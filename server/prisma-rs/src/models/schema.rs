@@ -1,8 +1,12 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 
 use crate::models::{ModelRef, ModelTemplate};
 
 pub type SchemaRef = Rc<RefCell<Schema>>;
+pub type SchemaWeakRef = Weak<RefCell<Schema>>;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,9 +58,12 @@ impl Into<SchemaRef> for SchemaTemplate {
             version: self.version,
         }));
 
-        self.models
-            .into_iter()
-            .for_each(|mt| schema.borrow_mut().models.push(mt.build(schema.clone())));
+        self.models.into_iter().for_each(|mt| {
+            schema
+                .borrow_mut()
+                .models
+                .push(mt.build(Rc::downgrade(&schema)))
+        });
 
         schema
     }
