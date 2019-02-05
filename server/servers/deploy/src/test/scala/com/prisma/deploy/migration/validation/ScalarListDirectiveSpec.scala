@@ -66,4 +66,23 @@ class ScalarListDirectiveSpec extends WordSpecLike with Matchers with DataModelV
     error3.field should equal(Some("tags"))
     error3.description should equal("Valid values for the strategy argument of `@scalarList` are: EMBEDDED.")
   }
+
+  "Enum Lists must not fail" in {
+    val dataModelString =
+      """
+        |enum UsedEnum {
+        |    A,
+        |    B
+        |}
+        |
+        |type AWithId {
+        |    id: ID! @id
+        |    fieldA: UsedEnum
+        |    fieldB: UsedEnum!
+        |    fieldC: [UsedEnum]
+        |}
+      """.stripMargin
+
+    validate(dataModelString, Set(EmbeddedScalarListsCapability))
+  }
 }
