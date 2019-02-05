@@ -1,24 +1,4 @@
-import Connectors from '../../../../connectors'
-import { Client } from 'pg'
-import { connectionDetails } from '../connectionDetails'
-import { PostgresConnector } from '../../../../databases/relational/postgres/postgresConnector'
-import { DatabaseType } from 'prisma-datamodel'
-import { connect } from 'tls'
-
-async function introspect(client: Client) {
-  return (await Connectors.create(DatabaseType.postgres, client).introspect('service$stage')).renderToNormalizedDatamodelString()
-}
-
-async function testSchema(sql: string) {
-  const client = new Client(connectionDetails)
-  await client.connect()
-  await client.query('DROP SCHEMA IF EXISTS "service$stage" cascade;')
-  await client.query(sql)
-
-  expect(await introspect(client)).toMatchSnapshot()
-
-  await client.end()
-}
+import testSchema from "../common"
 
 describe('Introspector', () => {
   test('Type with scalar lists', async () => {
@@ -283,6 +263,6 @@ describe('Introspector', () => {
     --
     -- PostgreSQL database dump complete
     --
-    `)
+    `, "service$stage", false)
   })
 })
