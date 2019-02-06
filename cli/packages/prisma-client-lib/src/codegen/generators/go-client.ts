@@ -52,7 +52,7 @@ export class GoGenerator extends Generator {
     Int: 'int32',
     String: 'string',
     ID: 'string',
-    Float: 'float32',
+    Float: 'float64',
     Boolean: 'bool',
     DateTime: 'string',
     Json: 'map[string]interface{}',
