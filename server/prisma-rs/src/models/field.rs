@@ -1,5 +1,5 @@
 use crate::models::{Model, ModelWeakRef, Renameable};
-use std::cell::Ref;
+use std::rc::Rc;
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
@@ -156,10 +156,10 @@ impl RelationSide {
 impl ScalarField {
     fn with_model<F, T>(&self, f: F) -> T
     where
-        F: FnOnce(Ref<Model>) -> T,
+        F: FnOnce(Rc<Model>) -> T,
     {
         match self.model.upgrade() {
-            Some(model) => f(model.borrow()),
+            Some(model) => f(model),
             None => panic!(
                 "Model does not exist anymore. Parent model is deleted without deleting the child fields."
             )

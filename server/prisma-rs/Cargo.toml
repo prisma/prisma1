@@ -29,6 +29,7 @@ log = "0.4"
 env_logger = "0.6"
 sql = { git = "https://github.com/prisma/sql.git", branch = "equals" }
 debug_stub_derive = "0.3"
+once_cell = "0.1"
 
 [build-dependencies]
 prost-build = "0.4"

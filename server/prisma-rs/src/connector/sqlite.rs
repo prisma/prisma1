@@ -116,8 +116,7 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let table_location =
-                Self::table_location(database_name, selector.model.borrow().db_name());
+            let table_location = Self::table_location(database_name, selector.model.db_name());
 
             let field_names: Vec<&str> = selector
                 .selected_fields
@@ -266,18 +265,15 @@ mod tests {
 
         let project_template: ProjectTemplate = serde_json::from_value(project_json).unwrap();
         let project: Project = project_template.into();
-        let schema = project.schema.borrow();
-        let model = schema.models[0].clone();
+        let model = &project.schema.models.get().unwrap()[0];
 
         let find_by = PrismaValue::String(String::from("Musti"));
 
-        let m = model.clone();
-        let m = m.borrow();
-        let fields = m.scalar_fields();
+        let fields = model.scalar_fields();
 
         let selector = NodeSelector::new(
             model.clone(),
-            m.find_field("name").unwrap(),
+            model.find_field("name").unwrap(),
             &find_by,
             &fields,
         );

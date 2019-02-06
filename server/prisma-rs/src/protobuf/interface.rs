@@ -60,18 +60,17 @@ impl ProtoBufInterface {
                 serde_json::from_reader(params.project_json.as_slice())?;
 
             let project: Project = project_template.into();
-            let schema = project.schema.borrow();
 
-            let model = schema.find_model(&params.model_name).ok_or_else(|| {
-                Error::InvalidInputError(format!("Model not found: {}", params.model_name))
-            })?;
+            let model = project
+                .schema
+                .find_model(&params.model_name)
+                .ok_or_else(|| {
+                    Error::InvalidInputError(format!("Model not found: {}", params.model_name))
+                })?;
 
-            let model_borrow = model.borrow();
+            let selected_fields: Vec<&ScalarField> = model.find_fields(&params.selected_scalar());
 
-            let selected_fields: Vec<&ScalarField> =
-                model_borrow.find_fields(&params.selected_scalar());
-
-            let field = model_borrow.find_field(&params.field_name).ok_or_else(|| {
+            let field = model.find_field(&params.field_name).ok_or_else(|| {
                 Error::InvalidInputError(format!("Field not found: {}", params.field_name))
             })?;
 

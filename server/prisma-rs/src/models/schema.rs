@@ -1,12 +1,10 @@
-use std::{
-    cell::RefCell,
-    rc::{Rc, Weak},
-};
+use std::rc::{Rc, Weak};
 
 use crate::models::{ModelRef, ModelTemplate};
+use once_cell::unsync::OnceCell;
 
-pub type SchemaRef = Rc<RefCell<Schema>>;
-pub type SchemaWeakRef = Weak<RefCell<Schema>>;
+pub type SchemaRef = Rc<Schema>;
+pub type SchemaWeakRef = Weak<Schema>;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -19,7 +17,7 @@ pub struct SchemaTemplate {
 
 #[derive(Debug)]
 pub struct Schema {
-    pub models: Vec<ModelRef>,
+    pub models: OnceCell<Vec<ModelRef>>,
     pub relations: Vec<Relation>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
@@ -51,19 +49,21 @@ pub struct PrismaEnum {
 
 impl Into<SchemaRef> for SchemaTemplate {
     fn into(self) -> SchemaRef {
-        let schema = Rc::new(RefCell::new(Schema {
-            models: Vec::new(),
+        let schema = Rc::new(Schema {
+            models: OnceCell::new(),
             relations: self.relations,
             enums: self.enums,
             version: self.version,
-        }));
-
-        self.models.into_iter().for_each(|mt| {
-            schema
-                .borrow_mut()
-                .models
-                .push(mt.build(Rc::downgrade(&schema)))
         });
+
+        let models = self
+            .models
+            .into_iter()
+            .map(|mt| mt.build(Rc::downgrade(&schema)))
+            .collect();
+
+        // Models will not be set before this, look above! No panic.
+        schema.models.set(models).unwrap();
 
         schema
     }
@@ -72,8 +72,8 @@ impl Into<SchemaRef> for SchemaTemplate {
 impl Schema {
     pub fn find_model(&self, name: &str) -> Option<ModelRef> {
         self.models
-            .iter()
-            .find(|model| model.borrow().name == name)
+            .get()
+            .and_then(|models| models.iter().find(|model| model.name == name))
             .cloned()
     }
 
@@ -94,12 +94,10 @@ mod tests {
             serde_json::from_reader(File::open("./legacy_schema.json").unwrap()).unwrap();
 
         let schema: SchemaRef = template.into();
-        let schema = schema.borrow();
 
         assert!(schema.is_legacy());
 
         let model = schema.find_model("Subscription").unwrap();
-        let model = model.borrow();
 
         assert!(model.is_legacy());
 

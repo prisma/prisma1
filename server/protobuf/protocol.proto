@@ -62,6 +62,18 @@ message Error {
     }
 }
 
+message RelationalField {
+    required string        field           = 1;
+    repeated SelectedField selected_fields = 2;
+}
+
+message SelectedField {
+    oneof field {
+        string          scalar     = 1;
+        RelationalField relational = 2;
+    }
+}
+
 message GetNodeByWhereInput {
     required Header         header          = 1;
     required bytes          project_json    = 2;
@@ -71,14 +83,106 @@ message GetNodeByWhereInput {
     repeated SelectedField  selected_fields = 6;
 }
 
-message RelationalField {
-    required string        field           = 1;
-    repeated SelectedField selected_fields = 2;
+message AndFilter {
+    repeated Filter filters = 1;
 }
 
-message SelectedField {
-    oneof field {
-        string scalar         = 1;
-        RelationalField relational = 2;
+message OrFilter {
+    repeated Filter filters = 1;
+}
+
+message NotFilter {
+    repeated Filter filters = 1;
+}
+
+message MultiContainer {
+    repeated ValueContainer values = 1;
+}
+
+message ScalarFilter {
+    required string field = 1;
+
+    oneof condition {
+        ValueContainer equals                 = 2;
+        ValueContainer not_equals             = 3;
+        ValueContainer contains               = 4;
+        ValueContainer not_contains           = 5;
+        ValueContainer starts_with            = 6;
+        ValueContainer not_starts_with        = 7;
+        ValueContainer ends_with              = 8;
+        ValueContainer not_ends_with          = 9;
+        ValueContainer less_than              = 10;
+        ValueContainer less_than_or_equals    = 11;
+        ValueContainer greater_than           = 12;
+        ValueContainer greater_than_or_equals = 13;
+        MultiContainer in                     = 14;
+        MultiContainer not_in                 = 15;
     }
+}
+
+message ScalarListFilter {
+    required string              field     = 1;
+    required ScalarListCondition condition = 2;
+}
+
+message ScalarListCondition {
+    oneof condition {
+        ValueContainer contains       = 1;
+        MultiContainer contains_every = 2;
+        MultiContainer contains_some  = 3;
+    }
+}
+
+message RelationFilter {
+    required RelationalField field         = 1;
+    required Filter          nested_filter = 2;
+
+    oneof condition {
+        bool EveryRelatedNode      = 3;
+        bool AtLeastOneRelatedNode = 4;
+        bool NoRelatedNode         = 5;
+        bool ToOneRelatedNode      = 6;
+    }
+}
+
+message Filter {
+    oneof type {
+        AndFilter               and                  = 1;
+        OrFilter                or                   = 2;
+        NotFilter               not                  = 3;
+        ScalarFilter            scalar               = 4;
+        ScalarListFilter        scalar_list          = 5;
+        RelationalField         one_relation_is_null = 6;
+        RelationFilter          relation             = 7;
+        bool                    node_subscription    = 8;
+        bool                    bool_filter          = 9;
+    }
+}
+
+message OrderBy {
+    enum SortOrder {
+        ASC = 0;
+        DESC = 1;
+    };
+
+    required string scalar_field = 1;
+    required SortOrder sort_order = 2;
+}
+
+message QueryArguments {
+    optional uint32    skip     = 1;
+    optional GraphqlId after    = 2;
+    optional uint32    first    = 3;
+    optional GraphqlId before   = 4;
+    optional uint32    last     = 5;
+    optional Filter    filter   = 6;
+    optional OrderBy   order_by = 7;
+}
+
+message GetNodesInput {
+    required Header         header          = 1;
+    required bytes          project_json    = 2;
+    required string         model_name      = 3;
+    required QueryArguments query_arguments = 4;
+    repeated SelectedField  selected_fields = 5;
 }
