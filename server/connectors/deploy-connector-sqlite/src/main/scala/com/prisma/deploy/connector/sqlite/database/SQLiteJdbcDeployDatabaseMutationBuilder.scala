@@ -172,52 +172,60 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             newIsRequired: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
 
-//    https://www.sqlite.org/lang_altertable.html
-//    If foreign key constraints are enabled, disable them using PRAGMA foreign_keys=OFF.
+    alterTable(project, model)
+  }
+  private def alterTable(project: Project, model: Model) = {
+    val tableName     = model.dbName
+    val tempTableName = s"${model.dbName}_TEMP_TABLE"
+
+    //    https://www.sqlite.org/lang_altertable.html
+    //    If foreign key constraints are enabled, disable them using PRAGMA foreign_keys=OFF.
     val foreignKeysOff = sqlu"Pragma foreign_keys=OFF"
 
-//    Start a transaction.
+    //    Start a transaction.
     val beginTransaction = sqlu"BEGIN TRANSACTION"
-//    Remember the format of all indexes and triggers associated with table X. This information will be needed in step 8 below
-//    One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
+    //    Remember the format of all indexes and triggers associated with table X. This information will be needed in step 8 below
+    //    One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
 
-//    Use CREATE TABLE to construct a new table "new_X" that is in the desired revised format of table X.
-//    Make sure that the name "new_X" does not collide with any existing table name, of course.
+    //    Use CREATE TABLE to construct a new table "new_X" that is in the desired revised format of table X.
+    //    Make sure that the name "new_X" does not collide with any existing table name, of course.
     val idField    = model.idField_!
     val idFieldSQL = typeMapper.rawSQLForField(idField)
 
-    val createNewTable = sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_TEMP_TABLE")} (
+    val createNewTable =
+      sqlu"""CREATE TABLE #${qualify(project.dbName, tempTableName)} (
            #$idFieldSQL,
            PRIMARY KEY (#${qualify(idField.dbName)})
            );"""
 
+    //Fixme InlineRelationFields
     val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.map { field =>
-      createColumn(project, s"${model.dbName}_TEMP_TABLE", field.dbName, field.isRequired, field.isUnique, field.typeIdentifier)
+      createColumn(project, tempTableName, field.dbName, field.isRequired, field.isUnique, field.typeIdentifier)
     }: _*)
 
-//    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
+    //    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
     val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",")
     val transferContent =
-      sqlu"""INSERT INTO #${qualify(project.dbName, s"${model.dbName}_TEMP_TABLE")} (#$columnNames)
+      sqlu"""INSERT INTO #${qualify(project.dbName, tempTableName)} (#$columnNames)
              SELECT #$columnNames
-             FROM #${qualify(project.dbName, s"${model.dbName}")}
+             FROM #${qualify(project.dbName, tableName)}
           """
 
-//    Drop the old table X: DROP TABLE X.
-    val dropOldTable = sqlu"DROP TABLE #${qualify(project.dbName, model.dbName)} "
-//    Change the name of new_X to X using: ALTER TABLE new_X RENAME TO X.
+    //    Drop the old table X: DROP TABLE X.
+    val dropOldTable = sqlu"DROP TABLE #${qualify(project.dbName, tableName)} "
+    //    Change the name of new_X to X using: ALTER TABLE new_X RENAME TO X.
 
-    val renameNewTable = sqlu"ALTER TABLE #${qualify(project.dbName, s"${model.dbName}_TEMP_TABLE")} RENAME TO #${qualify(project.dbName, model.dbName)}"
-//    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
+    val renameNewTable = sqlu"ALTER TABLE #${qualify(project.dbName, tempTableName)} RENAME TO #${qualify(project.dbName, tableName)}"
+    //    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
     val createIndexes = sqlu"" //Fixme
-//    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
+    //    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
 
-//    If foreign key constraints were originally enabled then run PRAGMA foreign_key_check to verify that the schema change did not break any foreign key constraints.
+    //    If foreign key constraints were originally enabled then run PRAGMA foreign_key_check to verify that the schema change did not break any foreign key constraints.
     val foreignKeyCheck = sqlu"Pragma foreign_key_check"
-//    Commit the transaction started in step 2.
+    //    Commit the transaction started in step 2.
 
     val commit = sqlu"COMMIT"
-//    If foreign keys constraints were originally enabled, reenable them now.
+    //    If foreign keys constraints were originally enabled, reenable them now.
     val foreignKeysOn = sqlu"Pragma foreign_keys=ON"
 
     DBIO.seq(
@@ -235,10 +243,12 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     )
   }
 
-  override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
+  override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]): DBIO[_] = {
     //if no model is provided, this concerns the relation table
-
-    sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} DROP COLUMN #${qualify(columnName)}"""
+    model match {
+      case Some(m) => alterTable(project, m)
+      case None    => sys.error("implement for relations") //Fixme
+    }
   }
 
   override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
