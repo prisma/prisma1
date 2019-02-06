@@ -56,7 +56,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   private def mustUpdateColumn(column: Column, mutaction: CreateColumn) = {
     column.typeIdentifier != mutaction.field.typeIdentifier ||
-    column.isRequired == mutaction.field.isRequired //Fixme, this should probably be unequal???
+    column.isRequired != mutaction.field.isRequired
   }
 
   private def mustAddUniqueConstraint(column: Column, mutaction: CreateColumn) = {
