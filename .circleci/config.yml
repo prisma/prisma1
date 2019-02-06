@@ -13,10 +13,8 @@ jobs:
       - image: circleci/mysql:5
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_USER: prisma
+          MYSQL_ROOT_PASSWORD: ''
           MYSQL_DATABASE: prisma
-          MYSQL_PASSWORD: prisma
-          MYSQL_PW: prisma
     steps:
       - checkout
       - run: sudo apt install postgresql-client
