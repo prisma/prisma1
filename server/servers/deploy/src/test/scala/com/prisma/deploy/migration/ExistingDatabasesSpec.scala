@@ -88,13 +88,14 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
+
     val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
 
     val dataModel =
       s"""
          |type Blog @db(name: "blog"){
          |  id: Int! @id
-         |  title: String!
+         |  title: String
          |}
        """.stripMargin
 
