@@ -199,9 +199,9 @@ export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
   yarn install
+  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
   yarn build
   npm version $newVersion
-  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
