@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -oxe
+set -xe
 cd packages/prisma-datamodel
 yarn
 yarn build

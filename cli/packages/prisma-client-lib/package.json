@@ -31,7 +31,7 @@
     "lodash.flatten": "^4.4.0",
     "prettier": "^1.14.3",
     "prisma-datamodel": "^1.25.0",
-    "prisma-generate-schema": "1.23.0-alpha.173",
+    "prisma-generate-schema": "1.20.4",
     "subscriptions-transport-ws": "^0.9.15",
     "uppercamelcase": "^3.0.0",
     "ws": "^6.1.0",
