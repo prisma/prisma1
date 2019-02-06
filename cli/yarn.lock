@@ -6628,14 +6628,6 @@ pretty-ms@^3.0.0:
   dependencies:
     parse-ms "^1.0.0"
 
-prisma-datamodel@1.23.0-alpha.173:
-  version "1.23.0-alpha.173"
-  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.173.tgz#1c8ba6b9d35b86f4eeb2e6f90113141b7391445c"
-  dependencies:
-    graphql "^14.0.2"
-    pluralize "^7.0.0"
-    popsicle "10"
-
 prisma-datamodel@1.23.0-alpha.178:
   version "1.23.0-alpha.178"
   resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.178.tgz#d5f2db4a1d163af60762eeb87d982eeeae80cf30"
@@ -6643,15 +6635,6 @@ prisma-datamodel@1.23.0-alpha.178:
     graphql "^14.0.2"
     pluralize "^7.0.0"
     popsicle "10"
-
-prisma-generate-schema@1.23.0-alpha.173:
-  version "1.23.0-alpha.173"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.23.0-alpha.173.tgz#73117d75e2c908c4fa3188bd816697e2a4cb55ec"
-  dependencies:
-    graphql "^14.0.2"
-    pluralize "^7.0.0"
-    popsicle "10"
-    prisma-datamodel "1.23.0-alpha.173"
 
 prisma-generate-schema@^1.23.0-alpha.178:
   version "1.23.0-alpha.178"
