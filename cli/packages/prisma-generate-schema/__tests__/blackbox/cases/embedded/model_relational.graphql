@@ -1,14 +1,14 @@
 type Parent {
   id: ID! @unique
   p: String @unique
-  children: [Child!]!
-  j: [Joint!]!
+  children: [Child]
+  j: [Joint]
 }
 
 # No embedded on relational
 type Child {
   c: String @unique
-  friendsOpt: [Friend!]! @mongoRelation(field: "friends")
+  friendsOpt: [Friend] @mongoRelation(field: "friends")
   jointOpt: Joint! @mongoRelation(field: "joint")
 }
 

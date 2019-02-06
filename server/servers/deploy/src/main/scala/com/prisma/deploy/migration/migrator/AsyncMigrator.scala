@@ -9,6 +9,7 @@ import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPer
 import com.prisma.deploy.migration.migrator.DeploymentProtocol.{Initialize, Schedule}
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -29,6 +30,7 @@ case class AsyncMigrator(
     system.actorOf(Props(DeploymentSchedulerActor(migrationPersistence, projectPersistence, deployConnector, invalidationPublisher)))
   }
   implicit val timeout = new Timeout(5.minutes)
+  val logger           = LoggerFactory.getLogger("prisma")
 
   override def schedule(
       project: Project,
@@ -43,10 +45,11 @@ case class AsyncMigrator(
   override def initialize: Unit = {
     (deploymentScheduler ? Initialize).onComplete {
       case Success(_) =>
-        println("Deployment worker initialization complete.")
+        logger.info("Deployment worker initialization complete.")
 
       case Failure(err) =>
-        println(s"Fatal error during deployment worker initialization: $err")
+        logger.info(s"Fatal error during deployment worker initialization: $err")
+        err.printStackTrace()
         sys.exit(-1)
     }
   }

@@ -28,12 +28,16 @@ describe(`Renderer datamodel v2 test`, () => {
       isEnum: false,
       fields: [
         field1, field2, field3
-      ]
+      ],
+      comments: [],
+      directives: [],
+      databaseName: null,
+      indices: []
     }
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })

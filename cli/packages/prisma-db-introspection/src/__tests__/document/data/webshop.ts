@@ -117,10 +117,10 @@ export const collections = {
 export const schemaString = `type items {
   # Type String is currently not supported for id fields.
   _id: String! @id
-  keywords: [String!]!
+  keywords: [String]
   price: Float
   rating: Float
-  reviews: [itemsReviews!]!
+  reviews: [itemsReviews]
 }
 
 type itemsReviews @embedded {
@@ -133,7 +133,7 @@ type orders {
   _id: Int! @id
   amount: Float
   customer: users @relation(link: INLINE)
-  items: [items!]! @relation(link: INLINE)
+  items: [items] @relation(link: INLINE)
   orderDate: String
 }
 
@@ -142,7 +142,7 @@ type users {
   _id: String! @id
   firstName: String
   lastName: String
-  paymentInfo: [usersPaymentInfo!]!
+  paymentInfo: [usersPaymentInfo]
   shippingAddress: usersShippingAddress
 }
 
@@ -164,10 +164,10 @@ type usersShippingAddress @embedded {
 export const normalizedSchemaString = `type Item @db(name: "items") {
   # Type String is currently not supported for id fields.
   _id: String! @id
-  keywords: [String!]!
+  keywords: [String]
   price: Float
   rating: Float
-  reviews: [ItemReview!]!
+  reviews: [ItemReview]
 }
 
 type ItemReview @embedded {
@@ -180,7 +180,7 @@ type Order @db(name: "orders") {
   _id: Int! @id
   amount: Float
   customer: User @relation(link: INLINE)
-  items: [Item!]! @relation(link: INLINE)
+  items: [Item] @relation(link: INLINE)
   orderDate: String
 }
 
@@ -189,7 +189,7 @@ type User @db(name: "users") {
   _id: String! @id
   firstName: String
   lastName: String
-  paymentInfo: [UserPaymentInfo!]!
+  paymentInfo: [UserPaymentInfo]
   shippingAddress: UserShippingAddress
 }
 

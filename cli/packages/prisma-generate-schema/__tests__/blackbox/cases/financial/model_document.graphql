@@ -8,9 +8,9 @@ type Person {
   email: String
   firstName: String
   lastName: String
-  phoneNumbers: [PhoneNumber!]! @relation(link: INLINE)
-  scheduledTransactions: [FinancialScheduledTransaction!]! @relation(link: INLINE)
-  transactions: [FinancialTransaction!]! @relation(link: INLINE)
+  phoneNumbers: [PhoneNumber] @relation(link: INLINE)
+  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: INLINE)
+  transactions: [FinancialTransaction] @relation(link: INLINE)
   user: User
 }
 
@@ -22,7 +22,7 @@ type PhoneNumber {
 type FinancialAccount {
   id: ID! @id
   key: String @unique
-  campuses: [Campus!]! @relation(link: INLINE)
+  campuses: [Campus] @relation(link: INLINE)
   description: String!
   isActive: Boolean!
   name: String
@@ -71,7 +71,7 @@ type FinancialScheduledTransaction {
   isActive: Boolean!
   startDate: DateTime
   frequency: TRANSACTION_FREQUENCY
-  transactions: [FinancialTransaction!]!
+  transactions: [FinancialTransaction]
   account: FinancialAccount @relation(link: INLINE)
   amount: Float!
 }
@@ -135,9 +135,9 @@ type GroupRole {
 type GroupType {
   id: ID! @id
   description: String
-  groups: [Group!]!
+  groups: [Group]
   name: String! @unique
-  roles: [GroupRole!]!
+  roles: [GroupRole]
 }
 
 type Group {
@@ -145,22 +145,22 @@ type Group {
   key: String @unique
   description: String
   type: GroupType! @relation(link: INLINE)
-  invites: [GroupInvite!]!
+  invites: [GroupInvite]
   isActive: Boolean!
-  members: [GroupMember!]! @relation(link: INLINE)
+  members: [GroupMember] @relation(link: INLINE)
   name: String!
   organization: Group @relation(link: INLINE)
 }
 
 type Campus {
   id: ID! @id
-  accounts: [FinancialAccount!]!
+  accounts: [FinancialAccount]
   description: String
   isActive: Boolean
   organization: Group @relation(link: INLINE)
   location: Location @relation(link: INLINE)
   name: String!
-  phoneNumbers: [PhoneNumber!]! @relation(link: INLINE)
+  phoneNumbers: [PhoneNumber] @relation(link: INLINE)
 }
 
 enum LOCATION_TYPE {

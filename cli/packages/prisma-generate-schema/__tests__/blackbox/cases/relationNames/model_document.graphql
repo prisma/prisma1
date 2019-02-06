@@ -13,7 +13,7 @@ type B {
 }
 
 type C {
-  toB: [B!]! @relation(link: INLINE)
-  toA: [A!]! @relation(link: INLINE)
+  toB: [B] @relation(link: INLINE)
+  toA: [A] @relation(link: INLINE)
   id: ID! @id
 }

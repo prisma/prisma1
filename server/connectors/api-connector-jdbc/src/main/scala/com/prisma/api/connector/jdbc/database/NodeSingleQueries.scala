@@ -28,7 +28,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.allScalarAndFlatRelationFields(where.model))
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = {
     val model      = where.model

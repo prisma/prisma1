@@ -4,5 +4,5 @@ type Story {
 
 type UserSpace {
   id: ID! @unique
-  stories: [Story!]! @relation(name: "StoriesByUserSpace", onDelete: SET_NULL)
+  stories: [Story] @relation(name: "StoriesByUserSpace", onDelete: SET_NULL)
 }

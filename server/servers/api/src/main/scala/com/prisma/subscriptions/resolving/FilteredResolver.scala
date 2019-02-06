@@ -1,15 +1,15 @@
 package com.prisma.subscriptions.resolving
 
 import com.prisma.api.connector._
-import com.prisma.api.schema.ObjectTypeBuilder
-import com.prisma.gc_values.{StringIdGCValue, IdGCValue}
+import com.prisma.api.schema.{ObjectTypeBuilder, SangriaExtensions}
+import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Model
 import sangria.schema.Context
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object FilteredResolver {
+object FilteredResolver extends SangriaExtensions {
   def resolve(
       modelObjectTypes: ObjectTypeBuilder,
       model: Model,
@@ -32,6 +32,6 @@ object FilteredResolver {
 
     val filterValues = filterInput.filters.filter(removeTopLevelIdFilter) ++ Vector(ScalarFilter(model.idField_!, Equals(id)))
     val filter       = AndFilter(filterValues)
-    dataResolver.getNodes(model, QueryArguments.withFilter(filter = filter), SelectedFields.all(model)).map(_.nodes.headOption)
+    dataResolver.getNodes(model, QueryArguments.withFilter(filter = filter), ctx.getSelectedFields(model)).map(_.nodes.headOption)
   }
 }

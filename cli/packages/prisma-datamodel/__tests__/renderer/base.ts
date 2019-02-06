@@ -10,10 +10,10 @@ const parser = Parser.create(DatabaseType.postgres)
 const simpleModel = 
 `type User {
   age: int
-  isAdmin: Boolean @default(value: false)
+  isAdmin: Boolean @default(value: "false")
   name: String
   nationality: String @default(value: "DE")
-  roles: [Int!]!
+  roles: [Int]
 }`
 
 const modelWithDirectives =
@@ -34,7 +34,7 @@ describe(`Renderer test`, () => {
     const listField = new GQLScalarField('roles', 'Int')
     listField.isList = true
 
-    const model = {
+    const model: IGQLType = {
       fields: [
         new GQLScalarField('name', 'String'),
         new GQLScalarField('age', 'int'),
@@ -44,12 +44,16 @@ describe(`Renderer test`, () => {
       ],
       name: 'User',
       isEmbedded: false,
-      isEnum: false
-    } as IGQLType
+      isEnum: false,
+      indices: [],
+      directives: [],
+      comments: [],
+      databaseName: null
+    }
 
     const res = renderer.render({
       types: [model]
-    })
+    }, true)
 
     expect(res).toEqual(simpleModel)
   })
@@ -90,21 +94,24 @@ describe(`Renderer test`, () => {
       isEnum: false,
       fields: [
         scalarField, arrayField
-      ]
+      ],
+      comments: [],
+      indices: [],
+      databaseName: null
     }
 
 
 
     const res = renderer.render({
       types: [type]
-    })
+    }, true)
 
     expect(res).toEqual(modelWithDirectives)
   })
 
   test('Render a single type consistently with the parser', () => {
     const parsed = parser.parseFromSchemaString(simpleModel);
-    const rendered = renderer.render(parsed)
+    const rendered = renderer.render(parsed, true)
 
     expect(rendered).toEqual(simpleModel)
   })

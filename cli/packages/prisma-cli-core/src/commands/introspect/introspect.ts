@@ -11,8 +11,9 @@ import { prettyTime } from '../../util'
 import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
-import { Parser, DatabaseType } from 'prisma-datamodel'
+import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
+import { TmpRelationalRendererV2 } from './TmpRelationalRendererV2'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -57,17 +58,26 @@ export default class IntrospectCommand extends Command {
     ['mongo-db']: flags.string({
       description: 'Mongo database',
     }),
+
+    /**
+     * Temporary flag needed to test Datamodel v2
+     */
+    ['prototype']: flags.boolean({
+      description:
+        'Output Datamodel v2. Note: This is a temporary flag for debugging',
+    }),
   }
   static hidden = false
   async run() {
-    const { interactive } = this.flags
+    const { interactive, prototype } = this.flags
     const pgHost = this.flags['pg-host']
     const pgPort = this.flags['pg-port']
     const pgUser = this.flags['pg-user']
     const pgPassword = this.flags['pg-password']
     const pgDb = this.flags['pg-db']
     const pgSsl = this.flags['pg-ssl']
-    const pgSchema = this.flags['pg-schema']
+    // we need to be able to override it later with the interactive flow
+    let pgSchema = this.flags['pg-schema']
 
     const mongoUri = this.flags['mongo-uri']
     let mongoDb = this.flags['mongo-db']
@@ -130,10 +140,6 @@ export default class IntrospectCommand extends Command {
       notProvidedArgs.length > 0 &&
       notProvidedArgs.length < pgArgsEntries.length
     ) {
-      console.log({
-        pgArgsEntriesLength: pgArgsEntries.length,
-        notProvidedArgsLength: notProvidedArgs.length,
-      })
       throw new Error(
         `If you provide one of the pg- arguments, you need to provide all of them. The arguments ${notProvidedArgs
           .map(([k]) => k)
@@ -150,24 +156,35 @@ export default class IntrospectCommand extends Command {
         database: pgDb,
         ssl: pgSsl,
       })
+      await client.connect()
       connector = new PostgresConnector(client)
       databaseType = DatabaseType.postgres
     }
 
-    if (!interactive) {
-      await this.definition.load(this.flags)
-      const service = this.definition.service!
-      const stage = this.definition.stage!
-      const cluster = this.definition.getCluster()
-      const workspace = this.definition.getWorkspace()
-      this.env.setActiveCluster(cluster!)
-      await this.client.initClusterClient(cluster!, service!, stage, workspace!)
+    try {
+      if (!interactive) {
+        await this.definition.load(this.flags)
+        const service = this.definition.service!
+        const stage = this.definition.stage!
+        const cluster = this.definition.getCluster()
+        const workspace = this.definition.getWorkspace()
+        this.env.setActiveCluster(cluster!)
+        await this.client.initClusterClient(
+          cluster!,
+          service!,
+          stage,
+          workspace!,
+        )
 
-      if (await this.hasExecuteRaw()) {
-        client = new PrismaDBClient(this.definition)
-        connector = new PostgresConnector(client)
-        databaseType = DatabaseType.postgres
+        if (await this.hasExecuteRaw()) {
+          client = new PrismaDBClient(this.definition)
+          await client.connect()
+          connector = new PostgresConnector(client)
+          databaseType = DatabaseType.postgres
+        }
       }
+    } catch (e) {
+      //
     }
 
     if (!client || !connector!) {
@@ -176,11 +193,14 @@ export default class IntrospectCommand extends Command {
         client = new PGClient(credentials)
         connector = new PostgresConnector(client)
         databaseType = DatabaseType.postgres
+        await client.connect()
+        pgSchema = credentials.schema
       } else if (credentials.type === 'mongo') {
         client = await this.connectToMongo(credentials)
         connector = new MongoConnector(client)
         mongoDb = credentials.database
         databaseType = DatabaseType.mongo
+        await client.connect()
       }
     }
 
@@ -231,17 +251,25 @@ export default class IntrospectCommand extends Command {
             )
       }
 
-      const ParserInstance = Parser.create(databaseType!)
-      const datamodel = ParserInstance.parseFromSchemaString(
-        this.definition.typesString!,
-      )
+      let datamodel
+      if (this.definition.typesString) {
+        const ParserInstance = Parser.create(databaseType!)
+        datamodel = ParserInstance.parseFromSchemaString(
+          this.definition.typesString!,
+        )
+      }
 
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
 
       const introspection = await connector!.introspect(schema)
-      const sdl = await introspection.getNormalizedDatamodel(datamodel)
+      const sdl = datamodel
+        ? await introspection.getNormalizedDatamodel(datamodel)
+        : await introspection.getDatamodel()
       const numTables = sdl.types.length
-      const renderedSdl = introspection.renderer.render(sdl)
+
+      const renderedSdl = prototype
+        ? await new TmpRelationalRendererV2().render(sdl) // TODO: Move tmp renderer back to datamodel
+        : await introspection.renderer.render(sdl)
 
       // Mongo has .close, Postgres .end
       if (typeof client.close === 'function') {
@@ -259,7 +287,8 @@ export default class IntrospectCommand extends Command {
         )
         this.out.exit(1)
       }
-      const fileName = `datamodel-${new Date().getTime()}.prisma`
+      const prototypeFileName = prototype ? '-prototype' : ''
+      const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
       const fullFileName = path.join(this.config.definitionDir, fileName)
       fs.writeFileSync(fullFileName, renderedSdl)
       this.out.action.stop(prettyTime(Date.now() - before))
@@ -275,7 +304,7 @@ ${chalk.bold(
 `)
 
       if (
-        !this.definition.definition ||
+        this.definition.definition &&
         !this.definition.definition!.datamodel
       ) {
         await this.definition.load(this.flags)

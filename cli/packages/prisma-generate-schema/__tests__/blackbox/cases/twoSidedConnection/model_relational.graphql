@@ -29,12 +29,12 @@ type BWithoutIdWithA {
 type CWithIdWithA {
   id: ID! @unique
   field: String!
-  x: [AWithC!]!
+  x: [AWithC]
 }
 
 type CWithoutIdWithA {
   field: String!
-  x: [AWithC!]!
+  x: [AWithC]
 }
 
 type AWithIdWithB {
@@ -62,12 +62,12 @@ type BWithoutIdWithB {
 type CWithIdWithB {
   id: ID! @unique
   field: String!
-  x: [BWithC!]!
+  x: [BWithC]
 }
 
 type CWithoutIdWithB {
   field: String!
-  x: [BWithC!]!
+  x: [BWithC]
 }
 
 type AWithIdWithC {
@@ -95,12 +95,12 @@ type BWithoutIdWithC {
 type CWithIdWithC {
   id: ID! @unique
   field: String!
-  x: [CWithC!]!
+  x: [CWithC]
 }
 
 type CWithoutIdWithC {
   field: String!
-  x: [CWithC!]!
+  x: [CWithC]
 }
 
 type AWithA {
@@ -134,16 +134,16 @@ type BWithC {
 }
 
 type CWithA {
-  x: [AWithIdWithC!]!
-  y: [AWithoutIdWithC!]!
+  x: [AWithIdWithC]
+  y: [AWithoutIdWithC]
 }
 
 type CWithB {
-  x: [BWithIdWithC!]!
-  y: [BWithoutIdWithC!]!
+  x: [BWithIdWithC]
+  y: [BWithoutIdWithC]
 }
 
 type CWithC {
-  x: [CWithIdWithC!]!
-  y: [CWithoutIdWithC!]!
+  x: [CWithIdWithC]
+  y: [CWithoutIdWithC]
 }

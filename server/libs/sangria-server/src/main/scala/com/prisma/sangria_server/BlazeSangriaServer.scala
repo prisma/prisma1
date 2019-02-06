@@ -1,5 +1,7 @@
 package com.prisma.sangria_server
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import cats.effect._
 import cats.implicits._
 import io.circe.Json
@@ -7,7 +9,6 @@ import org.http4s
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl.io._
-import org.http4s.server.Server
 import org.http4s.server.blaze._
 import play.api.libs.json.{JsValue => PlayJsValue}
 import ujson.circe.CirceJson
@@ -17,7 +18,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 object BlazeSangriaServer extends SangriaServerExecutor {
-  override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = BlazeSangriaServer(handler, port, requestPrefix)
+  override def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer) = {
+    BlazeSangriaServer(handler, port, requestPrefix)
+  }
 
   override def supportsWebsockets = false
 }
@@ -74,7 +77,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
         id = requestId,
         method = HttpMethod.Post,
         path = request.uri.path.split('/').filter(_.nonEmpty).toVector,
-        headers = request.headers.map(h => h.name.value -> h.value).toMap,
+        headers = request.headers.map(h => h.name.value.toLowerCase() -> h.value).toMap,
         json = circeJsonToPlayJson(json),
         ip = "0.0.0.0"
       )
@@ -83,5 +86,4 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
 
   def circeJsonToPlayJson(json: Json): PlayJsValue  = CirceJson.transform(json, PlayJson)
   def playJsonToCircleJson(json: PlayJsValue): Json = PlayJson.transform(json, CirceJson)
-
 }

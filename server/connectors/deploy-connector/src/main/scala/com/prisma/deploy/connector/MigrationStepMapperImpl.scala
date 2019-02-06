@@ -70,7 +70,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
         case _ if previous.isScalarList && next.isScalarList                                                         => Vector(deleteScalarListTable, createScalarListTable)
         case _ if previous.isScalarNonList && next.isScalarNonList =>
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier
-          val common         = Vector(createTemporaryColumn, deleteColumn, renameTemporaryColumn) // a table might have temporary no columns. MySQL does not allow this.
+          val common         = Vector(createTemporaryColumn, deleteColumn, renameTemporaryColumn) // a table might have temporary no columns. MySQL does not allow this.  //Fixme this breaks for SQLITE
           if (isIdTypeChange) {
             val deleteRelations = previousSchema.relations.filter(_.containsTheModel(previous.model)).map(deleteRelation).toVector
             val recreateRelations = nextSchema.relations
@@ -100,27 +100,34 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       val nextManifestation     = nextRelation.manifestation
 
       val manifestationChange = (previousManifestation, nextManifestation) match {
-        case (Some(_: EmbeddedRelationLink), Some(_: RelationTable)) =>
+        case (_: EmbeddedRelationLink, _: RelationTable) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
-        case (Some(_: RelationTable), Some(_: EmbeddedRelationLink)) =>
+        case (_: RelationTable, _: EmbeddedRelationLink) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
 
-        case (Some(_: EmbeddedRelationLink), Some(_: EmbeddedRelationLink)) =>
-          Vector(
-            deleteRelation(previousRelation),
-            createRelation(nextRelation)
-          )
-        case (Some(_: RelationTable), Some(_: RelationTable)) =>
-          Vector(
-            UpdateRelationTable(project, previousRelation, nextRelation)
-          )
-        case (None, None) => // this is the case for the legacy data model where we always have relation tables
+        case (previousLink: EmbeddedRelationLink, nextLink: EmbeddedRelationLink) =>
+          val previousModel     = previousSchema.getModelByName_!(previousLink.inTableOfModelName)
+          val nextModel         = nextSchema.getModelByName_!(nextLink.inTableOfModelName)
+          val tableDidNotChange = previousModel.stableIdentifier == nextModel.stableIdentifier
+
+          if (tableDidNotChange) {
+            Vector(
+              UpdateInlineRelation(project, previousRelation, nextRelation)
+            )
+          } else {
+            Vector(
+              deleteRelation(previousRelation),
+              createRelation(nextRelation)
+            )
+          }
+
+        case (_: RelationTable, _: RelationTable) =>
           Vector(
             UpdateRelationTable(project, previousRelation, nextRelation)
           )
@@ -140,7 +147,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
   def deleteRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) =>
+      case m: EmbeddedRelationLink =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
@@ -153,7 +160,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
   def createRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) =>
+      case m: EmbeddedRelationLink =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
