@@ -33,17 +33,3 @@ A [`Generator`](src/generator/generator.ts) is usually responsible for a single 
 All default generators, i.e. generators for a **relational model**, one for each type that can occur in an OpenCRUD schema, can ge found in the [`DefaultGenerators`](src/generator/default/index.ts) class.
 
 All special document generators, i.e. generators for a **document model**, can ge found in the [`DocumentGenerators`](src/generator/document/index.ts) class.
-
-## Rendering introspection results
-
-With prototype features enabled (V2)
-
-```
-const renderer = Renderers.create(introspection.databaseType, prototype)
-const renderedSdl = renderer.render(sdl)
-```
-
-Without prototype featurs, simply use the shorthand:
-```const renderedSdl = introspection.renderToDatamodelString()```
-or with an existing model:
-```const renderedSdl = introspection.renderToNormalizedDatamodelString(referenceModel)```
