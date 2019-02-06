@@ -2,6 +2,7 @@ use crate::models::{Field, FieldTemplate, Renameable, ScalarField, Schema, Schem
 
 use std::{
     cell::{Ref, RefCell},
+    collections::HashSet,
     rc::{Rc, Weak},
 };
 
@@ -90,6 +91,13 @@ impl Model {
             .iter()
             .find(|field| field.db_name() == name)
             .cloned()
+    }
+
+    pub fn find_fields(&self, names: &HashSet<&str>) -> Vec<&ScalarField> {
+        self.scalar_fields()
+            .into_iter()
+            .filter(|field| names.contains(field.db_name()))
+            .collect()
     }
 
     pub fn scalar_fields(&self) -> Vec<&ScalarField> {

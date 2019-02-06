@@ -116,17 +116,17 @@ impl Connector for Sqlite {
         selector: &NodeSelector,
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
+            let table_location =
+                Self::table_location(database_name, selector.model.borrow().db_name());
+
             let field_names: Vec<&str> = selector
                 .selected_fields
                 .iter()
                 .map(|field| field.db_name())
                 .collect();
 
-            let table_location =
-                Self::table_location(database_name, selector.model.borrow().db_name());
-
             let query = dbg!(select_from(&table_location)
-                .columns(field_names.as_slice())
+                .columns(&field_names)
                 .so_that(selector.field.db_name().equals(DatabaseValue::Parameter))
                 .compile()
                 .unwrap());
@@ -135,7 +135,7 @@ impl Connector for Sqlite {
             let mut result = Vec::new();
 
             conn.query_row(&query, params.as_slice(), |row| {
-                for (i, field) in selector.model.borrow().scalar_fields().iter().enumerate() {
+                for (i, field) in selector.selected_fields.iter().enumerate() {
                     result.push(Self::fetch_value(field.type_identifier, row, i));
                 }
             })?;
@@ -273,13 +273,13 @@ mod tests {
 
         let m = model.clone();
         let m = m.borrow();
-        let scalars = m.scalar_fields();
+        let fields = m.scalar_fields();
 
         let selector = NodeSelector::new(
             model.clone(),
             m.find_field("name").unwrap(),
             &find_by,
-            &scalars,
+            &fields,
         );
 
         let result = sqlite.get_node_by_where(db_name, &selector).unwrap();

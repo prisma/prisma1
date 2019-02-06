@@ -63,9 +63,22 @@ message Error {
 }
 
 message GetNodeByWhereInput {
-    required Header         header       = 1;
-    required bytes          project_json = 2;
-    required string         model_name   = 3;
-    required string         field_name   = 4;
-    required ValueContainer value        = 5;
+    required Header         header          = 1;
+    required bytes          project_json    = 2;
+    required string         model_name      = 3;
+    required string         field_name      = 4;
+    required ValueContainer value           = 5;
+    repeated SelectedField  selected_fields = 6;
+}
+
+message RelationalField {
+    required string        field           = 1;
+    repeated SelectedField selected_fields = 2;
+}
+
+message SelectedField {
+    oneof field {
+        string scalar         = 1;
+        RelationalField relational = 2;
+    }
 }

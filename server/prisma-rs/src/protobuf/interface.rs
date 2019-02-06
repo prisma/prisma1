@@ -2,10 +2,10 @@ use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
     connector::{Connector, Sqlite},
     error::Error,
-    models::{Project, ProjectTemplate, Renameable},
+    models::{Project, ProjectTemplate, Renameable, ScalarField},
+    protobuf::prisma,
     querying::NodeSelector,
     PrismaResult,
-    protobuf::prisma,
 };
 
 use prost::Message;
@@ -60,7 +60,6 @@ impl ProtoBufInterface {
                 serde_json::from_reader(params.project_json.as_slice())?;
 
             let project: Project = project_template.into();
-
             let schema = project.schema.borrow();
 
             let model = schema.find_model(&params.model_name).ok_or_else(|| {
@@ -68,6 +67,10 @@ impl ProtoBufInterface {
             })?;
 
             let model_borrow = model.borrow();
+
+            let selected_fields: Vec<&ScalarField> =
+                model_borrow.find_fields(&params.selected_scalar());
+
             let field = model_borrow.find_field(&params.field_name).ok_or_else(|| {
                 Error::InvalidInputError(format!("Field not found: {}", params.field_name))
             })?;
@@ -75,8 +78,6 @@ impl ProtoBufInterface {
             let value = params.value.prisma_value.ok_or_else(|| {
                 Error::InvalidInputError(String::from("Search value cannot be empty."))
             })?;
-
-            let selected_fields = model_borrow.scalar_fields();
 
             let node_selector =
                 NodeSelector::new(model.clone(), field, &value, selected_fields.as_slice());
@@ -91,11 +92,13 @@ impl ProtoBufInterface {
                     prisma_value: Some(value),
                 })
                 .collect();
-            
-            let nodes = vec![prisma::Node { values: response_values }];
 
-            let fields = selected_fields
-                .iter()
+            let nodes = vec![prisma::Node {
+                values: response_values,
+            }];
+
+            let fields: Vec<String> = selected_fields
+                .into_iter()
                 .map(|field| field.db_name().to_string())
                 .collect();
 

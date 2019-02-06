@@ -4,26 +4,23 @@ mod interface;
 pub use envelope::ProtoBufEnvelope;
 pub use interface::ProtoBufInterface;
 
+use std::collections::HashSet;
+
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
 }
 
 use prisma::{
-    RpcResponse,
-    rpc_response as rpc,
-    result,
-    Header,
-    Result,
-    Error as ProtoError,
-    NodesResult,
+    result, rpc_response as rpc, selected_field, Error as ProtoError, GetNodeByWhereInput, Header,
+    NodesResult, Result, RpcResponse, SelectedField,
 };
 
-use crate::{Error as CrateError};
+use crate::Error as CrateError;
 
 impl RpcResponse {
     pub fn header() -> Header {
         Header {
-            type_name: String::from("RpcResponse")
+            type_name: String::from("RpcResponse"),
         }
     }
 
@@ -37,11 +34,9 @@ impl RpcResponse {
     pub fn ok(result: NodesResult) -> RpcResponse {
         RpcResponse {
             header: Self::header(),
-            response: Some(rpc::Response::Result(
-                prisma::Result {
-                    value: Some(result::Value::NodesResult(result)),
-                }
-            ))
+            response: Some(rpc::Response::Result(prisma::Result {
+                value: Some(result::Value::NodesResult(result)),
+            })),
         }
     }
 
@@ -49,8 +44,38 @@ impl RpcResponse {
         RpcResponse {
             header: Self::header(),
             response: Some(rpc::Response::Error(ProtoError {
-                value: Some(error.into())
+                value: Some(error.into()),
             })),
+        }
+    }
+}
+
+impl GetNodeByWhereInput {
+    pub fn selected_scalar(&self) -> HashSet<&str> {
+        self.selected_fields
+            .iter()
+            .fold(HashSet::new(), |mut acc, field| {
+                if let Some(selected_field::Field::Scalar(ref s)) = field.field {
+                    acc.insert(s);
+                };
+
+                acc
+            })
+    }
+}
+
+impl SelectedField {
+    pub fn is_scalar(&self) -> bool {
+        match self.field {
+            Some(selected_field::Field::Scalar(_)) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_relational(&self) -> bool {
+        match self.field {
+            Some(selected_field::Field::Relational { .. }) => true,
+            _ => false,
         }
     }
 }

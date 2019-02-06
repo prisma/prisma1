@@ -29,7 +29,8 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
       ByteString.copyFromUtf8(projectJson.toString()),
       where.model.name,
       where.fieldName,
-      ValueContainer(toPrismaValue(where.fieldGCValue))
+      ValueContainer(toPrismaValue(where.fieldGCValue)),
+      toPrismaSelectedFields(selectedFields)
     )
 
     val nodeResult: Option[(Node, Vector[String])] = NativeBinding.get_node_by_where(input)
@@ -110,6 +111,30 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
       case JsonGCValue(j)      => PrismaValue.Json(j.toString())
       case StringGCValue(s)    => PrismaValue.String(s)
       case _                   => sys.error(s"Not supported: $value")
+    }
+  }
+
+  def toPrismaSelectedFields(selectedFields: SelectedFields): Vector[prisma.protocol.SelectedField] = {
+    selectedFields.fields.foldLeft(Vector[prisma.protocol.SelectedField]()) { (acc, selectedField) =>
+      selectedField match {
+        case SelectedScalarField(f) => {
+          val field = prisma.protocol.SelectedField(
+            prisma.protocol.SelectedField.Field.Scalar(f.dbName)
+          )
+
+          acc :+ field
+        }
+        case SelectedRelationField(f, sf) => {
+          val field = prisma.protocol.SelectedField(
+            prisma.protocol.SelectedField.Field.Relational(prisma.protocol.RelationalField(
+              f.dbName,
+              toPrismaSelectedFields(sf)
+            ))
+          )
+
+          acc :+ field
+        }
+      }
     }
   }
 }
