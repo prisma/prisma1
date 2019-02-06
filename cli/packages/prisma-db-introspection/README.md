@@ -42,6 +42,10 @@ const renderedSdl = renderer.render(sdl)
 ```
 
 Without prototype featurs, simply use the shorthand:
-```const renderedSdl = introspection.renderToDatamodelString()```
+```
+const renderedSdl = introspection.renderToDatamodelString()
+```
 or with an existing reference model:
-```const renderedSdl = introspection.renderToNormalizedDatamodelString(referenceModel)```
+```
+const renderedSdl = introspection.renderToNormalizedDatamodelString(referenceModel)
+```
