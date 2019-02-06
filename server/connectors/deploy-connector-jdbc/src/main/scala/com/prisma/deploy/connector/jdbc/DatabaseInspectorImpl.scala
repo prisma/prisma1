@@ -1,9 +1,10 @@
 package com.prisma.deploy.connector.jdbc
 
-import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
+import slick.jdbc.SQLiteProfile
 import slick.jdbc.meta.{MColumn, MForeignKey, MIndexInfo, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,7 +12,27 @@ import scala.concurrent.{ExecutionContext, Future}
 case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContext) extends DatabaseInspector {
   import db.profile.api.actionBasedSQLInterpolation
 
-  override def inspect(schema: String): Future[DatabaseSchema] = db.database.run(action(schema))
+  override def inspect(schema: String): Future[DatabaseSchema] = {
+    if (db.isSQLite) {
+      import slick.jdbc.SQLiteProfile.api._
+
+      val path     = s"""db/$schema"""
+      val masterDb = Database.forURL(s"jdbc:sqlite:$path", driver = "org.sqlite.JDBC")
+
+      val slickDatabase = SlickDatabase(SQLiteProfile, masterDb)
+
+      val dbs = Databases(primary = slickDatabase, replica = slickDatabase)
+
+      dbs.primary.database.run(action(schema))
+
+      //Fixme this still only introspects the base db, not the attached db. we might need to connect directly to the project db for Sqlite
+      //Fixme even if connecting directly, schema and catalog are empty, so that logic needs to be adjusted as well.
+    } else {
+      db.database.run(action(schema))
+
+    }
+
+  }
 
   def action(schema: String): DBIO[DatabaseSchema] = {
     for {
@@ -19,7 +40,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
       // 1. For MySQL only catalog will be populated.
       // 2. For Postgres only schema will be populated.
       // 3. It works when both are populated.
-      potentialTables <- MTable.getTables(cat = Some(schema), schemaPattern = Some(schema), namePattern = None, types = None)
+      potentialTables <- MTable.getTables(cat = None, schemaPattern = None, namePattern = None, types = None)
       // the line above does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
       // we therefore have one additional filter step in memory
       mTables = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))

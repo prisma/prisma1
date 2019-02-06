@@ -119,7 +119,8 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
 
       case c: SQLiteDeployConnector =>
         val session = c.managementDatabase.database.createSession()
-        (session, "PRAGMA foreign_keys=on;") //Fixme this is a hack to have a idempotent statement that does nothing
+        val path    = s"""'db/$projectId'"""
+        (session, s"ATTACH DATABASE $path AS $projectId;")
 
       case x => sys.error(s"$x is not supported here")
     }
