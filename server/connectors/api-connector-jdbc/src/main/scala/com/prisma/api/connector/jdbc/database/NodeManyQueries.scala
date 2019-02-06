@@ -75,7 +75,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, queryArguments, selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))
     } else {
       val builder = RelatedModelsQueryBuilder(slickDatabase,
-                                              schemaName,
+                                              project,
                                               fromField,
                                               queryArguments,
                                               fromNodeIds,
@@ -116,7 +116,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     require(queryArguments.isWithPagination)
-    val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, queryArguments, fromModelIds, selectedFields)
+    val builder = RelatedModelsQueryBuilder(slickDatabase, project, fromField, queryArguments, fromModelIds, selectedFields)
 
     SimpleDBIO { ctx =>
       val baseQuery        = "(" + builder.mysqlHack.getSQL + ")"

@@ -15,7 +15,7 @@ case class MySqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
 
   private lazy val dbDriver = new org.mariadb.jdbc.Driver
 
-  def databases(root: Boolean): Databases = {
+  private def databases(root: Boolean): Databases = {
     val config        = typeSafeConfigFromDatabaseConfig(dbConfig, root)
     val masterDb      = Database.forConfig("database", config, driver = dbDriver)
     val slickDatabase = SlickDatabase(MySQLProfile, masterDb)
@@ -23,7 +23,7 @@ case class MySqlInternalDatabaseDefs(dbConfig: DatabaseConfig) {
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
-  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, root: Boolean): Config = {
+  private def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, root: Boolean): Config = {
     val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
     val schema = if (root) "" else managementSchemaName
 

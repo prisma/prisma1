@@ -395,6 +395,7 @@ input CampusUpdateManyMutationInput {
 input CampusUpdateManyWithoutAccountsInput {
   create: [CampusCreateWithoutAccountsInput!]
   connect: [CampusWhereUniqueInput!]
+  set: [CampusWhereUniqueInput!]
   disconnect: [CampusWhereUniqueInput!]
   delete: [CampusWhereUniqueInput!]
   update: [CampusUpdateWithWhereUniqueWithoutAccountsInput!]
@@ -1025,6 +1026,7 @@ input FinancialAccountUpdateManyMutationInput {
 input FinancialAccountUpdateManyWithoutCampusesInput {
   create: [FinancialAccountCreateWithoutCampusesInput!]
   connect: [FinancialAccountWhereUniqueInput!]
+  set: [FinancialAccountWhereUniqueInput!]
   disconnect: [FinancialAccountWhereUniqueInput!]
   delete: [FinancialAccountWhereUniqueInput!]
   update: [FinancialAccountUpdateWithWhereUniqueWithoutCampusesInput!]
@@ -2082,6 +2084,7 @@ input FinancialScheduledTransactionUpdateManyMutationInput {
 input FinancialScheduledTransactionUpdateManyWithoutPersonInput {
   create: [FinancialScheduledTransactionCreateWithoutPersonInput!]
   connect: [FinancialScheduledTransactionWhereUniqueInput!]
+  set: [FinancialScheduledTransactionWhereUniqueInput!]
   disconnect: [FinancialScheduledTransactionWhereUniqueInput!]
   delete: [FinancialScheduledTransactionWhereUniqueInput!]
   update: [FinancialScheduledTransactionUpdateWithWhereUniqueWithoutPersonInput!]
@@ -2672,6 +2675,7 @@ input FinancialTransactionUpdateManyMutationInput {
 input FinancialTransactionUpdateManyWithoutPersonInput {
   create: [FinancialTransactionCreateWithoutPersonInput!]
   connect: [FinancialTransactionWhereUniqueInput!]
+  set: [FinancialTransactionWhereUniqueInput!]
   disconnect: [FinancialTransactionWhereUniqueInput!]
   delete: [FinancialTransactionWhereUniqueInput!]
   update: [FinancialTransactionUpdateWithWhereUniqueWithoutPersonInput!]
@@ -2683,6 +2687,7 @@ input FinancialTransactionUpdateManyWithoutPersonInput {
 input FinancialTransactionUpdateManyWithoutScheduledTransactionInput {
   create: [FinancialTransactionCreateWithoutScheduledTransactionInput!]
   connect: [FinancialTransactionWhereUniqueInput!]
+  set: [FinancialTransactionWhereUniqueInput!]
   disconnect: [FinancialTransactionWhereUniqueInput!]
   delete: [FinancialTransactionWhereUniqueInput!]
   update: [FinancialTransactionUpdateWithWhereUniqueWithoutScheduledTransactionInput!]
@@ -3297,6 +3302,7 @@ input GroupInviteUpdateManyMutationInput {
 input GroupInviteUpdateManyWithoutGroupInput {
   create: [GroupInviteCreateWithoutGroupInput!]
   connect: [GroupInviteWhereUniqueInput!]
+  set: [GroupInviteWhereUniqueInput!]
   disconnect: [GroupInviteWhereUniqueInput!]
   delete: [GroupInviteWhereUniqueInput!]
   update: [GroupInviteUpdateWithWhereUniqueWithoutGroupInput!]
@@ -3648,6 +3654,7 @@ input GroupMemberUpdateInput {
 input GroupMemberUpdateManyWithoutGroupInput {
   create: [GroupMemberCreateWithoutGroupInput!]
   connect: [GroupMemberWhereUniqueInput!]
+  set: [GroupMemberWhereUniqueInput!]
   disconnect: [GroupMemberWhereUniqueInput!]
   delete: [GroupMemberWhereUniqueInput!]
   update: [GroupMemberUpdateWithWhereUniqueWithoutGroupInput!]
@@ -4153,6 +4160,7 @@ input GroupRoleUpdateManyMutationInput {
 input GroupRoleUpdateManyWithoutGroupTypeInput {
   create: [GroupRoleCreateWithoutGroupTypeInput!]
   connect: [GroupRoleWhereUniqueInput!]
+  set: [GroupRoleWhereUniqueInput!]
   disconnect: [GroupRoleWhereUniqueInput!]
   delete: [GroupRoleWhereUniqueInput!]
   update: [GroupRoleUpdateWithWhereUniqueWithoutGroupTypeInput!]
@@ -5077,6 +5085,7 @@ input GroupUpdateManyMutationInput {
 input GroupUpdateManyWithoutTypeInput {
   create: [GroupCreateWithoutTypeInput!]
   connect: [GroupWhereUniqueInput!]
+  set: [GroupWhereUniqueInput!]
   disconnect: [GroupWhereUniqueInput!]
   delete: [GroupWhereUniqueInput!]
   update: [GroupUpdateWithWhereUniqueWithoutTypeInput!]
@@ -6816,6 +6825,7 @@ input PhoneNumberUpdateManyDataInput {
 input PhoneNumberUpdateManyInput {
   create: [PhoneNumberCreateInput!]
   connect: [PhoneNumberWhereUniqueInput!]
+  set: [PhoneNumberWhereUniqueInput!]
   disconnect: [PhoneNumberWhereUniqueInput!]
   delete: [PhoneNumberWhereUniqueInput!]
   update: [PhoneNumberUpdateWithWhereUniqueNestedInput!]

@@ -18,12 +18,19 @@ import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
-    isActive: Boolean
+    isActive: Boolean,
+    isPrototype: Boolean
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
 
   override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: ConnectorCapabilities           = ConnectorCapabilities.postgres(isActive)
+  override def capabilities: ConnectorCapabilities = {
+    if (isPrototype) {
+      ConnectorCapabilities.postgresPrototype
+    } else {
+      ConnectorCapabilities.postgres(isActive = isActive)
+    }
+  }
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig)
   lazy val setupDatabases      = internalDatabases.setupDatabase
@@ -36,14 +43,14 @@ case class PostgresDeployConnector(
   lazy val postgresTypeMapper = PostgresTypeMapper()
   lazy val mutationBuilder    = PostgresJdbcDeployDatabaseMutationBuilder(managementDatabases.primary, postgresTypeMapper)
 
-  override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary)
+  override lazy val projectPersistence: ProjectPersistence           = JdbcProjectPersistence(managementDatabases.primary, dbConfig)
   override lazy val migrationPersistence: MigrationPersistence       = JdbcMigrationPersistence(managementDatabases.primary)
   override lazy val cloudSecretPersistence: CloudSecretPersistence   = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence       = JdbcTelemetryPersistence(managementDatabases.primary)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -93,7 +100,7 @@ case class PostgresDeployConnector(
     if (isActive) {
       EmptyDatabaseIntrospectionInferrer
     } else {
-      val schema = dbConfig.schema.getOrElse(projectId).toLowerCase
+      val schema = dbConfig.schema.getOrElse(projectId)
       DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
     }
   }
@@ -123,5 +130,5 @@ case class PostgresDeployConnector(
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
 
-  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabase))
+  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabases.primary))
 }

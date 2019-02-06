@@ -71,6 +71,13 @@ object DeployErrors {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }
 
+  def relationDirectiveHasInvalidName(fieldAndType: FieldAndType): DeployError = {
+    error(
+      fieldAndType,
+      s"""The field `${fieldAndType.fieldDef.name}` has an invalid name in the `@relation` directive. It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*"""
+    )
+  }
+
   def ambiguousRelationSinceThereIsOnlyOneRelationDirective(fieldAndType: FieldAndType): DeployError = {
     val relationName = fieldAndType.fieldDef.previousRelationName.get
     val nameA        = fieldAndType.objectType.name

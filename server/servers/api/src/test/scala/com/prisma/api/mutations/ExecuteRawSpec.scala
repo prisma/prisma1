@@ -9,11 +9,11 @@ import org.jooq.Query
 import org.jooq.conf.{ParamType, Settings}
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
-import org.scalatest.{FlatSpec, Matchers}
-import play.api.libs.json.JsValue
+import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
+import play.api.libs.json.{JsString, JsValue}
 import sangria.util.StringUtil
 
-class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
+class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
 
   override def doNotRunForPrototypes: Boolean                   = true
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
@@ -21,7 +21,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
   val project: Project = SchemaDsl.fromBuilder { schema =>
     schema.model("Todo").field("title", _.String)
   }
-  val schemaName = project.id
+  val schemaName = project.dbName
   val model      = project.schema.getModelByName_!("Todo")
 
   override protected def beforeAll(): Unit = {
@@ -42,7 +42,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
   lazy val idColumn      = model.idField_!.dbName
   lazy val titleColumn   = model.getScalarFieldByName_!("title").dbName
 
-  "the simplest query Select 1" should "work" in {
+  "the simplest query Select 1 should work" in {
     val result = server.query(
       """mutation {
         |  executeRaw(
@@ -58,7 +58,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.pathAsJsValue("data.executeRaw") should equal(s"""[{"$columnName":1}]""".parseJson)
   }
 
-  "querying model tables" should "work" in {
+  "querying model tables should work" in {
     val id1 = createTodo("title1")
     val id2 = createTodo(null)
 
@@ -68,7 +68,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
       s"""[{"$idColumn":"$id1","$titleColumn":"title1"},{"$idColumn":"$id2","$titleColumn":null}]""".parseJson)
   }
 
-  "inserting into a model table" should "work" in {
+  "inserting into a model table should work" in {
     val insertResult = executeRaw(sql.insertInto(modelTable).columns(field(idColumn), field(titleColumn)).values("id1", "title1").values("id2", "title2"))
     insertResult.pathAsJsValue("data.executeRaw") should equal("2".parseJson)
 
@@ -77,7 +77,37 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
       s"""[{"$idColumn":"id1","$titleColumn":"title1"},{"$idColumn":"id2","$titleColumn":"title2"}]""".parseJson)
   }
 
-  "syntactic errors" should "bubble through to the user" in {
+  "postgres arrays should work" in {
+    if (isPostgres) {
+      val query =
+        """
+          |SELECT
+          |    array_agg(columnInfos.attname) as postgres_array
+          |FROM
+          |    pg_attribute columnInfos;
+        """.stripMargin
+
+      val result = server.query(
+        s"""mutation {
+           |  executeRaw(
+           |    query: "${StringUtil.escapeString(query)}"
+           |  )
+           |}
+        """.stripMargin,
+        project
+      )
+
+      val postgresArray = result.pathAsJsArray("data.executeRaw").value.head.pathAsJsArray("postgres_array").value
+      postgresArray should not(be(empty))
+      val allAreStrings = postgresArray.forall {
+        case _: JsString => true
+        case _           => false
+      }
+      allAreStrings should be(true)
+    }
+  }
+
+  "syntactic errors should bubble through to the user" in {
     val errorCode = if (isPostgres) 0 else 1064
     val errorContains = if (isPostgres) {
       "ERROR: syntax error at end of input"
@@ -97,7 +127,7 @@ class RawAccessSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  "other errors" should "also bubble through to the user" in {
+  "other errors should also bubble through to the user" in {
     val id        = createTodo("title")
     val errorCode = if (isPostgres) 0 else 1062
     val errorContains = if (isPostgres) {

@@ -130,14 +130,6 @@ input ASubscriptionWhereInput {
   """
   AND: [ASubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [ASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ASubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -252,14 +244,6 @@ input AWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWhereInput!]
   field: Int
   """
   All values that are not equal to given value.
@@ -342,6 +326,10 @@ input AWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  a: AWhereInput
+  b_some: BWhereInput
+  c: CWhereInput
+  e_some: EWhereInput
 }
 
 input AWhereUniqueInput {
@@ -542,14 +530,6 @@ input BSubscriptionWhereInput {
   """
   AND: [BSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -595,6 +575,7 @@ input BUpdateManyDataInput {
 input BUpdateManyInput {
   create: [BCreateInput!]
   connect: [BWhereUniqueInput!]
+  set: [BWhereUniqueInput!]
   disconnect: [BWhereUniqueInput!]
   delete: [BWhereUniqueInput!]
   update: [BUpdateWithWhereUniqueNestedInput!]
@@ -610,6 +591,7 @@ input BUpdateManyMutationInput {
 input BUpdateManyWithoutAInput {
   create: [BCreateWithoutAInput!]
   connect: [BWhereUniqueInput!]
+  set: [BWhereUniqueInput!]
   disconnect: [BWhereUniqueInput!]
   delete: [BWhereUniqueInput!]
   update: [BUpdateWithWhereUniqueWithoutAInput!]
@@ -621,6 +603,7 @@ input BUpdateManyWithoutAInput {
 input BUpdateManyWithoutCInput {
   create: [BCreateWithoutCInput!]
   connect: [BWhereUniqueInput!]
+  set: [BWhereUniqueInput!]
   disconnect: [BWhereUniqueInput!]
   delete: [BWhereUniqueInput!]
   update: [BUpdateWithWhereUniqueWithoutCInput!]
@@ -719,14 +702,6 @@ input BWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -780,6 +755,10 @@ input BWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  c: CWhereInput
+  b_some: BWhereInput
+  a: AWhereInput
+  c2: CWhereInput
 }
 
 input BWhereUniqueInput {
@@ -897,14 +876,6 @@ input CSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1024,14 +995,6 @@ input CWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1114,6 +1077,10 @@ input CWhereInput {
   All values greater than or equal the given value.
   """
   expirationDate_gte: DateTime
+  c: CWhereInput
+  b_some: BWhereInput
+  a: AWhereInput
+  b2: BWhereInput
 }
 
 input CWhereUniqueInput {
@@ -1266,14 +1233,6 @@ input DSubscriptionWhereInput {
   """
   AND: [DSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [DSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [DSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1315,6 +1274,7 @@ input DUpdateManyDataInput {
 input DUpdateManyInput {
   create: [DCreateInput!]
   connect: [DWhereUniqueInput!]
+  set: [DWhereUniqueInput!]
   disconnect: [DWhereUniqueInput!]
   delete: [DWhereUniqueInput!]
   update: [DUpdateWithWhereUniqueNestedInput!]
@@ -1348,14 +1308,6 @@ input DWhereInput {
   Logical AND on all given filters.
   """
   AND: [DWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [DWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [DWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1409,6 +1361,10 @@ input DWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  c: CWhereInput
+  b: BWhereInput
+  a: AWhereInput
+  d_some: DWhereInput
 }
 
 input DWhereUniqueInput {
@@ -1557,14 +1513,6 @@ input ESubscriptionWhereInput {
   """
   AND: [ESubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [ESubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ESubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1599,6 +1547,7 @@ input EUpdateManyMutationInput {
 input EUpdateManyWithoutAInput {
   create: [ECreateWithoutAInput!]
   connect: [EWhereUniqueInput!]
+  set: [EWhereUniqueInput!]
   disconnect: [EWhereUniqueInput!]
   delete: [EWhereUniqueInput!]
   update: [EUpdateWithWhereUniqueWithoutAInput!]
@@ -1632,14 +1581,6 @@ input EWhereInput {
   Logical AND on all given filters.
   """
   AND: [EWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [EWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [EWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1693,6 +1634,7 @@ input EWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  a: AWhereInput
 }
 
 input EWhereUniqueInput {

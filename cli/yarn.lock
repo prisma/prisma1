@@ -6636,9 +6636,9 @@ prisma-datamodel@1.23.0-alpha.173:
     pluralize "^7.0.0"
     popsicle "10"
 
-prisma-datamodel@1.23.0-alpha.178:
-  version "1.23.0-alpha.178"
-  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.23.0-alpha.178.tgz#d5f2db4a1d163af60762eeb87d982eeeae80cf30"
+prisma-datamodel@^1.25.0:
+  version "1.25.0"
+  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.25.0.tgz#ca80cd1c190a33c4d76bdb43463dbd98cc2a212f"
   dependencies:
     graphql "^14.0.2"
     pluralize "^7.0.0"
@@ -6652,15 +6652,6 @@ prisma-generate-schema@1.23.0-alpha.173:
     pluralize "^7.0.0"
     popsicle "10"
     prisma-datamodel "1.23.0-alpha.173"
-
-prisma-generate-schema@^1.23.0-alpha.178:
-  version "1.23.0-alpha.178"
-  resolved "https://registry.yarnpkg.com/prisma-generate-schema/-/prisma-generate-schema-1.23.0-alpha.178.tgz#d2ae8026d443617ff7fd80a0e022750f982feace"
-  dependencies:
-    graphql "^14.0.2"
-    pluralize "^7.0.0"
-    popsicle "10"
-    prisma-datamodel "1.23.0-alpha.178"
 
 prisma-json-schema@0.1.3:
   version "0.1.3"

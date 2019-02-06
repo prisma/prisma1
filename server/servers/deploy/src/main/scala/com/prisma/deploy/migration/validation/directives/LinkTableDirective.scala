@@ -1,9 +1,10 @@
 package com.prisma.deploy.migration.validation.directives
 
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
-import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl}
-import com.prisma.shared.models.ConnectorCapabilities
+import com.prisma.deploy.migration.validation.{DeployError, PrismaSdl, PrismaType, ScalarPrismaField}
+import com.prisma.shared.models.{ConnectorCapabilities, TypeIdentifier}
 import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import sangria.ast.{Directive, Document, ObjectTypeDefinition}
 
 object LinkTableDirective extends TypeDirective[Boolean] {
@@ -32,12 +33,35 @@ object LinkTableDirective extends TypeDirective[Boolean] {
   }
 
   override def postValidate(dataModel: PrismaSdl, capabilities: ConnectorCapabilities) = {
-    // if this error occurs automatically the others occur as well. We therefore only return this one.
     val isReferencedError = ensureLinkTableIsReferenced(dataModel, capabilities)
-    if (isReferencedError.nonEmpty) {
+    // if this error occurs automatically the others occur as well. We therefore only return this one to keep errors concise.
+    val error = if (isReferencedError.nonEmpty) {
       isReferencedError
     } else {
       ensureTheRightTypesAreLinked(dataModel, capabilities)
+    }
+    error ++ validateShapeOfLinkTable(dataModel)
+  }
+
+  def validateShapeOfLinkTable(dataModel: PrismaSdl): Vector[DeployError] = {
+    dataModel.relationTables.flatMap { relationTable =>
+      val wrongNumberOfRelationFields = (relationTable.relationFields.size != 2).toOption {
+        DeployError(relationTable.name, "A link table must specify exactly two relation fields.")
+      }
+      val superfluousFieldErrors = relationTable.nonRelationFields
+        .filter {
+          case s: ScalarPrismaField if s.isId => false
+          case _                              => true
+        }
+        .map { scalarField =>
+          DeployError(scalarField.tpe.name, scalarField.name, "A link table must not specify any additional scalar fields.")
+        }
+
+      val idFieldHasIllegalType = relationTable.scalarFields.find(f => f.isId && f.typeIdentifier != TypeIdentifier.Cuid).map { scalarField =>
+        DeployError(scalarField.tpe.name, scalarField.name, "The id field of a link table must be of type `ID!`.")
+      }
+
+      wrongNumberOfRelationFields ++ superfluousFieldErrors ++ idFieldHasIllegalType
     }
   }
 

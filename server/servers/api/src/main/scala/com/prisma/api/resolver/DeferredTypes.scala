@@ -29,7 +29,8 @@ object DeferredTypes {
 
   case class ToOneDeferred(
       model: Model,
-      where: NodeSelector
+      where: NodeSelector,
+      selectedFields: SelectedFields
   ) extends Deferred[OneDeferredResultType]
 
   case class CountManyModelDeferred(

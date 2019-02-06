@@ -18,16 +18,16 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
 
   override val migrationPersistence: MigrationPersistence     = MongoMigrationPersistence(internalDatabase)
-  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence)
+  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence, config)
   override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
   override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
 
-  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient, config.database)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
 
-  override def capabilities: ConnectorCapabilities = ConnectorCapabilities.mongo(isActive = isActive, isTest = isTest)
+  override def capabilities: ConnectorCapabilities = ConnectorCapabilities.mongo(isTest = isTest)
 
-  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
+  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
 
   override def initialize(): Future[Unit] = Future.unit

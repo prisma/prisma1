@@ -1,0 +1,686 @@
+import Collapse from 'components/Markdown/Collapse'
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: 'Writing Data (TypeScript)',
+  position: 60,
+  technology: "typescript",
+  technologyOrder: 2,
+  articleGroup: "Writing Data",
+}
+
+## Overview
+
+The Prisma client is based on the operations defined in the GraphQL schema of your Prisma API. For _writing_ data, it basically _mirrors_ the [GraphQL mutations](qwe2) of your Prisma service.
+
+For this page, we'll assume your Prisma API is based on the following [datamodel](knul):
+
+```graphql
+type Link {
+  id: ID! @unique
+  createdAt: DateTime!
+  description: String!
+  url: String!
+  postedBy: User
+  votes: [Vote!]!
+}
+
+type User {
+  id: ID! @unique
+  name: String!
+  email: String! @unique
+  password: String!
+  links: [Link!]!
+  votes: [Vote!]!
+}
+
+type Vote {
+  id: ID! @unique
+  link: Link!
+  user: User!
+}
+```
+
+For each model type in your datamodel, six methods for writing data are generated. These are named after the mutations in the GraphQL schema, e.g. for the `User` model:
+
+- `createUser`: Creates a new `User` record in the database 
+- `updateUser`: Updates an existing `User` record in the database
+- `deleteUser`: Deletes an existing `User` record from the database
+- `upsertUser`: Updates an existing or create a new `User` record in the database
+- `updateManyUsers`: Updates many existing `User` records in the database at once. 
+- `deleteManyUsers`: Deletes many existing `User` records from the database at once.
+
+<Collapse title="View the full generated GraphQL schema & Prisma client">
+
+- You can view what the generated GraphQL schema for the API [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.graphql)
+- You can view what the generated JavaScript client [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.js).
+
+</Collapse>
+
+Each invokation of one of these methods is executed as a [transaction](vw4d#transactions--nested-mutations), meaning it is either guaranteed to succeed entirely or be rolled back if it partially fails.
+
+## Creating objects
+
+When creating new records in the database, the `create`-method takes one input object which wraps all the scalar fields of the record to be created. It also provides a way to create relational data for the model, this can be supplied using [nested object writes](#nested-object-writes).
+
+Each method call returns an object that contains all the scalar fields of the model that was just created.
+
+<Collapse title="View the types of the input object for `Link`, `User` and `Vote`">
+
+- View the type of the input object of `createLink` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L567)
+- View the type of the input object of `createUser` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L418)
+- View the type of the input object of `createVote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L214)
+
+</Collapse>
+
+### Examples
+
+_Create a new user_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const newUser: UserNode = await prisma
+  .createUser({
+    name: "Alice",
+    email: "alice@prisma.io",
+    password: "IlikeTurtles"
+  })
+```
+
+```graphql
+# generated mutation
+mutation {
+  createUser(data: {
+    name: "Alice"
+    email: "alice@prisma.io"
+    password: "IlikeTurtles"
+  }) {
+    id
+    name
+    email
+    password
+  }
+}
+```
+
+</Code>
+
+_Create a new vote_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const newVote: VoteNode = await prisma
+  .createVote({
+    user: {
+      connect: {
+        email: "alice@prisma.io"
+      }
+    },
+    link: {
+      connect: {
+        id: "cjli47wr3005b0a23m9crhh0e"
+      }
+    }
+  })
+```
+
+```graphql
+# generated mutation
+mutation {
+  createVote(data: {
+    user: {
+      connect: {
+        email: "alice@prisma.io"
+      }
+    }
+    link: {
+      connect: {
+        id: "cjli47wr3005b0a23m9crhh0e"
+      }
+    }
+  }) {
+    id
+  }
+}
+```
+
+</Code>
+
+_Create a new user with two new links_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const newUserWithLinks: UserNode = await prisma
+  .createUser({
+    name: "Alice",
+    email: "alice@prisma.io",
+    password: "IlikeTurtles",
+    links: {
+      create: [{
+        description: "My first link",
+        url: "https://www.prisma.io"
+      }, {
+        description: "My second link",
+        url: "https://www.howtographql.com"
+      }]
+    }, 
+  })
+```
+
+```graphql
+# generated mutation
+mutation {
+  createUser(data: {
+    name: "Alice"
+    email: "alice@prisma.io"
+    password: "IlikeTurtles"
+    links: {
+      create: [{
+        description: "My first link",
+        url: "https://www.prisma.io"
+      }, {
+        description: "My second link",
+        url: "https://www.howtographql.com"
+      }]
+    }
+  }) {
+    id
+    name
+    email
+    password
+  }
+}
+```
+
+</Code>
+
+
+## Updating objects
+
+When updating existing records in the database, the `update`-method receives one input object with two fields:
+
+- `data`: This is similar to the input object you provide to a `create`-method. It wraps scalar fields of the model to be updated and lets you provide relational data via [nested object writes](#nested-object-writes).
+- `where`: This is used to select the record that should be updated. You can use any [unique](knul#unique-scalar-fields) field to identify the record. 
+
+<Collapse title="View the types of `data` and `where` for `Link`, `User` and `Vote`">
+
+- `data`
+  - View the type of the `data` field of `updateLink` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L255)
+  - View the type of the `data` field of `updateUser` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L468)
+  - View the type of the `data` field of `updateVote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L366)
+- `where`
+  - View the type of the `where` field of `updateLink` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L455)
+  - View the type of the `where` field of `updateUser` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L357)
+  - View the type of the `where` field of `updateVote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L522)
+
+</Collapse>
+
+Each method call returns an object that contains all the scalar fields of the model that was just updated.
+
+### Examples
+
+_Set a new name on an existing user_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedUser: UserNode = await prisma
+  .updateUser({
+    data: {
+      name: "Alice"
+    },
+    where: {
+      id: "cjli512bd005g0a233s1ogbgy"
+    }
+  })
+```
+
+```graphql
+# generated mutation
+mutation {
+  updateUser(
+    data: {
+      name: "Alice"
+    }
+    where: {
+      id: "cjli512bd005g0a233s1ogbgy"
+    }
+  ) {
+    id
+    name
+    email
+    password
+  }
+}
+```
+
+</Code>
+
+_Update a link so that it was posted by a different user than before_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedLink: LinkNode = await prisma
+  .updateLink({
+    data: {
+      postedBy: {
+        connect: {
+          id: "cjli512bd005g0a233s1ogbgy"
+        }
+      },
+    },
+    where: {
+      id: "cjli47wr3005b0a23m9crhh0e"
+    }
+  })
+```
+
+```graphql
+mutation {
+  updateLink(
+    data: {
+      postedBy: {
+        connect: {
+          id: "cjli512bd005g0a233s1ogbgy"
+        }
+      }
+    }
+    where: {
+      id: "cjli47wr3005b0a23m9crhh0e"
+    }
+  ) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Delete the user that made a vote_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedVote: VoteNode = await prisma
+  .updateVote({
+    data: {
+      user: {
+        delete: true
+      },
+    },
+    where: {
+      id: "cjli5aual005n0a233ekv89o4"
+    }
+  })
+```
+
+```graphql
+mutation {
+  updateVote(
+    data: {
+      user: {
+        delete: true
+      }
+    }
+    where: {
+      id: "cjli5aual005n0a233ekv89o4"
+    }
+  ) {
+    id
+  }
+}
+```
+
+</Code>
+
+> For this operation to succeed, the `user` field on the `Vote` model must not be required. Otherwise the constraint that every `Vote` needs to be connected to a `User` would be violated.  
+
+## Deleting objects
+
+When deleting records from the database, the `delete`-method receives one input object that specifies which record is to be deleted. The type of this input object is identical to the `where` object in `update`-methods.
+
+The properties of that object correspond to those fields of the model that are marked as [unique](knul#unique-scalar-fields). For the example datamodel above, this means that for `User`, `Vote` and `Link` it has an `id` property. For `User` it additionally accepts the `email` field.
+
+<Collapse title="View the types of the input object for `Link`, `User` and `Vote`">
+
+- View the type of the input object of `deleteLink` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L455)
+- View the type of the input object of `deleteUser` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L357)
+- View the type of the input object of `deleteVote` [here](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts#L522)
+
+</Collapse>
+
+Each method call returns an object that contains all the scalar fields of the model that was just deleted.
+
+### Examples
+
+_Delete a link by its id_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const deletedLink: LinkNode = await prisma
+  .deleteLink({
+    id: "cjli47wr3005b0a23m9crhh0e"
+  })
+```
+
+```graphql
+mutation {
+  deleteLink(where: {
+    id: "cjli47wr3005b0a23m9crhh0e"
+  }) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+_Delete a user by their email_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const deletedUser: UserNode = await prisma
+  .deleteUser({
+    email: "alice@prisma.io"
+  })
+```
+
+```graphql
+mutation {
+  deleteUser(where: {
+    email: "alice@prisma.io"
+  }) {
+    id
+    createdAt
+    description
+    url
+  }
+}
+```
+
+</Code>
+
+## Creating or updating objects (upserts)
+
+Upsert operations allow you to _try_ to update an existing record. If that record actually does not exist yet, it will be created. The `upsert`-methods are a mix of `create`- and `update`-methods, meaning they receive an input argument that has three fields:
+
+- `where`: Identical to the `where` field provided in `update`-methods
+- `update`: Identical to the `data` field provided in `update`-methods
+- `create`: Identical to the input object provide in `create`-methods
+
+### Examples
+
+_Update the URL of a link. If the link doesn't exist yet, create a new one_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedOrCreatedLink: LinkNode = await prisma
+  .upsertLink({
+    where: {
+      id: "cjli47wr3005b0a23m9crhh0e"
+    },
+    update: {
+      url: "https://www.howtographql.com"
+    },
+    create: {
+      url: "https://www.howtographql.com",
+      description: "Fullstack GraphQL Tutorial"
+    }
+  })
+```
+
+```graphql
+mutation {
+  upsertLink(
+    where: {
+      id: "cjli47wr3005b0a23m9crhh0e"
+    }
+    update: {
+      url: "https://www.howtographql.com"
+    }
+    create: {
+      url: "https://www.howtographql.com"
+      description: "Fullstack GraphQL Tutorial"
+    }
+  ) {
+    id
+  }
+}
+```
+
+</Code>
+
+
+## Updating and deleting many records
+
+The Prisma client API offers special methods to update or delete many records at once. The corresponding mutations in the generated GraphQL API of your Prisma service are called [batch mutations](vw4d#batch-mutations). Each `updateMany`- and `deleteMany`-method only returns the number of records that ultimately have been affected by the operation.
+
+### Examples
+
+_Update three links, specified by their IDs, and reset their URLs to the empty string_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedLinksCount: number = await prisma
+  .updateManyLinks({
+    where: {
+      id_in: ["cjli6tknz005s0a23uf0lmlve", "cjli6tnkj005x0a2325ynfpb9", "cjli6tq3200620a23s4lp8npd"]
+    },
+    data: {
+      url: ""
+    },
+  }).count
+```
+
+```graphql
+mutation {
+  updateManyLinks({
+    where: {
+      id_in: ["cjli6tknz005s0a23uf0lmlve", "cjli6tnkj005x0a2325ynfpb9", "cjli6tq3200620a23s4lp8npd"]
+    }
+    data: {
+      url: ""
+    }
+  }) {
+    count
+  }
+}
+```
+
+</Code>
+
+<Warning>
+
+If one of more of the provided IDs does not actually exist in the database, the operation will **not** return an error.
+
+</Warning>
+
+_Update all links where the description contains the string `graphql` and reset their URLs to the empty string_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedLinksCount: number = await prisma
+  .updateManyLinks({
+    where: {
+      description_contains: "graphql"
+    },
+    data: {
+      url: ""
+    },
+  }).count
+```
+
+```graphql
+mutation {
+  updateManyLinks({
+    where: {
+      description_contains: "graphql"
+    }
+    data: {
+      url: ""
+    }
+  }) {
+    count
+  }
+}
+```
+
+</Code>
+
+_Delete all links that were created before 2018_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const deleteLinksCount: number = await prisma
+  .deleteManyLinks({
+    createdAt_lte: "2018"
+  }).count
+```
+
+```graphql
+mutation {
+  deleteManyLinks(where: {
+    createdAt_lte: "2018"
+  }) {
+    count
+  }
+}
+```
+
+</Code>
+
+## Nested object writes
+
+Nested object writes let you modify database records across multiple models in a single transaction. The corresponding concept from Prisma GraphQL API is called [nested mutations](vw4d#transactions--nested-mutations). Nested object writes are available for `create`- and `update`-methods.
+
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
+If a model `A` has a relation to a different model `B`, you can write to the model `B` through `createA` and `updateA` operations. In these cases, the `data` argument for the `createA` and `updateA` operations can contain one of the following keywords: 
+
+- `create`: Creates a new model `B` and connects it via a relation field to the model `A`.
+- `update`: Updates an existing model `B` that is connected to the model `A` via a relation field.
+- `upsert`: Updates an existing model `B` that is connected to the model `A` via a relation field or creates a new model `B` and connects it via a relation field to the model `A`.
+- `delete`: Deletes an existing model `B` that is connected to the model `A` via a relation field.
+- `connect`: Connects an existing model `B` to an the model `A` via a relation field.
+- `disconnect`: Disconnects an existing model `B` from the relation to model `A`.
+- `set`:  Connects an existing model `B` to an the model `A` via a relation field. If the model `B` was connected to a different model `A` before, it is further disconnected from that (the connection is "rewired").
+
+### Examples
+
+_Create a new user with two new links and connect one existing link_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const newUserWithLinks: UserNode = await prisma
+  .createUser({
+    name: "Alice",
+    email: "alice@prisma.io",
+    password: "IlikeTurtles",
+    links: {
+      create: [{
+        description: "My first link",
+        url: "https://www.prisma.io"
+      }, {
+        description: "My second link",
+        url: "https://www.howtographql.com"
+      }],
+      connect: {
+        id: "cjli6tknz005s0a23uf0lmlve"
+      }
+    }, 
+  })
+```
+
+```graphql
+# generated mutation
+mutation {
+  createUser(data: {
+    name: "Alice"
+    email: "alice@prisma.io"
+    password: "IlikeTurtles"
+    links: {
+      create: [{
+        description: "My first link",
+        url: "https://www.prisma.io"
+      }, {
+        description: "My second link",
+        url: "https://www.howtographql.com"
+      }]
+      connect: {
+        id: "cjli6tknz005s0a23uf0lmlve"
+      }
+    }
+  }) {
+    id
+    name
+    email
+    password
+  }
+}
+```
+
+</Code>
+
+_Delete a link from a user_:
+
+<Code languages={["TypeScript", "GraphQL"]}>
+
+```js
+const updatedUser: UserNode = await prisma
+  .updateUser({
+    where: {
+      id: "cjli8znnd006n0a23ywc6wf8w"
+    },
+    data: {
+      links: {
+        delete: {
+          id: "cjli6tknz005s0a23uf0lmlve"
+        }
+      }
+    }
+  })
+```
+
+```graphql
+# generated mutation
+mutation {
+  updateUser(
+    where: {
+      id: "cjli8znnd006n0a23ywc6wf8w"
+    }
+    data: {
+      links: {
+        delete: {
+          id: "cjli6tknz005s0a23uf0lmlve"
+        }
+      }
+    }
+  ) {
+    id
+  }
+}
+```
+
+</Code>

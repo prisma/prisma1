@@ -100,10 +100,10 @@ case class LegacyDataModelValidator(
   val result   = GraphQlSdlParser.parse(schema)
   lazy val doc = result.get
 
-  def validateSyntax: PrismaSdl Or Vector[DeployError] = {
+  def validateSyntax: DataModelValidationResult Or Vector[DeployError] = {
     val errors = validate
     if (errors.isEmpty) {
-      Good(generateSDL)
+      Good(DataModelValidationResult(generateSDL, warnings = Vector.empty))
     } else {
       Bad(errors.toVector)
     }
@@ -399,6 +399,15 @@ case class LegacyDataModelValidator(
       }
     }
 
+    def ensureRelationDirectivesHaveValidNames(fieldAndType: FieldAndType): Option[DeployError] = {
+      if (fieldAndType.fieldDef.hasRelationDirectiveWithNameArg && fieldAndType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(
+            fieldAndType.fieldDef.relationName.get)) {
+        Some(DeployErrors.relationDirectiveHasInvalidName(fieldAndType))
+      } else {
+        None
+      }
+    }
+
     def ensureNoOldDefaultValueDirectives(fieldAndTypes: FieldAndType): Option[DeployError] = {
       if (fieldAndType.fieldDef.hasOldDefaultValueDirective) {
         Some(DeployErrors.invalidSyntaxForDefaultValue(fieldAndType))
@@ -448,6 +457,7 @@ case class LegacyDataModelValidator(
       ensureDirectivesAreUnique(fieldAndType) ++
       ensureNoOldDefaultValueDirectives(fieldAndType) ++
       ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
+      ensureRelationDirectivesHaveValidNames(fieldAndType) ++
       ensureNoDefaultValuesOnListFields(fieldAndType) ++
       ensureNoInvalidEnumValuesInDefaultValues(fieldAndType) ++
       ensureDefaultValuesHaveCorrectType(fieldAndType)
@@ -492,9 +502,8 @@ case class LegacyDataModelValidator(
     }
   }
 
-  def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
-  def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
-  def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
+  def isSelfRelation(fieldAndType: FieldAndType): Boolean = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
+  def isRelationField(fieldDef: FieldDefinition): Boolean = !isScalarField(fieldDef) && !isEnumField(fieldDef)
 
   def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
   def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType

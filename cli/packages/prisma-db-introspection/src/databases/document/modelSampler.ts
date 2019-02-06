@@ -272,7 +272,7 @@ export class ModelMerger {
 
       // Recursive embedding case. 
       if(typeInfo.type === ObjectTypeIdentifier) {
-        // Generate pretty embedded model name, which has no purpose outside of the schema. 
+        // Generate basic embedded model name, which has no purpose outside of the schema. 
         this.embeddedTypes[name] = this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true, this.primitiveResolver)
         if(typeInfo.isArray) {
           // Embedded array. 

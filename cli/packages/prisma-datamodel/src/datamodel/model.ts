@@ -20,7 +20,7 @@ import {
  * to represent arguments.
  */
 export interface IArguments {
-  [name: string]: string
+  readonly [name: string]: string
 }
 
 /**
@@ -89,9 +89,25 @@ export interface IGQLField {
   isId: boolean
 
   /**
+   * Indicates if this field is the created at timestamp.
+   */
+  isCreatedAt: boolean
+
+  /**
+   * Indicates if this field is the updated at timestamp.
+   */
+  isUpdatedAt: boolean
+
+  /**
    * Indicates if this field is read-only. 
    */
   isReadOnly: boolean
+
+  /**
+   * Indicates how this field is called in the database. If this value is not set,
+   * the name in the database is equal to the field name. 
+   */
+  databaseName?: string
 
   /**
    * Indicates this fields extra directives, 
@@ -131,6 +147,14 @@ export interface IGQLType {
   fields: IGQLField[]
 
   /**
+   * Indicates how this type is called in the database. If this value is not set,
+   * the name in the database is equal to the type name. 
+   * 
+   * This field is ignored for embedded types, which never have a database name. 
+   */
+  databaseName?: string
+
+  /**
    * Indicates this types extra directives, 
    * which can not expressed using this 
    * interface's other members.
@@ -167,8 +191,11 @@ export class GQLFieldBase implements IGQLField {
   public relationName: string | null
   public isUnique: boolean
   public defaultValue: any
+  public isCreatedAt: boolean
+  public isUpdatedAt: boolean
   public isId: boolean
   public isReadOnly: boolean
+  public databaseName?: string
   public directives?: IDirectiveInfo[]
   public comments?: IComment[]
 
@@ -181,6 +208,8 @@ export class GQLFieldBase implements IGQLField {
     this.relationName = null
     this.isUnique = false
     this.defaultValue = null
+    this.isCreatedAt = false
+    this.isUpdatedAt = false
     this.isId = false
     this.isReadOnly = false
 
@@ -206,4 +235,83 @@ export class GQLMultiRelationField extends GQLFieldBase {
     super(name, type, isRequired)
     this.isList = true
   }
+}
+
+function cloneComments(copy: ISDL | IGQLField | IGQLType, obj: ISDL | IGQLField | IGQLType) {
+  if(obj.comments !== undefined) {
+    copy.comments = []
+    for(const comment of obj.comments) {
+      copy.comments.push({...comment})
+    }
+  }
+}
+
+function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField | IGQLType) {
+  if(obj.directives !== undefined) {
+    copy.directives = []
+    for(const directive of obj.directives) {
+      copy.directives.push({...directive})
+    }
+  }
+
+  cloneComments(copy, obj)
+}
+
+// 21st of Dec: Start: 8:00 - end: 9:45
+function cloneField(field: IGQLField): IGQLField {
+  const copy = {
+    ...field
+  }
+
+  cloneCommentsAndDirectives(copy, field)
+
+  return copy
+}
+
+function cloneType(type: IGQLType): IGQLType {
+  const copy = {
+    ...type
+  }
+
+  cloneCommentsAndDirectives(copy, type)
+
+  copy.fields = []
+  for(const field of type.fields) {
+    copy.fields.push(cloneField(field))
+  }
+
+  return copy
+}
+
+/**
+ * Deep-copies a datamodel and re-connects all types correctly.
+ * @param schema The datamodel to clone. 
+ */
+export function cloneSchema(schema: ISDL): ISDL {
+  // TODO(ejoebstl): It would be better to have a concrete implementation for 
+  // each SDL object and require a clone method on interface level.
+  const copy = {
+    ...schema
+  }
+
+  cloneComments(copy, schema)
+
+  copy.types = []
+  for(const type of schema.types) {
+    copy.types.push(cloneType(type))
+  }
+
+  // Re-Assign type pointer
+  for(const type of copy.types) {
+    for(const field of type.fields) {
+      if(typeof field.type !== 'string') {
+        const typeName = field.type.name
+        const [fieldType] = copy.types.filter(x => x.name === typeName)
+        console.assert(fieldType !== undefined) // This case should never happen
+        field.type = fieldType
+      }
+    }
+  }
+
+  return copy
 }

@@ -55,7 +55,12 @@ object IdDirective extends FieldDirective[IdBehaviour] {
   override def value(document: Document, typeDef: ObjectTypeDefinition, fieldDef: FieldDefinition, capabilities: ConnectorCapabilities) = {
     fieldDef.directive(name).map { directive =>
       val strategy = IdStrategyArgument(capabilities).value(directive).getOrElse(FieldBehaviour.IdStrategy.Auto)
-      val sequence = SequenceDirective.value(document, typeDef, fieldDef, capabilities)
+      val sequence = (strategy, fieldDef.typeIdentifier(document)) match {
+        case (FieldBehaviour.IdStrategy.Auto, TypeIdentifier.Int) =>
+          Some(FieldBehaviour.Sequence.default(typeDef.name, fieldDef.name))
+        case _ =>
+          SequenceDirective.value(document, typeDef, fieldDef, capabilities)
+      }
       IdBehaviour(strategy, sequence)
     }
   }
