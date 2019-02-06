@@ -10,6 +10,13 @@ jobs:
           POSTGRES_PASSWORD: prisma
           POSTGRES_PW: prisma
           POSTGRES_DB: prisma
+      - image: circleci/mysql:8
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_USER: prisma
+          MYSQL_DATABASE: prisma
+          MYSQL_PASSWORD: prisma
+          MYSQL_PW: prisma
     steps:
       - checkout
       - run: sudo apt install postgresql-client
@@ -25,6 +32,10 @@ jobs:
               sleep 2
             done
             echo Failed waiting for Postgres && exit 1
+      - run:
+          name: Wait for MySQL to start
+          # preinstalled in circleci/* docker image
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
       - run: ./cli/scripts/publish.sh
 
   # content deployment
