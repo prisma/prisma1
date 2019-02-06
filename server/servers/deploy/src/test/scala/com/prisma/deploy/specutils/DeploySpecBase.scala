@@ -86,8 +86,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   override def doNotRunForCapabilities = Set(MigrationsCapability)
   lazy val slickDatabase               = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
 
-//  case class SQLs(postgres: String, mysql: String, sqlite: String)
-  case class SQLs(postgres: String, mysql: String)
+  case class SQLs(postgres: String, mysql: String, sqlite: String)
 
   def addProject() = {
     deployConnector.deleteProjectDatabase(projectId).await()
@@ -98,8 +97,8 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
     slickDatabase match {
       case db if db.isMySql    => setupWithRawSQL(sqls.mysql)
       case db if db.isPostgres => setupWithRawSQL(sqls.postgres)
-//      case db if db.isSQLite   => setupWithRawSQL(sqls.sqlite)
-      case _ => sys.error("This is neither Postgres nor MySQL nor SQLite")
+      case db if db.isSQLite   => setupWithRawSQL(sqls.sqlite)
+      case _                   => sys.error("This is neither Postgres nor MySQL nor SQLite")
     }
     inspect
   }
@@ -139,8 +138,8 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
     slickDatabase match {
       case db if db.isMySql    => executeSql(sqls.mysql)
       case db if db.isPostgres => executeSql(sqls.postgres)
-//      case db if db.isSQLite   => executeSql(sqls.sqlite)
-      case _ => sys.error("This is neither Postgres nor MySQL nor SQLite")
+      case db if db.isSQLite   => executeSql(sqls.sqlite)
+      case _                   => sys.error("This is neither Postgres nor MySQL nor SQLite")
     }
 
     inspect

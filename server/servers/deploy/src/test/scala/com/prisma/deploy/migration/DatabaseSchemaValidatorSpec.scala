@@ -32,7 +32,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -57,19 +57,22 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   id SERIAL PRIMARY KEY
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
          |   id int NOT NULL, PRIMARY KEY(id)
          | );
        """.stripMargin
+
     val sqlite =
       s"""
          | CREATE TABLE blog (
          |   id int NOT NULL, PRIMARY KEY(id)
          | );
        """.stripMargin
-    setup(SQLs(postgres = postgres, mysql = mysql))
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -95,6 +98,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   title text
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -103,7 +107,15 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   title mediumtext
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -130,6 +142,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   title text NOT NULL
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -138,7 +151,15 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   title mediumtext NOT NULL
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -165,6 +186,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   title text
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -173,7 +195,15 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   title mediumtext
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -199,6 +229,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   id varchar(25) PRIMARY KEY
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -206,7 +237,14 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id char(25), PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -229,6 +267,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references author(id)
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author (
@@ -241,7 +280,19 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES author(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -269,6 +320,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references author(id)
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author (
@@ -281,7 +333,19 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES author(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -315,6 +379,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int NOT NULL references author(id)
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author (
@@ -327,7 +392,19 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int NOT NULL, FOREIGN KEY (author) REFERENCES author(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -360,6 +437,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   id SERIAL PRIMARY KEY
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author(
@@ -370,7 +448,17 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -406,6 +494,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references wrong_table(id)
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author (
@@ -420,7 +509,21 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE wrong_table (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES wrong_table(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -455,6 +558,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references author(nick)
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author(
@@ -467,7 +571,19 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL,
+         |   nick int, UNIQUE KEY(nick)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id),
+         |   author int, FOREIGN KEY (author) REFERENCES author(nick)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -500,6 +616,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   id SERIAL PRIMARY KEY
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author(
@@ -510,7 +627,17 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -552,6 +679,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references author(id)
          | )
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author (
@@ -566,7 +694,21 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   author int, FOREIGN KEY (author) REFERENCES author(id),
+         |   blog int, FOREIGN KEY (blog) REFERENCES blog(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -608,6 +750,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references author(id)
          | );
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author(
@@ -622,7 +765,21 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   author int, FOREIGN KEY (author) REFERENCES author(id),
+         |   blog int, FOREIGN KEY (blog) REFERENCES blog(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -658,6 +815,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int
          | )
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author(
@@ -672,7 +830,21 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   author int,
+         |   blog int
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -719,6 +891,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   author int references wrong_table(id)
          | )
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE author (
@@ -736,7 +909,24 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | )
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE author (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE wrong_table(
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_to_author(
+         |   blog int, FOREIGN KEY (blog) REFERENCES wrong_table(id),
+         |   author int, FOREIGN KEY (author) REFERENCES wrong_table(id)
+         | )
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -781,6 +971,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   PRIMARY KEY ("nodeId","position")
          | )
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -794,7 +985,20 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_tags (
+         |   `nodeId` char(25) NOT NULL,
+         |   `position` int NOT NULL,
+         |   `value` mediumtext NOT NULL,
+         |   PRIMARY KEY (`nodeId`,`position`)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -814,6 +1018,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   id SERIAL PRIMARY KEY
          | );
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -821,7 +1026,14 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -852,6 +1064,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |   PRIMARY KEY ("nodeId","position")
          | );
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -865,7 +1078,20 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          | );
        """.stripMargin
 
-    setup(SQLs(postgres = postgres, mysql = mysql))
+    val sqlite =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL, PRIMARY KEY(id)
+         | );
+         | CREATE TABLE blog_tags (
+         |   `nodeId` bool NOT NULL,
+         |   `position` bool NOT NULL,
+         |   `value` bool NOT NULL,
+         |   PRIMARY KEY (`nodeId`,`position`)
+         | );
+       """.stripMargin
+
+    setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
 
     val dataModel =
       s"""
@@ -878,7 +1104,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val errors = deployThatMustError(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
     errors should have(size(3))
     errors.forall(_.`type` == "Blog") should be(true)
-    errors.forall(_.field == Some("tags")) should be(true)
+    errors.forall(_.field.contains("tags")) should be(true)
     val (error1, error2, error3) = (errors(0), errors(1), errors(2))
     error1.description should be(
       "The column `nodeId` in the underlying table for the scalar list field `tags` has the wrong type. It has the type `Boolean` but it should have the type `String`.")
