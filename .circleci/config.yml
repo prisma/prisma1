@@ -10,7 +10,7 @@ jobs:
           POSTGRES_PASSWORD: prisma
           POSTGRES_PW: prisma
           POSTGRES_DB: prisma
-      - image: circleci/mysql:8
+      - image: circleci/mysql:5
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_USER: prisma
