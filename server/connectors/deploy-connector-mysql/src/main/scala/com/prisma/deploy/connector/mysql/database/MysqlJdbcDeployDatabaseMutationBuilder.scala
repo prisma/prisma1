@@ -55,9 +55,9 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier))
-    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, isList = false, TypeIdentifier.Cuid)
-    val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, isList = false, typeIdentifier)
+    val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier))
+    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, TypeIdentifier.Cuid)
+    val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, typeIdentifier)
 
     sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
            #$nodeIdSql,
@@ -75,13 +75,13 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val modelB            = relation.modelB
     val modelAColumn      = relation.modelAColumn
     val modelBColumn      = relation.modelBColumn
-    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, modelA.idField_!.typeIdentifier)
+    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, modelB.idField_!.typeIdentifier)
 
     // we do not create an index on A because queries for the A column can be satisfied with the combined index as well
 
     def legacyTableCreate(idColumn: String) = {
-      val idSql = typeMapper.rawSQLFromParts(idColumn, isRequired = true, isList = false, TypeIdentifier.Cuid)
+      val idSql = typeMapper.rawSQLFromParts(idColumn, isRequired = true, TypeIdentifier.Cuid)
       sqlu"""
          CREATE TABLE #${qualify(project.dbName, relationTableName)} (
            #$idSql,
@@ -114,7 +114,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
-    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = false, references.idField_!.typeIdentifier)
+    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, references.idField_!.typeIdentifier)
     sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
           ADD COLUMN #$colSql,
           ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
@@ -149,12 +149,11 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             columnName: String,
                             isRequired: Boolean,
                             isUnique: Boolean,
-                            isList: Boolean,
                             typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val newColSql = typeMapper.rawSQLFromParts(columnName, isRequired = isRequired, isList = isList, typeIdentifier)
+    val newColSql = typeMapper.rawSQLFromParts(columnName, isRequired = isRequired, typeIdentifier)
     val uniqueString =
       if (isUnique) {
-        val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = isList, typeIdentifier))
+        val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier))
         s", ADD UNIQUE INDEX ${qualify(s"${columnName}_UNIQUE")} (${qualify(columnName)}$indexSize ASC)"
       } else {
         ""
@@ -172,9 +171,8 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             oldColumnName: String,
                             newColumnName: String,
                             newIsRequired: Boolean,
-                            newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, isList = newIsList, newTypeIdentifier)
+    val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, newTypeIdentifier)
 
     sqlu"ALTER TABLE #${qualify(project.dbName, model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }
@@ -185,7 +183,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
+    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
     val indexSize = indexSizeForSQLType(sqlType)
 
     sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
@@ -206,7 +204,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   //Here this is only used for relationtables
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_] = {
     if (oldColumnName != newColumnName) {
-      val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = true, isList = false, project.models.head.idField_!.typeIdentifier)
+      val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = true, project.models.head.idField_!.typeIdentifier)
       sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
     } else {
       DatabaseAction.successful(())

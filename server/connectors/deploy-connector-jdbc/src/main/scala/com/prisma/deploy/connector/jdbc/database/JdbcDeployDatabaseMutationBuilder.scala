@@ -37,7 +37,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       columnName: String,
       isRequired: Boolean,
       isUnique: Boolean,
-      isList: Boolean,
       typeIdentifier: TypeIdentifier.ScalarTypeIdentifier
   ): DBIO[_]
 
@@ -47,7 +46,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
       oldColumnName: String,
       newColumnName: String,
       newIsRequired: Boolean,
-      newIsList: Boolean,
       newTypeIdentifier: ScalarTypeIdentifier
   ): DBIO[_]
 

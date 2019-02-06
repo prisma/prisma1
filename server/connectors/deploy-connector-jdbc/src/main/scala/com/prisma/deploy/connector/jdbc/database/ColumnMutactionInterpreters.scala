@@ -15,7 +15,6 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           columnName = mutaction.field.dbName,
           isRequired = mutaction.field.isRequired,
           isUnique = mutaction.field.isUnique,
-          isList = mutaction.field.isList,
           typeIdentifier = mutaction.field.typeIdentifier
         )
 
@@ -28,7 +27,6 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           columnName = mutaction.field.dbName,
           isRequired = mutaction.field.isRequired,
           isUnique = mutaction.field.isUnique,
-          isList = mutaction.field.isList,
           typeIdentifier = mutaction.field.typeIdentifier
         )
 
@@ -40,7 +38,6 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
             oldColumnName = mutaction.field.dbName,
             newColumnName = mutaction.field.dbName,
             newIsRequired = mutaction.field.isRequired,
-            newIsList = mutaction.field.isList,
             newTypeIdentifier = mutaction.field.typeIdentifier
           )
         }
@@ -59,7 +56,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   private def mustUpdateColumn(column: Column, mutaction: CreateColumn) = {
     column.typeIdentifier != mutaction.field.typeIdentifier ||
-    column.isRequired == mutaction.field.isRequired
+    column.isRequired == mutaction.field.isRequired //Fixme, this should probably be unequal???
   }
 
   private def mustAddUniqueConstraint(column: Column, mutaction: CreateColumn) = {
@@ -109,7 +106,6 @@ case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           columnName = mutaction.field.dbName,
           isRequired = mutaction.field.isRequired,
           isUnique = mutaction.field.isUnique,
-          isList = mutaction.field.isList,
           typeIdentifier = mutaction.field.typeIdentifier
         )
       case None =>
@@ -160,7 +156,6 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       oldColumnName = before.dbName,
       newColumnName = after.dbName,
       newIsRequired = after.isRequired,
-      newIsList = after.isList,
       newTypeIdentifier = after.typeIdentifier
     )
 
@@ -170,7 +165,6 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       columnName = after.dbName,
       isRequired = after.isRequired,
       isUnique = after.isUnique,
-      isList = after.isList,
       typeIdentifier = after.typeIdentifier
     )
 

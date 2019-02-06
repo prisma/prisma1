@@ -56,7 +56,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
         typeMapper.rawSQLFromParts(
           name = idField.dbName,
           isRequired = idField.isRequired,
-          isList = false,
           typeIdentifier = idField.typeIdentifier,
           defaultValue = Some(StringGCValue(s"""nextval('"${project.dbName}"."${seq.name}"'::regclass)"""))
         )
@@ -84,7 +83,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(isList = false, typeIdentifier)
+    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
 
     sqlu"""
            CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
@@ -105,8 +104,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     val modelB                              = relation.modelB
     val modelAColumn                        = relation.modelAColumn
     val modelBColumn                        = relation.modelBColumn
-    val aColSql                             = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, isList = false, modelA.idField_!.typeIdentifier)
-    val bColSql                             = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, isList = false, modelB.idField_!.typeIdentifier)
+    val aColSql                             = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, modelA.idField_!.typeIdentifier)
+    val bColSql                             = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, modelB.idField_!.typeIdentifier)
     def legacyTableCreate(idColumn: String) = sqlu"""
                         CREATE TABLE #${qualify(project.dbName, relationTableName)} (
                             "#$idColumn" CHAR(25) NOT NULL,
@@ -139,7 +138,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
-    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, isList = model.idField_!.isList, references.idField_!.typeIdentifier)
+    val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, references.idField_!.typeIdentifier)
 
     sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} ADD COLUMN #$colSql
            REFERENCES #${qualify(project.dbName, references.dbName)} (#${qualify(references.dbNameOfIdField_!)}) ON DELETE SET NULL;"""
@@ -155,10 +154,9 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       columnName: String,
       isRequired: Boolean,
       isUnique: Boolean,
-      isList: Boolean,
       typeIdentifier: ScalarTypeIdentifier
   ): DBIO[_] = {
-    val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, isList, typeIdentifier)
+    val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, typeIdentifier)
     val uniqueAction = isUnique match {
       case true  => addUniqueConstraint(project, tableName, columnName, typeIdentifier)
       case false => DatabaseAction.successful(())
@@ -173,11 +171,10 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
                             oldColumnName: String,
                             newColumnName: String,
                             newIsRequired: Boolean,
-                            newIsList: Boolean,
                             newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val tableName         = model.dbName
     val nulls             = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
-    val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(newIsList, newTypeIdentifier)
+    val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(newTypeIdentifier)
     val renameIfNecessary = renameColumn(project, tableName, oldColumnName, newColumnName)
 
     DatabaseAction.seq(
