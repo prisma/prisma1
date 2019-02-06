@@ -30,7 +30,7 @@
     "jsonwebtoken": "^8.3.0",
     "lodash.flatten": "^4.4.0",
     "prettier": "^1.14.3",
-    "prisma-datamodel": "^1.25.0",
+    "prisma-datamodel": "1.23.0-alpha.1",
     "prisma-generate-schema": "1.20.4",
     "subscriptions-transport-ws": "^0.9.15",
     "uppercamelcase": "^3.0.0",
