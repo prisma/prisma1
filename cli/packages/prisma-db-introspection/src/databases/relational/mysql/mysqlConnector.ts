@@ -20,7 +20,7 @@ import MysqlDatabaseClient from './mysqlDatabaseClient'
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class MysqlConnector extends RelationalConnector {
   constructor(client: IDatabaseClient | Connection) {
-    if((client as Connection).state !== undefined) {
+    if ((client as Connection).state !== undefined) {
       client = new MysqlDatabaseClient(client as Connection)
     }
 
@@ -34,7 +34,7 @@ export class MysqlConnector extends RelationalConnector {
   protected createIntrospectionResult(
     models: ITable[],
     relations: ITableRelation[],
-    enums: IEnum[]
+    enums: IEnum[],
   ): RelationalIntrospectionResult {
     return new MysqlIntrospectionResult(models, relations, enums)
   }
@@ -60,9 +60,9 @@ export class MysqlConnector extends RelationalConnector {
     const commentQuery = `
       SELECT
         column_comment
-      FROM 
+      FROM
         information_schema.columns
-      WHERE 
+      WHERE
         table_schema = ?
         AND table_name = ?
         AND column_name = ?
@@ -73,7 +73,7 @@ export class MysqlConnector extends RelationalConnector {
       columnName,
     ])).map(row => row.column_comment as string)
 
-    if (comment === undefined  || comment === '') {
+    if (comment === undefined || comment === '') {
       return null
     } else {
       return comment
@@ -108,12 +108,11 @@ export class MysqlConnector extends RelationalConnector {
   }
 
   private parseJoinedArray(arrayAsString: string): string[] {
-    if(arrayAsString === null || arrayAsString === undefined) {
+    if (arrayAsString === null || arrayAsString === undefined) {
       return []
     }
     return arrayAsString.split(',').map(x => x.trim())
   }
-
 
   protected async queryEnums(schemaName: string): Promise<IInternalEnumInfo[]> {
     const enumQuery = `
@@ -125,24 +124,26 @@ export class MysqlConnector extends RelationalConnector {
         column_type like 'enum(%'      
         AND table_schema = ?`
 
-      return (await this.query(enumQuery, [schemaName])).map(row => {
-        const enumValues = row.enumValues as string
-        // Strip 'enum(' from beginning and ')' from end.
-        const strippedEnumValues = enumValues.substring(5, enumValues.length - 1)
+    return (await this.query(enumQuery, [schemaName])).map(row => {
+      const enumValues = row.enumValues as string
+      // Strip 'enum(' from beginning and ')' from end.
+      const strippedEnumValues = enumValues.substring(5, enumValues.length - 1)
 
-        return {
-          // Enum types in mysql are anonymous. We generate some funny name for them.
-          name: camelCase(row.table_name) + camelCase(row.column_name) + 'Enum' as string,
-          values: this.parseJoinedArray(strippedEnumValues)
-        }
-      })
+      return {
+        // Enum types in mysql are anonymous. We generate some funny name for them.
+        name: (camelCase(row.table_name) +
+          camelCase(row.column_name) +
+          'Enum') as string,
+        values: this.parseJoinedArray(strippedEnumValues),
+      }
+    })
   }
 
   /**
    * We have extra join conditions in mysql.
-   * @param schemaName 
+   * @param schemaName
    */
-  protected async listRelations(schemaName: string) : Promise<ITableRelation[]> {
+  protected async listRelations(schemaName: string): Promise<ITableRelation[]> {
     const fkQuery = `  
       SELECT 
         keyColumn1.constraint_name AS "fkConstraintName",
@@ -171,11 +172,13 @@ export class MysqlConnector extends RelationalConnector {
       WHERE
         refConstraints.constraint_schema = ?`
 
-    return (await this.query(fkQuery, [schemaName])).map(row => { return {
-      sourceColumn: row.fkColumnName as string,
-      sourceTable: row.fkTableName as string,
-      targetColumn: row.referencedColumnName as string,
-      targetTable: row.referencedTableName as string
-    }}) 
+    return (await this.query(fkQuery, [schemaName])).map(row => {
+      return {
+        sourceColumn: row.fkColumnName as string,
+        sourceTable: row.fkTableName as string,
+        targetColumn: row.referencedColumnName as string,
+        targetTable: row.referencedTableName as string,
+      }
+    })
   }
 }
