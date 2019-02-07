@@ -10,6 +10,7 @@ extern crate debug_stub_derive;
 pub mod config;
 pub mod connector;
 pub mod error;
+pub mod executor;
 pub mod models;
 pub mod protobuf;
 

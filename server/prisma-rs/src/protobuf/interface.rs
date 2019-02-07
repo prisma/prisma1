@@ -2,7 +2,8 @@ use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
     connector::{PrismaConnector, Sqlite},
     error::Error,
-    protobuf::{prisma, QueryExecutor},
+    executor::QueryExecutor,
+    protobuf::prisma,
     PrismaResult,
 };
 
