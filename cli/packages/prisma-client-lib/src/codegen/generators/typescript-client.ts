@@ -291,7 +291,9 @@ import { typeDefs } from './prisma-schema'`
 export const prisma = new Prisma()`
   }
   renderTypedefsFirstLine() {
-    return ''
+    return `${codeComment}
+
+`
   }
   renderTypedefs() {
     return (

@@ -1,0 +1,355 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Collapse from 'components/Markdown/Collapse'
+import Warning from 'components/Markdown/Warning'
+import Info from 'components/Markdown/Info'
+
+export const meta = {
+  title: 'Build an App',
+  gettingStartedTitle: 'GraphQL API',
+  position: 3,
+  gettingStartedOrder: 1,
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a GraphQL server.',
+  technology: 'go',
+  technologyOrder: 4,
+  articleGroup: 'Build an App',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Define a GraphQL schema for your GraphQL server
+- Implement resolver functions using the Prisma client
+- Use the GraphQL Playground to try out your GraphQL API
+
+## Configure project
+
+You're using [`gqlgen`](https://github.com/99designs/gqlgen) as a GraphQL server library for this project. `gqlgen` is also used to generated code based on your GraphQL schema to help you build type-safe GraphQL servers.
+
+Create a new directory and add the `gqlgen` code generation script to it:
+
+```bash copy
+mkdir scripts
+touch scripts/gqlgen.go
+```
+
+Now add the following code to `gqlgen.go`:
+
+```go copy
+// +build ignore
+
+package main
+
+import "github.com/99designs/gqlgen/cmd"
+
+func main() {
+	cmd.Execute()
+}
+```
+
+Finally, update the dependencies of your project:
+
+```bash copy
+dep ensure -update
+```
+
+## Define GraphQL API & create project sceleton
+
+### Create the GraphQL schema
+
+Every GraphQL API is based on a [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) that specifies all API operations and data structures. The schema is a _contract_ between client and server.
+
+Create your GraphQL schema definition file inside a new directory called `server`:
+
+```bash copy
+mkdir server
+touch servers/schema.graphql
+```
+
+Now add the following type definitions to the schema file:
+
+```graphql
+type Query {
+  publishedPosts: [Post!]!
+  post(postId: ID!): Post
+  postsByUser(userId: ID!): [Post!]!
+}
+
+type Mutation {
+  createUser(name: String!): User
+  createDraft(title: String!, userId: ID!): Post
+  publish(postId: ID!): Post
+}
+
+type User {
+  id: ID!
+  email: String
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  published: Boolean!
+  author: User
+}
+```
+
+### Configure `gqlen`
+
+Next, you'll use `gqlgen` to scaffold the resolvers for your GraphQL server. You first need to create the config file `gqlgen.yml` that's used as foundation for the code generation process:
+
+```bash copy
+touch gqlgen.yml
+```
+
+Now add the following configuration to it:
+
+```yml copy
+schema: server/schema.graphql
+exec:
+  filename: server/generated.go
+models:
+  Post:
+    model: hello-world/prisma-client.Post
+  User:
+    model: hello-world/prisma-client.User
+resolver:
+  # Goal: copy&paste from generated file
+  filename: tmp/resolver.go
+  type: Resolver
+```
+
+Finally, use the `gqlgen` code generation script to create the foundation for your GraphQL server:
+
+```bash copy
+go run scripts/gqlgen.go
+```
+
+The files in the generated `tmp` directory contain empty GraphQL resolvers that you need to implement. First, copy the file into a more appropriate location:
+
+```bash copy
+cp ./tmp/resolver.go ./server/
+```
+
+> When making changes to your GraphQL schema in the future, you need to run `$ go run scripts/gqlgen.go` again. This will override the files in `tmp` so you can copy and paste the new resolvers into their permanent location in `servers/resolvers.go`.
+
+## Implement resolver functions
+
+Now add proper resolver implementations to `resolver.go`, replace the entire contents of the file with the following:
+
+```go
+package main
+
+import (
+	"context"
+	"hello-world/generated/prisma-client"
+)
+
+type Resolver struct {
+	Prisma *prisma.Client
+}
+
+func (r *Resolver) Mutation() MutationResolver {
+	return &mutationResolver{r}
+}
+func (r *Resolver) Post() PostResolver {
+	return &postResolver{r}
+}
+func (r *Resolver) Query() QueryResolver {
+	return &queryResolver{r}
+}
+func (r *Resolver) User() UserResolver {
+	return &userResolver{r}
+}
+
+type mutationResolver struct{ *Resolver }
+
+func (r *mutationResolver) CreateUser(ctx context.Context, name string) (*prisma.User, error) {
+	return r.Prisma.CreateUser(prisma.UserCreateInput{
+		Name: name,
+	}).Exec(ctx)
+}
+func (r *mutationResolver) CreateDraft(ctx context.Context, title string, userId string) (*prisma.Post, error) {
+	return r.Prisma.CreatePost(prisma.PostCreateInput{
+		Title: title,
+		Author: &prisma.UserCreateOneWithoutPostsInput{
+			Connect: &prisma.UserWhereUniqueInput{ID: &userId},
+		},
+	}).Exec(ctx)
+}
+func (r *mutationResolver) Publish(ctx context.Context, postId string) (*prisma.Post, error) {
+	published := true
+	return r.Prisma.UpdatePost(prisma.PostUpdateParams{
+		Where: prisma.PostWhereUniqueInput{ID: &postId},
+		Data:  prisma.PostUpdateInput{Published: &published},
+	}).Exec(ctx)
+}
+
+type postResolver struct{ *Resolver }
+
+func (r *postResolver) Author(ctx context.Context, obj *prisma.Post) (*prisma.User, error) {
+	return r.Prisma.Post(prisma.PostWhereUniqueInput{ID: &obj.ID}).Author().Exec(ctx)
+}
+
+type queryResolver struct{ *Resolver }
+
+func (r *queryResolver) PublishedPosts(ctx context.Context) ([]prisma.Post, error) {
+	published := true
+	return r.Prisma.Posts(&prisma.PostsParams{
+		Where: &prisma.PostWhereInput{Published: &published},
+	}).Exec(ctx)
+}
+func (r *queryResolver) Post(ctx context.Context, postId string) (*prisma.Post, error) {
+	return r.Prisma.Post(prisma.PostWhereUniqueInput{ID: &postId}).Exec(ctx)
+}
+func (r *queryResolver) PostsByUser(ctx context.Context, userId string) ([]prisma.Post, error) {
+	return r.Prisma.Posts(&prisma.PostsParams{
+		Where: &prisma.PostWhereInput{
+			Author: &prisma.UserWhereInput{
+				ID: &userId,
+			}},
+	}).Exec(ctx)
+}
+
+type userResolver struct{ *Resolver }
+
+func (r *userResolver) Posts(ctx context.Context, obj *prisma.User) ([]prisma.Post, error) {
+	return r.Prisma.User(prisma.UserWhereUniqueInput{ID: &obj.ID}).Posts(nil).Exec(ctx)
+}
+```
+
+Each resolver invokes a method on the Prisma client instance which is called `Prisma` and attached to the incoming resolver object of `r`.
+
+## Configure your GraphQL server
+
+There are a few configuration steps left until you can start the server.
+
+Update the package name at the top of `generated.go` from `package server` to:
+
+```go copy
+package main
+```
+
+Next, move the `index.go` script you've been using on the previous pages into the server directory:
+
+```bash copy
+mv index.go ./server
+```
+
+Now replace the contents of `index.go` with the following:
+
+```go
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+
+	"hello-world/generated/prisma-client"
+
+	"github.com/99designs/gqlgen/handler"
+)
+
+const defaultPort = "4000"
+
+func main() {
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = defaultPort
+	}
+
+	client := prisma.New(nil)
+	resolver := Resolver{
+		Prisma: client,
+	}
+
+	http.Handle("/", handler.Playground("GraphQL Playground", "/query"))
+	http.Handle("/query", handler.GraphQL(NewExecutableSchema(Config{Resolvers: &resolver})))
+
+	log.Printf("Server is running on http://localhost:%s", port)
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+
+## Start the GraphQL server
+
+To start the GraphQL server, run the following command:
+
+```bash copy
+go run ./server
+```
+
+## Explore the GraphQL API in a Playground
+
+The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`.
+
+To test these operations, navigate your browser to `http://localhost:4000` where a [GraphQL Playground](https://github.com/prisma/graphql-playground) is running.
+
+<Collapse title="Learn more about the GraphQL Playground">
+
+A GraphQL Playground is an interactive GraphQL IDE that lets you explore the operations of GraphQL API. You can click the green **SCHEMA**-button at the right edge of the Playground window to view the auto-generated documentation for your GraphQL API.
+
+![](https://imgur.com/7vJGm8a.png)
+
+</Collapse>
+
+Here are a few sample queries and mutations you can send to explore the API.
+
+<QueryChooser titles={["Create a new User", "Create new draft", "Publish a Post", "Fetch published Posts"]}>
+
+```graphql lineNumbers,copy
+mutation {
+  createUser(name: "Bob") {
+    id
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  createDraft(
+    title: "GraphQL is great"
+    userId: "__USER_ID__"
+  ) {
+    id
+    published
+    author {
+      id
+    }
+  }
+}
+```
+
+```graphql lineNumbers,copy
+mutation {
+  publish(postId: "__POST_ID__") {
+    id
+    title
+    published
+  }
+}
+```
+
+```graphql lineNumbers,copy
+query {
+  publishedPosts {
+    id
+    title
+    author {
+      id
+      name
+    }
+  }
+}
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.
