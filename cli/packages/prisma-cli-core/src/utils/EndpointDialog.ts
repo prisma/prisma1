@@ -14,14 +14,17 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { PostgresConnector, MongoConnector } from 'prisma-db-introspection'
 import { MongoClient } from 'mongodb'
-import * as yaml from 'js-yaml'
 import { Client as PGClient } from 'pg'
+import * as yaml from 'js-yaml'
+import { DatabaseType, Renderers } from 'prisma-datamodel'
+import {
+  getConnectedConnectorFromCredentials,
+  getConnectorWithDatabase,
+} from '../commands/introspect/util'
 
 export interface GetEndpointParams {
   folderName: string
 }
-
-export type DatabaseType = 'postgres' | 'mysql' | 'mongo'
 
 export interface DatabaseCredentials {
   type: DatabaseType
@@ -34,6 +37,7 @@ export interface DatabaseCredentials {
   schema?: string
   ssl?: boolean
   uri?: string
+  executeRaw?: boolean
 }
 
 export interface GetEndpointResult {
@@ -215,7 +219,7 @@ export class EndpointDialog {
       password: credentials.password,
       uri: credentials.uri,
     }
-    if (credentials.type !== 'mongo') {
+    if (credentials.type !== DatabaseType.mongo) {
       data = {
         ...data,
         rawAccess: true,
@@ -260,7 +264,7 @@ export class EndpointDialog {
     let writeDockerComposeYml = true
 
     switch (choice) {
-      case 'Use other server':
+      case 'Use other server': {
         clusterEndpoint = await this.customEndpointSelector()
         cluster = new Cluster(this.out, 'custom', clusterEndpoint)
         const needsAuth = await cluster.needsAuth()
@@ -287,8 +291,9 @@ export class EndpointDialog {
         writeDockerComposeYml = false
 
         break
+      }
       case 'local':
-      case 'Create new database':
+      case 'Create new database': {
         cluster =
           (this.env.clusters || []).find(c => c.name === 'local') ||
           new Cluster(this.out, 'local', 'http://localhost:4466')
@@ -322,105 +327,109 @@ export class EndpointDialog {
         dockerComposeYml += this.printDatabaseService(type)
         newDatabase = true
         break
-      case 'Use existing database':
+      }
+      case 'Use existing database': {
+        /**
+         * Get database credentials
+         */
         credentials = await this.getDatabase()
-        if (credentials.type === 'mongo') {
-          datamodel = defaultMongoDataModel
+        /**
+         * Get connector
+         */
+        const intermediateConnectorData = await getConnectedConnectorFromCredentials(
+          credentials,
+        )
+        const connectorData = await getConnectorWithDatabase(
+          {
+            ...intermediateConnectorData,
+            databaseType: credentials.type,
+          },
+          this,
+        )
 
-          const before = Date.now()
-          this.out.action.start(`Connecting to database`)
-          const client = await this.connectToMongo(credentials)
+        const {
+          connector,
+          databaseName,
+          databaseType,
+          disconnect,
+        } = connectorData
+        let schemas: string[]
 
-          // Only introspect, if there is already data
-          if (credentials.alreadyData) {
-            const connector = new MongoConnector(client)
-            const introspection = await connector.introspect(
-              credentials.database!,
-            )
-            const sdl = await introspection.getDatamodel()
-            const numCollections = sdl.types.length
-            const renderedSdl = introspection.renderer.render(sdl)
-            await client.close()
+        /**
+         * Use listSchemas to try connection
+         */
+        try {
+          schemas = await connector.listSchemas()
+        } catch (e) {
+          throw new Error(`Could not connect to database: ${e.message}`)
+        }
 
-            if (numCollections === 0) {
-              this.out.log(
-                chalk.red(
-                  `\n${chalk.bold(
-                    'Error: ',
-                  )}The provided database doesn't contain any collection. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
-                ),
-              )
-              this.out.exit(1)
-            }
+        if (databaseName && !schemas.includes(databaseName)) {
+          const schemaWord =
+            databaseType === DatabaseType.postgres ? 'schema' : 'database'
+          throw new Error(
+            `The provided ${schemaWord} "${databaseName}" does not exist. The following are available: ${schemas.join(
+              ', ',
+            )}`,
+          )
+        }
 
-            this.out.action.stop(prettyTime(Date.now() - before))
-            this.out.log(
-              `Created datamodel definition based on ${numCollections} Mongo collections.`,
-            )
-            datamodel = renderedSdl
-          } else {
-            this.out.action.stop(prettyTime(Date.now() - before))
-          }
-          credentials.uri = this.replaceMongoHost(credentials.uri!)
-          /**
-           * All non-mongo databases
-           */
-        } else {
-          this.out.log('')
+        /**
+         * Either introspect, if alreadyData is true
+         */
+        if (credentials.alreadyData) {
           const before = Date.now()
           this.out.action.start(
-            credentials!.alreadyData
-              ? `Introspecting database`
-              : `Connecting to database`,
+            `Introspecting database ${chalk.bold(databaseName)}`,
           )
-          const client = new PGClient(this.replaceLocalDockerHost(credentials))
-          await client.connect()
-          const connector = new PostgresConnector(client)
-          let schemas
-          try {
-            schemas = await connector.listSchemas()
-          } catch (e) {
-            throw new Error(`Could not connect to database. ${e.message}`)
-          }
-
-          if (
-            credentials &&
-            credentials.alreadyData &&
-            schemas &&
-            schemas.length > 0
-          ) {
-            const schema = credentials.schema || schemas[0]
-
-            const introspection = await connector.introspect(schema)
-            const sdl = await introspection.getDatamodel()
-            const numTables = sdl.types.length
-            const renderedSdl = introspection.renderer.render(sdl)
-
-            await client.end()
-            if (numTables === 0) {
-              this.out.log(
-                chalk.red(
-                  `\n${chalk.bold(
-                    'Error: ',
-                  )}The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
-                ),
-              )
-              this.out.exit(1)
+          const introspection = await connector.introspect(databaseName)
+          const isdl = await introspection.getDatamodel()
+          const renderer = Renderers.create(databaseType)
+          datamodel = renderer.render(isdl)
+          const tableName =
+            databaseType === DatabaseType.mongo ? 'Mongo collections' : 'tables'
+          await disconnect()
+          this.out.action.stop(prettyTime(Date.now() - before))
+          this.out.log(
+            `Created datamodel definition based on ${
+              isdl.types.length
+            } ${tableName}.`,
+          )
+          /**
+           * Or just use the default datamodel
+           */
+        } else {
+          switch (credentials.type) {
+            case DatabaseType.mongo: {
+              datamodel = defaultMongoDataModel
+              break
             }
-
-            this.out.action.stop(prettyTime(Date.now() - before))
-            this.out.log(
-              `Created datamodel definition based on ${numTables} database tables.`,
-            )
-            datamodel = renderedSdl
-          } else {
-            this.out.action.stop(prettyTime(Date.now() - before))
+            case DatabaseType.mysql:
+            case DatabaseType.postgres: {
+              datamodel = defaultDataModel
+            }
           }
         }
+
+        /**
+         * sanitize mongo host for docker usage
+         */
+        if (credentials.type === DatabaseType.mongo && credentials.uri) {
+          credentials.uri = this.replaceMongoHost(credentials.uri!)
+        }
+
+        /**
+         * Add the database credentials to the docker compose file
+         */
         dockerComposeYml += this.printDatabaseConfig(credentials)
+
+        /**
+         * The cluster instance is later used by the init command
+         */
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
-      case 'Demo server':
+      }
+      case 'Demo server': {
         writeDockerComposeYml = false
 
         const demoCluster = await this.getDemoCluster()
@@ -430,7 +439,8 @@ export class EndpointDialog {
           cluster = demoCluster
         }
         break
-      default:
+      }
+      default: {
         const result = this.getClusterAndWorkspaceFromChoice(choice)
         if (!result.workspace) {
           cluster = clusters.find(c => c.name === result.cluster)
@@ -444,6 +454,7 @@ export class EndpointDialog {
           )
           workspace = result.workspace
         }
+      }
     }
 
     if (!cluster) {
@@ -511,20 +522,6 @@ export class EndpointDialog {
         },
       )
     })
-  }
-
-  replaceLocalDockerHost(credentials: DatabaseCredentials) {
-    if (credentials.host) {
-      const replaceMap = {
-        'host.docker.internal': 'localhost',
-        'docker.for.mac.localhost': 'localhost',
-      }
-      return {
-        ...credentials,
-        host: replaceMap[credentials.host] || credentials.host,
-      }
-    }
-    return credentials
   }
 
   replaceMongoHost(connectionString: string) {
@@ -970,14 +967,9 @@ export class EndpointDialog {
         },
         {
           value: 'yes',
-          name: 'Yes (experimental - Prisma migrations not yet supported)',
+          name: 'Yes',
           short: 'Yes',
         },
-        new inquirer.Separator(
-          `\n\n${chalk.yellow(
-            'Warning: Introspecting databases with existing data is currently an experimental feature. If you find any issues, please report them here: https://github.com/prisma/prisma/issues\n',
-          )}`,
-        ),
       ],
       pageSize: 10,
     }

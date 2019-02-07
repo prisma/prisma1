@@ -12,10 +12,17 @@ import { prettyTime } from '../../util'
 import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
-import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
-import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 import { createConnection } from 'mysql'
+import { Parser, DatabaseType, Renderers, ISDL } from 'prisma-datamodel'
+import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 import { omit } from 'lodash'
+import {
+  ConnectorAndDisconnect,
+  getConnectedConnectorFromCredentials,
+  ConnectorData,
+  getConnectorWithDatabase,
+  IntermediateConnectorData,
+} from './util'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -91,325 +98,119 @@ export default class IntrospectCommand extends Command {
   }
   static hidden = false
   async run() {
-    const { interactive, prototype } = this.flags
-    const pgHost = this.flags['pg-host']
-    const pgPort = this.flags['pg-port']
-    const pgUser = this.flags['pg-user']
-    const pgPassword = this.flags['pg-password']
-    const pgDb = this.flags['pg-db']
-    const pgSsl = this.flags['pg-ssl']
-    // we need to be able to override it later with the interactive flow
-    let pgSchema = this.flags['pg-schema']
-
-    const mongoUri = this.flags['mongo-uri']
-    let mongoDb = this.flags['mongo-db']
-
-    const mysqlHost = this.flags['mysql-host']
-    const mysqlPort = this.flags['mysql-port']
-    const mysqlUser = this.flags['mysql-user']
-    const mysqlPassword = this.flags['mysql-password']
-    let mysqlDb = this.flags['mysql-db']
-
-    const endpointDialog = new EndpointDialog({
-      out: this.out,
-      client: this.client,
-      env: this.env,
-      config: this.config,
-      definition: this.definition,
-      shouldAskForGenerator: false,
-    })
-
-    let client
-    let connector: IConnector
-    let databaseType: DatabaseType
+    /**
+     * Get connector and connect to database
+     */
+    const connectorData = await this.getConnectorWithDatabase()
 
     /**
-     * Handle MongoDB CLI args
+     * Introspect the database
      */
 
-    if (mongoUri && !mongoDb) {
-      throw new Error(
-        `You provided mongo-uri, but not the required option mongo-db`,
-      )
-    }
-
-    if (mongoDb && !mongoUri) {
-      throw new Error(
-        `You provided mongo-db, but not the required option mongo-uri`,
-      )
-    }
-
-    if (mongoDb && mongoUri) {
-      client = await this.connectToMongo({
-        type: 'mongo',
-        uri: mongoUri!,
-        database: mongoDb!,
-      })
-      connector = new MongoConnector(client)
-      databaseType = DatabaseType.mongo
-    }
-
-    const mysqlFlagsProvided =
-      mysqlHost && mysqlPort && mysqlUser && mysqlPassword
-
-    if (mysqlFlagsProvided) {
-      client = createConnection({
-        host: mysqlHost,
-        port: parseInt(mysqlPort, 10),
-        user: mysqlUser,
-        password: mysqlPassword,
-        database: mysqlDb,
-        // multipleStatements: true
-      })
-
-      await new Promise((resolve, reject) => {
-        client.connect(err => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve()
-          }
-        })
-      })
-
-      connector = Connectors.create(DatabaseType.mysql, client)
-      databaseType = DatabaseType.mysql
-    }
-
-    /**
-     * Handle Postgres CLI args
-     */
-
-    const requiredPostgresArgs = {
-      'pg-host': pgHost,
-      'pg-user': pgUser,
-      'pg-password': pgPassword,
-      'pg-db': pgDb,
-      'pg-schema': pgSchema,
-    }
-
-    // CONTINUE: Check if either none or all args are present
-    const pgArgsEntries = Object.entries(requiredPostgresArgs)
-    const notProvidedArgs = pgArgsEntries.filter(([_, value]) => !value)
-    if (
-      notProvidedArgs.length > 0 &&
-      notProvidedArgs.length < pgArgsEntries.length
-    ) {
-      throw new Error(
-        `If you provide one of the pg- arguments, you need to provide all of them. The arguments ${notProvidedArgs
-          .map(([k]) => k)
-          .join(', ')} are missing.`,
-      )
-    }
-
-    if (notProvidedArgs.length === 0) {
-      client = new PGClient({
-        host: pgHost,
-        port: parseInt(pgPort, 10),
-        user: pgUser,
-        password: pgPassword,
-        database: pgDb,
-        ssl: pgSsl,
-      })
-      await client.connect()
-      connector = new PostgresConnector(client)
-      databaseType = DatabaseType.postgres
-    }
-
-    try {
-      await this.definition.load(this.flags)
-      const service = this.definition.service!
-      const stage = this.definition.stage!
-      const cluster = this.definition.getCluster()
-      const workspace = this.definition.getWorkspace()
-      this.env.setActiveCluster(cluster!)
-      await this.client.initClusterClient(cluster!, service!, stage, workspace!)
-    } catch (e) {
-      //
-    }
-
-    try {
-      if (!interactive) {
-        if (!mysqlFlagsProvided && (await this.hasExecuteRaw())) {
-          client = new PrismaDBClient(this.definition)
-          await client.connect()
-          databaseType = client.databaseType
-          connector = Connectors.create(databaseType, client)
-        }
-      }
-    } catch (e) {
-      // console.error(e)
-    }
-
-    if (!client || !connector!) {
-      const credentials = await endpointDialog.getDatabase(true)
-      if (credentials.type === 'postgres') {
-        client = new PGClient(credentials)
-        connector = new PostgresConnector(client)
-        databaseType = DatabaseType.postgres
-        await client.connect()
-        pgSchema = credentials.schema
-      } else if (credentials.type === 'mysql') {
-        // we omit ssl as the mysql driver uses the parameter differently and requires a string instead of a boolean
-        const credentialsWithoutSsl = omit<DatabaseCredentials, 'ssl'>(
-          credentials,
-          ['ssl'],
-        )
-        client = createConnection(credentialsWithoutSsl)
-
-        await new Promise((resolve, reject) => {
-          client.connect(err => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve()
-            }
-          })
-        })
-
-        connector = Connectors.create(DatabaseType.mysql, client)
-        databaseType = DatabaseType.mysql
-        mysqlDb = credentials.schema
-      } else if (credentials.type === 'mongo') {
-        client = await this.connectToMongo(credentials)
-        connector = new MongoConnector(client)
-        mongoDb = credentials.database
-        databaseType = DatabaseType.mongo
-        await client.connect()
-      }
-    }
-
-    let schemas
     const before = Date.now()
-    try {
-      schemas = await connector!.listSchemas()
-    } catch (e) {
-      throw new Error(`Could not connect to database. ${e.message}`)
-    }
+    this.out.action.start(
+      `Introspecting database ${chalk.bold(connectorData.databaseName)}`,
+    )
+    const {
+      sdl: newDatamodelSdl,
+      numTables,
+      referenceDatamodelExists,
+    } = await this.introspect(connectorData)
+    this.out.action.stop(prettyTime(Date.now() - before))
+
     /**
-     * Check, if the provided schema exists in the database.
-     * This functionality is the same for Mongo and Postgres
+     * Write the result to the filesystem
      */
-    if (schemas && schemas.length > 0) {
-      let schema
-      if (schemas.length === 1) {
-        schema = schemas[0]
-      } else if (pgSchema) {
-        const exists = schemas.includes(pgSchema)
-        if (!exists) {
-          throw new Error(
-            `The provided Postgres Schema ${pgSchema} does not exist. Choose one of ${schemas.join(
-              ', ',
-            )}`,
-          )
-        }
-        schema = pgSchema
-      } else if (mysqlDb) {
-        const exists = schemas.includes(mysqlDb)
-        if (!exists) {
-          throw new Error(
-            `The provided MySQL Schema ${mysqlDb} does not exist. Choose one of ${schemas.join(
-              ', ',
-            )}`,
-          )
-        }
-        schema = mysqlDb
-      } else if (mongoDb) {
-        if (!schemas.includes(mongoDb)) {
-          throw new Error(
-            `The provided Mongo Database ${mongoDb} does not exist. Choose one of ${schemas.join(
-              ', ',
-            )}`,
-          )
-        }
+    const fileName = this.writeDatamodel(newDatamodelSdl)
 
-        schema = mongoDb
-      } else {
-        const databaseDivider =
-          databaseType! === DatabaseType.postgres ? '$' : '@'
-        const schemaName = `${this.definition.service}${databaseDivider}${
-          this.definition.stage
-        }`
-        const exists = schemas.includes(schemaName)
-        schema = exists
-          ? schemaName
-          : await endpointDialog.selectSchema(
-              schemas.filter(
-                s =>
-                  !s.startsWith(
-                    'prisma-temporary-introspection-service' + databaseDivider,
-                  ),
-              ),
-            )
-      }
-
-      let datamodel
-      if (this.definition.typesString) {
-        const ParserInstance = Parser.create(databaseType!)
-        datamodel = ParserInstance.parseFromSchemaString(
-          this.definition.typesString!,
-        )
-      }
-
-      this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
-
-      const introspection = await connector!.introspect(schema)
-      const sdl = datamodel
-        ? await introspection.getNormalizedDatamodel(datamodel)
-        : await introspection.getDatamodel()
-      const numTables = sdl.types.length
-
-      const renderer = Renderers.create(introspection.databaseType, prototype)
-      const renderedSdl = renderer.render(sdl)
-
-      // Mongo has .close, Postgres .end
-      if (typeof client.close === 'function') {
-        await client.close()
-      } else {
-        await client.end()
-      }
-      if (numTables === 0) {
-        this.out.log(
-          chalk.red(
-            `\n${chalk.bold(
-              'Error: ',
-            )}The provided database doesn't contain any tables. Please provide another database.`,
-          ),
-        )
-        this.out.exit(1)
-      }
-      const prototypeFileName = prototype ? '-prototype' : ''
-      const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
-      const fullFileName = path.join(this.config.definitionDir, fileName)
-      fs.writeFileSync(fullFileName, renderedSdl)
-      this.out.action.stop(prettyTime(Date.now() - before))
-      this.out.log(
-        `Created datamodel definition based on ${numTables} database tables.`,
-      )
-      this.out.log(`\
+    this.out.log(
+      `Created datamodel definition based on ${numTables} database tables.`,
+    )
+    const andDatamodelText = referenceDatamodelExists
+      ? ' and the existing datamodel'
+      : ''
+    this.out.log(`\
 ${chalk.bold(
-        'Created 1 new file:',
-      )}    GraphQL SDL-based datamodel (derived from existing database)
+      'Created 1 new file:',
+    )}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
 
   ${chalk.cyan(fileName)}
 `)
 
-      if (
-        this.definition.definition &&
-        !this.definition.definition!.datamodel
-      ) {
-        await this.definition.load(this.flags)
-        this.definition.addDatamodel(fileName)
-        this.out.log(
-          `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
-        )
-      }
-    } else {
-      throw new Error(`Could not find schema in provided database.`)
+    if (this.definition.definition && !this.definition.definition!.datamodel) {
+      await this.definition.load(this.flags)
+      this.definition.addDatamodel(fileName)
+      this.out.log(
+        `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
+      )
     }
   }
+
+  getExistingDatamodel(databaseType: DatabaseType): ISDL | null {
+    if (this.definition.typesString) {
+      const ParserInstance = Parser.create(databaseType!)
+      return ParserInstance.parseFromSchemaString(this.definition.typesString!)
+    }
+
+    return null
+  }
+
+  async introspect({
+    connector,
+    disconnect,
+    databaseType,
+    databaseName,
+  }: ConnectorData): Promise<{
+    sdl: string
+    numTables: number
+    referenceDatamodelExists: boolean
+  }> {
+    const existingDatamodel = this.getExistingDatamodel(databaseType)
+
+    const introspection = await connector.introspect(databaseName)
+    const sdl = existingDatamodel
+      ? await introspection.getNormalizedDatamodel(existingDatamodel)
+      : await introspection.getDatamodel()
+
+    const renderer = Renderers.create(
+      introspection.databaseType,
+      this.flags.prototype,
+    )
+    const renderedSdl = renderer.render(sdl)
+
+    // disconnect from database
+    await disconnect()
+
+    const numTables = sdl.types.length
+    if (numTables === 0) {
+      this.out.log(
+        chalk.red(
+          `\n${chalk.bold(
+            'Error: ',
+          )}The provided database doesn't contain any tables. Please provide another database.`,
+        ),
+      )
+      this.out.exit(1)
+    }
+
+    return {
+      sdl: renderedSdl,
+      numTables,
+      referenceDatamodelExists: Boolean(existingDatamodel),
+    }
+  }
+
+  writeDatamodel(renderedSdl: string): string {
+    const prototypeFileName = this.flags.prototype ? '-prototype' : ''
+    const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
+    const fullFileName = path.join(this.config.definitionDir, fileName)
+    fs.writeFileSync(fullFileName, renderedSdl)
+    return fileName
+  }
+
   async hasExecuteRaw() {
     try {
+      await this.definition.load(this.flags)
       const service = this.definition.service!
       const stage = this.definition.stage!
       const token = this.definition.getToken(service, stage)
@@ -426,26 +227,156 @@ ${chalk.bold(
       return false
     }
   }
-  connectToMongo(credentials: DatabaseCredentials): Promise<MongoClient> {
-    return new Promise((resolve, reject) => {
-      if (!credentials.uri) {
-        throw new Error(`Please provide the MongoDB connection string`)
-      }
 
-      MongoClient.connect(
-        credentials.uri,
-        { useNewUrlParser: true },
-        (err, client) => {
-          if (err) {
-            reject(err)
-          } else {
-            if (credentials.database) {
-              client.db(credentials.database)
-            }
-            resolve(client)
-          }
-        },
-      )
+  /**
+   * This method makes sure, that a database is present
+   */
+  async getConnectorWithDatabase(): Promise<ConnectorData> {
+    const data = await this.getConnector()
+    const endpointDialog = new EndpointDialog({
+      out: this.out,
+      client: this.client,
+      env: this.env,
+      config: this.config,
+      definition: this.definition,
+      shouldAskForGenerator: false,
     })
+
+    return getConnectorWithDatabase(data, endpointDialog)
+  }
+
+  async getConnector(): Promise<IntermediateConnectorData> {
+    const hasExecuteRaw = await this.hasExecuteRaw()
+    const credentials = await this.getCredentials(hasExecuteRaw)
+    if (credentials) {
+      const {
+        connector,
+        disconnect,
+      } = await getConnectedConnectorFromCredentials(credentials)
+      return {
+        connector,
+        disconnect,
+        databaseType: credentials.type,
+        databaseName: credentials.schema,
+      }
+    }
+
+    if (!hasExecuteRaw) {
+      throw new Error(
+        `This must not happen. No source for the introspection could be determined. Please report this issue to Prisma.`,
+      )
+    }
+
+    /**
+     * Continue with Prisma as the database driver, based on executeRaw
+     */
+
+    const client = new PrismaDBClient(this.definition)
+    await client.connect()
+    const connector = Connectors.create(client.databaseType, client)
+    const disconnect = () => client.end()
+    const databaseDivider =
+      client.databaseType! === DatabaseType.postgres ? '$' : '@'
+    const databaseName = `${this.definition.service}${databaseDivider}${
+      this.definition.stage
+    }`
+    return {
+      connector,
+      disconnect,
+      databaseType: client.databaseType,
+      databaseName,
+    }
+  }
+
+  async getCredentials(
+    hasExecuteRaw: boolean,
+  ): Promise<DatabaseCredentials | null> {
+    const requiredPostgresFlags = ['pg-host', 'pg-user', 'pg-password', 'pg-db']
+    const requiredMysqlFlags = [
+      'mysql-host',
+      'mysql-user',
+      'mysql-password',
+      'mysql-port',
+    ]
+
+    const flags = this.flags
+    const flagsKeys = Object.keys(this.flags)
+
+    const mysqlFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
+    const postgresFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
+
+    if (mysqlFlags.length > 0 && postgresFlags.length > 0) {
+      throw new Error(
+        `You can't provide both MySQL and Postgres connection flags. Please provide either of both.`,
+      )
+    }
+
+    if (mysqlFlags.length < requiredMysqlFlags.length) {
+      this.handleMissingArgs(requiredMysqlFlags, mysqlFlags, 'mysql')
+    }
+
+    if (postgresFlags.length < requiredPostgresFlags.length) {
+      this.handleMissingArgs(requiredPostgresFlags, postgresFlags, 'pg')
+    }
+
+    if (mysqlFlags.length === requiredMysqlFlags.length) {
+      return {
+        host: flags['myqsl-host'],
+        port: parseInt(flags['mysql-port'], 10),
+        user: flags['mysql-user'],
+        password: flags['mysql-password'],
+        schema: flags['mysql-db'],
+        type: DatabaseType.mysql,
+      }
+    }
+
+    if (postgresFlags.length === requiredPostgresFlags.length) {
+      return {
+        host: flags['pg-host'],
+        user: flags['pg-user'],
+        password: flags['pg-password'],
+        database: flags['pg-database'],
+        port: parseInt(flags['pg-port'], 10),
+        schema: flags['pg-schema'], // this is optional and can be undefined
+        type: DatabaseType.postgres,
+      }
+    }
+
+    if (flags['mongo-uri']) {
+      return {
+        uri: flags['mongo-uri'],
+        schema: flags['mongo-db'], // this is optional and can be undefined
+        type: DatabaseType.mongo,
+      }
+    }
+
+    if (flags.interactive || !hasExecuteRaw) {
+      const endpointDialog = new EndpointDialog({
+        out: this.out,
+        client: this.client,
+        env: this.env,
+        config: this.config,
+        definition: this.definition,
+        shouldAskForGenerator: false,
+      })
+      return await endpointDialog.getDatabase(true)
+    }
+
+    return null
+  }
+  handleMissingArgs(
+    requiredArgs: string[],
+    providedArgs: string[],
+    prefix: string,
+  ) {
+    const missingArgs = requiredArgs.filter(
+      arg => !providedArgs.some(provided => arg === provided),
+    )
+
+    throw new Error(
+      `If you provide one of the ${prefix}- arguments, you need to provide all of them. The arguments ${missingArgs.join(
+        ', ',
+      )} are missing.`,
+    )
   }
 }
