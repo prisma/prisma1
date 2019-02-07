@@ -7,6 +7,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Project
 import play.api.libs.json.JsValue
+import slick.dbio.DBIO._
 import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,9 +19,34 @@ case class JdbcDatabaseMutactionExecutor(
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
 
+  private def runAttached[T](project: Project, query: DBIO[T]) = {
+    if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/${project.dbName}'"""
+      val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
+      val attachIfNecessary = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
+              case true  => slick.dbio.DBIO.successful(())
+              case false => attach
+            }
+        _      <- activateForeignKey
+        result <- query
+      } yield result
+
+      slickDatabase.database.run(attachIfNecessary.withPinnedSession)
+    } else {
+      slickDatabase.database.run(query)
+    }
+  }
+
   override def executeRaw(project: Project, query: String): Future[JsValue] = {
     val action = JdbcActionsBuilder(project, slickDatabase).executeRaw(query)
-    slickDatabase.database.run(action)
+    runAttached(project, action)
   }
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = true)
@@ -35,31 +61,9 @@ case class JdbcDatabaseMutactionExecutor(
       case false => executeTopLevelMutaction(mutaction, actionsBuilder)
     }
 
-    if (slickDatabase.isMySql) {
-      slickDatabase.database.run(singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted))
-    } else if (slickDatabase.isPostgres) {
-      slickDatabase.database.run(singleAction)
-    } else if (slickDatabase.isSQLite) {
-      import slickDatabase.profile.api._
-      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/${mutaction.project.dbName}'"""
-      val attach             = sqlu"ATTACH DATABASE #${path} AS #${mutaction.project.dbName};"
-      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+    val finalAction = if (slickDatabase.isMySql) singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted) else singleAction
 
-      val attachIfNecessary = for {
-        attachedDbs <- list
-        _ <- attachedDbs.map(_._2).contains(mutaction.project.dbName) match {
-              case true  => DBIO.successful(())
-              case false => attach
-            }
-        _      <- activateForeignKey
-        result <- singleAction
-      } yield result
-
-      slickDatabase.database.run(attachIfNecessary.withPinnedSession)
-    } else {
-      sys.error("No valid database profile given.")
-    }
+    runAttached(mutaction.project, finalAction)
   }
 
   def executeTopLevelMutaction(

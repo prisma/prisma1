@@ -36,6 +36,7 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
   lazy val slickDatabase = testDependencies.databaseMutactionExecutor.asInstanceOf[JdbcDatabaseMutactionExecutor].slickDatabase
   lazy val isMySQL       = slickDatabase.isMySql
   lazy val isPostgres    = slickDatabase.isPostgres
+  lazy val isSQLite      = slickDatabase.isSQLite
   lazy val sql           = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
   lazy val modelTable    = table(name(schemaName, model.dbName))
   lazy val idColumn      = model.idField_!.dbName
@@ -107,11 +108,10 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "syntactic errors should bubble through to the user" in {
-    val errorCode = if (isPostgres) 0 else 1064
-    val errorContains = if (isPostgres) {
-      "syntax error at end of input"
-    } else {
-      "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near"
+    val (errorCode, errorContains) = () match {
+      case _ if isPostgres => (0, "syntax error at end of input")
+      case _ if isMySQL    => (1064, "check the manual that corresponds to your MySQL server version for the right syntax to use near")
+      case _ if isSQLite   => (1, "incomplete input")
     }
     server.queryThatMustFail(
       s"""mutation {
@@ -127,13 +127,13 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "other errors should also bubble through to the user" in {
-    val id        = createTodo("title")
-    val errorCode = if (isPostgres) 0 else 1062
-    val errorContains = if (isPostgres) {
-      "duplicate key value violates unique constraint"
-    } else {
-      "Duplicate entry"
+    val id = createTodo("title")
+    val (errorCode, errorContains) = () match {
+      case _ if isPostgres => (0, "duplicate key value violates unique constraint")
+      case _ if isMySQL    => (1062, "Duplicate entry")
+      case _ if isSQLite   => (19, "Abort due to constraint violation (UNIQUE constraint failed: Todo.id)")
     }
+
     executeRawThatMustFail(
       sql.insertInto(modelTable).columns(field(idColumn), field(titleColumn)).values(id, "irrelevant"),
       errorCode = errorCode,
