@@ -81,7 +81,7 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
     val id1 = createTodo("title1")
     val id2 = createTodo(null)
 
-    val result = executeRaw(sql.select(field("title").as("aliasedTitle")).from(modelTable))
+    val result = executeRaw(sql.select(field(titleColumn).as("aliasedTitle")).from(modelTable))
 
     result.pathAsJsValue("data.executeRaw") should equal(s"""[{"aliasedTitle":"title1"},{"aliasedTitle":null}]""".parseJson)
   }
@@ -90,9 +90,10 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
     val id1 = createTodo("title1")
     val id2 = createTodo(null)
 
-    val result = executeRaw(sql.select(field("title").as("ALIASEDTITLE"), field("title")).from(modelTable))
+    val result = executeRaw(sql.select(field(titleColumn).as("ALIASEDTITLE"), field(titleColumn)).from(modelTable))
 
-    result.pathAsJsValue("data.executeRaw") should equal(s"""[{"ALIASEDTITLE":"title1","title":"title1"},{"ALIASEDTITLE":null,"title":null}]""".parseJson)
+    result.pathAsJsValue("data.executeRaw") should equal(
+      s"""[{"ALIASEDTITLE":"title1","$titleColumn":"title1"},{"ALIASEDTITLE":null,"$titleColumn":null}]""".parseJson)
   }
 
   "postgres arrays should work" in {
