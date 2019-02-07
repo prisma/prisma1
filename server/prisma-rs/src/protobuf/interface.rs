@@ -1,17 +1,15 @@
 use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
-    connector::{Connector, Sqlite},
+    connector::{PrismaConnector, Sqlite},
     error::Error,
-    models::{Project, ProjectTemplate, Renameable, ScalarField},
-    protobuf::prisma,
-    querying::NodeSelector,
+    protobuf::{prisma, QueryExecutor},
     PrismaResult,
 };
 
 use prost::Message;
 
 pub struct ProtoBufInterface {
-    connector: Box<dyn Connector + Send + Sync + 'static>,
+    connector: PrismaConnector,
 }
 
 impl ProtoBufInterface {
@@ -54,53 +52,8 @@ impl ProtoBufInterface {
 
     pub fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
-            let params = prisma::GetNodeByWhereInput::decode(payload)?;
-
-            let project_template: ProjectTemplate =
-                serde_json::from_reader(params.project_json.as_slice())?;
-
-            let project: Project = project_template.into();
-
-            let model = project
-                .schema
-                .find_model(&params.model_name)
-                .ok_or_else(|| {
-                    Error::InvalidInputError(format!("Model not found: {}", params.model_name))
-                })?;
-
-            let selected_fields: Vec<&ScalarField> = model.find_fields(&params.selected_scalar());
-
-            let field = model.find_field(&params.field_name).ok_or_else(|| {
-                Error::InvalidInputError(format!("Field not found: {}", params.field_name))
-            })?;
-
-            let value = params.value.prisma_value.ok_or_else(|| {
-                Error::InvalidInputError(String::from("Search value cannot be empty."))
-            })?;
-
-            let node_selector =
-                NodeSelector::new(model.clone(), field, &value, selected_fields.as_slice());
-
-            let result = self
-                .connector
-                .get_node_by_where(project.db_name(), &node_selector)?;
-
-            let response_values: Vec<prisma::ValueContainer> = result
-                .into_iter()
-                .map(|value| prisma::ValueContainer {
-                    prisma_value: Some(value),
-                })
-                .collect();
-
-            let nodes = vec![prisma::Node {
-                values: response_values,
-            }];
-
-            let fields: Vec<String> = selected_fields
-                .into_iter()
-                .map(|field| field.db_name().to_string())
-                .collect();
-
+            let input = prisma::GetNodeByWhereInput::decode(payload)?;
+            let (nodes, fields) = input.query(&self.connector)?;
             let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();

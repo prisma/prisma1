@@ -1,33 +1,30 @@
 use std::rc::Rc;
 
 use crate::{
-    models::{Model, ScalarField},
+    models::{Model, ScalarField, Project},
+    protobuf::prisma::QueryArguments,
     PrismaValue,
 };
 
-/// A helper struct for selecting data.
 pub struct NodeSelector<'a> {
-    /// The model to select from
+    pub project: Project,
+    pub database: &'a str,
     pub model: Rc<Model>,
-    /// The name of the field to filtering
-    pub field: &'a ScalarField,
-    /// The value of the field, should be in the corresponding type.
-    pub value: &'a PrismaValue,
-    /// Fields to select from the table
+    pub query_arguments: &'a QueryArguments,
     pub selected_fields: &'a [&'a ScalarField],
 }
 
 impl<'a> NodeSelector<'a> {
     pub fn new(
+        project: Project,
         model: Rc<Model>,
-        field: &'a ScalarField,
-        value: &'a PrismaValue,
+        query_arguments: &'a QueryArguments,
         selected_fields: &'a [&'a ScalarField],
     ) -> NodeSelector<'a> {
         NodeSelector {
+            database,
             model,
-            field,
-            value,
+            query_arguments,
             selected_fields,
         }
     }

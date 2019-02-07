@@ -1,6 +1,11 @@
 use std::rc::{Rc, Weak};
 
-use crate::models::{ModelRef, ModelTemplate};
+use crate::{
+    error::Error,
+    models::{ModelRef, ModelTemplate},
+    PrismaResult,
+};
+
 use once_cell::unsync::OnceCell;
 
 pub type SchemaRef = Rc<Schema>;
@@ -70,11 +75,12 @@ impl Into<SchemaRef> for SchemaTemplate {
 }
 
 impl Schema {
-    pub fn find_model(&self, name: &str) -> Option<ModelRef> {
+    pub fn find_model(&self, name: &str) -> PrismaResult<ModelRef> {
         self.models
             .get()
             .and_then(|models| models.iter().find(|model| model.name == name))
             .cloned()
+            .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
     }
 
     pub fn is_legacy(&self) -> bool {
@@ -101,25 +107,25 @@ mod tests {
 
         assert!(model.is_legacy());
 
-        let id_field = model.find_field("id").unwrap();
+        let id_field = model.fields().find_from_scalar("id").unwrap();
         assert!(id_field.is_id());
         assert!(!id_field.is_created_at());
         assert!(!id_field.is_updated_at());
         assert!(!id_field.is_writable());
 
-        let title_field = model.find_field("title").unwrap();
+        let title_field = model.fields().find_from_scalar("title").unwrap();
         assert!(!title_field.is_id());
         assert!(!title_field.is_created_at());
         assert!(!title_field.is_updated_at());
         assert!(title_field.is_writable());
 
-        let created_at_field = model.find_field("createdAt").unwrap();
+        let created_at_field = model.fields().find_from_scalar("createdAt").unwrap();
         assert!(!created_at_field.is_id());
         assert!(created_at_field.is_created_at());
         assert!(!created_at_field.is_updated_at());
         assert!(!created_at_field.is_writable());
 
-        let updated_at_field = model.find_field("updatedAt").unwrap();
+        let updated_at_field = model.fields().find_from_scalar("updatedAt").unwrap();
         assert!(!updated_at_field.is_id());
         assert!(!updated_at_field.is_created_at());
         assert!(updated_at_field.is_updated_at());

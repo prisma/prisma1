@@ -12,7 +12,6 @@ pub mod connector;
 pub mod error;
 pub mod models;
 pub mod protobuf;
-pub mod querying;
 
 use config::PrismaConfig;
 use error::Error;
@@ -43,6 +42,16 @@ pub unsafe extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut Pr
 
     ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
 }
+
+/*
+#[no_mangle]
+pub unsafe extern "C" fn get_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
+    let payload = slice::from_raw_parts_mut(data, len);
+    let response_payload = PBI.get_nodes(payload);
+
+    ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
+}
+*/
 
 #[no_mangle]
 pub unsafe extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {

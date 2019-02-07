@@ -3,9 +3,8 @@ use r2d2_sqlite::SqliteConnectionManager;
 
 use crate::{
     connector::Connector,
-    models::{Renameable, TypeIdentifier},
+    models::{Renameable, ScalarField, TypeIdentifier},
     protobuf::prisma::{graphql_id::IdValue, GraphqlId},
-    querying::NodeSelector,
     PrismaResult, PrismaValue, SERVER_ROOT,
 };
 
@@ -113,28 +112,30 @@ impl Connector for Sqlite {
     fn get_node_by_where(
         &self,
         database_name: &str,
-        selector: &NodeSelector,
+        table_name: &str,
+        selected_fields: &[&ScalarField],
+        query_condition: (&ScalarField, &PrismaValue),
     ) -> PrismaResult<Vec<PrismaValue>> {
         self.with_connection(database_name, |conn| {
-            let table_location = Self::table_location(database_name, selector.model.db_name());
+            let table_location = Self::table_location(database_name, table_name);
+            let (field, value) = query_condition;
 
-            let field_names: Vec<&str> = selector
-                .selected_fields
+            let field_names: Vec<&str> = selected_fields
                 .iter()
                 .map(|field| field.db_name())
                 .collect();
 
             let query = dbg!(select_from(&table_location)
                 .columns(&field_names)
-                .so_that(selector.field.db_name().equals(DatabaseValue::Parameter))
+                .so_that(field.db_name().equals(DatabaseValue::Parameter))
                 .compile()
                 .unwrap());
 
-            let params = vec![(selector.value as &ToSql)];
+            let params = vec![(value as &ToSql)];
             let mut result = Vec::new();
 
             conn.query_row(&query, params.as_slice(), |row| {
-                for (i, field) in selector.selected_fields.iter().enumerate() {
+                for (i, field) in selected_fields.iter().enumerate() {
                     result.push(Self::fetch_value(field.type_identifier, row, i));
                 }
             })?;
@@ -267,18 +268,14 @@ mod tests {
         let project: Project = project_template.into();
         let model = &project.schema.models.get().unwrap()[0];
 
+        let field = model.fields().find_from_scalar("name").unwrap();
         let find_by = PrismaValue::String(String::from("Musti"));
 
-        let fields = model.scalar_fields();
+        let fields = model.fields().scalar();
 
-        let selector = NodeSelector::new(
-            model.clone(),
-            model.find_field("name").unwrap(),
-            &find_by,
-            &fields,
-        );
-
-        let result = sqlite.get_node_by_where(db_name, &selector).unwrap();
+        let result = sqlite
+            .get_node_by_where(db_name, model.db_name(), &fields, (field, &find_by))
+            .unwrap();
 
         let datetime: DateTime<Utc> = DateTime::from_utc(
             chrono::NaiveDateTime::from_timestamp(1549046025, 567000000),

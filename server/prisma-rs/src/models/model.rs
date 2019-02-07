@@ -1,11 +1,7 @@
-use crate::models::{Field, FieldTemplate, Renameable, ScalarField, Schema, SchemaWeakRef};
-
-use std::{
-    collections::HashSet,
-    rc::{Rc, Weak},
-};
+use crate::models::{FieldTemplate, Fields, Renameable, Schema, SchemaWeakRef};
 
 use once_cell::unsync::OnceCell;
+use std::rc::{Rc, Weak};
 
 pub type ModelRef = Rc<Model>;
 pub type ModelWeakRef = Weak<Model>;
@@ -25,7 +21,7 @@ pub struct Model {
     pub name: String,
     pub stable_identifier: String,
     pub is_embedded: bool,
-    pub fields: OnceCell<Vec<Field>>,
+    fields: OnceCell<Fields>,
     pub manifestation: Option<ModelManifestation>,
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
@@ -55,7 +51,7 @@ impl ModelTemplate {
             .collect();
 
         // The model is created here and fields WILL BE UNSET before now!
-        model.fields.set(fields).unwrap();
+        model.fields.set(Fields::new(fields)).unwrap();
 
         model
     }
@@ -83,31 +79,11 @@ impl Model {
         }
     }
 
-    pub fn find_field(&self, name: &str) -> Option<&ScalarField> {
-        self.scalar_fields()
-            .iter()
-            .find(|field| field.db_name() == name)
-            .cloned()
-    }
-
-    pub fn find_fields(&self, names: &HashSet<&str>) -> Vec<&ScalarField> {
-        self.scalar_fields()
-            .into_iter()
-            .filter(|field| names.contains(field.db_name()))
-            .collect()
-    }
-
-    pub fn scalar_fields(&self) -> Vec<&ScalarField> {
-        match self.fields.get() {
-            Some(fields) => fields.iter().fold(Vec::new(), |mut acc, field| {
-                if let Field::Scalar(scalar_field) = field {
-                    acc.push(scalar_field);
-                }
-
-                acc
-            }),
-            None => Vec::with_capacity(0),
-        }
+    pub fn fields(&self) -> &Fields {
+        self.fields
+            .get()
+            .ok_or_else(|| String::from("Model fields must be set!"))
+            .unwrap()
     }
 
     pub fn is_legacy(&self) -> bool {
