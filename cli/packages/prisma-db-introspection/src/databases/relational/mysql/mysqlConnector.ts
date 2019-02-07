@@ -182,8 +182,6 @@ export class MysqlConnector extends RelationalConnector {
       }
     })
 
-    console.log(result)
-
     return result
   }
 }

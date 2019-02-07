@@ -67,6 +67,21 @@ export abstract class RelationalConnector implements IConnector {
     return await this.queryEnums(schemaName)
   }
 
+  /**
+   * All queries below use the standardized information_schema table.
+   */
+  public async listSchemas(): Promise<string[]> {
+    const res = await this.query(
+      `SELECT 
+         schema_name
+       FROM 
+         information_schema.schemata 
+       WHERE schema_name NOT LIKE 'information_schema';`,
+    )
+
+    return res.map(x => x.schema_name)
+  }
+
   protected async listModels(schemaName: string): Promise<ITable[]> {
     const tables: ITable[] = []
     const allTables = await this.queryTables(schemaName)
