@@ -173,7 +173,6 @@ export class MysqlConnector extends RelationalConnector {
         refConstraints.constraint_schema = ?`
 
     const result = (await this.query(fkQuery, [schemaName])).map(row => {
-      console.log(row)
       return {
         sourceColumn: row.fkColumnName as string,
         sourceTable: row.fkTableName as string,
