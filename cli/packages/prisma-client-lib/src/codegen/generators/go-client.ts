@@ -815,7 +815,7 @@ func (client *Client) GraphQL(ctx context.Context, query string, variables map[s
     const dynamic = `
 
 var DefaultEndpoint = ${options.endpoint}
-var Secret          = ${options.secret || ''}
+var Secret          = ${options.secret || `""`}
 
 ${this.printOperation(queryFields, 'query', options)}
 
