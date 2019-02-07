@@ -77,6 +77,15 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
       s"""[{"$idColumn":"id1","$titleColumn":"title1"},{"$idColumn":"id2","$titleColumn":"title2"}]""".parseJson)
   }
 
+  "querying model tables with alias should work" in {
+    val id1 = createTodo("title1")
+    val id2 = createTodo(null)
+
+    val result = executeRaw(sql.select(field("title").as("aliasedTitle")).from(modelTable))
+
+    result.pathAsJsValue("data.executeRaw") should equal(s"""[{"aliasedTitle":"title1"},{"aliasedTitle":null}]""".parseJson)
+  }
+
   "postgres arrays should work" in {
     if (isPostgres) {
       val query =
