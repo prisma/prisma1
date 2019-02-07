@@ -260,7 +260,7 @@ You can connect the following databases to Prisma already:
 
 - MySQL
 - PostgreSQL
-- MongoDB ([beta](https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/mongodb-preview-b6o5/))
+- MongoDB
 
 ### Upcoming Connectors
 

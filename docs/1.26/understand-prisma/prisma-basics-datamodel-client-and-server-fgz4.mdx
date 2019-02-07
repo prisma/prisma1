@@ -1,0 +1,302 @@
+import Warning from 'components/Markdown/Warning'
+import Code from 'components/Markdown/Code'
+import Info from 'components/Markdown/Info'
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: 'Prisma Basics: Datamodel, Prisma Client & Server',
+  position: 20,
+  description: 'Learn about the main concepts you are dealing with when working Prisma.'
+}
+
+## Main concepts
+
+When working with Prisma, you're primarily dealing with **three concepts**:
+
+- **Datamodel**: Defines the models of your application and is foundation for the Prisma client API. (Optional: Can be used to perform migrations against your database.)
+- **Prisma server**: A standalone infrastructure component sitting on top of your database.
+- **Prisma client**: An auto-generated library that connects to the Prisma server and lets you read, write and stream data in your database. It is used for data access in your applications.
+
+## Datamodel
+
+The datamodel primarily serves as foundation for the API operations of your Prisma client.
+
+### Prisma client operations are derived from datamodel
+
+For each model defined in your datamodel, there are the following Prisma client operations automatically generated for you:
+
+- **Read a single record** of the model
+- **Read a list of records** of the model (including filtering, sorting & pagination)
+- **Write a new record** of the model
+- **Update an existing record** of the model
+- **Delete an existing record** of the model 
+- **Check for the existence** of a certain record of the model
+- **Receive realtime updates** when there is a write operation on any record of the model
+
+You can find documentation and examples for all of these operations in the [Prisma Client](/prisma-client) docs.
+
+### The Schema Definition Language (SDL)
+
+The datamodel is written in `.prisma`-files and uses [GraphQL SDL syntax](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/). SDL is used because it is _agnostic of programming languages_, _simple_, _expressive_ and _intuitive_ to use.
+
+There is no hard technical requirement for using SDL to define the datamodel and the API might be openened up to specify the datamodel in other ways in the future. Please create a [feature request](https://github.com/prisma/prisma/issues/new?template=feature_request.md) if you'd like to see a different way for specifying the datamodel.
+
+### Using the datamodel for database migrations (optional)
+
+There are two cases how the datamodel can be created:
+
+- **Manually written**: When the datamodel is written manually from scratch, the datamodel is also used to perform database migrations (this only applies for _new_ databases without existing data). The model definitions of the datamodel not only determine the API operations of the Prisma client, but are also mapped to the database (meaning they're used to perform database migrations in a declarative way).
+- **Derived from an existing database schema (introspection)**: When you're starting to use Prisma with an existing database, the datamodel is derived from the existing database schema. In this case, Prisma is not used to perform database migrations (instead, you keep migrating the database manually as you used too).
+
+> While there currently is a clear rule for when you can use Prisma to perform database migrations and when not, it is planned to unify the two approaches. This means you'll always have the flexibility to perform migrations manually or using Prisma. [Learn more](https://github.com/prisma/prisma/issues/3022).
+
+### Example
+
+Here is what a simple datamodel with two models looks like:
+
+```graphql
+type Post {
+  id: ID! @unique
+  createdAt: DateTime!
+  published: Boolean! @default(value: "false")
+  title: String!
+  author: User!
+}
+
+type User {
+  id: ID! @unique
+  email: String @unique
+  name: String!
+  posts: [Post!]!
+}
+```
+
+Here's a few things to note about the datamodel:
+
+- The `Post` and `User` models are connected via a relation (defined by the `author` and `posts` fields).
+- The `!` following a type means that the corresponding field of the model can never be `null`.
+- The `@unique` directive is used by Prisma to ensure there'll never be two records that have the same value for this field.
+- The `@default` directive is used by Prisma to set default values when records of this model are being created.
+- `createdAt` is not writeable and will be maintained by Prisma, it indicates the exact time when a record was created. There also is `updatedAt` which indicates the time when a record was last updated.
+
+## Prisma client
+
+The Prisma client is an auto-generated library that replaces a traditional ORM in your API server. It connects to a Prisma server which sits on top your database:
+
+![](https://imgur.com/URyxmnZ.png)
+
+### Seamless relation API
+
+The Prisma client is available in various programming languages and provides type safe database access. In contrast to traditional ORMs, it provides a seamless API to work with relational data, JOINs and transactions.
+
+Here is an example that performs several write operations in a single transaction:
+
+- Create a new `User` record
+- Create two new `Post` records
+- Connect the two newly created and one existing `Post` record to the new `User` record via the `posts` relation
+
+<Code languages={["JavaScript", "TypeScript", "Go"]}>
+
+```js
+const newUserWithLinks = await prisma
+  .createUser({
+    name: "Alice",
+    password: "IlikeTurtles",
+    posts: {
+      create: [{
+        title: "Prisma is the data layer for modern applications",
+      }, {
+        title: "Check out How to GraphQL - The fullstack tutorial for GraphQL",
+      }],
+      connect: {
+        id: "cjli6tknz005s0a23uf0lmlve"
+      }
+    }, 
+  })
+```
+
+```ts
+const newUserWithLinks: UserNode = await prisma
+  .createUser({
+    name: "Alice",
+    password: "IlikeTurtles",
+    links: {
+      create: [{
+        description: "The data layer for modern applications",
+        url: "https://www.prisma.io"
+      }, {
+        description: "Fullstack GraphQL tutorial",
+        url: "https://www.howtographql.com"
+      }],
+      connect: {
+        id: "cjli6tknz005s0a23uf0lmlve"
+      }
+    }, 
+  })
+```
+
+```go
+name := "Alice"
+    password := "IlikeTurtles"
+
+    description := "The data layer for modern applications"
+    url := "https://www.prisma.io"
+
+    linkId := "cjli6tknz005s0a23uf0lmlve"
+
+    db.CreateUser(&prisma.UserCreateInput{
+        Name:     &name,
+        Password: &password,
+        Links: &prisma.LinkCreateManyWithoutPostedByInput{
+            Create: &prisma.LinkCreateWithoutPostedByInput{
+                Description: &description,
+                Url:         &url,
+            },
+            Connect: &prisma.LinkWhereUniqueInput{
+                ID: &linkId,
+            },
+        },
+    })
+```
+
+</Code>
+
+For traditional ORMs, such a set of write operations requires you to manually control a database transaction. Prisma client handles the transaction for you.
+
+### Type safe data access
+
+The operations exposed by your Prisma client are strongly typed. For any typed programming language, this means that you get _compile-time safety_ for all database operations and you know _exactly_ what shape of data is going to be returned.
+
+It also makes for an amazing developer experience where you get _auto-completion_ in your editor.
+
+All the typings are auto-generated, so you don't need to deal with writing any boilerplate for that. After you changed your datamodel, you just regenerate your Prisma client and all typings will be updated.
+
+### Realtime updates
+
+Adding a realtime event system to your database is an extremely complicated task. Prisma client lets you subscribe to any database event without having to deal with the underlying infrastructure. You can do so via generated methods on the `$subscribe` property.
+
+Here is an example that subscribes to events where new `User` records are created that have `gmail` in their email address:
+
+<Code languages={["JavaScript", "TypeScript", "Go"]}>
+
+```js
+prisma.$subscribe.user({
+  mutation_in: ["CREATED"],
+  email_contains: "gmail"
+}).node()
+```
+
+```ts
+prisma.$subscribe.user({
+  mutation_in: ["CREATED"],
+  email_contains: "gmail"
+}).node()
+```
+
+```go
+// subscriptions for the Prisma Go client will be available soon
+```
+
+</Code>
+
+### Native GraphQL
+
+The Prisma client lets you run GraphQL queries and mutations against your database using the `$graphql` method.
+
+Here is an example that shows how to create a new `User` record using the native GraphQL API:
+
+<Code languages={["JavsScript", "TypeScript", "Go"]}>
+
+```js
+const mutation = `
+  mutation ($name: String!){
+    createUser(name: $name) {
+      id
+    }
+  }
+`
+
+const variables = { name: 'Alice' }
+const result = prisma.$graphql(mutation, variables)
+```
+
+```ts
+const mutation = `
+  mutation ($name: String!){
+    createUser(name: $name) {
+      id
+    }
+  }
+`
+
+const variables: UserCreateInput = { name: 'Alice' }
+const result: any = prisma.$graphql(mutation, variables)
+```
+
+```go
+db.GraphQL(`
+  mutation ($name: String!){
+    createUser(name: $name) {
+      id
+    }
+  }
+`, map[string]interface{}{
+  "name": "Alice"
+})
+```
+
+</Code>
+
+## Prisma server
+
+The Prisma server is a standalone infrastructure component that is connected to your database:
+
+![](https://imgur.com/774DDya.png)
+
+It needs to be configured with your database connection details and user credentials when being deployed.
+
+The main responsibility of the Prisma server is to translate requests made by the Prisma client into actual database queries.
+
+While there are a few ways to set up a Prisma server, the currently recommended way is to use [Docker](rty1). Here is a sample Docker Compose file that configures a Prisma server connecting to a local MySQL database:
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.26
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: localhost
+            port: 3306
+            user: root
+            password: secret42
+```
+
+Prisma servers can be deployed to your favorite cloud provider, such as [AWS](https://aws.amazon.com/de/), [Digital Ocean](https://www.digitalocean.com/), [Google Cloud](https://cloud.google.com/gcp/) [Microsoft Azure](https://azure.microsoft.com/), [Zeit Now](https://zeit.co/now), ...
+
+<Collapse title="Managing Prisma servers in Prisma Cloud">
+
+Prisma Cloud is a set of tools helping you to manage your Prisma servers and services. It consists of the web-based [Prisma Console](https://app.prisma.io/) and parts of the Prisma CLI.
+
+You can host a Prisma server anywhere - be it your on own infrastructure or using your favorite cloud provider (such as AWS, Google Cloud, Digital Ocean, ...). No matter where the Prisma server is hosted, you're still able to _manage_ it through Prisma Cloud. This includes maintenance tasks like _upgrading_ the Prisma version. 
+
+To take advantage of these benefits, you need to connect your Prisma server to Prisma Cloud.
+
+![](https://i.imgur.com/gUzWSwS.png)
+
+With the cloud provider integrations, you're also able to _set up_ your Prisma server directly through the web UI instead of fiddling around with Docker and the APIs/UIs of your cloud provider. As an example, learn how to [setup a new Prisma server with a connected database on Heroku](https://www.youtube.com/watch?v=b2ofz3XxR14).
+
+</Collapse>
+
+<Info>
+
+To get started with Prisma without the hassle of setting up your own database and Prisma server, you can use a free, hosted [Demo server](jfr3) in [Prisma Cloud](https://www.prisma.io/cloud). Run `prisma init` and choose the **Demo server** option or follow the ["Get Start"-tutorial](a001).
+
+</Info>

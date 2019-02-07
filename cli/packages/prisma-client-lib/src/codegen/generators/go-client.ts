@@ -814,8 +814,8 @@ func (client *Client) GraphQL(ctx context.Context, query string, variables map[s
     // Dynamic contains the parts of the generated code that are dynamically generated.
     const dynamic = `
 
-var DefaultEndpoint = ${GoGenerator.replaceEnv(options.endpoint)}
-var Secret          = ${GoGenerator.replaceEnv(options.secret || '')}
+var DefaultEndpoint = ${options.endpoint}
+var Secret          = ${options.secret || `""`}
 
 ${this.printOperation(queryFields, 'query', options)}
 
