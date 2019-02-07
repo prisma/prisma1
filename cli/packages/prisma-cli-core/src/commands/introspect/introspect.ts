@@ -5,7 +5,6 @@ import {
   PrismaDBClient,
   MongoConnector,
   Connectors,
-  MysqlConnector,
 } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -234,8 +233,8 @@ export default class IntrospectCommand extends Command {
         if (!mysqlFlagsProvided && (await this.hasExecuteRaw())) {
           client = new PrismaDBClient(this.definition)
           await client.connect()
-          connector = new MysqlConnector(client)
-          databaseType = DatabaseType.mysql
+          databaseType = client.databaseType
+          connector = Connectors.create(databaseType, client)
         }
       }
     } catch (e) {
@@ -326,13 +325,20 @@ export default class IntrospectCommand extends Command {
 
         schema = mongoDb
       } else {
-        const schemaName = `${this.definition.service}$${this.definition.stage}`
+        const databaseDivider =
+          databaseType! === DatabaseType.postgres ? '$' : '@'
+        const schemaName = `${this.definition.service}${databaseDivider}${
+          this.definition.stage
+        }`
         const exists = schemas.includes(schemaName)
         schema = exists
           ? schemaName
           : await endpointDialog.selectSchema(
               schemas.filter(
-                s => !s.startsWith('prisma-temporary-introspection-service$'),
+                s =>
+                  !s.startsWith(
+                    'prisma-temporary-introspection-service' + databaseDivider,
+                  ),
               ),
             )
       }
