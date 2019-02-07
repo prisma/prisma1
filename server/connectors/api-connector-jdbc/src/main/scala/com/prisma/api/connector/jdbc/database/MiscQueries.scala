@@ -46,7 +46,7 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
 
         while (resultSet.next) {
           val keyValues = (1 to metaData.getColumnCount).map { i =>
-            val columnName   = metaData.getColumnName(i)
+            val columnName   = metaData.getColumnLabel(i)
             val untypedValue = resultSet.getObject(i)
             val value        = untypedValueToJson(untypedValue)
             columnName -> value
