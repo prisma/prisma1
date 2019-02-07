@@ -4,6 +4,7 @@ import {
   PostgresConnector,
   PrismaDBClient,
   MongoConnector,
+  Connectors,
 } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -13,7 +14,6 @@ import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
 import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
-import { TmpRelationalRendererV2 } from './TmpRelationalRendererV2'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -179,8 +179,8 @@ export default class IntrospectCommand extends Command {
         if (await this.hasExecuteRaw()) {
           client = new PrismaDBClient(this.definition)
           await client.connect()
-          connector = new PostgresConnector(client)
-          databaseType = DatabaseType.postgres
+          databaseType = client.databaseType
+          connector = Connectors.create(databaseType, client)
         }
       }
     } catch (e) {
@@ -240,13 +240,20 @@ export default class IntrospectCommand extends Command {
 
         schema = mongoDb
       } else {
-        const schemaName = `${this.definition.service}$${this.definition.stage}`
+        const databaseDivider =
+          databaseType! === DatabaseType.postgres ? '$' : '@'
+        const schemaName = `${this.definition.service}${databaseDivider}${
+          this.definition.stage
+        }`
         const exists = schemas.includes(schemaName)
         schema = exists
           ? schemaName
           : await endpointDialog.selectSchema(
               schemas.filter(
-                s => !s.startsWith('prisma-temporary-introspection-service$'),
+                s =>
+                  !s.startsWith(
+                    'prisma-temporary-introspection-service' + databaseDivider,
+                  ),
               ),
             )
       }
@@ -267,9 +274,8 @@ export default class IntrospectCommand extends Command {
         : await introspection.getDatamodel()
       const numTables = sdl.types.length
 
-      const renderedSdl = prototype
-        ? await new TmpRelationalRendererV2().render(sdl) // TODO: Move tmp renderer back to datamodel
-        : await introspection.renderer.render(sdl)
+      const renderer = Renderers.create(introspection.databaseType, prototype)
+      const renderedSdl = renderer.render(sdl)
 
       // Mongo has .close, Postgres .end
       if (typeof client.close === 'function') {

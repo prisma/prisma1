@@ -1,13 +1,13 @@
-import { IConnector } from "../../common/connector"
-import { TypeIdentifier, DatabaseType } from "prisma-datamodel"
-import { RelationalIntrospectionResult } from "./relationalIntrospectionResult"
-import IDatabaseClient from "../IDatabaseClient";
+import { IConnector } from '../../common/connector'
+import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
+import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
+import IDatabaseClient from '../IDatabaseClient'
 
 export interface IInternalIndexInfo {
-  tableName: string,
-  name: string,
-  fields: string[],
-  unique: boolean,
+  tableName: string
+  name: string
+  fields: string[]
+  unique: boolean
   isPrimaryKey: boolean
 }
 
@@ -24,67 +24,73 @@ export abstract class RelationalConnector implements IConnector {
   }
 
   abstract getDatabaseType(): DatabaseType
-  protected abstract createIntrospectionResult(models: ITable[], relations: ITableRelation[], enums: IEnum[]) : RelationalIntrospectionResult 
+  protected abstract createIntrospectionResult(
+    models: ITable[],
+    relations: ITableRelation[],
+    enums: IEnum[],
+  ): RelationalIntrospectionResult
 
   protected async query(query: string, params: any[] = []): Promise<any[]> {
-    return (await this.client.query(query, params))
+    return await this.client.query(query, params)
   }
 
   /**
    * Column comments are DB specific
    */
-  protected abstract async queryColumnComment(schemaName: string, tableName: string, columnName: string): Promise<string | null>
+  protected abstract async queryColumnComment(
+    schemaName: string,
+    tableName: string,
+    columnName: string,
+  ): Promise<string | null>
 
   /**
    * Indices are DB specific
    */
-  protected abstract async queryIndices(schemaName: string, tableName: string): Promise<IInternalIndexInfo[]>
+  protected abstract async queryIndices(
+    schemaName: string,
+    tableName: string,
+  ): Promise<IInternalIndexInfo[]>
 
   protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
 
-  public async introspect(schema: string): Promise<RelationalIntrospectionResult> {
-    return this.createIntrospectionResult(await this.listModels(schema), await this.listRelations(schema), await this.listEnums(schema))
+  public async introspect(
+    schema: string,
+  ): Promise<RelationalIntrospectionResult> {
+    return this.createIntrospectionResult(
+      await this.listModels(schema),
+      await this.listRelations(schema),
+      await this.listEnums(schema),
+    )
   }
 
   public async listEnums(schemaName: string): Promise<IEnum[]> {
     return await this.queryEnums(schemaName)
   }
 
-  /**
-   * All queries below use the standardized information_schema table.
-   */
-  public async listSchemas(): Promise<string[]> {
-    const res = await this.query(
-      `SELECT 
-         schema_name
-       FROM 
-         information_schema.schemata 
-       WHERE schema_name NOT LIKE 'information_schema';`,
-    )
-
-    return res.map(x => x.schema_name)
-  }
-
   protected async listModels(schemaName: string): Promise<ITable[]> {
     const tables: ITable[] = []
     const allTables = await this.queryTables(schemaName)
-  
-    for(const tableName of allTables) {
+
+    for (const tableName of allTables) {
       const columns = await this.queryColumns(schemaName, tableName)
-     
-      for(const column of columns) {
-        column.comment = await this.queryColumnComment(schemaName, tableName, column.name)
+
+      for (const column of columns) {
+        column.comment = await this.queryColumnComment(
+          schemaName,
+          tableName,
+          column.name,
+        )
       }
 
       const allIndices = await this.queryIndices(schemaName, tableName)
       const secondaryIndices = allIndices.filter(x => !x.isPrimaryKey)
       const [primaryKey] = allIndices.filter(x => x.isPrimaryKey)
-      
+
       tables.push({
-        name: tableName, 
+        name: tableName,
         columns: columns,
         indices: secondaryIndices,
-        primaryKey: primaryKey || null
+        primaryKey: primaryKey || null,
       })
     }
 
@@ -102,12 +108,14 @@ export abstract class RelationalConnector implements IConnector {
         -- Views are not supported yet
         AND table_type = 'BASE TABLE'`
 
-    return (await this.query(allTablesQuery, [schemaName])).map(row => row.table_name as string)
+    return (await this.query(allTablesQuery, [schemaName])).map(
+      row => row.table_name as string,
+    )
   }
 
   /**
    * The name of the type column in information_schema.columns.
-   * 
+   *
    * The standardized DATA_TYPE field sitself is too unspecific.
    */
   protected abstract getTypeColumnName()
@@ -131,19 +139,24 @@ export abstract class RelationalConnector implements IConnector {
         cols.table_schema = ${this.parameter(1, 'text')}
         AND cols.table_name  = ${this.parameter(2, 'text')}`
 
-    return (await this.query(allColumnsQuery, [schemaName, tableName])).map(row => { return {
-      name: row.column_name as string,
-      type: row.udt_name as string,
-      isList: false,
-      readOnly: false, // Thread nothing as read only for now.
-      isUnique: false, // Will resolve via unique indexes later.
-      defaultValue: row.column_default as string,
-      isNullable: row.is_nullable as boolean,
-      comment: null as string | null
-    }})
+    return (await this.query(allColumnsQuery, [schemaName, tableName])).map(
+      row => {
+        return {
+          name: row.column_name as string,
+          type: row.udt_name as string,
+          isList: false,
+          readOnly: false, // Thread nothing as read only for now.
+          isUnique: false, // Will resolve via unique indexes later.
+          defaultValue: row.column_default as string,
+          isNullable: row.is_nullable as boolean,
+          comment: null as string | null,
+        }
+      },
+    )
   }
 
-  protected async listRelations(schemaName: string) : Promise<ITableRelation[]> {
+  protected async listRelations(schemaName: string): Promise<ITableRelation[]> {
+    console.log('Calling listRelations')
     const fkQuery = `  
       SELECT 
         keyColumn1.constraint_name AS "fkConstraintName",
@@ -168,15 +181,19 @@ export abstract class RelationalConnector implements IConnector {
       WHERE
         refConstraints.constraint_schema = ${this.parameter(1, 'text')}`
 
-    return (await this.query(fkQuery, [schemaName])).map(row => { return {
-      sourceColumn: row.fkColumnName as string,
-      sourceTable: row.fkTableName as string,
-      targetColumn: row.referencedColumnName as string,
-      targetTable: row.referencedTableName as string
-    }}) 
+    const result = (await this.query(fkQuery, [schemaName])).map(row => {
+      console.log(row)
+      return {
+        sourceColumn: row.fkColumnName as string,
+        sourceTable: row.fkTableName as string,
+        targetColumn: row.referencedColumnName as string,
+        targetTable: row.referencedTableName as string,
+      }
+    })
+
+    return result
   }
 }
-
 
 export interface IEnum {
   name: string
