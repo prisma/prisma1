@@ -137,8 +137,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
       nextModel     <- nextSchema.getModelByName(nextModelName)
-      if nextSchema.getFieldByName(nextModelName, nextFieldName).isEmpty
-    } yield DeleteField(model = nextModel.name, name = previousField.name)
+      if nextModel.getFieldByName(nextFieldName).isEmpty
+    } yield DeleteField(model = previousModel.name, name = previousField.name)
   }
 
   lazy val relationsToCreate: Vector[CreateRelation] = {
