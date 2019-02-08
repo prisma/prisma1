@@ -92,11 +92,11 @@ export async function getConnectorWithDatabase(
   let { databaseName } = result
 
   let schemas: string[]
-  // try {
-  schemas = await connector!.listSchemas()
-  // } catch (e) {
-  // throw new Error(`Could not connect to database. ${e.message}`)
-  // }
+  try {
+    schemas = await connector!.listSchemas()
+  } catch (e) {
+    throw new Error(`Could not connect to database. ${e.message}`)
+  }
 
   if (databaseName && !schemas.includes(databaseName)) {
     const schemaWord =
