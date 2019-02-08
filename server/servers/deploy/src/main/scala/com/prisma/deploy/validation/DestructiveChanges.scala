@@ -107,7 +107,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
 
     if (isScalar) {
       clientDbQueries.existsByModel(model).map {
-        case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
+        case true  => Vector(DeployWarnings.dataLossField(x.model, x.name))
         case false => Vector.empty
       }
     } else {

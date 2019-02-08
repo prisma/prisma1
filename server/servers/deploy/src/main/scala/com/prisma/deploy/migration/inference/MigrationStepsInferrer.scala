@@ -136,7 +136,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousField <- previousModel.fields.filterNot(_.isMagicalBackRelation)
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
-      if nextSchema.getFieldByName(nextModelName, nextFieldName).isEmpty
+      nextModel     <- nextSchema.getModelByName(nextModelName)
+      if nextModel.getFieldByName(nextFieldName).isEmpty
     } yield DeleteField(model = previousModel.name, name = previousField.name)
   }
 
