@@ -2,7 +2,7 @@ use std::rc::{Rc, Weak};
 
 use crate::{
     error::Error,
-    models::{ModelRef, ModelTemplate},
+    models::{ModelRef, ModelTemplate, Renameable},
     PrismaResult,
 };
 
@@ -78,7 +78,7 @@ impl Schema {
     pub fn find_model(&self, name: &str) -> PrismaResult<ModelRef> {
         self.models
             .get()
-            .and_then(|models| models.iter().find(|model| model.name == name))
+            .and_then(|models| models.iter().find(|model| model.db_name() == name))
             .cloned()
             .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
     }

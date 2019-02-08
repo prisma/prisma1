@@ -28,7 +28,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val input = prisma.protocol.GetNodeByWhereInput(
       protocol.Header("GetNodeByWhereInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
-      where.model.name,
+      where.model.dbName,
       where.fieldName,
       protocol.ValueContainer(toPrismaValue(where.fieldGCValue)),
       toPrismaSelectedFields(selectedFields)
@@ -43,7 +43,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val input = prisma.protocol.GetNodesInput(
       protocol.Header("GetNodesInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
-      model.name,
+      model.dbName,
       toPrismaArguments(queryArguments),
       toPrismaSelectedFields(selectedFields)
     )
@@ -240,12 +240,12 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
       case ScalarFilter(field, scalarCondition) =>
         protocol.Filter(
           protocol.Filter.Type.Scalar(
-            protocol.ScalarFilter(field.name, toPrismaCondition(scalarCondition))
+            protocol.ScalarFilter(field.dbName, toPrismaCondition(scalarCondition))
           )
         )
       case ScalarListFilter(field, scalarListCondition) =>
         protocol.Filter(
-          protocol.Filter.Type.ScalarList(protocol.ScalarListFilter(field.name, toPrismaListCondition(scalarListCondition)))
+          protocol.Filter.Type.ScalarList(protocol.ScalarListFilter(field.dbName, toPrismaListCondition(scalarListCondition)))
         )
       case OneRelationIsNullFilter(field) =>
         protocol.Filter(

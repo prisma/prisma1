@@ -1,10 +1,16 @@
+pub mod connector;
+pub mod query_builder;
+
+pub use connector::*;
+pub use query_builder::*;
+
 use chrono::{DateTime, Utc};
 use r2d2_sqlite::SqliteConnectionManager;
+use std::collections::HashSet;
 
 use crate::{
-    connector::Connector,
-    models::{Field, Renameable, ScalarField, TypeIdentifier},
-    protobuf::prisma::{graphql_id::IdValue, GraphqlId, Node, QueryArguments, ValueContainer},
+    models::TypeIdentifier,
+    protobuf::prisma::{graphql_id::IdValue, GraphqlId},
     PrismaResult, PrismaValue, SERVER_ROOT,
 };
 
@@ -13,8 +19,6 @@ use rusqlite::{
     Error as RusqlError, Row, NO_PARAMS,
 };
 
-use sql::{grammar::operation::eq::Equable, prelude::*};
-use std::collections::HashSet;
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -33,7 +37,7 @@ impl Sqlite {
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
-        Ok(Sqlite { pool, test_mode })
+        Ok(Sqlite { pool, test_mode, })
     }
 
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
@@ -48,7 +52,7 @@ impl Sqlite {
             })?
             .map(|res| res.unwrap())
             .collect();
-
+        
         if !databases.contains(db_name) {
             let path = format!("{}/db/{}", *SERVER_ROOT, db_name);
             dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
@@ -100,59 +104,6 @@ impl Sqlite {
                 PrismaValue::Float(v as f32)
             }
         }
-    }
-
-    /// Helper to namespace different databases.
-    fn table_location(database: &str, table: &str) -> String {
-        format!("{}.{}", database, table)
-    }
-}
-
-impl Connector for Sqlite {
-    fn get_node_by_where(
-        &self,
-        database_name: &str,
-        table_name: &str,
-        selected_fields: &[&ScalarField],
-        query_condition: (&ScalarField, &PrismaValue),
-    ) -> PrismaResult<Node> {
-        self.with_connection(database_name, |conn| {
-            let table_location = Self::table_location(database_name, table_name);
-            let (field, value) = query_condition;
-
-            let field_names: Vec<&str> = selected_fields
-                .iter()
-                .map(|field| field.db_name())
-                .collect();
-
-            let query = dbg!(select_from(&table_location)
-                .columns(&field_names)
-                .so_that(field.db_name().equals(DatabaseValue::Parameter))
-                .compile()
-                .unwrap());
-
-            let params = vec![(value as &ToSql)];
-            let mut values = Vec::new();
-
-            conn.query_row(&query, params.as_slice(), |row| {
-                for (i, field) in selected_fields.iter().enumerate() {
-                    let prisma_value = Some(Self::fetch_value(field.type_identifier, row, i));
-                    values.push(ValueContainer { prisma_value });
-                }
-            })?;
-
-            Ok(Node { values })
-        })
-    }
-
-    fn get_nodes(
-        &self,
-        _database_name: &str,
-        _table_name: &str,
-        _selected_fields: &[Field],
-        _query_arguments: &QueryArguments,
-    ) -> PrismaResult<Vec<Node>> {
-        Ok(Vec::new())
     }
 }
 
@@ -285,7 +236,7 @@ mod tests {
         let fields = model.fields().scalar();
 
         let result = sqlite
-            .get_node_by_where(db_name, model.db_name(), &fields, (field, &find_by))
+            .get_node_by_where(db_name, &model, &fields, (field, &find_by))
             .unwrap();
 
         let datetime: DateTime<Utc> = DateTime::from_utc(

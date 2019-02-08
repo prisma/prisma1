@@ -40,7 +40,7 @@ impl QueryExecutor for GetNodeByWhereInput {
 
         let node = connector.get_node_by_where(
             project.db_name(),
-            model.db_name(),
+            &model,
             &selected_fields,
             (field, &value),
         )?;

@@ -13,6 +13,7 @@ pub mod error;
 pub mod executor;
 pub mod models;
 pub mod protobuf;
+pub mod query_builder;
 
 use config::PrismaConfig;
 use error::Error;

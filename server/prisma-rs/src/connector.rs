@@ -1,6 +1,6 @@
 mod sqlite;
 
-use crate::protobuf::prisma::Node;
+use crate::{models::Model, protobuf::prisma::Node};
 
 pub use sqlite::Sqlite;
 pub type PrismaConnector = Box<dyn Connector + Send + Sync + 'static>;
@@ -17,9 +17,9 @@ pub trait Connector {
     fn get_node_by_where(
         &self,
         database_name: &str,
-        table_name: &str,
+        model: &Model,
         selected_fields: &[&ScalarField],
-        query_condition: (&ScalarField, &PrismaValue),
+        query_conditions: (&ScalarField, &PrismaValue),
     ) -> PrismaResult<Node>;
 
     /// Find all nodes with the given query arguments.
