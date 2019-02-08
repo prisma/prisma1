@@ -8,7 +8,7 @@ import {
 } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
-import { prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
@@ -215,6 +215,9 @@ ${chalk.bold(
       const stage = this.definition.stage!
       const token = this.definition.getToken(service, stage)
       const workspace = this.definition.getWorkspace()
+      const cluster = this.definition.getCluster()
+      this.env.setActiveCluster(cluster!)
+      await this.client.initClusterClient(cluster!, service!, stage, workspace!)
       const introspection = await this.client.introspect(
         service,
         stage,
@@ -224,6 +227,7 @@ ${chalk.bold(
       const introspectionString = JSON.stringify(introspection)
       return introspectionString.includes('executeRaw')
     } catch (e) {
+      console.error(e)
       return false
     }
   }
@@ -247,6 +251,7 @@ ${chalk.bold(
 
   async getConnector(): Promise<IntermediateConnectorData> {
     const hasExecuteRaw = await this.hasExecuteRaw()
+    console.log({ hasExecuteRaw })
     const credentials = await this.getCredentials(hasExecuteRaw)
     if (credentials) {
       const {
@@ -292,23 +297,15 @@ ${chalk.bold(
     hasExecuteRaw: boolean,
   ): Promise<DatabaseCredentials | null> {
     const requiredPostgresFlags = ['pg-host', 'pg-user', 'pg-password', 'pg-db']
-    const requiredMysqlFlags = [
-      'mysql-host',
-      'mysql-user',
-      'mysql-password',
-      'mysql-port',
-    ]
+    const requiredMysqlFlags = ['mysql-host', 'mysql-user', 'mysql-password']
 
-    const flags = this.flags
-    console.log(this.flags)
-    const flagsKeys = Object.keys(this.flags)
+    const flags = this.getSanitizedFlags()
+    const flagsKeys = Object.keys(flags)
 
     const mysqlFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
     const postgresFlags = flagsKeys.filter(f =>
       requiredPostgresFlags.includes(f),
     )
-
-    console.log({ mysqlFlags, postgresFlags })
 
     if (mysqlFlags.length > 0 && postgresFlags.length > 0) {
       throw new Error(
@@ -316,11 +313,17 @@ ${chalk.bold(
       )
     }
 
-    if (mysqlFlags.length < requiredMysqlFlags.length) {
+    if (
+      mysqlFlags.length > 0 &&
+      mysqlFlags.length < requiredMysqlFlags.length
+    ) {
       this.handleMissingArgs(requiredMysqlFlags, mysqlFlags, 'mysql')
     }
 
-    if (postgresFlags.length < requiredPostgresFlags.length) {
+    if (
+      postgresFlags.length > 0 &&
+      postgresFlags.length < requiredPostgresFlags.length
+    ) {
       this.handleMissingArgs(requiredPostgresFlags, postgresFlags, 'pg')
     }
 

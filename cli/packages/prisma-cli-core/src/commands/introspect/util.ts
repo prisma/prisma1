@@ -3,7 +3,6 @@ import { MongoClient } from 'mongodb'
 import { createConnection, Connection } from 'mysql'
 
 import { DatabaseCredentials, EndpointDialog } from '../../utils/EndpointDialog'
-import IDatabaseClient from 'prisma-db-introspection/dist/databases/IDatabaseClient'
 import { omit } from 'lodash'
 import { Connectors } from 'prisma-db-introspection'
 import { DatabaseType } from 'prisma-datamodel'
@@ -22,17 +21,6 @@ function replaceLocalDockerHost(credentials: DatabaseCredentials) {
   }
   return credentials
 }
-
-// const databaseTypeMap = {
-//   mongo: DatabaseType.mongo,
-//   myqsl: DatabaseType.mysql,
-//   postgres: DatabaseType.postgres,
-//   sqlite: DatabaseType.sqlite,
-// }
-
-// function convertDatabaseType(databaseType: InternalDatabaseType): DatabaseType {
-//   return databaseTypeMap[databaseType]
-// }
 
 export interface ConnectorAndDisconnect {
   /**
@@ -77,14 +65,17 @@ export async function getConnectedConnectorFromCredentials(
     case DatabaseType.mongo: {
       client = await getConnectedMongoClient(credentials)
       disconnect = () => (client as MongoClient).close()
+      break
     }
     case DatabaseType.mysql: {
       client = await getConnectedMysqlClient(credentials)
       disconnect = async () => (client as Connection).end()
+      break
     }
     case DatabaseType.postgres: {
       client = await getConnectedPostgresClient(credentials)
       disconnect = () => (client as PGClient).end()
+      break
     }
   }
 
@@ -118,10 +109,7 @@ export async function getConnectorWithDatabase(
   }
 
   if (!databaseName) {
-    const schemasWithoutTmpService = schemas.filter(
-      s => !s.startsWith('prisma-temporary-introspection-service'),
-    )
-    databaseName = await endpointDialog.selectSchema(schemasWithoutTmpService)
+    databaseName = await endpointDialog.selectSchema(schemas)
   }
 
   return { connector, disconnect, databaseType, databaseName }
@@ -132,7 +120,7 @@ async function getConnectedMysqlClient(
 ): Promise<Connection> {
   const credentialsWithoutSsl = omit<DatabaseCredentials, 'ssl'>(
     replaceLocalDockerHost(credentials),
-    ['ssl'],
+    'ssl',
   )
 
   const client = createConnection(credentialsWithoutSsl)

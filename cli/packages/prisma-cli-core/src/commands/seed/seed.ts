@@ -2,7 +2,7 @@ import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
 import { Importer } from '../import/Importer'
 import { Seeder } from './Seeder'
-import { prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
 import * as path from 'path'
 
@@ -61,7 +61,7 @@ export default class Seed extends Command {
     if (!seedSource) {
       // Await on error to wait for it to set the exit code to 1
       await this.out.error(
-        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional'
+        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional',
       )
     }
 

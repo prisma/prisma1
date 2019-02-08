@@ -11,6 +11,7 @@ import packagejson = require('../package.json')
 import * as mock from './mock'
 import { RC } from './types/rc'
 import { initStatusChecker } from './StatusChecker'
+import { filterObject } from './util'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -152,5 +153,15 @@ export class Command {
 
   get stderr(): string {
     return this.out.stderr.output
+  }
+
+  getSanitizedFlags(): OutputFlags {
+    return filterObject(this.flags, (_, value) => {
+      if (value === undefined) {
+        return false
+      }
+
+      return true
+    })
   }
 }

@@ -75,7 +75,7 @@ export abstract class RelationalConnector implements IConnector {
       `SELECT 
          schema_name
        FROM 
-         information_schema.schemata 
+         information_schema.schemata
        WHERE schema_name NOT LIKE 'information_schema';`,
     )
 

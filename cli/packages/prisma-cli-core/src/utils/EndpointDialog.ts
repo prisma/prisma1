@@ -8,13 +8,11 @@ import {
   defaultMongoDataModel,
   defaultDockerCompose,
   prettyTime,
-} from '../util'
+} from './util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
-import { PostgresConnector, MongoConnector } from 'prisma-db-introspection'
 import { MongoClient } from 'mongodb'
-import { Client as PGClient } from 'pg'
 import * as yaml from 'js-yaml'
 import { DatabaseType, Renderers } from 'prisma-datamodel'
 import {
@@ -301,8 +299,8 @@ export class EndpointDialog {
         const type =
           choice === 'Create new database'
             ? await this.askForDatabaseType()
-            : 'mysql'
-        if (type === 'mongo') {
+            : DatabaseType.postgres
+        if (type === DatabaseType.mongo) {
           datamodel = defaultMongoDataModel
         }
         const defaultHosts = {
@@ -311,13 +309,13 @@ export class EndpointDialog {
           postgres: 'postgres',
         }
         credentials = {
-          user: type === 'mysql' ? 'root' : 'prisma',
+          user: type === DatabaseType.mysql ? 'root' : 'prisma',
           password: 'prisma',
           type,
           host: defaultHosts[type],
           port: defaultPorts[type],
         }
-        if (type === 'mongo') {
+        if (type === DatabaseType.mongo) {
           credentials = {
             type,
             uri: 'mongodb://prisma:prisma@mongo',
@@ -333,12 +331,15 @@ export class EndpointDialog {
          * Get database credentials
          */
         credentials = await this.getDatabase()
+
         /**
          * Get connector
          */
+        console.log(credentials)
         const intermediateConnectorData = await getConnectedConnectorFromCredentials(
           credentials,
         )
+
         const connectorData = await getConnectorWithDatabase(
           {
             ...intermediateConnectorData,
@@ -532,10 +533,11 @@ export class EndpointDialog {
     introspection: boolean = false,
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
+    console.log({ type })
     const credentials: any = {
       type,
     }
-    if (type === 'mysql' || type === 'postgres') {
+    if (type === DatabaseType.mysql || type === DatabaseType.postgres) {
       const alreadyData = introspection || (await this.askForExistingData())
       const askForSchema = introspection ? true : alreadyData ? true : false
       credentials.alreadyData = alreadyData
@@ -558,14 +560,14 @@ export class EndpointDialog {
         key: 'password',
       })
       credentials.database =
-        type === 'postgres'
+        type === DatabaseType.postgres
           ? await this.ask({
               message: `Enter database name (the database includes the schema)`,
               key: 'database',
             })
           : null
       credentials.ssl =
-        type === 'postgres'
+        type === DatabaseType.postgres
           ? await this.ask({
               message: 'Use SSL?',
               inputType: 'confirm',
@@ -574,7 +576,7 @@ export class EndpointDialog {
             })
           : undefined
       // In the workflows that we already have data, we just ask for the concrete schema later
-      if (alreadyData) {
+      if (!alreadyData) {
         // list all schemas at this point
         credentials.schema = askForSchema
           ? await this.ask({
@@ -583,7 +585,7 @@ export class EndpointDialog {
             })
           : undefined
       }
-    } else if (type === 'mongo') {
+    } else if (type === DatabaseType.mongo) {
       credentials.uri = await this.ask({
         message: 'Enter MongoDB connection string',
         key: 'uri',
@@ -602,7 +604,28 @@ export class EndpointDialog {
   }
 
   public async selectSchema(schemas: string[]): Promise<string> {
-    const choices = schemas.map(s => ({
+    const filteredSchemas = schemas.filter(
+      s =>
+        !s.startsWith('prisma-temporary-service') &&
+        !['performance_schema', 'sys', 'mysql', 'prisma'].includes(s),
+    )
+
+    if (filteredSchemas.length === 0) {
+      const metaSchemasText =
+        schemas.length > 0
+          ? ` The schemas ${schemas.join(
+              ', ',
+            )} are system schemas that can't be introspected.`
+          : ''
+      throw new Error(
+        `There is no schema in the database to be selected for introspection.${metaSchemasText}`,
+      )
+    }
+
+    if (filteredSchemas.length === 1) {
+      return filteredSchemas[0]
+    }
+    const choices = filteredSchemas.map(s => ({
       value: s,
       name: s,
     }))
@@ -816,7 +839,9 @@ export class EndpointDialog {
     return `Production Prisma cluster`
   }
 
-  private async askForDatabaseType(introspect: boolean = false) {
+  private async askForDatabaseType(
+    introspect: boolean = false,
+  ): Promise<DatabaseType> {
     const choices: any[] = []
 
     choices.push({
@@ -844,10 +869,16 @@ export class EndpointDialog {
         introspect ? 'introspect' : 'deploy to'
       }?`,
       choices,
-      // pageSize: 9,
     })
 
-    return dbType
+    const databaseTypeMap = {
+      mongo: DatabaseType.mongo,
+      mysql: DatabaseType.mysql,
+      postgres: DatabaseType.postgres,
+      sqlite: DatabaseType.sqlite,
+    }
+
+    return databaseTypeMap[dbType]
   }
 
   private convertChoices(

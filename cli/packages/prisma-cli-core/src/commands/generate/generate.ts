@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-import { prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
 import * as fs from 'fs-extra'
 import * as path from 'path'

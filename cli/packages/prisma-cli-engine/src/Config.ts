@@ -5,7 +5,6 @@ import * as fs from 'fs-extra'
 import * as cuid from 'scuid'
 import * as findUp from 'find-up'
 import { Output } from './Output/index'
-const debug = require('debug')('config')
 import { getGraphQLConfig } from 'graphql-config'
 import { values } from 'lodash'
 import { getRoot } from './util'
@@ -199,7 +198,7 @@ export class Config {
       }
       this.definitionDir = configDir
     } catch (e) {
-      debug(e)
+      //
     }
 
     return definitionPath
@@ -210,7 +209,6 @@ export class Config {
     if (process.env.NODE_ENV === 'test' && process.env.TEST_PRISMA_CLI) {
       cwd = path.join(os.tmpdir(), `${cuid()}/`)
       fs.mkdirpSync(cwd)
-      debug('cwd', cwd)
     }
     return cwd
   }
@@ -220,7 +218,6 @@ export class Config {
     if (process.env.NODE_ENV === 'test') {
       home = path.join(os.tmpdir(), `${cuid()}/`)
       fs.mkdirpSync(home)
-      debug('home', home)
     }
     return home
   }

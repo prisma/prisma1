@@ -10,12 +10,19 @@ import { Client } from 'pg'
 
 export default abstract class Connectors {
   // TODO: find a proper type for databse config
-  public static create(databaseType: DatabaseType, databaseClient: IDatabaseClient | MongoClient | Connection | Client ) : IConnector {
-    switch(databaseType) {
-      case DatabaseType.mongo: throw new MongoConnector(databaseClient as MongoClient)
-      case DatabaseType.postgres: return new PostgresConnector(databaseClient as IDatabaseClient)
-      case DatabaseType.mysql: return new MysqlConnector(databaseClient as IDatabaseClient)
-      default: throw new Error('Not implemented.')
+  public static create(
+    databaseType: DatabaseType,
+    databaseClient: IDatabaseClient | MongoClient | Connection | Client,
+  ): IConnector {
+    switch (databaseType) {
+      case DatabaseType.mongo:
+        throw new MongoConnector(databaseClient as MongoClient)
+      case DatabaseType.postgres:
+        return new PostgresConnector(databaseClient as IDatabaseClient)
+      case DatabaseType.mysql:
+        return new MysqlConnector(databaseClient as IDatabaseClient)
+      default:
+        throw new Error(`${databaseType} is not implemented.`)
     }
   }
 }
