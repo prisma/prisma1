@@ -29,6 +29,7 @@
   "author": "Tim Suchanek <suchanek@prisma.io>",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@expo/spawn-async": "^1.4.0",
     "@types/fs-extra": "^5.0.0",
     "@types/node": "^8.0.22",
     "aws-sdk": "^2.373.0",
@@ -39,6 +40,7 @@
     "lint-staged": "^4.0.3",
     "pkg": "^4.3.5",
     "prettier": "^1.10.2",
+    "progress-estimator": "^0.2.2",
     "rimraf": "^2.6.1",
     "tslint": "^5.6.0",
     "tslint-config-prettier": "^1.17.0",
@@ -48,13 +50,14 @@
   "scripts": {
     "build": "rimraf dist && tsc -d && chmod +x dist/index.js",
     "lint": "tslint src/**/*.ts",
-    "publish-homebrew": "dotenv -e scripts/.env ts-node ./scripts/release-brew.ts",
-    "make-binary": "npm run build && npm run package",
+    "publish-binaries": "dotenv -e scripts/.env ts-node ./scripts/release-binaries.ts",
+    "binary-osx": "npm run build && npm run package",
+    "binary-linux": "npm run build && npm run package-linux",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
     "prepublishOnly": "npm run lint && npm run build",
-    "package": "./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64",
-    "package-linux": "./scripts/cp-assets.sh && pkg package.json --targets node10-linux-x64"
+    "package": "rm -rf ./prisma && ./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64",
+    "package-linux": "rm -rf ./prisma && ./scripts/cp-assets.sh && pkg package.json --targets node10-linux-x64"
   },
   "cli-engine": {
     "bin": "prisma",
