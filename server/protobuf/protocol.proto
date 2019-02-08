@@ -134,15 +134,16 @@ message ScalarListCondition {
 }
 
 message RelationFilter {
+    enum Condition {
+        EVERY_RELATED_NODE = 0;
+        AT_LEAST_ONE_RELATED_NODE = 1;
+        NO_RELATED_NODE = 2;
+        TO_ONE_RELATED_NODE = 3;
+    };
+
     required RelationalField field         = 1;
     required Filter          nested_filter = 2;
-
-    oneof condition {
-        bool EveryRelatedNode      = 3;
-        bool AtLeastOneRelatedNode = 4;
-        bool NoRelatedNode         = 5;
-        bool ToOneRelatedNode      = 6;
-    }
+    required Condition       condition     = 3;
 }
 
 message Filter {

@@ -3,8 +3,8 @@ use r2d2_sqlite::SqliteConnectionManager;
 
 use crate::{
     connector::Connector,
-    models::{Renameable, ScalarField, TypeIdentifier},
-    protobuf::prisma::{graphql_id::IdValue, GraphqlId},
+    models::{Field, Renameable, ScalarField, TypeIdentifier},
+    protobuf::prisma::{graphql_id::IdValue, GraphqlId, Node, QueryArguments, ValueContainer},
     PrismaResult, PrismaValue, SERVER_ROOT,
 };
 
@@ -115,7 +115,7 @@ impl Connector for Sqlite {
         table_name: &str,
         selected_fields: &[&ScalarField],
         query_condition: (&ScalarField, &PrismaValue),
-    ) -> PrismaResult<Vec<PrismaValue>> {
+    ) -> PrismaResult<Node> {
         self.with_connection(database_name, |conn| {
             let table_location = Self::table_location(database_name, table_name);
             let (field, value) = query_condition;
@@ -132,16 +132,27 @@ impl Connector for Sqlite {
                 .unwrap());
 
             let params = vec![(value as &ToSql)];
-            let mut result = Vec::new();
+            let mut values = Vec::new();
 
             conn.query_row(&query, params.as_slice(), |row| {
                 for (i, field) in selected_fields.iter().enumerate() {
-                    result.push(Self::fetch_value(field.type_identifier, row, i));
+                    let prisma_value = Some(Self::fetch_value(field.type_identifier, row, i));
+                    values.push(ValueContainer { prisma_value });
                 }
             })?;
 
-            Ok(result)
+            Ok(Node { values })
         })
+    }
+
+    fn get_nodes(
+        &self,
+        _database_name: &str,
+        _table_name: &str,
+        _selected_fields: &[Field],
+        _query_arguments: &QueryArguments,
+    ) -> PrismaResult<Vec<Node>> {
+        Ok(Vec::new())
     }
 }
 
@@ -283,13 +294,22 @@ mod tests {
         );
 
         assert_eq!(3, result.len());
+
         assert_eq!(
-            PrismaValue::GraphqlId(GraphqlId {
+            Some(&PrismaValue::GraphqlId(GraphqlId {
                 id_value: Some(IdValue::Int(1))
-            }),
-            result[0]
+            })),
+            result.get(0)
         );
-        assert_eq!(PrismaValue::String(String::from("Musti")), result[1]);
-        assert_eq!(PrismaValue::DateTime(datetime.to_rfc3339()), result[2]);
+
+        assert_eq!(
+            Some(&PrismaValue::String(String::from("Musti"))),
+            result.get(1)
+        );
+
+        assert_eq!(
+            Some(&PrismaValue::DateTime(datetime.to_rfc3339())),
+            result.get(2)
+        );
     }
 }

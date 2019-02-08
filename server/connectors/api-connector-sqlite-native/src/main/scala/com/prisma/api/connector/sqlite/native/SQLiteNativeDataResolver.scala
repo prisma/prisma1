@@ -1,16 +1,17 @@
 package com.prisma.api.connector.sqlite.native
 
 import com.google.protobuf.ByteString
-import com.prisma.api.connector._
+import com.prisma.api.connector.{EveryRelatedNode, _}
 import com.prisma.gc_values._
 import com.prisma.rs.{NativeBinding, NodeResult}
 import com.prisma.shared.models.{Model, Project, RelationField, ScalarField}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
+import prisma.protocol
 import prisma.protocol.GraphqlId.IdValue
+import prisma.protocol.Node
 import prisma.protocol.ValueContainer.PrismaValue
-import prisma.protocol.{GraphqlId, Header, Node, ValueContainer}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,20 +26,33 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = Future {
     val projectJson = Json.toJson(project)
     val input = prisma.protocol.GetNodeByWhereInput(
-      Header("GetNodeByWhereInput"),
+      protocol.Header("GetNodeByWhereInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
       where.model.name,
       where.fieldName,
-      ValueContainer(toPrismaValue(where.fieldGCValue)),
+      protocol.ValueContainer(toPrismaValue(where.fieldGCValue)),
       toPrismaSelectedFields(selectedFields)
     )
 
-    val nodeResult: Option[(Node, Vector[String])] = NativeBinding.get_node_by_where(input)
-    nodeResult.map(x => transformNode(x, where))
+    val nodeResult: Option[(protocol.Node, Vector[String])] = NativeBinding.get_node_by_where(input)
+    nodeResult.map(x => transformNode(x, where.model))
   }
 
-  override def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] =
-    forwarder.getNodes(model, queryArguments, selectedFields)
+  override def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = Future {
+    val projectJson = Json.toJson(project)
+    val input = prisma.protocol.GetNodesInput(
+      protocol.Header("GetNodesInput"),
+      ByteString.copyFromUtf8(projectJson.toString()),
+      model.name,
+      toPrismaArguments(queryArguments),
+      toPrismaSelectedFields(selectedFields)
+    )
+
+    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(input)
+
+    // TODO: Do we need to handle the pagination stuff here?
+    ResolverResult(nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
+  }
 
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
@@ -63,27 +77,27 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
 
   val isoFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
-  def transformNode(node: (Node, Vector[String]), selector: NodeSelector): PrismaNode = {
-    val idField = selector.model.idField_!
+  def transformNode(node: (protocol.Node, Vector[String]), model: Model): PrismaNode = {
+    val idField = model.idField_!
     val idIndex = node._2.indexWhere(idField.name == _)
     val idValue = toGcValue(node._1.values.toVector(idIndex).prismaValue)
 
     val rootMap = node._1.values.zipWithIndex.foldLeft(mutable.Map.empty[String, GCValue]) {
-      case (acc, (value: ValueContainer, index: Int)) =>
+      case (acc, (value: protocol.ValueContainer, index: Int)) =>
         acc += (node._2(index) -> toGcValue(value.prismaValue))
     }
 
     PrismaNode(idValue.asInstanceOf[IdGCValue], RootGCValue(rootMap.toMap))
   }
 
-  def toGcValue(value: ValueContainer.PrismaValue): GCValue = {
+  def toGcValue(value: protocol.ValueContainer.PrismaValue): GCValue = {
     value match {
       case PrismaValue.Empty                => NullGCValue
       case PrismaValue.Boolean(b: Boolean)  => BooleanGCValue(b)
       case PrismaValue.DateTime(dt: String) => DateTimeGCValue(DateTime.parse(dt))
       case PrismaValue.Enum(e: String)      => EnumGCValue(e)
       case PrismaValue.Float(f: Float)      => FloatGCValue(f)
-      case PrismaValue.GraphqlId(id: GraphqlId) =>
+      case PrismaValue.GraphqlId(id: protocol.GraphqlId) =>
         id.idValue match {
           case IdValue.String(s) => StringIdGCValue(s)
           case IdValue.Int(i)    => IntGCValue(i.toInt)
@@ -114,6 +128,12 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     }
   }
 
+  def toPrismaId(value: IdGCValue): protocol.GraphqlId = value match {
+    case StringIdGCValue(s) => protocol.GraphqlId(IdValue.String(s))
+    case IntGCValue(i) => protocol.GraphqlId(IdValue.Int(i))
+    case UuidGCValue(u) => protocol.GraphqlId(IdValue.String(u.toString))
+  }
+
   def toPrismaSelectedFields(selectedFields: SelectedFields): Vector[prisma.protocol.SelectedField] = {
     selectedFields.fields.foldLeft(Vector[prisma.protocol.SelectedField]()) { (acc, selectedField) =>
       selectedField match {
@@ -137,4 +157,142 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
       }
     }
   }
+
+  def toPrismaCondition(scalarCondition: ScalarCondition): protocol.ScalarFilter.Condition = {
+    scalarCondition match {
+      case Equals(value) =>
+        protocol.ScalarFilter.Condition.Equals(protocol.ValueContainer(toPrismaValue(value)))
+      case NotEquals(value) =>
+        protocol.ScalarFilter.Condition.NotEquals(protocol.ValueContainer(toPrismaValue(value)))
+      case Contains(value) =>
+        protocol.ScalarFilter.Condition.Contains(protocol.ValueContainer(toPrismaValue(value)))
+      case NotContains(value) =>
+        protocol.ScalarFilter.Condition.NotContains(protocol.ValueContainer(toPrismaValue(value)))
+      case StartsWith(value) =>
+        protocol.ScalarFilter.Condition.StartsWith(protocol.ValueContainer(toPrismaValue(value)))
+      case NotStartsWith(value) =>
+        protocol.ScalarFilter.Condition.NotStartsWith(protocol.ValueContainer(toPrismaValue(value)))
+      case EndsWith(value) =>
+        protocol.ScalarFilter.Condition.EndsWith(protocol.ValueContainer(toPrismaValue(value)))
+      case NotEndsWith(value) =>
+        protocol.ScalarFilter.Condition.NotEndsWith(protocol.ValueContainer(toPrismaValue(value)))
+      case LessThan(value) =>
+        protocol.ScalarFilter.Condition.LessThan(protocol.ValueContainer(toPrismaValue(value)))
+      case LessThanOrEquals(value) =>
+        protocol.ScalarFilter.Condition.LessThanOrEquals(protocol.ValueContainer(toPrismaValue(value)))
+      case GreaterThan(value) =>
+        protocol.ScalarFilter.Condition.GreaterThan(protocol.ValueContainer(toPrismaValue(value)))
+      case GreaterThanOrEquals(value) =>
+        protocol.ScalarFilter.Condition.GreaterThanOrEquals(protocol.ValueContainer(toPrismaValue(value)))
+      case In(values) =>
+        protocol.ScalarFilter.Condition.In(protocol.MultiContainer(values.map(v => protocol.ValueContainer(toPrismaValue(v)))))
+      case NotIn(values) =>
+        protocol.ScalarFilter.Condition.NotIn(protocol.MultiContainer(values.map(v => protocol.ValueContainer(toPrismaValue(v)))))
+    }
+  }
+
+  def toPrismaListCondition(scalarListCondition: ScalarListCondition): protocol.ScalarListCondition = {
+    val condition = scalarListCondition match {
+      case ListContains(value) =>
+        protocol.ScalarListCondition.Condition.Contains(protocol.ValueContainer(toPrismaValue(value)))
+      case ListContainsEvery(values) =>
+        protocol.ScalarListCondition.Condition.ContainsEvery(protocol.MultiContainer(values.map(v =>
+          protocol.ValueContainer(toPrismaValue(v)))
+        ))
+      case ListContainsSome(values) =>
+        protocol.ScalarListCondition.Condition.ContainsSome(protocol.MultiContainer(values.map(v =>
+          protocol.ValueContainer(toPrismaValue(v)))
+        ))
+    }
+
+    protocol.ScalarListCondition(condition)
+  }
+
+  def toRelationFilterCondition(condition: RelationCondition): protocol.RelationFilter.Condition = {
+    condition match {
+      case EveryRelatedNode => protocol.RelationFilter.Condition.EVERY_RELATED_NODE
+      case AtLeastOneRelatedNode => protocol.RelationFilter.Condition.AT_LEAST_ONE_RELATED_NODE
+      case NoRelatedNode => protocol.RelationFilter.Condition.NO_RELATED_NODE
+      case ToOneRelatedNode => protocol.RelationFilter.Condition.TO_ONE_RELATED_NODE
+    }
+  }
+
+  def toPrismaFilter(filter: Filter): protocol.Filter = {
+    filter match {
+      case AndFilter(filters) =>
+        protocol.Filter(
+          protocol.Filter.Type.And(
+            protocol.AndFilter(filters.map(toPrismaFilter))
+          )
+        )
+      case OrFilter(filters) =>
+        protocol.Filter(
+          protocol.Filter.Type.Or(
+            protocol.OrFilter(filters.map(toPrismaFilter))
+          )
+        )
+      case NotFilter(filters) =>
+        protocol.Filter(
+          protocol.Filter.Type.Not(
+            protocol.NotFilter(filters.map(toPrismaFilter))
+          )
+        )
+      case ScalarFilter(field, scalarCondition) =>
+        protocol.Filter(
+          protocol.Filter.Type.Scalar(
+            protocol.ScalarFilter(field.name, toPrismaCondition(scalarCondition))
+          )
+        )
+      case ScalarListFilter(field, scalarListCondition) =>
+        protocol.Filter(
+          protocol.Filter.Type.ScalarList(protocol.ScalarListFilter(field.name, toPrismaListCondition(scalarListCondition)))
+        )
+      case OneRelationIsNullFilter(field) =>
+        protocol.Filter(
+          protocol.Filter.Type.OneRelationIsNull(protocol.RelationalField(field.dbName, Seq()))
+        )
+      case RelationFilter(field, nestedFilter, condition) =>
+        protocol.Filter(
+          protocol.Filter.Type.Relation(
+            protocol.RelationFilter(
+              protocol.RelationalField(field.dbName, Seq()),
+              toPrismaFilter(nestedFilter),
+              toRelationFilterCondition(condition)
+            )
+          )
+        )
+      case NodeSubscriptionFilter =>
+        protocol.Filter(
+          protocol.Filter.Type.NodeSubscription(true)
+        )
+      case TrueFilter =>
+        protocol.Filter(
+          protocol.Filter.Type.BoolFilter(true)
+        )
+      case FalseFilter =>
+        protocol.Filter(
+          protocol.Filter.Type.BoolFilter(false)
+        )
+    }
+  }
+
+  def toPrismaOrderBy(orderBy: OrderBy): protocol.OrderBy = {
+    protocol.OrderBy(orderBy.field.dbName, orderBy.sortOrder match {
+      case SortOrder.Asc => protocol.OrderBy.SortOrder.ASC
+      case SortOrder.Desc => protocol.OrderBy.SortOrder.DESC
+    })
+  }
+
+  def toPrismaArguments(queryArguments: QueryArguments): protocol.QueryArguments = {
+    protocol.QueryArguments(
+      queryArguments.skip,
+      queryArguments.after.map(toPrismaId),
+      queryArguments.first,
+      queryArguments.before.map(toPrismaId),
+      queryArguments.last,
+      queryArguments.filter.map(toPrismaFilter),
+      queryArguments.orderBy.map(toPrismaOrderBy)
+    )
+  }
+
 }

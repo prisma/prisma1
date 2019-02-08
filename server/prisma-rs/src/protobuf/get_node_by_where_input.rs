@@ -3,7 +3,7 @@ use crate::{
     error::Error,
     executor::QueryExecutor,
     models::{Project, ProjectTemplate, Renameable},
-    protobuf::prisma::{selected_field, GetNodeByWhereInput, Node, ValueContainer},
+    protobuf::prisma::{selected_field, GetNodeByWhereInput, Node},
     PrismaResult,
 };
 
@@ -38,29 +38,18 @@ impl QueryExecutor for GetNodeByWhereInput {
             Error::InvalidInputError(String::from("Search value cannot be empty."))
         })?;
 
-        let result = connector.get_node_by_where(
+        let node = connector.get_node_by_where(
             project.db_name(),
             model.db_name(),
             &selected_fields,
             (field, &value),
         )?;
 
-        let response_values: Vec<ValueContainer> = result
-            .into_iter()
-            .map(|value| ValueContainer {
-                prisma_value: Some(value),
-            })
-            .collect();
-
-        let nodes = vec![Node {
-            values: response_values,
-        }];
-
         let fields: Vec<String> = selected_fields
             .into_iter()
             .map(|field| field.db_name().to_string())
             .collect();
 
-        Ok((nodes, fields))
+        Ok((vec![node], fields))
     }
 }

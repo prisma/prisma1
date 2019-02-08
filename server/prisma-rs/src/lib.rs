@@ -17,7 +17,7 @@ pub mod protobuf;
 use config::PrismaConfig;
 use error::Error;
 use lazy_static::lazy_static;
-use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
+use protobuf::{ProtoBufEnvelope, ProtoBufInterface, ScalaInterface};
 use serde_yaml;
 
 pub use protobuf::prisma::value_container::PrismaValue;
@@ -44,7 +44,6 @@ pub unsafe extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut Pr
     ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
 }
 
-/*
 #[no_mangle]
 pub unsafe extern "C" fn get_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
     let payload = slice::from_raw_parts_mut(data, len);
@@ -52,7 +51,6 @@ pub unsafe extern "C" fn get_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEn
 
     ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
 }
-*/
 
 #[no_mangle]
 pub unsafe extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {

@@ -9,6 +9,11 @@ use crate::{
 
 use prost::Message;
 
+pub trait ScalaInterface {
+    fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
+    fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
+}
+
 pub struct ProtoBufInterface {
     connector: PrismaConnector,
 }
@@ -50,10 +55,25 @@ impl ProtoBufInterface {
             }
         })
     }
+}
 
-    pub fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
+impl ScalaInterface for ProtoBufInterface {
+    fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = prisma::GetNodeByWhereInput::decode(payload)?;
+            let (nodes, fields) = input.query(&self.connector)?;
+            let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
+
+            let mut response_payload = Vec::new();
+            response.encode(&mut response_payload).unwrap();
+
+            Ok(response_payload)
+        })
+    }
+
+    fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
+        Self::protobuf_result(|| {
+            let input = prisma::GetNodesInput::decode(payload)?;
             let (nodes, fields) = input.query(&self.connector)?;
             let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
 

@@ -24,6 +24,14 @@ object NativeBinding {
     }
   }
 
+  def get_nodes(getNodes: GetNodesInput): (Vector[Node], Vector[String]) = {
+    val (pointer, length) = writeBuffer(getNodes)
+
+    handleProtoResult(library.get_nodes(pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
+      nodesAndFields
+    }
+  }
+
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)

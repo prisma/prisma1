@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-int32_t select_1();
 ProtoBuf *get_node_by_where(const char *data, uintptr_t len);
-ProtoBuf *get_nodenodes(const char *data, uintptr_t len);
+ProtoBuf *get_nodes(const char *data, uintptr_t len);
