@@ -412,7 +412,7 @@ export class EndpointDialog {
         }
 
         /**
-         * sanitize mongo host for docker usage
+         * Sanitize mongo host for docker usage
          */
         if (credentials.type === DatabaseType.mongo && credentials.uri) {
           credentials.uri = this.replaceMongoHost(credentials.uri!)
@@ -573,13 +573,16 @@ export class EndpointDialog {
               defaultValue: !credentials.host.includes('localhost'),
             })
           : undefined
-      // list all schemas at this point
-      credentials.schema = askForSchema
-        ? await this.ask({
-            message: `Enter name of existing schema (e.g. default$default)`,
-            key: 'schema',
-          })
-        : undefined
+      // In the workflows that we already have data, we just ask for the concrete schema later
+      if (alreadyData) {
+        // list all schemas at this point
+        credentials.schema = askForSchema
+          ? await this.ask({
+              message: `Enter name of existing schema (e.g. default$default)`,
+              key: 'schema',
+            })
+          : undefined
+      }
     } else if (type === 'mongo') {
       credentials.uri = await this.ask({
         message: 'Enter MongoDB connection string',

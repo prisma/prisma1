@@ -72,7 +72,6 @@ export async function getConnectedConnectorFromCredentials(
 ): Promise<ConnectorAndDisconnect> {
   let client: MongoClient | PGClient | Connection
   let disconnect: () => Promise<void>
-  let databaseName
 
   switch (credentials.type) {
     case DatabaseType.mongo: {

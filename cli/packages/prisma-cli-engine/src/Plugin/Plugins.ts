@@ -6,10 +6,8 @@ import { Config } from '../Config'
 import BuiltinPlugins from './BuiltInPlugins'
 import CorePlugins from './CorePlugins'
 import Cache, { CachedCommand, CachedTopic, Group } from './Cache'
-import { Command } from '../Command';
+import { Command } from '../Command'
 import { Topic } from '../Topic'
-
-const debug = require('debug')('plugins')
 
 export default class Plugins {
   builtin: BuiltinPlugins
@@ -43,7 +41,7 @@ export default class Plugins {
       // this.linked,
       // this.user,
       this.core,
-      this.builtin
+      this.builtin,
     )
     this.loaded = true
   }
@@ -79,7 +77,6 @@ export default class Plugins {
 
   async findCommand(id: string): Promise<typeof Command | undefined> {
     for (const plugin of this.plugins) {
-      debug('findCommand', plugin.name)
       const c = await plugin.findCommand(id)
       if (c) {
         return c
@@ -89,16 +86,21 @@ export default class Plugins {
   }
 
   async commandsForTopic(topic: string): Promise<Array<typeof Command>> {
-    let commands = this.plugins.reduce((t, p) => {
-      try {
-        return t.concat(p.commands
-          .filter(c => c.topic === topic)
-          .map(c => p.findCommand(c.id)))
-      } catch (err) {
-        this.out.warn(err, `error reading plugin ${p.name}`)
-        return t
-      }
-    }, [] as any)
+    let commands = this.plugins.reduce(
+      (t, p) => {
+        try {
+          return t.concat(
+            p.commands
+              .filter(c => c.topic === topic)
+              .map(c => p.findCommand(c.id)),
+          )
+        } catch (err) {
+          this.out.warn(err, `error reading plugin ${p.name}`)
+          return t
+        }
+      },
+      [] as any,
+    )
     commands = await Promise.all(commands)
     return uniqby(commands, 'id')
   }
@@ -118,7 +120,7 @@ export default class Plugins {
             return false
           }
           const re = new RegExp(`^${id}`)
-          return !!(t.id).match(re)
+          return !!t.id.match(re)
         })
       }
     }
@@ -198,10 +200,15 @@ export default class Plugins {
   }
 
   get topics(): CachedTopic[] {
-    return uniqby(this.plugins.reduce((t, p) => t.concat(p.topics), [] as any), 'id')
+    return uniqby(
+      this.plugins.reduce((t, p) => t.concat(p.topics), [] as any),
+      'id',
+    )
   }
 
   get groups(): Group[] {
-    return this.plugins.filter(p => p.groups).reduce((t, p) => t.concat(p.groups), [] as any)
+    return this.plugins
+      .filter(p => p.groups)
+      .reduce((t, p) => t.concat(p.groups), [] as any)
   }
 }

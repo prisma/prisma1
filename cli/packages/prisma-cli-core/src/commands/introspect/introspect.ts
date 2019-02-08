@@ -229,7 +229,7 @@ ${chalk.bold(
   }
 
   /**
-   * This method makes sure, that a database is present
+   * This method makes sure, that a concrete database to introspect is selected
    */
   async getConnectorWithDatabase(): Promise<ConnectorData> {
     const data = await this.getConnector()
@@ -300,10 +300,15 @@ ${chalk.bold(
     ]
 
     const flags = this.flags
+    console.log(this.flags)
     const flagsKeys = Object.keys(this.flags)
 
     const mysqlFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
-    const postgresFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
+    const postgresFlags = flagsKeys.filter(f =>
+      requiredPostgresFlags.includes(f),
+    )
+
+    console.log({ mysqlFlags, postgresFlags })
 
     if (mysqlFlags.length > 0 && postgresFlags.length > 0) {
       throw new Error(
@@ -319,7 +324,7 @@ ${chalk.bold(
       this.handleMissingArgs(requiredPostgresFlags, postgresFlags, 'pg')
     }
 
-    if (mysqlFlags.length === requiredMysqlFlags.length) {
+    if (mysqlFlags.length >= requiredMysqlFlags.length) {
       return {
         host: flags['myqsl-host'],
         port: parseInt(flags['mysql-port'], 10),
@@ -330,7 +335,7 @@ ${chalk.bold(
       }
     }
 
-    if (postgresFlags.length === requiredPostgresFlags.length) {
+    if (postgresFlags.length >= requiredPostgresFlags.length) {
       return {
         host: flags['pg-host'],
         user: flags['pg-user'],
