@@ -8,7 +8,6 @@ import {
   Renderer,
   TypeIdentifiers,
 } from 'prisma-datamodel'
-import * as fs from 'fs'
 
 export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
   constructor(
@@ -17,10 +16,6 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
     enums: IEnum[],
     renderer?: Renderer,
   ) {
-    fs.writeFileSync(
-      './mysql-introspection.json',
-      JSON.stringify({ model, relations, enums }, null, 2),
-    )
     super(model, relations, enums, DatabaseType.postgres, renderer)
   }
 
