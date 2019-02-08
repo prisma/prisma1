@@ -151,27 +151,28 @@ export abstract class RelationalConnector implements IConnector {
       FROM
         information_schema.columns AS cols
       WHERE
-        cols.table_schema = ${this.parameter(1, 'text')}
-        AND cols.table_name  = ${this.parameter(2, 'text')}`
+        cols.table_schema = '${schemaName}'
+        AND cols.table_name  = '${tableName}'`
 
-    return (await this.query(allColumnsQuery, [schemaName, tableName])).map(
-      row => {
-        return {
-          name: row.column_name as string,
-          type: row.udt_name as string,
-          isList: false,
-          readOnly: false, // Thread nothing as read only for now.
-          isUnique: false, // Will resolve via unique indexes later.
-          defaultValue: row.column_default as string,
-          isNullable: row.is_nullable as boolean,
-          comment: null as string | null,
-        }
-      },
-    )
+    /**
+     * Note, that ordinal_position comes back as a string because it's a bigint!
+     */
+
+    return (await this.query(allColumnsQuery)).map(row => {
+      return {
+        name: row.column_name as string,
+        type: row.udt_name as string,
+        isList: false,
+        readOnly: false, // Thread nothing as read only for now.
+        isUnique: false, // Will resolve via unique indexes later.
+        defaultValue: row.column_default as string,
+        isNullable: row.is_nullable as boolean,
+        comment: null as string | null,
+      }
+    })
   }
 
   protected async listRelations(schemaName: string): Promise<ITableRelation[]> {
-    console.log('Calling listRelations')
     const fkQuery = `  
       SELECT 
         keyColumn1.constraint_name AS "fkConstraintName",
@@ -197,7 +198,6 @@ export abstract class RelationalConnector implements IConnector {
         refConstraints.constraint_schema = ${this.parameter(1, 'text')}`
 
     const result = (await this.query(fkQuery, [schemaName])).map(row => {
-      console.log(row)
       return {
         sourceColumn: row.fkColumnName as string,
         sourceTable: row.fkTableName as string,

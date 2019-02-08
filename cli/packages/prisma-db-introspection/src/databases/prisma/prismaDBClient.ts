@@ -26,10 +26,6 @@ export class PrismaDBClient implements IDatabaseClient {
 
   async query(query: string, variables: string[]): Promise<any[]> {
     const finalQuery = this.replace(query, variables)
-    // console.log('Query before')
-    // console.log(query)
-    // console.log('Final Query')
-    // console.log(finalQuery)
     const databases = await this.getDatabases()
 
     if (!databases || !databases[0]) {

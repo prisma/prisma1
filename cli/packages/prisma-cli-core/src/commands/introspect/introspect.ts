@@ -227,7 +227,6 @@ ${chalk.bold(
       const introspectionString = JSON.stringify(introspection)
       return introspectionString.includes('executeRaw')
     } catch (e) {
-      console.error(e)
       return false
     }
   }
@@ -251,7 +250,6 @@ ${chalk.bold(
 
   async getConnector(): Promise<IntermediateConnectorData> {
     const hasExecuteRaw = await this.hasExecuteRaw()
-    console.log({ hasExecuteRaw })
     const credentials = await this.getCredentials(hasExecuteRaw)
     if (credentials) {
       const {

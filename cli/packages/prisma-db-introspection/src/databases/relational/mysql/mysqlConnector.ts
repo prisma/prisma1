@@ -1,15 +1,12 @@
 import {
   RelationalConnector,
   ITable,
-  IColumn,
   ITableRelation,
-  IIndex,
   IInternalEnumInfo,
   IEnum,
 } from '../relationalConnector'
-import * as _ from 'lodash'
 import { Connection } from 'mysql'
-import { TypeIdentifier, DatabaseType, camelCase } from 'prisma-datamodel'
+import { DatabaseType, camelCase } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
@@ -91,12 +88,12 @@ export class MysqlConnector extends RelationalConnector {
       FROM 
         information_schema.statistics
       WHERE
-        table_schema = ?
-        AND table_name = ?
+        table_schema = '${schemaName}'
+        AND table_name = '${tableName}'
       GROUP BY
         table_name, index_name, non_unique
     `
-    return (await this.query(indexQuery, [schemaName, tableName])).map(row => {
+    return (await this.query(indexQuery)).map(row => {
       return {
         tableName: row.table_name as string,
         name: row.index_name as string,

@@ -1,5 +1,4 @@
 'use strict'
-import { PrismaDefinition } from 'prisma-json-schema'
 
 import * as _ from 'lodash'
 import * as replaceall from 'replaceall'
@@ -34,11 +33,6 @@ export class Variables {
     this.fileName = fileName
     this.options = options
     this.envVars = envVars || process.env
-
-    // this.fileRefSyntax = RegExp(/^file\((~?[a-zA-Z0-9._\-/]+?)\)/g);
-    // this.cfRefSyntax = RegExp(/^cf:/g);
-    // this.s3RefSyntax = RegExp(/^s3:(.+?)\/(.+)$/);
-    // this.ssmRefSyntax = RegExp(/^ssm:([a-zA-Z0-9_.-/]+)[~]?(true|false)?/);
   }
 
   populateJson(json: any): Promise<any> {
@@ -132,7 +126,6 @@ export class Variables {
         return BbPromise.resolve(property)
       })
     }
-    // return property;
     return BbPromise.resolve(property)
   }
 
@@ -191,16 +184,8 @@ export class Variables {
       return this.getValueFromOptions(variableString)
     } else if (variableString.match(this.selfRefSyntax)) {
       return this.getValueFromSelf(variableString)
-      // } else if (variableString.match(this.fileRefSyntax)) {
-      //   return this.getValueFromFile(variableString);
-      // } else if (variableString.match(this.cfRefSyntax)) {
-      //   return this.getValueFromCf(variableString);
-      // } else if (variableString.match(this.s3RefSyntax)) {
-      //   return this.getValueFromS3(variableString);
     } else if (variableString.match(this.stringRefSyntax)) {
       return this.getValueFromString(variableString)
-      // } else if (variableString.match(this.ssmRefSyntax)) {
-      //   return this.getValueFromSsm(variableString);
     }
     const errorMessage = [
       `Invalid variable reference syntax for variable ${variableString}.`,
@@ -241,164 +226,6 @@ export class Variables {
     return this.getDeepValue(deepProperties, valueToPopulate)
   }
 
-  // getValueFromFile(variableString) {
-  //   const matchedFileRefString = variableString.match(this.fileRefSyntax)[0];
-  //   const referencedFileRelativePath = matchedFileRefString
-  //     .replace(this.fileRefSyntax, (match, varName) => varName.trim())
-  //     .replace('~', os.homedir());
-  //
-  //   const referencedFileFullPath = (path.isAbsolute(referencedFileRelativePath) ?
-  //     referencedFileRelativePath :
-  //     path.join(this.prisma.config.servicePath, referencedFileRelativePath));
-  //   let fileExtension = referencedFileRelativePath.split('.');
-  //   fileExtension = fileExtension[fileExtension.length - 1];
-  //   // Validate file exists
-  //   if (!this.prisma.utils.fileExistsSync(referencedFileFullPath)) {
-  //     return BbPromise.resolve(undefined);
-  //   }
-  //
-  //   let valueToPopulate;
-  //
-  //   // Process JS files
-  //   if (fileExtension === 'js') {
-  //     const jsFile = require(referencedFileFullPath); // eslint-disable-line global-require
-  //     const variableArray = variableString.split(':');
-  //     let returnValueFunction;
-  //     if (variableArray[1]) {
-  //       let jsModule = variableArray[1];
-  //       jsModule = jsModule.split('.')[0];
-  //       returnValueFunction = jsFile[jsModule];
-  //     } else {
-  //       returnValueFunction = jsFile;
-  //     }
-  //
-  //     if (typeof returnValueFunction !== 'function') {
-  //       throw new this.prisma.classes
-  //         .Error([
-  //           'Invalid variable syntax when referencing',
-  //           ` file "${referencedFileRelativePath}".`,
-  //           ' Check if your javascript is exporting a function that returns a value.',
-  //         ].join(''));
-  //     }
-  //     valueToPopulate = returnValueFunction.call(jsFile);
-  //
-  //     return BbPromise.resolve(valueToPopulate).then(valueToPopulateResolved => {
-  //       let deepProperties = variableString.replace(matchedFileRefString, '');
-  //       deepProperties = deepProperties.slice(1).split('.');
-  //       deepProperties.splice(0, 1);
-  //       return this.getDeepValue(deepProperties, valueToPopulateResolved)
-  //         .then(deepValueToPopulateResolved => {
-  //           if (typeof deepValueToPopulateResolved === 'undefined') {
-  //             const errorMessage = [
-  //               'Invalid variable syntax when referencing',
-  //               ` file "${referencedFileRelativePath}".`,
-  //               ' Check if your javascript is returning the correct data.',
-  //             ].join('');
-  //             throw new this.prisma.classes
-  //               .Error(errorMessage);
-  //           }
-  //           return BbPromise.resolve(deepValueToPopulateResolved);
-  //         });
-  //     });
-  //   }
-  //
-  //   // Process everything except JS
-  //   if (fileExtension !== 'js') {
-  //     valueToPopulate = this.prisma.utils.readFileSync(referencedFileFullPath);
-  //     if (matchedFileRefString !== variableString) {
-  //       let deepProperties = variableString
-  //         .replace(matchedFileRefString, '');
-  //       if (deepProperties.substring(0, 1) !== ':') {
-  //         const errorMessage = [
-  //           'Invalid variable syntax when referencing',
-  //           ` file "${referencedFileRelativePath}" sub properties`,
-  //           ' Please use ":" to reference sub properties.',
-  //         ].join('');
-  //         throw new this.prisma.classes
-  //           .Error(errorMessage);
-  //       }
-  //       deepProperties = deepProperties.slice(1).split('.');
-  //       return this.getDeepValue(deepProperties, valueToPopulate);
-  //     }
-  //   }
-  //   return BbPromise.resolve(valueToPopulate);
-  // }
-  //
-  // getValueFromCf(variableString) {
-  //   const variableStringWithoutSource = variableString.split(':')[1].split('.');
-  //   const stackName = variableStringWithoutSource[0];
-  //   const outputLogicalId = variableStringWithoutSource[1];
-  //   return this.prisma.getProvider('aws')
-  //     .request('CloudFormation',
-  //       'describeStacks',
-  //       { StackName: stackName },
-  //       this.options.stage,
-  //       this.options.region)
-  //     .then(result => {
-  //       const outputs = result.Stacks[0].Outputs;
-  //       const output = outputs.find(x => x.OutputKey === outputLogicalId);
-  //
-  //       if (output === undefined) {
-  //         const errorMessage = [
-  //           'Trying to request a non exported variable from CloudFormation.',
-  //           ` Stack name: "${stackName}"`,
-  //           ` Requested variable: "${outputLogicalId}".`,
-  //         ].join('');
-  //         throw new this.prisma.classes
-  //           .Error(errorMessage);
-  //       }
-  //
-  //       return output.OutputValue;
-  //     });
-  // }
-  //
-  // getValueFromS3(variableString) {
-  //   const groups = variableString.match(this.s3RefSyntax);
-  //   const bucket = groups[1];
-  //   const key = groups[2];
-  //   return this.prisma.getProvider('aws')
-  //     .request('S3',
-  //       'getObject',
-  //       {
-  //         Bucket: bucket,
-  //         Key: key,
-  //       },
-  //       this.options.stage,
-  //       this.options.region)
-  //     .then(
-  //       response => response.Body.toString(),
-  //       err => {
-  //         const errorMessage = `Error getting value for ${variableString}. ${err.message}`;
-  //         throw new this.prisma.classes.Error(errorMessage);
-  //       }
-  //     );
-  // }
-  //
-  // getValueFromSsm(variableString) {
-  //   const groups = variableString.match(this.ssmRefSyntax);
-  //   const param = groups[1];
-  //   const decrypt = (groups[2] === 'true');
-  //   return this.prisma.getProvider('aws')
-  //     .request('SSM',
-  //       'getParameter',
-  //       {
-  //         Name: param,
-  //         WithDecryption: decrypt,
-  //       },
-  //       this.options.stage,
-  //       this.options.region)
-  //     .then(
-  //       response => BbPromise.resolve(response.Parameter.Value),
-  //       err => {
-  //         const expectedErrorMessage = `Parameter ${param} not found.`;
-  //         if (err.message !== expectedErrorMessage) {
-  //           throw new this.prisma.classes.Error(err.message);
-  //         }
-  //         return BbPromise.resolve(undefined);
-  //       }
-  //     );
-  // }
-
   getDeepValue(deepProperties, valueToPopulate) {
     return BbPromise.reduce(
       deepProperties,
@@ -434,10 +261,6 @@ export class Variables {
         varType = 'option'
       } else if (variableString.match(this.selfRefSyntax)) {
         varType = 'self reference'
-        // } else if (variableString.match(this.fileRefSyntax)) {
-        //   varType = 'file';
-        // } else if (variableString.match(this.ssmRefSyntax)) {
-        //   varType = 'SSM parameter';
       }
       this.out.warn(
         this.out.getErrorPrefix(this.fileName, 'warning') +

@@ -335,7 +335,6 @@ export class EndpointDialog {
         /**
          * Get connector
          */
-        console.log(credentials)
         const intermediateConnectorData = await getConnectedConnectorFromCredentials(
           credentials,
         )
@@ -533,7 +532,6 @@ export class EndpointDialog {
     introspection: boolean = false,
   ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
-    console.log({ type })
     const credentials: any = {
       type,
     }

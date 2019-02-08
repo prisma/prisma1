@@ -1,19 +1,14 @@
 import { ITable, ITableRelation, IEnum } from '../relationalConnector'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import {
-  ISDL,
   IGQLField,
   IGQLType,
-  IDirectiveInfo,
-  plural,
   camelCase,
-  capitalize,
   DatabaseType,
   Renderer,
-  TypeIdentifier,
   TypeIdentifiers,
 } from 'prisma-datamodel'
-import * as _ from 'lodash'
+import * as fs from 'fs'
 
 export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
   constructor(
@@ -22,6 +17,10 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
     enums: IEnum[],
     renderer?: Renderer,
   ) {
+    fs.writeFileSync(
+      './mysql-introspection.json',
+      JSON.stringify({ model, relations, enums }, null, 2),
+    )
     super(model, relations, enums, DatabaseType.postgres, renderer)
   }
 

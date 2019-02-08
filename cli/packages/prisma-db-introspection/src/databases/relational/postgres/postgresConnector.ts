@@ -1,18 +1,14 @@
 import {
   RelationalConnector,
   ITable,
-  IColumn,
   ITableRelation,
-  IIndex,
   IInternalEnumInfo,
   IEnum,
 } from '../relationalConnector'
-import * as _ from 'lodash'
 import { Client } from 'pg'
-import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
+import { DatabaseType } from 'prisma-datamodel'
 import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
-import { PrismaDBClient } from '../../prisma/prismaDBClient'
 import IDatabaseClient from '../../IDatabaseClient'
 import PostgresDatabaseClient from './postgresDatabaseClient'
 
