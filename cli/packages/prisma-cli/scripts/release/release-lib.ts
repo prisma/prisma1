@@ -74,7 +74,7 @@ export async function brew(stableReleaseVersion: string) {
   const fileData = await fs.readFile(tarFileName)
 
   const s3Resp = await uploadFiletoS3(
-    'teggnet',
+    'homebrew-prisma',
     `prisma-${stableReleaseVersion}.tar.gz`,
     fileData,
   )
@@ -111,7 +111,7 @@ end
 
   await logger(
     gitCommitPush({
-      owner: 'pantharshit00',
+      owner: 'prisma',
       repo: 'homebrew-prisma',
       token,
       files: [{ path: 'prisma.rb', content: homebrewDefinition }],
@@ -125,16 +125,13 @@ end
   )
 
   const pullRes = await logger(
-    axios.post(
-      'https://api.github.com/repos/pantharshit00/homebrew-prisma/pulls',
-      {
-        title: `Automated PR for version ${stableReleaseVersion}`,
-        head: 'automated-pr-branch',
-        base: 'master',
-        body: ' Automated PR generated via script',
-        maintainer_can_modify: true,
-      },
-    ),
+    axios.post('https://api.github.com/repos/prisma/homebrew-prisma/pulls', {
+      title: `Automated PR for version ${stableReleaseVersion}`,
+      head: 'automated-pr-branch',
+      base: 'master',
+      body: ' Automated PR generated via script',
+      maintainer_can_modify: true,
+    }),
     `Creating PR`,
     {
       estimate: 1000,
@@ -157,7 +154,7 @@ export async function linux(stableReleaseVersion: string) {
   const fileData = await fs.readFile(tarFileName)
 
   const s3Resp = await uploadFiletoS3(
-    'teggnet',
+    'curl-linux',
     `prisma-${stableReleaseVersion}.tar.gz`,
     fileData,
   )
