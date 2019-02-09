@@ -34,6 +34,13 @@ function uploadFiletoS3(bucket: string, filename: string, file: Buffer) {
   })
 }
 
+async function updateVerion(releaseTag: string) {
+  const data = await fs.readFile('package.json', 'utf-8')
+  const pJson = JSON.parse(data)
+  pJson.version = releaseTag
+  return fs.writeFile('package.json', JSON.stringify(pJson, null, 2))
+}
+
 async function createBinary(command: string, release: string) {
   await logger(
     spawn('npm', ['run', command]),
@@ -162,20 +169,31 @@ function checkEnvs() {
 }
 
 async function main() {
-  checkEnvs()
-  const tData = await logger(
-    axios.get('https://api.github.com/repos/prisma/prisma/releases'),
-    'Fetching version',
-    {
-      estimate: 800,
-    },
-  )
-  const stableReleaseVersion = tData.data.filter(
-    node => !node.tag_name.includes('alpha') && !node.tag_name.includes('beta'),
-  )[0].tag_name
-  console.log(`Version to publish: ${stableReleaseVersion}`)
-
-  await brew(stableReleaseVersion)
-  await linux(stableReleaseVersion)
+  try {
+    checkEnvs()
+    const tData = await logger(
+      axios.get('https://api.github.com/repos/prisma/prisma/releases'),
+      'Fetching version',
+      {
+        estimate: 800,
+      },
+    )
+    const stableReleaseVersion = tData.data.filter(
+      node =>
+        !node.tag_name.includes('alpha') && !node.tag_name.includes('beta'),
+    )[0].tag_name
+    console.log(`Version to publish: ${stableReleaseVersion}`)
+    await logger(
+      updateVerion(stableReleaseVersion),
+      'Updating package.json to new version',
+      {
+        estimate: 1000,
+      },
+    )
+    await brew(stableReleaseVersion)
+    await linux(stableReleaseVersion)
+  } catch (error) {
+    throw new Error(error)
+  }
 }
 main()
