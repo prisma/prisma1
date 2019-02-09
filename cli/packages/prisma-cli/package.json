@@ -50,14 +50,13 @@
   "scripts": {
     "build": "rimraf dist && tsc -d && chmod +x dist/index.js",
     "lint": "tslint src/**/*.ts",
-    "publish-binaries": "dotenv -e scripts/.env ts-node ./scripts/release-binaries.ts",
-    "binary-osx": "npm run build && npm run package",
-    "binary-linux": "npm run build && npm run package-linux",
+    "publish-macos": "dotenv -e scripts/.env ts-node ./scripts/release/macos.ts",
+    "publish-linux": "dotenv -e scripts/.env ts-node ./scripts/release/linux.ts",
+    "binary-osx": "npm run build && ./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64",
+    "binary-linux": "npm run build && ./scripts/cp-assets.sh && pkg package.json --targets node10-linux-x64",
     "precommit": "lint-staged",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
-    "prepublishOnly": "npm run lint && npm run build",
-    "package": "rm -rf ./prisma && ./scripts/cp-assets.sh && pkg package.json --targets node10-macos-x64",
-    "package-linux": "rm -rf ./prisma && ./scripts/cp-assets.sh && pkg package.json --targets node10-linux-x64"
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "cli-engine": {
     "bin": "prisma",
