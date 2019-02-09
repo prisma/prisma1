@@ -59,6 +59,7 @@ exports[`Introspector int columns 1`] = `
 
 exports[`Introspector text columns 1`] = `
 "type String @pgTable(name: \\"Strings\\") {
+  id: ID! @pgColumn(name: \\"pk\\") @unique
   a: String @unique
   aa: String! @unique
   b: String @unique
@@ -69,7 +70,6 @@ exports[`Introspector text columns 1`] = `
   f: String!
   g: UUID
   h: UUID!
-  id: ID! @pgColumn(name: \\"pk\\") @unique
 }"
 `;
 

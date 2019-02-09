@@ -31,7 +31,7 @@ describe('Schema normalization from existing mongo schema', () => {
         likes: Int!
       }`
 
-    // User has renamed a few types, but post is missing 
+    // User has renamed a few types, but post is missing
     const existingSchema = `
       type User @db(name: "useru") {
         age: Int!
@@ -57,7 +57,6 @@ describe('Schema normalization from existing mongo schema', () => {
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
-
 
   it('Should identify ID field correctly.', () => {
     const schemaFromDb = `
@@ -85,7 +84,6 @@ describe('Schema normalization from existing mongo schema', () => {
   })
 
   it('Should respect the ordering from an existing schema.', () => {
-
     const schemaFromDb = `
       type User {
         age: Int!
@@ -113,7 +111,7 @@ describe('Schema normalization from existing mongo schema', () => {
       }
       `
 
-    // User has renamed a few types, but post is missing 
+    // User has renamed a few types, but post is missing
     const existingSchema = `
       type Vehicle {
         wheelCount: Int!
@@ -246,8 +244,8 @@ describe('Schema normalization from existing mongo schema', () => {
 
     const expectedResultSchema = dedent(`
       type User {
-        posts: [Post] @relation(name: "PostToUser")
         email: String! @id
+        posts: [Post] @relation(name: "PostToUser")
       }
       
       type Post {
@@ -258,7 +256,6 @@ describe('Schema normalization from existing mongo schema', () => {
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
-
 
   it('Should remove back relations if they are missing in the reference schema.', () => {
     const schemaFromDb = `
@@ -284,8 +281,8 @@ describe('Schema normalization from existing mongo schema', () => {
 
     const expectedResultSchema = dedent(`
       type User {
-        posts: [Post]
         email: String! @id
+        posts: [Post]
       }
       
       type Post {

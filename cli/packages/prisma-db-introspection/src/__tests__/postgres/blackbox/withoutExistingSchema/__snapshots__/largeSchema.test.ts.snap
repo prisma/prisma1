@@ -2,20 +2,20 @@
 
 exports[`Introspector large example database 1`] = `
 "type Actor @indexes(value: [{name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}]) @pgTable(name: \\"actor\\") {
+  id: Int! @pgColumn(name: \\"actor_id\\") @unique
   film_actor: Film_actor!
   first_name: String!
-  id: Int! @pgColumn(name: \\"actor_id\\") @unique
   last_name: String!
   last_update: DateTime!
 }
 
 type Address @pgTable(name: \\"address\\") {
+  id: Int! @pgColumn(name: \\"address_id\\") @unique
   address: String!
   address2: String
   city_id: City!
   customer: Customer!
   district: String!
-  id: Int! @pgColumn(name: \\"address_id\\") @unique
   last_update: DateTime!
   phone: String!
   postal_code: String
@@ -24,35 +24,35 @@ type Address @pgTable(name: \\"address\\") {
 }
 
 type Category @pgTable(name: \\"category\\") {
-  film_category: Film_category!
   id: Int! @pgColumn(name: \\"category_id\\") @unique
+  film_category: Film_category!
   last_update: DateTime!
   name: String!
 }
 
 type City @pgTable(name: \\"city\\") {
+  id: Int! @pgColumn(name: \\"city_id\\") @unique
   address: Address!
   city: String!
   country_id: Country!
-  id: Int! @pgColumn(name: \\"city_id\\") @unique
   last_update: DateTime!
 }
 
 type Country @pgTable(name: \\"country\\") {
+  id: Int! @pgColumn(name: \\"country_id\\") @unique
   city: City!
   country: String!
-  id: Int! @pgColumn(name: \\"country_id\\") @unique
   last_update: DateTime!
 }
 
 type Customer @indexes(value: [{name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"], unique: \\"false\\"}, {name: \\"idx_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}]) @pgTable(name: \\"customer\\") {
+  id: Int! @pgColumn(name: \\"customer_id\\") @unique
   active: Int
   activebool: Boolean! @default(value: \\"true\\")
   address_id: Address!
   create_date: DateTime!
   email: String
   first_name: String!
-  id: Int! @pgColumn(name: \\"customer_id\\") @unique
   last_name: String!
   last_update: DateTime
   payment: Payment!
@@ -61,12 +61,12 @@ type Customer @indexes(value: [{name: \\"idx_fk_store_id\\", fields: [\\"store_i
 }
 
 type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"], unique: \\"false\\"}, {name: \\"idx_title\\", fields: [\\"title\\"], unique: \\"false\\"}]) @pgTable(name: \\"film\\") {
+  id: Int! @pgColumn(name: \\"film_id\\") @unique
   description: String
   film_actor: Film_actor!
   film_category: Film_category!
   # Type tsvector is not supported
   # fulltext: tsvector!
-  id: Int! @pgColumn(name: \\"film_id\\") @unique
   inventory: Inventory!
   language_id: Language!
   last_update: DateTime!
@@ -82,49 +82,55 @@ type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\
 
 type Film_actor @pgTable(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
+  # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
   # Multiple ID fields (compound indexes) are not supported
-  # ID field must be called \\"id\\" in relational models.
-  # actor_id: Actor! @unique
-  film_id: Film!
+  # id: Film! @pgColumn(name: \\"film_id\\") @unique
   last_update: DateTime!
 }
 
 type Film_category @pgTable(name: \\"film_category\\") {
-  category_id: Category!
   # Multiple ID fields (compound indexes) are not supported
+  # id: Film! @pgColumn(name: \\"film_id\\") @unique
   # Multiple ID fields (compound indexes) are not supported
-  # ID field must be called \\"id\\" in relational models.
-  # film_id: Film! @unique
+  # id: Category! @pgColumn(name: \\"category_id\\") @unique
   last_update: DateTime!
 }
 
 type Inventory @indexes(value: [{name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"], unique: \\"false\\"}]) @pgTable(name: \\"inventory\\") {
-  film_id: Film!
   id: Int! @pgColumn(name: \\"inventory_id\\") @unique
+  film_id: Film!
   last_update: DateTime!
   rental: Rental!
   store_id: Int!
 }
 
 type Language @pgTable(name: \\"language\\") {
-  film: Film!
   id: Int! @pgColumn(name: \\"language_id\\") @unique
+  film: Film!
   last_update: DateTime!
   name: String!
 }
 
+enum Mpaa_rating {
+  G
+  NC-17
+  PG
+  PG-13
+  R
+}
+
 type Payment @pgTable(name: \\"payment\\") {
+  id: Int! @pgColumn(name: \\"payment_id\\") @unique
   amount: Float!
   customer_id: Customer!
-  id: Int! @pgColumn(name: \\"payment_id\\") @unique
   payment_date: DateTime!
   rental_id: Rental!
   staff_id: Staff!
 }
 
 type Rental @indexes(value: [{name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"]}]) @pgTable(name: \\"rental\\") {
-  customer_id: Customer!
   id: Int! @pgColumn(name: \\"rental_id\\") @unique
+  customer_id: Customer!
   inventory_id: Inventory!
   last_update: DateTime!
   payment: Payment!
@@ -134,11 +140,11 @@ type Rental @indexes(value: [{name: \\"idx_unq_rental_rental_date_inventory_id_c
 }
 
 type Staff @pgTable(name: \\"staff\\") {
+  id: Int! @pgColumn(name: \\"staff_id\\") @unique
   active: Boolean! @default(value: \\"true\\")
   address_id: Address!
   email: String
   first_name: String!
-  id: Int! @pgColumn(name: \\"staff_id\\") @unique
   last_name: String!
   last_update: DateTime!
   password: String
@@ -152,17 +158,9 @@ type Staff @pgTable(name: \\"staff\\") {
 }
 
 type Store @pgTable(name: \\"store\\") {
-  address_id: Address!
   id: Int! @pgColumn(name: \\"store_id\\") @unique
+  address_id: Address!
   last_update: DateTime!
   manager_staff_id: Staff! @unique
-}
-
-enum Mpaa_rating {
-  G
-  PG
-  PG-13
-  R
-  NC-17
 }"
 `;

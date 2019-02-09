@@ -2,6 +2,7 @@
 
 exports[`Introspector test schema - 2504 1`] = `
 "type Employee {
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   Address: String
   BirthDate: DateTime
   City: String
@@ -11,7 +12,6 @@ exports[`Introspector test schema - 2504 1`] = `
   Fax: String
   FirstName: String!
   HireDate: DateTime
-  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   LastName: String!
   Phone: String
   PostalCode: String

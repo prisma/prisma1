@@ -2,19 +2,20 @@
 
 exports[`Introspector large example database 1`] = `
 "type Album {
-  ArtistId: Artist!
   id: Int! @pgColumn(name: \\"AlbumId\\") @unique
+  ArtistId: Artist!
   Title: String!
   track: Track
 }
 
 type Artist {
-  album: Album!
   id: Int! @pgColumn(name: \\"ArtistId\\") @unique
+  album: Album!
   Name: String
 }
 
 type Customer {
+  id: Int! @pgColumn(name: \\"CustomerId\\") @unique
   Address: String
   City: String
   Company: String
@@ -22,7 +23,6 @@ type Customer {
   Email: String!
   Fax: String
   FirstName: String!
-  id: Int! @pgColumn(name: \\"CustomerId\\") @unique
   invoice: Invoice!
   LastName: String!
   Phone: String
@@ -32,6 +32,7 @@ type Customer {
 }
 
 type Employee {
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   Address: String
   BirthDate: DateTime
   City: String
@@ -42,7 +43,6 @@ type Employee {
   Fax: String
   FirstName: String!
   HireDate: DateTime
-  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   LastName: String!
   Phone: String
   PostalCode: String
@@ -58,13 +58,13 @@ type Genre {
 }
 
 type Invoice {
+  id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
   BillingAddress: String
   BillingCity: String
   BillingCountry: String
   BillingPostalCode: String
   BillingState: String
   CustomerId: Customer!
-  id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
   InvoiceDate: DateTime!
   invoiceLine: InvoiceLine!
   Total: Float!
@@ -91,11 +91,11 @@ type Playlist {
 }
 
 type Track {
+  id: Int! @pgColumn(name: \\"TrackId\\") @unique
   AlbumId: Album
   Bytes: Int
   Composer: String
   GenreId: Genre
-  id: Int! @pgColumn(name: \\"TrackId\\") @unique
   invoiceLine: InvoiceLine!
   MediaTypeId: MediaType!
   Milliseconds: Int!
