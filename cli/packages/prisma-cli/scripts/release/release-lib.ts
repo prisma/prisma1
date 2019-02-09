@@ -21,17 +21,22 @@ axios.defaults.headers.common.Authorization = `Bearer ${token}`
 const s3 = new AWS.S3({ params: { timeout: 6000000 } })
 
 function uploadFiletoS3(bucket: string, filename: string, file: Buffer) {
-  const s3Resp = s3
-    .upload({
-      Bucket: bucket,
-      Key: filename,
-      Body: file,
-      ACL: 'public-read',
+  try {
+    const s3Resp = s3
+      .upload({
+        Bucket: bucket,
+        Key: filename,
+        Body: file,
+        ACL: 'public-read',
+      })
+      .promise()
+    return logger(s3Resp, `Upload ${filename} to s3`, {
+      estimate: 30000,
     })
-    .promise()
-  return logger(s3Resp, `Upload ${filename} to s3`, {
-    estimate: 30000,
-  })
+  } catch (e) {
+    console.error('Failed to upload to S3')
+    process.exit(1)
+  }
 }
 
 async function updateVerion(releaseTag: string) {
@@ -56,7 +61,7 @@ async function createBinary(command: string, release: string) {
   return tarFileName
 }
 
-async function brew(stableReleaseVersion: string) {
+export async function brew(stableReleaseVersion: string) {
   console.log('Home Brew Release')
 
   const tarFileName = await createBinary('binary-osx', stableReleaseVersion)
@@ -69,7 +74,7 @@ async function brew(stableReleaseVersion: string) {
   const fileData = await fs.readFile(tarFileName)
 
   const s3Resp = await uploadFiletoS3(
-    'homebrew-prisma',
+    'teggnet',
     `prisma-${stableReleaseVersion}.tar.gz`,
     fileData,
   )
@@ -104,39 +109,55 @@ end
     }
   })
 
-  await gitCommitPush({
-    owner: 'prisma',
-    repo: 'homebrew-prisma',
-    token,
-    files: [{ path: 'prisma.rb', content: homebrewDefinition }],
-    fullyQualifiedRef: 'heads/automated-pr-branch',
-    commitMessage: `bump version to ${stableReleaseVersion}`,
-  })
-
-  const pullRes = await axios.post(
-    'https://api.github.com/repos/prisma/homebrew-prisma/pulls',
+  await logger(
+    gitCommitPush({
+      owner: 'pantharshit00',
+      repo: 'homebrew-prisma',
+      token,
+      files: [{ path: 'prisma.rb', content: homebrewDefinition }],
+      fullyQualifiedRef: 'heads/automated-pr-branch',
+      commitMessage: `bump version to ${stableReleaseVersion}`,
+    }),
+    `Committing changes in prisma.rb`,
     {
-      title: `Automated PR for version ${stableReleaseVersion}`,
-      head: 'automated-pr-branch',
-      base: 'master',
-      body: ' Automated PR generated via script',
-      maintainer_can_modify: true,
+      estimate: 1000,
     },
   )
+
+  const pullRes = await logger(
+    axios.post(
+      'https://api.github.com/repos/pantharshit00/homebrew-prisma/pulls',
+      {
+        title: `Automated PR for version ${stableReleaseVersion}`,
+        head: 'automated-pr-branch',
+        base: 'master',
+        body: ' Automated PR generated via script',
+        maintainer_can_modify: true,
+      },
+    ),
+    `Creating PR`,
+    {
+      estimate: 1000,
+    },
+  )
+
   console.log(
     `Pull Request created at ${
       pullRes.data.html_url
     }. Merge this to complete the release`,
   )
+  console.log('Cleaning up...')
+  fs.unlinkSync(tarFileName)
+  fs.unlinkSync('prisma')
 }
 
-async function linux(stableReleaseVersion: string) {
+export async function linux(stableReleaseVersion: string) {
   console.log('releasing linux')
   const tarFileName = await createBinary('binary-linux', stableReleaseVersion)
   const fileData = await fs.readFile(tarFileName)
 
   const s3Resp = await uploadFiletoS3(
-    'curl-linux',
+    'teggnet',
     `prisma-${stableReleaseVersion}.tar.gz`,
     fileData,
   )
@@ -144,9 +165,12 @@ async function linux(stableReleaseVersion: string) {
   const uploadedBinaryURL = s3Resp.Location
 
   console.log('Linux binary uploaded to ' + uploadedBinaryURL)
+  console.log('Cleaning up...')
+  fs.unlinkSync(tarFileName)
+  fs.unlinkSync('prisma')
 }
 
-function checkEnvs() {
+export function checkEnvs() {
   const missing = []
   const map = {
     GITHUB_TOKEN: process.env.GITHUB_TOKEN,
@@ -168,32 +192,24 @@ function checkEnvs() {
   }
 }
 
-async function main() {
-  try {
-    checkEnvs()
-    const tData = await logger(
-      axios.get('https://api.github.com/repos/prisma/prisma/releases'),
-      'Fetching version',
-      {
-        estimate: 800,
-      },
-    )
-    const stableReleaseVersion = tData.data.filter(
-      node =>
-        !node.tag_name.includes('alpha') && !node.tag_name.includes('beta'),
-    )[0].tag_name
-    console.log(`Version to publish: ${stableReleaseVersion}`)
-    await logger(
-      updateVerion(stableReleaseVersion),
-      'Updating package.json to new version',
-      {
-        estimate: 1000,
-      },
-    )
-    await brew(stableReleaseVersion)
-    await linux(stableReleaseVersion)
-  } catch (error) {
-    throw new Error(error)
-  }
+export async function grabRelease() {
+  const tData = await logger(
+    axios.get('https://api.github.com/repos/prisma/prisma/releases'),
+    'Fetching version',
+    {
+      estimate: 800,
+    },
+  )
+  const stableReleaseVersion: string = tData.data.filter(
+    node => !node.tag_name.includes('alpha') && !node.tag_name.includes('beta'),
+  )[0].tag_name
+  console.log(`Version to publish: ${stableReleaseVersion}`)
+  await logger(
+    updateVerion(stableReleaseVersion),
+    'Updating package.json to new version',
+    {
+      estimate: 1000,
+    },
+  )
+  return stableReleaseVersion
 }
-main()
