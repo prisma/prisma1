@@ -63,7 +63,7 @@ export default abstract class Renderer {
       },
     }
 
-    if (!index.unique) {
+    if (index.unique) {
       directive.arguments = {
         ...directive.arguments,
         unique: this.renderValue(TypeIdentifiers.boolean, index.unique),
@@ -330,8 +330,7 @@ export default abstract class Renderer {
     if (
       strType === TypeIdentifiers.string ||
       strType === TypeIdentifiers.json ||
-      strType === TypeIdentifiers.dateTime ||
-      strType === TypeIdentifiers.boolean
+      strType === TypeIdentifiers.dateTime
     ) {
       return `"${value}"`
     } else {

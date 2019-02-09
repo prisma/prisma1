@@ -95,8 +95,8 @@ describe(`Renderer directives test`, () => {
 
     const modelWithDirectives = dedent(`
       type User @indexes(value: [
-        {name: "NameIndex", fields: ["firstName", "lastName"], unique: "false"},
-        {name: "PrimaryIndex", fields: ["id"]}
+        {name: "NameIndex", fields: ["firstName", "lastName"]},
+        {name: "PrimaryIndex", fields: ["id"], unique: true}
       ]) {
         createdAt: DateTime! @createdAt
         firstName: String!

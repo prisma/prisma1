@@ -2,7 +2,7 @@
 
 exports[`Introspector large example database 1`] = `
 "type Actor @indexes(value: [
-  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}
+  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
 ]) @pgTable(name: \\"actor\\") {
   id: Int! @pgColumn(name: \\"actor_id\\") @unique
   film_actor: Film_actor!
@@ -48,12 +48,12 @@ type Country @pgTable(name: \\"country\\") {
 }
 
 type Customer @indexes(value: [
-  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"], unique: \\"false\\"},
-  {name: \\"idx_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}
+  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"]},
+  {name: \\"idx_last_name\\", fields: [\\"last_name\\"]}
 ]) @pgTable(name: \\"customer\\") {
   id: Int! @pgColumn(name: \\"customer_id\\") @unique
   active: Int
-  activebool: Boolean! @default(value: \\"true\\")
+  activebool: Boolean! @default(value: true)
   address_id: Address!
   create_date: DateTime!
   email: String
@@ -66,8 +66,8 @@ type Customer @indexes(value: [
 }
 
 type Film @indexes(value: [
-  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"], unique: \\"false\\"},
-  {name: \\"idx_title\\", fields: [\\"title\\"], unique: \\"false\\"}
+  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"]},
+  {name: \\"idx_title\\", fields: [\\"title\\"]}
 ]) @pgTable(name: \\"film\\") {
   id: Int! @pgColumn(name: \\"film_id\\") @unique
   description: String
@@ -105,7 +105,7 @@ type Film_category @pgTable(name: \\"film_category\\") {
 }
 
 type Inventory @indexes(value: [
-  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"], unique: \\"false\\"}
+  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"]}
 ]) @pgTable(name: \\"inventory\\") {
   id: Int! @pgColumn(name: \\"inventory_id\\") @unique
   film_id: Film!
@@ -139,7 +139,7 @@ type Payment @pgTable(name: \\"payment\\") {
 }
 
 type Rental @indexes(value: [
-  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"]}
+  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"], unique: true}
 ]) @pgTable(name: \\"rental\\") {
   id: Int! @pgColumn(name: \\"rental_id\\") @unique
   customer_id: Customer!
@@ -153,7 +153,7 @@ type Rental @indexes(value: [
 
 type Staff @pgTable(name: \\"staff\\") {
   id: Int! @pgColumn(name: \\"staff_id\\") @unique
-  active: Boolean! @default(value: \\"true\\")
+  active: Boolean! @default(value: true)
   address_id: Address!
   email: String
   first_name: String!
