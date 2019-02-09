@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector large example database 1`] = `
-"type Actor @indexes(value: [{name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}]) @pgTable(name: \\"actor\\") {
+"type Actor @indexes(value: [
+  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}
+]) @pgTable(name: \\"actor\\") {
   id: Int! @pgColumn(name: \\"actor_id\\") @unique
   film_actor: Film_actor!
   first_name: String!
@@ -45,7 +47,10 @@ type Country @pgTable(name: \\"country\\") {
   last_update: DateTime!
 }
 
-type Customer @indexes(value: [{name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"], unique: \\"false\\"}, {name: \\"idx_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}]) @pgTable(name: \\"customer\\") {
+type Customer @indexes(value: [
+  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"], unique: \\"false\\"},
+  {name: \\"idx_last_name\\", fields: [\\"last_name\\"], unique: \\"false\\"}
+]) @pgTable(name: \\"customer\\") {
   id: Int! @pgColumn(name: \\"customer_id\\") @unique
   active: Int
   activebool: Boolean! @default(value: \\"true\\")
@@ -60,7 +65,10 @@ type Customer @indexes(value: [{name: \\"idx_fk_store_id\\", fields: [\\"store_i
   store_id: Int!
 }
 
-type Film @indexes(value: [{name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"], unique: \\"false\\"}, {name: \\"idx_title\\", fields: [\\"title\\"], unique: \\"false\\"}]) @pgTable(name: \\"film\\") {
+type Film @indexes(value: [
+  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"], unique: \\"false\\"},
+  {name: \\"idx_title\\", fields: [\\"title\\"], unique: \\"false\\"}
+]) @pgTable(name: \\"film\\") {
   id: Int! @pgColumn(name: \\"film_id\\") @unique
   description: String
   film_actor: Film_actor!
@@ -96,7 +104,9 @@ type Film_category @pgTable(name: \\"film_category\\") {
   last_update: DateTime!
 }
 
-type Inventory @indexes(value: [{name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"], unique: \\"false\\"}]) @pgTable(name: \\"inventory\\") {
+type Inventory @indexes(value: [
+  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"], unique: \\"false\\"}
+]) @pgTable(name: \\"inventory\\") {
   id: Int! @pgColumn(name: \\"inventory_id\\") @unique
   film_id: Film!
   last_update: DateTime!
@@ -128,7 +138,9 @@ type Payment @pgTable(name: \\"payment\\") {
   staff_id: Staff!
 }
 
-type Rental @indexes(value: [{name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"]}]) @pgTable(name: \\"rental\\") {
+type Rental @indexes(value: [
+  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"]}
+]) @pgTable(name: \\"rental\\") {
   id: Int! @pgColumn(name: \\"rental_id\\") @unique
   customer_id: Customer!
   inventory_id: Inventory!

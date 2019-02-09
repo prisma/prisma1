@@ -37,6 +37,7 @@ export default abstract class Renderer {
     return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }
   }
 
+  // TODO: Cleanup index rendering.
   protected createIndexDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
     if (type.indices.length > 0) {
       const indexDescriptions: string[] = []
@@ -46,7 +47,7 @@ export default abstract class Renderer {
       typeDirectives.push({
         name: DirectiveKeys.indexes,
         arguments: {
-          value: `[${indexDescriptions.join(', ')}]`,
+          value: `[\n${indexDescriptions.join(',\n')}\n]`,
         },
       })
     }
@@ -70,7 +71,7 @@ export default abstract class Renderer {
     }
 
     // If we switch back to single index declarations later, simply return the directive here.
-    return `{${Object.keys(directive.arguments)
+    return `${indent}{${Object.keys(directive.arguments)
       .map(x => `${x}: ${directive.arguments[x]}`)
       .join(', ')}}`
   }
