@@ -171,7 +171,7 @@ export async function linux(stableReleaseVersion: string) {
 }
 
 export function checkEnvs() {
-  const missing = []
+  const missing: string[] = []
   const map = {
     GITHUB_TOKEN: process.env.GITHUB_TOKEN,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
