@@ -1,4 +1,4 @@
-import { IDirectiveInfo, RelationalParser, ISDL, IGQLField, IGQLType, DirectiveKeys } from 'prisma-datamodel'
+import { IDirectiveInfo, ISDL, IGQLField, IGQLType, DirectiveKeys } from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
 export class AdjustJoinTableCardinality implements INormalizer {
@@ -8,27 +8,25 @@ export class AdjustJoinTableCardinality implements INormalizer {
     this.baseModel = baseModel
   }
 
-  public normalizeType(type: IGQLType, ref: IGQLType) { 
-    for(const field of type.fields) {
+  public normalizeType(type: IGQLType, ref: IGQLType) {
+    for (const field of type.fields) {
       // Only look at n:n relations.
-      if(typeof field.type !== 'string' && field.isList) {
+      if (typeof field.type !== 'string' && field.isList) {
         // TODO: Subclass
         // Fid the reference field.
         const refField = ref.fields.find(x => x.name === field.name)
-        
-        if(refField === undefined || typeof refField.type === 'string')
-          continue
 
-        if(refField.type.name !== field.type.name)
-          continue
+        if (refField === undefined || typeof refField.type === 'string') continue
+
+        if (refField.type.name !== field.type.name) continue
 
         // If the reference is not a list. We restrict it to a non-list and add
         // a link: TABLE directive (compatability mode).
-        if(!refField.isList) {
+        if (!refField.isList) {
           field.isList = false
           field.isRequired = refField.isRequired
           field.directives.push(this.createLinkTableDirective())
-          if(field.relatedField !== null) {
+          if (field.relatedField !== null) {
             field.relatedField.directives.push(this.createLinkTableDirective())
           }
         }
@@ -37,10 +35,10 @@ export class AdjustJoinTableCardinality implements INormalizer {
   }
 
   public normalize(model: ISDL) {
-    for(const type of model.types) {
+    for (const type of model.types) {
       // TODO: We should move all tooling for finding types or fields into some common class.
       const ref = this.baseModel.types.find(x => x.name === type.name || x.databaseName === type.name)
-      if(ref !== undefined) {
+      if (ref !== undefined) {
         this.normalizeType(type, ref)
       }
     }
@@ -50,8 +48,8 @@ export class AdjustJoinTableCardinality implements INormalizer {
     return {
       name: DirectiveKeys.relation,
       arguments: {
-        link: 'TABLE'
-      }
+        link: 'TABLE',
+      },
     }
   }
 }

@@ -1,7 +1,6 @@
 import { IntrospectionResult } from '../../common/introspectionResult'
-import { ITable, IColumn, IIndex, ITableRelation, IEnum } from './relationalConnector'
+import { ITable, IColumn, IIndex, ITableRelation, IEnum, ISequenceInfo } from './relationalConnector'
 import {
-  RelationalParser,
   ISDL,
   DatabaseType,
   Renderer,
@@ -13,17 +12,21 @@ import {
   IComment,
   camelCase,
   TypeIdentifiers,
+  IdStrategy,
+  LegacyRelationalReservedFields,
 } from 'prisma-datamodel'
 
 export abstract class RelationalIntrospectionResult extends IntrospectionResult {
   protected model: ITable[]
   protected relations: ITableRelation[]
   protected enums: IEnum[]
+  protected sequences: ISequenceInfo[]
 
   constructor(
     model: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
     databaseType: DatabaseType,
     renderer?: Renderer,
   ) {
@@ -32,10 +35,11 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     this.model = model
     this.relations = relations
     this.enums = enums
+    this.sequences = sequences
   }
 
   public getDatamodel(): ISDL {
-    return this.infer(this.model, this.enums, this.relations)
+    return this.infer(this.model, this.enums, this.relations, this.sequences)
   }
 
   protected resolveRelations(types: IGQLType[], relations: ITableRelation[]) {
@@ -80,6 +84,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types
   }
 
+  protected abstract resolveSequences(types: IGQLType[], sequences: ISequenceInfo[]): IGQLType[]
+
   protected resolveRelation(types: IGQLType[], relation: ITableRelation) {
     // Correctly sets field types according to given FK constraints.
     for (const typeA of types) {
@@ -117,6 +123,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
                 isCreatedAt: false,
                 isUpdatedAt: false,
                 isId: false,
+                idStrategy: null,
+                associatedSequence: null,
                 isReadOnly: false,
                 isRequired: fieldA.isRequired, // TODO: Not sure if that makes sense
                 isUnique: false,
@@ -233,6 +241,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           isList: true,
           isUnique: false,
           isId: false,
+          idStrategy: null,
+          associatedSequence: null,
           isCreatedAt: false,
           isUpdatedAt: false,
           isRequired: true,
@@ -251,6 +261,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           isList: true,
           isUnique: false,
           isId: false,
+          idStrategy: null,
+          associatedSequence: null,
           isCreatedAt: false,
           isUpdatedAt: false,
           isRequired: true,
@@ -313,10 +325,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types.filter(x => !this.isTypeReserved(x))
   }
 
-  protected infer(model: ITable[], enums: IEnum[], relations: ITableRelation[]): ISDL {
+  protected infer(model: ITable[], enums: IEnum[], relations: ITableRelation[], sequences: ISequenceInfo[]): ISDL {
     // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
     // Ask tim, this is an important descision for the SDK
     let types = [...model.map(x => this.inferObjectType(x)), ...enums.map(x => this.inferEnumType(x))]
+    types = this.resolveSequences(types, sequences)
+    types = this.inferDefaultValues(types)
     types = this.resolveRelations(types, relations)
     types = this.resolveEnumTypes(types)
     types = this.hideJoinTypes(types)
@@ -344,12 +358,25 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     }
   }
 
+  // We need info about indices for resolving the exact type, as String is mapped to ID.
+  // Also, we need info about the actual type before we resolve default values.
+  protected inferDefaultValues(types: IGQLType[]) {
+    for (const type of types) {
+      for (const field of type.fields) {
+        this.inferFieldTypeAndDefaultValue(field, type.name)
+      }
+    }
+    return types
+  }
+
   protected inferEnumType(model: IEnum): IGQLType {
     const values = model.values.map(
       (x: string): IGQLField => ({
         name: x,
         isCreatedAt: false,
         isId: false,
+        idStrategy: null,
+        associatedSequence: null,
         isList: false,
         isReadOnly: false,
         isRequired: false,
@@ -415,12 +442,6 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       }
     }
 
-    // We need info about indices for resolving the exact type, as String is mapped to ID.
-    // Also, we need info about the actual type before we resolve default values.
-    for (const field of fields) {
-      this.inferFieldTypeAndDefaultValue(field, model.name)
-    }
-
     return {
       name: model.name,
       isEmbedded: false, // Never
@@ -451,10 +472,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       isList: field.isList,
       type: field.type,
       isId: false, // Will resolve later, from indices
+      idStrategy: field.isAutoIncrement ? IdStrategy.Auto : IdStrategy.None,
+      associatedSequence: null,
       relatedField: null,
       relationName: null,
-      isCreatedAt: RelationalParser.createdAtFieldName === field.name, // Heuristic, can be overriden by normalization
-      isUpdatedAt: RelationalParser.updatedAtFieldName === field.name, // Heuristic, can be overriden by normalization
+      isCreatedAt: LegacyRelationalReservedFields.createdAtFieldName === field.name, // Heuristic, can be overriden by normalization
+      isUpdatedAt: LegacyRelationalReservedFields.updatedAtFieldName === field.name, // Heuristic, can be overriden by normalization
       isReadOnly: false, // Never
       comments,
       directives: [],

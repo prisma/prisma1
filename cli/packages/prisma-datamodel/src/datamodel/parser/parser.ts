@@ -21,7 +21,7 @@ import GQLAssert from '../../util/gqlAssert'
  * to an internal representation, convenient for
  * working with.
  */
-export default abstract class Parser {
+export default abstract class DefaultParser {
   /**
    * Shorthand to parse the datamodel, given an SDL string.
    * @param schemaString The datamodel as SDL string.

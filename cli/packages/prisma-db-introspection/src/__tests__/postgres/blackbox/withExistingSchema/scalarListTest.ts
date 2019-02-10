@@ -2,7 +2,7 @@ import Connectors from '../../../../connectors'
 import { Client } from 'pg'
 import { connectionDetails } from '../connectionDetails'
 import { PostgresConnector } from '../../../../databases/relational/postgres/postgresConnector'
-import { DatabaseType, Parser } from 'prisma-datamodel'
+import { DatabaseType, DefaultParser } from 'prisma-datamodel'
 import { connect } from 'tls'
 
 const existingSchema = `
@@ -23,8 +23,10 @@ type House {
 `
 
 async function introspect(client: Client) {
-  const existing = Parser.create(DatabaseType.postgres).parseFromSchemaString(existingSchema)
-  return (await Connectors.create(DatabaseType.postgres, client).introspect('service$stage')).renderToNormalizedDatamodelString(existing)
+  const existing = DefaultParser.create(DatabaseType.postgres).parseFromSchemaString(existingSchema)
+  return (await Connectors.create(DatabaseType.postgres, client).introspect(
+    'service$stage',
+  )).renderToNormalizedDatamodelString(existing)
 }
 
 async function testSchema(sql: string) {

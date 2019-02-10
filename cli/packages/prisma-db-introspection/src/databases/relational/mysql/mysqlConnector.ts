@@ -4,6 +4,7 @@ import {
   ITableRelation,
   IInternalEnumInfo,
   IEnum,
+  ISequenceInfo,
 } from '../relationalConnector'
 import { Connection } from 'mysql'
 import { DatabaseType, camelCase } from 'prisma-datamodel'
@@ -32,12 +33,16 @@ export class MysqlConnector extends RelationalConnector {
     models: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult {
-    return new MysqlIntrospectionResult(models, relations, enums)
+    return new MysqlIntrospectionResult(models, relations, enums, sequences)
   }
 
   protected getTypeColumnName() {
     return 'COLUMN_TYPE'
+  }
+  protected getAutoIncrementCondition() {
+    return 'EXTRA like \'%auto_increment%\''
   }
 
   protected parameter(count: number, type: string) {
@@ -49,11 +54,7 @@ export class MysqlConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(
-    schemaName: string,
-    tableName: string,
-    columnName: string,
-  ) {
+  protected async queryColumnComment(schemaName: string, tableName: string, columnName: string) {
     const commentQuery = `
       SELECT
         column_comment
@@ -64,11 +65,9 @@ export class MysqlConnector extends RelationalConnector {
         AND table_name = ?
         AND column_name = ?
     `
-    const [comment] = (await this.query(commentQuery, [
-      schemaName,
-      tableName,
-      columnName,
-    ])).map(row => row.column_comment as string)
+    const [comment] = (await this.query(commentQuery, [schemaName, tableName, columnName])).map(
+      row => row.column_comment as string,
+    )
 
     if (comment === undefined || comment === '') {
       return null
@@ -128,9 +127,7 @@ export class MysqlConnector extends RelationalConnector {
 
       return {
         // Enum types in mysql are anonymous. We generate some funny name for them.
-        name: (camelCase(row.table_name) +
-          camelCase(row.column_name) +
-          'Enum') as string,
+        name: (camelCase(row.table_name) + camelCase(row.column_name) + 'Enum') as string,
         values: this.parseJoinedArray(strippedEnumValues),
       }
     })
@@ -179,5 +176,9 @@ export class MysqlConnector extends RelationalConnector {
     })
 
     return result
+  }
+
+  protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
+    return []
   }
 }

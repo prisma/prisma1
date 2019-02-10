@@ -146,7 +146,7 @@ describe(`Renderer directives test`, () => {
   })
 
   test('Render built-in sequence directive correctly', () => {
-    const renderer = Renderer.create(DatabaseType.mongo)
+    const renderer = Renderer.create(DatabaseType.postgres, true)
 
     const modelWithDirectives = dedent(`
       type User {

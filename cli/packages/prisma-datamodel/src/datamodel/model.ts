@@ -274,6 +274,12 @@ function cloneComments(copy: ISDL | IGQLField | IGQLType, obj: ISDL | IGQLField 
   }
 }
 
+function cloneSequence(copy: IGQLField, obj: IGQLField) {
+  if (obj.associatedSequence !== null) {
+    copy.associatedSequence = { ...obj.associatedSequence }
+  }
+}
+
 function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField | IGQLType) {
   if (obj.directives !== undefined) {
     copy.directives = []
@@ -292,6 +298,7 @@ export function cloneField(field: IGQLField): IGQLField {
   }
 
   cloneCommentsAndDirectives(copy, field)
+  cloneSequence(copy, field)
 
   return copy
 }
