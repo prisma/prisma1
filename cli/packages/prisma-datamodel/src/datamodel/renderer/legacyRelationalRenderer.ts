@@ -1,6 +1,6 @@
 import Renderer from './renderer'
 import { LegacyRelationalReservedFields } from '../legacyFields'
-import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from '../model'
+import { ISDL, IGQLType, IDirectiveInfo, IGQLField, cloneSchema } from '../model'
 import GQLAssert from '../../util/gqlAssert'
 import { TypeIdentifiers } from '../scalar'
 import { DirectiveKeys } from '../directives'
@@ -8,6 +8,12 @@ import { DirectiveKeys } from '../directives'
  * Renderer implementation for relational models.
  */
 export default class RelationalRenderer extends Renderer {
+  // The legacy renderer changes field names on rendering,
+  // so we force it to operate on a copy.
+  public render(input: ISDL, sortBeforeRendering: boolean = false): string {
+    return super.render(cloneSchema(input), sortBeforeRendering)
+  }
+
   // Special case for postgres. We never render id, createdAt, isCreatedAt directive.
   protected shouldCreateIsIdFieldDirective(field: IGQLField) {
     return false

@@ -24,13 +24,13 @@ type PostWithoutConnection {
   count: Int!
 }
 
-type BillingInfo{
+type BillingInfo {
   id: ID! @id
   account: String!
   user: User!
 }
 
-type BillingInfoWithoutConnection{
+type BillingInfoWithoutConnection {
   removeThisId: ID! @id
   account: String!
 }
@@ -41,7 +41,7 @@ type OptionalDetails {
   user: User!
 }
 
-type OptionalDetailsWithoutConnection{
+type OptionalDetailsWithoutConnection {
   removeThisId: ID! @id
   text: String!
 }

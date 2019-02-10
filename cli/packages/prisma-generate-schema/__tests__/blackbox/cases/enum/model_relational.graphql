@@ -1,47 +1,47 @@
 enum UsedEnum {
-    A,
-    B,
-    C,
-    D
+  A
+  B
+  C
+  D
 }
 
 enum UnusedEnum {
-    X, 
-    Y, 
-    Z
+  X
+  Y
+  Z
 }
 
 type A {
-    fieldA: UsedEnum
-    fieldB: UsedEnum!
-    fieldC: [UsedEnum]
-    b: B!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum]
+  b: B!
 }
 
 type AWithId {
-    id: ID! @unique
-    fieldA: UsedEnum
-    fieldB: UsedEnum!
-    fieldC: [UsedEnum]
-    c: C
+  id: ID! @unique
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum]
+  c: C
 }
 
 type B {
-    field: String!
-    a: [A]
+  field: String!
+  a: [A]
 }
 
 type C {
-    field: [Int]
-    a: AWithId!
+  field: [Int]
+  a: AWithId!
 }
 
 type D {
-    field: [DateTime]
-    a: AWithId!
+  field: [DateTime]
+  a: AWithId!
 }
 
 type E {
-    field: Json
-    a: [A]
+  field: Json
+  a: [A]
 }

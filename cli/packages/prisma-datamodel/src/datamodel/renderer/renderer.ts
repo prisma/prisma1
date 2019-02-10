@@ -101,7 +101,7 @@ export default abstract class Renderer {
   }
 
   protected renderType(type: IGQLType): string {
-    const typeDirectives: IDirectiveInfo[] = type.directives || []
+    const typeDirectives: IDirectiveInfo[] = [...type.directives]
 
     this.createReservedTypeDirectives(type, typeDirectives)
 
@@ -241,7 +241,7 @@ export default abstract class Renderer {
   }
 
   protected renderField(field: IGQLField): string {
-    const fieldDirectives: IDirectiveInfo[] = field.directives || []
+    const fieldDirectives: IDirectiveInfo[] = [...field.directives]
 
     this.createReservedFieldDirectives(field, fieldDirectives)
 

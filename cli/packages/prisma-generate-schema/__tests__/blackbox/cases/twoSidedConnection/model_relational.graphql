@@ -1,9 +1,3 @@
-# Two Sided Connections of all types
-# With/Without ID
-# Case A: Required
-# Case B: Not Required
-# Case C: List
-
 type AWithIdWithA {
   id: ID! @unique
   field: String!

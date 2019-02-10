@@ -38,7 +38,7 @@ export default abstract class DefaultParser {
    * @returns A list of types found in the datamodel.
    */
   public parseFromSchema(schema: any): ISDL {
-    const types = [...this.parseObjectTypes(schema), ...this.parseEnumTypes(schema)]
+    const types = [...this.parseTypes(schema)]
 
     this.resolveRelations(types)
 
@@ -408,55 +408,54 @@ export default abstract class DefaultParser {
   }
 
   /**
-   * Parses all object types in the schema.
+   * Parses all types in the schema.
    * @param schema
    */
-  protected parseObjectTypes(schema: any): IGQLType[] {
-    const objectTypes: IGQLType[] = []
+  protected parseTypes(schema: any): IGQLType[] {
+    const types: IGQLType[] = []
 
     for (const type of schema.definitions) {
       if (type.kind === 'ObjectTypeDefinition') {
-        objectTypes.push(this.parseObjectType(type))
+        types.push(this.parseObjectType(type))
+      } else if (type.kind === 'EnumTypeDefinition') {
+        types.push(this.parseEnumType(type))
       }
     }
 
-    return objectTypes
+    return types
   }
 
   /**
-   * Parses all enum types in the schema.
+   * Parses an enum type.
    * @param schema
    */
-  protected parseEnumTypes(schema: any): IGQLType[] {
-    const enumTypes: IGQLType[] = []
-    for (const type of schema.definitions) {
-      if (type.kind === 'EnumTypeDefinition') {
-        const values: IGQLField[] = []
-        for (const value of type.values) {
-          if (value.kind === 'EnumValueDefinition') {
-            const name = value.name.value
+  protected parseEnumType(type: any): IGQLType {
+    if (type.kind === 'EnumTypeDefinition') {
+      const values: IGQLField[] = []
+      for (const value of type.values) {
+        if (value.kind === 'EnumValueDefinition') {
+          const name = value.name.value
 
-            // All props except name are ignored for enum defs.
-            values.push(new GQLScalarField(name, 'String', false))
-          }
+          // All props except name are ignored for enum defs.
+          values.push(new GQLScalarField(name, 'String', false))
         }
-
-        const directives = this.parseDirectives(type)
-
-        enumTypes.push({
-          name: type.name.value,
-          fields: values,
-          isEnum: true,
-          isEmbedded: false,
-          directives,
-          comments: [],
-          databaseName: null,
-          indices: [],
-        })
       }
-    }
 
-    return enumTypes
+      const directives = this.parseDirectives(type)
+
+      return {
+        name: type.name.value,
+        fields: values,
+        isEnum: true,
+        isEmbedded: false,
+        directives,
+        comments: [],
+        databaseName: null,
+        indices: [],
+      }
+    } else {
+      throw GQLAssert.raise('Expected an enum type.')
+    }
   }
 
   /**

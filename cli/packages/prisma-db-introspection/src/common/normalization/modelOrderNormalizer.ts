@@ -27,7 +27,7 @@ export default class ModelOrderNormalizer implements INormalizer {
     return model
   }
 
-  protected typeOrderComparer<T extends IGQLField | IGQLType>(ref: T[], a: T, b: T): number {
+  protected typeOrderComparer(ref: IGQLType[], a: IGQLType, b: IGQLType): number {
     // Should we also compare for enum?
     const ia = ref.findIndex(x => x.name === a.name || x.databaseName === a.name)
     const ib = ref.findIndex(x => x.name === b.name || x.databaseName === b.name)

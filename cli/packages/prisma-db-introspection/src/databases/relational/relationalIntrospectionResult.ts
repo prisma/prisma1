@@ -108,9 +108,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
 
               fieldA.type = typeB
 
+              // Add back connecting
               // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint. Tell Tim.
-
-              // Add back connecting field
               const connectorFieldAtB: IGQLField = {
                 // TODO - how do we name that field?
                 // Problems:
@@ -235,52 +234,78 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         const typeA = relA.type as IGQLType
         const typeB = relB.type as IGQLType
 
-        const relatedFieldForA: IGQLField = {
-          name: typeB.name,
-          type: typeB,
-          isList: true,
-          isUnique: false,
-          isId: false,
-          idStrategy: null,
-          associatedSequence: null,
-          isCreatedAt: false,
-          isUpdatedAt: false,
-          isRequired: true,
-          isReadOnly: false,
-          comments: [],
-          directives: [],
-          defaultValue: null,
-          relatedField: null,
-          databaseName: null,
-          relationName: this.normalizeRelatioName(type.name),
+        if (true || typeA !== typeB) {
+          // Regular case. Two different types via join type.
+          const relatedFieldForA: IGQLField = {
+            name: typeB.name,
+            type: typeB,
+            isList: true,
+            isUnique: false,
+            isId: false,
+            idStrategy: null,
+            associatedSequence: null,
+            isCreatedAt: false,
+            isUpdatedAt: false,
+            isRequired: true,
+            isReadOnly: false,
+            comments: [],
+            directives: [],
+            defaultValue: null,
+            relatedField: null,
+            databaseName: null,
+            relationName: this.normalizeRelatioName(type.name),
+          }
+
+          const relatedFieldForB: IGQLField = {
+            name: typeA.name,
+            type: typeA,
+            isList: true,
+            isUnique: false,
+            isId: false,
+            idStrategy: null,
+            associatedSequence: null,
+            isCreatedAt: false,
+            isUpdatedAt: false,
+            isRequired: true,
+            isReadOnly: false,
+            comments: [],
+            directives: [],
+            defaultValue: null,
+            relatedField: relatedFieldForA,
+            databaseName: null,
+            relationName: this.normalizeRelatioName(type.name),
+          }
+
+          relatedFieldForA.relatedField = relatedFieldForB
+
+          typeA.fields.push(relatedFieldForA)
+          typeB.fields.push(relatedFieldForB)
+        } else {
+          // Self join to same field via join type.
+          const relatedField: IGQLField = {
+            name: typeA.name,
+            type: typeA,
+            isList: true,
+            isUnique: false,
+            isId: false,
+            idStrategy: null,
+            associatedSequence: null,
+            isCreatedAt: false,
+            isUpdatedAt: false,
+            isRequired: true,
+            isReadOnly: false,
+            comments: [],
+            directives: [],
+            defaultValue: null,
+            relatedField: null,
+            databaseName: null,
+            relationName: this.normalizeRelatioName(type.name),
+          }
+
+          typeA.fields.push(relatedField)
         }
-
-        const relatedFieldForB: IGQLField = {
-          name: typeA.name,
-          type: typeA,
-          isList: true,
-          isUnique: false,
-          isId: false,
-          idStrategy: null,
-          associatedSequence: null,
-          isCreatedAt: false,
-          isUpdatedAt: false,
-          isRequired: true,
-          isReadOnly: false,
-          comments: [],
-          directives: [],
-          defaultValue: null,
-          relatedField: relatedFieldForA,
-          databaseName: null,
-          relationName: this.normalizeRelatioName(type.name),
-        }
-
-        relatedFieldForA.relatedField = relatedFieldForB
-
-        typeA.fields.push(relatedFieldForA)
         typeA.fields = typeA.fields.filter(x => x.type !== type)
         typeB.fields = typeB.fields.filter(x => x.type !== type)
-        typeB.fields.push(relatedFieldForB)
       } else {
         nonJoinTypes.push(type)
       }
