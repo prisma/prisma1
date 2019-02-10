@@ -1,4 +1,4 @@
-import { ISDL, IGQLType, IDirectiveInfo, IGQLField, IIndexInfo } from '../model'
+import { ISDL, IGQLType, IDirectiveInfo, IGQLField, IIndexInfo, IdStrategy } from '../model'
 import { GraphQLSchema } from 'graphql/type/schema'
 import { GraphQLObjectType, GraphQLEnumType, GraphQLField, GraphQLFieldConfig } from 'graphql/type/definition'
 import { GraphQLDirective } from 'graphql/type/directives'
@@ -148,10 +148,27 @@ export default abstract class Renderer {
     }
   }
 
-  protected createIsIdfFieldDirective(field: IGQLField) {
-    return { name: DirectiveKeys.isId, arguments: {} }
+  protected createIsIdFieldDirective(field: IGQLField) {
+    const args = {} as any
+
+    if (field.idStrategy !== null && field.idStrategy !== IdStrategy.Auto) {
+      args.strategy = field.idStrategy
+    }
+
+    return { name: DirectiveKeys.isId, arguments: args }
   }
 
+  protected createSequenceFieldDirective(field: IGQLField): IDirectiveInfo {
+    const sequence = field.associatedSequence!
+    return {
+      name: DirectiveKeys.sequence,
+      arguments: {
+        name: this.renderValue(TypeIdentifiers.string, sequence.name),
+        initialValue: this.renderValue(TypeIdentifiers.integer, sequence.initialValue),
+        allocationSize: this.renderValue(TypeIdentifiers.integer, sequence.allocationSize),
+      },
+    }
+  }
   protected createIsCreatedAtFieldDirective(field: IGQLField) {
     return { name: DirectiveKeys.isCreatedAt, arguments: {} }
   }
@@ -180,6 +197,10 @@ export default abstract class Renderer {
     return field.isId
   }
 
+  protected shouldCreateSequenceFieldDirective(field: IGQLField) {
+    return field.associatedSequence !== null
+  }
+
   protected shouldCreateCreatedAtFieldDirective(field: IGQLField) {
     return field.isCreatedAt
   }
@@ -203,7 +224,10 @@ export default abstract class Renderer {
       fieldDirectives.push(this.createRelationNameFieldDirective(field))
     }
     if (this.shouldCreateIsIdFieldDirective(field)) {
-      fieldDirectives.push(this.createIsIdfFieldDirective(field))
+      fieldDirectives.push(this.createIsIdFieldDirective(field))
+    }
+    if (this.shouldCreateSequenceFieldDirective(field)) {
+      fieldDirectives.push(this.createSequenceFieldDirective(field))
     }
     if (this.shouldCreateCreatedAtFieldDirective(field)) {
       fieldDirectives.push(this.createIsCreatedAtFieldDirective(field))

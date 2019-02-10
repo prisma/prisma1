@@ -1,4 +1,11 @@
-import { IGQLType, IGQLField, GQLScalarField, IDirectiveInfo, GQLOneRelationField } from '../../src/datamodel/model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  IDirectiveInfo,
+  GQLOneRelationField,
+  IdStrategy,
+} from '../../src/datamodel/model'
 import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType'
@@ -123,6 +130,54 @@ describe(`Renderer directives test`, () => {
         { name: 'NameIndex', fields: [firstNameField, lastNameField], unique: false },
         { name: 'PrimaryIndex', fields: [idField], unique: true },
       ],
+      directives: [],
+      comments: [],
+      databaseName: null,
+    }
+
+    const res = renderer.render(
+      {
+        types: [type],
+      },
+      true,
+    )
+
+    expect(res).toEqual(modelWithDirectives)
+  })
+
+  test('Render built-in sequence directive correctly', () => {
+    const renderer = Renderer.create(DatabaseType.mongo)
+
+    const modelWithDirectives = dedent(`
+      type User {
+        createdAt: DateTime! @createdAt
+        firstName: String!
+        id: Int! @id(strategy: SEQUENCE) @sequence(name: "test_seq", initialValue: 8, allocationSize: 100)
+        lastName: String!
+        updatedAt: DateTime! @updatedAt
+      }`)
+
+    const createdAtField = new GQLScalarField('createdAt', 'DateTime', true)
+    createdAtField.isCreatedAt = true
+    const updatedAtField = new GQLScalarField('updatedAt', 'DateTime', true)
+    updatedAtField.isUpdatedAt = true
+    const idField = new GQLScalarField('id', 'Int', true)
+    idField.isId = true
+    idField.idStrategy = IdStrategy.Sequence
+    idField.associatedSequence = {
+      name: 'test_seq',
+      initialValue: 8,
+      allocationSize: 100,
+    }
+    const firstNameField = new GQLScalarField('firstName', 'String', true)
+    const lastNameField = new GQLScalarField('lastName', 'String', true)
+
+    const type: IGQLType = {
+      name: 'User',
+      isEmbedded: false,
+      isEnum: false,
+      fields: [idField, createdAtField, updatedAtField, firstNameField, lastNameField],
+      indices: [],
       directives: [],
       comments: [],
       databaseName: null,

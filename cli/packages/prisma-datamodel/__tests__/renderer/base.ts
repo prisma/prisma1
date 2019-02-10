@@ -14,6 +14,19 @@ const simpleModel = `type User {
   roles: [Int]
 }`
 
+const complicatedModel = `type User @indexes(value: [
+  {name: "NameIndex", fields: ["firstName", "lastName"]},
+  {name: "PrimaryIndex", fields: ["id"], unique: true}
+]) {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: "test_seq", initialValue: 8, allocationSize: 100)
+  age: int
+  isAdmin: Boolean @default(value: false)
+  nationality: String @default(value: "DE")
+  roles: [Int]
+  firstName: String!
+  lastName: String!
+}`
+
 const modelWithDirectives = `type Test @dummyDirective(isDummy: true) {
   test: String @relation(link: INLINE)
   test2: Int @defaultValue(value: 10) @relation(name: "TestRelation")
@@ -115,6 +128,13 @@ describe(`Renderer test`, () => {
   })
 
   test('Render a single type consistently with the parser', () => {
+    const parsed = parser.parseFromSchemaString(simpleModel)
+    const rendered = renderer.render(parsed, true)
+
+    expect(rendered).toEqual(simpleModel)
+  })
+
+  test('Render a more complicated schema consistently with the parser', () => {
     const parsed = parser.parseFromSchemaString(simpleModel)
     const rendered = renderer.render(parsed, true)
 

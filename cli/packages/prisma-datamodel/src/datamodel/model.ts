@@ -1,17 +1,5 @@
-import {
-  GraphQLScalarType,
-  GraphQLNonNull,
-  GraphQLList,
-  GraphQLObjectType,
-  GraphQLType,
-} from 'graphql'
-import {
-  GraphQLString,
-  GraphQLInt,
-  GraphQLFloat,
-  GraphQLBoolean,
-  GraphQLID,
-} from 'graphql/type'
+import { GraphQLScalarType, GraphQLNonNull, GraphQLList, GraphQLObjectType, GraphQLType } from 'graphql'
+import { GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID } from 'graphql/type'
 
 // tslint:disable:max-classes-per-file
 
@@ -45,6 +33,18 @@ export interface IIndexInfo {
   name: string
   fields: IGQLField[]
   unique: boolean
+}
+
+export enum IdStrategy {
+  Auto = 'AUTO',
+  None = 'NONE',
+  Sequence = 'SEQUENCE',
+}
+
+export interface ISequenceInfo {
+  name: string
+  initialValue: number
+  allocationSize: number
 }
 
 /**
@@ -95,6 +95,17 @@ export interface IGQLField {
   isId: boolean
 
   /**
+   * Indicates the id strategy to use. Null defaults to Auto.
+   */
+  idStrategy: IdStrategy | null
+
+  /**
+   * Indicates if a sequence is associated with this field.
+   * Only valid if the field is an ID field with idType set to Sequence.
+   */
+  associatedSequence: ISequenceInfo | null
+
+  /**
    * Indicates if this field is the created at timestamp.
    */
   isCreatedAt: boolean
@@ -105,19 +116,19 @@ export interface IGQLField {
   isUpdatedAt: boolean
 
   /**
-   * Indicates if this field is read-only. 
+   * Indicates if this field is read-only.
    */
   isReadOnly: boolean
 
   /**
    * Indicates how this field is called in the database. If this value is not set,
-   * the name in the database is equal to the field name. 
+   * the name in the database is equal to the field name.
    */
   databaseName: string | null
 
   /**
-   * Indicates this fields extra directives, 
-   * which can not expressed using this 
+   * Indicates this fields extra directives,
+   * which can not expressed using this
    * interface's other members.
    */
   directives: IDirectiveInfo[]
@@ -154,15 +165,15 @@ export interface IGQLType {
 
   /**
    * Indicates how this type is called in the database. If this value is not set,
-   * the name in the database is equal to the type name. 
-   * 
-   * This field is ignored for embedded types, which never have a database name. 
+   * the name in the database is equal to the type name.
+   *
+   * This field is ignored for embedded types, which never have a database name.
    */
   databaseName: string | null
 
   /**
-   * Indicates this types extra directives, 
-   * which can not expressed using this 
+   * Indicates this types extra directives,
+   * which can not expressed using this
    * interface's other members.
    */
   directives: IDirectiveInfo[]
@@ -174,7 +185,7 @@ export interface IGQLType {
 
   /**
    * Indices for this type.
-   * 
+   *
    * Will be parsed and rendered to the corresponding directive.
    */
   indices: IIndexInfo[]
@@ -184,7 +195,7 @@ export interface ISDL {
   /**
    * All types in this datamodel.
    */
-  types: IGQLType[] 
+  types: IGQLType[]
 
   /**
    * Comments for this datamodel.
@@ -207,6 +218,8 @@ export class GQLFieldBase implements IGQLField {
   public isCreatedAt: boolean
   public isUpdatedAt: boolean
   public isId: boolean
+  public idStrategy: IdStrategy | null
+  public associatedSequence: ISequenceInfo | null
   public isReadOnly: boolean
   public databaseName: string | null
   public directives: IDirectiveInfo[]
@@ -224,6 +237,8 @@ export class GQLFieldBase implements IGQLField {
     this.isCreatedAt = false
     this.isUpdatedAt = false
     this.isId = false
+    this.idStrategy = null
+    this.associatedSequence = null
     this.isReadOnly = false
     this.databaseName = null
     this.directives = []
@@ -251,19 +266,19 @@ export class GQLMultiRelationField extends GQLFieldBase {
 }
 
 function cloneComments(copy: ISDL | IGQLField | IGQLType, obj: ISDL | IGQLField | IGQLType) {
-  if(obj.comments !== undefined) {
+  if (obj.comments !== undefined) {
     copy.comments = []
-    for(const comment of obj.comments) {
-      copy.comments.push({...comment})
+    for (const comment of obj.comments) {
+      copy.comments.push({ ...comment })
     }
   }
 }
 
 function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField | IGQLType) {
-  if(obj.directives !== undefined) {
+  if (obj.directives !== undefined) {
     copy.directives = []
-    for(const directive of obj.directives) {
-      copy.directives.push({...directive})
+    for (const directive of obj.directives) {
+      copy.directives.push({ ...directive })
     }
   }
 
@@ -273,7 +288,7 @@ function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField |
 // 21st of Dec: Start: 8:00 - end: 9:45
 export function cloneField(field: IGQLField): IGQLField {
   const copy = {
-    ...field
+    ...field,
   }
 
   cloneCommentsAndDirectives(copy, field)
@@ -283,14 +298,14 @@ export function cloneField(field: IGQLField): IGQLField {
 
 export function cloneType(type: IGQLType): IGQLType {
   const copy = {
-    ...type
+    ...type,
   }
 
   cloneCommentsAndDirectives(copy, type)
   cloneIndices(copy, type)
 
   copy.fields = []
-  for(const field of type.fields) {
+  for (const field of type.fields) {
     copy.fields.push(cloneField(field))
   }
 
@@ -298,14 +313,14 @@ export function cloneType(type: IGQLType): IGQLType {
 }
 
 export function cloneIndices(copy: IGQLType, obj: IGQLType) {
-  if(obj.indices !== undefined) {
+  if (obj.indices !== undefined) {
     copy.indices = []
-    
-    for(const index of obj.indices) {
+
+    for (const index of obj.indices) {
       copy.indices.push({
         name: index.name,
         unique: index.unique,
-        fields: [...index.fields]
+        fields: [...index.fields],
       })
     }
   }
@@ -313,26 +328,26 @@ export function cloneIndices(copy: IGQLType, obj: IGQLType) {
 
 /**
  * Deep-copies a datamodel and re-connects all types correctly.
- * @param schema The datamodel to clone. 
+ * @param schema The datamodel to clone.
  */
 export function cloneSchema(schema: ISDL): ISDL {
-  // TODO(ejoebstl): It would be better to have a concrete implementation for 
+  // TODO(ejoebstl): It would be better to have a concrete implementation for
   // each SDL object and require a clone method on interface level.
   const copy = {
-    ...schema
+    ...schema,
   }
 
   cloneComments(copy, schema)
 
   copy.types = []
-  for(const type of schema.types) {
+  for (const type of schema.types) {
     copy.types.push(cloneType(type))
   }
 
   // Re-Assign type pointer for relations
-  for(const type of copy.types) {
-    for(const field of type.fields) {
-      if(typeof field.type !== 'string') {
+  for (const type of copy.types) {
+    for (const field of type.fields) {
+      if (typeof field.type !== 'string') {
         const typeName = field.type.name
         const [fieldType] = copy.types.filter(x => x.name === typeName)
         console.assert(fieldType !== undefined) // This case should never happen
@@ -342,12 +357,12 @@ export function cloneSchema(schema: ISDL): ISDL {
   }
 
   // Re-Assign field pointer for indices
-  for(const type of copy.types) {
-    if(type.indices !== undefined) {
-      for(const index of type.indices) {
+  for (const type of copy.types) {
+    if (type.indices !== undefined) {
+      for (const index of type.indices) {
         // We need an index for setting the element
         // tslint:disable-next-line:prefer-for-of
-        for(let i = 0; i < index.fields.length; i++) {
+        for (let i = 0; i < index.fields.length; i++) {
           const fieldName = index.fields[i].name
           const [field] = type.fields.filter(x => x.name === fieldName)
           console.assert(field !== undefined) // This case should never happen
