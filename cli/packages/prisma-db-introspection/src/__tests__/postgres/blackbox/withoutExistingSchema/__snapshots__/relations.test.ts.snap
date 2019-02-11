@@ -9,7 +9,7 @@ exports[`Introspector relation with inline relation column 1`] = `
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  bill: Bill
+  bill: [Bill]
   description: String!
 }"
 `;
@@ -23,7 +23,7 @@ exports[`Introspector relation with inline relation column 2`] = `
 
 type Product @db(name: \\"product\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
-  bill: Bill
+  bill: [Bill]
   description: String!
 }"
 `;
@@ -37,7 +37,7 @@ exports[`Introspector relation with inline relation column NOT NULL 1`] = `
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  bill: Bill!
+  bill: [Bill]
   description: String!
 }"
 `;
@@ -51,7 +51,7 @@ exports[`Introspector relation with inline relation column NOT NULL 2`] = `
 
 type Product @db(name: \\"product\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
-  bill: Bill!
+  bill: [Bill]
   description: String!
 }"
 `;
@@ -88,7 +88,7 @@ exports[`Introspector relation with relation table with extra column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   id: Int! @unique
   bill: String!
-  bill_product: Bill_product
+  bill_product: [Bill_product]
 }
 
 type Bill_product @pgTable(name: \\"bill_product\\") {
@@ -99,7 +99,7 @@ type Bill_product @pgTable(name: \\"bill_product\\") {
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  bill_product: Bill_product
+  bill_product: [Bill_product]
   product: String!
 }"
 `;
@@ -108,7 +108,7 @@ exports[`Introspector relation with relation table with extra column 2`] = `
 "type Bill @db(name: \\"bill\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
   bill: String!
-  bill_product: Bill_product
+  bill_product: [Bill_product]
 }
 
 type Bill_product @db(name: \\"bill_product\\") {
@@ -119,7 +119,7 @@ type Bill_product @db(name: \\"bill_product\\") {
 
 type Product @db(name: \\"product\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
-  bill_product: Bill_product
+  bill_product: [Bill_product]
   product: String!
 }"
 `;

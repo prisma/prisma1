@@ -5,7 +5,7 @@ exports[`Introspector large example database 1`] = `
   {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
 ]) @pgTable(name: \\"actor\\") {
   id: Int! @pgColumn(name: \\"actor_id\\") @unique
-  film_actor: Film_actor!
+  film_actor: [Film_actor]
   first_name: String!
   last_name: String!
   last_update: DateTime!
@@ -16,25 +16,25 @@ type Address @pgTable(name: \\"address\\") {
   address: String!
   address2: String
   city_id: City!
-  customer: Customer!
+  customer: [Customer]
   district: String!
   last_update: DateTime!
   phone: String!
   postal_code: String
-  staff: Staff!
-  store: Store!
+  staff: [Staff]
+  store: [Store]
 }
 
 type Category @pgTable(name: \\"category\\") {
   id: Int! @pgColumn(name: \\"category_id\\") @unique
-  film_category: Film_category!
+  film_category: [Film_category]
   last_update: DateTime!
   name: String!
 }
 
 type City @pgTable(name: \\"city\\") {
   id: Int! @pgColumn(name: \\"city_id\\") @unique
-  address: Address!
+  address: [Address]
   city: String!
   country_id: Country!
   last_update: DateTime!
@@ -42,7 +42,7 @@ type City @pgTable(name: \\"city\\") {
 
 type Country @pgTable(name: \\"country\\") {
   id: Int! @pgColumn(name: \\"country_id\\") @unique
-  city: City!
+  city: [City]
   country: String!
   last_update: DateTime!
 }
@@ -60,8 +60,8 @@ type Customer @indexes(value: [
   first_name: String!
   last_name: String!
   last_update: DateTime
-  payment: Payment!
-  rental: Rental!
+  payment: [Payment]
+  rental: [Rental]
   store_id: Int!
 }
 
@@ -71,11 +71,11 @@ type Film @indexes(value: [
 ]) @pgTable(name: \\"film\\") {
   id: Int! @pgColumn(name: \\"film_id\\") @unique
   description: String
-  film_actor: Film_actor!
-  film_category: Film_category!
+  film_actor: [Film_actor]
+  film_category: [Film_category]
   # Type tsvector is not supported
   # fulltext: tsvector!
-  inventory: Inventory!
+  inventory: [Inventory]
   language_id: Language!
   last_update: DateTime!
   length: Int
@@ -110,13 +110,13 @@ type Inventory @indexes(value: [
   id: Int! @pgColumn(name: \\"inventory_id\\") @unique
   film_id: Film!
   last_update: DateTime!
-  rental: Rental!
+  rental: [Rental]
   store_id: Int!
 }
 
 type Language @pgTable(name: \\"language\\") {
   id: Int! @pgColumn(name: \\"language_id\\") @unique
-  film: Film!
+  film: [Film]
   last_update: DateTime!
   name: String!
 }
@@ -145,7 +145,7 @@ type Rental @indexes(value: [
   customer_id: Customer!
   inventory_id: Inventory!
   last_update: DateTime!
-  payment: Payment!
+  payment: [Payment]
   rental_date: DateTime!
   return_date: DateTime
   staff_id: Staff!
@@ -160,10 +160,10 @@ type Staff @pgTable(name: \\"staff\\") {
   last_name: String!
   last_update: DateTime!
   password: String
-  payment: Payment!
+  payment: [Payment]
   # Type bytea is not supported
   # picture: bytea
-  rental: Rental!
+  rental: [Rental]
   store: Store!
   store_id: Int!
   username: String!
@@ -182,7 +182,7 @@ exports[`Introspector large example database 2`] = `
   {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
 ]) {
   actor_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"actor_actor_id_seq\\", initialValue: 1, allocationSize: 1)
-  film_actor: Film_actor!
+  film_actor: [Film_actor]
   first_name: String!
   last_name: String!
   last_update: DateTime!
@@ -193,25 +193,25 @@ type Address @db(name: \\"address\\") {
   address: String!
   address2: String
   city_id: City!
-  customer: Customer!
+  customer: [Customer]
   district: String!
   last_update: DateTime!
   phone: String!
   postal_code: String
-  staff: Staff!
-  store: Store!
+  staff: [Staff]
+  store: [Store]
 }
 
 type Category @db(name: \\"category\\") {
   category_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"category_category_id_seq\\", initialValue: 1, allocationSize: 1)
-  film_category: Film_category!
+  film_category: [Film_category]
   last_update: DateTime!
   name: String!
 }
 
 type City @db(name: \\"city\\") {
   city_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"city_city_id_seq\\", initialValue: 1, allocationSize: 1)
-  address: Address!
+  address: [Address]
   city: String!
   country_id: Country!
   last_update: DateTime!
@@ -219,7 +219,7 @@ type City @db(name: \\"city\\") {
 
 type Country @db(name: \\"country\\") {
   country_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"country_country_id_seq\\", initialValue: 1, allocationSize: 1)
-  city: City!
+  city: [City]
   country: String!
   last_update: DateTime!
 }
@@ -237,8 +237,8 @@ type Customer @db(name: \\"customer\\") @indexes(value: [
   first_name: String!
   last_name: String!
   last_update: DateTime
-  payment: Payment!
-  rental: Rental!
+  payment: [Payment]
+  rental: [Rental]
   store_id: Int!
 }
 
@@ -248,11 +248,11 @@ type Film @db(name: \\"film\\") @indexes(value: [
 ]) {
   film_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"film_film_id_seq\\", initialValue: 1, allocationSize: 1)
   description: String
-  film_actor: Film_actor!
-  film_category: Film_category!
+  film_actor: [Film_actor]
+  film_category: [Film_category]
   # Type tsvector is not supported
   # fulltext: tsvector!
-  inventory: Inventory!
+  inventory: [Inventory]
   language_id: Language!
   last_update: DateTime!
   length: Int
@@ -287,13 +287,13 @@ type Inventory @db(name: \\"inventory\\") @indexes(value: [
   inventory_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"inventory_inventory_id_seq\\", initialValue: 1, allocationSize: 1)
   film_id: Film!
   last_update: DateTime!
-  rental: Rental!
+  rental: [Rental]
   store_id: Int!
 }
 
 type Language @db(name: \\"language\\") {
   language_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"language_language_id_seq\\", initialValue: 1, allocationSize: 1)
-  film: Film!
+  film: [Film]
   last_update: DateTime!
   name: String!
 }
@@ -322,7 +322,7 @@ type Rental @db(name: \\"rental\\") @indexes(value: [
   customer_id: Customer!
   inventory_id: Inventory!
   last_update: DateTime!
-  payment: Payment!
+  payment: [Payment]
   rental_date: DateTime!
   return_date: DateTime
   staff_id: Staff!
@@ -337,10 +337,10 @@ type Staff @db(name: \\"staff\\") {
   last_name: String!
   last_update: DateTime!
   password: String
-  payment: Payment!
+  payment: [Payment]
   # Type bytea is not supported
   # picture: bytea
-  rental: Rental!
+  rental: [Rental]
   store: Store!
   store_id: Int!
   username: String!

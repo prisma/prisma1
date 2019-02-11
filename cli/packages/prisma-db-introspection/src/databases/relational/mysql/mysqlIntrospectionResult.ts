@@ -1,6 +1,6 @@
 import { ITable, ITableRelation, IEnum, ISequenceInfo } from '../relationalConnector'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
-import { IGQLField, IGQLType, camelCase, DatabaseType, Renderer, TypeIdentifiers } from 'prisma-datamodel'
+import { IGQLField, IGQLType, camelCase, DatabaseType, Renderer, TypeIdentifiers, IdStrategy } from 'prisma-datamodel'
 
 export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
   constructor(

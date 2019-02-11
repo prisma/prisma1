@@ -5,12 +5,12 @@ exports[`Introspector large example database 1`] = `
   id: Int! @pgColumn(name: \\"AlbumId\\") @unique
   ArtistId: Artist!
   Title: String!
-  track: Track
+  track: [Track]
 }
 
 type Artist {
   id: Int! @pgColumn(name: \\"ArtistId\\") @unique
-  album: Album!
+  album: [Album]
   Name: String
 }
 
@@ -23,7 +23,7 @@ type Customer {
   Email: String!
   Fax: String
   FirstName: String!
-  invoice: Invoice!
+  invoice: [Invoice]
   LastName: String!
   Phone: String
   PostalCode: String
@@ -37,9 +37,9 @@ type Employee {
   BirthDate: DateTime
   City: String
   Country: String
-  customer: Customer
+  customer: [Customer]
   Email: String
-  employee: Employee
+  employee: [Employee]
   Fax: String
   FirstName: String!
   HireDate: DateTime
@@ -54,7 +54,7 @@ type Employee {
 type Genre {
   id: Int! @pgColumn(name: \\"GenreId\\") @unique
   Name: String
-  track: Track
+  track: [Track]
 }
 
 type Invoice {
@@ -66,7 +66,7 @@ type Invoice {
   BillingState: String
   CustomerId: Customer!
   InvoiceDate: DateTime!
-  invoiceLine: InvoiceLine!
+  invoiceLine: [InvoiceLine]
   Total: Float!
 }
 
@@ -81,7 +81,7 @@ type InvoiceLine {
 type MediaType {
   id: Int! @pgColumn(name: \\"MediaTypeId\\") @unique
   Name: String
-  track: Track!
+  track: [Track]
 }
 
 type Playlist {
@@ -96,7 +96,7 @@ type Track {
   Bytes: Int
   Composer: String
   GenreId: Genre
-  invoiceLine: InvoiceLine!
+  invoiceLine: [InvoiceLine]
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!
@@ -110,12 +110,12 @@ exports[`Introspector large example database 2`] = `
   AlbumId: Int! @id(strategy: NONE)
   ArtistId: Artist!
   Title: String!
-  track: Track
+  track: [Track]
 }
 
 type Artist {
   ArtistId: Int! @id(strategy: NONE)
-  album: Album!
+  album: [Album]
   Name: String
 }
 
@@ -128,7 +128,7 @@ type Customer {
   Email: String!
   Fax: String
   FirstName: String!
-  invoice: Invoice!
+  invoice: [Invoice]
   LastName: String!
   Phone: String
   PostalCode: String
@@ -142,9 +142,9 @@ type Employee {
   BirthDate: DateTime
   City: String
   Country: String
-  customer: Customer
+  customer: [Customer]
   Email: String
-  employee: Employee
+  employee: [Employee]
   Fax: String
   FirstName: String!
   HireDate: DateTime
@@ -159,7 +159,7 @@ type Employee {
 type Genre {
   GenreId: Int! @id(strategy: NONE)
   Name: String
-  track: Track
+  track: [Track]
 }
 
 type Invoice {
@@ -171,7 +171,7 @@ type Invoice {
   BillingState: String
   CustomerId: Customer!
   InvoiceDate: DateTime!
-  invoiceLine: InvoiceLine!
+  invoiceLine: [InvoiceLine]
   Total: Float!
 }
 
@@ -186,7 +186,7 @@ type InvoiceLine {
 type MediaType {
   MediaTypeId: Int! @id(strategy: NONE)
   Name: String
-  track: Track!
+  track: [Track]
 }
 
 type Playlist {
@@ -201,7 +201,7 @@ type Track {
   Bytes: Int
   Composer: String
   GenreId: Genre
-  invoiceLine: InvoiceLine!
+  invoiceLine: [InvoiceLine]
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!

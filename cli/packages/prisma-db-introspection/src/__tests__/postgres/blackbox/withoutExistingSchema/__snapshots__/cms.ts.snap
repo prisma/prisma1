@@ -15,12 +15,12 @@ exports[`Introspector CMS/sequences 1`] = `
   address_street_02: String
   address_zip_code: String
   entity_type: String
-  provider_performance: Provider_performance!
+  provider_performance: [Provider_performance]
   provider_type: String
-  providers_individuals: Providers_individual!
-  providers_organizations: Providers_organization!
-  service_provider_performance: Service_provider_performance!
-  service_provider_performance_summary: Service_provider_performance_summary!
+  providers_individuals: [Providers_individual]
+  providers_organizations: [Providers_organization]
+  service_provider_performance: [Service_provider_performance]
+  service_provider_performance_summary: [Service_provider_performance_summary]
 }
 
 type Provider_performance @indexes(value: [
@@ -71,9 +71,9 @@ type Service @indexes(value: [
   id: ID! @pgColumn(name: \\"hcpcs_code\\") @unique
   hcpcs_description: String
   hcpcs_drug_indicator: String
-  provider_performance: Provider_performance!
-  service_performance: Service_performance!
-  service_provider_performance: Service_provider_performance!
+  provider_performance: [Provider_performance]
+  service_performance: [Service_performance]
+  service_provider_performance: [Service_provider_performance]
 }
 
 type Service_performance @indexes(value: [
@@ -237,7 +237,7 @@ type Service_provider_performance_summary_type @pgTable(name: \\"service_provide
   id: Int! @unique
   description: String!
   group_membership: Boolean! @default(value: true)
-  service_provider_performance_summary: Service_provider_performance_summary!
+  service_provider_performance_summary: [Service_provider_performance_summary]
   slug: String @unique
 }"
 `;
@@ -257,12 +257,12 @@ exports[`Introspector CMS/sequences 2`] = `
   address_street_02: String
   address_zip_code: String
   entity_type: String
-  provider_performance: Provider_performance!
+  provider_performance: [Provider_performance]
   provider_type: String
-  providers_individuals: Providers_individual!
-  providers_organizations: Providers_organization!
-  service_provider_performance: Service_provider_performance!
-  service_provider_performance_summary: Service_provider_performance_summary!
+  providers_individuals: [Providers_individual]
+  providers_organizations: [Providers_organization]
+  service_provider_performance: [Service_provider_performance]
+  service_provider_performance_summary: [Service_provider_performance_summary]
 }
 
 type Provider_performance @db(name: \\"provider_performance\\") @indexes(value: [
@@ -313,9 +313,9 @@ type Service @db(name: \\"services\\") @indexes(value: [
   hcpcs_code: ID! @id(strategy: NONE)
   hcpcs_description: String
   hcpcs_drug_indicator: String
-  provider_performance: Provider_performance!
-  service_performance: Service_performance!
-  service_provider_performance: Service_provider_performance!
+  provider_performance: [Provider_performance]
+  service_performance: [Service_performance]
+  service_provider_performance: [Service_provider_performance]
 }
 
 type Service_performance @db(name: \\"service_performance\\") @indexes(value: [
@@ -479,7 +479,7 @@ type Service_provider_performance_summary_type @db(name: \\"service_provider_per
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_provider_performance_summary_type_id_seq1\\", initialValue: 1, allocationSize: 1)
   description: String!
   group_membership: Boolean! @default(value: true)
-  service_provider_performance_summary: Service_provider_performance_summary!
+  service_provider_performance_summary: [Service_provider_performance_summary]
   slug: String @unique
 }"
 `;

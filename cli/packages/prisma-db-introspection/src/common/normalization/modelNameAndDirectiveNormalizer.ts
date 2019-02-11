@@ -81,6 +81,7 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
     obj.defaultValue = obj.defaultValue || baseObj.defaultValue
     obj.associatedSequence = obj.associatedSequence || baseObj.associatedSequence
 
+    // Overwrite strategy, if database has none, prisma might have some.
     if (obj.idStrategy === IdStrategy.None) {
       obj.idStrategy = baseObj.idStrategy
     }

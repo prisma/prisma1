@@ -99,11 +99,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
               relation.targetTable === this.getDatabaseName(typeB)
             ) {
               if (!fieldB.isId) {
-                GQLAssert.raise(
-                  `Relation ${typeA.name}.${fieldA.name} -> ${typeB.name}.${
+                fieldA.comments.push({
+                  text: `Relation ${typeA.name}.${fieldA.name} -> ${typeB.name}.${
                     fieldB.name
-                  } does not target the PK column of ${typeB.name}`,
-                )
+                  } does not target the id field of ${typeB.name}`,
+                  isError: true,
+                })
               }
 
               fieldA.type = typeB
@@ -118,7 +119,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
                 name: camelCase(typeA.name),
                 databaseName: null,
                 defaultValue: null,
-                isList: fieldA.isUnique,
+                isList: !fieldA.isUnique,
                 isCreatedAt: false,
                 isUpdatedAt: false,
                 isId: false,
@@ -149,6 +150,58 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         relation.targetColumn
       }.`,
     )
+  }
+  protected markNonIdFieldsWithSequencesAsErrored(types: IGQLType[]): IGQLType[] {
+    for (const type of types) {
+      for (const field of type.fields) {
+        if (field.idStrategy === IdStrategy.Sequence && !field.isId) {
+          field.comments.push({
+            text: 'Only id fields can have sequences',
+            isError: true,
+          })
+        }
+      }
+    }
+    return types
+  }
+
+  protected resolveFallbackIdField(types: IGQLType[]): IGQLType[] {
+    for (const type of types) {
+      const idField = type.fields.find(x => x.isId)
+
+      if (idField === undefined) {
+        // Okay, we find alternate indices.
+
+        // First, is there a single field with a sequence or auto increment?
+        const fieldsWithSequences = type.fields.filter(
+          field => field.idStrategy === IdStrategy.Auto || field.idStrategy === IdStrategy.Sequence,
+        )
+
+        if (fieldsWithSequences.length === 1) {
+          fieldsWithSequences[0].isId = true
+          continue
+        }
+
+        // If not, is there something called id?
+        const idFields = type.fields.filter(
+          field => field.name === LegacyRelationalReservedFields.idFieldName && field.isUnique,
+        )
+
+        if (idFields.length === 1) {
+          idFields[0].isId = true
+          continue
+        }
+
+        // If not, is there a single unique field?
+        const uniqueField = type.fields.filter(field => field.isUnique)
+
+        if (uniqueField.length === 1) {
+          uniqueField[0].isId = true
+          continue
+        }
+      }
+    }
+    return types
   }
 
   protected hideScalarListTypes(types: IGQLType[]): IGQLType[] {
@@ -354,16 +407,18 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
     // Ask tim, this is an important descision for the SDK
     let types = [...model.map(x => this.inferObjectType(x)), ...enums.map(x => this.inferEnumType(x))]
+    types = this.hideUniqueIndices(types)
     types = this.resolveSequences(types, sequences)
+    types = this.resolveFallbackIdField(types) // unique flags and index types are required for this step.
     types = this.inferDefaultValues(types)
     types = this.resolveRelations(types, relations)
     types = this.resolveEnumTypes(types)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
     types = this.hideScalarListTypes(types)
-    types = this.hideUniqueIndices(types)
     types = this.hideIndicesOnRelatedFields(types)
     types = this.hideJoinTypes(types)
+    types = this.markNonIdFieldsWithSequencesAsErrored(types)
 
     return {
       comments: [],
