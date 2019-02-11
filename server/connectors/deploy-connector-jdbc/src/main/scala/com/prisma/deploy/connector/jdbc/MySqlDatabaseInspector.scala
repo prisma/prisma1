@@ -10,14 +10,15 @@ case class MySqlDatabaseInspector(db: SlickDatabase)(implicit val ec: ExecutionC
   import db.profile.api.actionBasedSQLInterpolation
 
   override protected def typeIdentifierForTypeName(typeName: String): Option[TypeIdentifier.ScalarTypeIdentifier] = {
+    // https://dev.mysql.com/doc/refman/8.0/en/data-types.html
     typeName match {
-      case "tinyint"                      => Some(TypeIdentifier.Boolean)
-      case _ if typeName.contains("char") => Some(TypeIdentifier.String)
-      case _ if typeName.contains("text") => Some(TypeIdentifier.String)
-      case _ if typeName.contains("int")  => Some(TypeIdentifier.Int)
-      case "decimal"                      => Some(TypeIdentifier.Float)
-      case "datetime"                     => Some(TypeIdentifier.DateTime)
-      case _                              => None
+      case "tinyint"                                  => Some(TypeIdentifier.Boolean)
+      case _ if typeName.contains("char")             => Some(TypeIdentifier.String)
+      case _ if typeName.contains("text")             => Some(TypeIdentifier.String)
+      case _ if typeName.contains("int")              => Some(TypeIdentifier.Int)
+      case "decimal" | "numeric" | "float" | "double" => Some(TypeIdentifier.Float)
+      case "datetime" | "timestamp"                   => Some(TypeIdentifier.DateTime)
+      case _                                          => None
     }
   }
 
