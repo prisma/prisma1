@@ -1,6 +1,5 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.ScalarField
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import org.jooq.DSLContext

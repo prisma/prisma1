@@ -19,6 +19,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
           builder.updateColumn(
             mutaction.project,
             mutaction.field,
+            oldTableName = c.table.name,
             oldColumnName = mutaction.field.dbName,
             oldTypeIdentifier = c.typeIdentifier.asInstanceOf[ScalarTypeIdentifier]
           )
@@ -115,7 +116,12 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     val typeChanges     = before.typeIdentifier != after.typeIdentifier
     val requiredChanges = before.isRequired != after.isRequired
 
-    def updateColumn = builder.updateColumn(mutaction.project, after, oldColumnName = before.dbName, oldTypeIdentifier = before.typeIdentifier)
+    def updateColumn =
+      builder.updateColumn(mutaction.project,
+                           after,
+                           oldTableName = before.model.dbName,
+                           oldColumnName = before.dbName,
+                           oldTypeIdentifier = before.typeIdentifier)
 
     def removeUniqueConstraint = builder.removeIndex(
       mutaction.project,

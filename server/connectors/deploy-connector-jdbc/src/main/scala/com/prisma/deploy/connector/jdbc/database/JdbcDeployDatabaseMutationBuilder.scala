@@ -31,7 +31,7 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def createRelationTable(project: Project, relation: Relation): DBIO[_]
   def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
   def createColumn(project: Project, field: ScalarField): DBIO[_]
-  def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def updateColumn(project: Project, field: ScalarField, oldTableName: String, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_]
   def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
   def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model] = None): DBIO[_]
   def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_]

@@ -158,7 +158,11 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql"""
   }
 
-  override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def updateColumn(project: Project,
+                            field: ScalarField,
+                            oldTableName: String,
+                            oldColumnName: String,
+                            oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
 
     alterTable(project, field.model)
   }

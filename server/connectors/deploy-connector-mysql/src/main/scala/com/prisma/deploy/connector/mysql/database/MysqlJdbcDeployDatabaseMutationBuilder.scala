@@ -153,17 +153,21 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} DROP COLUMN #${qualify(columnName)}"""
   }
 
-  override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def updateColumn(project: Project,
+                            field: ScalarField,
+                            oldTableName: String,
+                            oldColumnName: String,
+                            oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     if (oldTypeIdentifier != field.typeIdentifier) {
       DBIO.seq(
         createColumn(project, field.copy(manifestation = Some(FieldManifestation(s"${field.dbName}_temp")))),
-        deleteColumn(project, field.model.dbName, oldColumnName),
+        deleteColumn(project, oldTableName, oldColumnName),
         renameColumn(project, field.model.dbName, s"${field.dbName}_temp", field.dbName)
       )
     } else {
       val newColSql = typeMapper.rawSQLForField(field)
 
-      sqlu"ALTER TABLE #${qualify(project.dbName, field.model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+      sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
     }
   }
 

@@ -142,18 +142,19 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$fieldSQL"""
   }
 
-  override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def updateColumn(project: Project,
+                            field: ScalarField,
+                            oldTableName: String,
+                            oldColumnName: String,
+                            oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     if (oldTypeIdentifier != field.typeIdentifier) {
       DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
     } else {
-      val tableName         = field.model.dbName
-      val nulls             = if (field.isRequired) "SET NOT NULL" else "DROP NOT NULL"
       val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
-      val renameIfNecessary = renameColumn(project, tableName, oldColumnName, field.dbName)
+      val renameIfNecessary = renameColumn(project, oldTableName, oldColumnName, field.dbName)
 
       DatabaseAction.seq(
-        sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
-        sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
+        sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
         renameIfNecessary
       )
     }
