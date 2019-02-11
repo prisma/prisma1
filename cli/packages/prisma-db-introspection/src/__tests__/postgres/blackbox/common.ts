@@ -1,14 +1,14 @@
 import { connectionDetails } from './connectionDetails'
 import { Client } from 'pg'
 import Connectors from '../../../connectors'
-import { DatabaseType } from 'prisma-datamodel'
+import { DatabaseType, DefaultRenderer } from 'prisma-datamodel'
 
 export default async function testSchema(
   schemaSql: string,
   schemaName: string = 'DatabaseIntrospector',
   createSchema: boolean = true,
 ) {
-  expect(await createAndIntrospect(schemaSql, schemaName, createSchema)).toMatchSnapshot()
+  checkSnapshot(await createAndIntrospect(schemaSql, schemaName, createSchema))
 }
 
 export async function createAndIntrospect(
@@ -26,11 +26,22 @@ export async function createAndIntrospect(
   }
   await client.query(schemaSql)
 
-  const res = (await Connectors.create(DatabaseType.postgres, client).introspect(
-    schemaName,
-  )).renderToNormalizedDatamodelString()
+  const dml = (await Connectors.create(DatabaseType.postgres, client).introspect(schemaName)).getNormalizedDatamodel()
+
+  // V2 rendering
+  const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
+  const rendered = renderer.render(dml)
+
+  // V1 rendering
+  const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres, false)
+  const legacyRendered = legacyRenderer.render(dml)
 
   await client.end()
 
-  return res
+  return { v1: legacyRendered, v2: rendered }
+}
+
+export function checkSnapshot(res: { v1: string; v2: string }) {
+  expect(res.v1).toMatchSnapshot()
+  expect(res.v2).toMatchSnapshot()
 }

@@ -104,3 +104,108 @@ type Track {
   UnitPrice: Float!
 }"
 `;
+
+exports[`Introspector large example database 2`] = `
+"type Album {
+  AlbumId: Int! @id(strategy: NONE)
+  ArtistId: Artist!
+  Title: String!
+  track: Track
+}
+
+type Artist {
+  ArtistId: Int! @id(strategy: NONE)
+  album: Album!
+  Name: String
+}
+
+type Customer {
+  CustomerId: Int! @id(strategy: NONE)
+  Address: String
+  City: String
+  Company: String
+  Country: String
+  Email: String!
+  Fax: String
+  FirstName: String!
+  invoice: Invoice!
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  State: String
+  SupportRepId: Employee
+}
+
+type Employee {
+  EmployeeId: Int! @id(strategy: NONE)
+  Address: String
+  BirthDate: DateTime
+  City: String
+  Country: String
+  customer: Customer
+  Email: String
+  employee: Employee
+  Fax: String
+  FirstName: String!
+  HireDate: DateTime
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  ReportsTo: Employee
+  State: String
+  Title: String
+}
+
+type Genre {
+  GenreId: Int! @id(strategy: NONE)
+  Name: String
+  track: Track
+}
+
+type Invoice {
+  InvoiceId: Int! @id(strategy: NONE)
+  BillingAddress: String
+  BillingCity: String
+  BillingCountry: String
+  BillingPostalCode: String
+  BillingState: String
+  CustomerId: Customer!
+  InvoiceDate: DateTime!
+  invoiceLine: InvoiceLine!
+  Total: Float!
+}
+
+type InvoiceLine {
+  InvoiceLineId: Int! @id(strategy: NONE)
+  InvoiceId: Invoice!
+  Quantity: Int!
+  TrackId: Track!
+  UnitPrice: Float!
+}
+
+type MediaType {
+  MediaTypeId: Int! @id(strategy: NONE)
+  Name: String
+  track: Track!
+}
+
+type Playlist {
+  PlaylistId: Int! @id(strategy: NONE)
+  Name: String
+  Track: [Track]
+}
+
+type Track {
+  TrackId: Int! @id(strategy: NONE)
+  AlbumId: Album
+  Bytes: Int
+  Composer: String
+  GenreId: Genre
+  invoiceLine: InvoiceLine!
+  MediaTypeId: MediaType!
+  Milliseconds: Int!
+  Name: String!
+  Playlist: [Playlist]
+  UnitPrice: Float!
+}"
+`;

@@ -15,3 +15,19 @@ type User @pgTable(name: \\"users\\") {
   name: String!
 }"
 `;
+
+exports[`Introspector test schema - 2504 2`] = `
+"type Direct_message @db(name: \\"direct_messages\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"direct_messages_id_seq\\", initialValue: 1, allocationSize: 1)
+  receiver_id: User
+  sender_id: User
+  text: String!
+}
+
+type User @db(name: \\"users\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_id_seq\\", initialValue: 1, allocationSize: 1)
+  direct_messages: Direct_message
+  direct_messages: Direct_message
+  name: String!
+}"
+`;
