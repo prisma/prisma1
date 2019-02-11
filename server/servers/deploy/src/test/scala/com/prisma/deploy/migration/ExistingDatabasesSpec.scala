@@ -38,6 +38,34 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     result should equal(initialResult)
   }
 
+  "bigint columns should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id bigint  -- implicit primary key constraint
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id bigint NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |}
+       """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+
+    result should equal(initialResult)
+  }
+
   "removing a type for a table that is already deleted should work" in {
     addProject()
 

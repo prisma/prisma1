@@ -28,7 +28,19 @@ case class SlickDatabase(
     case x               => sys.error(s"No Jooq SQLDialect for Slick profile $x configured yet")
   }
 
+  val prismaDialect = profile match {
+    case PostgresProfile => PostgresDialect
+    case MySQLProfile    => MySqlDialect
+    case SQLiteProfile   => SqliteDialect
+    case x               => sys.error(s"No Prisma Dialect for Slick profile $x configured yet")
+  }
+
   val isMySql    = dialect.family() == SQLDialect.MYSQL
   val isPostgres = dialect.family() == SQLDialect.POSTGRES
   val isSQLite   = dialect.family() == SQLDialect.SQLITE
 }
+
+sealed trait PrismaDialect
+object PostgresDialect extends PrismaDialect
+object MySqlDialect    extends PrismaDialect
+object SqliteDialect   extends PrismaDialect

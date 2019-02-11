@@ -17,8 +17,9 @@ import scala.collection.mutable.ArrayBuffer
 
 trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with AwaitUtils with StringMatchers { self: Suite =>
 
-  implicit lazy val system       = ActorSystem()
-  implicit lazy val materializer = ActorMaterializer()
+  implicit lazy val system        = ActorSystem()
+  implicit lazy val materializer  = ActorMaterializer()
+  implicit lazy val implicitSuite = self
 
   override protected def afterAll(): Unit = {
     super.afterAll()
@@ -55,19 +56,17 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    projectsToCleanUp.foreach(id => internalDB.deleteProjectDatabase(id).await)
-    projectsToCleanUp.clear()
+    internalDB.reset().await
   }
 
   def setupProject(
       schema: String,
-      name: String = Cuid.createCuid(),
-      stage: String = Cuid.createCuid(),
       secrets: Vector[String] = Vector.empty
-  ): (Project, Migration) = {
+  )(implicit suite: Suite): (Project, Migration) = {
 
-    val projectId = name + "@" + stage
-    projectsToCleanUp += projectId
+    val (name, stage) = (suite.getClass.getSimpleName, "s")
+    val idAsString    = deployTestDependencies.projectIdEncoder.toEncodedString(name, stage)
+    internalDB.deleteProjectDatabase(idAsString).await()
     deployServer.addProject(name, stage)
     deployServer.deploySchema(name, stage, schema.stripMargin, secrets)
   }
