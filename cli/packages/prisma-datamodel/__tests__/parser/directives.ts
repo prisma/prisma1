@@ -106,5 +106,26 @@ for (const parser of parsersToTest) {
       const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String')
       SdlExpect.directive(mappedField, { name: 'unfunnyDirective', arguments: { funny: 'false' } })
     })
+
+    test('Parse a type with link table directive correctly.', () => {
+      const model = `type User {
+      id: Int! @id
+      lastName: String!
+    }
+    
+    type UserToUser @linkTable {
+      A: User!
+      B: User!
+    }
+    `
+
+      const { types } = parser.instance.parseFromSchemaString(model)
+
+      const userType = SdlExpect.type(types, 'User')
+      expect(userType.isLinkTable).toBe(false)
+
+      const linkType = SdlExpect.type(types, 'UserToUser')
+      expect(linkType.isLinkTable).toBe(true)
+    })
   })
 }

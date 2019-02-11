@@ -34,9 +34,9 @@ type Affiliation @indexes(value: [
   affiliation_phases: [Affiliation_phase]
   affiliation_phases: [Affiliation_phase]
   affiliation_type: String
-  documents: [Document]
-  events: [Event]
-  media: [Media]
+  affiliations_documents: [Affiliations_document]
+  affiliations_events: [Affiliations_event]
+  affiliations_media: [Affiliations_media]
   positions: [Position]
   publisher_id: Publisher!
   seasons: [Season]
@@ -53,6 +53,21 @@ type Affiliation_phase @pgTable(name: \\"affiliation_phases\\") {
   end_season_id: Season
   start_date_time: DateTime
   start_season_id: Season
+}
+
+type Affiliations_document @linkTable @pgTable(name: \\"affiliations_documents\\") {
+  affiliation_id: Affiliation!
+  document_id: Document!
+}
+
+type Affiliations_event @linkTable @pgTable(name: \\"affiliations_events\\") {
+  affiliation_id: Affiliation!
+  event_id: Event!
+}
+
+type Affiliations_media @linkTable @pgTable(name: \\"affiliations_media\\") {
+  affiliation_id: Affiliation!
+  media_id: Media!
 }
 
 type American_football_action_participant @indexes(value: [
@@ -280,7 +295,7 @@ type Baseball_action_pitch @indexes(value: [
   ball_type: String
   baseball_action_contact_details: [Baseball_action_contact_detail]
   baseball_action_play_id: Baseball_action_play!
-  baseball_defensive_players: [Baseball_defensive_player]
+  baseball_defensive_group_id: Baseball_defensive_group
   comment: String
   pitch_location: String
   pitch_type: String
@@ -327,9 +342,15 @@ type Baseball_action_substitution @pgTable(name: \\"baseball_action_substitution
   substitution_reason: String
 }
 
-type Baseball_defensive_player @pgTable(name: \\"baseball_defensive_players\\") {
+type Baseball_defensive_group @linkTable @pgTable(name: \\"baseball_defensive_group\\") {
   id: Int! @unique
   baseball_action_pitches: [Baseball_action_pitch]
+  baseball_defensive_players: [Baseball_defensive_player]
+}
+
+type Baseball_defensive_player @pgTable(name: \\"baseball_defensive_players\\") {
+  id: Int! @unique
+  baseball_defensive_group_id: Baseball_defensive_group!
   player_id: Person!
   position_id: Position!
 }
@@ -575,7 +596,7 @@ type Document @indexes(value: [
   {name: \\"idx_documents_5\\", fields: [\\"revision_id\\"]}
 ]) @pgTable(name: \\"documents\\") {
   id: Int! @unique
-  affiliations: [Affiliation]
+  affiliations_documents: [Affiliations_document]
   date_time: DateTime
   db_loading_date_time: DateTime
   doc_id: String!
@@ -584,16 +605,16 @@ type Document @indexes(value: [
   document_fixtures_events: [Document_fixtures_event]
   document_package_entry: [Document_package_entry]
   documents_media: [Documents_media]
-  events: [Event]
+  events_documents: [Events_document]
   language: String
   latest_revisions: [Latest_revision]
-  persons: [Person]
+  persons_documents: [Persons_document]
   priority: String
   publisher_id: Publisher!
   revision_id: String
   source_id: Publisher
   stats_coverage: String
-  teams: [Team]
+  teams_documents: [Teams_document]
   title: String
 }
 
@@ -660,19 +681,20 @@ type Event @indexes(value: [
   {name: \\"idx_events_1\\", fields: [\\"event_key\\"]}
 ]) @pgTable(name: \\"events\\") {
   id: Int! @unique
-  affiliations: [Affiliation]
+  affiliations_events: [Affiliations_event]
   american_football_event_states: [American_football_event_state]
   attendance: String
   baseball_event_states: [Baseball_event_state]
   basketball_event_states: [Basketball_event_state]
   document_fixtures_events: [Document_fixtures_event]
-  documents: [Document]
   duration: String
   event_key: String!
   event_status: String
+  events_documents: [Events_document]
+  events_media: [Events_media]
+  events_sub_seasons: [Events_sub_season]
   ice_hockey_event_states: [Ice_hockey_event_state]
   last_update: DateTime
-  media: [Media]
   motor_racing_event_states: [Motor_racing_event_state]
   participants_events: [Participants_event]
   person_event_metadata: [Person_event_metadatum]
@@ -681,7 +703,6 @@ type Event @indexes(value: [
   site_id: Site
   soccer_event_states: [Soccer_event_state]
   start_date_time: DateTime
-  sub_seasons: [Sub_season]
   tennis_event_states: [Tennis_event_state]
   wagering_moneylines: [Wagering_moneyline]
   wagering_odds_lines: [Wagering_odds_line]
@@ -689,6 +710,21 @@ type Event @indexes(value: [
   wagering_straight_spread_lines: [Wagering_straight_spread_line]
   wagering_total_score_lines: [Wagering_total_score_line]
   weather_conditions: [Weather_condition]
+}
+
+type Events_document @linkTable @pgTable(name: \\"events_documents\\") {
+  document_id: Document!
+  event_id: Event!
+}
+
+type Events_media @linkTable @pgTable(name: \\"events_media\\") {
+  event_id: Event!
+  media_id: Media!
+}
+
+type Events_sub_season @linkTable @pgTable(name: \\"events_sub_seasons\\") {
+  event_id: Event!
+  sub_season_id: Sub_season!
 }
 
 type Ice_hockey_action_participant @pgTable(name: \\"ice_hockey_action_participants\\") {
@@ -834,23 +870,23 @@ type Location @indexes(value: [
 
 type Media @pgTable(name: \\"media\\") {
   id: Int! @unique
-  affiliations: [Affiliation]
+  affiliations_media: [Affiliations_media]
   creation_location_id: Location!
   credit_id: Person!
   date_time: String
   db_loading_date_time: DateTime
   documents_media: [Documents_media]
-  events: [Event]
+  events_media: [Events_media]
   media_captions: [Media_caption]
   media_contents: [Media_content]
   media_keywords: [Media_keyword]
   media_type: String
   object_id: Int
-  persons: [Person] @relation(name: \\"persons_media\\")
+  persons_media: [Persons_media]
   publisher_id: Publisher!
   revision_id: Int
   source_id: Int
-  teams: [Team]
+  teams_media: [Teams_media]
 }
 
 type Media_caption @pgTable(name: \\"media_captions\\") {
@@ -1000,16 +1036,16 @@ type Person @indexes(value: [
   birth_location_id: Location
   death_date: String
   death_location_id: Location
-  documents: [Document]
   gender: String
   hometown_location_id: Location
   injury_phases: [Injury_phase]
-  media: [Media] @relation(name: \\"persons_media\\")
   media: [Media]
   media_captions: [Media_caption]
   person_event_metadata: [Person_event_metadatum]
   person_key: String!
   person_phases: [Person_phase]
+  persons_documents: [Persons_document]
+  persons_media: [Persons_media]
   publisher_id: Publisher!
   residence_location_id: Location
 }
@@ -1056,6 +1092,16 @@ type Person_phase @indexes(value: [
   start_season_id: Season
   uniform_number: String
   weight: String
+}
+
+type Persons_document @linkTable @pgTable(name: \\"persons_documents\\") {
+  document_id: Document!
+  person_id: Person!
+}
+
+type Persons_media @linkTable @pgTable(name: \\"persons_media\\") {
+  media_id: Media!
+  person_id: Person!
 }
 
 type Position @indexes(value: [
@@ -1259,7 +1305,7 @@ type Sub_season @indexes(value: [
 ]) @pgTable(name: \\"sub_seasons\\") {
   id: Int! @unique
   end_date_time: DateTime
-  events: [Event]
+  events_sub_seasons: [Events_sub_season]
   season_id: Season!
   standings: [Standing]
   start_date_time: DateTime
@@ -1270,13 +1316,13 @@ type Sub_season @indexes(value: [
 type Team @pgTable(name: \\"teams\\") {
   id: Int! @unique
   american_football_event_states: [American_football_event_state]
-  documents: [Document]
   home_site_id: Site
-  media: [Media]
   person_event_metadata: [Person_event_metadatum]
   publisher_id: Publisher!
   team_key: String!
   team_phases: [Team_phase]
+  teams_documents: [Teams_document]
+  teams_media: [Teams_media]
   wagering_moneylines: [Wagering_moneyline]
   wagering_odds_lines: [Wagering_odds_line]
   wagering_runlines: [Wagering_runline]
@@ -1302,6 +1348,16 @@ type Team_phase @pgTable(name: \\"team_phases\\") {
   role_id: Role
   start_date_time: String
   start_season_id: Season
+  team_id: Team!
+}
+
+type Teams_document @linkTable @pgTable(name: \\"teams_documents\\") {
+  document_id: Document!
+  team_id: Team!
+}
+
+type Teams_media @linkTable @pgTable(name: \\"teams_media\\") {
+  media_id: Media!
   team_id: Team!
 }
 
@@ -1499,9 +1555,9 @@ type Affiliation @db(name: \\"affiliations\\") @indexes(value: [
   affiliation_phases: [Affiliation_phase]
   affiliation_phases: [Affiliation_phase]
   affiliation_type: String
-  documents: [Document]
-  events: [Event]
-  media: [Media]
+  affiliations_documents: [Affiliations_document]
+  affiliations_events: [Affiliations_event]
+  affiliations_media: [Affiliations_media]
   positions: [Position]
   publisher_id: Publisher!
   seasons: [Season]
@@ -1518,6 +1574,21 @@ type Affiliation_phase @db(name: \\"affiliation_phases\\") {
   end_season_id: Season
   start_date_time: DateTime
   start_season_id: Season
+}
+
+type Affiliations_document @db(name: \\"affiliations_documents\\") @linkTable {
+  affiliation_id: Affiliation!
+  document_id: Document!
+}
+
+type Affiliations_event @db(name: \\"affiliations_events\\") @linkTable {
+  affiliation_id: Affiliation!
+  event_id: Event!
+}
+
+type Affiliations_media @db(name: \\"affiliations_media\\") @linkTable {
+  affiliation_id: Affiliation!
+  media_id: Media!
 }
 
 type American_football_action_participant @db(name: \\"american_football_action_participants\\") @indexes(value: [
@@ -1745,7 +1816,7 @@ type Baseball_action_pitch @db(name: \\"baseball_action_pitches\\") @indexes(val
   ball_type: String
   baseball_action_contact_details: [Baseball_action_contact_detail]
   baseball_action_play_id: Baseball_action_play!
-  baseball_defensive_players: [Baseball_defensive_player]
+  baseball_defensive_group_id: Baseball_defensive_group
   comment: String
   pitch_location: String
   pitch_type: String
@@ -1792,9 +1863,15 @@ type Baseball_action_substitution @db(name: \\"baseball_action_substitutions\\")
   substitution_reason: String
 }
 
+type Baseball_defensive_group @db(name: \\"baseball_defensive_group\\") @linkTable {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_defensive_group_id_seq\\", initialValue: 1, allocationSize: 1)
+  baseball_action_pitches: [Baseball_action_pitch]
+  baseball_defensive_players: [Baseball_defensive_player]
+}
+
 type Baseball_defensive_player @db(name: \\"baseball_defensive_players\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_defensive_players_id_seq\\", initialValue: 1, allocationSize: 1)
-  baseball_action_pitches: [Baseball_action_pitch]
+  baseball_defensive_group_id: Baseball_defensive_group!
   player_id: Person!
   position_id: Position!
 }
@@ -2040,7 +2117,7 @@ type Document @db(name: \\"documents\\") @indexes(value: [
   {name: \\"idx_documents_5\\", fields: [\\"revision_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"documents_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliations: [Affiliation]
+  affiliations_documents: [Affiliations_document]
   date_time: DateTime
   db_loading_date_time: DateTime
   doc_id: String!
@@ -2049,16 +2126,16 @@ type Document @db(name: \\"documents\\") @indexes(value: [
   document_fixtures_events: [Document_fixtures_event]
   document_package_entry: [Document_package_entry]
   documents_media: [Documents_media]
-  events: [Event]
+  events_documents: [Events_document]
   language: String
   latest_revisions: [Latest_revision]
-  persons: [Person]
+  persons_documents: [Persons_document]
   priority: String
   publisher_id: Publisher!
   revision_id: String
   source_id: Publisher
   stats_coverage: String
-  teams: [Team]
+  teams_documents: [Teams_document]
   title: String
 }
 
@@ -2125,19 +2202,20 @@ type Event @db(name: \\"events\\") @indexes(value: [
   {name: \\"idx_events_1\\", fields: [\\"event_key\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"events_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliations: [Affiliation]
+  affiliations_events: [Affiliations_event]
   american_football_event_states: [American_football_event_state]
   attendance: String
   baseball_event_states: [Baseball_event_state]
   basketball_event_states: [Basketball_event_state]
   document_fixtures_events: [Document_fixtures_event]
-  documents: [Document]
   duration: String
   event_key: String!
   event_status: String
+  events_documents: [Events_document]
+  events_media: [Events_media]
+  events_sub_seasons: [Events_sub_season]
   ice_hockey_event_states: [Ice_hockey_event_state]
   last_update: DateTime
-  media: [Media]
   motor_racing_event_states: [Motor_racing_event_state]
   participants_events: [Participants_event]
   person_event_metadata: [Person_event_metadatum]
@@ -2146,7 +2224,6 @@ type Event @db(name: \\"events\\") @indexes(value: [
   site_id: Site
   soccer_event_states: [Soccer_event_state]
   start_date_time: DateTime
-  sub_seasons: [Sub_season]
   tennis_event_states: [Tennis_event_state]
   wagering_moneylines: [Wagering_moneyline]
   wagering_odds_lines: [Wagering_odds_line]
@@ -2154,6 +2231,21 @@ type Event @db(name: \\"events\\") @indexes(value: [
   wagering_straight_spread_lines: [Wagering_straight_spread_line]
   wagering_total_score_lines: [Wagering_total_score_line]
   weather_conditions: [Weather_condition]
+}
+
+type Events_document @db(name: \\"events_documents\\") @linkTable {
+  document_id: Document!
+  event_id: Event!
+}
+
+type Events_media @db(name: \\"events_media\\") @linkTable {
+  event_id: Event!
+  media_id: Media!
+}
+
+type Events_sub_season @db(name: \\"events_sub_seasons\\") @linkTable {
+  event_id: Event!
+  sub_season_id: Sub_season!
 }
 
 type Ice_hockey_action_participant @db(name: \\"ice_hockey_action_participants\\") {
@@ -2299,23 +2391,23 @@ type Location @db(name: \\"locations\\") @indexes(value: [
 
 type Media @db(name: \\"media\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliations: [Affiliation]
+  affiliations_media: [Affiliations_media]
   creation_location_id: Location!
   credit_id: Person!
   date_time: String
   db_loading_date_time: DateTime
   documents_media: [Documents_media]
-  events: [Event]
+  events_media: [Events_media]
   media_captions: [Media_caption]
   media_contents: [Media_content]
   media_keywords: [Media_keyword]
   media_type: String
   object_id: Int
-  persons: [Person] @relation(name: \\"persons_media\\")
+  persons_media: [Persons_media]
   publisher_id: Publisher!
   revision_id: Int
   source_id: Int
-  teams: [Team]
+  teams_media: [Teams_media]
 }
 
 type Media_caption @db(name: \\"media_captions\\") {
@@ -2465,16 +2557,16 @@ type Person @db(name: \\"persons\\") @indexes(value: [
   birth_location_id: Location
   death_date: String
   death_location_id: Location
-  documents: [Document]
   gender: String
   hometown_location_id: Location
   injury_phases: [Injury_phase]
-  media: [Media] @relation(name: \\"persons_media\\")
   media: [Media]
   media_captions: [Media_caption]
   person_event_metadata: [Person_event_metadatum]
   person_key: String!
   person_phases: [Person_phase]
+  persons_documents: [Persons_document]
+  persons_media: [Persons_media]
   publisher_id: Publisher!
   residence_location_id: Location
 }
@@ -2521,6 +2613,16 @@ type Person_phase @db(name: \\"person_phases\\") @indexes(value: [
   start_season_id: Season
   uniform_number: String
   weight: String
+}
+
+type Persons_document @db(name: \\"persons_documents\\") @linkTable {
+  document_id: Document!
+  person_id: Person!
+}
+
+type Persons_media @db(name: \\"persons_media\\") @linkTable {
+  media_id: Media!
+  person_id: Person!
 }
 
 type Position @db(name: \\"positions\\") @indexes(value: [
@@ -2724,7 +2826,7 @@ type Sub_season @db(name: \\"sub_seasons\\") @indexes(value: [
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sub_seasons_id_seq\\", initialValue: 1, allocationSize: 1)
   end_date_time: DateTime
-  events: [Event]
+  events_sub_seasons: [Events_sub_season]
   season_id: Season!
   standings: [Standing]
   start_date_time: DateTime
@@ -2735,13 +2837,13 @@ type Sub_season @db(name: \\"sub_seasons\\") @indexes(value: [
 type Team @db(name: \\"teams\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"teams_id_seq\\", initialValue: 1, allocationSize: 1)
   american_football_event_states: [American_football_event_state]
-  documents: [Document]
   home_site_id: Site
-  media: [Media]
   person_event_metadata: [Person_event_metadatum]
   publisher_id: Publisher!
   team_key: String!
   team_phases: [Team_phase]
+  teams_documents: [Teams_document]
+  teams_media: [Teams_media]
   wagering_moneylines: [Wagering_moneyline]
   wagering_odds_lines: [Wagering_odds_line]
   wagering_runlines: [Wagering_runline]
@@ -2767,6 +2869,16 @@ type Team_phase @db(name: \\"team_phases\\") {
   role_id: Role
   start_date_time: String
   start_season_id: Season
+  team_id: Team!
+}
+
+type Teams_document @db(name: \\"teams_documents\\") @linkTable {
+  document_id: Document!
+  team_id: Team!
+}
+
+type Teams_media @db(name: \\"teams_media\\") @linkTable {
+  media_id: Media!
   team_id: Team!
 }
 

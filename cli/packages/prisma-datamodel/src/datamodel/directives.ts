@@ -6,6 +6,7 @@ export abstract class DirectiveKeys {
   public static index = 'index'
   public static indexes = 'indexes'
   public static sequence = 'sequence'
+  public static linkTable = 'linkTable'
 
   public static isId = 'id'
   public static isCreatedAt = 'createdAt'

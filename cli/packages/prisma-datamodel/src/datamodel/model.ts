@@ -151,6 +151,15 @@ export interface IGQLType {
    * Indicates if this is an enum type.
    */
   isEnum: boolean
+
+  /**
+   * Indicates if this type is a link table.
+   * This implies a compound primary key over
+   * the two foreign key fields. The indices are hidden
+   * when introspecting.
+   */
+  isLinkTable: boolean
+
   /**
    * The name of this type.
    */

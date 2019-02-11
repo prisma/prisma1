@@ -53,6 +53,7 @@ describe(`Renderer test`, () => {
       ],
       name: 'User',
       isEmbedded: false,
+      isLinkTable: false,
       isEnum: false,
       indices: [],
       directives: [],
@@ -109,6 +110,7 @@ describe(`Renderer test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: false,
+      isLinkTable: false,
       directives: typeDirectives,
       isEnum: false,
       fields: [scalarField, arrayField],

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Introspector large example database 1`] = `
+exports[`Introspector chinook example database 1`] = `
 "type Album {
   id: Int! @pgColumn(name: \\"AlbumId\\") @unique
   ArtistId: Artist!
@@ -87,7 +87,12 @@ type MediaType {
 type Playlist {
   id: Int! @pgColumn(name: \\"PlaylistId\\") @unique
   Name: String
-  Track: [Track]
+  playlistTrack: [PlaylistTrack]
+}
+
+type PlaylistTrack @linkTable {
+  PlaylistId: Playlist!
+  TrackId: Track!
 }
 
 type Track {
@@ -100,12 +105,12 @@ type Track {
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!
-  Playlist: [Playlist]
+  playlistTrack: [PlaylistTrack]
   UnitPrice: Float!
 }"
 `;
 
-exports[`Introspector large example database 2`] = `
+exports[`Introspector chinook example database 2`] = `
 "type Album {
   AlbumId: Int! @id(strategy: NONE)
   ArtistId: Artist!
@@ -192,7 +197,12 @@ type MediaType {
 type Playlist {
   PlaylistId: Int! @id(strategy: NONE)
   Name: String
-  Track: [Track]
+  playlistTrack: [PlaylistTrack]
+}
+
+type PlaylistTrack @linkTable {
+  PlaylistId: Playlist!
+  TrackId: Track!
 }
 
 type Track {
@@ -205,7 +215,7 @@ type Track {
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!
-  Playlist: [Playlist]
+  playlistTrack: [PlaylistTrack]
   UnitPrice: Float!
 }"
 `;

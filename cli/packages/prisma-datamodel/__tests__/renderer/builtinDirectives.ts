@@ -36,6 +36,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: true,
+      isLinkTable: false,
       // This will be ignored since we are dealing with an embedded type
       databaseName: 'testType',
       isEnum: false,
@@ -79,6 +80,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: false,
+      isLinkTable: false,
       databaseName: 'testType',
       isEnum: false,
       fields: [field1, field2, field3, field4],
@@ -124,6 +126,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'User',
       isEmbedded: false,
+      isLinkTable: false,
       isEnum: false,
       fields: [idField, createdAtField, updatedAtField, firstNameField, lastNameField],
       indices: [
@@ -175,6 +178,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'User',
       isEmbedded: false,
+      isLinkTable: false,
       isEnum: false,
       fields: [idField, createdAtField, updatedAtField, firstNameField, lastNameField],
       indices: [],
@@ -186,6 +190,58 @@ describe(`Renderer directives test`, () => {
     const res = renderer.render(
       {
         types: [type],
+      },
+      true,
+    )
+
+    expect(res).toEqual(modelWithDirectives)
+  })
+
+  test('Render built-in linktable directive correctly', () => {
+    const renderer = Renderer.create(DatabaseType.postgres, true)
+
+    const modelWithDirectives = dedent(`
+      type User {
+        id: Int! @id
+        lastName: String!
+      }
+      
+      type UserToUser @linkTable {
+        A: User!
+        B: User!
+      }`)
+
+    const idField = new GQLScalarField('id', 'Int', true)
+    idField.isId = true
+    const lastNameField = new GQLScalarField('lastName', 'String', true)
+
+    const type: IGQLType = {
+      name: 'User',
+      isEmbedded: false,
+      isLinkTable: false,
+      isEnum: false,
+      fields: [idField, lastNameField],
+      indices: [],
+      directives: [],
+      comments: [],
+      databaseName: null,
+    }
+
+    const linkType: IGQLType = {
+      name: 'UserToUser',
+      isEmbedded: false,
+      isLinkTable: true,
+      isEnum: false,
+      fields: [new GQLOneRelationField('A', type, true), new GQLOneRelationField('B', type, true)],
+      indices: [],
+      directives: [],
+      comments: [],
+      databaseName: null,
+    }
+
+    const res = renderer.render(
+      {
+        types: [type, linkType],
       },
       true,
     )

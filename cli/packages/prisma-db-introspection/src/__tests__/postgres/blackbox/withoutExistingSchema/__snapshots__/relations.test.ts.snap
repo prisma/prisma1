@@ -60,12 +60,17 @@ exports[`Introspector relation with relation table 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   id: Int! @unique
   bill: String!
-  product: [Product]
+  bill_product: [Bill_product]
+}
+
+type Bill_product @linkTable @pgTable(name: \\"bill_product\\") {
+  bill_id: Bill
+  product_id: Product
 }
 
 type Product @pgTable(name: \\"product\\") {
   id: Int! @unique
-  bill: [Bill]
+  bill_product: [Bill_product]
   product: String!
 }"
 `;
@@ -74,12 +79,17 @@ exports[`Introspector relation with relation table 2`] = `
 "type Bill @db(name: \\"bill\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
   bill: String!
-  product: [Product]
+  bill_product: [Bill_product]
+}
+
+type Bill_product @db(name: \\"bill_product\\") @linkTable {
+  bill_id: Bill
+  product_id: Product
 }
 
 type Product @db(name: \\"product\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
-  bill: [Bill]
+  bill_product: [Bill_product]
   product: String!
 }"
 `;

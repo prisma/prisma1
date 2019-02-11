@@ -165,6 +165,22 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types
   }
 
+  protected markMultiIdFieldsForJoinTabesAsErrors(types: IGQLType[]): IGQLType[] {
+    for (const type of types) {
+      if (!type.isLinkTable) {
+        const pkFields = type.fields.filter(field => field.isId)
+        if (pkFields.length > 1) {
+          for (const field of pkFields) {
+            field.comments.push({
+              text: `Multiple ID fields (compound indexes) are not supported`,
+              isError: true,
+            })
+          }
+        }
+      }
+    }
+    return types
+  }
   protected resolveFallbackIdField(types: IGQLType[]): IGQLType[] {
     for (const type of types) {
       const idField = type.fields.find(x => x.isId)
@@ -287,78 +303,88 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         const typeA = relA.type as IGQLType
         const typeB = relB.type as IGQLType
 
-        if (true || typeA !== typeB) {
-          // Regular case. Two different types via join type.
-          const relatedFieldForA: IGQLField = {
-            name: typeB.name,
-            type: typeB,
-            isList: true,
-            isUnique: false,
-            isId: false,
-            idStrategy: null,
-            associatedSequence: null,
-            isCreatedAt: false,
-            isUpdatedAt: false,
-            isRequired: true,
-            isReadOnly: false,
-            comments: [],
-            directives: [],
-            defaultValue: null,
-            relatedField: null,
-            databaseName: null,
-            relationName: this.normalizeRelatioName(type.name),
+        if ((relA.name === 'A' && relB.name === 'B') || (relB.name === 'A' && relA.name === 'B')) {
+          // In this case, this is a prisma link table. Hide it.
+          if (true || typeA !== typeB) {
+            // Regular case. Two different types via join type.
+            const relatedFieldForA: IGQLField = {
+              name: typeB.name,
+              type: typeB,
+              isList: true,
+              isUnique: false,
+              isId: false,
+              idStrategy: null,
+              associatedSequence: null,
+              isCreatedAt: false,
+              isUpdatedAt: false,
+              isRequired: true,
+              isReadOnly: false,
+              comments: [],
+              directives: [],
+              defaultValue: null,
+              relatedField: null,
+              databaseName: null,
+              relationName: this.normalizeRelatioName(type.name),
+            }
+
+            const relatedFieldForB: IGQLField = {
+              name: typeA.name,
+              type: typeA,
+              isList: true,
+              isUnique: false,
+              isId: false,
+              idStrategy: null,
+              associatedSequence: null,
+              isCreatedAt: false,
+              isUpdatedAt: false,
+              isRequired: true,
+              isReadOnly: false,
+              comments: [],
+              directives: [],
+              defaultValue: null,
+              relatedField: relatedFieldForA,
+              databaseName: null,
+              relationName: this.normalizeRelatioName(type.name),
+            }
+
+            relatedFieldForA.relatedField = relatedFieldForB
+
+            typeA.fields.push(relatedFieldForA)
+            typeB.fields.push(relatedFieldForB)
+          } else {
+            // Self join to same field via join type.
+            const relatedField: IGQLField = {
+              name: typeA.name,
+              type: typeA,
+              isList: true,
+              isUnique: false,
+              isId: false,
+              idStrategy: null,
+              associatedSequence: null,
+              isCreatedAt: false,
+              isUpdatedAt: false,
+              isRequired: true,
+              isReadOnly: false,
+              comments: [],
+              directives: [],
+              defaultValue: null,
+              relatedField: null,
+              databaseName: null,
+              relationName: this.normalizeRelatioName(type.name),
+            }
+
+            typeA.fields.push(relatedField)
           }
-
-          const relatedFieldForB: IGQLField = {
-            name: typeA.name,
-            type: typeA,
-            isList: true,
-            isUnique: false,
-            isId: false,
-            idStrategy: null,
-            associatedSequence: null,
-            isCreatedAt: false,
-            isUpdatedAt: false,
-            isRequired: true,
-            isReadOnly: false,
-            comments: [],
-            directives: [],
-            defaultValue: null,
-            relatedField: relatedFieldForA,
-            databaseName: null,
-            relationName: this.normalizeRelatioName(type.name),
-          }
-
-          relatedFieldForA.relatedField = relatedFieldForB
-
-          typeA.fields.push(relatedFieldForA)
-          typeB.fields.push(relatedFieldForB)
+          typeA.fields = typeA.fields.filter(x => x.type !== type)
+          typeB.fields = typeB.fields.filter(x => x.type !== type)
         } else {
-          // Self join to same field via join type.
-          const relatedField: IGQLField = {
-            name: typeA.name,
-            type: typeA,
-            isList: true,
-            isUnique: false,
-            isId: false,
-            idStrategy: null,
-            associatedSequence: null,
-            isCreatedAt: false,
-            isUpdatedAt: false,
-            isRequired: true,
-            isReadOnly: false,
-            comments: [],
-            directives: [],
-            defaultValue: null,
-            relatedField: null,
-            databaseName: null,
-            relationName: this.normalizeRelatioName(type.name),
-          }
-
-          typeA.fields.push(relatedField)
+          // Not a prisma link type. Mark as link table.
+          type.isLinkTable = true
+          // Drop ids. Compound PK indices are not supported yet.
+          relA.isId = false
+          relB.isId = false
+          nonJoinTypes.push(type)
         }
-        typeA.fields = typeA.fields.filter(x => x.type !== type)
-        typeB.fields = typeB.fields.filter(x => x.type !== type)
       } else {
         nonJoinTypes.push(type)
       }
@@ -419,6 +445,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     types = this.hideIndicesOnRelatedFields(types)
     types = this.hideJoinTypes(types)
     types = this.markNonIdFieldsWithSequencesAsErrored(types)
+    types = this.markMultiIdFieldsForJoinTabesAsErrors(types)
 
     return {
       comments: [],
@@ -477,6 +504,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       fields: values,
       isEnum: true,
       isEmbedded: false,
+      isLinkTable: false,
       databaseName: null,
       comments: [],
       directives: [],
@@ -503,7 +531,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         }
         pkField.isId = true
       } else {
-        // Compound PK - that's not supported
+        // Compound PK - that's not supported, except for join tables
+        // We will mark it as error later.
         for (const pkFieldName of pk.fields) {
           const [pkField] = fields.filter(field => field.name === pkFieldName)
           if (!pkField) {
@@ -514,10 +543,6 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
             )
           }
           pkField.isId = true
-          pkField.comments.push({
-            text: `Multiple ID fields (compound indexes) are not supported`,
-            isError: true,
-          })
         }
       }
     }
@@ -526,6 +551,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       name: model.name,
       isEmbedded: false, // Never
       isEnum: false, // Never
+      isLinkTable: false, // Resolved Later
       fields,
       indices,
       directives: [],

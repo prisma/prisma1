@@ -126,6 +126,7 @@ export class ModelMerger {
     return {
       fields: fields,
       isEmbedded: this.isEmbedded,
+      isLinkTable: false, // No link table in mongo
       name: this.name,
       isEnum: false, // No enum in mongo
       comments: [],
