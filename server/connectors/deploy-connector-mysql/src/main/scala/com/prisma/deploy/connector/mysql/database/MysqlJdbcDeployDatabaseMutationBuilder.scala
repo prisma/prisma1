@@ -159,13 +159,12 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val typeChange = if (oldTypeIdentifier != field.typeIdentifier) {
-      sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(field.dbName)} = null"
+      sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(oldColumnName)} = null"
     } else { DBIO.successful(()) }
 
     val newColSql = typeMapper.rawSQLForField(field)
 
-    DBIO.seq(sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql", typeChange)
-
+    DBIO.seq(typeChange, sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql")
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {
