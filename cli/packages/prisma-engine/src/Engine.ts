@@ -7,6 +7,7 @@ import * as net from 'net'
 interface EngineConfig {
   prismaConfig?: string
   debug?: boolean
+  pathToBinary?: string
 }
 
 /**
@@ -15,6 +16,7 @@ interface EngineConfig {
 export class Engine {
   prismaConfig: string
   port?: number
+  pathToBinary?: string
   debug: boolean
   child?: ChildProcess
   /**
@@ -22,9 +24,10 @@ export class Engine {
    * As soon as the Prisma binary returns a correct return code (like 1 or 0), we don't need this anymore
    */
   exiting: boolean = false
-  constructor({ prismaConfig, debug }: EngineConfig = {}) {
+  constructor({ prismaConfig, debug, pathToBinary }: EngineConfig = {}) {
     this.prismaConfig = prismaConfig || this.getPrismaYml()
     this.debug = debug || false
+    this.pathToBinary = pathToBinary
   }
 
   /**
@@ -91,7 +94,10 @@ export class Engine {
   async start() {
     this.port = await this.getFreePort()
     const PRISMA_CONFIG = this.generatePrismaConfig()
-    this.child = spawn(path.join(__dirname, '../prisma'), [], {
+    const BINARY_PATH = this.pathToBinary
+      ? this.pathToBinary
+      : path.join(__dirname, '../prisma')
+    this.child = spawn(BINARY_PATH, [], {
       env: {
         PRISMA_CONFIG,
       },
