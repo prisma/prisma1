@@ -445,6 +445,6 @@ custom:
 datamodel: ${self:custom.datamodel}.prisma
 
 generate:
-  - language: ${self:custom.language}-client
+  - generator: ${self:custom.language}-client
     output: ./generated/prisma-client
 ```
