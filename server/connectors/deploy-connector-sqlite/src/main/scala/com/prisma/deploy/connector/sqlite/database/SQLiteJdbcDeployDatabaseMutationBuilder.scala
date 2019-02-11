@@ -158,14 +158,19 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql"""
   }
 
+  private def createColumnForAlterTable(project: Project, tableName: String, field: ScalarField): DBIO[_] = {
+    val newColSql = rawSQLFromParts(field.dbName, isRequired = field.isRequired, field.typeIdentifier)
+    sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$newColSql"""
+  }
+
   override def updateColumn(project: Project,
                             field: ScalarField,
                             oldTableName: String,
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-
     alterTable(project, field.model)
   }
+
   private def alterTable(project: Project, model: Model) = {
     val tableName     = model.dbName
     val tempTableName = s"${model.dbName}_TEMP_TABLE"
@@ -177,7 +182,6 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     //    Start a transaction.
     val beginTransaction = sqlu"BEGIN TRANSACTION"
     //    Remember the format of all indexes and triggers associated with table X. This information will be needed in step 8 below
-    //    One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
 
     //    Use CREATE TABLE to construct a new table "new_X" that is in the desired revised format of table X.
     //    Make sure that the name "new_X" does not collide with any existing table name, of course.
@@ -191,10 +195,12 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            );"""
 
     //Fixme InlineRelationFields
-    val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.map(createColumn(project, _)): _*)
+    val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.filterNot(_.isId).map(createColumnForAlterTable(project, tempTableName, _)): _*)
 
     //    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
+    //    Fixme -> field could have been renamed
     val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",")
+
     val transferContent =
       sqlu"""INSERT INTO #${qualify(project.dbName, tempTableName)} (#$columnNames)
              SELECT #$columnNames
@@ -203,11 +209,17 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     //    Drop the old table X: DROP TABLE X.
     val dropOldTable = sqlu"DROP TABLE #${qualify(project.dbName, tableName)} "
+
+    //    Fetch original indexes
+    //    Fixme
+    //    One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
+
     //    Change the name of new_X to X using: ALTER TABLE new_X RENAME TO X.
 
     val renameNewTable = sqlu"ALTER TABLE #${qualify(project.dbName, tempTableName)} RENAME TO #${qualify(project.dbName, tableName)}"
     //    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
     val createIndexes = sqlu"" //Fixme
+
     //    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
 
     //    If foreign key constraints were originally enabled then run PRAGMA foreign_key_check to verify that the schema change did not break any foreign key constraints.

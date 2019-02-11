@@ -9,10 +9,12 @@ import slick.jdbc.PostgresProfile.api._
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case None => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
+      case None =>
+        CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
       // This can only happen if an inline relation field has been converted into a scalar field. The foreign key indicates it is a relation column.
       // Our step order ensures that this relation column already has been deleted. So we just create the scalar column.
-      case Some(c) if c.foreignKey.isDefined => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
+      case Some(c) if c.foreignKey.isDefined =>
+        CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
 
       case Some(c) =>
         val updateColumn = mustUpdateColumn(c, mutaction).toOption {
@@ -159,7 +161,6 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
 }
 object CreateColumnHelper {
-
   def withIndexIfNecessary(builder: JdbcDeployDatabaseMutationBuilder, project: Project, field: ScalarField) = {
     val createColumn        = builder.createColumn(project, field)
     val addUniqueConstraint = if (field.isUnique) builder.addUniqueConstraint(project, field) else DBIO.successful(())

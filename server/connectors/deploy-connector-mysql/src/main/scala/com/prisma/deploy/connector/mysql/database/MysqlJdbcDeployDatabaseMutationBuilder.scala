@@ -3,9 +3,9 @@ package com.prisma.deploy.connector.mysql.database
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
-import com.prisma.shared.models.Manifestations.{FieldManifestation, RelationTable}
-import com.prisma.shared.models._
+import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
+import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
