@@ -1,8 +1,8 @@
-import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
+import { DatabaseType, DefaultParser, DefaultRenderer, dedent } from 'prisma-datamodel'
 import ModelNameAndDirectiveNormalizer from '../../common/normalization/modelNameAndDirectiveNormalizer'
 
 function testNormalization(schemaFromDb, expectedResultSchema) {
-  const parser = Parser.create(DatabaseType.mongo)
+  const parser = DefaultParser.create(DatabaseType.mongo)
 
   const fromDb = parser.parseFromSchemaString(schemaFromDb)
 
@@ -18,7 +18,6 @@ function testNormalization(schemaFromDb, expectedResultSchema) {
 
 describe('Schema normalization from database schema', () => {
   it('Should normalize type names.', () => {
-
     const schemaFromDb = `type user {
         age: Int!
         name: String!
@@ -49,7 +48,6 @@ describe('Schema normalization from database schema', () => {
 
     testNormalization(schemaFromDb, expectedResultSchema)
   })
-
 
   it('Should correctly name nested embedded types.', () => {
     const schemaFromDb = `  

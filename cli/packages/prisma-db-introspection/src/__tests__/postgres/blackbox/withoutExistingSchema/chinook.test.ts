@@ -1,7 +1,7 @@
-import testSchema from "../common"
+import testSchema from '../common'
 
 describe('Introspector', () => {
-  test('large example database', async () => {
+  test('chinook example database', async () => {
     // https://github.com/lerocha/chinook-database/wiki/Chinook-Schema
     await testSchema(`
 /*******************************************************************************

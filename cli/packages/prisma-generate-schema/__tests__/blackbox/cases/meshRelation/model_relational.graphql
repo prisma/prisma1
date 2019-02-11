@@ -1,37 +1,36 @@
 type A {
-    field: Int!
-    a: A!
-    b: [B]
-    c: C
-    e: [E]
+  field: Int!
+  a: A!
+  b: [B]
+  c: C
+  e: [E]
 }
 
 type B {
-    field: [String]
-    c: C @relation(name: "BToC")
-    b: [B]
-    a: A!
-    c2: C @relation(name: "BToC2")
+  field: [String]
+  c: C @relation(name: "BToC")
+  b: [B]
+  a: A!
+  c2: C @relation(name: "BToC2")
 }
 
 type C {
-    expirationDate: DateTime
-    c: C! 
-    b: [B] @relation(name: "BToC")
-    a: A
-    b2: B @relation(name: "BToC2")
+  expirationDate: DateTime
+  c: C!
+  b: [B] @relation(name: "BToC")
+  a: A
+  b2: B @relation(name: "BToC2")
 }
 
 type D {
-    field: Json
-    c: C!
-    b: B!
-    a: A!
-    d: [D]
+  field: Json
+  c: C!
+  b: B!
+  a: A!
+  d: [D]
 }
 
-
 type E {
-    field: Json
-    a: A!
+  field: Json
+  a: A!
 }

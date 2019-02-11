@@ -4,6 +4,7 @@ import {
   ITableRelation,
   IInternalEnumInfo,
   IEnum,
+  ISequenceInfo,
 } from '../relationalConnector'
 import { Client } from 'pg'
 import { DatabaseType } from 'prisma-datamodel'
@@ -31,8 +32,9 @@ export class PostgresConnector extends RelationalConnector {
     models: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult {
-    return new PostgresIntrospectionResult(models, relations, enums)
+    return new PostgresIntrospectionResult(models, relations, enums, sequences)
   }
 
   public async listSchemas(): Promise<string[]> {
@@ -44,16 +46,16 @@ export class PostgresConnector extends RelationalConnector {
     return 'udt_name'
   }
 
+  protected getAutoIncrementCondition() {
+    return 'false'
+  }
+
   protected parameter(count: number, type: string) {
     return `$${count}::${type}`
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(
-    schemaName: string,
-    tableName: string,
-    columnName: string,
-  ) {
+  protected async queryColumnComment(schemaName: string, tableName: string, columnName: string) {
     const commentQuery = `
       SELECT
       (
@@ -71,11 +73,9 @@ export class PostgresConnector extends RelationalConnector {
         cols.table_name    = $2::text AND
         cols.column_name   = $3::text;
     `
-    const [comment] = (await this.query(commentQuery, [
-      schemaName,
-      tableName,
-      columnName,
-    ])).map(row => row.column_comment as string)
+    const [comment] = (await this.query(commentQuery, [schemaName, tableName, columnName])).map(
+      row => row.column_comment as string,
+    )
 
     if (comment === undefined) {
       return null
@@ -156,6 +156,24 @@ export class PostgresConnector extends RelationalConnector {
       return {
         name: row.enumName as string,
         values: this.parseJoinedArray(row.enumValues),
+      }
+    })
+  }
+
+  protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
+    const sequenceQuery = `
+    SELECT
+      sequence_name, start_value
+      FROM 
+      information_schema.sequences
+      WHERE
+      sequence_schema =  $1::text`
+
+    return (await this.query(sequenceQuery, [schemaName])).map(row => {
+      return {
+        name: row.sequence_name as string,
+        initialValue: row.start_value as number,
+        allocationSize: 1,
       }
     })
   }

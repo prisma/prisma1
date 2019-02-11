@@ -52,7 +52,6 @@
       "helpers.ts",
       "connectionDetails.ts",
       "common.ts",
-      "/document/",
       "/data/",
       "dist"
     ],

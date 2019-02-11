@@ -1,32 +1,22 @@
-import { ITable, ITableRelation, IEnum } from '../relationalConnector'
+import { ITable, ITableRelation, IEnum, ISequenceInfo } from '../relationalConnector'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
-import {
-  IGQLField,
-  IGQLType,
-  camelCase,
-  DatabaseType,
-  Renderer,
-  TypeIdentifiers,
-} from 'prisma-datamodel'
+import { IGQLField, IGQLType, camelCase, DatabaseType, Renderer, TypeIdentifiers, IdStrategy } from 'prisma-datamodel'
 
 export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
   constructor(
     model: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
     renderer?: Renderer,
   ) {
-    super(model, relations, enums, DatabaseType.postgres, renderer)
+    super(model, relations, enums, sequences, DatabaseType.mysql, renderer)
   }
 
   protected isTypeReserved(type: IGQLType): boolean {
     return type.name == '_RelayId'
   }
-  protected toTypeIdentifyer(
-    fieldTypeName: string,
-    fieldInfo: IGQLField,
-    typeName: string,
-  ): string | null {
+  protected toTypeIdentifyer(fieldTypeName: string, fieldInfo: IGQLField, typeName: string): string | null {
     const precisionStart = fieldTypeName.indexOf('(')
     const precisionEnd = fieldTypeName.lastIndexOf(')')
 
@@ -77,10 +67,11 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
         return null
     }
   }
-  protected parseDefaultValue(
-    defaultValueString: string,
-    type: string,
-  ): string | null {
+  protected parseDefaultValue(defaultValueString: string, type: string): string | null {
     return defaultValueString
+  }
+
+  protected resolveSequences(types: IGQLType[], sequences: ISequenceInfo[]) {
+    return types // Mysql cannot do that.
   }
 }

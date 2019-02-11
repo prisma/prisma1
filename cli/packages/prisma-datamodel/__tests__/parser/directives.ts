@@ -1,12 +1,15 @@
 import RelationalParser from '../../src/datamodel/parser/relationalParser'
 import DocumentParser from '../../src/datamodel/parser/documentParser'
-import { IGQLType } from '../../src/datamodel/model'
-import { SdlExpect } from '../../src/test-helpers' 
-import { TypeIdentifiers } from '../../src/datamodel/scalar';
+import { IGQLType, IdStrategy } from '../../src/datamodel/model'
+import { SdlExpect } from '../../src/test-helpers'
+import { TypeIdentifiers } from '../../src/datamodel/scalar'
 
-const parsersToTest = [{ name: 'relational', instance: new RelationalParser()}, { name: 'document', instance: new DocumentParser()}]
+const parsersToTest = [
+  { name: 'relational', instance: new RelationalParser() },
+  { name: 'document', instance: new DocumentParser() },
+]
 
-for(const parser of parsersToTest) {
+for (const parser of parsersToTest) {
   describe(`${parser.name} parser directive tests`, () => {
     test('Parse a type with build-in directives correctly.', () => {
       const model = `
@@ -34,7 +37,6 @@ for(const parser of parsersToTest) {
       expect(mappedField.relationName).toBe('typeRelation')
     })
 
-
     test('Parse a type with multiple index directives correctly.', () => {
       const model = `
       type User @db(name: "user") 
@@ -53,10 +55,34 @@ for(const parser of parsersToTest) {
       const idField = SdlExpect.field(userType, 'id', true, false, 'Int', true, true)
       const firstNameField = SdlExpect.field(userType, 'firstName', true, false, TypeIdentifiers.string)
       const lastNameField = SdlExpect.field(userType, 'lastName', true, false, TypeIdentifiers.string)
- 
+
       SdlExpect.index(userType, 'NameIndex', [firstNameField, lastNameField], false)
       // True is the default value
       SdlExpect.index(userType, 'PrimaryIndex', [idField], true)
+    })
+
+    test('Parse a type with sequence directive correctly.', () => {
+      const model = `
+      type User @db(name: "user") {
+        id: Int! @id(strategy: SEQUENCE) @sequence(name: "pk_seq", initialValue: 2, allocationSize: 99)
+        createdAt: DateTime! @createdAt
+        updatedAt: DateTime! @updatedAt
+        firstName: String!
+        lastName: String!
+      }`
+
+      const { types } = parser.instance.parseFromSchemaString(model)
+
+      const userType = SdlExpect.type(types, 'User')
+      const idField = SdlExpect.field(userType, 'id', true, false, 'Int', true, true)
+      const firstNameField = SdlExpect.field(userType, 'firstName', true, false, TypeIdentifiers.string)
+      const lastNameField = SdlExpect.field(userType, 'lastName', true, false, TypeIdentifiers.string)
+
+      expect(idField.idStrategy).toEqual(IdStrategy.Sequence)
+      expect(idField.associatedSequence).not.toBeNull()
+      expect(idField.associatedSequence!.name).toBe('pk_seq')
+      expect(idField.associatedSequence!.initialValue).toBe(2)
+      expect(idField.associatedSequence!.allocationSize).toBe(99)
     })
 
     test('Parse a type with unknown directives correctly.', () => {
@@ -79,6 +105,27 @@ for(const parser of parsersToTest) {
 
       const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String')
       SdlExpect.directive(mappedField, { name: 'unfunnyDirective', arguments: { funny: 'false' } })
+    })
+
+    test('Parse a type with link table directive correctly.', () => {
+      const model = `type User {
+      id: Int! @id
+      lastName: String!
+    }
+    
+    type UserToUser @linkTable {
+      A: User!
+      B: User!
+    }
+    `
+
+      const { types } = parser.instance.parseFromSchemaString(model)
+
+      const userType = SdlExpect.type(types, 'User')
+      expect(userType.isLinkTable).toBe(false)
+
+      const linkType = SdlExpect.type(types, 'UserToUser')
+      expect(linkType.isLinkTable).toBe(true)
     })
   })
 }
