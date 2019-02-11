@@ -43,20 +43,16 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       }
 
     case x: UpdateField =>
-      val oldModel           = previousSchema.getModelByName_!(x.model)
-      val newModel           = nextSchema.getModelByName_!(x.newModel)
-      val next               = nextSchema.getFieldByName_!(x.newModel, x.finalName)
-      val previous           = previousSchema.getFieldByName_!(x.model, x.name)
-      lazy val temporaryNext = next.asScalarField_!.copy(name = next.name + "_prisma_tmp", manifestation = None)
-
+      val oldModel                   = previousSchema.getModelByName_!(x.model)
+      val newModel                   = nextSchema.getModelByName_!(x.newModel)
+      val next                       = nextSchema.getFieldByName_!(x.newModel, x.finalName)
+      val previous                   = previousSchema.getFieldByName_!(x.model, x.name)
       lazy val createColumn          = CreateColumn(project, oldModel, next.asScalarField_!)
       lazy val updateColumn          = UpdateColumn(project, oldModel, previous.asScalarField_!, next.asScalarField_!)
       lazy val deleteColumn          = DeleteColumn(project, oldModel, previous.asScalarField_!)
       lazy val createScalarListTable = CreateScalarListTable(project, oldModel, next.asScalarField_!)
       lazy val deleteScalarListTable = DeleteScalarListTable(project, oldModel, previous.asScalarField_!)
       lazy val updateScalarListTable = UpdateScalarListTable(project, oldModel, newModel, previous.asScalarField_!, next.asScalarField_!)
-      lazy val createTemporaryColumn = createColumn.copy(field = temporaryNext)
-      lazy val renameTemporaryColumn = UpdateColumn(project, oldModel, temporaryNext, next.asScalarField_!)
 
       // TODO: replace that with a pattern match based on the subtypes of `models.Field`
       () match {
@@ -65,10 +61,10 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
         case _ if previous.isRelation && next.isScalarList                                                     => Vector(createScalarListTable)
         case _ if previous.isScalarList && next.isScalarNonList                                                => Vector(createColumn, deleteScalarListTable)
         case _ if previous.isScalarList && next.isRelation                                                     => Vector(deleteScalarListTable)
-        case _ if previous.isScalarNonList && next.isScalarList                                                => Vector(createScalarListTable, deleteColumn)
-        case _ if previous.isScalarNonList && next.isRelation                                                  => Vector(deleteColumn)
         case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier => Vector(updateScalarListTable)
         case _ if previous.isScalarList && next.isScalarList                                                   => Vector(deleteScalarListTable, createScalarListTable)
+        case _ if previous.isScalarNonList && next.isRelation                                                  => Vector(deleteColumn)
+        case _ if previous.isScalarNonList && next.isScalarList                                                => Vector(createScalarListTable, deleteColumn)
         case _ if previous.isScalarNonList && next.isScalarNonList =>
           val common         = Vector(updateColumn)
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier

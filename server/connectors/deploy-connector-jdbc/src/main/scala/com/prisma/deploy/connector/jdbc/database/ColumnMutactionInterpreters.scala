@@ -7,7 +7,6 @@ import com.prisma.utils.boolean.BooleanUtils._
 import slick.jdbc.PostgresProfile.api._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
-  // todo: that does not consider unique constraints yet
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
       case None => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
@@ -112,10 +111,11 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
     val after  = mutaction.newField
 
     //Fixme no more index recreation
-    val indexMustBeRecreated = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
+
+    val typeChanges     = before.typeIdentifier != after.typeIdentifier
+    val requiredChanges = before.isRequired != after.isRequired
 
     def updateColumn = builder.updateColumn(mutaction.project, after, oldColumnName = before.dbName, oldTypeIdentifier = before.typeIdentifier)
-    def createColumn = builder.createColumn(mutaction.project, after)
 
     def removeUniqueConstraint = builder.removeIndex(
       mutaction.project,
@@ -125,12 +125,27 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
     def addUniqueConstraint = builder.addUniqueConstraint(mutaction.project, after)
 
-    def updateColumnActions = (before.isUnique, indexMustBeRecreated, after.isUnique) match {
-      case (true, true, true)  => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
-      case (true, _, false)    => Vector(removeUniqueConstraint, updateColumn)
-      case (true, false, true) => Vector(updateColumn)
-      case (false, _, false)   => Vector(updateColumn)
-      case (false, _, true)    => Vector(updateColumn, addUniqueConstraint)
+    def updateColumnActions = (before.isUnique, typeChanges, requiredChanges, after.isUnique) match {
+      // type changes, after unique
+      case (true, true, true, true)   => Vector(updateColumn, addUniqueConstraint)
+      case (false, true, true, true)  => Vector(updateColumn, addUniqueConstraint)
+      case (true, true, false, true)  => Vector(updateColumn, addUniqueConstraint)
+      case (false, true, false, true) => Vector(updateColumn, addUniqueConstraint)
+      //type changes, after not unique
+      case (true, true, true, false)   => Vector(updateColumn)
+      case (false, true, true, false)  => Vector(updateColumn)
+      case (true, true, false, false)  => Vector(updateColumn)
+      case (false, true, false, false) => Vector(updateColumn)
+      // type does not change, after is unique
+      case (true, false, true, true)   => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
+      case (false, false, true, true)  => Vector(updateColumn, addUniqueConstraint)
+      case (true, false, false, true)  => Vector(updateColumn)
+      case (false, false, false, true) => Vector(updateColumn, addUniqueConstraint)
+      // type does not change, after is not unique
+      case (true, false, true, false)   => Vector(removeUniqueConstraint, updateColumn)
+      case (false, false, true, false)  => Vector(updateColumn)
+      case (true, false, false, false)  => Vector(removeUniqueConstraint, updateColumn)
+      case (false, false, false, false) => Vector(updateColumn)
     }
 
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(before.dbName)) match {

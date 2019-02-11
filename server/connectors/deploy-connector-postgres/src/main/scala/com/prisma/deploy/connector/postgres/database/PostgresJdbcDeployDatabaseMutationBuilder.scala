@@ -52,24 +52,13 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     }
 
     val idFieldSQL = sequence match {
-      case Some(seq) =>
-        typeMapper.rawSQLFromParts(
-          name = idField.dbName,
-          isRequired = idField.isRequired,
-          typeIdentifier = idField.typeIdentifier,
-          defaultValue = Some(StringGCValue(s"""nextval('"${project.dbName}"."${seq.name}"'::regclass)"""))
-        )
-      case None =>
-        typeMapper.rawSQLForField(idField)
+      case Some(s) => typeMapper.rawSQLForField(idField.copy(defaultValue = Some(StringGCValue(s"""nextval('"${project.dbName}"."${s.name}"'::regclass)"""))))
+      case None    => typeMapper.rawSQLForField(idField)
     }
 
     val createSequenceIfRequired = sequence match {
-      case Some(sequence) =>
-        sqlu"""
-              CREATE SEQUENCE "#${project.dbName}"."#${sequence.name}" START #${sequence.initialValue}
-            """
-      case _ =>
-        DBIO.successful(())
+      case Some(sequence) => sqlu"""CREATE SEQUENCE "#${project.dbName}"."#${sequence.name}" START #${sequence.initialValue}"""
+      case _              => DBIO.successful(())
     }
 
     val createTable = sqlu"""
@@ -157,13 +146,8 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     if (oldTypeIdentifier != field.typeIdentifier) {
       DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
     } else {
-
-      val tableName = field.model.dbName
-      val nulls = if (field.isRequired) {
-        "SET NOT NULL"
-      } else {
-        "DROP NOT NULL"
-      }
+      val tableName         = field.model.dbName
+      val nulls             = if (field.isRequired) "SET NOT NULL" else "DROP NOT NULL"
       val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
       val renameIfNecessary = renameColumn(project, tableName, oldColumnName, field.dbName)
 
