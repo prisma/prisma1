@@ -63,7 +63,8 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
       schema: String,
       secrets: Vector[String] = Vector.empty
   )(implicit suite: Suite): (Project, Migration) = {
-    val (name, stage) = (suite.getClass.getSimpleName, "default")
+
+    val (name, stage) = (suite.getClass.getSimpleName, "s")
     val idAsString    = deployTestDependencies.projectIdEncoder.toEncodedString(name, stage)
     internalDB.deleteProjectDatabase(idAsString).await()
     deployServer.addProject(name, stage)
