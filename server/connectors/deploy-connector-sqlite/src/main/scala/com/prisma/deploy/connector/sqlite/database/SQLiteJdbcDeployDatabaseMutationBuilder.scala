@@ -6,7 +6,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
-import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
+import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -153,26 +153,16 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     } yield result
   }
 
-  override def createColumn(project: Project,
-                            tableName: String,
-                            columnName: String,
-                            isRequired: Boolean,
-                            isUnique: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val newColSql = rawSQLFromParts(columnName, isRequired = isRequired, typeIdentifier)
-    val unique    = if (isUnique) addUniqueConstraint(project, tableName, columnName, typeIdentifier) else DBIO.successful(())
-    val add       = sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$newColSql"""
+  override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
+    val newColSql = rawSQLFromParts(field.dbName, isRequired = field.isRequired, field.typeIdentifier)
+    val unique    = if (field.isUnique) addUniqueConstraint(project, field) else DBIO.successful(())
+    val add       = sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql"""
     DBIO.seq(add, unique)
   }
 
-  override def updateColumn(project: Project,
-                            model: Model,
-                            oldColumnName: String,
-                            newColumnName: String,
-                            newIsRequired: Boolean,
-                            newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+  override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
 
-    alterTable(project, model)
+    alterTable(project, field.model)
   }
   private def alterTable(project: Project, model: Model) = {
     val tableName     = model.dbName
@@ -199,9 +189,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
            );"""
 
     //Fixme InlineRelationFields
-    val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.map { field =>
-      createColumn(project, tempTableName, field.dbName, field.isRequired, field.isUnique, field.typeIdentifier)
-    }: _*)
+    val addAllScalarNonListFields = DBIO.seq(model.scalarNonListFields.map(createColumn(project, _)): _*)
 
     //    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
     val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",")
@@ -251,8 +239,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     }
   }
 
-  override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(project.dbName, s"${columnName}_UNIQUE")} ON #${qualify(tableName)} (#${qualify(columnName)} ASC)"
+  override def addUniqueConstraint(project: Project, field: Field): DBIO[_] = {
+    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(project.dbName, s"${field.dbName}_UNIQUE")} ON #${qualify(field.model.dbName)} (#${qualify(field.dbName)} ASC)"
   }
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {

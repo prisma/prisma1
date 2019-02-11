@@ -3,6 +3,8 @@ package com.prisma.deploy.connector
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
 
+import scala.concurrent.Future
+
 case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper {
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = step match {
     case x: CreateModel =>
@@ -58,19 +60,18 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
       // TODO: replace that with a pattern match based on the subtypes of `models.Field`
       () match {
-        case _ if previous.isRelation && next.isRelation                                                             => Vector.empty
-        case _ if previous.isRelation && next.isScalarNonList                                                        => Vector(createColumn)
-        case _ if previous.isRelation && next.isScalarList                                                           => Vector(createScalarListTable)
-        case _ if previous.isScalarList && next.isScalarNonList                                                      => Vector(createColumn, deleteScalarListTable)
-        case _ if previous.isScalarList && next.isRelation                                                           => Vector(deleteScalarListTable)
-        case _ if previous.isScalarNonList && next.isScalarList                                                      => Vector(createScalarListTable, deleteColumn)
-        case _ if previous.isScalarNonList && next.isRelation                                                        => Vector(deleteColumn)
-        case _ if previous.isScalarNonList && next.isScalarNonList && previous.typeIdentifier == next.typeIdentifier => Vector(updateColumn)
-        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier       => Vector(updateScalarListTable)
-        case _ if previous.isScalarList && next.isScalarList                                                         => Vector(deleteScalarListTable, createScalarListTable)
+        case _ if previous.isRelation && next.isRelation                                                       => Vector.empty
+        case _ if previous.isRelation && next.isScalarNonList                                                  => Vector(createColumn)
+        case _ if previous.isRelation && next.isScalarList                                                     => Vector(createScalarListTable)
+        case _ if previous.isScalarList && next.isScalarNonList                                                => Vector(createColumn, deleteScalarListTable)
+        case _ if previous.isScalarList && next.isRelation                                                     => Vector(deleteScalarListTable)
+        case _ if previous.isScalarNonList && next.isScalarList                                                => Vector(createScalarListTable, deleteColumn)
+        case _ if previous.isScalarNonList && next.isRelation                                                  => Vector(deleteColumn)
+        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier => Vector(updateScalarListTable)
+        case _ if previous.isScalarList && next.isScalarList                                                   => Vector(deleteScalarListTable, createScalarListTable)
         case _ if previous.isScalarNonList && next.isScalarNonList =>
+          val common         = Vector(updateColumn)
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier
-          val common         = Vector(createTemporaryColumn, deleteColumn, renameTemporaryColumn) // a table might have temporary no columns. MySQL does not allow this.  //Fixme this breaks for SQLITE
           if (isIdTypeChange) {
             val deleteRelations = previousSchema.relations.filter(_.containsTheModel(previous.model)).map(deleteRelation).toVector
             val recreateRelations = nextSchema.relations

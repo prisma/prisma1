@@ -6,7 +6,7 @@ import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{Model, Project, Relation}
+import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -148,48 +148,46 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     deleteColumn(project, model.dbName, column)
   }
 
-  override def createColumn(
-      project: Project,
-      tableName: String,
-      columnName: String,
-      isRequired: Boolean,
-      isUnique: Boolean,
-      typeIdentifier: ScalarTypeIdentifier
-  ): DBIO[_] = {
-    val fieldSQL = typeMapper.rawSQLFromParts(columnName, isRequired, typeIdentifier)
-    val uniqueAction = isUnique match {
-      case true  => addUniqueConstraint(project, tableName, columnName, typeIdentifier)
+  override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
+    val fieldSQL = typeMapper.rawSQLForField(field)
+    val uniqueAction = field.isUnique match {
+      case true  => addUniqueConstraint(project, field)
       case false => DatabaseAction.successful(())
     }
 
-    val addColumn = sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$fieldSQL"""
+    val addColumn = sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$fieldSQL"""
     DatabaseAction.seq(addColumn, uniqueAction)
   }
 
-  override def updateColumn(project: Project,
-                            model: Model,
-                            oldColumnName: String,
-                            newColumnName: String,
-                            newIsRequired: Boolean,
-                            newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val tableName         = model.dbName
-    val nulls             = if (newIsRequired) { "SET NOT NULL" } else { "DROP NOT NULL" }
-    val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(newTypeIdentifier)
-    val renameIfNecessary = renameColumn(project, tableName, oldColumnName, newColumnName)
+  override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+    if (oldTypeIdentifier != field.typeIdentifier) {
+      DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
+    } else {
 
-    DatabaseAction.seq(
-      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
-      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
-      renameIfNecessary
-    )
+      val tableName = field.model.dbName
+      val nulls = if (field.isRequired) {
+        "SET NOT NULL"
+      } else {
+        "DROP NOT NULL"
+      }
+      val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
+      val renameIfNecessary = renameColumn(project, tableName, oldColumnName, field.dbName)
+
+      DatabaseAction.seq(
+        sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
+        sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
+        renameIfNecessary
+      )
+    }
   }
 
   override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
     sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} DROP COLUMN #${qualify(columnName)}"""
   }
 
-  override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    sqlu"""CREATE UNIQUE INDEX #${qualify(s"${project.dbName}.$tableName.$columnName._UNIQUE")} ON #${qualify(project.dbName, tableName)}(#${qualify(columnName)} ASC);"""
+  override def addUniqueConstraint(project: Project, field: Field): DBIO[_] = {
+    sqlu"""CREATE UNIQUE INDEX #${qualify(s"${project.dbName}.${field.model.dbName}.${field.dbName}._UNIQUE")} ON #${qualify(project.dbName, field.model.dbName)}(#${qualify(
+      field.dbName)} ASC);"""
   }
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {

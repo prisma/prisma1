@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.deploy.connector._
+import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import slick.jdbc.PostgresProfile.api._
 import com.prisma.utils.boolean.BooleanUtils._
 
@@ -8,41 +9,23 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
   // todo: that does not consider unique constraints yet
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case None =>
-        builder.createColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName,
-          isRequired = mutaction.field.isRequired,
-          isUnique = mutaction.field.isUnique,
-          typeIdentifier = mutaction.field.typeIdentifier
-        )
+      case None => builder.createColumn(mutaction.project, field = mutaction.field)
 
       // This can only happen if an inline relation field has been converted into a scalar field. The foreign key indicates it is a relation column.
       // Our step order ensures that this relation column already has been deleted. So we just create the scalar column.
-      case Some(c) if c.foreignKey.isDefined =>
-        builder.createColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName,
-          isRequired = mutaction.field.isRequired,
-          isUnique = mutaction.field.isUnique,
-          typeIdentifier = mutaction.field.typeIdentifier
-        )
+      case Some(c) if c.foreignKey.isDefined => builder.createColumn(mutaction.project, mutaction.field)
 
       case Some(c) =>
         val updateColumn = mustUpdateColumn(c, mutaction).toOption {
           builder.updateColumn(
             mutaction.project,
-            model = mutaction.model,
+            mutaction.field,
             oldColumnName = mutaction.field.dbName,
-            newColumnName = mutaction.field.dbName,
-            newIsRequired = mutaction.field.isRequired,
-            newTypeIdentifier = mutaction.field.typeIdentifier
+            oldTypeIdentifier = c.typeIdentifier.asInstanceOf[ScalarTypeIdentifier]
           )
         }
         val addUniqueConstraint = mustAddUniqueConstraint(c, mutaction).toOption {
-          builder.addUniqueConstraint(mutaction.project, mutaction.model.dbName, mutaction.field.dbName, mutaction.field.typeIdentifier)
+          builder.addUniqueConstraint(mutaction.project, mutaction.field)
         }
         val removeUniqueConstraint = mustRemoveUniqueConstraint(c, mutaction).toOption {
           val index = c.table.indexByColumns_!(c.name)
@@ -99,17 +82,8 @@ case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   override def rollback(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case Some(_) =>
-        builder.createColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName,
-          isRequired = mutaction.field.isRequired,
-          isUnique = mutaction.field.isUnique,
-          typeIdentifier = mutaction.field.typeIdentifier
-        )
-      case None =>
-        DBIO.successful(())
+      case Some(_) => builder.createColumn(mutaction.project, mutaction.field)
+      case None    => DBIO.successful(())
     }
   }
 }
@@ -146,27 +120,14 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
   }
 
   private def updateFromBeforeStateToAfterState(mutaction: UpdateColumn, schemaBeforeMigration: DatabaseSchema): DBIO[_] = {
-    val before               = mutaction.oldField
-    val after                = mutaction.newField
+    val before = mutaction.oldField
+    val after  = mutaction.newField
+
+    //Fixme no more index recreation
     val indexMustBeRecreated = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
 
-    def updateColumn = builder.updateColumn(
-      mutaction.project,
-      model = mutaction.model,
-      oldColumnName = before.dbName,
-      newColumnName = after.dbName,
-      newIsRequired = after.isRequired,
-      newTypeIdentifier = after.typeIdentifier
-    )
-
-    def createColumn = builder.createColumn(
-      mutaction.project,
-      tableName = mutaction.model.dbName,
-      columnName = after.dbName,
-      isRequired = after.isRequired,
-      isUnique = after.isUnique,
-      typeIdentifier = after.typeIdentifier
-    )
+    def updateColumn = builder.updateColumn(mutaction.project, after, oldColumnName = before.dbName, oldTypeIdentifier = before.typeIdentifier)
+    def createColumn = builder.createColumn(mutaction.project, after)
 
     def removeUniqueConstraint = builder.removeIndex(
       mutaction.project,
@@ -174,12 +135,7 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       indexName = schemaBeforeMigration.table_!(mutaction.model.dbName).indexByColumns_!(before.dbName).name
     )
 
-    def addUniqueConstraint = builder.addUniqueConstraint(
-      mutaction.project,
-      tableName = mutaction.model.dbName,
-      columnName = after.dbName,
-      typeIdentifier = after.typeIdentifier
-    )
+    def addUniqueConstraint = builder.addUniqueConstraint(mutaction.project, after)
 
     def updateColumnActions = (before.isUnique, indexMustBeRecreated, after.isUnique) match {
       case (true, true, true)  => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)

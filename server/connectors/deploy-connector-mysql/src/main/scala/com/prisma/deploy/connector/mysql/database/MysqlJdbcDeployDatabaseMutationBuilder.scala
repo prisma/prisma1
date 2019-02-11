@@ -4,7 +4,7 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.RelationTable
-import com.prisma.shared.models.{Model, Project, Relation, TypeIdentifier}
+import com.prisma.shared.models._
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
@@ -144,37 +144,27 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     } yield result
   }
 
-  override def createColumn(project: Project,
-                            tableName: String,
-                            columnName: String,
-                            isRequired: Boolean,
-                            isUnique: Boolean,
-                            typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val newColSql = typeMapper.rawSQLFromParts(columnName, isRequired = isRequired, typeIdentifier)
+  override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
+    val newColSql = typeMapper.rawSQLForField(field)
     val uniqueString =
-      if (isUnique) {
-        val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier))
-        s", ADD UNIQUE INDEX ${qualify(s"${columnName}_UNIQUE")} (${qualify(columnName)}$indexSize ASC)"
+      if (field.isUnique) {
+        val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier))
+        s", ADD UNIQUE INDEX ${qualify(s"${field.dbName}_UNIQUE")} (${qualify(field.dbName)}$indexSize ASC)"
       } else {
         ""
       }
 
-    sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
   }
 
   override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
     sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} DROP COLUMN #${qualify(columnName)}"""
   }
 
-  override def updateColumn(project: Project,
-                            model: Model,
-                            oldColumnName: String,
-                            newColumnName: String,
-                            newIsRequired: Boolean,
-                            newTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = newIsRequired, newTypeIdentifier)
+  override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+    val newColSql = typeMapper.rawSQLForField(field)
 
-    sqlu"ALTER TABLE #${qualify(project.dbName, model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+    sqlu"ALTER TABLE #${qualify(project.dbName, field.model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {
@@ -182,11 +172,11 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     case _                                                      => ""
   }
 
-  override def addUniqueConstraint(project: Project, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
+  override def addUniqueConstraint(project: Project, field: Field): DBIO[_] = {
+    val sqlType   = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
     val indexSize = indexSizeForSQLType(sqlType)
 
-    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} ADD UNIQUE INDEX #${qualify(s"${columnName}_UNIQUE")}(#${qualify(columnName)}#$indexSize ASC)"
+    sqlu"ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD UNIQUE INDEX #${qualify(s"${field.dbName}_UNIQUE")}(#${qualify(field.dbName)}#$indexSize ASC)"
   }
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
