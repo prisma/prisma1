@@ -1,6 +1,6 @@
 package com.prisma.deploy.connector.jdbc
 
-import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.connector.shared.jdbc.{MySqlDialect, PostgresDialect, SlickDatabase, SqliteDialect}
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
@@ -12,7 +12,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   import db.profile.api.actionBasedSQLInterpolation
 
   // intermediate helper classes
-  case class IntrospectedColumn(name: String, udtName: String, isUpdatable: Boolean, default: String, isNullable: Boolean, isUnique: Boolean)
+  case class IntrospectedColumn(name: String, udtName: String, default: String, isNullable: Boolean, isUnique: Boolean)
   case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
   case class IntrospectedSequence(column: String, name: String, current: Int)
 
@@ -50,13 +50,19 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
       val columns = introspectedColumns.map { col =>
         // this needs to be extended further in the future if we support arbitrary SQL types
         val typeIdentifier = col.udtName match {
-          case "varchar" | "string" | "text" | "bpchar" => TypeIdentifier.String
-          case "numeric"                                => TypeIdentifier.Float
-          case "bool"                                   => TypeIdentifier.Boolean
-          case "timestamp"                              => TypeIdentifier.DateTime
-          case "int4"                                   => TypeIdentifier.Int
-          case "uuid"                                   => TypeIdentifier.UUID
-          case x                                        => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
+          case "varchar" | "string" | "text" | "bpchar"             => TypeIdentifier.String
+          case "numeric"                                            => TypeIdentifier.Float
+          case "bool"                                               => TypeIdentifier.Boolean
+          case "timestamp"                                          => TypeIdentifier.DateTime
+          case "int4"                                               => TypeIdentifier.Int
+          case "uuid"                                               => TypeIdentifier.UUID
+          case x if x.startsWith("varchar") || x.startsWith("char") => TypeIdentifier.String // mysql
+          case "mediumtext"                                         => TypeIdentifier.String // mysql
+          case x if x.startsWith("decimal")                         => TypeIdentifier.Float // mysql
+          case x if x.startsWith("int")                             => TypeIdentifier.Int // mysql
+          case x if x.startsWith("tinyint")                         => TypeIdentifier.Boolean // mysql
+          case x if x.startsWith("datetime")                        => TypeIdentifier.DateTime // mysql
+          case x                                                    => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
         }
         val fk = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
           ForeignKey(fk.referencedTable, fk.referencedColumn)
@@ -78,10 +84,14 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   }
 
   implicit lazy val introspectedColumnGetResult = GetResult { ps =>
+    val dataTypeColumn = db.prismaDialect match {
+      case PostgresDialect => "udt_name"
+      case MySqlDialect    => "COLUMN_TYPE"
+      case x               => sys.error(s"$x is not implemented yet.")
+    }
     IntrospectedColumn(
       name = ps.rs.getString("column_name"),
-      udtName = ps.rs.getString("udt_name"),
-      isUpdatable = ps.rs.getBoolean("is_updatable"),
+      udtName = ps.rs.getString(dataTypeColumn),
       default = ps.rs.getString("column_default"),
       isNullable = ps.rs.getBoolean("is_nullable"),
       isUnique = ps.rs.getBoolean("is_unique")
@@ -89,27 +99,19 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   }
 
   private def getColumns(schema: String, table: String): DBIO[Vector[IntrospectedColumn]] = {
+    val dataTypeColumn = db.prismaDialect match {
+      case PostgresDialect => "udt_name"
+      case MySqlDialect    => "COLUMN_TYPE"
+      case x               => sys.error(s"$x is not implemented yet.")
+    }
     sql"""
          |SELECT
          |        cols.ordinal_position,
          |        cols.column_name,
-         |        cols.udt_name,
-         |        cols.is_updatable,
+         |        cols.#${dataTypeColumn},
          |        cols.column_default,
          |        cols.is_nullable = 'YES' as is_nullable,
-         |        EXISTS(
-         |          SELECT * FROM
-         |            information_schema.constraint_column_usage columnConstraint
-         |          LEFT JOIN
-         |            information_schema.table_constraints tableConstraints
-         |          ON
-         |            columnConstraint.constraint_name = tableConstraints.constraint_name
-         |          WHERE
-         |            cols.column_name = columnConstraint.column_name
-         |            AND cols.table_name = columnConstraint.table_name
-         |            AND cols.table_schema = columnConstraint.table_schema
-         |            AND tableConstraints.constraint_type = 'UNIQUE'
-         |          ) AS is_unique
+         |        false as is_unique
          |      FROM
          |        information_schema.columns AS cols
          |      WHERE
@@ -129,29 +131,45 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   }
 
   private def foreignKeyConstraints(schema: String, table: String): DBIO[Vector[IntrospectedForeignKey]] = {
-    sql"""
-         |SELECT
-         |	kcu.constraint_name as "fkConstraintName",
-         |    kcu.table_name as "fkTableName",
-         |    kcu.column_name as "fkColumnName",
-         |    ccu.table_name as "referencedTableName",
-         |    ccu.column_name as "referencedColumnName"
-         |FROM
-         |    information_schema.key_column_usage kcu
-         |INNER JOIN
-         |	information_schema.constraint_column_usage AS ccu
-         |	ON ccu.constraint_catalog = kcu.constraint_catalog
-         |    AND ccu.constraint_schema = kcu.constraint_schema
-         |    AND ccu.constraint_name = kcu.constraint_name
-         |INNER JOIN
-         |	information_schema.referential_constraints as rc
-         |	ON rc.constraint_catalog = kcu.constraint_catalog
-         |    AND rc.constraint_schema = kcu.constraint_schema
-         |    AND rc.constraint_name = kcu.constraint_name 
-         |WHERE 
-         |	kcu.table_schema = $schema AND
-         |	kcu.table_name = $table
-          """.stripMargin.as[IntrospectedForeignKey]
+    if (db.isPostgres) {
+      sql"""
+           |SELECT
+           |	  kcu.constraint_name as "fkConstraintName",
+           |    kcu.table_name as "fkTableName",
+           |    kcu.column_name as "fkColumnName",
+           |    ccu.table_name as "referencedTableName",
+           |    ccu.column_name as "referencedColumnName"
+           |FROM
+           |    information_schema.key_column_usage kcu
+           |INNER JOIN
+           |	information_schema.constraint_column_usage AS ccu
+           |	ON ccu.constraint_catalog = kcu.constraint_catalog
+           |    AND ccu.constraint_schema = kcu.constraint_schema
+           |    AND ccu.constraint_name = kcu.constraint_name
+           |INNER JOIN
+           |	information_schema.referential_constraints as rc
+           |	ON rc.constraint_catalog = kcu.constraint_catalog
+           |    AND rc.constraint_schema = kcu.constraint_schema
+           |    AND rc.constraint_name = kcu.constraint_name 
+           |WHERE 
+           |	kcu.table_schema = $schema AND
+           |	kcu.table_name = $table
+            """.stripMargin.as[IntrospectedForeignKey]
+    } else {
+      sql"""
+           |SELECT
+           |    kcu.constraint_name AS fkConstraintName,
+           |    kcu.table_name AS fkTablename,
+           |    kcu.column_name AS fkColumnName,
+           |    kcu.referenced_table_name AS referencedTableName,
+           |    kcu.referenced_column_name AS referencedColumnName
+           |FROM
+           |    information_schema.key_column_usage kcu
+           |WHERE
+           |    kcu.constraint_schema = "MigrationsSpec@default"
+           |    AND kcu.referenced_table_name IS NOT NULL;
+            """.stripMargin.as[IntrospectedForeignKey]
+    }
   }
 
   implicit val indexGetResult = GetResult { pr =>
@@ -164,41 +182,67 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   }
 
   private def indexes(schema: String, table: String): DBIO[Vector[Index]] = {
-    sql"""
-         |SELECT
-         |          tableInfos.relname as table_name,
-         |          indexInfos.relname as index_name,
-         |          array_agg(columnInfos.attname) as column_names,
-         |          rawIndex.indisunique as is_unique,
-         |          rawIndex.indisprimary as is_primary_key
-         |      FROM
-         |          -- pg_class stores infos about tables, indices etc: https://www.postgresql.org/docs/9.3/catalog-pg-class.html
-         |          pg_class tableInfos,
-         |          pg_class indexInfos,
-         |          -- pg_index stores indices: https://www.postgresql.org/docs/9.3/catalog-pg-index.html
-         |          pg_index rawIndex,
-         |          -- pg_attribute stores infos about columns: https://www.postgresql.org/docs/9.3/catalog-pg-attribute.html
-         |          pg_attribute columnInfos,
-         |          -- pg_namespace stores info about the schema
-         |          pg_namespace schemaInfo
-         |      WHERE
-         |          -- find table info for index
-         |          tableInfos.oid = rawIndex.indrelid
-         |          -- find index info
-         |          AND indexInfos.oid = rawIndex.indexrelid
-         |          -- find table columns
-         |          AND columnInfos.attrelid = tableInfos.oid
-         |          AND columnInfos.attnum = ANY(rawIndex.indkey)
-         |          -- we only consider oridnary tables
-         |          AND tableInfos.relkind = 'r'
-         |          -- we only consider stuff out of one specific schema
-         |          AND tableInfos.relnamespace = schemaInfo.oid
-         |      GROUP BY
-         |          tableInfos.relname,
-         |          indexInfos.relname,
-         |          rawIndex.indisunique,
-         |          rawIndex.indisprimary
-          """.stripMargin.as[Index]
+    if (db.isPostgres) {
+      sql"""
+           |SELECT
+           |          tableInfos.relname as table_name,
+           |          indexInfos.relname as index_name,
+           |          array_agg(columnInfos.attname) as column_names,
+           |          rawIndex.indisunique as is_unique,
+           |          rawIndex.indisprimary as is_primary_key
+           |      FROM
+           |          -- pg_class stores infos about tables, indices etc: https://www.postgresql.org/docs/9.3/catalog-pg-class.html
+           |          pg_class tableInfos,
+           |          pg_class indexInfos,
+           |          -- pg_index stores indices: https://www.postgresql.org/docs/9.3/catalog-pg-index.html
+           |          pg_index rawIndex,
+           |          -- pg_attribute stores infos about columns: https://www.postgresql.org/docs/9.3/catalog-pg-attribute.html
+           |          pg_attribute columnInfos,
+           |          -- pg_namespace stores info about the schema
+           |          pg_namespace schemaInfo
+           |      WHERE
+           |          -- find table info for index
+           |          tableInfos.oid = rawIndex.indrelid
+           |          -- find index info
+           |          AND indexInfos.oid = rawIndex.indexrelid
+           |          -- find table columns
+           |          AND columnInfos.attrelid = tableInfos.oid
+           |          AND columnInfos.attnum = ANY(rawIndex.indkey)
+           |          -- we only consider oridnary tables
+           |          AND tableInfos.relkind = 'r'
+           |          -- we only consider stuff out of one specific schema
+           |          AND tableInfos.relnamespace = schemaInfo.oid
+           |      GROUP BY
+           |          tableInfos.relname,
+           |          indexInfos.relname,
+           |          rawIndex.indisunique,
+           |          rawIndex.indisprimary
+            """.stripMargin.as[Index]
+    } else {
+      sql"""
+           |SELECT
+           |        table_name,
+           |        index_name,
+           |        GROUP_CONCAT(DISTINCT column_name SEPARATOR ', ') AS column_names,
+           |        NOT non_unique AS is_unique,
+           |        index_name = 'PRIMARY' AS is_primary_key
+           |      FROM
+           |        information_schema.statistics
+           |      WHERE
+           |        table_schema = $schema
+           |        AND table_name = $table
+           |      GROUP BY
+           |        table_name, index_name, non_unique
+         """.stripMargin.as[(String, String, String, Boolean, Boolean)].map { rows =>
+        rows.map { row =>
+          Index(
+            name = row._2,
+            columns = row._3.split(',').map(_.trim).toVector,
+            unique = row._4
+          )
+        }
+      }
+    }
   }
 
   def getSequences(schema: String, table: String): DBIO[Vector[IntrospectedSequence]] = {
