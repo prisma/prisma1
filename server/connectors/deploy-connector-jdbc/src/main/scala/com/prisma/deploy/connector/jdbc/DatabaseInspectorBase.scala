@@ -62,7 +62,7 @@ trait DatabaseInspectorBase extends DatabaseInspector {
           case x if x.startsWith("varchar") || x.startsWith("char") => TypeIdentifier.String // mysql
           case "mediumtext"                                         => TypeIdentifier.String // mysql
           case x if x.startsWith("decimal")                         => TypeIdentifier.Float // mysql
-          case x if x.startsWith("int")                             => TypeIdentifier.Int // mysql
+          case x if x.startsWith("int") || x.startsWith("bigint")   => TypeIdentifier.Int // mysql
           case x if x.startsWith("tinyint")                         => TypeIdentifier.Boolean // mysql
           case x if x.startsWith("datetime")                        => TypeIdentifier.DateTime // mysql
           case x                                                    => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
