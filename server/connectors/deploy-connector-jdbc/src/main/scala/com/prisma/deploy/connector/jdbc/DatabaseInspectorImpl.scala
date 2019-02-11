@@ -149,28 +149,26 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
   private def foreignKeyConstraints(schema: String, table: String): DBIO[Vector[IntrospectedForeignKey]] = {
     sql"""
          |SELECT
-         |          keyColumn1.constraint_name AS "fkConstraintName",
-         |          keyColumn1.table_name AS "fkTableName",
-         |          keyColumn1.column_name AS "fkColumnName",
-         |          keyColumn2.constraint_name AS "referencedConstraintName",
-         |          keyColumn2.table_name AS "referencedTableName",
-         |          keyColumn2.column_name AS "referencedColumnName"
-         |      FROM
-         |        information_schema.referential_constraints refConstraints
-         |      INNER JOIN
-         |        information_schema.key_column_usage AS keyColumn1
-         |        ON keyColumn1.constraint_catalog = refConstraints.constraint_catalog
-         |        AND keyColumn1.constraint_schema = refConstraints.constraint_schema
-         |        AND keyColumn1.constraint_name = refConstraints.constraint_name
-         |      INNER JOIN
-         |        information_schema.key_column_usage AS keyColumn2
-         |        ON keyColumn2.constraint_catalog = refConstraints.unique_constraint_catalog
-         |        AND keyColumn2.constraint_schema = refConstraints.unique_constraint_schema
-         |        AND keyColumn2.constraint_name = refConstraints.unique_constraint_name
-         |        AND keyColumn2.ordinal_position = keyColumn1.ordinal_position
-         |      WHERE
-         |        refConstraints.constraint_schema = $schema AND
-         |        keyColumn1.table_name = $table
+         |	kcu.constraint_name as "fkConstraintName",
+         |    kcu.table_name as "fkTableName",
+         |    kcu.column_name as "fkColumnName",
+         |    ccu.table_name as "referencedTableName",
+         |    ccu.column_name as "referencedColumnName"
+         |FROM
+         |    information_schema.key_column_usage kcu
+         |INNER JOIN
+         |	information_schema.constraint_column_usage AS ccu
+         |	ON ccu.constraint_catalog = kcu.constraint_catalog
+         |    AND ccu.constraint_schema = kcu.constraint_schema
+         |    AND ccu.constraint_name = kcu.constraint_name
+         |INNER JOIN
+         |	information_schema.referential_constraints as rc
+         |	ON rc.constraint_catalog = kcu.constraint_catalog
+         |    AND rc.constraint_schema = kcu.constraint_schema
+         |    AND rc.constraint_name = kcu.constraint_name 
+         |WHERE 
+         |	kcu.table_schema = $schema AND
+         |	kcu.table_name = $table
           """.stripMargin.as[IntrospectedForeignKey]
   }
 
