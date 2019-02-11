@@ -52,7 +52,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     }
 
     val idFieldSQL = sequence match {
-      case Some(s) => typeMapper.rawSQLForField(idField.copy(defaultValue = Some(StringGCValue(s"""nextval('"${project.dbName}"."${s.name}"'::regclass)"""))))
+      case Some(s) => typeMapper.rawSQLForField(idField) ++ s""" DEFAULT nextval('"${project.dbName}"."${s.name}"'::regclass)"""
       case None    => typeMapper.rawSQLForField(idField)
     }
 
