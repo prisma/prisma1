@@ -3,6 +3,7 @@ package com.prisma.deploy.connector.jdbc
 import com.prisma.connector.shared.jdbc.{MySqlDialect, PostgresDialect, SlickDatabase, SqliteDialect}
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import slick.dbio.DBIO
 import slick.jdbc.GetResult
 
@@ -52,20 +53,8 @@ trait DatabaseInspectorBase extends DatabaseInspector {
     } yield {
       val columns = introspectedColumns.map { col =>
         // this needs to be extended further in the future if we support arbitrary SQL types
-        val typeIdentifier = col.udtName match {
-          case "varchar" | "string" | "text" | "bpchar"             => TypeIdentifier.String
-          case "numeric"                                            => TypeIdentifier.Float
-          case "bool"                                               => TypeIdentifier.Boolean
-          case "timestamp"                                          => TypeIdentifier.DateTime
-          case "int4"                                               => TypeIdentifier.Int
-          case "uuid"                                               => TypeIdentifier.UUID
-          case x if x.startsWith("varchar") || x.startsWith("char") => TypeIdentifier.String // mysql
-          case "mediumtext"                                         => TypeIdentifier.String // mysql
-          case x if x.startsWith("decimal")                         => TypeIdentifier.Float // mysql
-          case x if x.startsWith("int") || x.startsWith("bigint")   => TypeIdentifier.Int // mysql
-          case x if x.startsWith("tinyint")                         => TypeIdentifier.Boolean // mysql
-          case x if x.startsWith("datetime")                        => TypeIdentifier.DateTime // mysql
-          case x                                                    => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
+        val typeIdentifier = typeIdentifierForTypeName(col.udtName).getOrElse {
+          sys.error(s"Encountered unknown SQL type ${col.udtName} with column ${col.name}. $col")
         }
         val fk = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
           ForeignKey(fk.referencedTable, fk.referencedColumn)
@@ -102,6 +91,8 @@ trait DatabaseInspectorBase extends DatabaseInspector {
          |  AND cols.table_name  = $table
           """.stripMargin.as[IntrospectedColumn]
   }
+
+  protected def typeIdentifierForTypeName(typeName: String): Option[ScalarTypeIdentifier]
 
   protected def foreignKeyConstraints(schema: String, table: String): DBIO[Vector[IntrospectedForeignKey]]
 
@@ -146,7 +137,7 @@ trait DatabaseInspectorBase extends DatabaseInspector {
     */
   private val dataTypeColumn = db.prismaDialect match {
     case PostgresDialect => "udt_name"
-    case MySqlDialect    => "COLUMN_TYPE"
+    case MySqlDialect    => "DATA_TYPE"
     case x               => sys.error(s"$x is not implemented yet.")
   }
 }

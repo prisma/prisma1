@@ -1,12 +1,25 @@
 package com.prisma.deploy.connector.jdbc
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.Index
+import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
 case class MySqlDatabaseInspector(db: SlickDatabase)(implicit val ec: ExecutionContext) extends DatabaseInspectorBase {
   import db.profile.api.actionBasedSQLInterpolation
+
+  override protected def typeIdentifierForTypeName(typeName: String): Option[TypeIdentifier.ScalarTypeIdentifier] = {
+    typeName match {
+      case "tinyint"                      => Some(TypeIdentifier.Boolean)
+      case _ if typeName.contains("char") => Some(TypeIdentifier.String)
+      case _ if typeName.contains("text") => Some(TypeIdentifier.String)
+      case _ if typeName.contains("int")  => Some(TypeIdentifier.Int)
+      case "decimal"                      => Some(TypeIdentifier.Float)
+      case "datetime"                     => Some(TypeIdentifier.DateTime)
+      case _                              => None
+    }
+  }
 
   override def getSequences(schema: String, table: String): DBIO[Vector[IntrospectedSequence]] = {
     val sequencesForTable =
