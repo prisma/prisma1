@@ -1,8 +1,6 @@
-import { Command, flags, Flags, Project } from 'prisma-cli-engine'
+import { Command, flags, Flags } from 'prisma-cli-engine'
 import chalk from 'chalk'
-import * as inquirer from 'inquirer'
-import { repeat } from 'lodash'
-import { prettyProject, prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 
 export default class Delete extends Command {
   static topic = 'delete'
@@ -24,7 +22,6 @@ export default class Delete extends Command {
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
-    const workspaceName = this.definition.getWorkspace()
     const stage = this.definition.stage!
     const cluster = this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
@@ -43,12 +40,23 @@ export default class Delete extends Command {
     }
 
     const before = Date.now()
-    this.out.action.start(`${chalk.red.bold(`Deleting service ${prettyName} from ${this.definition.cluster}`)}`)
-    await this.client.deleteProject(
-      serviceName,
-      stage,
-      this.definition.getWorkspace() || (this.env.activeCluster.workspaceSlug as string),
+    this.out.action.start(
+      `${chalk.red.bold(
+        `Deleting service ${prettyName} from ${this.definition.cluster}`,
+      )}`,
     )
+    try {
+      await this.client.deleteProject(
+        serviceName,
+        stage,
+        this.definition.getWorkspace() ||
+          (this.env.activeCluster.workspaceSlug as string),
+      )
+    } catch (e) {
+      if (!force) {
+        this.out.error(e)
+      }
+    }
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 

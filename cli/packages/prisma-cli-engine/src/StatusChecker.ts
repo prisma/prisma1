@@ -8,7 +8,6 @@ import { Environment, getProxyAgent } from 'prisma-yml'
 import * as os from 'os'
 import { getIsGlobal } from './utils/isGlobal'
 import * as serializeError from 'serialize-error'
-const debug = require('debug')('StatusChecker')
 
 export class StatusChecker {
   config: Config
@@ -52,7 +51,7 @@ export class StatusChecker {
       globalBin,
       hashDate,
     })
-    const secret = 'shedae6Lequiefaing6xeighe'
+    const secret = 'sipheeN1aiy3Taech3Eveimae'
 
     const hash = crypto
       .createHmac('sha256', secret)
@@ -108,7 +107,6 @@ export function initStatusChecker(
   config: Config,
   env?: Environment,
 ): StatusChecker {
-  debug('setting status checker')
   statusChecker = new StatusChecker(config, env)
 
   return statusChecker!

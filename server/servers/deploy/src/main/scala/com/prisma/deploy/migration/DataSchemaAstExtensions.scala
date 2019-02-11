@@ -125,7 +125,7 @@ object DataSchemaAstExtensions {
       case _                               => false
     }
 
-    def isScalarList: Boolean = isList && hasScalarType
+    def isScalarList(document: Document): Boolean = isList && (hasScalarType || isEnumField(document))
 
     def isValidScalarType: Boolean = isList || isValidScalarNonListType
 

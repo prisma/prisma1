@@ -54,7 +54,6 @@ export class Client {
     stageName?: string,
     workspaceSlug?: string | undefined | null,
   ) {
-    debug('Initializing cluster client')
     try {
       const token = await cluster.getToken(
         serviceName,
@@ -212,7 +211,6 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('introspecting', { serviceName, stageName, workspaceSlug })
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -236,7 +234,6 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -661,9 +658,9 @@ export class Client {
   }
 
   async hasStepsApi() {
-    const result: IntrospectionQuery = await this.client.request(
-      introspectionQuery,
-    )
+    const result: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
 
     return hasTypeWithField(result, 'DeployPayload', 'steps')
   }
@@ -701,9 +698,9 @@ export class Client {
       ${renderMigrationFragment(false)}
     `
 
-    const introspectionResult: IntrospectionQuery = await this.client.request(
-      introspectionQuery,
-    )
+    const introspectionResult: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
     const hasStepsApi = hasTypeWithField(
       introspectionResult,
       'DeployPayload',
@@ -893,7 +890,6 @@ export class Client {
     } as any)
     while (!valid) {
       try {
-        debug('requesting', endpoint)
         await client.request(
           `
             {

@@ -9,12 +9,21 @@ const typeDefs = fs.readFileSync(
   path.join(fixturesPath, 'schema.graphql'),
   'utf-8',
 )
-test.only('typescript generator', t => {
+test('typescript generator', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
     internalTypes: [],
   })
   const result = generator.render()
+  t.snapshot(result)
+})
+test('typescript generator definitions', t => {
+  const schema = buildSchema(typeDefs)
+  const generator = new TypescriptGenerator({
+    schema,
+    internalTypes: [],
+  })
+  const result = generator.renderTypedefs()
   t.snapshot(result)
 })

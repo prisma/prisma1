@@ -7,7 +7,7 @@ import * as fs from 'fs-extra'
 import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName, defaultDockerCompose } from '../../util'
+import { prettyTime, concatName, defaultDockerCompose } from '../../utils/util'
 import * as sillyname from 'sillyname'
 import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { EndpointDialog } from '../../utils/EndpointDialog'
@@ -321,11 +321,11 @@ ${chalk.gray(
       const isPackaged = fs.existsSync('/snapshot')
       const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
       const child = spawnPath(splittedHook[0], splittedHook.slice(1))
-      const stderr = child.stderr && child.stderr.toString()
+      const stderr = child.stderr && child.stderr.toString().trim()
       if (stderr && stderr.length > 0) {
         this.out.log(chalk.red(stderr))
       }
-      const stdout = child.stdout && child.stdout.toString()
+      const stdout = child.stdout && child.stdout.toString().trim()
       if (stdout && stdout.length > 0) {
         this.out.log(stdout)
       }
@@ -578,29 +578,11 @@ ${chalk.gray(
   }
 
   private getLocalClusterChoices(): string[][] {
-    // const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
-
-    // const clusterNames: string[][] = clusters.map(c => {
-    //   const note =
-    //     c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
-    //       ? 'Local cluster (requires Docker)'
-    //       : 'Self-hosted'
-    //   return [c.name, note]
-    // })
-
-    // if (clusterNames.length === 0) {
-    //   clusterNames.push(['local', 'Local cluster (requires Docker)'])
-    // }
-    // return clusterNames
     return [['local', 'Local cluster (requires Docker)']]
   }
 
   private async getLoggedInChoices(): Promise<any[]> {
     const localChoices = this.getLocalClusterChoices()
-    // const workspaces = await this.client.getWorkspaces()
-    // const clusters = this.env.clusters.filter(
-    //   c => c.shared && c.name !== 'shared-public-demo',
-    // )
     const combinations: string[][] = []
     const remoteClusters = this.env.clusters.filter(
       c => c.shared || c.isPrivate,

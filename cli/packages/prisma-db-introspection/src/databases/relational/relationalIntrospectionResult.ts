@@ -1,28 +1,6 @@
 import { IntrospectionResult } from '../../common/introspectionResult'
 import { ITable, IColumn, IIndex, ITableRelation, IEnum } from './relationalConnector'
-import { ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase, TypeIdentifiers } from 'prisma-datamodel'
-
-/*
-Relational Introspector changes
- [x] Inline relations 1:1 vs 1:n (via unique constraint)
- [ ] Inline relations 1:1 vs 1:n (via data inspection)
- [x] Always add back relations for inline relations
- [x] Correctly handle scalar list tables
- [ ] Add unit test for scalar list table handling 
-Postgres introspector changes
- [x] Turn string field with isId into ID field
-Renderer changes
- [ ] Remove `@relation` if only one relation from A to B
- [ ] Make sorting in renderer optional by parameter
-Normalizer changes
- [ ] db/pgColumn directive not picked up correctly
- [x] preserve order of fields and types in respect to ref datamodel
- [ ] Add unit tests for postgres introspection with existing ref datamodel
- [ ] hide createdAt/updatedAt if also hidden in the reference datamodel
- [ ] hide back relations if also hidden in the reference datamodel
- [ ] in v1: handle join tables for 1:n or 1:1 relations correclty, e.g. do not generate a n:n relation in this case
- [ ] migrating v1 to v2: In the case above, add a @relation(link: TABLE) directive.
-*/
+import { RelationalParser, ISDL, DatabaseType, Renderer, IGQLField, IGQLType, TypeIdentifier, IIndexInfo, GQLAssert, IComment, camelCase, TypeIdentifiers } from 'prisma-datamodel'
 
 export abstract class RelationalIntrospectionResult extends IntrospectionResult {
 
@@ -414,7 +392,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     // We need info about indices for resolving the exact type, as String is mapped to ID.
     // Also, we need info about the actual type before we resolve default values.
     for(const field of fields) {
-      this.inferFieldTypeAndDefaultValue(field)
+      this.inferFieldTypeAndDefaultValue(field, model.name)
     }
 
     return {
@@ -450,8 +428,8 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       isId: false, // Will resolve later, from indices
       relatedField: null,
       relationName: null,
-      isCreatedAt: false, // No longer depends on the DB
-      isUpdatedAt: false, // No longer depends on the DB
+      isCreatedAt: RelationalParser.createdAtFieldName === field.name, // Heuristic, can be overriden by normalization
+      isUpdatedAt: RelationalParser.updatedAtFieldName === field.name, // Heuristic, can be overriden by normalization
       isReadOnly: false, // Never
       comments,
       directives: [],
@@ -461,9 +439,9 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return gqlField
   }
 
-  protected inferFieldTypeAndDefaultValue(field: IGQLField) {
+  protected inferFieldTypeAndDefaultValue(field: IGQLField, typeName: string) {
     GQLAssert.raiseIf(typeof field.type !== 'string', 'Must be called before resolving relations')
-    let type: string | null = this.toTypeIdentifyer(field.type as string, field)
+    let type: string | null = this.toTypeIdentifyer(field.type as string, field, typeName)
 
     if(type === null) {
       field.comments.push({
@@ -486,7 +464,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
    * field is marked with an error comment.
    * @param typeName 
    */
-  protected abstract toTypeIdentifyer(typeName: string, fieldInfo: IGQLField): TypeIdentifier | null
+  protected abstract toTypeIdentifyer(fieldTypeName: string, fieldInfo: IGQLField, typeName: string): string | null
 
   protected abstract parseDefaultValue(defaultValueString: string, type: string): string | null
 }

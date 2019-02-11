@@ -6,15 +6,12 @@ import { ProjectDefinition, RunOptions } from './types/common'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
-// import { Auth } from './Auth'
 import { Environment, PrismaDefinitionClass } from 'prisma-yml'
 import packagejson = require('../package.json')
 import * as mock from './mock'
-import * as fs from 'fs-extra'
-import * as path from 'path'
 import { RC } from './types/rc'
-import { PrismaDefinition } from 'prisma-json-schema'
 import { initStatusChecker } from './StatusChecker'
+import { filterObject } from './util'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -156,5 +153,15 @@ export class Command {
 
   get stderr(): string {
     return this.out.stderr.output
+  }
+
+  getSanitizedFlags(): OutputFlags {
+    return filterObject(this.flags, (_, value) => {
+      if (value === undefined) {
+        return false
+      }
+
+      return true
+    })
   }
 }

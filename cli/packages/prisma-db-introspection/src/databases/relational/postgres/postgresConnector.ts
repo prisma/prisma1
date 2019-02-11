@@ -1,36 +1,26 @@
 import {
   RelationalConnector,
   ITable,
-  IColumn,
   ITableRelation,
-  IIndex,
   IInternalEnumInfo,
   IEnum,
 } from '../relationalConnector'
-import * as _ from 'lodash'
 import { Client } from 'pg'
-import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
+import { DatabaseType } from 'prisma-datamodel'
 import { PostgresIntrospectionResult } from './postgresIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
-import { PrismaDBClient } from '../../prisma/prismaDBClient'
+import IDatabaseClient from '../../IDatabaseClient'
+import PostgresDatabaseClient from './postgresDatabaseClient'
 
 // Documentation: https://www.prisma.io/docs/data-model-and-migrations/introspection-mapping-to-existing-db-soi1/
 
 // Responsible for extracting a normalized representation of a PostgreSQL database (schema)
 export class PostgresConnector extends RelationalConnector {
-  client: Client
-
-  constructor(client: Client) {
-    super()
-
-    if (
-      !(client instanceof Client) &&
-      !((client as any) instanceof PrismaDBClient)
-    ) {
-      throw new Error('Postgres instance needed for initialization.')
+  constructor(client: IDatabaseClient | Client) {
+    if (client instanceof Client) {
+      client = new PostgresDatabaseClient(client)
     }
-
-    this.client = client
+    super(client)
   }
 
   public getDatabaseType(): DatabaseType {
@@ -40,18 +30,22 @@ export class PostgresConnector extends RelationalConnector {
   protected createIntrospectionResult(
     models: ITable[],
     relations: ITableRelation[],
-    enums: IEnum[]
+    enums: IEnum[],
   ): RelationalIntrospectionResult {
     return new PostgresIntrospectionResult(models, relations, enums)
-  }
-
-  protected async query(query: string, params?: any[]): Promise<any[]> {
-    return (await this.client.query(query, params)).rows
   }
 
   public async listSchemas(): Promise<string[]> {
     const schemas = await super.listSchemas()
     return schemas.filter(schema => !schema.startsWith('pg_'))
+  }
+
+  protected getTypeColumnName() {
+    return 'udt_name'
+  }
+
+  protected parameter(count: number, type: string) {
+    return `$${count}::${type}`
   }
 
   // TODO: Unit test for column comments
@@ -140,12 +134,11 @@ export class PostgresConnector extends RelationalConnector {
   }
 
   private parseJoinedArray(arrayAsString: string): string[] {
-    if(arrayAsString === null || arrayAsString === undefined) {
+    if (arrayAsString === null || arrayAsString === undefined) {
       return []
     }
     return arrayAsString.split(',').map(x => x.trim())
   }
-
 
   protected async queryEnums(schemaName: string): Promise<IInternalEnumInfo[]> {
     const enumQuery = `
@@ -159,11 +152,11 @@ export class PostgresConnector extends RelationalConnector {
           n.nspname = $1::text
       GROUP BY t.typname`
 
-      return (await this.query(enumQuery, [schemaName])).map(row => {
-        return {
-          name: row.enumName as string,
-          values: this.parseJoinedArray(row.enumValues)
-        }
-      })
+    return (await this.query(enumQuery, [schemaName])).map(row => {
+      return {
+        name: row.enumName as string,
+        values: this.parseJoinedArray(row.enumValues),
+      }
+    })
   }
 }

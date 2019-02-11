@@ -21,10 +21,10 @@ set -x
 #
 
 if [[ -z "$CIRCLE_BRANCH" ]]; then
-  if [[ $CIRCLE_TAG == "*beta" ]]; then
+  if [[ $CIRCLE_TAG == *"beta" ]]; then
     export CIRCLE_BRANCH=beta
   fi
-  if [[ $CIRCLE_TAG == "*alpha" ]]; then
+  if [[ $CIRCLE_TAG == *"alpha" ]]; then
     export CIRCLE_BRANCH=alpha
   fi
 fi
@@ -198,10 +198,10 @@ cd prisma-client-lib
 export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
+  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
   yarn install
   yarn build
   npm version $newVersion
-  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
 
   if [[ $CIRCLE_TAG ]]; then
     npm publish
@@ -310,9 +310,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   ../../scripts/doubleInstall.sh
 
   # new docker tag
-  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
+  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/utils/util.ts
 
-  cat src/util.ts
+  cat src/utils/util.ts
 
   yarn build
   npm version $newVersion

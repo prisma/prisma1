@@ -5,6 +5,7 @@ import { RelationalParser, RelationalRenderer, RelationalRendererV2 } from 'pris
 import { Client } from 'pg'
 import { connectionDetails } from '../connectionDetails'
 import { PostgresConnector } from '../../../../databases/relational/postgres/postgresConnector'
+import PostgresDatabaseClient from '../../../../databases/relational/postgres/postgresDatabaseClient'
 
 // Tests are located in different module.
 const relativeTestCaseDir = path.join(__dirname, '../../../../../../prisma-generate-schema/__tests__/blackbox/cases/')

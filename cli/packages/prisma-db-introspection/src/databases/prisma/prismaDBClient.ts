@@ -1,16 +1,17 @@
 import { Cluster, PrismaDefinitionClass } from 'prisma-yml'
 import { GraphQLClient } from 'graphql-request'
+import IDatabaseClient from '../IDatabaseClient'
+import { DatabaseType } from 'prisma-datamodel'
 
-const SERVICE_NAME = 'prisma-temporary-introspection-service'
-const SERVICE_STAGE = 'prisma-temporary-test-stage'
+const SERVICE_NAME = 'prisma-temporary-service'
+const SERVICE_STAGE = 'temporary-stage'
 const SERVICE_SECRET = 'prisma-instrospection-secret'
 
-
-// Removed DB Client interface. This is not polymorphic to other db clients.
-export class PrismaDBClient {
+export class PrismaDBClient implements IDatabaseClient {
   cluster: Cluster
   client: GraphQLClient
   definition: PrismaDefinitionClass
+  databaseType: DatabaseType
 
   constructor(definition: PrismaDefinitionClass) {
     this.cluster = definition.getCluster()!
@@ -23,7 +24,7 @@ export class PrismaDBClient {
     }
   }
 
-  async query(query: string, variables: string[] = []): Promise<any> {
+  async query(query: string, variables: string[]): Promise<any[]> {
     const finalQuery = this.replace(query, variables)
     const databases = await this.getDatabases()
 
@@ -31,7 +32,7 @@ export class PrismaDBClient {
       throw new Error(`Prisma Config doesn't have any database connection`)
     }
 
-    return this.client.request(
+    const res = await this.client.request(
       `
       mutation executeRaw($query: String! $database: PrismaDatabase) {
         rows: executeRaw(
@@ -45,6 +46,8 @@ export class PrismaDBClient {
         database: databases[0],
       },
     )
+
+    return (res as any).rows as any[]
   }
 
   async getDatabases(): Promise<string[]> {
@@ -66,11 +69,44 @@ export class PrismaDBClient {
     return []
   }
 
+  protected async setDatabaseType(): Promise<void> {
+    const {
+      data: {
+        serverInfo: { primaryConnector },
+      },
+    } = await this.cluster
+      .request(
+        `{
+          serverInfo {
+            primaryConnector
+          }
+        }`,
+      )
+      .then(res => res.json())
+
+    const typeMap = {
+      mysql: DatabaseType.mysql,
+      postgres: DatabaseType.postgres,
+      mongo: DatabaseType.mongo,
+    }
+
+    const databaseType = typeMap[primaryConnector]
+    if (!databaseType) {
+      throw new Error(
+        `Could not identify primaryConnector ${primaryConnector} as database type`,
+      )
+    }
+
+    this.databaseType = databaseType
+  }
+
   replace(query: string, variables: string[] = []): string {
     let queryString = query
 
     for (const [index, variable] of variables.entries()) {
-      const regex = new RegExp(`\\$${index + 1}`, 'g')
+      const pattern =
+        this.databaseType === DatabaseType.postgres ? `\\$${index + 1}` : '\\?'
+      const regex = new RegExp(pattern, 'g')
       queryString = queryString.replace(regex, `'${variable}'`)
     }
 
@@ -78,6 +114,7 @@ export class PrismaDBClient {
   }
 
   async connect() {
+    await this.setDatabaseType()
     await this.cluster
       .request(
         `mutation($input: AddProjectInput!) {

@@ -12,7 +12,6 @@ import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
 import { replaceYamlValue } from './utils/yamlComment'
 import { parseEndpoint } from './utils/parseEndpoint'
-const debug = require('debug')('prisma definition')
 
 interface ErrorMessage {
   message: string
@@ -218,7 +217,6 @@ and execute ${chalk.bold.green(
         clusterName,
       } = parseEndpoint(this.endpoint)
       if (clusterBaseUrl) {
-        debug('making cluster here')
         const existingCluster = !process.env.PRISMA_MANAGEMENT_API_SECRET
           ? this.env.clusters.find(
               c => c.baseUrl.toLowerCase() === clusterBaseUrl,
