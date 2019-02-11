@@ -43,6 +43,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
 //      _                       = println(s"getTable: $schema, $table")
       introspectedForeignKeys <- foreignKeyConstraints(schema, table)
       introspectedIndexes     <- indexes(schema, table)
+      sequences               <- getSequences(schema, table)
 //      _                       = println(introspectedForeignKeys)
     } yield {
       val columns = introspectedColumns.map { col =>
@@ -66,13 +67,14 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
         val fk = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
           ForeignKey(fk.referencedTable, fk.referencedColumn)
         }
+        val sequence = sequences.find(_.column == col.name).map(mseq => Sequence(mseq.name, mseq.current))
         Column(
           name = col.name,
           tpe = col.udtName,
           typeIdentifier = typeIdentifier,
           isRequired = !col.isNullable,
           foreignKey = fk,
-          sequence = None
+          sequence = sequence
         )(_)
       }
       Table(table, columns, indexes = introspectedIndexes)
