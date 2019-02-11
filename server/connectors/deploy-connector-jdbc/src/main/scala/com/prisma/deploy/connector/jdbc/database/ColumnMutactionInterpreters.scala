@@ -2,18 +2,18 @@ package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import slick.jdbc.PostgresProfile.api._
+import com.prisma.shared.models.{Project, ScalarField}
 import com.prisma.utils.boolean.BooleanUtils._
+import slick.jdbc.PostgresProfile.api._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
   // todo: that does not consider unique constraints yet
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case None => builder.createColumn(mutaction.project, field = mutaction.field)
-
+      case None => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
       // This can only happen if an inline relation field has been converted into a scalar field. The foreign key indicates it is a relation column.
       // Our step order ensures that this relation column already has been deleted. So we just create the scalar column.
-      case Some(c) if c.foreignKey.isDefined => builder.createColumn(mutaction.project, mutaction.field)
+      case Some(c) if c.foreignKey.isDefined => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
 
       case Some(c) =>
         val updateColumn = mustUpdateColumn(c, mutaction).toOption {
@@ -54,14 +54,8 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   override def rollback(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case None =>
-        builder.deleteColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName
-        )
-      case Some(_) =>
-        DBIO.successful(())
+      case None    => builder.deleteColumn(mutaction.project, tableName = mutaction.model.dbName, columnName = mutaction.field.dbName)
+      case Some(_) => DBIO.successful(())
     }
   }
 }
@@ -69,20 +63,14 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case Some(_) =>
-        builder.deleteColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName
-        )
-      case None =>
-        DBIO.successful(())
+      case Some(_) => builder.deleteColumn(mutaction.project, tableName = mutaction.model.dbName, columnName = mutaction.field.dbName)
+      case None    => DBIO.successful(())
     }
   }
 
   override def rollback(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case Some(_) => builder.createColumn(mutaction.project, mutaction.field)
+      case Some(_) => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
       case None    => DBIO.successful(())
     }
   }
@@ -147,7 +135,16 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(before.dbName)) match {
       case Some(_) => DBIO.seq(updateColumnActions: _*)
-      case None    => createColumn
+      case None    => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.newField)
     }
+  }
+
+}
+object CreateColumnHelper {
+
+  def withIndexIfNecessary(builder: JdbcDeployDatabaseMutationBuilder, project: Project, field: ScalarField) = {
+    val createColumn        = builder.createColumn(project, field)
+    val addUniqueConstraint = if (field.isUnique) builder.addUniqueConstraint(project, field) else DBIO.successful(())
+    DBIO.seq(createColumn, addUniqueConstraint)
   }
 }

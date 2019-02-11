@@ -154,10 +154,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
-    val newColSql = rawSQLFromParts(field.dbName, isRequired = field.isRequired, field.typeIdentifier)
-    val unique    = if (field.isUnique) addUniqueConstraint(project, field) else DBIO.successful(())
-    val add       = sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql"""
-    DBIO.seq(add, unique)
+    val newColSql = rawSQLFromParts(field.dbName, isRequired = field.isRequired, field.typeIdentifier) //Fixme build from field helper
+    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql"""
   }
 
   override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {

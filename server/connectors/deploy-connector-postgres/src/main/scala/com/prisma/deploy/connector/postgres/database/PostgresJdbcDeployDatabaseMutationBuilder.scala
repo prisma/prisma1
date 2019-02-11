@@ -150,13 +150,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
     val fieldSQL = typeMapper.rawSQLForField(field)
-    val uniqueAction = field.isUnique match {
-      case true  => addUniqueConstraint(project, field)
-      case false => DatabaseAction.successful(())
-    }
-
-    val addColumn = sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$fieldSQL"""
-    DatabaseAction.seq(addColumn, uniqueAction)
+    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$fieldSQL"""
   }
 
   override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {

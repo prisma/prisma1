@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.mysql.database
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
-import com.prisma.shared.models.Manifestations.RelationTable
+import com.prisma.shared.models.Manifestations.{FieldManifestation, RelationTable}
 import com.prisma.shared.models._
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import com.prisma.utils.boolean.BooleanUtils
@@ -146,15 +146,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
     val newColSql = typeMapper.rawSQLForField(field)
-    val uniqueString =
-      if (field.isUnique) {
-        val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier))
-        s", ADD UNIQUE INDEX ${qualify(s"${field.dbName}_UNIQUE")} (${qualify(field.dbName)}$indexSize ASC)"
-      } else {
-        ""
-      }
-
-    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql #$uniqueString, ALGORITHM = INPLACE"""
+    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql, ALGORITHM = INPLACE"""
   }
 
   override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
@@ -162,9 +154,17 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   override def updateColumn(project: Project, field: ScalarField, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val newColSql = typeMapper.rawSQLForField(field)
+    if (oldTypeIdentifier != field.typeIdentifier) {
+      DBIO.seq(
+        createColumn(project, field.copy(manifestation = Some(FieldManifestation(s"${field.dbName}_temp")))),
+        deleteColumn(project, field.model.dbName, oldColumnName),
+        renameColumn(project, field.model.dbName, s"${field.dbName}_temp", field.dbName)
+      )
+    } else {
+      val newColSql = typeMapper.rawSQLForField(field)
 
-    sqlu"ALTER TABLE #${qualify(project.dbName, field.model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+      sqlu"ALTER TABLE #${qualify(project.dbName, field.model.dbName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+    }
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {
