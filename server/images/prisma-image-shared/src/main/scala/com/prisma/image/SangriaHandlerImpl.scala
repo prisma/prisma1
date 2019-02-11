@@ -101,11 +101,12 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
       project <- apiDependencies.projectFetcher.fetch_!(projectId)
     } yield {
       if (project.secrets.nonEmpty) {
-        Try {
-          val token = apiDependencies.auth.extractToken(rawRequest.headers.get("authorization"))
-          apiDependencies.auth.verifyToken(token, project.secrets)
-        } match {
-          case Success(_) => project
+        Try { apiDependencies.auth.extractToken(rawRequest.headers.get("authorization")) } match {
+          case Success(token) =>
+            apiDependencies.auth.verifyToken(token, project.secrets) match {
+              case Success(_) => project
+              case Failure(_) => throw AuthFailure()
+            }
           case Failure(_) => throw AuthFailure()
         }
       } else {
