@@ -6,8 +6,8 @@ pub use sqlite::Sqlite;
 pub type PrismaConnector = Box<dyn Connector + Send + Sync + 'static>;
 
 use crate::{
-    models::{Field, ScalarField},
-    protobuf::prisma::QueryArguments,
+    models::ScalarField,
+    protobuf::prisma::{QueryArguments, SelectedField},
     PrismaResult, PrismaValue,
 };
 
@@ -27,7 +27,7 @@ pub trait Connector {
         &self,
         database_name: &str,
         table_name: &str,
-        selected_fields: &[Field],
+        selected_fields: &[SelectedField],
         query_arguments: &QueryArguments,
     ) -> PrismaResult<Vec<Node>>;
 }

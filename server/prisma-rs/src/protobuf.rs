@@ -2,6 +2,7 @@ mod envelope;
 mod get_node_by_where_input;
 mod get_nodes_input;
 mod interface;
+mod query_arguments;
 
 pub use envelope::ProtoBufEnvelope;
 pub use get_node_by_where_input::*;

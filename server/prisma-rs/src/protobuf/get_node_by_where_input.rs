@@ -27,11 +27,14 @@ impl QueryExecutor for GetNodeByWhereInput {
     fn query(self, connector: &PrismaConnector) -> PrismaResult<(Vec<Node>, Vec<String>)> {
         let project_template: ProjectTemplate =
             serde_json::from_reader(self.project_json.as_slice())?;
+
         let project: Project = project_template.into();
         let model = project.schema.find_model(&self.model_name)?;
+
         let selected_fields = model
             .fields()
             .find_many_from_scalar(&self.selected_fields());
+
         let field = model.fields().find_from_scalar(&self.field_name)?;
 
         let value = self.value.prisma_value.ok_or_else(|| {
