@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuil
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.{FieldManifestation, RelationTable}
 import com.prisma.shared.models._
-import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
@@ -158,17 +158,14 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             oldTableName: String,
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    if (oldTypeIdentifier != field.typeIdentifier) {
-      DBIO.seq(
-        createColumn(project, field.copy(manifestation = Some(FieldManifestation(s"${field.dbName}_temp")))),
-        deleteColumn(project, oldTableName, oldColumnName),
-        renameColumn(project, field.model.dbName, s"${field.dbName}_temp", field.dbName)
-      )
-    } else {
-      val newColSql = typeMapper.rawSQLForField(field)
+    val typeChange = if (oldTypeIdentifier != field.typeIdentifier) {
+      sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(field.dbName)} = null"
+    } else { DBIO.successful(()) }
 
-      sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
-    }
+    val newColSql = typeMapper.rawSQLForField(field)
+
+    DBIO.seq(sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql", typeChange)
+
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {
@@ -196,10 +193,19 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   }
 
   //Here this is only used for relationtables
-  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_] = {
-    if (oldColumnName != newColumnName) {
-      val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = true, project.models.head.idField_!.typeIdentifier)
-      sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql"
+  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier): DBIO[_] = {
+    val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = true, typeIdentifier)
+    sharedRename(project, tableName, oldColumnName, newColumnName, newColSql)
+  }
+
+  private def renameColumn(project: Project, tableName: String, oldColumnName: String, field: Field): DBIO[_] = {
+    val newColSql = typeMapper.rawSQLFromParts(field.dbName, isRequired = field.isRequired, field.typeIdentifier)
+    sharedRename(project, tableName, oldColumnName, field.dbName, newColSql)
+  }
+
+  private def sharedRename(project: Project, tableName: String, oldName: String, newName: String, typeString: String) = {
+    if (oldName != newName) {
+      sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} CHANGE COLUMN #${qualify(oldName)} #$typeString"
     } else {
       DatabaseAction.successful(())
     }

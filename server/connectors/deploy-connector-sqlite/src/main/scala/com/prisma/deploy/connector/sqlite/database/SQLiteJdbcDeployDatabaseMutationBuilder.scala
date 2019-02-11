@@ -257,7 +257,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     }
   }
 
-  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String) = {
+  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {
     if (oldColumnName != newColumnName) {
       sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
     } else {

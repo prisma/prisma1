@@ -108,11 +108,8 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
   }
 
   private def updateFromBeforeStateToAfterState(mutaction: UpdateColumn, schemaBeforeMigration: DatabaseSchema): DBIO[_] = {
-    val before = mutaction.oldField
-    val after  = mutaction.newField
-
-    //Fixme no more index recreation
-
+    val before          = mutaction.oldField
+    val after           = mutaction.newField
     val typeChanges     = before.typeIdentifier != after.typeIdentifier
     val requiredChanges = before.isRequired != after.isRequired
 

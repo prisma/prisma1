@@ -5,7 +5,7 @@ import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuil
 import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.RelationTable
-import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
@@ -151,10 +151,12 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
     } else {
       val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
-      val renameIfNecessary = renameColumn(project, oldTableName, oldColumnName, field.dbName)
+      val nulls             = if (field.isRequired) "SET NOT NULL" else "DROP NOT NULL"
+      val renameIfNecessary = renameColumn(project, oldTableName, oldColumnName, field.dbName, field.typeIdentifier)
 
       DatabaseAction.seq(
         sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
+        sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
         renameIfNecessary
       )
     }
@@ -181,7 +183,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     }
   }
 
-  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String) = {
+  override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {
     if (oldColumnName != newColumnName) {
       sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
     } else {

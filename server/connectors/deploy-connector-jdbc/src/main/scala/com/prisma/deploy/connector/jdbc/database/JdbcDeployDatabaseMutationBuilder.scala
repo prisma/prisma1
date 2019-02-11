@@ -3,7 +3,7 @@ package com.prisma.deploy.connector.jdbc.database
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.JdbcBase
-import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
 import org.jooq.impl.SQLDataType
@@ -34,16 +34,18 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def updateColumn(project: Project, field: ScalarField, oldTableName: String, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_]
   def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
   def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model] = None): DBIO[_]
-  def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String): DBIO[_]
+  def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier): DBIO[_]
 
   /*
    * Connector-agnostic functions
    */
 
   def updateRelationTable(project: Project, previousRelation: Relation, nextRelation: Relation) = {
+    val modelAIdType         = nextRelation.modelA.idField_!.typeIdentifier
+    val modelBIdType         = nextRelation.modelB.idField_!.typeIdentifier
     val addOrRemoveId        = addOrRemoveIdColumn(project, previousRelation, nextRelation)
-    val renameModelAColumn   = renameColumn(project, previousRelation.relationTableName, previousRelation.modelAColumn, nextRelation.modelAColumn)
-    val renameModelBColumn   = renameColumn(project, previousRelation.relationTableName, previousRelation.modelBColumn, nextRelation.modelBColumn)
+    val renameModelAColumn   = renameColumn(project, previousRelation.relationTableName, previousRelation.modelAColumn, nextRelation.modelAColumn, modelAIdType)
+    val renameModelBColumn   = renameColumn(project, previousRelation.relationTableName, previousRelation.modelBColumn, nextRelation.modelBColumn, modelBIdType)
     val renameTableStatement = renameTable(project, previousRelation.relationTableName, nextRelation.relationTableName)
 
     val all = Vector(addOrRemoveId, renameModelAColumn, renameModelBColumn, renameTableStatement)
