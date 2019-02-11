@@ -16,7 +16,7 @@ trait DatabaseInspectorBase extends DatabaseInspector {
   import db.profile.api.actionBasedSQLInterpolation
 
   // intermediate helper classes
-  case class IntrospectedColumn(name: String, udtName: String, default: String, isNullable: Boolean, isUnique: Boolean)
+  case class IntrospectedColumn(name: String, udtName: String, default: String, isNullable: Boolean)
   case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
   case class IntrospectedSequence(column: String, name: String, current: Int)
 
@@ -82,8 +82,7 @@ trait DatabaseInspectorBase extends DatabaseInspector {
          |  cols.column_name,
          |  cols.#$dataTypeColumn,
          |  cols.column_default,
-         |  cols.is_nullable = 'YES' as is_nullable,
-         |  false as is_unique
+         |  cols.is_nullable = 'YES' as is_nullable
          |FROM
          |  information_schema.columns AS cols
          |WHERE
@@ -108,8 +107,7 @@ trait DatabaseInspectorBase extends DatabaseInspector {
       name = ps.rs.getString("column_name"),
       udtName = ps.rs.getString(dataTypeColumn),
       default = ps.rs.getString("column_default"),
-      isNullable = ps.rs.getBoolean("is_nullable"),
-      isUnique = ps.rs.getBoolean("is_unique")
+      isNullable = ps.rs.getBoolean("is_nullable")
     )
   }
 
