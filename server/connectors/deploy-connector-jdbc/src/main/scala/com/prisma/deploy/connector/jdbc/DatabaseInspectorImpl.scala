@@ -5,79 +5,25 @@ import com.prisma.deploy.connector._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
 import slick.jdbc.GetResult
-import slick.jdbc.meta.{MColumn, MForeignKey, MIndexInfo, MTable}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContext) extends DatabaseInspector {
   import db.profile.api.actionBasedSQLInterpolation
 
+  // intermediate helper classes
+  case class IntrospectedColumn(name: String, udtName: String, isUpdatable: Boolean, default: String, isNullable: Boolean, isUnique: Boolean)
+  case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
+  case class IntrospectedSequence(column: String, name: String, current: Int)
+
   override def inspect(schema: String): Future[DatabaseSchema] = db.database.run(action(schema))
 
   def action(schema: String): DBIO[DatabaseSchema] = {
-//    for {
-//      // we filter on catalog and schema at the same time, because:
-//      // 1. For MySQL only catalog will be populated.
-//      // 2. For Postgres only schema will be populated.
-//      // 3. It works when both are populated.
-//      potentialTables <- MTable.getTables(cat = Some(schema), schemaPattern = Some(schema), namePattern = None, types = None)
-//      // the line above does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
-//      // we therefore have one additional filter step in memory
-//      mTables = potentialTables.filter(table => table.name.schema.orElse(table.name.catalog).contains(schema))
-//      tables  <- DBIO.sequence(mTables.map(mTableToModel))
-//    } yield {
-//      DatabaseSchema(tables)
-//    }
     for {
       tableNames <- getTableNames(schema)
-//      _          = println(s"tableNames: $tableNames")
-      tables <- DBIO.sequence(tableNames.map(name => getTable(schema, name)))
+      tables     <- DBIO.sequence(tableNames.map(name => getTable(schema, name)))
     } yield {
       DatabaseSchema(tables)
-    }
-  }
-
-  private def getTable(schema: String, table: String): DBIO[Table] = {
-    for {
-      introspectedColumns <- getColumns(schema, table)
-//      _                       = println(s"getTable: $schema, $table")
-      introspectedForeignKeys <- foreignKeyConstraints(schema, table)
-      introspectedIndexes     <- indexes(schema, table)
-      sequences               <- getSequences(schema, table)
-//      _                       = println(introspectedForeignKeys)
-    } yield {
-      val columns = introspectedColumns.map { col =>
-        // this needs to be extended further in the future if we support arbitrary SQL types
-        import java.sql.Types._
-        val typeIdentifier = col.udtName match {
-          case "varchar" | "string" | "text" | "bpchar" => TypeIdentifier.String
-          case "numeric"                                => TypeIdentifier.Float
-          case "bool"                                   => TypeIdentifier.Boolean
-          case "timestamp"                              => TypeIdentifier.DateTime
-          case "int4"                                   => TypeIdentifier.Int
-          case "uuid"                                   => TypeIdentifier.UUID
-//          case VARCHAR | CHAR | LONGVARCHAR        => TypeIdentifier.String
-//          case FLOAT | NUMERIC | DECIMAL           => TypeIdentifier.Float
-//          case BOOLEAN | BIT                       => TypeIdentifier.Boolean
-//          case TIMESTAMP                           => TypeIdentifier.DateTime
-//          case INTEGER                             => TypeIdentifier.Int
-//          case OTHER if mColumn.typeName == "uuid" => TypeIdentifier.UUID
-          case x => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
-        }
-        val fk = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
-          ForeignKey(fk.referencedTable, fk.referencedColumn)
-        }
-        val sequence = sequences.find(_.column == col.name).map(mseq => Sequence(mseq.name, mseq.current))
-        Column(
-          name = col.name,
-          tpe = col.udtName,
-          typeIdentifier = typeIdentifier,
-          isRequired = !col.isNullable,
-          foreignKey = fk,
-          sequence = sequence
-        )(_)
-      }
-      Table(table, columns, indexes = introspectedIndexes)
     }
   }
 
@@ -94,7 +40,42 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
        """.stripMargin.as[String]
   }
 
-  case class IntrospectedColumn(name: String, udtName: String, isUpdatable: Boolean, default: String, isNullable: Boolean, isUnique: Boolean)
+  private def getTable(schema: String, table: String): DBIO[Table] = {
+    for {
+      introspectedColumns     <- getColumns(schema, table)
+      introspectedForeignKeys <- foreignKeyConstraints(schema, table)
+      introspectedIndexes     <- indexes(schema, table)
+      sequences               <- getSequences(schema, table)
+    } yield {
+      val columns = introspectedColumns.map { col =>
+        // this needs to be extended further in the future if we support arbitrary SQL types
+        val typeIdentifier = col.udtName match {
+          case "varchar" | "string" | "text" | "bpchar" => TypeIdentifier.String
+          case "numeric"                                => TypeIdentifier.Float
+          case "bool"                                   => TypeIdentifier.Boolean
+          case "timestamp"                              => TypeIdentifier.DateTime
+          case "int4"                                   => TypeIdentifier.Int
+          case "uuid"                                   => TypeIdentifier.UUID
+          case x                                        => sys.error(s"Encountered unknown SQL type $x with column ${col.name}. $col")
+        }
+        val fk = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
+          ForeignKey(fk.referencedTable, fk.referencedColumn)
+        }
+        val sequence = sequences.find(_.column == col.name).map { mseq =>
+          Sequence(mseq.name, mseq.current)
+        }
+        Column(
+          name = col.name,
+          tpe = col.udtName,
+          typeIdentifier = typeIdentifier,
+          isRequired = !col.isNullable,
+          foreignKey = fk,
+          sequence = sequence
+        )(_)
+      }
+      Table(table, columns, indexes = introspectedIndexes)
+    }
+  }
 
   implicit lazy val introspectedColumnGetResult = GetResult { ps =>
     IntrospectedColumn(
@@ -137,8 +118,6 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
           """.stripMargin.as[IntrospectedColumn]
   }
 
-  case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
-
   implicit val introspectedForeignKeyGetResult = GetResult { pr =>
     IntrospectedForeignKey(
       name = pr.rs.getString("fkConstraintName"),
@@ -174,8 +153,6 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
          |	kcu.table_name = $table
           """.stripMargin.as[IntrospectedForeignKey]
   }
-
-//  case class IntrospectedIndex(name: String)
 
   implicit val indexGetResult = GetResult { pr =>
     val columns = pr.rs.getArray("column_names").getArray.asInstanceOf[Array[String]]
@@ -224,39 +201,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
           """.stripMargin.as[Index]
   }
 
-  def mTableToModel(mTable: MTable): DBIO[Table] = {
-    for {
-      mColumns     <- mTable.getColumns
-      importedKeys <- mTable.getImportedKeys
-      mIndexes     <- mTable.getIndexInfo()
-      sequences    <- getSequences(mTable.name.schema.orElse(mTable.name.catalog).get, mTable.name.name)
-    } yield {
-      val columns = mColumns.map { mColumn =>
-        val importedKeyForColumn = importedKeys.find(_.fkColumn == mColumn.name)
-        mColumnToModel(mColumn, importedKeyForColumn, sequences)
-      }
-      val indexes = mIndexesToModels(mIndexes)
-      Table(mTable.name.name, columns, indexes)
-    }
-  }
-
-  def mIndexesToModels(mIndex: Vector[MIndexInfo]): Vector[Index] = {
-    val byName = mIndex.groupBy(_.indexName)
-    byName.map {
-      case (Some(indexName), mIndexes) =>
-        Index(
-          name = indexName,
-          columns = mIndexes.flatMap(_.column),
-          unique = !mIndexes.head.nonUnique
-        )
-      case (None, _) =>
-        sys.error("There must always be an index name")
-    }.toVector
-  }
-
-  case class MSequence(column: String, name: String, current: Int)
-
-  def getSequences(schema: String, table: String): DBIO[Vector[MSequence]] = {
+  def getSequences(schema: String, table: String): DBIO[Vector[IntrospectedSequence]] = {
     if (db.isPostgres) {
       getSequencesPostgres(schema, table)
     } else if (db.isMySql) {
@@ -266,7 +211,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
     }
   }
 
-  private def getSequencesPostgres(schema: String, table: String): DBIO[Vector[MSequence]] = {
+  private def getSequencesPostgres(schema: String, table: String): DBIO[Vector[IntrospectedSequence]] = {
     val sequencesForTable = sql"""
                               |select
                               |  cols.column_name, seq.sequence_name, seq.start_value
@@ -287,13 +232,13 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
     } yield {
       sequences.zip(currentValues).map {
         case ((column, sequence, _), current) =>
-          MSequence(column, sequence, current)
+          IntrospectedSequence(column, sequence, current)
       }
     }
     action.withPinnedSession
   }
 
-  private def getSequencesMySql(schema: String, table: String): DBIO[Vector[MSequence]] = {
+  private def getSequencesMySql(schema: String, table: String): DBIO[Vector[IntrospectedSequence]] = {
     val sequencesForTable =
       sql"""
            |select column_name
@@ -317,33 +262,8 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
       val x = for {
         column       <- sequences.headOption
         currentValue <- currentValues.headOption
-      } yield MSequence(column = column, name = "sequences_are_not_named_in_mysql", current = currentValue)
+      } yield IntrospectedSequence(column = column, name = "sequences_are_not_named_in_mysql", current = currentValue)
       x.toVector
     }
-  }
-
-  //Fixme needs to handle sqlite
-
-  def mColumnToModel(mColumn: MColumn, mForeignKey: Option[MForeignKey], mSequences: Vector[MSequence]): Table => Column = {
-    val isRequired = !mColumn.nullable.getOrElse(true) // sometimes the metadata can't definitely say if something is nullable. We treat those as not required.
-    // this needs to be extended further in the future if we support arbitrary SQL types
-    import java.sql.Types._
-    val typeIdentifier = mColumn.sqlType match {
-      case VARCHAR | CHAR | LONGVARCHAR        => TypeIdentifier.String
-      case FLOAT | NUMERIC | DECIMAL           => TypeIdentifier.Float
-      case BOOLEAN | BIT                       => TypeIdentifier.Boolean
-      case TIMESTAMP                           => TypeIdentifier.DateTime
-      case INTEGER                             => TypeIdentifier.Int
-      case OTHER if mColumn.typeName == "uuid" => TypeIdentifier.UUID
-      case x                                   => sys.error(s"Encountered unknown SQL type $x with column ${mColumn.name}. $mColumn")
-    }
-    Column(
-      name = mColumn.name,
-      tpe = mColumn.typeName,
-      typeIdentifier = typeIdentifier,
-      isRequired = isRequired,
-      foreignKey = mForeignKey.map(mfk => ForeignKey(mfk.pkTable.name, mfk.pkColumn)),
-      sequence = mSequences.find(_.column == mColumn.name).map(mseq => Sequence(mseq.name, mseq.current))
-    )
   }
 }
