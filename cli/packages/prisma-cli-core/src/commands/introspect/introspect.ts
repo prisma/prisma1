@@ -13,7 +13,12 @@ import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
 import { createConnection } from 'mysql'
-import { Parser, DatabaseType, Renderers, ISDL } from 'prisma-datamodel'
+import {
+  DefaultParser,
+  DatabaseType,
+  DefaultRenderer,
+  ISDL,
+} from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 import { omit } from 'lodash'
 import {
@@ -148,7 +153,7 @@ ${chalk.bold(
 
   getExistingDatamodel(databaseType: DatabaseType): ISDL | null {
     if (this.definition.typesString) {
-      const ParserInstance = Parser.create(databaseType!)
+      const ParserInstance = DefaultParser.create(databaseType!)
       return ParserInstance.parseFromSchemaString(this.definition.typesString!)
     }
 
@@ -172,7 +177,7 @@ ${chalk.bold(
       ? await introspection.getNormalizedDatamodel(existingDatamodel)
       : await introspection.getDatamodel()
 
-    const renderer = Renderers.create(
+    const renderer = DefaultRenderer.create(
       introspection.databaseType,
       this.flags.prototype,
     )
