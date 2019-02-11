@@ -42,6 +42,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
       introspectedColumns <- getColumns(schema, table)
 //      _                       = println(s"getTable: $schema, $table")
       introspectedForeignKeys <- foreignKeyConstraints(schema, table)
+      introspectedIndexes     <- indexes(schema, table)
 //      _                       = println(introspectedForeignKeys)
     } yield {
       val columns = introspectedColumns.map { col =>
@@ -74,7 +75,7 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
           sequence = None
         )(_)
       }
-      Table(table, columns, indexes = Vector.empty)
+      Table(table, columns, indexes = introspectedIndexes)
     }
   }
 
@@ -136,13 +137,13 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
 
   case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
 
-  implicit val introspectedForeignKeyGetResult = GetResult { ps =>
+  implicit val introspectedForeignKeyGetResult = GetResult { pr =>
     IntrospectedForeignKey(
-      name = ps.rs.getString("fkConstraintName"),
-      table = ps.rs.getString("fkTableName"),
-      column = ps.rs.getString("fkColumnName"),
-      referencedTable = ps.rs.getString("referencedTableName"),
-      referencedColumn = ps.rs.getString("referencedColumnName")
+      name = pr.rs.getString("fkConstraintName"),
+      table = pr.rs.getString("fkTableName"),
+      column = pr.rs.getString("fkColumnName"),
+      referencedTable = pr.rs.getString("referencedTableName"),
+      referencedColumn = pr.rs.getString("referencedColumnName")
     )
   }
 
@@ -170,6 +171,55 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
          |	kcu.table_schema = $schema AND
          |	kcu.table_name = $table
           """.stripMargin.as[IntrospectedForeignKey]
+  }
+
+//  case class IntrospectedIndex(name: String)
+
+  implicit val indexGetResult = GetResult { pr =>
+    val columns = pr.rs.getArray("column_names").getArray.asInstanceOf[Array[String]]
+    Index(
+      name = pr.rs.getString("index_name"),
+      columns = columns.toVector,
+      unique = pr.rs.getBoolean("is_unique")
+    )
+  }
+
+  private def indexes(schema: String, table: String): DBIO[Vector[Index]] = {
+    sql"""
+         |SELECT
+         |          tableInfos.relname as table_name,
+         |          indexInfos.relname as index_name,
+         |          array_agg(columnInfos.attname) as column_names,
+         |          rawIndex.indisunique as is_unique,
+         |          rawIndex.indisprimary as is_primary_key
+         |      FROM
+         |          -- pg_class stores infos about tables, indices etc: https://www.postgresql.org/docs/9.3/catalog-pg-class.html
+         |          pg_class tableInfos,
+         |          pg_class indexInfos,
+         |          -- pg_index stores indices: https://www.postgresql.org/docs/9.3/catalog-pg-index.html
+         |          pg_index rawIndex,
+         |          -- pg_attribute stores infos about columns: https://www.postgresql.org/docs/9.3/catalog-pg-attribute.html
+         |          pg_attribute columnInfos,
+         |          -- pg_namespace stores info about the schema
+         |          pg_namespace schemaInfo
+         |      WHERE
+         |          -- find table info for index
+         |          tableInfos.oid = rawIndex.indrelid
+         |          -- find index info
+         |          AND indexInfos.oid = rawIndex.indexrelid
+         |          -- find table columns
+         |          AND columnInfos.attrelid = tableInfos.oid
+         |          AND columnInfos.attnum = ANY(rawIndex.indkey)
+         |          -- we only consider oridnary tables
+         |          AND tableInfos.relkind = 'r'
+         |          -- we only consider stuff out of one specific schema
+         |          AND tableInfos.relnamespace = schemaInfo.oid
+         |      GROUP BY
+         |          tableInfos.relname,
+         |          indexInfos.relname,
+         |          rawIndex.indisunique,
+         |          rawIndex.indisprimary
+          """.stripMargin.as[Index]
   }
 
   def mTableToModel(mTable: MTable): DBIO[Table] = {
