@@ -30,8 +30,8 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
 //    }
     for {
       tableNames <- getTableNames(schema)
-      _          = println(s"tableNames: $tableNames")
-      tables     <- DBIO.sequence(tableNames.map(name => getTable(schema, name)))
+//      _          = println(s"tableNames: $tableNames")
+      tables <- DBIO.sequence(tableNames.map(name => getTable(schema, name)))
     } yield {
       DatabaseSchema(tables)
     }
@@ -39,21 +39,21 @@ case class DatabaseInspectorImpl(db: SlickDatabase)(implicit ec: ExecutionContex
 
   private def getTable(schema: String, table: String): DBIO[Table] = {
     for {
-      introspectedColumns     <- getColumns(schema, table)
-      _                       = println(s"getTable: $schema, $table")
+      introspectedColumns <- getColumns(schema, table)
+//      _                       = println(s"getTable: $schema, $table")
       introspectedForeignKeys <- foreignKeyConstraints(schema, table)
-      _                       = println(introspectedForeignKeys)
+//      _                       = println(introspectedForeignKeys)
     } yield {
       val columns = introspectedColumns.map { col =>
         // this needs to be extended further in the future if we support arbitrary SQL types
         import java.sql.Types._
         val typeIdentifier = col.udtName match {
-          case "varchar" | "string" | "text" => TypeIdentifier.String
-          case "numeric"                     => TypeIdentifier.Float
-          case "bool"                        => TypeIdentifier.Boolean
-          case "timestamp"                   => TypeIdentifier.DateTime
-          case "int4"                        => TypeIdentifier.Int
-          case "uuid"                        => TypeIdentifier.UUID
+          case "varchar" | "string" | "text" | "bpchar" => TypeIdentifier.String
+          case "numeric"                                => TypeIdentifier.Float
+          case "bool"                                   => TypeIdentifier.Boolean
+          case "timestamp"                              => TypeIdentifier.DateTime
+          case "int4"                                   => TypeIdentifier.Int
+          case "uuid"                                   => TypeIdentifier.UUID
 //          case VARCHAR | CHAR | LONGVARCHAR        => TypeIdentifier.String
 //          case FLOAT | NUMERIC | DECIMAL           => TypeIdentifier.Float
 //          case BOOLEAN | BIT                       => TypeIdentifier.Boolean
