@@ -109,6 +109,8 @@ case class PostgresDatabaseInspector(db: SlickDatabase)(implicit val ec: Executi
          |    AND tableInfos.relkind = 'r'
          |    -- we only consider stuff out of one specific schema
          |    AND tableInfos.relnamespace = schemaInfo.oid
+         |    AND schemaInfo.nspname = $schema
+         |    AND tableInfos.relname = $table
          |GROUP BY
          |    tableInfos.relname,
          |    indexInfos.relname,
