@@ -329,3 +329,791 @@ enum NOTIFICATION_TYPE {
   HOUSE_RULES
 }"
 `;
+
+exports[`Introspects defaultValue/mysql correctly 1`] = `
+"type A {
+  a: Int @default(value: 10) @unique
+  b: Int! @default(value: 10)
+  c: String! @unique
+  d: String @default(value: \\"Hello\\")
+}
+
+type AWithId {
+  id: ID! @id
+  a: Int @default(value: 10) @unique
+  b: Int! @default(value: 10)
+  c: String! @unique
+  d: String @default(value: \\"Hello\\")
+  b2: B! @relation(link: TABLE)
+}
+
+type B {
+  a: [A]
+  a2: AWithId @relation(link: TABLE)
+}"
+`;
+
+exports[`Introspects embedded/mysql correctly 1`] = `
+"type Parent {
+  id: ID! @id
+  p: String @unique
+  children: [Child]
+  j: [Joint]
+}
+
+type Child {
+  c: String @unique
+  friendsOpt: [Friend]
+  jointOpt: Joint! @relation(link: TABLE)
+}
+
+type Friend {
+  f: String @unique
+  test: String
+}
+
+type Joint {
+  id: ID! @id
+  j: String
+}"
+`;
+
+exports[`Introspects emptyTypes/mysql correctly 1`] = `
+"type OnlyId {
+  id: ID! @id
+}
+
+type OnlyIdAndARelation {
+  id: ID! @id
+  ref: OnlyId! @relation(link: TABLE)
+}
+
+type OnlyIdAndARelation2 {
+  id: ID! @id
+  ref: OnlyId @relation(link: TABLE)
+}
+
+type OnlyDate {
+  createdAt: DateTime! @createdAt
+}
+
+type OnlyRelation {
+  ref: [OnlyDate]
+}
+
+type OnlyRelationA {
+  ref: OnlyRelationA! @relation(link: TABLE)
+}
+
+type OnlyRelationB {
+  ref: OnlyRelationB @relation(link: TABLE)
+}"
+`;
+
+exports[`Introspects enum/mysql correctly 1`] = `
+"enum UsedEnum {
+  A
+  B
+  C
+  D
+}
+
+enum UnusedEnum {
+  X
+  Y
+  Z
+}
+
+type A {
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum]
+  b: B! @relation(link: TABLE)
+}
+
+type AWithId {
+  id: ID! @id
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum]
+  c: C @relation(link: TABLE)
+}
+
+type B {
+  field: String!
+  a: [A] @relation(link: TABLE)
+}
+
+type C {
+  field: [Int]
+  a: AWithId! @relation(link: TABLE)
+}
+
+type D {
+  field: [DateTime]
+  a: AWithId! @relation(link: TABLE)
+}
+
+type E {
+  field: Json
+  a: [A]
+}"
+`;
+
+exports[`Introspects financial/mysql correctly 1`] = `
+"type User {
+  id: ID! @id
+  person: Person! @relation(link: TABLE)
+}
+
+type Person {
+  id: ID! @id
+  email: String
+  firstName: String
+  lastName: String
+  phoneNumbers: [PhoneNumber]
+  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: TABLE)
+  transactions: [FinancialTransaction] @relation(link: TABLE)
+  user: User @relation(link: TABLE)
+}
+
+type PhoneNumber {
+  id: ID! @id
+  number: String!
+}
+
+type FinancialAccount {
+  id: ID! @id
+  key: String @unique
+  campuses: [Campus]
+  description: String!
+  isActive: Boolean!
+  name: String
+}
+
+enum CREDIT_CARD {
+  VISA
+  MASTERCARD
+  AMEX
+  DISCOVER
+}
+
+enum CURRENCY_TYPE {
+  ACH
+  CC
+}
+
+enum ACH_TYPE {
+  SAVINGS
+  CHECKING
+}
+
+type FinancialPaymentDetail {
+  id: ID! @id
+  accountNumberMasked: String!
+  billingLocation: Location @relation(link: TABLE)
+  creditCardType: CREDIT_CARD
+  achType: ACH_TYPE
+  currencyType: CURRENCY_TYPE
+  expirationDate: DateTime!
+  nameOnCard: String
+}
+
+enum TRANSACTION_FREQUENCY {
+  DAILY
+  MONTHLY
+  BIWEEKLY
+  CUSTOM
+}
+
+type FinancialScheduledTransaction {
+  id: ID! @id
+  person: Person @relation(link: TABLE)
+  endDate: DateTime
+  payment: FinancialPaymentDetail @relation(link: TABLE)
+  isActive: Boolean!
+  startDate: DateTime
+  frequency: TRANSACTION_FREQUENCY
+  transactions: [FinancialTransaction] @relation(link: TABLE)
+  account: FinancialAccount @relation(link: TABLE)
+  amount: Float!
+}
+
+enum TRANSACTION_STATUS {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+type FinancialTransaction {
+  id: ID! @id
+  payment: FinancialPaymentDetail @relation(link: TABLE)
+  person: Person @relation(link: TABLE)
+  processedDate: DateTime
+  scheduledTransaction: FinancialScheduledTransaction @relation(link: TABLE)
+  status: TRANSACTION_STATUS!
+  transactionDate: DateTime
+  amount: Float!
+  account: FinancialAccount @relation(link: TABLE)
+  organization: Group! @relation(link: TABLE)
+}
+
+enum GROUP_INVITE_STATUS {
+  PENDING
+  JOINED
+}
+
+enum GROUP_ROLE_TYPE {
+  ADMIN
+  OWNER
+  MEMBER
+}
+
+type GroupInvite {
+  id: ID! @id
+  email: String!
+  group: Group! @relation(link: TABLE)
+  groupRole: GroupRole @relation(link: TABLE)
+  status: GROUP_INVITE_STATUS!
+}
+
+type GroupMember {
+  id: ID! @id
+  group: Group @relation(link: TABLE)
+  role: GroupRole @relation(link: TABLE)
+  person: Person @relation(link: TABLE)
+}
+
+type GroupRole {
+  id: ID! @id
+  canEdit: Boolean!
+  canView: Boolean!
+  description: String!
+  groupType: GroupType @relation(link: TABLE)
+  isLeader: Boolean
+  name: String! @unique
+  type: GROUP_ROLE_TYPE
+}
+
+type GroupType {
+  id: ID! @id
+  description: String
+  groups: [Group] @relation(link: TABLE)
+  name: String! @unique
+  roles: [GroupRole] @relation(link: TABLE)
+}
+
+type Group {
+  id: ID! @id
+  key: String @unique
+  description: String
+  type: GroupType! @relation(link: TABLE)
+  invites: [GroupInvite] @relation(link: TABLE)
+  isActive: Boolean!
+  members: [GroupMember] @relation(link: TABLE)
+  name: String!
+  organization: Group @relation(link: TABLE)
+}
+
+type Campus {
+  id: ID! @id
+  accounts: [FinancialAccount]
+  description: String
+  isActive: Boolean
+  organization: Group @relation(link: TABLE)
+  location: Location @relation(link: TABLE)
+  name: String!
+  phoneNumbers: [PhoneNumber]
+}
+
+enum LOCATION_TYPE {
+  HOME
+  WORK
+}
+
+type Location {
+  id: ID! @id
+  city: String
+  locationType: LOCATION_TYPE
+  postalCode: String
+  state: String
+  street1: String
+  street2: String
+}"
+`;
+
+exports[`Introspects flavian/mysql correctly 1`] = `
+"type User {
+  id: ID! @id
+  email: String! @unique
+  name: String
+  posts: [Post] @relation(link: TABLE)
+}
+
+type Post {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  published: Boolean! @default(value: false)
+  title: String!
+  content: String
+  author: User! @relation(link: TABLE)
+}"
+`;
+
+exports[`Introspects meshRelation/mysql correctly 1`] = `
+"type A {
+  field: Int!
+  a: A! @relation(link: TABLE)
+  b: [B] @relation(link: TABLE)
+  c: C @relation(link: TABLE)
+  e: [E] @relation(link: TABLE)
+}
+
+type B {
+  field: [String]
+  c: C @relation(name: \\"BToC\\")
+  b: [B]
+  a: A! @relation(link: TABLE)
+  c2: C @relation(name: \\"BToC2\\")
+}
+
+type C {
+  expirationDate: DateTime
+  c: C! @relation(link: TABLE)
+  b: [B] @relation(name: \\"BToC\\")
+  a: A @relation(link: TABLE)
+  b2: B @relation(name: \\"BToC2\\")
+}
+
+type D {
+  field: Json
+  c: C! @relation(link: TABLE)
+  b: B! @relation(link: TABLE)
+  a: A! @relation(link: TABLE)
+  d: [D]
+}
+
+type E {
+  field: Json
+  a: A! @relation(link: TABLE)
+}"
+`;
+
+exports[`Introspects oneSidedConnection/mysql correctly 1`] = `
+"type TypeWithId {
+  id: ID! @id
+  field: String!
+}
+
+type TypeWithoutId {
+  field: String!
+}
+
+type A {
+  x: TypeWithId! @relation(link: TABLE)
+  y: TypeWithoutId! @relation(link: TABLE)
+}
+
+type B {
+  x: TypeWithId @relation(link: TABLE)
+  y: TypeWithoutId @relation(link: TABLE)
+}
+
+type C {
+  x: [TypeWithId]
+  y: [TypeWithoutId]
+}
+
+type D {
+  id: ID! @id
+  x: TypeWithId! @relation(link: TABLE)
+  y: TypeWithoutId! @relation(link: TABLE)
+}
+
+type E {
+  id: ID! @id
+  x: TypeWithId @relation(link: TABLE)
+  y: TypeWithoutId @relation(link: TABLE)
+}
+
+type F {
+  id: ID! @id
+  x: [TypeWithId]
+  y: [TypeWithoutId]
+}"
+`;
+
+exports[`Introspects prisma-3143/mysql correctly 1`] = `
+"type Story {
+  id: ID! @id
+}
+
+type UserSpace {
+  id: ID! @id
+  stories: [Story] @relation(name: \\"StoriesByUserSpace\\")
+}"
+`;
+
+exports[`Introspects relationNames/mysql correctly 1`] = `
+"type A {
+  toB: B! @relation(name: \\"RaToB\\")
+  toB2: B! @relation(name: \\"RaToB2\\")
+  toC: C @relation(link: TABLE)
+}
+
+type B {
+  toA: A! @relation(name: \\"RaToB\\")
+  toA2: A! @relation(name: \\"RaToB2\\")
+  toC: C! @relation(link: TABLE)
+}
+
+type C {
+  toB: [B] @relation(link: TABLE)
+  toA: [A] @relation(link: TABLE)
+}"
+`;
+
+exports[`Introspects relations/mysql correctly 1`] = `
+"type User {
+  id: ID! @id
+  name: String!
+  posts: [Post] @relation(name: \\"PostsByUser\\")
+  postsWithoutConnection: [PostWithoutConnection]
+  billingInfo: BillingInfo! @relation(link: TABLE)
+  billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: TABLE)
+  likes: [Post] @relation(name: \\"LikesByUser\\")
+  optionalDetails: OptionalDetails @relation(link: TABLE)
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(link: TABLE)
+}
+
+type Post {
+  id: ID! @id
+  text: String!
+  count: Int!
+  user: User! @relation(name: \\"PostsByUser\\")
+  likes: [User] @relation(name: \\"LikesByUser\\")
+}
+
+type PostWithoutConnection {
+  id: ID! @id
+  text: String!
+  count: Int!
+}
+
+type BillingInfo {
+  id: ID! @id
+  account: String!
+  user: User! @relation(link: TABLE)
+}
+
+type BillingInfoWithoutConnection {
+  account: String!
+}
+
+type OptionalDetails {
+  text: String!
+  user: User! @relation(link: TABLE)
+}
+
+type OptionalDetailsWithoutConnection {
+  text: String!
+}"
+`;
+
+exports[`Introspects scalars/mysql correctly 1`] = `
+"type LotsOfScalars {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+type LotsOfRequiredScalars {
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+}
+
+type LotsOfScalarLists {
+  int: [Int]
+  string: [String]
+  float: [Float]
+  dateTime: [DateTime]
+  json: [Json]
+  boolean: [Boolean]
+}
+
+type LotsOfScalarsWithID {
+  id: ID! @id
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+type LotsOfRequiredScalarsWithID {
+  id: ID! @id
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+}
+
+type LotsOfScalarListsWithID {
+  id: ID! @id
+  int: [Int]
+  string: [String]
+  float: [Float]
+  dateTime: [DateTime]
+  json: [Json]
+  boolean: [Boolean]
+}"
+`;
+
+exports[`Introspects selfReferencing/mysql correctly 1`] = `
+"type SelfReferencingAWithId {
+  id: ID! @id
+  a: SelfReferencingAWithId! @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingBWithId {
+  id: ID! @id
+  a: SelfReferencingBWithId @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingCWithId {
+  id: ID! @id
+  a: [SelfReferencingBWithId]
+  field: Int!
+}
+
+type SelfReferencingA {
+  id: ID! @id
+  a: SelfReferencingAWithId! @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingB {
+  id: ID! @id
+  a: SelfReferencingB @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingC {
+  id: ID! @id
+  a: [SelfReferencingC]
+  field: Int!
+}
+
+type MultiSelfReferencingCWithId {
+  id: ID! @id
+  a: [MultiSelfReferencingCWithId] @relation(name: \\"WithIdAToA\\")
+  b: [MultiSelfReferencingCWithId] @relation(name: \\"WithIdAToA\\")
+}
+
+type MultiSelfReferencingBWithId {
+  id: ID! @id
+  a: MultiSelfReferencingBWithId @relation(name: \\"WithIdAToA2\\")
+  b: MultiSelfReferencingBWithId @relation(name: \\"WithIdAToA2\\")
+}
+
+type MultiSelfReferencingC {
+  a: [MultiSelfReferencingC] @relation(name: \\"AToA\\")
+  b: [MultiSelfReferencingC] @relation(name: \\"AToA\\")
+}
+
+type MultiSelfReferencingB {
+  a: MultiSelfReferencingB @relation(name: \\"AToA2\\")
+  b: MultiSelfReferencingB @relation(name: \\"AToA2\\")
+}"
+`;
+
+exports[`Introspects simple/mysql correctly 1`] = `
+"type User {
+  id: ID! @id
+  name: String!
+}"
+`;
+
+exports[`Introspects todo/mysql correctly 1`] = `
+"type Todo {
+  id: ID! @id
+  text: String!
+  done: Boolean!
+  user: User! @relation(link: TABLE)
+}
+
+type User {
+  id: ID! @id
+  name: String!
+}"
+`;
+
+exports[`Introspects twoSidedConnection/mysql correctly 1`] = `
+"type AWithIdWithA {
+  id: ID! @id
+  field: String!
+  x: AWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithA {
+  field: String!
+  x: AWithA! @relation(link: TABLE)
+}
+
+type BWithIdWithA {
+  id: ID! @id
+  field: String!
+  x: AWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithA {
+  field: String!
+  x: AWithB @relation(link: TABLE)
+}
+
+type CWithIdWithA {
+  id: ID! @id
+  field: String!
+  x: [AWithC] @relation(link: TABLE)
+}
+
+type CWithoutIdWithA {
+  field: String!
+  x: [AWithC] @relation(link: TABLE)
+}
+
+type AWithIdWithB {
+  id: ID! @id
+  field: String!
+  x: BWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithB {
+  field: String!
+  x: BWithA! @relation(link: TABLE)
+}
+
+type BWithIdWithB {
+  id: ID! @id
+  field: String!
+  x: BWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithB {
+  field: String!
+  x: BWithB @relation(link: TABLE)
+}
+
+type CWithIdWithB {
+  id: ID! @id
+  field: String!
+  x: [BWithC] @relation(link: TABLE)
+}
+
+type CWithoutIdWithB {
+  field: String!
+  x: [BWithC] @relation(link: TABLE)
+}
+
+type AWithIdWithC {
+  id: ID! @id
+  field: String!
+  x: CWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithC {
+  field: String!
+  x: CWithA! @relation(link: TABLE)
+}
+
+type BWithIdWithC {
+  id: ID! @id
+  field: String!
+  x: CWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithC {
+  field: String!
+  x: CWithB @relation(link: TABLE)
+}
+
+type CWithIdWithC {
+  id: ID! @id
+  field: String!
+  x: [CWithC]
+}
+
+type CWithoutIdWithC {
+  field: String!
+  x: [CWithC]
+}
+
+type AWithA {
+  x: AWithIdWithA! @relation(link: TABLE)
+  y: AWithoutIdWithA! @relation(link: TABLE)
+}
+
+type AWithB {
+  x: BWithIdWithA! @relation(link: TABLE)
+  y: BWithoutIdWithA! @relation(link: TABLE)
+}
+
+type AWithC {
+  x: CWithIdWithA! @relation(link: TABLE)
+  y: CWithoutIdWithA! @relation(link: TABLE)
+}
+
+type BWithA {
+  x: AWithIdWithB @relation(link: TABLE)
+  y: AWithoutIdWithB @relation(link: TABLE)
+}
+
+type BWithB {
+  x: BWithIdWithB @relation(link: TABLE)
+  y: BWithoutIdWithB @relation(link: TABLE)
+}
+
+type BWithC {
+  x: CWithIdWithB @relation(link: TABLE)
+  y: CWithoutIdWithB @relation(link: TABLE)
+}
+
+type CWithA {
+  x: [AWithIdWithC] @relation(link: TABLE)
+  y: [AWithoutIdWithC] @relation(link: TABLE)
+}
+
+type CWithB {
+  x: [BWithIdWithC] @relation(link: TABLE)
+  y: [BWithoutIdWithC] @relation(link: TABLE)
+}
+
+type CWithC {
+  x: [CWithIdWithC]
+  y: [CWithoutIdWithC]
+}"
+`;
+
+exports[`Introspects withAndWithoutId/mysql correctly 1`] = `
+"type TypeWithId {
+  id: ID! @id
+  field: String!
+}
+
+type TypeWithoutId {
+  field: String!
+}"
+`;

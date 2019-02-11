@@ -64,5 +64,4 @@ for (const testName of testNames) {
   test(`Introspects ${testName}/mysql correctly`, async () => {
     await blackBoxTest(testName)
   })
-  break
 }
