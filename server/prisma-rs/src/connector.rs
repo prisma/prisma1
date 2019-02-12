@@ -5,11 +5,7 @@ use crate::{models::Model, protobuf::prisma::Node};
 pub use sqlite::Sqlite;
 pub type PrismaConnector = Box<dyn Connector + Send + Sync + 'static>;
 
-use crate::{
-    models::ScalarField,
-    protobuf::prisma::{QueryArguments, SelectedField},
-    PrismaResult, PrismaValue,
-};
+use crate::{models::ScalarField, protobuf::prisma::QueryArguments, PrismaResult, PrismaValue};
 
 /// Trait responsible for fetching rows from the database.
 pub trait Connector {
@@ -26,8 +22,8 @@ pub trait Connector {
     fn get_nodes(
         &self,
         database_name: &str,
-        table_name: &str,
-        selected_fields: &[SelectedField],
-        query_arguments: &QueryArguments,
+        model: &Model,
+        selected_fields: &[&ScalarField],
+        query_arguments: QueryArguments,
     ) -> PrismaResult<Vec<Node>>;
 }

@@ -5,9 +5,7 @@ use std::collections::HashSet;
 use crate::{
     connector::Connector,
     models::{Model, Renameable, ScalarField, TypeIdentifier},
-    protobuf::prisma::{
-        graphql_id::IdValue, GraphqlId, Node, QueryArguments, SelectedField, ValueContainer,
-    },
+    protobuf::prisma::{graphql_id::IdValue, GraphqlId, Node, QueryArguments, ValueContainer},
     PrismaResult, PrismaValue, SERVER_ROOT,
 };
 
@@ -39,12 +37,12 @@ impl Connector for Sqlite {
             let params = vec![(condition as &ToSql)];
             let mut values = Vec::new();
 
-            let table_location = Self::table_location(database_name, model.db_name());
             let field_names: Vec<&str> = selected_fields
                 .iter()
                 .map(|field| field.db_name())
                 .collect();
 
+            let table_location = Self::table_location(database_name, model.db_name());
             let query = select_from(&table_location)
                 .columns(&field_names)
                 .so_that(field.db_name().equals(DatabaseValue::Parameter))
@@ -64,12 +62,46 @@ impl Connector for Sqlite {
 
     fn get_nodes(
         &self,
-        _database_name: &str,
-        _table_name: &str,
-        _selected_fields: &[SelectedField],
-        _query_arguments: &QueryArguments,
+        database_name: &str,
+        model: &Model,
+        selected_fields: &[&ScalarField],
+        query_arguments: QueryArguments,
     ) -> PrismaResult<Vec<Node>> {
-        Ok(Vec::new())
+        self.with_connection(database_name, |conn| {
+            let field_names: Vec<&str> = selected_fields
+                .iter()
+                .map(|field| field.db_name())
+                .collect();
+
+            let table_location = Self::table_location(database_name, model.db_name());
+
+            let conditions: ConditionTree = query_arguments
+                .filter
+                .map(|filter| filter.into())
+                .unwrap_or(ConditionTree::NoCondition);
+
+            let query = select_from(&table_location)
+                .columns(&field_names)
+                .so_that(conditions)
+                .compile()
+                .unwrap();
+
+            let mut stmt = conn.prepare(&query).unwrap();
+            let mut nodes = Vec::new();
+
+            stmt.query_map(NO_PARAMS, |row| {
+                let mut values = Vec::new();
+
+                for (i, field) in selected_fields.iter().enumerate() {
+                    let prisma_value = Some(Self::fetch_value(field.type_identifier, row, i));
+                    values.push(ValueContainer { prisma_value });
+                }
+
+                nodes.push(Node { values });
+            })?;
+
+            Ok(nodes)
+        })
     }
 }
 
@@ -108,14 +140,15 @@ impl Sqlite {
 
     /// Take a new connection from the pool and create the database if it
     /// doesn't exist yet.
-    fn with_connection<F, T>(&self, db_name: &str, mut f: F) -> PrismaResult<T>
+    fn with_connection<F, T>(&self, db_name: &str, f: F) -> PrismaResult<T>
     where
-        F: FnMut(&Connection) -> PrismaResult<T>,
+        F: FnOnce(&Connection) -> PrismaResult<T>,
     {
         let mut conn = dbg!(self.pool.get()?);
         Self::create_database(&mut conn, db_name)?;
 
         let result = f(&conn);
+
         if self.test_mode {
             dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
         }
