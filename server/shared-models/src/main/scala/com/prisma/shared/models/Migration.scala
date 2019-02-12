@@ -72,9 +72,9 @@ object Migration {
 sealed trait MigrationStep
 sealed trait ModelMigrationStep extends MigrationStep
 
-case class CreateModel(name: String)                  extends ModelMigrationStep
-case class DeleteModel(name: String)                  extends ModelMigrationStep
-case class UpdateModel(name: String, newName: String) extends ModelMigrationStep
+case class CreateModel(name: String)                     extends ModelMigrationStep
+case class DeleteModel(name: String)                     extends ModelMigrationStep
+case class UpdateModel(oldModel: Model, newModel: Model) extends ModelMigrationStep
 
 sealed trait FieldMigrationStep                     extends MigrationStep
 case class CreateField(model: String, name: String) extends FieldMigrationStep

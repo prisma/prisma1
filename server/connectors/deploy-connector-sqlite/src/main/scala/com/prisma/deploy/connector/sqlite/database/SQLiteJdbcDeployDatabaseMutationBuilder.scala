@@ -177,10 +177,10 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     //    https://www.sqlite.org/lang_altertable.html
     //    If foreign key constraints are enabled, disable them using PRAGMA foreign_keys=OFF.
-    val foreignKeysOff = sqlu"Pragma foreign_keys=OFF"
+    val foreignKeysOff = sqlu"Pragma foreign_keys=OFF;"
 
     //    Start a transaction.
-    val beginTransaction = sqlu"BEGIN TRANSACTION"
+    val beginTransaction = sqlu"BEGIN TRANSACTION;"
     //    Remember the format of all indexes and triggers associated with table X. This information will be needed in step 8 below
 
     //    Use CREATE TABLE to construct a new table "new_X" that is in the desired revised format of table X.
@@ -204,31 +204,30 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     val transferContent =
       sqlu"""INSERT INTO #${qualify(project.dbName, tempTableName)} (#$columnNames)
              SELECT #$columnNames
-             FROM #${qualify(project.dbName, tableName)}
+             FROM #${qualify(project.dbName, tableName)};
           """
 
     //    Drop the old table X: DROP TABLE X.
-    val dropOldTable = sqlu"DROP TABLE #${qualify(project.dbName, tableName)} "
-
-    //    Fetch original indexes
-    //    Fixme
-    //    One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
+    val dropOldTable = sqlu"DROP TABLE #${qualify(project.dbName, tableName)};"
 
     //    Change the name of new_X to X using: ALTER TABLE new_X RENAME TO X.
+    val renameNewTable = sqlu"ALTER TABLE #${qualify(project.dbName, tempTableName)} RENAME TO #${qualify(tableName)};"
 
-    val renameNewTable = sqlu"ALTER TABLE #${qualify(project.dbName, tempTableName)} RENAME TO #${qualify(project.dbName, tableName)}"
-    //    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X. Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
+    //    Use CREATE INDEX and CREATE TRIGGER to reconstruct indexes and triggers associated with table X.
+    //    Perhaps use the old format of the triggers and indexes saved from step 3 above as a guide, making changes as appropriate for the alteration.
+    //    Fetch original indexes One way to do this is to run a query like the following: SELECT type, sql FROM sqlite_master WHERE tbl_name='X'.
     val createIndexes = sqlu"" //Fixme
 
-    //    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
+    //    If any views refer to table X in a way that is affected by the schema change, then drop those views using DROP VIEW
+    //    and recreate them with whatever changes are necessary to accommodate the schema change using CREATE VIEW.
 
     //    If foreign key constraints were originally enabled then run PRAGMA foreign_key_check to verify that the schema change did not break any foreign key constraints.
-    val foreignKeyCheck = sqlu"Pragma foreign_key_check"
+    val foreignKeyCheck = sqlu"Pragma foreign_key_check;"
     //    Commit the transaction started in step 2.
 
     val commit = sqlu"COMMIT"
     //    If foreign keys constraints were originally enabled, reenable them now.
-    val foreignKeysOn = sqlu"Pragma foreign_keys=ON"
+    val foreignKeysOn = sqlu"Pragma foreign_keys=ON;"
 
     DBIO.seq(
       foreignKeysOff,
@@ -237,9 +236,9 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
       addAllScalarNonListFields,
       transferContent,
       dropOldTable,
-      renameNewTable,
-      createIndexes,
-      foreignKeyCheck,
+//      renameNewTable,
+//      createIndexes,
+//      foreignKeyCheck,
       commit,
       foreignKeysOn
     )
@@ -254,37 +253,33 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def addUniqueConstraint(project: Project, field: Field): DBIO[_] = {
-    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(project.dbName, s"${field.dbName}_UNIQUE")} ON #${qualify(field.model.dbName)} (#${qualify(field.dbName)} ASC)"
+    sqlu"CREATE UNIQUE INDEX IF NOT EXISTS #${qualify(project.dbName, s"${field.dbName}_UNIQUE")} ON #${qualify(field.model.dbName)} (#${qualify(field.dbName)} ASC);"
   }
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
-    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)}"
+    sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)};"
   }
 
   override def renameTable(project: Project, oldTableName: String, newTableName: String): DBIO[_] = {
     if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)}"""
+      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)};"""
     } else {
-      DatabaseAction.successful(())
+      DBIO.successful(())
     }
   }
 
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {
     if (oldColumnName != newColumnName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
+      sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)};"""
     } else {
-      DatabaseAction.successful(())
+      DBIO.successful(())
     }
   }
 
-  def rawSQLFromParts(
-      name: String,
-      isRequired: Boolean,
-      typeIdentifier: TypeIdentifier,
-      isAutoGenerated: Boolean = false,
-      defaultValue: Option[GCValue] = None
-  ): String = {
+  def rawSQLFromParts(name: String, isRequired: Boolean, typeIdentifier: TypeIdentifier, isAutoGenerated: Boolean = false): String = {
+
     val n = typeMapper.esc(name)
+
     val defaultDefaultValue = typeIdentifier match {
       case TypeIdentifier.Cuid     => "defaultid"
       case TypeIdentifier.DateTime => "''"
@@ -297,15 +292,11 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
       case TypeIdentifier.Json     => "''"
       case TypeIdentifier.Relation => "''"
     }
+
     val nullable  = if (isRequired) "NOT NULL" else "NULL"
     val generated = if (isAutoGenerated) "AUTO_INCREMENT" else ""
     val ty        = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
-    val default = defaultValue match {
-      case None if !isRequired    => ""
-      case Some(d) if !isRequired => s"DEFAULT ${d.value}"
-      case Some(d) if isRequired  => s"DEFAULT ${d.value}"
-      case None if isRequired     => s"DEFAULT $defaultDefaultValue"
-    }
+    val default   = if (isRequired) s"DEFAULT $defaultDefaultValue" else ""
 
     s"$n $ty $nullable $default $generated"
   }

@@ -967,7 +967,9 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       functions = Vector.empty,
       noMigration = None
     )
+
     val refreshedProject = testDependencies.projectPersistence.load(project.id).await.get
+
     val mutation = DeployMutation(
       args = input,
       project = refreshedProject,

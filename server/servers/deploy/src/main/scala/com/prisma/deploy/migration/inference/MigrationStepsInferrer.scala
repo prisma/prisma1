@@ -2,6 +2,7 @@ package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
 import com.prisma.shared.models.FieldBehaviour._
+import com.prisma.shared.models.Manifestations.ModelManifestation
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -72,12 +73,19 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
-      if nextModel.name != previousModel.name || nextModel.isEmbedded != previousModel.isEmbedded
-    } yield UpdateModel(name = previousModelName, newName = nextModel.name)
+      if nextModel != previousModel
+    } yield UpdateModel(oldModel = previousModel, newModel = nextModel)
   }
 
-  lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(update => update.copy(newName = "__" + update.newName))
-  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map(update => update.copy(name = "__" + update.newName))
+  lazy val modelsToUpdateFirstStep: Vector[UpdateModel] = modelsToUpdate.map { update =>
+    val manifestation = Some(ModelManifestation("__" ++ update.newModel.dbName))
+    UpdateModel(oldModel = update.oldModel, newModel = update.newModel.copy(manifestation = manifestation).build(update.newModel.schema))
+  }
+
+  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map { update =>
+    val manifestation = Some(ModelManifestation("__" ++ update.newModel.dbName))
+    UpdateModel(oldModel = update.newModel.copy(manifestation = manifestation).build(update.newModel.schema), newModel = update.newModel)
+  }
 
   /*
    * Check all previous models if they are present on on the new one, ignore renames (== updated models).

@@ -9,7 +9,7 @@ sealed trait DeployMutaction {
 case class TruncateProject(project: Project) extends DeployMutaction { val projectId = project.id }
 
 case class CreateColumn(project: Project, model: Model, field: ScalarField)                           extends DeployMutaction
-case class DeleteColumn(project: Project, model: Model, field: ScalarField)                           extends DeployMutaction
+case class DeleteColumn(project: Project, oldModel: Model, field: ScalarField)                        extends DeployMutaction
 case class UpdateColumn(project: Project, model: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
 
 case class CreateScalarListTable(project: Project, model: Model, field: ScalarField)                                               extends DeployMutaction

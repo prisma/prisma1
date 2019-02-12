@@ -56,7 +56,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   override def rollback(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case None    => builder.deleteColumn(mutaction.project, tableName = mutaction.model.dbName, columnName = mutaction.field.dbName)
+      case None    => builder.deleteColumn(mutaction.project, mutaction.model.dbName, mutaction.field.dbName, Some(mutaction.model)) //Fixme
       case Some(_) => DBIO.successful(())
     }
   }
@@ -64,14 +64,14 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
 case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
-    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case Some(_) => builder.deleteColumn(mutaction.project, tableName = mutaction.model.dbName, columnName = mutaction.field.dbName)
+    schemaBeforeMigration.table(mutaction.oldModel.dbName).flatMap(_.column(mutaction.field.dbName)) match {
+      case Some(_) => builder.deleteColumn(mutaction.project, mutaction.oldModel.dbName, mutaction.field.dbName, Some(mutaction.oldModel))
       case None    => DBIO.successful(())
     }
   }
 
   override def rollback(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
-    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
+    schemaBeforeMigration.table(mutaction.oldModel.dbName).flatMap(_.column(mutaction.field.dbName)) match {
       case Some(_) => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
       case None    => DBIO.successful(())
     }
