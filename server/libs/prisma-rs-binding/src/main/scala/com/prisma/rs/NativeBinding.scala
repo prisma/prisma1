@@ -51,14 +51,13 @@ object NativeBinding {
       // Error cases
       case RpcResponse.Response.Error(error: Error) =>
         error.value match {
-          case Error.Value.ConnectionError(str)     => ???
-          case Error.Value.InvalidInputError(str)   => ???
-          case Error.Value.JsonDecodeError(str)     => ???
-          case Error.Value.NoResultsError(str)      => ???
-          case Error.Value.ProtobufDecodeError(str) => ???
-          case Error.Value.QueryError(str)          => ???
+          case Error.Value.ConnectionError(str)     => throw ConnectionError(str)
+          case Error.Value.InvalidInputError(str)   => throw InvalidInputError(str)
+          case Error.Value.JsonDecodeError(str)     => throw JsonDecodeError(str)
+          case Error.Value.NoResultsError(str)      => throw NoResultError(str)
+          case Error.Value.ProtobufDecodeError(str) => throw ProtobufDecodeError(str)
+          case Error.Value.QueryError(str)          => throw QueryError(str)
           case Error.Value.Empty                    => sys.error("Empty RPC response error value")
-
         }
 
       case RpcResponse.Response.Empty => sys.error("Empty RPC response value")
