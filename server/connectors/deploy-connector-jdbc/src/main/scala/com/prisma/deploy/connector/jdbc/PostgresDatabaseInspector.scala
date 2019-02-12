@@ -1,6 +1,7 @@
 package com.prisma.deploy.connector.jdbc
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.Index
+import com.prisma.deploy.connector.jdbc.DatabaseInspectorBase._
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
 
