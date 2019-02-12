@@ -48,7 +48,10 @@ case class Column(
     isRequired: Boolean,
     foreignKey: Option[ForeignKey],
     sequence: Option[Sequence]
-)(val table: Table)
+)(val table: Table) {
+  def isUnique = table.indexes.find(_.columns == Vector(name)).exists(_.unique)
+}
+
 object Column {
   object withForeignKey {
     def unapply(arg: Column): Option[ForeignKey] = arg.foreignKey

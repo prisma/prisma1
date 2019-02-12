@@ -287,6 +287,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     MigrationStepsInferrer().infer(
       previousSchema = previousSchema,
       nextSchema = nextSchema,
+      databaseSchema = null,
       renames = SchemaMapping.empty
     )
   }

@@ -116,22 +116,29 @@ case class MigrationStepsInferrerImplNew(previousSchema: Schema, nextSchema: Sch
 //    } yield {
 //      CreateField(model = nextModel.name, name = fieldOfNextModel.name)
 //    }
-    for {
-      nextModel        <- nextSchema.models.toVector
-      fieldOfNextModel <- nextModel.scalarFields.toVector
-      column           = databaseSchema.table(nextModel.dbName).flatMap(_.column(fieldOfNextModel.dbName))
+    val x = for {
+      nextModel <- nextSchema.models.toVector
+      nextField <- nextModel.scalarFields.toVector
+      column    = databaseSchema.table(nextModel.dbName).flatMap(_.column(nextField.dbName))
     } yield {
-      if (column.isEmpty) {
-        CreateField(model = nextModel.name, name = fieldOfNextModel.name)
-      } else {
-        UpdateField(
-          model = nextModel.name,
-          newModel = nextModel.name,
-          name = fieldOfNextModel.name,
-          newName = None
-        )
+      column match {
+        case None =>
+          Some(CreateField(model = nextModel.name, name = nextField.name))
+        case Some(c) =>
+          if (nextField.dbName != c.name || nextField.typeIdentifier != c.typeIdentifier || nextField.isUnique != c.isUnique || nextField.isRequired != c.isRequired) {
+            Some(
+              UpdateField(
+                model = nextModel.name,
+                newModel = nextModel.name,
+                name = nextField.name,
+                newName = None
+              ))
+          } else {
+            None
+          }
       }
     }
+    x.flatten
   }
 
   lazy val fieldsToUpdate: Vector[FieldMigrationStep] = {

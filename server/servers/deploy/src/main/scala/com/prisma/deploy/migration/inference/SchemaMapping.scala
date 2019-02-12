@@ -16,6 +16,8 @@ case class SchemaMapping(
     fields.find(r => r.nextModel == nextModel && r.nextField == nextField).map(_.previousField).getOrElse(nextField)
   def getPreviousRelationName(nextRelation: String): String = relations.find(_.next == nextRelation).map(_.previous).getOrElse(nextRelation)
 
+  def wasModelRenamed(nextModel: String) = getPreviousModelName(nextModel) != nextModel
+
   def getNextModelName(previousModel: String): String = models.find(_.previous == previousModel).map(_.next).getOrElse(previousModel)
   def getNextEnumName(previousEnum: String): String   = enums.find(_.previous == previousEnum).map(_.next).getOrElse(previousEnum)
   def getNextFieldName(previousModel: String, previousField: String): String =

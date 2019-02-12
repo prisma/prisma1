@@ -7,22 +7,24 @@ import slick.jdbc.PostgresProfile.api._
 case class CreateModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateModelTable] {
 
   override def execute(mutaction: CreateModelTable, schemaBeforeMigration: DatabaseSchema): DBIOAction[Any, NoStream, Effect.All] = {
-    schemaBeforeMigration.table(mutaction.model.dbName) match {
-      case None =>
-        builder.createModelTable(mutaction.project, mutaction.model)
-      case Some(_) =>
-        DBIO.successful(())
-    }
+//    schemaBeforeMigration.table(mutaction.model.dbName) match {
+//      case None =>
+//        builder.createModelTable(mutaction.project, mutaction.model)
+//      case Some(_) =>
+//        DBIO.successful(())
+//    }
+    builder.createModelTable(mutaction.project, mutaction.model)
   }
 
   override def rollback(mutaction: CreateModelTable, schemaBeforeMigration: DatabaseSchema) = {
     // only drop the table if it was created in the step before
-    schemaBeforeMigration.table(mutaction.model.dbName) match {
-      case None =>
-        builder.dropTable(mutaction.project, tableName = mutaction.model.dbName)
-      case Some(_) =>
-        DBIO.successful(())
-    }
+//    schemaBeforeMigration.table(mutaction.model.dbName) match {
+//      case None =>
+//        builder.dropTable(mutaction.project, tableName = mutaction.model.dbName)
+//      case Some(_) =>
+//        DBIO.successful(())
+//    }
+    builder.dropTable(mutaction.project, tableName = mutaction.model.dbName)
   }
 }
 

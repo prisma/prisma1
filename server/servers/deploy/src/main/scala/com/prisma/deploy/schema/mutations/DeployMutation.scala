@@ -83,7 +83,8 @@ case class DeployMutation(
             FutureOr(checkProjectSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
           }
       functions             <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
-      steps                 <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
+      steps                 <- FutureOr(inferMigrationSteps(inferredNextSchema, newDatabaseSchema, schemaMapping))
+      _                     = steps.foreach(println)
       destructiveWarnings   <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
       isMigratingFromV1ToV2 = project.schema.isLegacy && inferredNextSchema.isV2
       v1ToV2Warning = isMigratingFromV1ToV2.toOption {
@@ -152,9 +153,13 @@ case class DeployMutation(
     }
   }
 
-  private def inferMigrationSteps(nextSchema: Schema, schemaMapping: SchemaMapping): Future[Vector[MigrationStep] Or Vector[DeployError]] = {
+  private def inferMigrationSteps(
+      nextSchema: Schema,
+      databaseSchema: DatabaseSchema,
+      schemaMapping: SchemaMapping
+  ): Future[Vector[MigrationStep] Or Vector[DeployError]] = {
     val steps = if (actsAsActive) {
-      migrationStepsInferrer.infer(project.schema, nextSchema, schemaMapping)
+      migrationStepsInferrer.infer(project.schema, nextSchema, databaseSchema, schemaMapping)
     } else {
       Vector.empty
     }

@@ -1,20 +1,26 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
 import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
-  def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep]
+  def infer(previousSchema: Schema, nextSchema: Schema, databaseSchema: DatabaseSchema, renames: SchemaMapping): Vector[MigrationStep]
 }
 
 object MigrationStepsInferrer {
   def apply(): MigrationStepsInferrer = {
-    apply((previous, next, renames) => MigrationStepsInferrerImpl(previous, next, renames).evaluate())
+    apply((previous, next, _, renames) => MigrationStepsInferrerImpl(previous, next, renames).evaluate())
   }
 
-  def apply(fn: (Schema, Schema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer =
-    (previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) => fn(previousSchema, nextSchema, renames)
+  def newInferrer(): MigrationStepsInferrer = {
+    apply((previous, next, databaseSchema, renames) => MigrationStepsInferrerImplNew(previous, next, databaseSchema, renames).evaluate())
+  }
+
+  def apply(fn: (Schema, Schema, DatabaseSchema, SchemaMapping) => Vector[MigrationStep]): MigrationStepsInferrer =
+    (previousSchema: Schema, nextSchema: Schema, databaseSchema: DatabaseSchema, renames: SchemaMapping) =>
+      fn(previousSchema, nextSchema, databaseSchema, renames)
 }
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
