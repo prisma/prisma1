@@ -41,7 +41,10 @@ impl QueryExecutor for GetNodesInput {
             self.query_arguments,
         )?;
 
-        let fields = Vec::new();
+        let fields: Vec<String> = selected_fields
+            .into_iter()
+            .map(|field| field.db_name().to_string())
+            .collect();
 
         Ok((nodes, fields))
     }

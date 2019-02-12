@@ -720,7 +720,7 @@ dependencies = [
 [[package]]
 name = "sql"
 version = "0.4.3"
-source = "git+https://github.com/prisma/sql.git#e0fefddd2eb674e9c3a3512ba4e2f6d278786811"
+source = "git+https://github.com/prisma/sql.git#ebbbb873ca678626e124f6b7759a3f22d5a76270"
 
 [[package]]
 name = "syn"

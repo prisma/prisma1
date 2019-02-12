@@ -134,6 +134,27 @@ impl Into<ConditionTree> for Filter {
     }
 }
 
+impl ToDatabaseValue for PrismaValue {
+    fn to_database_value(self) -> DatabaseValue {
+        match self {
+            PrismaValue::String(s) => s.to_database_value(),
+            PrismaValue::Float(f) => (f as f64).to_database_value(),
+            PrismaValue::Boolean(b) => b.to_database_value(),
+            PrismaValue::DateTime(d) => d.to_database_value(),
+            PrismaValue::Enum(e) => e.to_database_value(),
+            PrismaValue::Json(j) => j.to_database_value(),
+            PrismaValue::Int(i) => (i as i64).to_database_value(),
+            PrismaValue::Relation(i) => i.to_database_value(),
+            PrismaValue::Null(_) => DatabaseValue::Null,
+            PrismaValue::Uuid(u) => u.to_database_value(),
+            PrismaValue::GraphqlId(id) => match id.id_value.unwrap() {
+                IdValue::String(s) => s.to_database_value(),
+                IdValue::Int(i) => i.to_database_value(),
+            },
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use sql::grammar::{clause::ConditionTree, Operation};
@@ -553,26 +574,5 @@ mod tests {
             "((foo = false AND bar = 2) OR (musti = 'cat' AND naukio = 'cat'))",
             condition.compile().unwrap(),
         );
-    }
-}
-
-impl ToDatabaseValue for PrismaValue {
-    fn to_database_value(self) -> DatabaseValue {
-        match self {
-            PrismaValue::String(s) => s.to_database_value(),
-            PrismaValue::Float(f) => (f as f64).to_database_value(),
-            PrismaValue::Boolean(b) => b.to_database_value(),
-            PrismaValue::DateTime(d) => d.to_database_value(),
-            PrismaValue::Enum(e) => e.to_database_value(),
-            PrismaValue::Json(j) => j.to_database_value(),
-            PrismaValue::Int(i) => (i as i64).to_database_value(),
-            PrismaValue::Relation(i) => i.to_database_value(),
-            PrismaValue::Null(_) => DatabaseValue::Null,
-            PrismaValue::Uuid(u) => u.to_database_value(),
-            PrismaValue::GraphqlId(id) => match id.id_value.unwrap() {
-                IdValue::String(s) => s.to_database_value(),
-                IdValue::Int(i) => i.to_database_value(),
-            },
-        }
     }
 }

@@ -43,11 +43,11 @@ impl Connector for Sqlite {
                 .collect();
 
             let table_location = Self::table_location(database_name, model.db_name());
-            let query = select_from(&table_location)
+            let query = dbg!(select_from(&table_location)
                 .columns(&field_names)
                 .so_that(field.db_name().equals(DatabaseValue::Parameter))
                 .compile()
-                .unwrap();
+                .unwrap());
 
             conn.query_row(&query, params.as_slice(), |row| {
                 for (i, field) in selected_fields.iter().enumerate() {
@@ -80,27 +80,27 @@ impl Connector for Sqlite {
                 .map(|filter| filter.into())
                 .unwrap_or(ConditionTree::NoCondition);
 
-            let query = select_from(&table_location)
+            let query = dbg!(select_from(&table_location)
                 .columns(&field_names)
                 .so_that(conditions)
                 .compile()
-                .unwrap();
+                .unwrap());
 
             let mut stmt = conn.prepare(&query).unwrap();
             let mut nodes = Vec::new();
 
-            stmt.query_map(NO_PARAMS, |row| {
+            while let Some(Ok(row)) = stmt.query(NO_PARAMS)?.next() {
                 let mut values = Vec::new();
 
                 for (i, field) in selected_fields.iter().enumerate() {
-                    let prisma_value = Some(Self::fetch_value(field.type_identifier, row, i));
+                    let prisma_value = Some(Self::fetch_value(field.type_identifier, &row, i));
                     values.push(ValueContainer { prisma_value });
                 }
 
                 nodes.push(Node { values });
-            })?;
+            }
 
-            Ok(nodes)
+            Ok(dbg!(nodes))
         })
     }
 }

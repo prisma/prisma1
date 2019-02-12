@@ -19,6 +19,17 @@ message Result {
     }
 }
 
+message Error {
+    oneof value {
+        string connection_error      = 1;
+        string query_error           = 2;
+        string no_results_error      = 3;
+        string protobuf_decode_error = 4;
+        string json_decode_error     = 5;
+        string invalid_input_error   = 6;
+    }
+}
+
 message NodesResult {
     repeated Node nodes = 1;
     repeated string fields = 2;
@@ -48,17 +59,6 @@ message GraphqlId {
     oneof id_value {
         string string = 1;
         int64  int    = 2;
-    }
-}
-
-message Error {
-    oneof value {
-        string connection_error      = 1;
-        string query_error           = 2;
-        string no_results_error      = 3;
-        string protobuf_decode_error = 4;
-        string json_decode_error     = 5;
-        string invalid_input_error   = 6;
     }
 }
 
