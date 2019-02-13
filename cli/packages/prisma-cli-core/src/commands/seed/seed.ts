@@ -30,49 +30,30 @@ export default class Seed extends Command {
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
-    await this.client.initClusterClient(
-      cluster!,
-      serviceName,
-      this.definition.stage,
-      this.definition.getWorkspace(),
-    )
+    await this.client.initClusterClient(cluster!, serviceName, this.definition.stage, this.definition.getWorkspace())
 
     const seed = this.definition.definition!.seed
     if (!seed) {
-      throw new Error(
-        `In order to seed, you need to provide a "seed" property in your prisma.yml`,
-      )
+      throw new Error(`In order to seed, you need to provide a "seed" property in your prisma.yml`)
     }
 
-    const seeder = new Seeder(
-      this.definition,
-      this.client,
-      this.out,
-      this.config,
-    )
+    const seeder = new Seeder(this.definition, this.client, this.out, this.config)
 
-    const seedSource =
-      this.definition.definition!.seed!.import ||
-      this.definition.definition!.seed!.run
+    const seedSource = this.definition.definition!.seed!.import || this.definition.definition!.seed!.run
 
     if (!seedSource) {
       // Await on error to wait for it to set the exit code to 1
       await this.out.error(
-        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional'
+        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional',
       )
     }
 
     this.out.action.start(`Seeding based on ${chalk.bold(seedSource!)}`)
     const before = Date.now()
-    await seeder.seed(
-      serviceName,
-      this.definition.stage!,
-      reset,
-      this.definition.getWorkspace()!,
-    )
+    await seeder.seed(serviceName, this.definition.stage!, reset, this.definition.getWorkspace()!)
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 }
