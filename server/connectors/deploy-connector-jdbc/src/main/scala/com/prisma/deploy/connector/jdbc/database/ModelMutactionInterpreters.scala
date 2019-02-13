@@ -32,12 +32,13 @@ case class DeleteModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) ex
   // TODO: this is not symmetric
 
   override def execute(mutaction: DeleteModelTable, schemaBeforeMigration: DatabaseSchema) = {
-    val droppingTable = schemaBeforeMigration.table(mutaction.model.dbName) match {
-      case Some(_) =>
-        builder.dropTable(mutaction.project, tableName = mutaction.model.dbName)
-      case None =>
-        DBIO.successful(())
-    }
+//    val droppingTable = schemaBeforeMigration.table(mutaction.model.dbName) match {
+//      case Some(_) =>
+//        builder.dropTable(mutaction.project, tableName = mutaction.model.dbName)
+//      case None =>
+//        DBIO.successful(())
+//    }
+    val droppingTable = builder.dropTable(mutaction.project, tableName = mutaction.model.dbName)
 
     val dropScalarListFields = mutaction.scalarListFields.map { field =>
       builder.dropScalarListTable(mutaction.project, mutaction.model.dbName, field, schemaBeforeMigration)
@@ -48,12 +49,13 @@ case class DeleteModelInterpreter(builder: JdbcDeployDatabaseMutationBuilder) ex
 
   override def rollback(mutaction: DeleteModelTable, schemaBeforeMigration: DatabaseSchema) = {
     // only recreate the table if it was actually deleted in the step before
-    val recreatingTable = schemaBeforeMigration.table(mutaction.model.dbName) match {
-      case Some(_) =>
-        builder.createModelTable(mutaction.project, model = mutaction.model)
-      case None =>
-        DBIO.successful(())
-    }
+//    val recreatingTable = schemaBeforeMigration.table(mutaction.model.dbName) match {
+//      case Some(_) =>
+//        builder.createModelTable(mutaction.project, model = mutaction.model)
+//      case None =>
+//        DBIO.successful(())
+//    }
+    val recreatingTable = builder.createModelTable(mutaction.project, model = mutaction.model)
     recreatingTable
   }
 }
