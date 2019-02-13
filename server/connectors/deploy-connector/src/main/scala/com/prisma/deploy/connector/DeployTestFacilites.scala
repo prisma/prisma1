@@ -15,8 +15,10 @@ object DatabaseInspector {
 }
 
 case class DatabaseSchema(tables: Vector[Table]) {
-  def table_!(name: String): Table       = table(name).getOrElse(sys.error(s"Table $name was not found."))
-  def table(name: String): Option[Table] = tables.find(_.name == name)
+  def table_!(name: String): Table                          = table(name).getOrElse(sys.error(s"Table $name was not found."))
+  def table(name: String): Option[Table]                    = tables.find(_.name == name)
+  def column(table: String, column: String): Option[Column] = this.table(table).flatMap(_.column(column))
+  def column_!(table: String, column: String): Column       = table_!(table).column_!(column)
 }
 object DatabaseSchema {
   val empty = DatabaseSchema(Vector.empty)
