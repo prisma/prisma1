@@ -4,13 +4,19 @@ import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
+import com.prisma.utils.boolean.BooleanUtils
 
 //trait MigrationStepsInferrer {
 //  def infer(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping): Vector[MigrationStep]
 //}
 //
 
-case class MigrationStepsInferrerImplNew(previousSchema: Schema, nextSchema: Schema, databaseSchema: DatabaseSchema, renames: SchemaMapping) {
+case class MigrationStepsInferrerImplNew(
+    previousSchema: Schema,
+    nextSchema: Schema,
+    databaseSchema: DatabaseSchema,
+    renames: SchemaMapping
+) extends BooleanUtils {
   import com.prisma.util.Diff._
 
   /**
@@ -56,6 +62,7 @@ case class MigrationStepsInferrerImplNew(previousSchema: Schema, nextSchema: Sch
       previousModelName = renames.getPreviousModelName(nextModel.name)
       if databaseSchema.table(nextModel.dbName).isEmpty
     } yield {
+      // FIXME: this would blow up if the db name of the model changed
       if (renames.wasModelRenamed(nextModel.name) && databaseSchema.table(previousModelName).isDefined) {
         UpdateModel(name = previousModelName, newName = nextModel.name)
       } else {
@@ -131,20 +138,7 @@ case class MigrationStepsInferrerImplNew(previousSchema: Schema, nextSchema: Sch
     } yield DeleteField(model = previousModel.name, name = previousField.name)
   }
 
-  lazy val relationsToCreate: Vector[CreateRelation] = {
-    for {
-      nextRelation <- nextSchema.relations.toVector
-      mustBeCreated = nextRelation.manifestation match {
-        case EmbeddedRelationLink(table, column)                        => databaseSchema.column(table, column).isEmpty
-        case RelationTable(table, modelAColumn, modelBColumn, idColumn) => databaseSchema.table(table).isEmpty
-      }
-      if mustBeCreated
-    } yield {
-      CreateRelation(name = nextRelation.name)
-    }
-  }
-
-  lazy val relationsToDelete: Vector[DeleteRelation] = {
+  lazy val relationsToDeleteTmp: Vector[DeleteRelation] = {
     for {
       previousRelation <- previousSchema.relations.toVector
       if relationNotInNextSchema(nextSchema, previousSchema = previousSchema, previousRelation, renames.getNextModelName, renames.getNextRelationName)
@@ -156,33 +150,105 @@ case class MigrationStepsInferrerImplNew(previousSchema: Schema, nextSchema: Sch
     } yield DeleteRelation(previousRelation.name)
   }
 
-  lazy val relationsToUpdate: Vector[UpdateRelation] = {
-    val updates = for {
-      previousRelation <- previousSchema.relations.toVector
-      nextModelAName   = renames.getNextModelName(previousRelation.modelAName)
-      nextModelBName   = renames.getNextModelName(previousRelation.modelBName)
-      nextRelation <- nextSchema
-                       .getRelationByName(renames.getNextRelationName(previousRelation.name))
-                       .orElse {
-                         val previousWasAmbiguous = previousSchema
-                           .getRelationsThatConnectModels(previousRelation.modelAName, previousRelation.modelBName)
-                           .size > 1
-                         val nextIsAmbiguous = nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).size > 1
-
-                         (previousWasAmbiguous, nextIsAmbiguous) match {
-                           case (true, true)   => None
-                           case (true, false)  => None
-                           case (false, true)  => None
-                           case (false, false) => nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
-                         }
-                       }
-      if didSomethingChange(previousRelation, nextRelation)(_.name, _.modelAName, _.modelBName, _.manifestation)
+  lazy val relationSteps: Vector[RelationMigrationStep] = {
+    val x = for {
+      nextRelation     <- nextSchema.relations.toVector
+      previousRelation = previousSchema.relations.find(correspondToEachOther(nextRelation))
     } yield {
-      UpdateRelation(name = previousRelation.name, newName = diff(previousRelation.name, nextRelation.name))
-    }
-    def isContainedInDeletes(update: UpdateRelation) = relationsToDelete.map(_.name).contains(update.name)
+      val x: Iterable[RelationMigrationStep] = previousRelation match {
+        case None =>
+          createRelation(nextRelation)
 
-    updates.filterNot(isContainedInDeletes)
+        case Some(previousRelation) =>
+          (previousRelation.manifestation, nextRelation.manifestation) match {
+            case (_: EmbeddedRelationLink, _: RelationTable) =>
+              deleteRelation(previousRelation) ++ createRelation(nextRelation)
+
+            case (_: RelationTable, _: EmbeddedRelationLink) =>
+              deleteRelation(previousRelation) ++ createRelation(nextRelation)
+
+            case (previousLink: EmbeddedRelationLink, nextLink: EmbeddedRelationLink) =>
+              val previousModel     = previousSchema.getModelByName_!(previousLink.inTableOfModelName)
+              val nextModel         = nextSchema.getModelByName_!(nextLink.inTableOfModelName)
+              val tableDidNotChange = previousModel.stableIdentifier == nextModel.stableIdentifier
+
+              if (tableDidNotChange) {
+                updateRelation(previousRelation, nextRelation)
+              } else {
+                deleteRelation(previousRelation) ++ createRelation(nextRelation)
+              }
+
+            case (_: RelationTable, _: RelationTable) =>
+              updateRelation(previousRelation, nextRelation)
+          }
+      }
+      x
+    }
+    x.flatten
+  }
+
+  lazy val relationsToUpdate: Vector[UpdateRelation] = relationSteps.collect { case f: UpdateRelation => f }
+  lazy val relationsToCreate: Vector[CreateRelation] = relationSteps.collect { case f: CreateRelation => f }
+  lazy val relationsToDelete: Vector[DeleteRelation] = relationSteps.collect { case f: DeleteRelation => f } ++ relationsToDeleteTmp
+
+  private def updateRelation(previousRelation: Relation, nextRelation: Relation) = {
+    val previousExists = (previousRelation.manifestation, nextRelation.manifestation) match {
+      case (p: EmbeddedRelationLink, n: EmbeddedRelationLink) =>
+        val previousModel = previousSchema.getModelByName_!(p.inTableOfModelName)
+        databaseSchema.column(previousModel.dbName, p.referencingColumn).isDefined
+
+      case (p: RelationTable, n: RelationTable) =>
+        databaseSchema.table(p.table).isDefined
+
+      case _ =>
+        sys.error("same manifestation type is not allowed here")
+    }
+
+    if (previousExists) {
+      Some(UpdateRelation(name = previousRelation.name, newName = diff(previousRelation.name, nextRelation.name)))
+    } else {
+      createRelation(nextRelation)
+    }
+  }
+
+  private def createRelation(relation: Relation): Option[CreateRelation] = {
+    val mustBeCreated = relation.manifestation match {
+      case EmbeddedRelationLink(table, column)                        => databaseSchema.column(table, column).isEmpty
+      case RelationTable(table, modelAColumn, modelBColumn, idColumn) => databaseSchema.table(table).isEmpty
+    }
+    mustBeCreated.toOption(CreateRelation(relation.name))
+  }
+
+  private def deleteRelation(relation: Relation): Option[DeleteRelation] = {
+    val mustBeDeleted = relation.manifestation match {
+      case EmbeddedRelationLink(table, column)                        => databaseSchema.column(table, column).isDefined
+      case RelationTable(table, modelAColumn, modelBColumn, idColumn) => databaseSchema.table(table).isDefined
+    }
+    mustBeDeleted.toOption(DeleteRelation(relation.name))
+  }
+
+  def correspondToEachOther(nextRelation: Relation)(previousRelation: Relation): Boolean = {
+    this.nextRelation(previousRelation).isDefined
+  }
+
+  def nextRelation(previousRelation: Relation) = {
+    val nextModelAName = renames.getNextModelName(previousRelation.modelAName)
+    val nextModelBName = renames.getNextModelName(previousRelation.modelBName)
+    nextSchema
+      .getRelationByName(renames.getNextRelationName(previousRelation.name))
+      .orElse {
+        val previousWasAmbiguous = previousSchema
+          .getRelationsThatConnectModels(previousRelation.modelAName, previousRelation.modelBName)
+          .size > 1
+        val nextIsAmbiguous = nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).size > 1
+
+        (previousWasAmbiguous, nextIsAmbiguous) match {
+          case (true, true)   => None
+          case (true, false)  => None
+          case (false, true)  => None
+          case (false, false) => nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
+        }
+      }
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
