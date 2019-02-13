@@ -1,5 +1,5 @@
 use crate::{
-    connectors::{IntoSelectQuery, SelectQuery},
+    data_resolvers::{IntoSelectQuery, SelectQuery},
     models::prelude::*,
     protobuf::prelude::*,
     PrismaResult,

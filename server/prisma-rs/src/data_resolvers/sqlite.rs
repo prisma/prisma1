@@ -1,4 +1,4 @@
-mod connector;
+mod data_resolver;
 mod service;
 
 use chrono::{DateTime, Utc};

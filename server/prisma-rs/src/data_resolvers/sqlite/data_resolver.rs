@@ -1,5 +1,5 @@
 use crate::{
-    connectors::{Connector, SelectQuery, Sqlite},
+    data_resolvers::{DataResolver, SelectQuery, Sqlite},
     models::prelude::*,
     protobuf::prelude::*,
     PrismaResult,
@@ -7,7 +7,7 @@ use crate::{
 use rusqlite::NO_PARAMS;
 use sql::prelude::*;
 
-impl Connector for Sqlite {
+impl DataResolver for Sqlite {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)> {
         let database_name = query.project.db_name();
         let model = query.project.schema.find_model(&query.model_name)?;
@@ -54,7 +54,7 @@ impl Connector for Sqlite {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::connectors::{Connector, SelectQuery};
+    use crate::data_resolvers::{DataResolver, SelectQuery};
     use chrono::{DateTime, Utc};
     use serde_json::{self, json};
     use std::collections::BTreeSet;

@@ -1,7 +1,7 @@
 mod sqlite;
 
 pub use sqlite::Sqlite;
-pub type PrismaConnector = Box<dyn Connector + Send + Sync + 'static>;
+pub type PrismaDataResolver = Box<dyn DataResolver + Send + Sync + 'static>;
 
 use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
 
@@ -23,6 +23,6 @@ pub trait IntoSelectQuery {
     fn into_select_query(self) -> PrismaResult<SelectQuery>;
 }
 
-pub trait Connector {
+pub trait DataResolver {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)>;
 }

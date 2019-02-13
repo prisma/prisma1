@@ -1,6 +1,5 @@
 use crate::{
-    connectors::SelectQuery,
-    connectors::{Connector, Sqlite},
+    data_resolvers::{DataResolver, SelectQuery, Sqlite},
     error::Error,
     protobuf::prelude::*,
 };
