@@ -8,7 +8,7 @@ extern crate prost_derive;
 extern crate debug_stub_derive;
 
 pub mod config;
-pub mod connector;
+pub mod connectors;
 pub mod error;
 pub mod executor;
 pub mod models;

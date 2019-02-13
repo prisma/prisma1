@@ -1,6 +1,6 @@
 use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
-    connector::{PrismaConnector, Sqlite},
+    connectors::{PrismaConnector, Sqlite},
     error::Error,
     executor::QueryExecutor,
     protobuf::prisma,

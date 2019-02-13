@@ -1,5 +1,5 @@
 use crate::{
-    connector::PrismaConnector,
+    connectors::PrismaConnector,
     executor::QueryExecutor,
     models::{Project, ProjectTemplate, Renameable},
     protobuf::prisma::{selected_field, GetNodesInput, Node},

@@ -1,5 +1,5 @@
 use crate::{
-    connector::PrismaConnector,
+    connectors::PrismaConnector,
     error::Error,
     executor::QueryExecutor,
     models::{Project, ProjectTemplate, Renameable},
