@@ -7,7 +7,7 @@ pub mod prelude;
 
 pub use envelope::ProtoBufEnvelope;
 pub use input::*;
-pub use interface::{ProtoBufInterface, ScalaInterface};
+pub use interface::{ExternalInterface, ProtoBufInterface};
 
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));

@@ -8,7 +8,7 @@ use crate::{
 
 use prost::Message;
 
-pub trait ScalaInterface {
+pub trait ExternalInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
 }
@@ -56,7 +56,7 @@ impl ProtoBufInterface {
     }
 }
 
-impl ScalaInterface for ProtoBufInterface {
+impl ExternalInterface for ProtoBufInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = prisma::GetNodeByWhereInput::decode(payload)?;
