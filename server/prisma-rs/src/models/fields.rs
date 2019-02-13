@@ -19,21 +19,21 @@ impl Fields {
         self.all.iter().fold(Vec::new(), Self::scalar_filter)
     }
 
-    pub fn find_many_from_all(&self, names: &BTreeSet<&str>) -> Vec<&Field> {
+    pub fn find_many_from_all(&self, names: &BTreeSet<String>) -> Vec<&Field> {
         self.all
             .iter()
             .filter(|field| names.contains(field.db_name()))
             .collect()
     }
 
-    pub fn find_many_from_scalar(&self, names: &BTreeSet<&str>) -> Vec<&ScalarField> {
+    pub fn find_many_from_scalar(&self, names: &BTreeSet<String>) -> Vec<&ScalarField> {
         self.all
             .iter()
             .filter(|field| names.contains(field.db_name()))
             .fold(Vec::new(), Self::scalar_filter)
     }
 
-    pub fn find_many_from_relation(&self, names: &BTreeSet<&str>) -> Vec<&RelationField> {
+    pub fn find_many_from_relation(&self, names: &BTreeSet<String>) -> Vec<&RelationField> {
         self.all
             .iter()
             .filter(|field| names.contains(field.db_name()))

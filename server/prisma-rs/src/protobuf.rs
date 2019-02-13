@@ -1,12 +1,12 @@
 mod envelope;
-mod get_node_by_where_input;
-mod get_nodes_input;
+mod input;
 mod interface;
 mod query_arguments;
 
+pub mod prelude;
+
 pub use envelope::ProtoBufEnvelope;
-pub use get_node_by_where_input::*;
-pub use get_nodes_input::*;
+pub use input::*;
 pub use interface::{ProtoBufInterface, ScalaInterface};
 
 pub mod prisma {
