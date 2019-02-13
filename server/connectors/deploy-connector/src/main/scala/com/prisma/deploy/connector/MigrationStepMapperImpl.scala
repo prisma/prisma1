@@ -3,8 +3,6 @@ package com.prisma.deploy.connector
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
 
-import scala.concurrent.Future
-
 case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper {
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = step match {
     case x: CreateModel =>
@@ -17,9 +15,9 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       Vector(DeleteModelTable(project, model, model.dbNameOfIdField_!, scalarListFieldNames))
 
     case x: UpdateModel =>
-      val model                = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
-      val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Vector(RenameTable(project = project, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
+      val oldModel = previousSchema.getModelByName(x.name).getOrElse(previousSchema.getModelByName_!(x.name.substring(2)))
+      val newModel = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
+      Vector(UpdateModelTable(project = project, oldModel = oldModel, newModel = newModel))
 
     case x: CreateField =>
       val model = nextSchema.getModelByName_!(x.model)

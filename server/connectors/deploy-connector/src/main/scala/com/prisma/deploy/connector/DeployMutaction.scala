@@ -16,9 +16,9 @@ case class CreateScalarListTable(project: Project, model: Model, field: ScalarFi
 case class DeleteScalarListTable(project: Project, model: Model, field: ScalarField)                                               extends DeployMutaction
 case class UpdateScalarListTable(project: Project, oldModel: Model, newModel: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
 
-case class CreateModelTable(project: Project, model: Model)                                                             extends DeployMutaction
-case class DeleteModelTable(project: Project, model: Model, nameOfIdField: String, scalarListFields: Vector[String])    extends DeployMutaction // delete/truncate collection based on migrations setting in server config
-case class RenameTable(project: Project, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends DeployMutaction // rename based on migration setting
+case class CreateModelTable(project: Project, model: Model)                                                          extends DeployMutaction
+case class DeleteModelTable(project: Project, model: Model, nameOfIdField: String, scalarListFields: Vector[String]) extends DeployMutaction // delete/truncate collection based on migrations setting in server config
+case class UpdateModelTable(project: Project, oldModel: Model, newModel: Model)                                      extends DeployMutaction // rename based on migration setting
 
 case class CreateRelationTable(project: Project, relation: Relation)                                 extends DeployMutaction
 case class DeleteRelationTable(project: Project, relation: Relation)                                 extends DeployMutaction // based on migration settings;  set relation fields to null in document

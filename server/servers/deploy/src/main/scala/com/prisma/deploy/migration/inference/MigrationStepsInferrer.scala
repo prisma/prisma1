@@ -74,19 +74,11 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
       if nextModel != previousModel
-    } yield UpdateModel(oldModel = previousModel, newModel = nextModel)
+    } yield UpdateModel(name = previousModel.name, newName = nextModel.name)
   }
 
-  lazy val modelsToUpdateFirstStep: Vector[UpdateModel] = modelsToUpdate.map { update =>
-    val manifestation = Some(ModelManifestation("__" ++ update.newModel.dbName))
-    UpdateModel(oldModel = update.oldModel, newModel = update.newModel.copy(manifestation = manifestation).build(update.newModel.schema))
-  }
-
-  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map { update =>
-    val manifestation = Some(ModelManifestation("__" ++ update.newModel.dbName))
-    UpdateModel(oldModel = update.newModel.copy(manifestation = manifestation).build(update.newModel.schema), newModel = update.newModel)
-  }
-
+  lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(u => UpdateModel(name = u.name, newName = "__" ++ u.newName))
+  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map(u => UpdateModel(name = "__" ++ u.newName, newName = u.newName))
   /*
    * Check all previous models if they are present on on the new one, ignore renames (== updated models).
    * Use the _previous_ model name to check presence, and as updates are ignored this has to yield a result,
