@@ -1,17 +1,27 @@
-impl Service<http::Request> for HelloWorld {
-    type Response = http::Response;
-    type Error = http::Error;
+use crate::{
+    connectors::SelectQuery,
+    connectors::{Connector, Sqlite},
+    error::Error,
+    protobuf::prelude::*,
+};
+use futures::{future, Async, Future, Poll};
+use tower_service::Service;
+
+impl Service<SelectQuery> for Sqlite {
+    type Response = (Vec<Node>, Vec<String>);
+    type Error = Error;
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn poll_ready(&mut self) -> Poll<(), Self::Error> {
         Ok(Async::Ready(()))
     }
 
-    fn call(&mut self, req: http::Request) -> Self::Future {
-        // Create the HTTP response
-        let resp = http::Response::ok().with_body(b"hello world\n");
+    fn call(&mut self, req: SelectQuery) -> Self::Future {
+        let result = match self.select_nodes(req) {
+            Ok(result) => future::ok(result),
+            Err(error) => future::err(error),
+        };
 
-        // Return the response as an immediate future
-        futures::finished(resp).boxed()
+        Box::new(result)
     }
 }
