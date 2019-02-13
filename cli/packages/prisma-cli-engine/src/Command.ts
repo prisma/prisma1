@@ -102,7 +102,7 @@ export class Command {
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.env = new Environment(this.config.home, this.out)
+    this.env = new Environment(this.config.home, this.out, this.config.version)
     this.definition = new PrismaDefinitionClass(this.env, this.config.definitionPath, process.env, this.out)
     this.client = new Client(this.config, this.env, this.out)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)

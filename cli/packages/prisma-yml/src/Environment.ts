@@ -25,9 +25,11 @@ export class Environment {
   home: string
   rcPath: string
   clustersFetched: boolean = false
-  constructor(home: string, out: IOutput = new Output()) {
+  version?: string
+  constructor(home: string, out: IOutput = new Output(), version?: string) {
     this.out = out
     this.home = home
+    this.version = version
 
     this.rcPath = path.join(this.home, '.prisma/config.yml')
     fs.mkdirpSync(path.dirname(this.rcPath))
@@ -254,6 +256,7 @@ export class Environment {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.cloudSessionKey}`,
+        'X-Cli-Version': this.version,
       } as any,
       body: JSON.stringify({
         query,
