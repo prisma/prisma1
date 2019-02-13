@@ -4,7 +4,6 @@ use super::{ConnectionLimit, WithMigrations};
 #[serde(rename_all = "camelCase")]
 pub struct FileConfig {
     pub connector: String,
-    pub file: String,
 
     #[serde(default)]
     pub test_mode: bool,

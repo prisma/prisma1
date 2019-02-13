@@ -341,7 +341,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("true", sql);
+        assert_eq!("1=1", sql);
     }
 
     #[test]
@@ -350,7 +350,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("false", sql);
+        assert_eq!("1=0", sql);
     }
 
     #[test]
@@ -500,7 +500,7 @@ mod tests {
         let filter = Filter::and(Vec::new());
         let condition: ConditionTree = filter.into();
 
-        assert_eq!("true", condition.compile().unwrap());
+        assert_eq!("1=1", condition.compile().unwrap());
     }
 
     #[test]
