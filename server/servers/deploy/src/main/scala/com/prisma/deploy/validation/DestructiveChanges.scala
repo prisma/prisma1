@@ -53,7 +53,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       case x: UpdateModel    => validationSuccessful
       case x: CreateField    => createFieldValidation(x)
       case x: DeleteField    => deleteFieldValidation(x)
-      case x: UpdateField    => updateFieldValidation(x)
+      case x: UpdateField    => updateFieldValidation(x).getOrElse(Future.successful(Vector.empty))
       case x: CreateEnum     => validationSuccessful
       case x: DeleteEnum     => deleteEnumValidation(x)
       case x: UpdateEnum     => updateEnumValidation(x)
@@ -163,9 +163,8 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     dataLossError.map(errors => errors ++ accidentalRemovalError)
   }
 
-  private def updateFieldValidation(x: UpdateField) = {
-    val model                    = previousSchema.getModelByName_!(x.model)
-    val oldField                 = model.getFieldByName_!(x.name)
+  private def updateFieldValidation(x: UpdateField) = previousSchema.getFieldByName(x.model, x.name).map { oldField =>
+    val model                    = oldField.model
     val newField                 = nextSchema.getModelByName_!(x.newModel).getFieldByName_!(x.finalName)
     val cardinalityChanges       = oldField.isList != newField.isList
     val typeChanges              = oldField.typeIdentifier != newField.typeIdentifier
@@ -199,12 +198,11 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       } else if (newField.isRequired && typeChanges) {
         clientDbQueries.existsByModel(model).map {
           case true =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                field = oldField.name,
-                "You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."
-              ))
+            Vector(DeployError(
+              `type` = model.name,
+              field = oldField.name,
+              "You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."
+            ))
           case false => Vector.empty
         }
       } else {
