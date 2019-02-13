@@ -85,6 +85,9 @@ object InternalDatabaseSchema {
          where table_schema = '#$schema'
          and table_name = '#$table'
          and column_name = '#$column'
-      """.as[String].map(_.nonEmpty)
+      """.as[String].map { columns =>
+      // FIXME: this is a work around for a bug in our Custom JDBC Driver. It returned a result set with one null entry. So we don't just check if result set is empty or not like in the other connectors.
+      columns.contains(column)
+    }
   }
 }
