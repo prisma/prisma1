@@ -6,53 +6,50 @@ use sql::{
     prelude::*,
 };
 
-use crate::protobuf::prisma::{
-    filter::Type, graphql_id::IdValue, scalar_filter::Condition, value_container::PrismaValue,
-    AndFilter, Filter, NotFilter, OrFilter, ScalarFilter,
-};
+use crate::protobuf::prelude::*;
 
 impl Into<ConditionTree> for ScalarFilter {
     fn into(self) -> ConditionTree {
         let field: &str = self.field.as_ref();
 
         match self.condition.unwrap() {
-            Condition::Equals(value) => {
+            scalar_filter::Condition::Equals(value) => {
                 ConditionTree::single(field.equals(value.prisma_value.unwrap()))
             }
-            Condition::NotEquals(value) => {
+            scalar_filter::Condition::NotEquals(value) => {
                 ConditionTree::single(field.not_equals(value.prisma_value.unwrap()))
             }
-            Condition::Contains(value) => {
+            scalar_filter::Condition::Contains(value) => {
                 ConditionTree::single(field.like(value.prisma_value.unwrap()))
             }
-            Condition::NotContains(value) => {
+            scalar_filter::Condition::NotContains(value) => {
                 ConditionTree::single(field.not_like(value.prisma_value.unwrap()))
             }
-            Condition::StartsWith(value) => {
+            scalar_filter::Condition::StartsWith(value) => {
                 ConditionTree::single(field.begins_with(value.prisma_value.unwrap()))
             }
-            Condition::NotStartsWith(value) => {
+            scalar_filter::Condition::NotStartsWith(value) => {
                 ConditionTree::single(field.not_begins_with(value.prisma_value.unwrap()))
             }
-            Condition::EndsWith(value) => {
+            scalar_filter::Condition::EndsWith(value) => {
                 ConditionTree::single(field.ends_into(value.prisma_value.unwrap()))
             }
-            Condition::NotEndsWith(value) => {
+            scalar_filter::Condition::NotEndsWith(value) => {
                 ConditionTree::single(field.not_ends_into(value.prisma_value.unwrap()))
             }
-            Condition::LessThan(value) => {
+            scalar_filter::Condition::LessThan(value) => {
                 ConditionTree::single(field.less_than(value.prisma_value.unwrap()))
             }
-            Condition::LessThanOrEquals(value) => {
+            scalar_filter::Condition::LessThanOrEquals(value) => {
                 ConditionTree::single(field.less_than_or_equals(value.prisma_value.unwrap()))
             }
-            Condition::GreaterThan(value) => {
+            scalar_filter::Condition::GreaterThan(value) => {
                 ConditionTree::single(field.greater_than(value.prisma_value.unwrap()))
             }
-            Condition::GreaterThanOrEquals(value) => {
+            scalar_filter::Condition::GreaterThanOrEquals(value) => {
                 ConditionTree::single(field.greater_than_or_equals(value.prisma_value.unwrap()))
             }
-            Condition::In(mc) => ConditionTree::single(
+            scalar_filter::Condition::In(mc) => ConditionTree::single(
                 field.in_selection(
                     mc.values
                         .into_iter()
@@ -60,7 +57,7 @@ impl Into<ConditionTree> for ScalarFilter {
                         .collect(),
                 ),
             ),
-            Condition::NotIn(mc) => ConditionTree::single(
+            scalar_filter::Condition::NotIn(mc) => ConditionTree::single(
                 field.not_in_selection(
                     mc.values
                         .into_iter()
@@ -118,11 +115,11 @@ impl Into<ConditionTree> for NotFilter {
 impl Into<ConditionTree> for Filter {
     fn into(self) -> ConditionTree {
         match self.type_.unwrap() {
-            Type::And(and_filter) => and_filter.into(),
-            Type::Or(or_filter) => or_filter.into(),
-            Type::Not(not_filter) => not_filter.into(),
-            Type::Scalar(scalar_filter) => scalar_filter.into(),
-            Type::BoolFilter(b) => {
+            filter::Type::And(and_filter) => and_filter.into(),
+            filter::Type::Or(or_filter) => or_filter.into(),
+            filter::Type::Not(not_filter) => not_filter.into(),
+            filter::Type::Scalar(scalar_filter) => scalar_filter.into(),
+            filter::Type::BoolFilter(b) => {
                 if b {
                     ConditionTree::NoCondition
                 } else {
@@ -148,8 +145,8 @@ impl ToDatabaseValue for PrismaValue {
             PrismaValue::Null(_) => DatabaseValue::Null,
             PrismaValue::Uuid(u) => u.to_database_value(),
             PrismaValue::GraphqlId(id) => match id.id_value.unwrap() {
-                IdValue::String(s) => s.to_database_value(),
-                IdValue::Int(i) => i.to_database_value(),
+                graphql_id::IdValue::String(s) => s.to_database_value(),
+                graphql_id::IdValue::Int(i) => i.to_database_value(),
             },
         }
     }
@@ -157,23 +154,19 @@ impl ToDatabaseValue for PrismaValue {
 
 #[cfg(test)]
 mod tests {
+    use crate::protobuf::prelude::*;
     use sql::grammar::{clause::ConditionTree, Operation};
-
-    use crate::protobuf::prisma::{
-        filter::Type, scalar_filter::Condition, value_container::PrismaValue, AndFilter, Filter,
-        MultiContainer, NotFilter, OrFilter, ScalarFilter, ValueContainer,
-    };
 
     impl Filter {
         fn bool_filter(condition: bool) -> Filter {
             Filter {
-                type_: Some(Type::BoolFilter(condition)),
+                type_: Some(filter::Type::BoolFilter(condition)),
             }
         }
 
-        fn scalar(field: &str, condition: Condition) -> Filter {
+        fn scalar(field: &str, condition: scalar_filter::Condition) -> Filter {
             Filter {
-                type_: Some(Type::Scalar(ScalarFilter {
+                type_: Some(filter::Type::Scalar(ScalarFilter {
                     field: field.to_string(),
                     condition: Some(condition),
                 })),
@@ -183,7 +176,7 @@ mod tests {
         fn equals(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::Equals(ValueContainer {
+                scalar_filter::Condition::Equals(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -192,7 +185,7 @@ mod tests {
         fn not_equals(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::NotEquals(ValueContainer {
+                scalar_filter::Condition::NotEquals(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -201,7 +194,7 @@ mod tests {
         fn less_than(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::LessThan(ValueContainer {
+                scalar_filter::Condition::LessThan(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -210,7 +203,7 @@ mod tests {
         fn less_than_or_equals(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::LessThanOrEquals(ValueContainer {
+                scalar_filter::Condition::LessThanOrEquals(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -219,7 +212,7 @@ mod tests {
         fn greater_than(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::GreaterThan(ValueContainer {
+                scalar_filter::Condition::GreaterThan(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -228,7 +221,7 @@ mod tests {
         fn greater_than_or_equals(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::GreaterThanOrEquals(ValueContainer {
+                scalar_filter::Condition::GreaterThanOrEquals(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -237,7 +230,7 @@ mod tests {
         fn in_selection(field: &str, selection: Vec<PrismaValue>) -> Filter {
             Self::scalar(
                 field,
-                Condition::In(MultiContainer {
+                scalar_filter::Condition::In(MultiContainer {
                     values: selection
                         .into_iter()
                         .map(|pv| ValueContainer {
@@ -251,7 +244,7 @@ mod tests {
         fn not_in_selection(field: &str, selection: Vec<PrismaValue>) -> Filter {
             Self::scalar(
                 field,
-                Condition::NotIn(MultiContainer {
+                scalar_filter::Condition::NotIn(MultiContainer {
                     values: selection
                         .into_iter()
                         .map(|pv| ValueContainer {
@@ -265,7 +258,7 @@ mod tests {
         fn contains(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::Contains(ValueContainer {
+                scalar_filter::Condition::Contains(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -274,7 +267,7 @@ mod tests {
         fn not_contains(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::NotContains(ValueContainer {
+                scalar_filter::Condition::NotContains(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -283,7 +276,7 @@ mod tests {
         fn starts_with(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::StartsWith(ValueContainer {
+                scalar_filter::Condition::StartsWith(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -292,7 +285,7 @@ mod tests {
         fn not_starts_with(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::NotStartsWith(ValueContainer {
+                scalar_filter::Condition::NotStartsWith(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -301,7 +294,7 @@ mod tests {
         fn ends_with(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::EndsWith(ValueContainer {
+                scalar_filter::Condition::EndsWith(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -310,7 +303,7 @@ mod tests {
         fn not_ends_with(field: &str, equals: PrismaValue) -> Filter {
             Self::scalar(
                 field,
-                Condition::NotEndsWith(ValueContainer {
+                scalar_filter::Condition::NotEndsWith(ValueContainer {
                     prisma_value: Some(equals),
                 }),
             )
@@ -318,19 +311,19 @@ mod tests {
 
         fn and(filters: Vec<Filter>) -> Filter {
             Filter {
-                type_: Some(Type::And(AndFilter { filters })),
+                type_: Some(filter::Type::And(AndFilter { filters })),
             }
         }
 
         fn or(filters: Vec<Filter>) -> Filter {
             Filter {
-                type_: Some(Type::Or(OrFilter { filters })),
+                type_: Some(filter::Type::Or(OrFilter { filters })),
             }
         }
 
         fn not(filters: Vec<Filter>) -> Filter {
             Filter {
-                type_: Some(Type::Not(NotFilter { filters })),
+                type_: Some(filter::Type::Not(NotFilter { filters })),
             }
         }
     }

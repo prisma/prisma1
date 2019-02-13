@@ -1,8 +1,7 @@
 use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
-    connectors::{PrismaConnector, Sqlite},
+    connectors::{IntoSelectQuery, PrismaConnector, Sqlite},
     error::Error,
-    executor::QueryExecutor,
     protobuf::prisma,
     PrismaResult,
 };
@@ -61,7 +60,9 @@ impl ScalaInterface for ProtoBufInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = prisma::GetNodeByWhereInput::decode(payload)?;
-            let (nodes, fields) = input.query(&self.connector)?;
+            let query = input.into_select_query()?;
+            let (nodes, fields) = self.connector.select_nodes(query)?;
+
             let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();
@@ -74,7 +75,9 @@ impl ScalaInterface for ProtoBufInterface {
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = prisma::GetNodesInput::decode(payload)?;
-            let (nodes, fields) = input.query(&self.connector)?;
+            let query = input.into_select_query()?;
+            let (nodes, fields) = self.connector.select_nodes(query)?;
+
             let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();

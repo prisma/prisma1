@@ -1,77 +1,34 @@
 use crate::{
-    connectors::{Connector, Sqlite},
-    models::{Model, Renameable, ScalarField},
-    protobuf::prisma::{Node, QueryArguments, ValueContainer},
-    PrismaResult, PrismaValue,
+    connectors::{Connector, SelectQuery, Sqlite},
+    models::prelude::*,
+    protobuf::prelude::*,
+    PrismaResult,
 };
-
-use rusqlite::{types::ToSql, NO_PARAMS};
-
+use rusqlite::NO_PARAMS;
 use sql::prelude::*;
 
 impl Connector for Sqlite {
-    fn get_node_by_where(
-        &self,
-        database_name: &str,
-        model: &Model,
-        selected_fields: &[&ScalarField],
-        query_conditions: (&ScalarField, &PrismaValue),
-    ) -> PrismaResult<Node> {
+    fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)> {
+        let database_name = query.project.db_name();
+        let model = query.project.schema.find_model(&query.model_name)?;
+        let selected_fields = model.fields().find_many_from_scalar(&query.selected_fields);
+
+        let field_names: Vec<String> = selected_fields
+            .iter()
+            .map(|f| f.db_name().to_string())
+            .collect();
+
+        let table_location = Self::table_location(database_name, model.db_name());
+        let conditions = query.conditions;
+
         self.with_connection(database_name, |conn| {
-            let (field, condition) = query_conditions;
-            let params = vec![(condition as &ToSql)];
-            let mut values = Vec::new();
-
-            let field_names: Vec<&str> = selected_fields
-                .iter()
-                .map(|field| field.db_name())
-                .collect();
-
-            let table_location = Self::table_location(database_name, model.db_name());
-            let query = dbg!(select_from(&table_location)
-                .columns(&field_names)
-                .so_that(field.db_name().equals(DatabaseValue::Parameter))
-                .compile()
-                .unwrap());
-
-            conn.query_row(&query, params.as_slice(), |row| {
-                for (i, field) in selected_fields.iter().enumerate() {
-                    let prisma_value = Some(Self::fetch_value(field.type_identifier, row, i));
-                    values.push(ValueContainer { prisma_value });
-                }
-            })?;
-
-            Ok(Node { values })
-        })
-    }
-
-    fn get_nodes(
-        &self,
-        database_name: &str,
-        model: &Model,
-        selected_fields: &[&ScalarField],
-        query_arguments: QueryArguments,
-    ) -> PrismaResult<Vec<Node>> {
-        self.with_connection(database_name, |conn| {
-            let field_names: Vec<&str> = selected_fields
-                .iter()
-                .map(|field| field.db_name())
-                .collect();
-
-            let table_location = Self::table_location(database_name, model.db_name());
-
-            let conditions: ConditionTree = query_arguments
-                .filter
-                .map(|filter| filter.into())
-                .unwrap_or(ConditionTree::NoCondition);
-
-            let query = dbg!(select_from(&table_location)
+            let query_sql = dbg!(select_from(&table_location)
                 .columns(&field_names)
                 .so_that(conditions)
                 .compile()
                 .unwrap());
 
-            let mut stmt = conn.prepare(&query).unwrap();
+            let mut stmt = conn.prepare(&query_sql).unwrap();
 
             let nodes_iter = stmt.query_map(NO_PARAMS, |row| {
                 let mut values = Vec::new();
@@ -89,7 +46,202 @@ impl Connector for Sqlite {
                 nodes.push(node?);
             }
 
-            Ok(dbg!(nodes))
+            Ok(dbg!((nodes, field_names)))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::connectors::{Connector, SelectQuery};
+    use chrono::{DateTime, Utc};
+    use serde_json::{self, json};
+    use std::collections::BTreeSet;
+
+    fn create_test_structure(sqlite: &Sqlite) -> PrismaResult<()> {
+        sqlite
+            .with_connection("graphcool", |conn| {
+                conn.execute_batch(
+                    "BEGIN;
+                     DROP TABLE IF EXISTS graphcool.user;
+                     CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, updated_at datetime(3));
+                     INSERT INTO graphcool.user (name, updated_at) values ('Musti', 1549046025567);
+                     INSERT INTO graphcool.user (name, updated_at) values ('Naukio', 1549046025567);
+                     COMMIT;",
+                )
+                .unwrap();
+                Ok(())
+            })?;
+
+        Ok(())
+    }
+
+    fn create_legacy_project() -> Project {
+        let project_json = json!({
+            "id": "graphcool",
+            "functions": [],
+            "schema": {
+                "models": [
+                    {
+                        "name": "user",
+                        "stableIdentifier": "user",
+                        "isEmbedded": false,
+                        "fields": [
+                            {
+                                "name": "id",
+                                "typeIdentifier": "GraphQLID",
+                                "isRequired": true,
+                                "isList": false,
+                                "isUnique": true,
+                                "isHidden": false,
+                                "isReadonly": true,
+                                "isAutoGenerated": true
+                            },
+                            {
+                                "name": "old_name",
+                                "typeIdentifier": "String",
+                                "isRequired": true,
+                                "isList": false,
+                                "isUnique": true,
+                                "isHidden": false,
+                                "isReadonly": false,
+                                "isAutoGenerated": false,
+                                "manifestation": {
+                                    "dbName": "name"
+                                }
+                            },
+                            {
+                                "name": "updated_at",
+                                "typeIdentifier": "DateTime",
+                                "isRequired": false,
+                                "isList": false,
+                                "isUnique": false,
+                                "isHidden": false,
+                                "isReadonly": false,
+                                "isAutoGenerated": false
+                            }
+                        ],
+                    }
+                ],
+                "relations": [],
+                "enums": [],
+            }
+        });
+
+        let project_template: ProjectTemplate = serde_json::from_value(project_json).unwrap();
+        project_template.into()
+    }
+
+    #[test]
+    fn test_simple_select_by_where() {
+        let sqlite = Sqlite::new(1, true).unwrap();
+        create_test_structure(&sqlite).unwrap();
+
+        let project = create_legacy_project();
+
+        let (model_name, fields, conditions) = {
+            let model = &project.schema.models.get().unwrap()[0];
+            let model_name = model.db_name().to_string();
+            let field = model.fields().find_from_scalar("name").unwrap();
+            let find_by = PrismaValue::String(String::from("Musti"));
+
+            let fields: BTreeSet<String> = model
+                .fields()
+                .scalar()
+                .iter()
+                .map(|f| f.db_name().to_string())
+                .collect();
+
+            (
+                model_name,
+                fields,
+                ConditionTree::single(field.db_name().equals(find_by)),
+            )
+        };
+
+        let query = SelectQuery {
+            project: project,
+            model_name: model_name,
+            selected_fields: fields,
+            conditions: conditions,
+            order_by: None,
+            skip: None,
+            after: None,
+            first: None,
+        };
+
+        let datetime: DateTime<Utc> = DateTime::from_utc(
+            chrono::NaiveDateTime::from_timestamp(1549046025, 567000000),
+            Utc,
+        );
+
+        let (nodes, fields) = sqlite.select_nodes(query).unwrap();
+
+        assert_eq!(1, nodes.len());
+        assert_eq!(
+            vec![
+                String::from("id"),
+                String::from("name"),
+                String::from("updated_at")
+            ],
+            fields
+        );
+
+        let result = &nodes[0];
+
+        assert_eq!(3, result.len());
+        assert_eq!(
+            Some(&PrismaValue::GraphqlId(GraphqlId {
+                id_value: Some(graphql_id::IdValue::Int(1))
+            })),
+            result.get(0)
+        );
+        assert_eq!(
+            Some(&PrismaValue::String(String::from("Musti"))),
+            result.get(1)
+        );
+        assert_eq!(
+            Some(&PrismaValue::DateTime(datetime.to_rfc3339())),
+            result.get(2)
+        );
+    }
+
+    #[test]
+    fn test_get_nodes_with_no_filters() {
+        let sqlite = Sqlite::new(1, true).unwrap();
+        create_test_structure(&sqlite).unwrap();
+
+        let project = create_legacy_project();
+
+        let (model_name, fields) = {
+            let model = &project.schema.models.get().unwrap()[0];
+            let model_name = model.db_name().to_string();
+
+            let fields: BTreeSet<String> = model
+                .fields()
+                .scalar()
+                .iter()
+                .map(|f| f.db_name().to_string())
+                .collect();
+
+            (model_name, fields)
+        };
+
+        let query = SelectQuery {
+            project: project,
+            model_name: model_name,
+            selected_fields: fields,
+            conditions: ConditionTree::NoCondition,
+            order_by: None,
+            skip: None,
+            after: None,
+            first: None,
+        };
+
+        let (nodes, fields) = sqlite.select_nodes(query).unwrap();
+
+        assert_eq!(2, nodes.len());
+        assert_eq!(3, fields.len());
     }
 }
