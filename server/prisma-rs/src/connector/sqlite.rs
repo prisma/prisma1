@@ -87,9 +87,8 @@ impl Connector for Sqlite {
                 .unwrap());
 
             let mut stmt = conn.prepare(&query).unwrap();
-            let mut nodes = Vec::new();
 
-            while let Some(Ok(row)) = stmt.query(NO_PARAMS)?.next() {
+            let nodes_iter = stmt.query_map(NO_PARAMS, |row| {
                 let mut values = Vec::new();
 
                 for (i, field) in selected_fields.iter().enumerate() {
@@ -97,7 +96,12 @@ impl Connector for Sqlite {
                     values.push(ValueContainer { prisma_value });
                 }
 
-                nodes.push(Node { values });
+                Node { values }
+            })?;
+
+            let mut nodes = Vec::new();
+            for node in nodes_iter {
+                nodes.push(node?);
             }
 
             Ok(dbg!(nodes))
@@ -235,15 +239,12 @@ impl FromSql for GraphqlId {
 mod tests {
 
     use super::*;
-    use crate::{connector::Connector, models::*};
+    use crate::{connector::Connector, models::*, protobuf::prisma::QueryArguments};
     use serde_json::{self, json};
 
-    #[test]
-    fn test_simple_select_by_where() {
-        let sqlite = Sqlite::new(1, true).unwrap();
+    fn create_test_structure(sqlite: &Sqlite) -> PrismaResult<&'static str> {
         let db_name = "graphcool";
 
-        // Create a simple schema
         sqlite
             .with_connection(db_name, |conn| {
                 conn.execute_batch(
@@ -251,13 +252,17 @@ mod tests {
                      DROP TABLE IF EXISTS graphcool.user;
                      CREATE TABLE graphcool.user(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT, updated_at datetime(3));
                      INSERT INTO graphcool.user (name, updated_at) values ('Musti', 1549046025567);
+                     INSERT INTO graphcool.user (name, updated_at) values ('Naukio', 1549046025567);
                      COMMIT;",
                 )
                 .unwrap();
                 Ok(())
-            })
-            .unwrap();
+            })?;
 
+        Ok(db_name)
+    }
+
+    fn create_legacy_project() -> Project {
         let project_json = json!({
             "id": "Musti",
             "functions": [],
@@ -310,7 +315,15 @@ mod tests {
         });
 
         let project_template: ProjectTemplate = serde_json::from_value(project_json).unwrap();
-        let project: Project = project_template.into();
+        project_template.into()
+    }
+
+    #[test]
+    fn test_simple_select_by_where() {
+        let sqlite = Sqlite::new(1, true).unwrap();
+        let db_name = create_test_structure(&sqlite).unwrap();
+
+        let project = create_legacy_project();
         let model = &project.schema.models.get().unwrap()[0];
 
         let field = model.fields().find_from_scalar("name").unwrap();
@@ -345,5 +358,31 @@ mod tests {
             Some(&PrismaValue::DateTime(datetime.to_rfc3339())),
             result.get(2)
         );
+    }
+
+    #[test]
+    fn test_get_nodes_with_no_filters() {
+        let sqlite = Sqlite::new(1, true).unwrap();
+        let db_name = create_test_structure(&sqlite).unwrap();
+
+        let project = create_legacy_project();
+        let model = &project.schema.models.get().unwrap()[0];
+        let fields = model.fields().scalar();
+
+        let query_arguments = QueryArguments {
+            skip: None,
+            after: None,
+            first: None,
+            before: None,
+            last: None,
+            filter: None,
+            order_by: None,
+        };
+
+        let result = sqlite
+            .get_nodes(&db_name, &model, &fields, query_arguments)
+            .unwrap();
+
+        assert_eq!(2, result.len());
     }
 }
