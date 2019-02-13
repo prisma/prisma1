@@ -10,15 +10,17 @@ use sql::prelude::*;
 impl DataResolver for Sqlite {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)> {
         let database_name = query.project.db_name();
-        let model = query.project.schema.find_model(&query.model_name)?;
-        let selected_fields = model.fields().find_many_from_scalar(&query.selected_fields);
+        let selected_fields = query
+            .model
+            .fields()
+            .find_many_from_scalar(&query.selected_fields);
 
         let field_names: Vec<String> = selected_fields
             .iter()
             .map(|f| f.db_name().to_string())
             .collect();
 
-        let table_location = Self::table_location(database_name, model.db_name());
+        let table_location = Self::table_location(database_name, query.model.db_name());
         let conditions = query.conditions;
 
         self.with_connection(database_name, |conn| {
@@ -140,29 +142,22 @@ mod tests {
 
         let project = create_legacy_project();
 
-        let (model_name, fields, conditions) = {
-            let model = &project.schema.models.get().unwrap()[0];
-            let model_name = model.db_name().to_string();
-            let field = model.fields().find_from_scalar("name").unwrap();
-            let find_by = PrismaValue::String(String::from("Musti"));
+        let model = project.schema.find_model("user").unwrap();
+        let field = model.fields().find_from_scalar("name").unwrap();
+        let find_by = PrismaValue::String(String::from("Musti"));
 
-            let fields: BTreeSet<String> = model
-                .fields()
-                .scalar()
-                .iter()
-                .map(|f| f.db_name().to_string())
-                .collect();
+        let fields: BTreeSet<String> = model
+            .fields()
+            .scalar()
+            .iter()
+            .map(|f| f.db_name().to_string())
+            .collect();
 
-            (
-                model_name,
-                fields,
-                ConditionTree::single(field.db_name().equals(find_by)),
-            )
-        };
+        let conditions = ConditionTree::single(field.db_name().equals(find_by));
 
         let query = SelectQuery {
             project: project,
-            model_name: model_name,
+            model: model,
             selected_fields: fields,
             conditions: conditions,
             order_by: None,
@@ -214,23 +209,18 @@ mod tests {
 
         let project = create_legacy_project();
 
-        let (model_name, fields) = {
-            let model = &project.schema.models.get().unwrap()[0];
-            let model_name = model.db_name().to_string();
+        let model = project.schema.find_model("user").unwrap();
 
-            let fields: BTreeSet<String> = model
-                .fields()
-                .scalar()
-                .iter()
-                .map(|f| f.db_name().to_string())
-                .collect();
-
-            (model_name, fields)
-        };
+        let fields: BTreeSet<String> = model
+            .fields()
+            .scalar()
+            .iter()
+            .map(|f| f.db_name().to_string())
+            .collect();
 
         let query = SelectQuery {
             project: project,
-            model_name: model_name,
+            model: model,
             selected_fields: fields,
             conditions: ConditionTree::NoCondition,
             order_by: None,

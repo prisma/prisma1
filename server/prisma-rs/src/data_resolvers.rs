@@ -6,11 +6,11 @@ pub type PrismaDataResolver = Box<dyn DataResolver + Send + Sync + 'static>;
 use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
 
 use sql::prelude::*;
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, sync::Arc};
 
 pub struct SelectQuery {
     pub project: Project,
-    pub model_name: String,
+    pub model: Arc<Model>,
     pub selected_fields: BTreeSet<String>,
     pub conditions: ConditionTree,
     pub order_by: Option<u32>, // TODO: add a proper order by structure

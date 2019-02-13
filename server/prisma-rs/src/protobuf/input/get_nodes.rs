@@ -29,9 +29,12 @@ impl IntoSelectQuery for GetNodesInput {
             .map(|filter| filter.into())
             .unwrap_or(ConditionTree::NoCondition);
 
+        let project: Project = project_template.into();
+        let model = project.schema.find_model(&self.model_name)?;
+
         let query = SelectQuery {
-            project: project_template.into(),
-            model_name: self.model_name,
+            project: project,
+            model: model,
             selected_fields: fields,
             conditions: filter,
             order_by: None, // TODO
