@@ -1,10 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog, DatabaseCredentials } from '../../utils/EndpointDialog'
-import {
-  PostgresConnector,
-  PrismaDBClient,
-  MongoConnector,
-} from 'prisma-db-introspection'
+import { PostgresConnector, PrismaDBClient, MongoConnector } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../util'
@@ -90,15 +86,11 @@ export default class IntrospectCommand extends Command {
      */
 
     if (mongoUri && !mongoDb) {
-      throw new Error(
-        `You provided mongo-uri, but not the required option mongo-db`,
-      )
+      throw new Error(`You provided mongo-uri, but not the required option mongo-db`)
     }
 
     if (mongoDb && !mongoUri) {
-      throw new Error(
-        `You provided mongo-db, but not the required option mongo-uri`,
-      )
+      throw new Error(`You provided mongo-db, but not the required option mongo-uri`)
     }
 
     if (mongoDb && mongoUri) {
@@ -126,10 +118,7 @@ export default class IntrospectCommand extends Command {
     // CONTINUE: Check if either none or all args are present
     const pgArgsEntries = Object.entries(requiredPostgresArgs)
     const notProvidedArgs = pgArgsEntries.filter(([_, value]) => !value)
-    if (
-      notProvidedArgs.length > 0 &&
-      notProvidedArgs.length < pgArgsEntries.length
-    ) {
+    if (notProvidedArgs.length > 0 && notProvidedArgs.length < pgArgsEntries.length) {
       console.log({
         pgArgsEntriesLength: pgArgsEntries.length,
         notProvidedArgsLength: notProvidedArgs.length,
@@ -158,7 +147,7 @@ export default class IntrospectCommand extends Command {
       await this.definition.load(this.flags)
       const service = this.definition.service!
       const stage = this.definition.stage!
-      const cluster = this.definition.getCluster()
+      const cluster = await this.definition.getCluster()
       const workspace = this.definition.getWorkspace()
       this.env.setActiveCluster(cluster!)
       await this.client.initClusterClient(cluster!, service!, stage, workspace!)
@@ -203,19 +192,13 @@ export default class IntrospectCommand extends Command {
         const exists = schemas.includes(pgSchema)
         if (!exists) {
           throw new Error(
-            `The provided Postgres Schema ${pgSchema} does not exist. Choose one of ${schemas.join(
-              ', ',
-            )}`,
+            `The provided Postgres Schema ${pgSchema} does not exist. Choose one of ${schemas.join(', ')}`,
           )
         }
         schema = pgSchema
       } else if (mongoDb) {
         if (!schemas.includes(mongoDb)) {
-          throw new Error(
-            `The provided Mongo Database ${mongoDb} does not exist. Choose one of ${schemas.join(
-              ', ',
-            )}`,
-          )
+          throw new Error(`The provided Mongo Database ${mongoDb} does not exist. Choose one of ${schemas.join(', ')}`)
         }
 
         schema = mongoDb
@@ -225,16 +208,12 @@ export default class IntrospectCommand extends Command {
         schema = exists
           ? schemaName
           : await endpointDialog.selectSchema(
-              schemas.filter(
-                s => !s.startsWith('prisma-temporary-introspection-service$'),
-              ),
+              schemas.filter(s => !s.startsWith('prisma-temporary-introspection-service$')),
             )
       }
 
       const ParserInstance = Parser.create(databaseType!)
-      const datamodel = ParserInstance.parseFromSchemaString(
-        this.definition.typesString!,
-      )
+      const datamodel = ParserInstance.parseFromSchemaString(this.definition.typesString!)
 
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
 
@@ -263,26 +242,17 @@ export default class IntrospectCommand extends Command {
       const fullFileName = path.join(this.config.definitionDir, fileName)
       fs.writeFileSync(fullFileName, renderedSdl)
       this.out.action.stop(prettyTime(Date.now() - before))
-      this.out.log(
-        `Created datamodel definition based on ${numTables} database tables.`,
-      )
+      this.out.log(`Created datamodel definition based on ${numTables} database tables.`)
       this.out.log(`\
-${chalk.bold(
-        'Created 1 new file:',
-      )}    GraphQL SDL-based datamodel (derived from existing database)
+${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived from existing database)
 
   ${chalk.cyan(fileName)}
 `)
 
-      if (
-        !this.definition.definition ||
-        !this.definition.definition!.datamodel
-      ) {
+      if (!this.definition.definition || !this.definition.definition!.datamodel) {
         await this.definition.load(this.flags)
         this.definition.addDatamodel(fileName)
-        this.out.log(
-          `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
-        )
+        this.out.log(`Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`)
       }
     } else {
       throw new Error(`Could not find schema in provided database.`)
@@ -294,12 +264,7 @@ ${chalk.bold(
       const stage = this.definition.stage!
       const token = this.definition.getToken(service, stage)
       const workspace = this.definition.getWorkspace()
-      const introspection = await this.client.introspect(
-        service,
-        stage,
-        token,
-        workspace!,
-      )
+      const introspection = await this.client.introspect(service, stage, token, workspace!)
       const introspectionString = JSON.stringify(introspection)
       return introspectionString.includes('executeRaw')
     } catch (e) {

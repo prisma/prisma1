@@ -18,8 +18,7 @@ export default class Export extends Command {
     }),
   }
   async run() {
-    let exportPath =
-      this.flags['path'] || `export-${new Date().toISOString()}.zip`
+    let exportPath = this.flags['path'] || `export-${new Date().toISOString()}.zip`
 
     if (!exportPath.endsWith('.zip')) {
       exportPath += `.zip`
@@ -30,14 +29,11 @@ export default class Export extends Command {
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
-    if (
-      this.definition.definition!.databaseType &&
-      this.definition.definition!.databaseType === 'document'
-    ) {
+    if (this.definition.definition!.databaseType && this.definition.definition!.databaseType === 'document') {
       throw new Error('Export is not yet supported for document stores.')
     }
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     await this.export(
@@ -48,27 +44,14 @@ export default class Export extends Command {
       this.definition.getWorkspace() || undefined,
     )
 
-    const importCommand = chalk.green.bold(
-      `$ prisma import --data ${exportPath}`,
-    )
+    const importCommand = chalk.green.bold(`$ prisma import --data ${exportPath}`)
     this.out.log(`Exported service to ${chalk.bold(exportPath)}
 You can import it to a new service with
   ${importCommand}`)
   }
 
-  async export(
-    serviceName: string,
-    stage: string,
-    exportPath: string,
-    token?: string,
-    workspaceSlug?: string,
-  ) {
-    const exporter = new Exporter(
-      exportPath,
-      this.client,
-      this.out,
-      this.config,
-    )
+  async export(serviceName: string, stage: string, exportPath: string, token?: string, workspaceSlug?: string) {
+    const exporter = new Exporter(exportPath, this.client, this.out, this.config)
 
     await exporter.download(serviceName, stage, token, workspaceSlug)
   }
