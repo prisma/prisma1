@@ -1,4 +1,4 @@
-use crate::models::{FieldTemplate, Fields, Renameable, Schema, SchemaWeakRef};
+use crate::models::{FieldTemplate, Fields, Schema, SchemaWeakRef};
 
 use once_cell::unsync::OnceCell;
 use std::sync::{Arc, Weak};
@@ -57,15 +57,6 @@ impl ModelTemplate {
     }
 }
 
-impl Renameable for Model {
-    fn db_name(&self) -> &str {
-        self.manifestation
-            .as_ref()
-            .map(|mf| mf.db_name.as_ref())
-            .unwrap_or_else(|| self.name.as_ref())
-    }
-}
-
 impl Model {
     fn with_schema<F, T>(&self, f: F) -> T
     where
@@ -88,5 +79,12 @@ impl Model {
 
     pub fn is_legacy(&self) -> bool {
         self.with_schema(|schema| schema.is_legacy())
+    }
+
+    pub fn db_name(&self) -> &str {
+        self.manifestation
+            .as_ref()
+            .map(|mf| mf.db_name.as_ref())
+            .unwrap_or_else(|| self.name.as_ref())
     }
 }

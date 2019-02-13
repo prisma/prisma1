@@ -1,4 +1,4 @@
-use crate::models::{Model, ModelWeakRef, Renameable};
+use crate::models::{Model, ModelWeakRef};
 
 use std::sync::Arc;
 
@@ -211,10 +211,8 @@ impl ScalarField {
     pub fn is_writable(&self) -> bool {
         !self.is_readonly && !self.is_id() && !self.is_created_at() && !self.is_updated_at()
     }
-}
 
-impl Renameable for ScalarField {
-    fn db_name(&self) -> &str {
+    pub fn db_name(&self) -> &str {
         self.manifestation
             .as_ref()
             .map(|mf| mf.db_name.as_ref())
@@ -222,8 +220,8 @@ impl Renameable for ScalarField {
     }
 }
 
-impl Renameable for RelationField {
-    fn db_name(&self) -> &str {
+impl RelationField {
+    pub fn db_name(&self) -> &str {
         self.manifestation
             .as_ref()
             .map(|mf| mf.db_name.as_ref())
@@ -231,8 +229,8 @@ impl Renameable for RelationField {
     }
 }
 
-impl Renameable for Field {
-    fn db_name(&self) -> &str {
+impl Field {
+    pub fn db_name(&self) -> &str {
         match self {
             Field::Scalar(sf) => sf.db_name(),
             Field::Relation(rf) => rf.db_name(),

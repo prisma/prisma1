@@ -2,7 +2,7 @@ use std::sync::{Arc, Weak};
 
 use crate::{
     error::Error,
-    models::{ModelRef, ModelTemplate, Renameable},
+    models::{ModelRef, ModelTemplate},
     PrismaResult,
 };
 

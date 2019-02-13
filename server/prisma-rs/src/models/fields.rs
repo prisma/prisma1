@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    models::{Field, RelationField, Renameable, ScalarField},
+    models::{Field, RelationField, ScalarField},
     PrismaResult,
 };
 use std::collections::BTreeSet;
