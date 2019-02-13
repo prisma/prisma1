@@ -1,29 +1,28 @@
 mod sqlite;
 
-use crate::{models::Model, protobuf::prisma::Node};
-
 pub use sqlite::Sqlite;
 pub type PrismaConnector = Box<dyn Connector + Send + Sync + 'static>;
 
-use crate::{models::ScalarField, protobuf::prisma::QueryArguments, PrismaResult, PrismaValue};
+use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
 
-/// Trait responsible for fetching rows from the database.
+use sql::prelude::*;
+use std::collections::BTreeSet;
+
+pub struct SelectQuery {
+    pub project: Project,
+    pub model_name: String,
+    pub selected_fields: BTreeSet<String>,
+    pub conditions: ConditionTree,
+    pub order_by: Option<u32>, // TODO: add a proper order by structure
+    pub skip: Option<u32>,
+    pub after: Option<GraphqlId>,
+    pub first: Option<u32>,
+}
+
+pub trait IntoSelectQuery {
+    fn into_select_query(self) -> PrismaResult<SelectQuery>;
+}
+
 pub trait Connector {
-    /// Find a certain model where the given fields matches the value.
-    fn get_node_by_where(
-        &self,
-        database_name: &str,
-        model: &Model,
-        selected_fields: &[&ScalarField],
-        query_conditions: (&ScalarField, &PrismaValue),
-    ) -> PrismaResult<Node>;
-
-    /// Find all nodes with the given query arguments.
-    fn get_nodes(
-        &self,
-        database_name: &str,
-        model: &Model,
-        selected_fields: &[&ScalarField],
-        query_arguments: QueryArguments,
-    ) -> PrismaResult<Vec<Node>>;
+    fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)>;
 }

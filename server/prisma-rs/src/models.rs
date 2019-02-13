@@ -4,6 +4,8 @@ mod model;
 mod project;
 mod schema;
 
+pub mod prelude;
+
 pub use field::*;
 pub use fields::*;
 pub use model::*;

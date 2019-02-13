@@ -10,7 +10,6 @@ extern crate debug_stub_derive;
 pub mod config;
 pub mod connectors;
 pub mod error;
-pub mod executor;
 pub mod models;
 pub mod protobuf;
 
@@ -20,7 +19,7 @@ use lazy_static::lazy_static;
 use protobuf::{ProtoBufEnvelope, ProtoBufInterface, ScalaInterface};
 use serde_yaml;
 
-pub use protobuf::prisma::value_container::PrismaValue;
+pub use protobuf::prelude::*;
 
 use std::{env, fs::File, slice};
 
