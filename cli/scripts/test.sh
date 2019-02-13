@@ -2,7 +2,7 @@
 
 set -e
 
-cd packages/prisma-datamodel
+cd cli/packages/prisma-datamodel
 yarn
 yarn test
 yarn build
