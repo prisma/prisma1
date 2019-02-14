@@ -131,6 +131,7 @@ object ConfigLoader {
     if (dbConnector == "mongo") {
       val uri      = extractString("uri", db)
       val database = extractStringOpt("database", db)
+      extractStringOpt("schema", db).map(x => throw InvalidConfiguration("Mongo should not define a schema, but only a database."))
 
       databaseConfig(
         name = dbName,
@@ -166,6 +167,13 @@ object ConfigLoader {
       val database   = uri.path.toAbsolute.parts.headOption
       val ssl        = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
       val rawAccess  = extractBooleanOpt("rawAccess", db)
+
+      if (schema.isDefined && database.isDefined && dbConnector != "postgres")
+        throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
+
+      if (schema.isDefined && database.isEmpty)
+        throw InvalidConfiguration(
+          "Only Postgres connectors specify a schema. If they do they also need to specify a database. Other connectors only specify a database.")
 
       databaseConfig(
         name = dbName,
@@ -221,6 +229,13 @@ object ConfigLoader {
       case "mongo" => 0
       case _       => extractInt("port", db)
     }
+
+    if (schema.isDefined && database.isDefined && dbConnector != "postgres")
+      throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
+
+    if (schema.isDefined && database.isEmpty)
+      throw InvalidConfiguration(
+        "Only Postgres connectors specify a schema. If they do they also need to specify a database. Other connectors only specify a database.")
 
     databaseConfig(
       name = dbName,
