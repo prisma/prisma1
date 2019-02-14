@@ -87,8 +87,8 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val proposer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, renames)
     val steps    = proposer.evaluate()
 
-    steps.length shouldBe 2
-    steps.last shouldBe UpdateModel("__Test2", "Test2")
+    steps.length shouldBe 1
+    steps.last shouldBe UpdateModel("Test", "Test2")
   }
 
   "Creating fields" should "create CreateField migration steps" in {
@@ -262,12 +262,10 @@ class MigrationStepsInferrerSpec extends FlatSpec with Matchers with DeploySpecB
     val inferrer = MigrationStepsInferrerImpl(previousProject.schema, nextProject.schema, mappings)
     val steps    = inferrer.evaluate()
 
-    steps should have(size(7))
+    steps should have(size(5))
     steps should contain(UpdateRelation("CommentToTodo", newName = Some("CommentNewToTodoNew")))
-    steps should contain(UpdateModel("Comment", newName = "__CommentNew"))
-    steps should contain(UpdateModel("Todo", newName = "__TodoNew"))
-    steps should contain(UpdateModel("__CommentNew", newName = "CommentNew"))
-    steps should contain(UpdateModel("__TodoNew", newName = "TodoNew"))
+    steps should contain(UpdateModel("Comment", newName = "CommentNew"))
+    steps should contain(UpdateModel("Todo", newName = "TodoNew"))
     steps should contain(UpdateField("Comment", "CommentNew", "todo", Some("todoNew")))
     steps should contain(UpdateField("Todo", "TodoNew", "comments", Some("commentsNew")))
   }
