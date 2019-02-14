@@ -6,6 +6,10 @@ cd cli/packages/prisma-datamodel
 yarn
 yarn test
 yarn build
+cd ../prisma-yml
+yarn
+yarn test
+yarn build
 cd ../prisma-db-introspection
 yarn
 yarn test
@@ -15,10 +19,6 @@ yarn
 yarn test
 yarn build
 cd ../prisma-client-lib
-yarn
-yarn test
-yarn build
-cd ../prisma-yml
 yarn
 yarn test
 yarn build
