@@ -157,13 +157,15 @@ case class DataModelValidatorImpl(
     val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
     val typeDirectiveValidations  = tryValidation(validateTypeDirectives())
     val enumValidations           = tryValidation(EnumValidator(doc).validate())
+    val validateRenames           = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       globalValidations,
       reservedFieldsValidations,
       fieldDirectiveValidations,
       enumValidations,
-      typeDirectiveValidations
+      typeDirectiveValidations,
+      validateRenames
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -237,6 +239,22 @@ case class DataModelValidatorImpl(
     } yield schemaError
 
     requiredArgErrors ++ optionalArgErrors
+  }
+
+  def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
+    // renaming ModelA to ModelB while also Renaming ModelB to ModelA
+    val typesWithRenames = objectTypes.filter(_.directive("rename").isDefined)
+    val oldNameNewNameTuples: List[(ObjectTypeDefinition, String)] =
+      typesWithRenames.map(t => (t, t.directive("rename").get.argument("oldName").get.valueAsString)).toList
+
+    def getCrossRenamedObjectTypes(tuples: List[(ObjectTypeDefinition, String)]): List[ObjectTypeDefinition] = tuples match {
+      case x if x.isEmpty => List.empty
+      case head :: tail   => tail.find(rest => rest._2 == head._1.name).map(_._1).toList ++ getCrossRenamedObjectTypes(tail)
+    }
+
+    val crossRenamedObjectTypes = getCrossRenamedObjectTypes(oldNameNewNameTuples)
+
+    crossRenamedObjectTypes.map(objectType => DeployErrors.crossRenamedTypeName(objectType))
   }
 
   def validateDirectiveUniqueness(fieldAndType: FieldAndType): Option[DeployError] = {

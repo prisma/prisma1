@@ -221,12 +221,10 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
         |  b: String @unique
         |}"""
 
-    val updatedProject = deployServer.deploySchema(project, schema1)
+    val updatedProject = deployServer.deploySchemaThatMustError(project, schema1)
 
-    val as = apiServer.query("""{as{b}}""", updatedProject)
-    as.toString should be("""{"data":{"as":[{"b":"B"}]}}""")
-    val bs = apiServer.query("""{bs{a}}""", updatedProject)
-    bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
+    updatedProject.toString() should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"The type `A` is being renamed. Another type is also being renamed and formerly had `A` new name.Please split cases where you do renames like type A -> type B and type B -> type A at the same time into two parts. "}],"warnings":[]}}}""")
   }
 
   // these will be fixed when we implement a migration workflow

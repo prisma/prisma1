@@ -15,8 +15,8 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       Vector(DeleteModelTable(project, model, model.dbNameOfIdField_!, scalarListFieldNames))
 
     case x: UpdateModel =>
-      val oldModel = previousSchema.getModelByName(x.name).getOrElse(previousSchema.getModelByName_!(x.name.substring(2)))
-      val newModel = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
+      val oldModel = previousSchema.getModelByName_!(x.name)
+      val newModel = nextSchema.getModelByName_!(x.newName)
       Vector(UpdateModelTable(project = project, oldModel = oldModel, newModel = newModel))
 
     case x: CreateField =>

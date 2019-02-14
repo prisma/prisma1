@@ -3,15 +3,11 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
-import com.prisma.shared.models.ConnectorCapability.{MigrationsCapability, ScalarListsCapability}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, RelationStrategy, TypeIdentifier}
-import com.prisma.utils.or.OrExtensions
+import com.prisma.shared.models.{ConnectorCapabilities, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
 
 import scala.collection.immutable.Seq
-import scala.util.{Failure, Success}
-import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
@@ -190,6 +186,7 @@ case class LegacyDataModelValidator(
     val scalarFieldValidations    = tryValidation(validateScalarFields(allFieldAndTypes))
     val fieldDirectiveValidations = tryValidation(allFieldAndTypes.flatMap(validateFieldDirectives))
     val enumValidations           = tryValidation(validateEnumTypes)
+    val crossRenameValidations    = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       reservedFieldsValidations,
@@ -200,7 +197,8 @@ case class LegacyDataModelValidator(
       relationFieldValidations,
       scalarFieldValidations,
       fieldDirectiveValidations,
-      enumValidations
+      enumValidations,
+      crossRenameValidations
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -248,6 +246,22 @@ case class LegacyDataModelValidator(
     } yield {
       DeployErrors.duplicateTypeName(objectType)
     }
+  }
+
+  def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
+    // renaming ModelA to ModelB while also Renaming ModelB to ModelA
+    val typesWithRenames = objectTypes.filter(_.directive("rename").isDefined)
+    val oldNameNewNameTuples: List[(ObjectTypeDefinition, String)] =
+      typesWithRenames.map(t => (t, t.directive("rename").get.argument("oldName").get.valueAsString)).toList
+
+    def getCrossRenamedObjectTypes(tuples: List[(ObjectTypeDefinition, String)]): List[ObjectTypeDefinition] = tuples match {
+      case x if x.isEmpty => List.empty
+      case head :: tail   => tail.find(rest => rest._2 == head._1.name).map(_._1).toList ++ getCrossRenamedObjectTypes(tail)
+    }
+
+    val crossRenamedObjectTypes = getCrossRenamedObjectTypes(oldNameNewNameTuples)
+
+    crossRenamedObjectTypes.map(objectType => DeployErrors.crossRenamedTypeName(objectType))
   }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
@@ -300,7 +314,7 @@ case class LegacyDataModelValidator(
 
     /**
       * Check that if a relation is not a self-relation and a relation-directive occurs only once that there is no
-      * opposing field without a relationdirective on the other side.
+      * opposing field without a relation directive on the other side.
       */
     val allowOnlyOneDirectiveOnlyWhenUnambigous = relationFieldsWithRelationDirective.flatMap {
       case thisType if !isSelfRelation(thisType) && relationCount(thisType) == 1 =>
