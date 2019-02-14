@@ -13,12 +13,8 @@ pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
 }
 
-use prisma::{
-    result, rpc_response as rpc, selected_field, Error as ProtoError, Header, Node, NodesResult,
-    Result, RpcResponse, SelectedField,
-};
-
 use crate::{Error as CrateError, PrismaValue};
+use prelude::*;
 
 impl RpcResponse {
     pub fn header() -> Header {
@@ -30,7 +26,7 @@ impl RpcResponse {
     pub fn empty() -> RpcResponse {
         RpcResponse {
             header: Self::header(),
-            response: Some(rpc::Response::Result(Result { value: None })),
+            response: Some(rpc::Response::Result(prisma::Result { value: None })),
         }
     }
 
@@ -78,5 +74,14 @@ impl Node {
 
     pub fn len(&self) -> usize {
         self.values.len()
+    }
+}
+
+impl ValueContainer {
+    pub fn is_null_value(&self) -> bool {
+        match self.prisma_value {
+            Some(PrismaValue::Null(_)) => true,
+            _ => false,
+        }
     }
 }

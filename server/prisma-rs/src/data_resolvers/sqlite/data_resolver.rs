@@ -1,6 +1,5 @@
 use crate::{
     data_resolvers::{DataResolver, SelectQuery, Sqlite},
-    models::prelude::*,
     protobuf::prelude::*,
     PrismaResult,
 };

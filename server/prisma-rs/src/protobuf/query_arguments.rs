@@ -13,12 +13,14 @@ impl Into<ConditionTree> for ScalarFilter {
         let field: &str = self.field.as_ref();
 
         match self.condition.unwrap() {
-            scalar_filter::Condition::Equals(value) => {
-                ConditionTree::single(field.equals(value.prisma_value.unwrap()))
-            }
-            scalar_filter::Condition::NotEquals(value) => {
-                ConditionTree::single(field.not_equals(value.prisma_value.unwrap()))
-            }
+            scalar_filter::Condition::Equals(value) => match value.prisma_value.unwrap() {
+                PrismaValue::Null(_) => ConditionTree::single(field.is_null()),
+                val => ConditionTree::single(field.equals(val)),
+            },
+            scalar_filter::Condition::NotEquals(value) => match value.prisma_value.unwrap() {
+                PrismaValue::Null(_) => ConditionTree::single(field.is_not_null()),
+                val => ConditionTree::single(field.not_equals(val)),
+            },
             scalar_filter::Condition::Contains(value) => {
                 ConditionTree::single(field.like(value.prisma_value.unwrap()))
             }
@@ -49,22 +51,32 @@ impl Into<ConditionTree> for ScalarFilter {
             scalar_filter::Condition::GreaterThanOrEquals(value) => {
                 ConditionTree::single(field.greater_than_or_equals(value.prisma_value.unwrap()))
             }
-            scalar_filter::Condition::In(mc) => ConditionTree::single(
-                field.in_selection(
-                    mc.values
-                        .into_iter()
-                        .map(|v| v.prisma_value.unwrap())
-                        .collect(),
+            scalar_filter::Condition::In(mc) => match mc.values.split_first() {
+                Some((head, tail)) if tail.is_empty() && head.is_null_value() => {
+                    ConditionTree::single(field.is_null())
+                }
+                _ => ConditionTree::single(
+                    field.in_selection(
+                        mc.values
+                            .into_iter()
+                            .map(|v| v.prisma_value.unwrap())
+                            .collect(),
+                    ),
                 ),
-            ),
-            scalar_filter::Condition::NotIn(mc) => ConditionTree::single(
-                field.not_in_selection(
-                    mc.values
-                        .into_iter()
-                        .map(|v| v.prisma_value.unwrap())
-                        .collect(),
+            },
+            scalar_filter::Condition::NotIn(mc) => match mc.values.split_first() {
+                Some((head, tail)) if tail.is_empty() && head.is_null_value() => {
+                    ConditionTree::single(field.is_not_null())
+                }
+                _ => ConditionTree::single(
+                    field.not_in_selection(
+                        mc.values
+                            .into_iter()
+                            .map(|v| v.prisma_value.unwrap())
+                            .collect(),
+                    ),
                 ),
-            ),
+            },
         }
     }
 }
@@ -126,7 +138,10 @@ impl Into<ConditionTree> for Filter {
                     ConditionTree::NegativeCondition
                 }
             }
-            _ => panic!("And, Or and Scalar are supported at this point"),
+            e => panic!(
+                "And, Or and Scalar are supported at this point (got {:?})",
+                e
+            ),
         }
     }
 }
