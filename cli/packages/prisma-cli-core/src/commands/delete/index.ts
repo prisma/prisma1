@@ -24,17 +24,11 @@ export default class Delete extends Command {
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
-    const workspaceName = this.definition.getWorkspace()
     const stage = this.definition.stage!
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
-    await this.client.initClusterClient(
-      cluster!,
-      serviceName,
-      stage,
-      this.definition.getWorkspace(),
-    )
+    await this.client.initClusterClient(cluster!, serviceName, stage, this.definition.getWorkspace())
 
     const prettyName = `${chalk.bold(serviceName)}@${stage}`
 
@@ -59,9 +53,7 @@ export default class Delete extends Command {
       message: `Are you sure that you want to delete ${projects}? y/N`,
       default: 'n',
     }
-    const { confirmation }: { confirmation: string } = await this.out.prompt(
-      confirmationQuestion,
-    )
+    const { confirmation }: { confirmation: string } = await this.out.prompt(confirmationQuestion)
     if (confirmation.toLowerCase().startsWith('n')) {
       this.out.exit(0)
     }

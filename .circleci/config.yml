@@ -25,6 +25,7 @@ jobs:
               sleep 2
             done
             echo Failed waiting for Postgres && exit 1
+      - run: ./cli/scripts/test.sh
       - run: ./cli/scripts/publish.sh
 
   # content deployment
