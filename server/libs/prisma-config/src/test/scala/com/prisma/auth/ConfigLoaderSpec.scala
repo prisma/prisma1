@@ -12,10 +12,10 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |prototype: true
                           |databases:
                           |  default:
-                          |    connector: mysql
+                          |    connector: postgres
                           |    migrations: true
                           |    host: localhost
-                          |    port: 3306
+                          |    port: 5432
                           |    user: root
                           |    password: prisma
                           |    database: my_database
@@ -32,9 +32,9 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.prototype should contain(true)
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
-      database.connector shouldBe "mysql"
+      database.connector shouldBe "postgres"
       database.active shouldBe true
-      database.port shouldBe 3306
+      database.port shouldBe 5432
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
       database.database shouldBe Some("my_database")
@@ -158,6 +158,52 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.isSuccess shouldBe false
       config.failed.get shouldBe a[InvalidConfiguration]
     }
+
+    "error if mysql has database and schema" in {
+      val invalidConfig = """
+                              |port: 4466
+                              |managementApiSecret: somesecret
+                              |prototype: true
+                              |databases:
+                              |  default:
+                              |    connector: mysql
+                              |    migrations: true
+                              |    host: localhost
+                              |    port: 3306
+                              |    user: root
+                              |    password: prisma
+                              |    database: my_database
+                              |    schema: my_schema
+                              |    ssl: true
+                              |    connectionLimit: 2
+                              |    rawAccess: true
+                            """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if mongo has database and schema" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: mongo
+                            |    database: test
+                            |    schema: test
+                            |    uri: 'mongodb://prisma:prisma@host.docker.internal:27017/?authSource=admin&ssl=false'
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
   }
 
   "fail with an invalid config format error for an invalid boolean conversion" in {
