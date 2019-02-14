@@ -2,27 +2,32 @@
 
 set -e
 
-cd ../client
+cd cli/packages/prisma-datamodel
+yarn
+yarn test
+yarn build
+cd ../prisma-yml
+yarn
+yarn test
+yarn build
+cd ../prisma-db-introspection
+yarn
+yarn test
+yarn build
+cd ../prisma-generate-schema
+yarn
+yarn test
+yarn build
+cd ../prisma-client-lib
 yarn
 yarn build
 yarn test
-cd ../cli
-cd packages/prisma-yml
-yarn build
-yarn test
 cd ../prisma-cli-engine
-yarn build
+yarn
 yarn test
+yarn build
 cd ../prisma-cli-core
-yarn build
-yarn test
-cd ../prisma-datamodel
-yarn build
-yarn test
-cd ../prisma-db-introspection
-yarn build
-yarn test
-cd ../prisma-generate-schema
+yarn
 yarn build
 yarn test
 

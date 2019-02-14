@@ -34,7 +34,7 @@ export class BuiltinCommandManager extends CommandManagerBase {
 
     let p = builtins[id]
     if (p) {
-      p = path.join(__dirname, 'commands', p)
+      p = path.join(__dirname, '../commands', p)
       return this.require(p)
     }
   }
@@ -81,11 +81,7 @@ export class Dispatcher {
 
   constructor(config: Config) {
     this.config = config
-    this.managers = [
-      new CLICommandManager(config),
-      new BuiltinCommandManager(config),
-      new PluginCommandManager(config),
-    ]
+    this.managers = [new CLICommandManager(config), new BuiltinCommandManager(config), new PluginCommandManager(config)]
   }
 
   async findCommand(
@@ -104,7 +100,7 @@ export class Dispatcher {
 
   async findTopic(id: string) {
     if (!id) return {}
-    // TODO: Fix this hack for "cluster". 
+    // TODO: Fix this hack for "cluster".
     // Find why cache does not invalidate for cluster command
     if (id.trim() === 'cluster') return null
     for (let manager of this.managers) {
