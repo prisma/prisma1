@@ -45,9 +45,9 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   var lastCallResult: RustCallResult = null
   var closed                         = false
 
-  val returnsRows = rawSqlString.toLowerCase().startsWith("with ") || rawSqlString.toLowerCase().startsWith("select ") || rawSqlString
-    .toLowerCase()
-    .contains("returning ")
+  val returnsRows = rawSqlString.toLowerCase().startsWith("with ") ||
+    rawSqlString.toLowerCase().startsWith("select") ||
+    rawSqlString.toLowerCase().contains("returning ")
 
   @tailrec
   private def transform(q: String, index: Int = 1, continue: Boolean = true): String = {

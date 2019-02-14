@@ -12,6 +12,7 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 postgres = { version = "0.15", features = ["with-chrono", "with-uuid"] }
+postgres_array = "0.9.0"
 colored = "1.6"
 byteorder = "*" # Already defined in postgres as dep
 rust_decimal = { version = "0.10", features = ["postgres"] }

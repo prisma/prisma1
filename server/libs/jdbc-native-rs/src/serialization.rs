@@ -9,6 +9,7 @@ use driver::DriverError;
 use num_traits::ToPrimitive;
 use jdbc_params::{JdbcParameterType, MagicDateTime};
 use uuid::Uuid;
+use postgres_array::Array;
 
 #[derive(Serialize)]
 pub struct ResultSet {
@@ -33,6 +34,8 @@ fn mapColumn(col: &Column) -> Result<ResultColumn> {
         &postgres::types::TIMESTAMP => Ok(JdbcParameterType::DateTime),
         &postgres::types::UUID => Ok(JdbcParameterType::UUID),
         &postgres::types::VOID => Ok(JdbcParameterType::VOID),
+        &postgres::types::NAME => Ok(JdbcParameterType::String),
+        &postgres::types::NAME_ARRAY => Ok(JdbcParameterType::StringArray),
         x =>  Err(DriverError::GenericError(format!(
             "Unhandled type in map column: {}",
             x
@@ -102,6 +105,15 @@ impl ResultSet {
                     &postgres::types::BPCHAR => serde_json::Value::String(row.get(i)),
                     &postgres::types::VOID => {
                         serde_json::Value::Null
+                    },
+                    &postgres::types::NAME => serde_json::Value::String(row.get(i)),
+                    &postgres::types::NAME_ARRAY => {
+                        let result: Array<String> = row.get(i);
+                        let mut json = vec!();
+                        for aString in result {
+                            json.push(serde_json::Value::String(aString));
+                        }
+                        serde_json::Value::Array(foo)
                     },
                     x => {
                         return Err(DriverError::GenericError(format!(
