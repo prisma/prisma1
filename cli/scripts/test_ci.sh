@@ -5,6 +5,11 @@ set -e
 #
 # Detect change
 #
+if [[ $CIRCLE_COMPARE_URL ]]; then
+  export lastCommits=`echo $CIRCLE_COMPARE_URL | sed -n 's/.*compare\/\(.*\)/\1/p' | sed 's/\.\.\./ /'`
+else
+  export lastCommits="HEAD"
+fi
 
 export changedFiles=$(git diff-tree --no-commit-id --name-only -r $lastCommits)
 
