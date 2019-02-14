@@ -25,7 +25,7 @@ jobs:
               sleep 2
             done
             echo Failed waiting for Postgres && exit 1
-      - run: ./cli/scripts/test.sh
+      - run: ./cli/scripts/test_ci.sh
       - run: ./cli/scripts/publish.sh
 
   cli_test:
@@ -52,7 +52,7 @@ jobs:
               sleep 2
             done
             echo Failed waiting for Postgres && exit 1
-      - run: ./cli/scripts/test.sh
+      - run: ./cli/scripts/test_ci.sh
 
   # content deployment
   content:
