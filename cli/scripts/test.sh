@@ -20,14 +20,14 @@ yarn test
 yarn build
 cd ../prisma-client-lib
 yarn
-yarn test
 yarn build
+yarn test
 cd ../prisma-cli-engine
 yarn
 yarn test
 yarn build
 cd ../prisma-cli-core
 yarn
-yarn test
 yarn build
+yarn test
 
