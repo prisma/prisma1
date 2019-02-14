@@ -1,4 +1,5 @@
-mod connector;
+mod data_resolver;
+mod service;
 
 use chrono::{DateTime, Utc};
 use r2d2_sqlite::SqliteConnectionManager;

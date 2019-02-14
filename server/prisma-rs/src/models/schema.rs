@@ -1,14 +1,14 @@
-use std::rc::{Rc, Weak};
+use std::sync::{Arc, Weak};
 
 use crate::{
     error::Error,
-    models::{ModelRef, ModelTemplate, Renameable},
+    models::{ModelRef, ModelTemplate},
     PrismaResult,
 };
 
 use once_cell::unsync::OnceCell;
 
-pub type SchemaRef = Rc<Schema>;
+pub type SchemaRef = Arc<Schema>;
 pub type SchemaWeakRef = Weak<Schema>;
 
 #[derive(Debug, Deserialize)]
@@ -54,7 +54,7 @@ pub struct PrismaEnum {
 
 impl Into<SchemaRef> for SchemaTemplate {
     fn into(self) -> SchemaRef {
-        let schema = Rc::new(Schema {
+        let schema = Arc::new(Schema {
             models: OnceCell::new(),
             relations: self.relations,
             enums: self.enums,
@@ -64,7 +64,7 @@ impl Into<SchemaRef> for SchemaTemplate {
         let models = self
             .models
             .into_iter()
-            .map(|mt| mt.build(Rc::downgrade(&schema)))
+            .map(|mt| mt.build(Arc::downgrade(&schema)))
             .collect();
 
         // Models will not be set before this, look above! No panic.

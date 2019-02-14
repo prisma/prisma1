@@ -1,16 +1,16 @@
 mod sqlite;
 
 pub use sqlite::Sqlite;
-pub type PrismaConnector = Box<dyn Connector + Send + Sync + 'static>;
+pub type PrismaDataResolver = Box<dyn DataResolver + Send + Sync + 'static>;
 
 use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
 
 use sql::prelude::*;
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, sync::Arc};
 
 pub struct SelectQuery {
     pub project: Project,
-    pub model_name: String,
+    pub model: Arc<Model>,
     pub selected_fields: BTreeSet<String>,
     pub conditions: ConditionTree,
     pub order_by: Option<u32>, // TODO: add a proper order by structure
@@ -23,6 +23,6 @@ pub trait IntoSelectQuery {
     fn into_select_query(self) -> PrismaResult<SelectQuery>;
 }
 
-pub trait Connector {
+pub trait DataResolver {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)>;
 }

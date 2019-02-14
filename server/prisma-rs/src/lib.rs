@@ -8,7 +8,7 @@ extern crate prost_derive;
 extern crate debug_stub_derive;
 
 pub mod config;
-pub mod connectors;
+pub mod data_resolvers;
 pub mod error;
 pub mod models;
 pub mod protobuf;
@@ -16,7 +16,7 @@ pub mod protobuf;
 use config::PrismaConfig;
 use error::Error;
 use lazy_static::lazy_static;
-use protobuf::{ProtoBufEnvelope, ProtoBufInterface, ScalaInterface};
+use protobuf::{ExternalInterface, ProtoBufEnvelope, ProtoBufInterface};
 use serde_yaml;
 
 pub use protobuf::prelude::*;

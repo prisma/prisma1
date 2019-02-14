@@ -1,4 +1,4 @@
-pub use crate::models::{Renameable, SchemaRef, SchemaTemplate};
+pub use crate::models::{SchemaRef, SchemaTemplate};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -50,8 +50,8 @@ impl Into<Project> for ProjectTemplate {
     }
 }
 
-impl Renameable for Project {
-    fn db_name(&self) -> &str {
+impl Project {
+    pub fn db_name(&self) -> &str {
         match self.manifestation {
             ProjectManifestation {
                 schema: Some(ref schema),

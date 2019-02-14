@@ -1,9 +1,9 @@
-use crate::models::{FieldTemplate, Fields, Renameable, Schema, SchemaWeakRef};
+use crate::models::{FieldTemplate, Fields, Schema, SchemaWeakRef};
 
 use once_cell::unsync::OnceCell;
-use std::rc::{Rc, Weak};
+use std::sync::{Arc, Weak};
 
-pub type ModelRef = Rc<Model>;
+pub type ModelRef = Arc<Model>;
 pub type ModelWeakRef = Weak<Model>;
 
 #[derive(Debug, Deserialize)]
@@ -35,7 +35,7 @@ pub struct ModelManifestation {
 
 impl ModelTemplate {
     pub fn build(self, schema: SchemaWeakRef) -> ModelRef {
-        let model = Rc::new(Model {
+        let model = Arc::new(Model {
             name: self.name,
             stable_identifier: self.stable_identifier,
             is_embedded: self.is_embedded,
@@ -47,7 +47,7 @@ impl ModelTemplate {
         let fields = self
             .fields
             .into_iter()
-            .map(|fi| fi.build(Rc::downgrade(&model)))
+            .map(|fi| fi.build(Arc::downgrade(&model)))
             .collect();
 
         // The model is created here and fields WILL BE UNSET before now!
@@ -57,19 +57,10 @@ impl ModelTemplate {
     }
 }
 
-impl Renameable for Model {
-    fn db_name(&self) -> &str {
-        self.manifestation
-            .as_ref()
-            .map(|mf| mf.db_name.as_ref())
-            .unwrap_or_else(|| self.name.as_ref())
-    }
-}
-
 impl Model {
     fn with_schema<F, T>(&self, f: F) -> T
     where
-        F: FnOnce(Rc<Schema>) -> T,
+        F: FnOnce(Arc<Schema>) -> T,
     {
         match self.schema.upgrade() {
             Some(model) => f(model),
@@ -88,5 +79,12 @@ impl Model {
 
     pub fn is_legacy(&self) -> bool {
         self.with_schema(|schema| schema.is_legacy())
+    }
+
+    pub fn db_name(&self) -> &str {
+        self.manifestation
+            .as_ref()
+            .map(|mf| mf.db_name.as_ref())
+            .unwrap_or_else(|| self.name.as_ref())
     }
 }

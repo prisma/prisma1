@@ -1,6 +1,6 @@
 use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
-    connectors::{IntoSelectQuery, PrismaConnector, Sqlite},
+    data_resolvers::{IntoSelectQuery, PrismaDataResolver, Sqlite},
     error::Error,
     protobuf::prisma,
     PrismaResult,
@@ -8,18 +8,18 @@ use crate::{
 
 use prost::Message;
 
-pub trait ScalaInterface {
+pub trait ExternalInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
 }
 
 pub struct ProtoBufInterface {
-    connector: PrismaConnector,
+    data_resolver: PrismaDataResolver,
 }
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
-        let connector = match config.databases.get("default") {
+        let data_resolver = match config.databases.get("default") {
             Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite" => {
                 Sqlite::new(config.limit(), config.test_mode).unwrap()
             }
@@ -27,7 +27,7 @@ impl ProtoBufInterface {
         };
 
         ProtoBufInterface {
-            connector: Box::new(connector),
+            data_resolver: Box::new(data_resolver),
         }
     }
 
@@ -56,12 +56,12 @@ impl ProtoBufInterface {
     }
 }
 
-impl ScalaInterface for ProtoBufInterface {
+impl ExternalInterface for ProtoBufInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = prisma::GetNodeByWhereInput::decode(payload)?;
             let query = input.into_select_query()?;
-            let (nodes, fields) = self.connector.select_nodes(query)?;
+            let (nodes, fields) = self.data_resolver.select_nodes(query)?;
 
             let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
 
@@ -76,7 +76,7 @@ impl ScalaInterface for ProtoBufInterface {
         Self::protobuf_result(|| {
             let input = prisma::GetNodesInput::decode(payload)?;
             let query = input.into_select_query()?;
-            let (nodes, fields) = self.connector.select_nodes(query)?;
+            let (nodes, fields) = self.data_resolver.select_nodes(query)?;
 
             let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
 
