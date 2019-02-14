@@ -23,6 +23,8 @@ On this page, you will learn how to:
 - Use the [`nexus-prisma`](https://github.com/prisma/nexus-prisma) plugin to connect Nexus with your database
 - Use the GraphQL Playground to test your GraphQL API
 
+Learn more about how `nexus-prisma` works in the [docs](https://nexus.js.org/docs/database-access-with-prisma).
+
 ## Configure project
 
 [`grahpql-yoga`](https://github.com/prisma/graphql-yoga) is a GraphQL server library based on [Express.js](https://expressjs.com/). Add it to your project with the following command:
@@ -83,20 +85,14 @@ npx nexus-prisma-generate --client ./generated/prisma-client --output ./generate
 
 <Info>
 
-You can ensure that the CRUD building blocks are automatically being updated after every deploy by also adding the `nexus-prisma-generate` command as a `post-deploy` hook in your `prisma.yml`:
-
-```yml copy
-hooks:
-  post-deploy:
-    - prisma generate
-    - npx nexus-prisma-generate --client ./generated/prisma-client --output ./generated/nexus-prisma
-```
+Similar to `prisma generate`, it is recommended to add this command as a `post-deploy` hook to your `prisma.yml`.
 
 </Info>
 
+
 ## Implement GraphQL API based on CRUD building blocks
 
-Before you start with the implementation, go ahead and start your development server to generate TS definitions:
+Before you start with the implementation, go ahead and start your development server to generate the missing TS definitions:
 
 ```bash copy
 npm run dev
@@ -108,6 +104,7 @@ We want to implement a GraphQL API with the following operations:
   - `publishedPosts`: Fetch all _published_ posts
   - `post`: Fetch a single post by its `id`
   - `postsByUser`: Fetch all the posts of a certain user
+
 - Mutations
   - `createUser`: Create a new user
   - `createDraft`: Create a new draft (i.e. an _unpublished_ post)
@@ -118,7 +115,7 @@ The following GraphQL Nexus code creates a GraphQL schema that implements these 
 
 ```ts
 import { prisma } from './generated/prisma-client'
-import metaSchema from './generated/nexus-prisma'
+import datamodelInfo from './generated/nexus-prisma'
 import * as path from 'path'
 import { stringArg, idArg } from 'nexus'
 import { prismaObjectType, makePrismaSchema } from 'nexus-prisma'
@@ -171,7 +168,7 @@ const schema = makePrismaSchema({
   types: [Query, Mutation],
 
   prisma: {
-    metaSchema,
+    datamodelInfo,
     client: prisma
   },
 
