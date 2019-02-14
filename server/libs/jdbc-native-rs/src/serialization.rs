@@ -113,7 +113,7 @@ impl ResultSet {
                         for aString in result {
                             json.push(serde_json::Value::String(aString));
                         }
-                        serde_json::Value::Array(foo)
+                        serde_json::Value::Array(json)
                     },
                     x => {
                         return Err(DriverError::GenericError(format!(
