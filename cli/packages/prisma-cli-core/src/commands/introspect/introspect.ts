@@ -26,6 +26,16 @@ export default class IntrospectCommand extends Command {
       char: 'i',
       description: 'Interactive mode',
     }),
+
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
+
     /**
      * Postgres Params
      */
