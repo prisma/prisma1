@@ -10,6 +10,14 @@ export default class ClusterToken extends Command {
       char: 'c',
       description: 'Copy token to clipboard',
     }),
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
   }
   async run() {
     const { copy } = this.flags

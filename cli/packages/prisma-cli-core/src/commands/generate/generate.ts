@@ -27,6 +27,10 @@ export default class GenereateCommand extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
     ['endpoint']: flags.boolean({
       description:
         'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',

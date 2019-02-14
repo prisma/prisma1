@@ -61,6 +61,10 @@ ${chalk.gray(
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
   }
   private deploying: boolean = false
   private showedHooks: boolean = false

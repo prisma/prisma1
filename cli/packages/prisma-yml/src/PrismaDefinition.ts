@@ -52,11 +52,26 @@ export class PrismaDefinitionClass {
     this.envVars = envVars
   }
   async load(args: Args, envPath?: string, graceful?: boolean) {
+    if (args.project) {
+      const flagPath = path.resolve(args.project as string)
+      
+      if (!fs.pathExistsSync(flagPath)) {
+        throw new Error(`Prisma definition path specified by --project '${flagPath}' does not exist`)
+      }
+
+      this.definitionPath = flagPath
+      this.definitionDir = path.dirname(flagPath)
+      await this.loadDefinition(args, graceful)
+
+      this.validate()
+      return;
+    }
+    
     if (envPath) {
       if (!fs.pathExistsSync(envPath)) {
         envPath = path.join(process.cwd(), envPath)
       }
-
+      
       if (!fs.pathExistsSync(envPath)) {
         throw new Error(`--env-file path '${envPath}' does not exist`)
       }
