@@ -38,7 +38,7 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   val splitStatements                = true
   val isBatchedReWriteConfigured     = false
   val regx                           = Pattern.compile("\\?") // Extreme simplification and unlikely to work as expected forever. todo
-  val rawSqlString                   = transform(query)
+  val rawSqlString                   = transform(query).trim
   val stmt                           = binding.prepareStatement(connection, rawSqlString)
   var currentParams                  = new Params
   val paramList                      = mutable.ArrayBuffer.empty[Params]
