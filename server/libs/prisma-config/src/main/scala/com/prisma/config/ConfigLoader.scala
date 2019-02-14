@@ -171,6 +171,10 @@ object ConfigLoader {
       if (schema.isDefined && database.isDefined && dbConnector != "postgres")
         throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
 
+      if (schema.isDefined && database.isEmpty)
+        throw InvalidConfiguration(
+          "Only Postgres connectors specify a schema. If they do they also need to specify a database. Other connectors only specify a database.")
+
       databaseConfig(
         name = dbName,
         connector = dbConnector,
@@ -228,6 +232,10 @@ object ConfigLoader {
 
     if (schema.isDefined && database.isDefined && dbConnector != "postgres")
       throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
+
+    if (schema.isDefined && database.isEmpty)
+      throw InvalidConfiguration(
+        "Only Postgres connectors specify a schema. If they do they also need to specify a database. Other connectors only specify a database.")
 
     databaseConfig(
       name = dbName,

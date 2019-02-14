@@ -185,6 +185,56 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.failed.get shouldBe a[InvalidConfiguration]
     }
 
+    "error if mysql has only schema" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: mysql
+                            |    migrations: true
+                            |    host: localhost
+                            |    port: 3306
+                            |    user: root
+                            |    password: prisma
+                            |    schema: my_schema
+                            |    ssl: true
+                            |    connectionLimit: 2
+                            |    rawAccess: true
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if postgres has only schema" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: postgres
+                            |    migrations: true
+                            |    host: localhost
+                            |    port: 5432
+                            |    user: root
+                            |    password: prisma
+                            |    schema: my_schema
+                            |    ssl: true
+                            |    connectionLimit: 2
+                            |    rawAccess: true
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
     "error if mongo has database and schema" in {
       val invalidConfig = """
                             |port: 4466
@@ -194,6 +244,24 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |  default:
                             |    connector: mongo
                             |    database: test
+                            |    schema: test
+                            |    uri: 'mongodb://prisma:prisma@host.docker.internal:27017/?authSource=admin&ssl=false'
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if only schema is specified for mongo" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: mongo
                             |    schema: test
                             |    uri: 'mongodb://prisma:prisma@host.docker.internal:27017/?authSource=admin&ssl=false'
                           """.stripMargin
