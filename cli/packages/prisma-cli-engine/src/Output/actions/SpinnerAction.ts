@@ -88,6 +88,6 @@ export class SpinnerAction extends ActionBase {
   }
 
   _write(s: string) {
-    this.out.stderr.write(s, { log: false })
+    this.out.stdout.write(s, { log: false })
   }
 }
