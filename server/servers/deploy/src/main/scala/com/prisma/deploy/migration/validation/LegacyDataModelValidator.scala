@@ -249,19 +249,17 @@ case class LegacyDataModelValidator(
   }
 
   def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
-    // renaming ModelA to ModelB while also Renaming ModelB to ModelA
-    val typesWithRenames = objectTypes.filter(_.directive("rename").isDefined)
-    val oldNameNewNameTuples: List[(ObjectTypeDefinition, String)] =
-      typesWithRenames.map(t => (t, t.directive("rename").get.argument("oldName").get.valueAsString)).toList
-
-    def getCrossRenamedObjectTypes(tuples: List[(ObjectTypeDefinition, String)]): List[ObjectTypeDefinition] = tuples match {
-      case x if x.isEmpty => List.empty
-      case head :: tail   => tail.find(rest => rest._2 == head._1.name).map(_._1).toList ++ getCrossRenamedObjectTypes(tail)
+    for {
+      renamedType1                     <- objectTypes
+      oldName                          <- renamedType1.oldName
+      allObjectTypesExceptThisOne      = objectTypes.filterNot(_ == renamedType1)
+      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.name == oldName)
+    } yield {
+      DeployError(
+        renamedType1.name,
+        s"You renamed type `$oldName` to `${renamedType1.name}`. But that is the old name of type `${renamedTypeThatHadTheNameOfType1.name}`. Please do this in two steps."
+      )
     }
-
-    val crossRenamedObjectTypes = getCrossRenamedObjectTypes(oldNameNewNameTuples)
-
-    crossRenamedObjectTypes.map(objectType => DeployErrors.crossRenamedTypeName(objectType))
   }
 
   def validateDuplicateFields(fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {

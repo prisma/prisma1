@@ -196,7 +196,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     as.toString should be("""{"data":{"as":[{"bNew":{"b":"B1"}}]}}""")
   }
 
-  "Renaming models by switching the names of two existing models" should "work even when there is existing data" in {
+  "Renaming models by switching the names of two existing models" should "error and ask to be split in two parts" in {
 
     val schema =
       """type A {
