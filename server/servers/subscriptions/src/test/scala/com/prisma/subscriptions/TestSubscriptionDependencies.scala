@@ -35,7 +35,7 @@ class TestSubscriptionDependencies()(implicit val system: ActorSystem, val mater
                                   } else {
                                     new org.postgresql.Driver
                                   }),
-    SupportedDrivers.SQLITE -> org.sqlite.JDBC
+    SupportedDrivers.SQLITE -> new org.sqlite.JDBC
   )
 
   override val cacheFactory: CacheFactory = new CaffeineCacheFactory()
