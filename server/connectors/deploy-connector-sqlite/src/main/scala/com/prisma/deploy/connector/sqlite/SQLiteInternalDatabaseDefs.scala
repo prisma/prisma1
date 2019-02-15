@@ -16,31 +16,10 @@ case class SQLiteInternalDatabaseDefs(dbConfig: DatabaseConfig, driver: Driver) 
   lazy val managementDatabases = databases(root = false)
 
   def databases(root: Boolean): Databases = {
-    val config   = typeSafeConfigFromDatabaseConfig(dbConfig, root)
-    val masterDb = Database.forConfig("database", config, driver)
+    val masterDb = Database.forDriver(driver, "jdbc:sqlite:management.db")
 
     val slickDatabase = SlickDatabase(SQLiteProfile, masterDb)
 
     Databases(primary = slickDatabase, replica = slickDatabase)
-  }
-
-  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig, root: Boolean): Config = {
-    val pooled = if (dbConfig.pooled) "" else "connectionPool = disabled"
-
-    ConfigFactory
-      .parseString(s"""
-        |database {
-        |  dataSourceClass = "slick.jdbc.DriverDataSource"
-        |  properties {
-        |    url = "jdbc:sqlite:management.db"
-        |    user = "${dbConfig.user}"
-        |    password = "${dbConfig.password.getOrElse("")}"
-        |  }
-        |  numThreads = 1
-        |  connectionTimeout = 5000
-        |  $pooled
-        |}
-      """.stripMargin)
-      .resolve
   }
 }
