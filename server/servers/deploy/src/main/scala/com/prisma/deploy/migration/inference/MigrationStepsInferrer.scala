@@ -72,7 +72,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
-      if nextModel != previousModel
+      if nextModel.template != previousModel.template
     } yield UpdateModel(name = previousModel.name, newName = nextModel.name)
   }
 

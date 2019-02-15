@@ -19,31 +19,6 @@ case class JdbcDatabaseMutactionExecutor(
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
 
-  private def runAttached[T](project: Project, query: DBIO[T]) = {
-    if (slickDatabase.isSQLite) {
-      import slickDatabase.profile.api._
-
-      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/${project.dbName}'"""
-      val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
-      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
-
-      val attachIfNecessary = for {
-        attachedDbs <- list
-        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
-              case true  => slick.dbio.DBIO.successful(())
-              case false => attach
-            }
-        _      <- activateForeignKey
-        result <- query
-      } yield result
-
-      slickDatabase.database.run(attachIfNecessary.withPinnedSession)
-    } else {
-      slickDatabase.database.run(query)
-    }
-  }
-
   override def executeRaw(project: Project, query: String): Future[JsValue] = {
     val action = JdbcActionsBuilder(project, slickDatabase).executeRaw(query)
     runAttached(project, action)
@@ -148,5 +123,30 @@ case class JdbcDatabaseMutactionExecutor(
     case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
     case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+  }
+
+  private def runAttached[T](project: Project, query: DBIO[T]) = {
+    if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/${project.dbName}'"""
+      val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
+      val attachIfNecessary = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
+              case true  => slick.dbio.DBIO.successful(())
+              case false => attach
+            }
+        _      <- activateForeignKey
+        result <- query
+      } yield result
+
+      slickDatabase.database.run(attachIfNecessary.withPinnedSession)
+    } else {
+      slickDatabase.database.run(query)
+    }
   }
 }

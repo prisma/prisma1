@@ -132,25 +132,16 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
     def updateColumnActions = (before.isUnique, typeChanges, requiredChanges, after.isUnique) match {
       // type changes, after unique
-      case (true, true, true, true)   => Vector(updateColumn, addUniqueConstraint)
-      case (false, true, true, true)  => Vector(updateColumn, addUniqueConstraint)
-      case (true, true, false, true)  => Vector(updateColumn, addUniqueConstraint)
-      case (false, true, false, true) => Vector(updateColumn, addUniqueConstraint)
+      case (_, true, _, true) => Vector(updateColumn, addUniqueConstraint)
       //type changes, after not unique
-      case (true, true, true, false)   => Vector(updateColumn)
-      case (false, true, true, false)  => Vector(updateColumn)
-      case (true, true, false, false)  => Vector(updateColumn)
-      case (false, true, false, false) => Vector(updateColumn)
+      case (_, true, _, false) => Vector(updateColumn)
       // type does not change, after is unique
-      case (true, false, true, true)   => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
-      case (false, false, true, true)  => Vector(updateColumn, addUniqueConstraint)
-      case (true, false, false, true)  => Vector(updateColumn)
-      case (false, false, false, true) => Vector(updateColumn, addUniqueConstraint)
+      case (true, false, true, true)  => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
+      case (false, false, _, true)    => Vector(updateColumn, addUniqueConstraint)
+      case (true, false, false, true) => Vector(updateColumn)
       // type does not change, after is not unique
-      case (true, false, true, false)   => Vector(removeUniqueConstraint, updateColumn)
-      case (false, false, true, false)  => Vector(updateColumn)
-      case (true, false, false, false)  => Vector(removeUniqueConstraint, updateColumn)
-      case (false, false, false, false) => Vector(updateColumn)
+      case (true, false, _, false)  => Vector(removeUniqueConstraint, updateColumn)
+      case (false, false, _, false) => Vector(updateColumn)
     }
 
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(before.dbName)) match {
