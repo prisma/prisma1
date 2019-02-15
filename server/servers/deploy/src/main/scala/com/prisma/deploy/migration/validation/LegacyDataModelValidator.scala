@@ -253,7 +253,7 @@ case class LegacyDataModelValidator(
       renamedType1                     <- objectTypes
       oldName                          <- renamedType1.oldName
       allObjectTypesExceptThisOne      = objectTypes.filterNot(_ == renamedType1)
-      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.name == oldName)
+      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.oldName.contains(renamedType1.name))
     } yield {
       DeployError(
         renamedType1.name,

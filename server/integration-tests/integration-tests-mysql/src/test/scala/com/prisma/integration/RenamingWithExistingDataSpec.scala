@@ -200,10 +200,12 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
 
     val schema =
       """type A {
+        |  id: ID! @unique
         |  a: String! @unique
         |}
         |
         |type B {
+        |  id: ID! @unique
         |  b: String @unique
         |}"""
 
@@ -214,17 +216,19 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
 
     val schema1 =
       """type B @rename(oldName: "A"){
+        |  id: ID! @unique
         |  a: String! @unique
         |}
         |
         |type A @rename(oldName: "B"){
+        |  id: ID! @unique
         |  b: String @unique
         |}"""
 
     val updatedProject = deployServer.deploySchemaThatMustError(project, schema1)
 
     updatedProject.toString() should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"The type `A` is being renamed. Another type is also being renamed and formerly had `A` new name.Please split cases where you do renames like type A -> type B and type B -> type A at the same time into two parts. "}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You renamed type `A` to `B`. But that is the old name of type `A`. Please do this in two steps."},{"description":"You renamed type `B` to `A`. But that is the old name of type `B`. Please do this in two steps."}],"warnings":[]}}}""")
   }
 
   // these will be fixed when we implement a migration workflow
