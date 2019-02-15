@@ -1,4 +1,9 @@
-pub use crate::models::{SchemaRef, SchemaTemplate};
+pub use crate::models::prelude::*;
+use once_cell::unsync::OnceCell;
+use std::sync::{Arc, Weak};
+
+pub type ProjectRef = Arc<Project>;
+pub type ProjectWeakRef = Weak<Project>;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,7 +31,7 @@ pub struct ProjectTemplate {
 #[derive(Debug)]
 pub struct Project {
     pub id: String,
-    pub schema: SchemaRef,
+    pub schema: OnceCell<SchemaRef>,
     pub functions: Vec<Function>,
     pub manifestation: ProjectManifestation,
     pub revision: Revision,
@@ -35,18 +40,25 @@ pub struct Project {
     pub allow_mutations: DefaultTrue,
 }
 
-impl Into<Project> for ProjectTemplate {
-    fn into(self) -> Project {
-        Project {
+impl Into<ProjectRef> for ProjectTemplate {
+    fn into(self) -> ProjectRef {
+        let project = Arc::new(Project {
             id: self.id,
-            schema: self.schema.into(),
+            schema: OnceCell::new(),
             functions: self.functions,
             manifestation: self.manifestation,
             revision: self.revision,
             secrets: self.secrets,
             allow_queries: self.allow_queries,
             allow_mutations: self.allow_mutations,
-        }
+        });
+
+        project
+            .schema
+            .set(self.schema.build(Arc::downgrade(&project)))
+            .unwrap();
+
+        project
     }
 }
 
@@ -63,6 +75,10 @@ impl Project {
             } => database,
             _ => self.id.as_ref(),
         }
+    }
+
+    pub fn schema(&self) -> &Schema {
+        self.schema.get().expect("Project has no schema set!")
     }
 }
 

@@ -98,11 +98,6 @@ impl Sqlite {
             }
         }
     }
-
-    /// Helper to namespace different databases.
-    fn table_location(database: &str, table: &str) -> String {
-        format!("{}.{}", database, table)
-    }
 }
 
 impl ToSql for PrismaValue {

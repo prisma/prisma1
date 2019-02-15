@@ -1,10 +1,6 @@
 use std::sync::{Arc, Weak};
 
-use crate::{
-    error::Error,
-    models::{ModelRef, ModelTemplate},
-    PrismaResult,
-};
+use crate::{error::Error, models::prelude::*, PrismaResult};
 
 use once_cell::unsync::OnceCell;
 
@@ -26,6 +22,7 @@ pub struct Schema {
     pub relations: Vec<Relation>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
+    pub project: ProjectWeakRef,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,10 +49,11 @@ pub struct PrismaEnum {
     values: Vec<String>,
 }
 
-impl Into<SchemaRef> for SchemaTemplate {
-    fn into(self) -> SchemaRef {
+impl SchemaTemplate {
+    pub fn build(self, project: ProjectWeakRef) -> SchemaRef {
         let schema = Arc::new(Schema {
             models: OnceCell::new(),
+            project: project,
             relations: self.relations,
             enums: self.enums,
             version: self.version,
@@ -86,49 +84,16 @@ impl Schema {
     pub fn is_legacy(&self) -> bool {
         self.version.is_none()
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json;
-    use std::fs::File;
-
-    #[test]
-    fn test_schema_json_deserialize_legacy() {
-        let template: SchemaTemplate =
-            serde_json::from_reader(File::open("./legacy_schema.json").unwrap()).unwrap();
-
-        let schema: SchemaRef = template.into();
-
-        assert!(schema.is_legacy());
-
-        let model = schema.find_model("Subscription").unwrap();
-
-        assert!(model.is_legacy());
-
-        let id_field = model.fields().find_from_scalar("id").unwrap();
-        assert!(id_field.is_id());
-        assert!(!id_field.is_created_at());
-        assert!(!id_field.is_updated_at());
-        assert!(!id_field.is_writable());
-
-        let title_field = model.fields().find_from_scalar("title").unwrap();
-        assert!(!title_field.is_id());
-        assert!(!title_field.is_created_at());
-        assert!(!title_field.is_updated_at());
-        assert!(title_field.is_writable());
-
-        let created_at_field = model.fields().find_from_scalar("createdAt").unwrap();
-        assert!(!created_at_field.is_id());
-        assert!(created_at_field.is_created_at());
-        assert!(!created_at_field.is_updated_at());
-        assert!(!created_at_field.is_writable());
-
-        let updated_at_field = model.fields().find_from_scalar("updatedAt").unwrap();
-        assert!(!updated_at_field.is_id());
-        assert!(!updated_at_field.is_created_at());
-        assert!(updated_at_field.is_updated_at());
-        assert!(!updated_at_field.is_writable());
+    pub fn with_project<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Arc<Project>) -> T,
+    {
+        match self.project.upgrade(){
+            Some(model) => f(model),
+            None => panic!(
+                "Project does not exist anymore. Parent project is deleted without deleting the child schema."
+            )
+        }
     }
 }

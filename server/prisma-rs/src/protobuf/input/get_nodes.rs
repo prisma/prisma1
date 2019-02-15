@@ -1,4 +1,5 @@
 use crate::{
+    cursor_condition::CursorCondition,
     data_resolvers::{IntoSelectQuery, SelectQuery},
     models::prelude::*,
     protobuf::prelude::*,
@@ -23,23 +24,25 @@ impl IntoSelectQuery for GetNodesInput {
                 acc
             });
 
+        let project: ProjectRef = project_template.into();
+        let model = project.schema().find_model(&self.model_name)?;
+        let cursor = CursorCondition::build(&self.query_arguments, &model);
+
         let filter = self
             .query_arguments
             .filter
             .map(|filter| filter.into())
             .unwrap_or(ConditionTree::NoCondition);
 
-        let project: Project = project_template.into();
-        let model = project.schema.find_model(&self.model_name)?;
+        let conditions = ConditionTree::and(filter, cursor);
 
         let query = SelectQuery {
             project: project,
             model: model,
             selected_fields: fields,
-            conditions: filter,
+            conditions: conditions,
             order_by: None, // TODO
             skip: self.query_arguments.skip,
-            after: self.query_arguments.after,
             first: self.query_arguments.first,
         };
 

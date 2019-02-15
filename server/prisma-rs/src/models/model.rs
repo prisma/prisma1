@@ -1,4 +1,4 @@
-use crate::models::{FieldTemplate, Fields, Schema, SchemaWeakRef};
+use crate::models::prelude::*;
 
 use once_cell::unsync::OnceCell;
 use std::sync::{Arc, Weak};
@@ -25,6 +25,7 @@ pub struct Model {
     pub manifestation: Option<ModelManifestation>,
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
+    //pub id_field: OnceCell<Column>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -44,30 +45,23 @@ impl ModelTemplate {
             schema,
         });
 
-        let fields = self
-            .fields
-            .into_iter()
-            .map(|fi| fi.build(Arc::downgrade(&model)))
-            .collect();
+        let fields = Fields::new(
+            self.fields
+                .into_iter()
+                .map(|fi| fi.build(Arc::downgrade(&model)))
+                .collect(),
+        );
 
         // The model is created here and fields WILL BE UNSET before now!
-        model.fields.set(Fields::new(fields)).unwrap();
+        model.fields.set(fields).unwrap();
 
         model
     }
 }
 
 impl Model {
-    fn with_schema<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Schema>) -> T,
-    {
-        match self.schema.upgrade() {
-            Some(model) => f(model),
-            None => panic!(
-                "Schema does not exist anymore. Parent schema is deleted without deleting the child models."
-            )
-        }
+    pub fn table(&self) -> String {
+        self.with_project(|project| format!("{}.{}", project.db_name(), self.db_name()))
     }
 
     pub fn fields(&self) -> &Fields {
@@ -86,5 +80,24 @@ impl Model {
             .as_ref()
             .map(|mf| mf.db_name.as_ref())
             .unwrap_or_else(|| self.name.as_ref())
+    }
+
+    pub fn with_schema<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Arc<Schema>) -> T,
+    {
+        match self.schema.upgrade(){
+            Some(model) => f(model),
+            None => panic!(
+                "Schema does not exist anymore. Parent schema is deleted without deleting the child models."
+            )
+        }
+    }
+
+    pub fn with_project<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Arc<Project>) -> T,
+    {
+        self.with_schema(|s| s.with_project(|p| f(p)))
     }
 }

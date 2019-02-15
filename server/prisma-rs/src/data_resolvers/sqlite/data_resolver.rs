@@ -19,15 +19,19 @@ impl DataResolver for Sqlite {
             .map(|f| f.db_name().to_string())
             .collect();
 
-        let table_location = Self::table_location(database_name, query.model.db_name());
         let conditions = query.conditions;
+        let table = query.model.table();
 
         self.with_connection(database_name, |conn| {
-            let query_sql = dbg!(select_from(&table_location)
-                .columns(&field_names)
-                .so_that(conditions)
+            let query_base = select_from(&table).so_that(conditions);
+
+            let query_sql = field_names
+                .iter()
+                .fold(query_base, |query, field| query.column(column(field)))
                 .compile()
-                .unwrap());
+                .unwrap();
+
+            dbg!(&query_sql);
 
             let mut stmt = conn.prepare(&query_sql).unwrap();
 
@@ -56,6 +60,7 @@ impl DataResolver for Sqlite {
 mod tests {
     use super::*;
     use crate::data_resolvers::{DataResolver, SelectQuery};
+    use crate::models::prelude::*;
     use chrono::{DateTime, Utc};
     use serde_json::{self, json};
     use std::collections::BTreeSet;
@@ -78,7 +83,7 @@ mod tests {
         Ok(())
     }
 
-    fn create_legacy_project() -> Project {
+    fn create_legacy_project() -> ProjectRef {
         let project_json = json!({
             "id": "graphcool",
             "functions": [],
@@ -141,7 +146,7 @@ mod tests {
 
         let project = create_legacy_project();
 
-        let model = project.schema.find_model("user").unwrap();
+        let model = project.schema().find_model("user").unwrap();
         let field = model.fields().find_from_scalar("name").unwrap();
         let find_by = PrismaValue::String(String::from("Musti"));
 
@@ -152,7 +157,7 @@ mod tests {
             .map(|f| f.db_name().to_string())
             .collect();
 
-        let conditions = ConditionTree::single(field.db_name().equals(find_by));
+        let conditions = ConditionTree::single(field.model_column().equals(find_by));
 
         let query = SelectQuery {
             project: project,
@@ -161,7 +166,6 @@ mod tests {
             conditions: conditions,
             order_by: None,
             skip: None,
-            after: None,
             first: None,
         };
 
@@ -208,7 +212,7 @@ mod tests {
 
         let project = create_legacy_project();
 
-        let model = project.schema.find_model("user").unwrap();
+        let model = project.schema().find_model("user").unwrap();
 
         let fields: BTreeSet<String> = model
             .fields()
@@ -224,7 +228,6 @@ mod tests {
             conditions: ConditionTree::NoCondition,
             order_by: None,
             skip: None,
-            after: None,
             first: None,
         };
 

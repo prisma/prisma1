@@ -8,6 +8,7 @@ extern crate prost_derive;
 extern crate debug_stub_derive;
 
 pub mod config;
+pub mod cursor_condition;
 pub mod data_resolvers;
 pub mod error;
 pub mod models;

@@ -8,9 +8,18 @@ use sql::{
 
 use crate::protobuf::prelude::*;
 
+impl Into<Order> for SortOrder {
+    fn into(self) -> Order {
+        match self {
+            SortOrder::Asc => Order::Ascending,
+            SortOrder::Desc => Order::Descending,
+        }
+    }
+}
+
 impl Into<ConditionTree> for ScalarFilter {
     fn into(self) -> ConditionTree {
-        let field: &str = self.field.as_ref();
+        let field = column(&self.field);
 
         match self.condition.unwrap() {
             scalar_filter::Condition::Equals(value) => match value.prisma_value.unwrap() {
@@ -146,6 +155,15 @@ impl Into<ConditionTree> for Filter {
     }
 }
 
+impl ToDatabaseValue for IdValue {
+    fn to_database_value(self) -> DatabaseValue {
+        match self {
+            graphql_id::IdValue::String(s) => s.to_database_value(),
+            graphql_id::IdValue::Int(i) => i.to_database_value(),
+        }
+    }
+}
+
 impl ToDatabaseValue for PrismaValue {
     fn to_database_value(self) -> DatabaseValue {
         match self {
@@ -159,10 +177,7 @@ impl ToDatabaseValue for PrismaValue {
             PrismaValue::Relation(i) => i.to_database_value(),
             PrismaValue::Null(_) => DatabaseValue::Null,
             PrismaValue::Uuid(u) => u.to_database_value(),
-            PrismaValue::GraphqlId(id) => match id.id_value.unwrap() {
-                graphql_id::IdValue::String(s) => s.to_database_value(),
-                graphql_id::IdValue::Int(i) => i.to_database_value(),
-            },
+            PrismaValue::GraphqlId(id) => id.id_value.unwrap().to_database_value(),
         }
     }
 }
@@ -367,7 +382,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo = 1", sql);
+        assert_eq!("`foo` = 1", sql);
     }
 
     #[test]
@@ -376,7 +391,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo <> 1", sql);
+        assert_eq!("`foo` <> 1", sql);
     }
 
     #[test]
@@ -385,7 +400,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo < 1", sql);
+        assert_eq!("`foo` < 1", sql);
     }
 
     #[test]
@@ -395,7 +410,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo <= 1", sql);
+        assert_eq!("`foo` <= 1", sql);
     }
 
     #[test]
@@ -404,7 +419,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo > 1", sql);
+        assert_eq!("`foo` > 1", sql);
     }
 
     #[test]
@@ -414,7 +429,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo >= 1", sql);
+        assert_eq!("`foo` >= 1", sql);
     }
 
     #[test]
@@ -424,7 +439,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo LIKE '%bar%'", sql);
+        assert_eq!("`foo` LIKE '%bar%'", sql);
     }
 
     #[test]
@@ -434,7 +449,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo NOT LIKE '%bar%'", sql);
+        assert_eq!("`foo` NOT LIKE '%bar%'", sql);
     }
 
     #[test]
@@ -444,7 +459,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo IN (1, 2)", sql);
+        assert_eq!("`foo` IN (1, 2)", sql);
     }
 
     #[test]
@@ -460,7 +475,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo NOT IN ('foo', 'bar')", sql);
+        assert_eq!("`foo` NOT IN ('foo', 'bar')", sql);
     }
 
     #[test]
@@ -470,7 +485,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo LIKE 'bar%'", sql);
+        assert_eq!("`foo` LIKE 'bar%'", sql);
     }
 
     #[test]
@@ -480,7 +495,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo NOT LIKE 'bar%'", sql);
+        assert_eq!("`foo` NOT LIKE 'bar%'", sql);
     }
 
     #[test]
@@ -490,7 +505,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo LIKE '%bar'", sql);
+        assert_eq!("`foo` LIKE '%bar'", sql);
     }
 
     #[test]
@@ -500,7 +515,7 @@ mod tests {
 
         let sql = condition.compile().unwrap();
 
-        assert_eq!("foo NOT LIKE '%bar'", sql);
+        assert_eq!("`foo` NOT LIKE '%bar'", sql);
     }
 
     #[test]
@@ -517,7 +532,7 @@ mod tests {
 
         let condition: ConditionTree = filter.into();
 
-        assert_eq!("foo = false", condition.compile().unwrap());
+        assert_eq!("`foo` = false", condition.compile().unwrap());
     }
 
     #[test]
@@ -529,7 +544,10 @@ mod tests {
 
         let condition: ConditionTree = filter.into();
 
-        assert_eq!("(foo = false AND bar = 2)", condition.compile().unwrap());
+        assert_eq!(
+            "(`foo` = false AND `bar` = 2)",
+            condition.compile().unwrap()
+        );
     }
 
     #[test]
@@ -542,7 +560,7 @@ mod tests {
         let condition: ConditionTree = filter.into();
 
         assert_eq!(
-            "(NOT (foo = false AND bar = 2))",
+            "(NOT (`foo` = false AND `bar` = 2))",
             condition.compile().unwrap()
         );
     }
@@ -558,7 +576,7 @@ mod tests {
         let condition: ConditionTree = filter.into();
 
         assert_eq!(
-            "(foo = false AND (bar = 2 AND lol = 'wtf'))",
+            "(`foo` = false AND (`bar` = 2 AND `lol` = 'wtf'))",
             condition.compile().unwrap()
         );
     }
@@ -579,7 +597,7 @@ mod tests {
         let condition: ConditionTree = filter.into();
 
         assert_eq!(
-            "((foo = false AND bar = 2) OR (musti = 'cat' AND naukio = 'cat'))",
+            "((`foo` = false AND `bar` = 2) OR (`musti` = 'cat' AND `naukio` = 'cat'))",
             condition.compile().unwrap(),
         );
     }

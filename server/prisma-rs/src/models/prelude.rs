@@ -1,1 +1,5 @@
-pub use super::{Model, Project, ProjectTemplate, Schema, TypeIdentifier};
+pub use super::{
+    FieldTemplate, Fields, Model, ModelRef, ModelTemplate, ModelWeakRef, Project, ProjectRef,
+    ProjectTemplate, ProjectWeakRef, Schema, SchemaRef, SchemaTemplate, SchemaWeakRef,
+    TypeIdentifier,
+};
