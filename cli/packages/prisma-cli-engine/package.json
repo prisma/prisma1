@@ -32,7 +32,7 @@
     "precommit": "lint-staged",
     "watch": "../../node_modules/.bin/watch -p 'src/**/*.*' -c 'yarn build'",
     "prettier": "prettier --single-quote --no-semi --trailing-comma all --write '*.ts' 'src/**/*.ts'",
-    "prepublishOnly": "yarn lint && yarn test && yarn build",
+    "prepublishOnly": "yarn build",
     "test": "npm run lint && jest"
   },
   "lint-staged": {

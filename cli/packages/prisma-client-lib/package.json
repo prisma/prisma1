@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "build": "rm -rf dist && tsc -d",
     "test-only": "npm run build && ava dist/**/*.test.js dist/*.test.js",
     "test-compilation": "npm run build && ava dist/codegen/compilation.test.js",

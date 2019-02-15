@@ -161,9 +161,9 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   sleep 20.0
   cd ..
@@ -182,9 +182,9 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -204,9 +204,9 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
 
   yarn install
@@ -233,9 +233,9 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   ../../scripts/doubleInstall.sh
   cd ..
@@ -256,9 +256,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -281,9 +281,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCL
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -318,9 +318,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -343,10 +343,10 @@ if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
 
   echo "new version: $newVersion"
   npm version $newVersion
-  npm publish
+  npm publish || echo "Try catch"
 else
   npm version $newVersion
-  npm publish --tag $CIRCLE_BRANCH
+  npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
 fi
 
 ############################################
