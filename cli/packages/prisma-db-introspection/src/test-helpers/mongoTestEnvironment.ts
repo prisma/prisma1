@@ -56,6 +56,6 @@ export class MongoTestEnvironment implements IDocumentTestEnvironment {
   }
 
   public async disconnect() {
-    await this.client.close()
+    await this.client.close(true)
   }
 }
