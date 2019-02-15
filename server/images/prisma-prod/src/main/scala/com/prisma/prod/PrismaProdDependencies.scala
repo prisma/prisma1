@@ -41,6 +41,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
     SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
     SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+    SupportedDrivers.SQLITE   -> org.sqlite.JDBC
   )
 
   override implicit lazy val executionContext: ExecutionContext = system.dispatcher

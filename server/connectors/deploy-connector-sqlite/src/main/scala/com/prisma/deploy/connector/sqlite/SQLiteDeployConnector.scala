@@ -1,5 +1,7 @@
 package com.prisma.deploy.connector.sqlite
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.SQLiteDatabaseInspector
@@ -22,11 +24,11 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
 
-  lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary
