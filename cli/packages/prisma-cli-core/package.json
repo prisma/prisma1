@@ -19,7 +19,7 @@
     "jest": "^23.6.0",
     "lint-staged": "^8.1.0",
     "nock": "^9.0.14",
-    "prettier": "^1.10.2",
+    "prettier": "1.14.3",
     "rimraf": "^2.6.1",
     "ts-jest": "^23.10.5",
     "tslint": "^5.6.0",
