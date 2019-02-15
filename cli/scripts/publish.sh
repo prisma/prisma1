@@ -297,15 +297,15 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
-  yarn add prisma-datamodel@$newVersion
+  yarn add prisma-datamodel@$newVersion || yarn add prisma-datamodel@$newVersion
   sleep 0.2
-  yarn add prisma-yml@$ymlVersion
+  yarn add prisma-yml@$newVersion
   sleep 0.2
-  yarn add prisma-db-introspection@$introspectionVersion
+  yarn add prisma-db-introspection@$newVersion
   sleep 0.5
-  yarn add prisma-generate-schema@$generateSchemaVersion
+  yarn add prisma-generate-schema@$newVersion
   sleep 0.2
-  yarn add prisma-client-lib@$clientVersion
+  yarn add prisma-client-lib@$newVersion
   sleep 0.3
   ../../scripts/doubleInstall.sh
 
