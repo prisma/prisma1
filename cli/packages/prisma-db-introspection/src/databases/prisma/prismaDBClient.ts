@@ -6,21 +6,13 @@ const SERVICE_NAME = 'prisma-temporary-introspection-service'
 const SERVICE_STAGE = 'prisma-temporary-test-stage'
 const SERVICE_SECRET = 'prisma-instrospection-secret'
 
-
 export class PrismaDBClient implements IDatabaseClient {
   cluster: Cluster
   client: GraphQLClient
   definition: PrismaDefinitionClass
 
   constructor(definition: PrismaDefinitionClass) {
-    this.cluster = definition.getCluster()!
     this.definition = definition
-
-    if (this.cluster.shared) {
-      throw new Error(
-        `Cannot introspect demo server. Please use introspection on your self-hosted server.`,
-      )
-    }
   }
 
   async query(query: string, variables: string[]): Promise<any[]> {
@@ -80,13 +72,17 @@ export class PrismaDBClient implements IDatabaseClient {
   }
 
   async connect() {
+    const cluster = await this.definition.getCluster()
+    if (!cluster) {
+      throw new Error('Could not get Prisma server for introspection')
+    }
     await this.cluster
       .request(
         `mutation($input: AddProjectInput!) {
-      addProject(input: $input) {
-        clientMutationId
-      }
-    }`,
+          addProject(input: $input) {
+            clientMutationId
+          }
+        }`,
         {
           input: {
             name: SERVICE_NAME,
@@ -116,10 +112,10 @@ export class PrismaDBClient implements IDatabaseClient {
       await this.cluster
         .request(
           `mutation($input: DeleteProjectInput!) {
-      deleteProject(input: $input) {
-        clientMutationId
-      }
-    }`,
+            deleteProject(input: $input) {
+              clientMutationId
+            }
+          }`,
           {
             input: {
               name: SERVICE_NAME,

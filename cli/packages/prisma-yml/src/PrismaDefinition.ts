@@ -11,7 +11,7 @@ import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
 import { replaceYamlValue } from './utils/yamlComment'
-import { parseEndpoint } from './utils/parseEndpoint'
+import { parseEndpoint, ParseEndpointResult } from './utils/parseEndpoint'
 const debug = require('debug')('prisma definition')
 
 interface ErrorMessage {
@@ -36,12 +36,7 @@ export class PrismaDefinitionClass {
   envVars: any
   rawEndpoint?: string
   private definitionString: string
-  constructor(
-    env: Environment,
-    definitionPath?: string | null,
-    envVars: EnvVars = process.env,
-    out?: IOutput,
-  ) {
+  constructor(env: Environment, definitionPath?: string | null, envVars: EnvVars = process.env, out?: IOutput) {
     this.secrets = null
     this.definitionPath = definitionPath
     if (definitionPath) {
@@ -67,20 +62,12 @@ export class PrismaDefinitionClass {
 
       this.validate()
     } else {
-      throw new Error(
-        `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
-      )
+      throw new Error(`Couldn’t find \`prisma.yml\` file. Are you in the right directory?`)
     }
   }
 
   private async loadDefinition(args: any, graceful?: boolean) {
-    const { definition, rawJson } = await readDefinition(
-      this.definitionPath!,
-      args,
-      this.out,
-      this.envVars,
-      graceful,
-    )
+    const { definition, rawJson } = await readDefinition(this.definitionPath!, args, this.out, this.envVars, graceful)
     this.rawEndpoint = rawJson.endpoint
     this.definition = definition
     this.rawJson = rawJson
@@ -91,10 +78,7 @@ export class PrismaDefinitionClass {
   }
 
   get endpoint(): string | undefined {
-    return (
-      (this.definition && this.definition.endpoint) ||
-      process.env.PRISMA_MANAGEMENT_API_ENDPOINT
-    )
+    return (this.definition && this.definition.endpoint) || process.env.PRISMA_MANAGEMENT_API_ENDPOINT
   }
 
   get clusterBaseUrl(): string | undefined {
@@ -156,9 +140,7 @@ export class PrismaDefinitionClass {
 Make sure that your \`cluster\` property looks like this: ${chalk.bold(
           '<workspace>/<cluster-name>',
         )}. You can also remove the cluster property from the prisma.yml
-and execute ${chalk.bold.green(
-          'prisma deploy',
-        )} again, to get that value auto-filled.`,
+and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-filled.`,
       )
     }
     if (
@@ -177,15 +159,9 @@ and execute ${chalk.bold.green(
         } points to a demo cluster, but is missing the workspace slug. A valid demo endpoint looks like this: https://eu1.prisma.sh/myworkspace/service-name/stage-name`,
       )
     }
-    if (
-      this.definition &&
-      this.definition.endpoint &&
-      !this.definition.endpoint.startsWith('http')
-    ) {
+    if (this.definition && this.definition.endpoint && !this.definition.endpoint.startsWith('http')) {
       throw new Error(
-        `${chalk.bold(
-          this.definition.endpoint,
-        )} is not a valid endpoint. It must start with http:// or https://`,
+        `${chalk.bold(this.definition.endpoint)} is not a valid endpoint. It must start with http:// or https://`,
       )
     }
     this.env.sharedClusters
@@ -207,42 +183,52 @@ and execute ${chalk.bold.green(
     return undefined
   }
 
-  getCluster(throws: boolean = false): Cluster | undefined {
+  async getCluster(throws: boolean = false): Promise<Cluster | undefined> {
     if (this.definition && this.endpoint) {
-      const {
-        clusterBaseUrl,
-        isPrivate,
-        local,
-        shared,
-        workspaceSlug,
-        clusterName,
-      } = parseEndpoint(this.endpoint)
-      if (clusterBaseUrl) {
-        debug('making cluster here')
-        const existingCluster = !process.env.PRISMA_MANAGEMENT_API_SECRET
-          ? this.env.clusters.find(
-              c => c.baseUrl.toLowerCase() === clusterBaseUrl,
-            )
-          : null
-        const cluster =
-          existingCluster ||
-          new Cluster(
-            this.out!,
-            clusterName,
-            clusterBaseUrl,
-            shared || isPrivate ? this.env.cloudSessionKey : undefined,
-            local,
-            shared,
-            isPrivate,
-            workspaceSlug,
-          )
-        this.env.removeCluster(clusterName)
-        this.env.addCluster(cluster)
+      const clusterData = parseEndpoint(this.endpoint)
+      const cluster = await this.getClusterByEndpoint(clusterData)
+      this.env.removeCluster(clusterData.clusterName)
+      this.env.addCluster(cluster)
+      return cluster
+    }
+
+    return undefined
+  }
+
+  findClusterByBaseUrl(baseUrl: string) {
+    return this.env.clusters.find(c => c.baseUrl.toLowerCase() === baseUrl)
+  }
+
+  async getClusterByEndpoint(data: ParseEndpointResult) {
+    if (data.clusterBaseUrl && !process.env.PRISMA_MANAGEMENT_API_SECRET) {
+      const cluster = this.findClusterByBaseUrl(data.clusterBaseUrl)
+      if (cluster) {
         return cluster
       }
     }
 
-    return undefined
+    const { clusterName, clusterBaseUrl, shared, isPrivate, local, workspaceSlug } = data
+
+    // if the cluster could potentially be served by the cloud api, fetch the available
+    // clusters from the cloud api
+    if (!local) {
+      await this.env.fetchClusters()
+      const cluster = this.findClusterByBaseUrl(data.clusterBaseUrl)
+      if (cluster) {
+        return cluster
+      }
+    }
+
+    return new Cluster(
+      this.out!,
+      clusterName,
+      clusterBaseUrl,
+      shared || isPrivate ? this.env.cloudSessionKey : undefined,
+      local,
+      shared,
+      isPrivate,
+      workspaceSlug,
+    )
   }
 
   getTypesString(definition: PrismaDefinition) {
@@ -252,7 +238,6 @@ and execute ${chalk.bold.green(
         : [definition.datamodel]
       : []
 
-    const errors: ErrorMessage[] = []
     let allTypes = ''
     typesPaths.forEach(unresolvedTypesPath => {
       const typesPath = path.join(this.definitionDir, unresolvedTypesPath!)
@@ -260,9 +245,7 @@ and execute ${chalk.bold.green(
         const types = fs.readFileSync(typesPath, 'utf-8')
         allTypes += types + '\n'
       } else {
-        throw new Error(
-          `The types definition file "${typesPath}" could not be found.`,
-        )
+        throw new Error(`The types definition file "${typesPath}" could not be found.`)
       }
     })
 
@@ -284,24 +267,16 @@ and execute ${chalk.bold.green(
     return null
   }
 
-  getDeployName() {
-    const cluster = this.getCluster()
+  async getDeployName() {
+    const cluster = await this.getCluster()
     return concatName(cluster!, this.service!, this.getWorkspace())
   }
 
   getSubscriptions(): FunctionInput[] {
     if (this.definition && this.definition.subscriptions) {
-      return Object.keys(this.definition!.subscriptions!).map(name => {
-        const subscription = this.definition!.subscriptions![name]
-
-        const url =
-          typeof subscription.webhook === 'string'
-            ? subscription.webhook
-            : subscription.webhook.url
-        const headers =
-          typeof subscription.webhook === 'string'
-            ? []
-            : transformHeaders(subscription.webhook.headers)
+      return Object.entries(this.definition!.subscriptions!).map(([name, subscription]) => {
+        const url = typeof subscription.webhook === 'string' ? subscription.webhook : subscription.webhook.url
+        const headers = typeof subscription.webhook === 'string' ? [] : transformHeaders(subscription.webhook.headers)
 
         let query = subscription.query
         if (subscription.query.endsWith('.graphql')) {
@@ -326,11 +301,7 @@ and execute ${chalk.bold.green(
   }
 
   replaceEndpoint(newEndpoint) {
-    this.definitionString = replaceYamlValue(
-      this.definitionString,
-      'endpoint',
-      newEndpoint,
-    )
+    this.definitionString = replaceYamlValue(this.definitionString, 'endpoint', newEndpoint)
     fs.writeFileSync(this.definitionPath!, this.definitionString)
   }
 
@@ -340,8 +311,8 @@ and execute ${chalk.bold.green(
     this.definition!.datamodel = datamodel
   }
 
-  getEndpoint(serviceInput?: string, stageInput?: string) {
-    const cluster = this.getCluster()
+  async getEndpoint(serviceInput?: string, stageInput?: string) {
+    const cluster = await this.getCluster()
     const service = serviceInput || this.service
     const stage = stageInput || this.stage
     const workspace = this.getWorkspace()
@@ -354,16 +325,10 @@ and execute ${chalk.bold.green(
   }
 
   getHooks(hookType: HookType): string[] {
-    if (
-      this.definition &&
-      this.definition.hooks &&
-      this.definition.hooks[hookType]
-    ) {
+    if (this.definition && this.definition.hooks && this.definition.hooks[hookType]) {
       const hooks = this.definition.hooks[hookType]
       if (typeof hooks !== 'string' && !Array.isArray(hooks)) {
-        throw new Error(
-          `Hook ${hookType} provided in prisma.yml must be string or an array of strings.`,
-        )
+        throw new Error(`Hook ${hookType} provided in prisma.yml must be string or an array of strings.`)
       }
       return typeof hooks === 'string' ? [hooks] : hooks
     }
@@ -372,11 +337,7 @@ and execute ${chalk.bold.green(
   }
 }
 
-export function concatName(
-  cluster: Cluster,
-  name: string,
-  workspace: string | null,
-) {
+export function concatName(cluster: Cluster, name: string, workspace: string | null) {
   if (cluster.shared) {
     const workspaceString = workspace ? `${workspace}~` : ''
     return `${workspaceString}${name}`
@@ -389,18 +350,5 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
   if (!headers) {
     return []
   }
-  return Object.keys(headers).map(key => ({
-    name: key,
-    value: headers[key],
-  }))
-}
-
-export function getEndpointFromRawProps(
-  clusterWorkspace: string,
-  service: string,
-  stage: string,
-) {
-  const splitted = clusterWorkspace.split('/')
-  const cluster = splitted.length > 1 ? splitted[1] : splitted[0]
-  const workspace = splitted.length > 1 ? splitted[0] : undefined
+  return Object.entries(headers).map(([name, value]) => ({ name, value }))
 }

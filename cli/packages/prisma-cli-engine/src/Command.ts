@@ -42,13 +42,9 @@ export class Command {
 
     argv.unshift('argv0', 'cmd')
 
-    const mockDefinition =
-      customArgs && customArgs.mockDefinition
-        ? customArgs.mockDefinition
-        : mock.mockDefinition
+    const mockDefinition = customArgs && customArgs.mockDefinition ? customArgs.mockDefinition : mock.mockDefinition
     const mockRC = customArgs && customArgs.mockRC ? customArgs.mockRC : null
-    const mockConfig =
-      customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
+    const mockConfig = customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
     debug(`Using mockDefinition`, mockDefinition)
     debug(`Using mockRC`, mockRC)
 
@@ -102,13 +98,8 @@ export class Command {
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.env = new Environment(this.config.home, this.out)
-    this.definition = new PrismaDefinitionClass(
-      this.env,
-      this.config.definitionPath,
-      process.env,
-      this.out,
-    )
+    this.env = new Environment(this.config.home, this.out, this.config.version)
+    this.definition = new PrismaDefinitionClass(this.env, this.config.definitionPath, process.env, this.out)
     this.client = new Client(this.config, this.env, this.out)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)
     // this.client.setAuth(this.auth)
@@ -119,15 +110,6 @@ export class Command {
   }
 
   async init(options?: RunOptions) {
-    // parse stuff here
-    const mockDefinition = options && options.mockDefinition
-    const mockRC = options && options.mockRC
-    // if (mockDefinition) {
-    //   this.definition.set(mockDefinition)
-    // }
-    // if (mockRC) {
-    //   this.env.localRC = mockRC
-    // }
     const parser = new Parser({
       flags: (this.constructor as any).flags || {},
       args: (this.constructor as any).args || [],
@@ -141,8 +123,7 @@ export class Command {
     this.flags = flags!
     this.argv = argv!
     this.args = args
-    const loadClusters = !['help'].includes((this.constructor as any).topic)
-    await this.env.load(loadClusters)
+    await this.env.load()
     initStatusChecker(this.config, this.env)
   }
 

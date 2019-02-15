@@ -26,7 +26,7 @@ In order to use a Prisma Demo server, you need to register with Prisma Cloud.
 
 ## Service endpoints
 
-The endpoints of Prisma services deployed to Prisma Demo servers have a slightly differen structure than the ones for services running on "regular" Prisma servers. 
+The endpoints of Prisma services deployed to Prisma Demo servers have a slightly different structure than the ones for services running on "regular" Prisma servers.
 
 A service deployed to Prisma Demo server has an additional path component in its URL (prefixing the _name_ and the _stage_ of a service), namely the _name of the Prisma Cloud workspace_.
 
@@ -53,7 +53,7 @@ Potential use cases for Prisma servers are:
 
 Prisma Demo servers are rate limited to **10 requests per 10 seconds** (on average).
 
-If this rate is exceeded, requests are being queued in memory. If the queue exceeds 25 requests, an error is returned immediately. 
+If this rate is exceeded, requests are being queued in memory. If the queue exceeds 25 requests, an error is returned immediately.
 
 The header field `throttled-by` is included in HTTP responses. It indicates how long the request was delayed due to throttling (in milli seconds).
 

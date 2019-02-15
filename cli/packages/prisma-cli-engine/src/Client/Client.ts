@@ -1,9 +1,4 @@
-import {
-  AuthenticateCustomerPayload,
-  Project,
-  SimpleProjectInfo,
-  CloudTokenRequestPayload,
-} from '../types/common'
+import { AuthenticateCustomerPayload, Project, SimpleProjectInfo, CloudTokenRequestPayload } from '../types/common'
 
 import { GraphQLClient } from 'graphql-request'
 import { flatten } from 'lodash'
@@ -12,22 +7,12 @@ import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import {
-  User,
-  Migration,
-  DeployPayload,
-  Workspace,
-  Service,
-  AuthenticationPayload,
-} from './types'
+import { User, Migration, DeployPayload, Workspace, Service, AuthenticationPayload } from './types'
 import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 import { IntrospectionQuery } from 'graphql'
 import { hasTypeWithField } from '../utils/graphql-schema'
-import {
-  renderMigrationFragment,
-  renderStepFragment,
-} from './migrationFragment'
+import { renderMigrationFragment, renderStepFragment } from './migrationFragment'
 
 const debug = require('debug')('client')
 
@@ -56,11 +41,7 @@ export class Client {
   ) {
     debug('Initializing cluster client')
     try {
-      const token = await cluster.getToken(
-        serviceName,
-        workspaceSlug || undefined,
-        stageName,
-      )
+      const token = await cluster.getToken(serviceName, workspaceSlug || undefined, stageName)
       const agent = getProxyAgent(cluster.getDeployEndpoint())
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
@@ -74,11 +55,7 @@ export class Client {
         if (cluster.shared) {
           cluster.clusterSecret = this.env.cloudSessionKey
         }
-        const token = await cluster.getToken(
-          serviceName,
-          workspaceSlug!,
-          stageName,
-        )
+        const token = await cluster.getToken(serviceName, workspaceSlug!, stageName)
         this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -92,9 +69,7 @@ export class Client {
   }
   get client(): GraphQLClient {
     if (!this.env.activeCluster) {
-      throw new Error(
-        `No cluster set. Please set the "cluster" property in your prisma.yml`,
-      )
+      throw new Error(`No cluster set. Please set the "cluster" property in your prisma.yml`)
     }
     return {
       request: async (query, variables) => {
@@ -128,13 +103,9 @@ export class Client {
               }
             }
 
-            if (
-              e.response.errors[0].code === 3016 &&
-              e.response.errors[0].message.includes('management$default')
-            ) {
+            if (e.response.errors[0].code === 3016 && e.response.errors[0].message.includes('management$default')) {
               // TODO: make url mutable in graphql client
-              ;(this.clusterClient as any).url = (this
-                .clusterClient as any).url.replace(/management$/, 'cluster')
+              ;(this.clusterClient as any).url = (this.clusterClient as any).url.replace(/management$/, 'cluster')
 
               const result = await this.clusterClient.request(query, variables)
               debug(result)
@@ -142,13 +113,9 @@ export class Client {
             }
           }
 
-          if (
-            e.message.includes('HTTP method not allowed') &&
-            (this.clusterClient as any).url.endsWith('management')
-          ) {
+          if (e.message.includes('HTTP method not allowed') && (this.clusterClient as any).url.endsWith('management')) {
             // TODO: make url mutable in graphql client
-            ;(this.clusterClient as any).url = (this
-              .clusterClient as any).url.replace(/management$/, 'cluster')
+            ;(this.clusterClient as any).url = (this.clusterClient as any).url.replace(/management$/, 'cluster')
 
             const result = await this.clusterClient.request(query, variables)
             debug(result)
@@ -167,15 +134,9 @@ export class Client {
             (e.message.includes('localhost') || e.message.includes('127.0.0.1'))
           ) {
             const localNotice = this.env.activeCluster.local
-              ? `Please use ${chalk.bold.green(
-                  'docker-compose up -d',
-                )} to start your local Prisma cluster.`
+              ? `Please use ${chalk.bold.green('docker-compose up -d')} to start your local Prisma cluster.`
               : ''
-            throw new Error(
-              `Could not connect to cluster ${chalk.bold(
-                this.env.activeCluster.name,
-              )}. ${localNotice}`,
-            )
+            throw new Error(`Could not connect to cluster ${chalk.bold(this.env.activeCluster.name)}. ${localNotice}`)
           } else {
             throw e
           }
@@ -206,22 +167,13 @@ export class Client {
     } as any
   }
 
-  async introspect(
-    serviceName: string,
-    stageName: string,
-    token?: string,
-    workspaceSlug?: string,
-  ): Promise<any> {
+  async introspect(serviceName: string, stageName: string, token?: string, workspaceSlug?: string): Promise<any> {
     debug('introspecting', { serviceName, stageName, workspaceSlug })
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const endpoint = this.env.activeCluster.getApiEndpoint(
-      serviceName,
-      stageName,
-      workspaceSlug,
-    )
+    const endpoint = this.env.activeCluster.getApiEndpoint(serviceName, stageName, workspaceSlug)
     const client = new GraphQLClient(endpoint, {
       headers,
       agent: getProxyAgent(this.config.cloudApiEndpoint),
@@ -241,17 +193,10 @@ export class Client {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const client = new GraphQLClient(
-      this.env.activeCluster.getApiEndpoint(
-        serviceName,
-        stageName,
-        workspaceSlug,
-      ),
-      {
-        headers,
-        agent: getProxyAgent(this.config.cloudApiEndpoint),
-      } as any,
-    )
+    const client = new GraphQLClient(this.env.activeCluster.getApiEndpoint(serviceName, stageName, workspaceSlug), {
+      headers,
+      agent: getProxyAgent(this.config.cloudApiEndpoint),
+    } as any)
     return client.request(query)
   }
 
@@ -262,11 +207,7 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    const endpoint = this.env.activeCluster.getExportEndpoint(
-      serviceName,
-      stage,
-      workspaceSlug,
-    )
+    const endpoint = this.env.activeCluster.getExportEndpoint(serviceName, stage, workspaceSlug)
     debug(`Downloading from ${endpoint}`)
     debug(exportData)
     const result = await fetch(endpoint, {
@@ -294,11 +235,7 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    const endpoint = this.env.activeCluster.getImportEndpoint(
-      serviceName,
-      stage,
-      workspaceSlug,
-    )
+    const endpoint = this.env.activeCluster.getImportEndpoint(serviceName, stage, workspaceSlug)
     debug(`Uploading to endpoint ${endpoint}`)
     const result = await fetch(endpoint, {
       method: 'post',
@@ -318,15 +255,8 @@ export class Client {
     }
   }
 
-  async reset(
-    serviceName: string,
-    stage: string,
-    token?: string,
-    workspaceSlug?: string,
-  ): Promise<void> {
-    const endpoint =
-      this.env.activeCluster.getApiEndpoint(serviceName, stage, workspaceSlug) +
-      '/private'
+  async reset(serviceName: string, stage: string, token?: string, workspaceSlug?: string): Promise<void> {
+    const endpoint = this.env.activeCluster.getApiEndpoint(serviceName, stage, workspaceSlug) + '/private'
     const result = await fetch(endpoint, {
       method: 'post',
       headers: {
@@ -402,9 +332,7 @@ export class Client {
     const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
-      this.out.log(
-        `Authenticated with ${authenticationPayload.account!.login[0].email}`,
-      )
+      this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -428,18 +356,16 @@ export class Client {
       if (cloud.token) {
         token = cloud.token
       }
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 1000))
     }
     this.env.globalRC.cloudSessionKey = token
     this.out.action.stop()
 
     authenticationPayload = await this.isAuthenticated()
-    await this.out.log(
-      `Authenticated with ${authenticationPayload.account!.login[0].email}`,
-    )
+    await this.out.log(`Authenticated with ${authenticationPayload.account!.login[0].email}`)
 
     this.env.saveGlobalRC()
-    await this.env.getClusters()
+    await this.env.fetchClusters()
   }
 
   logout(): void {
@@ -579,11 +505,7 @@ export class Client {
     return memberships.map(m => m.workspace)
   }
 
-  async addProject(
-    name: string,
-    stage: string,
-    secrets: string[] | null,
-  ): Promise<SimpleProjectInfo> {
+  async addProject(name: string, stage: string, secrets: string[] | null): Promise<SimpleProjectInfo> {
     const mutation = `\
       mutation addProject($name: String! $stage: String! $secrets: [String!]) {
         addProject(input: {
@@ -619,11 +541,7 @@ export class Client {
     return project
   }
 
-  async deleteProject(
-    name: string,
-    stage: string,
-    workspaceSlug: string | null,
-  ): Promise<void> {
+  async deleteProject(name: string, stage: string, workspaceSlug: string | null): Promise<void> {
     const cluster = this.env.activeCluster
     if (!this.env.activeCluster.shared && !this.env.activeCluster.isPrivate) {
       const mutation = `\
@@ -661,9 +579,7 @@ export class Client {
   }
 
   async hasStepsApi() {
-    const result: IntrospectionQuery = await this.client.request<IntrospectionQuery>(
-      introspectionQuery,
-    )
+    const result: IntrospectionQuery = await this.client.request<IntrospectionQuery>(introspectionQuery)
 
     return hasTypeWithField(result, 'DeployPayload', 'steps')
   }
@@ -701,29 +617,14 @@ export class Client {
       ${renderMigrationFragment(false)}
     `
 
-    const introspectionResult: IntrospectionQuery = await this.client.request<IntrospectionQuery>(
-      introspectionQuery,
-    )
-    const hasStepsApi = hasTypeWithField(
-      introspectionResult,
-      'DeployPayload',
-      'steps',
-    )
+    const introspectionResult: IntrospectionQuery = await this.client.request<IntrospectionQuery>(introspectionQuery)
+    const hasStepsApi = hasTypeWithField(introspectionResult, 'DeployPayload', 'steps')
 
-    const hasRelationManifestationApi = hasTypeWithField(
-      introspectionResult,
-      'CreateRelation',
-      'after',
-    )
+    const hasRelationManifestationApi = hasTypeWithField(introspectionResult, 'CreateRelation', 'after')
 
-    const steps = hasStepsApi
-      ? `steps { ${renderStepFragment(hasRelationManifestationApi)} }`
-      : ''
+    const steps = hasStepsApi ? `steps { ${renderStepFragment(hasRelationManifestationApi)} }` : ''
 
-    if (
-      noMigration &&
-      !hasTypeWithField(introspectionResult, 'DeployInput', 'noMigration')
-    ) {
+    if (noMigration && !hasTypeWithField(introspectionResult, 'DeployInput', 'noMigration')) {
       throw new Error(
         `You provided the --no-migrate option, but the Prisma server doesn't support it yet. It's supported in Prisma 1.26 and above.`,
       )
@@ -777,9 +678,7 @@ export class Client {
 
       return deploy
     } catch (e) {
-      if (
-        e.message.includes(`Field 'force' is not defined in the input type`)
-      ) {
+      if (e.message.includes(`Field 'force' is not defined in the input type`)) {
         const { deploy } = await this.client.request<{
           deploy: DeployPayload
         }>(oldMutation, {
@@ -877,9 +776,7 @@ export class Client {
   async getClusterSafe(name: string, stage: string): Promise<Cluster> {
     const cluster = await this.getCluster(name, stage)
     if (!cluster) {
-      throw new Error(
-        `No cluster for "${name}@${stage}" found. Please make sure to deploy the stage ${stage}`,
-      )
+      throw new Error(`No cluster for "${name}@${stage}" found. Please make sure to deploy the stage ${stage}`)
     }
 
     return cluster
@@ -929,7 +826,7 @@ export class Client {
             errors
           }
         }
-        `,
+      `,
 
       {
         stage,
@@ -940,10 +837,7 @@ export class Client {
     return migrationStatus
   }
 
-  async authenticateCustomer(
-    endpoint: string,
-    token: string,
-  ): Promise<AuthenticateCustomerPayload> {
+  async authenticateCustomer(endpoint: string, token: string): Promise<AuthenticateCustomerPayload> {
     // dont send any auth information when running the authenticateCustomer mutation
     const client = new GraphQLClient(endpoint, {
       agent: getProxyAgent(endpoint),
