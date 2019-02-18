@@ -143,6 +143,19 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
     excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
   )
 
+lazy val schemaInferrerBin = imageProject("schema-inferrer-bin", "schema-inferrer-bin")
+  .dependsOn(deploy)
+  .enablePlugins(PrismaGraalPlugin)
+  .settings(
+    nativeImageOptions ++= Seq(
+      "--verbose",
+      "--no-server",
+      "-H:+AllowVMInspection",
+      s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
+    ),
+    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar")
+  )
+
 def absolute(relativePathToProjectRoot: String) = {
   s"${System.getProperty("user.dir")}/${relativePathToProjectRoot.stripPrefix("/")}"
 }
@@ -472,7 +485,8 @@ val allDockerImageProjects = List(
   prismaLocal,
   prismaLocalGraalVM,
   prismaProd,
-  prismaProdGraalVM
+  prismaProdGraalVM,
+  schemaInferrerBin
 )
 
 val allServerProjects = List(
