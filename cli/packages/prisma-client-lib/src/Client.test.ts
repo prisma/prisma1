@@ -235,9 +235,7 @@ test('automatic non-scalar sub selection for a connection without scalars', t =>
 
   client.usersConnection()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -297,9 +295,7 @@ test('automatic non-scalar sub selection for a connection with scalars', t => {
 
   client.housesConnection()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -341,9 +337,7 @@ test('automatic non-scalar sub selection for relation', t => {
     })
     .user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -382,9 +376,7 @@ test('automatic non-scalar sub selection and enums', t => {
 
   client.user().type()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -417,9 +409,7 @@ test('automatic non-scalar sub selection and scalars', t => {
 
   client.user().name()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -456,9 +446,7 @@ test('automatic non-scalar sub selection', t => {
 
   client.users()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -500,9 +488,7 @@ test('related type', t => {
 
   client.user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -544,9 +530,7 @@ test('deep related type', t => {
 
   client.user().posts()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -588,9 +572,7 @@ test('embedded type', t => {
 
   client.user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -641,9 +623,7 @@ test('nested mbedded type', t => {
 
   client.user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -682,9 +662,7 @@ test('top level args', t => {
 
   client.post({ id: 'test' })
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -744,9 +722,13 @@ test('nested args', t => {
     },
   })
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
+
+function getQueryDocument(client) {
+  return client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+}

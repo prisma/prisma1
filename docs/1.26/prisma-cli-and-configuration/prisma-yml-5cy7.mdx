@@ -109,28 +109,11 @@ hooks:
   post-deploy:
     - prisma generate
 
-# This service has one event subscription configured. The
-# corresponding subscription query is located in `database/subscriptions/welcomeEmail.graphql`.
-# When the subscription fires, the specified `webhook`
-# is invoked via HTTP.
-subscriptions:
-  sendWelcomeEmail:
-    query: database/subscriptions/sendWelcomeEmail.graphql
-    webhook:
-      url: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
-      headers:
-        Authorization: ${env:MY_ENDPOINT_SECRET}
-
 # Points to a `.graphql` file containing GraphQL
 # operations that will be executed when initially
 # deploying a service.
 seed:
   import: database/seed.graphql
-
-# This service only defines one custom variable that's
-# referenced in the `webhook` of the `subscription`
-custom:
-  serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
 ```
 
 > In this example, the `databaseType` is inferred and defaults to `relational`.
@@ -139,11 +122,8 @@ This prisma.yml expects the following file structure:
 
 ```
 .
-│ .graphqlconfig.yml
 ├── prisma.yml
 └── database
-    ├── subscriptions
-    │   └── welcomeEmail.graphql
     ├── types.graphql
     └── enums.graphql
 ```
@@ -176,14 +156,10 @@ When using a recursive self-reference as a variable, the value that you put into
 - (optional) the _path_ to the referenced property; if no path is specified, the value of the variable will be the entire YAML file.
 
 ```yml
-subscriptions:
-  sendWelcomeEmail:
-    query: database/subscriptions/sendWelcomeEmail.graphql
-    webhook:
-      url: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
+datamodel: ${self:custom.datamodelPath}.prisma
 
 custom:
-  serverlessEndpoint: example.org
+  datamodelPath: myDatamodel
 ```
 
 > This works for any property inside prisma.yml, not just `custom`.
@@ -197,16 +173,10 @@ When using an environment variable, the value that you put into the bracket is c
 - the _prefix_ `env:`
 - the _name_ of the environment variable
 
-In the following example, an environment variable is referenced to specify the URL and the authentication token for a webhook:
+In the following example, an environment variable is referenced to determine the Prisma service secret:
 
 ```yml
-subscriptions:
-  sendWelcomeEmail:
-    query: database/subscriptions/sendWelcomeEmail.graphql
-    webhook:
-      url: https://example.org/sendWelcomeEmail
-      headers:
-        Authorization: ${env:MY_TOKEN}
+secret: ${env:PRISMA_SECRET}
 ```
 
 ## Reference
@@ -430,7 +400,7 @@ The `seed` property expects an **object**, with either one of two sub-properties
   - A path to a `.zip` file that contains a data set in Normalized Data Format (NDF)
 - `run`: Shell command that will be executed when seeding a service. This is meant for more complex seed setups that are not covered by `import`.
 
-Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma deploy`). Track [this feature request for additional seeding workflows](https://github.com/graphcool/prisma/issues/1536).
+Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma deploy`). Track [this feature request for additional seeding workflows](https://github.com/prisma/prisma/issues/1536).
 
 #### Examples
 
@@ -465,15 +435,16 @@ The `custom` property expects an **object**. There are no assumptions about the 
 
 #### Examples
 
-Define two custom values and reuse them in the definition of the event subscription.
+Define two custom values and reuse them in the definition of the datamodel and Prisma client generators.
 
 ```yml
 custom:
-  serverlessEndpoint: https://bcdeaxokbj.execute-api.eu-west-1.amazonaws.com/dev
-  subscriptionQueries: database/subscriptions/
+  language: typescript
+  datamodel: myDatamodel
 
-subscriptions:
-  sendWelcomeEmail:
-    query: ${self:custom.subscriptionQueries}/sendWelcomeEmail.graphql
-    webhook: https://${self:custom.serverlessEndpoint}/sendWelcomeEmail
+datamodel: ${self:custom.datamodel}.prisma
+
+generate:
+  - generator: ${self:custom.language}-client
+    output: ./generated/prisma-client
 ```
