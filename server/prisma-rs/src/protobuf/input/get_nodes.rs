@@ -46,6 +46,6 @@ impl IntoSelectQuery for GetNodesInput {
             first: self.query_arguments.first,
         };
 
-        Ok(query)
+        dbg!(Ok(query))
     }
 }

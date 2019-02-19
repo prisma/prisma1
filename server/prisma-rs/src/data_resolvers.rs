@@ -8,6 +8,7 @@ use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
 use sql::prelude::*;
 use std::collections::BTreeSet;
 
+#[derive(Debug)]
 pub struct SelectQuery {
     pub project: ProjectRef,
     pub model: ModelRef,

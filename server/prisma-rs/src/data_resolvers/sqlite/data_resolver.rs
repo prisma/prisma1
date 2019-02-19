@@ -33,7 +33,7 @@ impl DataResolver for Sqlite {
 
             dbg!(&query_sql);
 
-            let mut stmt = conn.prepare(&query_sql).unwrap();
+            let mut stmt = conn.prepare(&query_sql)?;
 
             let nodes_iter = stmt.query_map(NO_PARAMS, |row| {
                 let mut values = Vec::new();

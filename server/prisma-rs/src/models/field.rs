@@ -1,15 +1,11 @@
 use crate::models::prelude::*;
-use sql::{
-    grammar::definition::Column,
-    language::{column, full_column},
-};
+use sql::{grammar::definition::Column, language::full_column};
 use std::sync::Arc;
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
 static UPDATED_AT_FIELD: &str = "updatedAt";
 static CREATED_AT_FIELD: &str = "createdAt";
-static ALIAS: &str = "Alias";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]
@@ -236,10 +232,6 @@ impl ScalarField {
                 full_column(project.db_name(), model.db_name(), self.db_name())
             })
         })
-    }
-
-    pub fn alias_column(&self) -> Column {
-        column(format!("{}.{}", ALIAS, self.db_name()))
     }
 }
 

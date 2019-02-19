@@ -31,7 +31,7 @@ impl CursorCondition {
                     .unwrap_or(Order::Ascending);
 
                 let cursor_for = |cursor_type: CursorType, id: IdValue| {
-                    let row = Row::from((field.alias_column(), model.fields().id().alias_column()));
+                    let row = Row::from((field.model_column(), model.fields().id().model_column()));
 
                     let where_condition = model.fields().id().model_column().equals(id.clone());
 
