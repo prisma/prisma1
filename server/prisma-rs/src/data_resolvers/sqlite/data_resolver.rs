@@ -22,17 +22,25 @@ impl DataResolver for Sqlite {
         let conditions = query.conditions;
         let table = query.model.table();
 
+        let (skip, limit) = match query.last.or(query.first) {
+            Some(c) => (query.skip.unwrap_or(0), Some(c + 1)), // +1 to see if there's more data
+            None => (query.skip.unwrap_or(0), None),
+        };
+
         self.with_connection(database_name, |conn| {
             let query_base = select_from(&table).so_that(conditions);
-
             let query_sql = field_names
                 .iter()
                 .fold(query_base, |query, field| query.column(column(field)))
-                .compile()
-                .unwrap();
+                .offset(skip);
 
-            dbg!(&query_sql);
+            let query_sql = if let Some(limit) = limit {
+                query_sql.limit(limit)
+            } else {
+                query_sql
+            };
 
+            let query_sql = dbg!(query_sql.compile().unwrap());
             let mut stmt = conn.prepare(&query_sql)?;
 
             let nodes_iter = stmt.query_map(NO_PARAMS, |row| {
@@ -167,6 +175,7 @@ mod tests {
             order_by: None,
             skip: None,
             first: None,
+            last: None,
         };
 
         let datetime: DateTime<Utc> = DateTime::from_utc(
@@ -229,6 +238,7 @@ mod tests {
             order_by: None,
             skip: None,
             first: None,
+            last: None,
         };
 
         let (nodes, fields) = sqlite.select_nodes(query).unwrap();

@@ -14,9 +14,10 @@ pub struct SelectQuery {
     pub model: ModelRef,
     pub selected_fields: BTreeSet<String>,
     pub conditions: ConditionTree,
-    pub order_by: Option<u32>,
-    pub skip: Option<u32>,
-    pub first: Option<u32>,
+    pub order_by: Option<usize>,
+    pub skip: Option<usize>,
+    pub first: Option<usize>,
+    pub last: Option<usize>,
 }
 
 pub trait IntoSelectQuery {

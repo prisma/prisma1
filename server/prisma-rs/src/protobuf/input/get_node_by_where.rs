@@ -41,6 +41,7 @@ impl IntoSelectQuery for GetNodeByWhereInput {
             order_by: None, // TODO
             skip: None,
             first: None,
+            last: None,
         };
 
         Ok(query)

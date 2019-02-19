@@ -51,7 +51,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(input)
 
     // TODO: Do we need to handle the pagination stuff here?
-    ResolverResult(nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
+    ResolverResult(queryArguments, nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
   }
 
   override def getRelatedNodes(fromField: RelationField,
@@ -130,8 +130,8 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
 
   def toPrismaId(value: IdGCValue): protocol.GraphqlId = value match {
     case StringIdGCValue(s) => protocol.GraphqlId(IdValue.String(s))
-    case IntGCValue(i) => protocol.GraphqlId(IdValue.Int(i))
-    case UuidGCValue(u) => protocol.GraphqlId(IdValue.String(u.toString))
+    case IntGCValue(i)      => protocol.GraphqlId(IdValue.Int(i))
+    case UuidGCValue(u)     => protocol.GraphqlId(IdValue.String(u.toString))
   }
 
   def toPrismaSelectedFields(selectedFields: SelectedFields): Vector[prisma.protocol.SelectedField] = {
@@ -146,10 +146,11 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
         }
         case SelectedRelationField(f, sf) => {
           val field = prisma.protocol.SelectedField(
-            prisma.protocol.SelectedField.Field.Relational(prisma.protocol.RelationalField(
-              f.dbName,
-              toPrismaSelectedFields(sf)
-            ))
+            prisma.protocol.SelectedField.Field.Relational(
+              prisma.protocol.RelationalField(
+                f.dbName,
+                toPrismaSelectedFields(sf)
+              ))
           )
 
           acc :+ field
@@ -196,13 +197,9 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
       case ListContains(value) =>
         protocol.ScalarListCondition.Condition.Contains(protocol.ValueContainer(toPrismaValue(value)))
       case ListContainsEvery(values) =>
-        protocol.ScalarListCondition.Condition.ContainsEvery(protocol.MultiContainer(values.map(v =>
-          protocol.ValueContainer(toPrismaValue(v)))
-        ))
+        protocol.ScalarListCondition.Condition.ContainsEvery(protocol.MultiContainer(values.map(v => protocol.ValueContainer(toPrismaValue(v)))))
       case ListContainsSome(values) =>
-        protocol.ScalarListCondition.Condition.ContainsSome(protocol.MultiContainer(values.map(v =>
-          protocol.ValueContainer(toPrismaValue(v)))
-        ))
+        protocol.ScalarListCondition.Condition.ContainsSome(protocol.MultiContainer(values.map(v => protocol.ValueContainer(toPrismaValue(v)))))
     }
 
     protocol.ScalarListCondition(condition)
@@ -210,10 +207,10 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
 
   def toRelationFilterCondition(condition: RelationCondition): protocol.RelationFilter.Condition = {
     condition match {
-      case EveryRelatedNode => protocol.RelationFilter.Condition.EVERY_RELATED_NODE
+      case EveryRelatedNode      => protocol.RelationFilter.Condition.EVERY_RELATED_NODE
       case AtLeastOneRelatedNode => protocol.RelationFilter.Condition.AT_LEAST_ONE_RELATED_NODE
-      case NoRelatedNode => protocol.RelationFilter.Condition.NO_RELATED_NODE
-      case ToOneRelatedNode => protocol.RelationFilter.Condition.TO_ONE_RELATED_NODE
+      case NoRelatedNode         => protocol.RelationFilter.Condition.NO_RELATED_NODE
+      case ToOneRelatedNode      => protocol.RelationFilter.Condition.TO_ONE_RELATED_NODE
     }
   }
 
@@ -278,7 +275,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
 
   def toPrismaOrderBy(orderBy: OrderBy): protocol.OrderBy = {
     protocol.OrderBy(orderBy.field.dbName, orderBy.sortOrder match {
-      case SortOrder.Asc => protocol.OrderBy.SortOrder.ASC
+      case SortOrder.Asc  => protocol.OrderBy.SortOrder.ASC
       case SortOrder.Desc => protocol.OrderBy.SortOrder.DESC
     })
   }

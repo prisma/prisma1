@@ -42,8 +42,9 @@ impl IntoSelectQuery for GetNodesInput {
             selected_fields: fields,
             conditions: conditions,
             order_by: None, // TODO
-            skip: self.query_arguments.skip,
-            first: self.query_arguments.first,
+            skip: self.query_arguments.skip.map(|v| v as usize),
+            first: self.query_arguments.first.map(|v| v as usize),
+            last: self.query_arguments.last.map(|v| v as usize),
         };
 
         dbg!(Ok(query))
