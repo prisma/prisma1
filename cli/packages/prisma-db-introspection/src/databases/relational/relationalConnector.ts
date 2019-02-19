@@ -2,6 +2,7 @@ import { IConnector } from '../../common/connector'
 import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
+import GQLAssert from '../../../../prisma-datamodel/dist/util/gqlAssert';
 
 export interface IInternalIndexInfo {
   tableName: string
@@ -110,7 +111,7 @@ export abstract class RelationalConnector implements IConnector {
   protected async queryTables(schemaName: string) {
     const allTablesQuery = `
       SELECT 
-        table_name
+        table_name as table_name
       FROM 
         information_schema.tables
       WHERE 
@@ -118,7 +119,10 @@ export abstract class RelationalConnector implements IConnector {
         -- Views are not supported yet
         AND table_type = 'BASE TABLE'`
 
-    return (await this.query(allTablesQuery, [schemaName])).map(row => row.table_name as string)
+    return (await this.query(allTablesQuery, [schemaName])).map(row => {
+      GQLAssert.raiseIf(row.table_name === undefined, 'Received `undefined` as table name.')
+      return row.table_name as string
+    })
   }
 
   /**
@@ -145,10 +149,10 @@ export abstract class RelationalConnector implements IConnector {
   protected async queryColumns(schemaName: string, tableName: string) {
     const allColumnsQuery = `
       SELECT
-        ordinal_position,
-        column_name,
+        ordinal_position as ordinal_postition,
+        column_name as column_name,
         ${this.getTypeColumnName()} as udt_name,
-        column_default,
+        column_default as column_default,
         is_nullable = 'YES' as is_nullable,
         ${this.getAutoIncrementCondition()} as is_auto_increment
       FROM
@@ -160,8 +164,10 @@ export abstract class RelationalConnector implements IConnector {
     /**
      * Note, that ordinal_position comes back as a string because it's a bigint!
      */
-
+   
     return (await this.query(allColumnsQuery)).map(row => {
+      GQLAssert.raiseIf(row.column_name === undefined, 'Received `undefined` as column name.')
+      GQLAssert.raiseIf(row.udt_name === undefined, 'Received `undefined` as data type.')
       return {
         name: row.column_name as string,
         type: row.udt_name as string,

@@ -80,5 +80,5 @@ const testNames = fs.readdirSync(relativeTestCaseDir)
 for (const testName of testNames) {
   test(`Introspects ${testName}/relational correctly`, async () => {
     await blackBoxTest(testName)
-  })
+  }, 20000)
 }
