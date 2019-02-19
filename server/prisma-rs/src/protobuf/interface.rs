@@ -2,7 +2,7 @@ use crate::{
     config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
     data_resolvers::{IntoSelectQuery, PrismaDataResolver, Sqlite},
     error::Error,
-    protobuf::prisma,
+    protobuf::prelude::*,
     PrismaResult,
 };
 
@@ -54,16 +54,26 @@ impl ProtoBufInterface {
             }
         })
     }
+
+    fn validate(query_arguments: &QueryArguments) -> PrismaResult<()> {
+        if let (Some(_), Some(_)) = (query_arguments.first, query_arguments.last) {
+            return Err(Error::InvalidConnectionArguments(
+                "Cannot have first and last set in the same query",
+            ));
+        };
+
+        Ok(())
+    }
 }
 
 impl ExternalInterface for ProtoBufInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
-            let input = prisma::GetNodeByWhereInput::decode(payload)?;
+            let input = GetNodeByWhereInput::decode(payload)?;
             let query = input.into_select_query()?;
             let (nodes, fields) = self.data_resolver.select_nodes(query)?;
 
-            let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
+            let response = RpcResponse::ok(NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();
@@ -74,11 +84,13 @@ impl ExternalInterface for ProtoBufInterface {
 
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
-            let input = prisma::GetNodesInput::decode(payload)?;
+            let input = GetNodesInput::decode(payload)?;
+            Self::validate(&input.query_arguments)?;
+
             let query = input.into_select_query()?;
             let (nodes, fields) = self.data_resolver.select_nodes(query)?;
 
-            let response = prisma::RpcResponse::ok(prisma::NodesResult { nodes, fields });
+            let response = RpcResponse::ok(NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();

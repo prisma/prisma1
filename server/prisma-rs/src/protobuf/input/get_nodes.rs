@@ -28,7 +28,12 @@ impl IntoSelectQuery for GetNodesInput {
         let project: ProjectRef = project_template.into();
         let model = project.schema().find_model(&self.model_name)?;
         let cursor = CursorCondition::build(&self.query_arguments, &model);
-        let ordering = Ordering::for_model(&model, &self.query_arguments)?;
+
+        let ordering = Ordering::for_model(
+            &model,
+            &self.query_arguments.order_by,
+            self.query_arguments.last.is_some(),
+        )?;
 
         let filter = self
             .query_arguments
