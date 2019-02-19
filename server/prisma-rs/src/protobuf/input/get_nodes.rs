@@ -2,6 +2,7 @@ use crate::{
     cursor_condition::CursorCondition,
     data_resolvers::{IntoSelectQuery, SelectQuery},
     models::prelude::*,
+    ordering::Ordering,
     protobuf::prelude::*,
     PrismaResult,
 };
@@ -27,6 +28,7 @@ impl IntoSelectQuery for GetNodesInput {
         let project: ProjectRef = project_template.into();
         let model = project.schema().find_model(&self.model_name)?;
         let cursor = CursorCondition::build(&self.query_arguments, &model);
+        let ordering = Ordering::for_model(&model, &self.query_arguments)?;
 
         let filter = self
             .query_arguments
@@ -46,7 +48,7 @@ impl IntoSelectQuery for GetNodesInput {
             model: model,
             selected_fields: fields,
             conditions: conditions,
-            order_by: None, // TODO
+            ordering: Some(ordering),
             skip: skip as usize,
             limit: limit.map(|l| l as usize),
         };

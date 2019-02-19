@@ -22,18 +22,30 @@ impl DataResolver for Sqlite {
                 .map(|f| f.db_name().to_string())
                 .collect();
 
+            // BASE QUERY
             let query_base = select_from(&query.model.table()).so_that(query.conditions);
 
+            // SELECT FIELDS
             let query_sql = field_names
                 .iter()
                 .fold(query_base, |query, field| query.column(column(field)))
                 .offset(query.skip);
 
-            let query_sql = if let Some(limit) = query.limit {
-                query_sql.limit(limit)
-            } else {
-                query_sql
-            };
+            // ORDER BY
+            let query_sql = query
+                .ordering
+                .into_iter()
+                .fold(query_sql, |query_sql, ordering| {
+                    ordering.into_iter().fold(query_sql, |query_sql, order_by| {
+                        query_sql.order_by(order_by)
+                    })
+                });
+
+            // LIMIT
+            let query_sql = query
+                .limit
+                .into_iter()
+                .fold(query_sql, |query_sql, limit| query_sql.limit(limit));
 
             let query_sql = dbg!(query_sql.compile().unwrap());
             let mut stmt = conn.prepare(&query_sql)?;
@@ -167,7 +179,7 @@ mod tests {
             model: model,
             selected_fields: fields,
             conditions: conditions,
-            order_by: None,
+            ordering: None,
             skip: 0,
             limit: None,
         };
@@ -229,7 +241,7 @@ mod tests {
             model: model,
             selected_fields: fields,
             conditions: ConditionTree::NoCondition,
-            order_by: None,
+            ordering: None,
             skip: 0,
             limit: None,
         };

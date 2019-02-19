@@ -3,7 +3,7 @@ mod sqlite;
 pub use sqlite::Sqlite;
 pub type PrismaDataResolver = Box<dyn DataResolver + Send + Sync + 'static>;
 
-use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
+use crate::{models::prelude::*, ordering::OrderVec, protobuf::prelude::*, PrismaResult};
 
 use sql::prelude::*;
 use std::collections::BTreeSet;
@@ -14,7 +14,7 @@ pub struct SelectQuery {
     pub model: ModelRef,
     pub selected_fields: BTreeSet<String>,
     pub conditions: ConditionTree,
-    pub order_by: Option<usize>,
+    pub ordering: Option<OrderVec>,
     pub skip: usize,
     pub limit: Option<usize>,
 }

@@ -25,7 +25,6 @@ pub struct Model {
     pub manifestation: Option<ModelManifestation>,
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
-    //pub id_field: OnceCell<Column>,
 }
 
 #[derive(Debug, Deserialize)]

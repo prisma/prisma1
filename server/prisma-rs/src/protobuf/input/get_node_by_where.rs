@@ -38,7 +38,7 @@ impl IntoSelectQuery for GetNodeByWhereInput {
             model: model,
             selected_fields: fields,
             conditions: condition,
-            order_by: None, // TODO
+            ordering: None,
             skip: 0,
             limit: None,
         };

@@ -16,6 +16,8 @@ pub enum Error {
     JsonDecodeError(&'static str, Option<Cause>),
     /// Input from Scala was not good
     InvalidInputError(String),
+    /// Invalid connection arguments, e.g. first and last were both defined in a query
+    InvalidConnectionArguments(&'static str),
     /// No result returned from query
     NoResultError,
 }
@@ -40,6 +42,7 @@ impl StdError for Error {
             Error::ProtobufDecodeError(message, _) => message,
             Error::JsonDecodeError(message, _) => message,
             Error::InvalidInputError(message) => message,
+            Error::InvalidConnectionArguments(message) => message,
             Error::NoResultError => "Query returned no results",
         }
     }
@@ -70,6 +73,9 @@ impl Into<prisma::error::Value> for Error {
             }
             Error::InvalidInputError(message) => {
                 prisma::error::Value::InvalidInputError(message.to_string())
+            }
+            Error::InvalidConnectionArguments(message) => {
+                prisma::error::Value::InvalidConnectionArguments(message.to_string())
             }
             e @ Error::NoResultError => {
                 prisma::error::Value::NoResultsError(e.description().to_string())

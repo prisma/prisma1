@@ -12,6 +12,7 @@ pub mod cursor_condition;
 pub mod data_resolvers;
 pub mod error;
 pub mod models;
+pub mod ordering;
 pub mod protobuf;
 
 use config::PrismaConfig;

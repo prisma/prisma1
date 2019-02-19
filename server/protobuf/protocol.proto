@@ -21,12 +21,13 @@ message Result {
 
 message Error {
     oneof value {
-        string connection_error      = 1;
-        string query_error           = 2;
-        string no_results_error      = 3;
-        string protobuf_decode_error = 4;
-        string json_decode_error     = 5;
-        string invalid_input_error   = 6;
+        string connection_error             = 1;
+        string query_error                  = 2;
+        string no_results_error             = 3;
+        string protobuf_decode_error        = 4;
+        string json_decode_error            = 5;
+        string invalid_input_error          = 6;
+        string invalid_connection_arguments = 7;
     }
 }
 
