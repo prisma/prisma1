@@ -45,7 +45,7 @@ impl Ordering {
                     ],
                     (SortOrder::Asc, false) => vec![
                         first.model_column().ascend(),
-                        second_field.model_column().descend(),
+                        second_field.model_column().ascend(),
                     ],
                     (SortOrder::Desc, false) => vec![
                         first.model_column().descend(),
