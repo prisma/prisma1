@@ -8,7 +8,6 @@ describe('Introspector', () => {
 })
 
 const sql = `
-CREATE USER postgres SUPERUSER;
 
 --
 -- PostgreSQL database dump
@@ -71,8 +70,6 @@ CREATE TABLE DatabaseIntrospector.direct_messages (
 );
 
 
-ALTER TABLE DatabaseIntrospector.direct_messages OWNER TO postgres;
-
 --
 -- Name: direct_messages_id_seq; Type: SEQUENCE; Schema: DatabaseIntrospector; Owner: postgres
 --
@@ -84,8 +81,6 @@ CREATE SEQUENCE DatabaseIntrospector.direct_messages_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER TABLE DatabaseIntrospector.direct_messages_id_seq OWNER TO postgres;
 
 --
 -- Name: direct_messages_id_seq; Type: SEQUENCE OWNED BY; Schema: DatabaseIntrospector; Owner: postgres
@@ -103,8 +98,6 @@ CREATE TABLE DatabaseIntrospector.users (
 );
 
 
-ALTER TABLE DatabaseIntrospector.users OWNER TO postgres;
-
 --
 -- Name: users_id_seq; Type: SEQUENCE; Schema: DatabaseIntrospector; Owner: postgres
 --
@@ -116,8 +109,6 @@ CREATE SEQUENCE DatabaseIntrospector.users_id_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER TABLE DatabaseIntrospector.users_id_seq OWNER TO postgres;
 
 --
 -- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: DatabaseIntrospector; Owner: postgres

@@ -1,28 +1,17 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog, DatabaseCredentials } from '../../utils/EndpointDialog'
-import {
-  PostgresConnector,
-  PrismaDBClient,
-  MongoConnector,
-  Connectors,
-} from 'prisma-db-introspection'
+import { PrismaDBClient, Connectors } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
-import { Client as PGClient } from 'pg'
-import { MongoClient } from 'mongodb'
-import { createConnection } from 'mysql'
 import {
   DefaultParser,
   DatabaseType,
   DefaultRenderer,
   ISDL,
 } from 'prisma-datamodel'
-import { IConnector } from 'prisma-db-introspection/dist/common/connector'
-import { omit } from 'lodash'
 import {
-  ConnectorAndDisconnect,
   getConnectedConnectorFromCredentials,
   ConnectorData,
   getConnectorWithDatabase,
@@ -136,8 +125,8 @@ export default class IntrospectCommand extends Command {
       : ''
     this.out.log(`\
 ${chalk.bold(
-  'Created 1 new file:',
-)}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
+      'Created 1 new file:',
+    )}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
 
   ${chalk.cyan(fileName)}
 `)
