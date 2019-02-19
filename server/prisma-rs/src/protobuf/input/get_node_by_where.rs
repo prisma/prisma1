@@ -39,9 +39,8 @@ impl IntoSelectQuery for GetNodeByWhereInput {
             selected_fields: fields,
             conditions: condition,
             order_by: None, // TODO
-            skip: None,
-            first: None,
-            last: None,
+            skip: 0,
+            limit: None,
         };
 
         Ok(query)

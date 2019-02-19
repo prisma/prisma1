@@ -8,33 +8,28 @@ use sql::prelude::*;
 
 impl DataResolver for Sqlite {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)> {
-        let database_name = query.project.db_name();
-        let selected_fields = query
-            .model
-            .fields()
-            .find_many_from_scalar(&query.selected_fields);
-
-        let field_names: Vec<String> = selected_fields
-            .iter()
-            .map(|f| f.db_name().to_string())
-            .collect();
-
-        let conditions = query.conditions;
-        let table = query.model.table();
-
-        let (skip, limit) = match query.last.or(query.first) {
-            Some(c) => (query.skip.unwrap_or(0), Some(c + 1)), // +1 to see if there's more data
-            None => (query.skip.unwrap_or(0), None),
-        };
+        let project = query.project.clone();
+        let database_name = project.db_name();
 
         self.with_connection(database_name, |conn| {
-            let query_base = select_from(&table).so_that(conditions);
+            let selected_fields = query
+                .model
+                .fields()
+                .find_many_from_scalar(&query.selected_fields);
+
+            let field_names: Vec<String> = selected_fields
+                .iter()
+                .map(|f| f.db_name().to_string())
+                .collect();
+
+            let query_base = select_from(&query.model.table()).so_that(query.conditions);
+
             let query_sql = field_names
                 .iter()
                 .fold(query_base, |query, field| query.column(column(field)))
-                .offset(skip);
+                .offset(query.skip);
 
-            let query_sql = if let Some(limit) = limit {
+            let query_sql = if let Some(limit) = query.limit {
                 query_sql.limit(limit)
             } else {
                 query_sql
@@ -173,9 +168,8 @@ mod tests {
             selected_fields: fields,
             conditions: conditions,
             order_by: None,
-            skip: None,
-            first: None,
-            last: None,
+            skip: 0,
+            limit: None,
         };
 
         let datetime: DateTime<Utc> = DateTime::from_utc(
@@ -236,9 +230,8 @@ mod tests {
             selected_fields: fields,
             conditions: ConditionTree::NoCondition,
             order_by: None,
-            skip: None,
-            first: None,
-            last: None,
+            skip: 0,
+            limit: None,
         };
 
         let (nodes, fields) = sqlite.select_nodes(query).unwrap();

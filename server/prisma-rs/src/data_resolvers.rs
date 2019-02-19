@@ -15,9 +15,8 @@ pub struct SelectQuery {
     pub selected_fields: BTreeSet<String>,
     pub conditions: ConditionTree,
     pub order_by: Option<usize>,
-    pub skip: Option<usize>,
-    pub first: Option<usize>,
-    pub last: Option<usize>,
+    pub skip: usize,
+    pub limit: Option<usize>,
 }
 
 pub trait IntoSelectQuery {

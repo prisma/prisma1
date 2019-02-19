@@ -36,15 +36,19 @@ impl IntoSelectQuery for GetNodesInput {
 
         let conditions = ConditionTree::and(filter, cursor);
 
+        let (skip, limit) = match self.query_arguments.last.or(self.query_arguments.first) {
+            Some(c) => (self.query_arguments.skip.unwrap_or(0), Some(c + 1)), // +1 to see if there's more data
+            None => (self.query_arguments.skip.unwrap_or(0), None),
+        };
+
         let query = SelectQuery {
             project: project,
             model: model,
             selected_fields: fields,
             conditions: conditions,
             order_by: None, // TODO
-            skip: self.query_arguments.skip.map(|v| v as usize),
-            first: self.query_arguments.first.map(|v| v as usize),
-            last: self.query_arguments.last.map(|v| v as usize),
+            skip: skip as usize,
+            limit: limit.map(|l| l as usize),
         };
 
         dbg!(Ok(query))
