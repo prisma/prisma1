@@ -166,7 +166,7 @@ export default class IntrospectCommand extends Command {
         await this.definition.load(this.flags)
         const service = this.definition.service!
         const stage = this.definition.stage!
-        const cluster = this.definition.getCluster()
+        const cluster = await this.definition.getCluster()
         const workspace = this.definition.getWorkspace()
         this.env.setActiveCluster(cluster!)
         await this.client.initClusterClient(
@@ -297,8 +297,8 @@ export default class IntrospectCommand extends Command {
       )
       this.out.log(`\
 ${chalk.bold(
-  'Created 1 new file:',
-)}    GraphQL SDL-based datamodel (derived from existing database)
+        'Created 1 new file:',
+      )}    GraphQL SDL-based datamodel (derived from existing database)
 
   ${chalk.cyan(fileName)}
 `)
