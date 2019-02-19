@@ -163,7 +163,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     GQLAssert.raise(
       `Failed to resolve FK constraint ${relation.sourceTable}.${
         relation.sourceColumn
-      } -> ${relation.targetTable}.${relation.targetColumn}.`,
+      } -> ${relation.targetTable}.${relation.targetColumn}`,
     )
   }
   protected markNonIdFieldsWithSequencesAsErrored(

@@ -2,10 +2,14 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { DefaultParser, DefaultRenderer, DatabaseType } from 'prisma-datamodel'
 
-import * as mysql from 'mysql'
+import * as mysql from 'mysql2'
 import { connectionDetails } from '../connectionDetails'
 import { MysqlConnector } from '../../../../databases/relational/mysql/mysqlConnector'
 import MysqlClient from '../../../../databases/relational/mysql/mysqlDatabaseClient'
+
+// If you have trouble signing in to mysql 8, run
+// ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'prisma';
+// FLUSH PRIVILEGES;
 
 // Tests are located in different module.
 const relativeTestCaseDir = path.join(
@@ -78,5 +82,5 @@ const testNames = fs.readdirSync(relativeTestCaseDir)
 for (const testName of testNames) {
   test(`Introspects ${testName}/mysql correctly`, async () => {
     await blackBoxTest(testName)
-  })
+  }, 20000)
 }

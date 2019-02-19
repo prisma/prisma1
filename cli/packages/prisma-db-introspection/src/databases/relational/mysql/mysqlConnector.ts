@@ -6,7 +6,7 @@ import {
   IEnum,
   ISequenceInfo,
 } from '../relationalConnector'
-import { Connection } from 'mysql'
+import { Connection } from 'mysql2'
 import { DatabaseType, camelCase } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
