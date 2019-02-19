@@ -1,4 +1,9 @@
-import { LegacyRelationalReservedFields, ISDL, IGQLField, IGQLType } from 'prisma-datamodel'
+import {
+  LegacyRelationalReservedFields,
+  ISDL,
+  IGQLField,
+  IGQLType,
+} from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
 export class HideReservedFields implements INormalizer {
@@ -29,7 +34,9 @@ export class HideReservedFields implements INormalizer {
   public normalize(model: ISDL) {
     for (const type of model.types) {
       // We should move all tooling for finding types or fields into some common class.
-      const ref = this.baseModel.types.find(x => x.name === type.name || x.databaseName === type.name)
+      const ref = this.baseModel.types.find(
+        x => x.name === type.name || x.databaseName === type.name,
+      )
       if (ref !== undefined) {
         this.normalizeType(type, ref)
       }

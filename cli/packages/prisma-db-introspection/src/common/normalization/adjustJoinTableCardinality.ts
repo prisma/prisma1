@@ -1,4 +1,10 @@
-import { IDirectiveInfo, ISDL, IGQLField, IGQLType, DirectiveKeys } from 'prisma-datamodel'
+import {
+  IDirectiveInfo,
+  ISDL,
+  IGQLField,
+  IGQLType,
+  DirectiveKeys,
+} from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
 export class AdjustJoinTableCardinality implements INormalizer {
@@ -16,7 +22,8 @@ export class AdjustJoinTableCardinality implements INormalizer {
         // Fid the reference field.
         const refField = ref.fields.find(x => x.name === field.name)
 
-        if (refField === undefined || typeof refField.type === 'string') continue
+        if (refField === undefined || typeof refField.type === 'string')
+          continue
 
         if (refField.type.name !== field.type.name) continue
 
@@ -37,7 +44,9 @@ export class AdjustJoinTableCardinality implements INormalizer {
   public normalize(model: ISDL) {
     for (const type of model.types) {
       // TODO: We should move all tooling for finding types or fields into some common class.
-      const ref = this.baseModel.types.find(x => x.name === type.name || x.databaseName === type.name)
+      const ref = this.baseModel.types.find(
+        x => x.name === type.name || x.databaseName === type.name,
+      )
       if (ref !== undefined) {
         this.normalizeType(type, ref)
       }

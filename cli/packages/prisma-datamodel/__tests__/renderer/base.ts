@@ -1,4 +1,9 @@
-import { IGQLType, IGQLField, GQLScalarField, IDirectiveInfo } from '../../src/datamodel/model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  IDirectiveInfo,
+} from '../../src/datamodel/model'
 import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType'
@@ -37,7 +42,10 @@ describe(`Renderer test`, () => {
     const fieldWithDefaultValue = new GQLScalarField('isAdmin', 'Boolean')
     fieldWithDefaultValue.defaultValue = 'false'
 
-    const fieldWithStringDefaultValue = new GQLScalarField('nationality', 'String')
+    const fieldWithStringDefaultValue = new GQLScalarField(
+      'nationality',
+      'String',
+    )
     fieldWithStringDefaultValue.defaultValue = 'DE'
 
     const listField = new GQLScalarField('roles', 'Int')

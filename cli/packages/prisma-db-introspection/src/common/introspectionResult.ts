@@ -31,7 +31,9 @@ export abstract class IntrospectionResult {
    * from the base model.
    * @param baseModel
    */
-  public renderToNormalizedDatamodelString(baseModel: ISDL | null = null): string {
+  public renderToNormalizedDatamodelString(
+    baseModel: ISDL | null = null,
+  ): string {
     return this.renderer.render(this.getNormalizedDatamodel(baseModel))
   }
 }

@@ -13,7 +13,9 @@ export default abstract class Parsers {
       case DatabaseType.postgres:
         return new RelationalParser()
       default:
-        throw new Error('Parser for database type not implemented: ' + databaseType)
+        throw new Error(
+          'Parser for database type not implemented: ' + databaseType,
+        )
     }
   }
 }

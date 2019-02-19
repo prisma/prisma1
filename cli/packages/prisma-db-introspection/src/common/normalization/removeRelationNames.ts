@@ -16,10 +16,15 @@ export class RemoveRelationName implements INormalizer {
     for (const field of type.fields) {
       if (typeof field.type !== 'string' && field.relationName !== null) {
         // Hola, relation!
-        const otherRelationOfSameTypeCount = type.fields.filter(x => x.type === field.type && x !== field).length
-        const otherBackRelationCount = field.type.fields.filter(x => x.type == type && x !== field.relatedField).length
+        const otherRelationOfSameTypeCount = type.fields.filter(
+          x => x.type === field.type && x !== field,
+        ).length
+        const otherBackRelationCount = field.type.fields.filter(
+          x => x.type == type && x !== field.relatedField,
+        ).length
 
-        if (otherRelationOfSameTypeCount > 0 || otherBackRelationCount > 0) continue // We need a relation name directive here
+        if (otherRelationOfSameTypeCount > 0 || otherBackRelationCount > 0)
+          continue // We need a relation name directive here
 
         if (ref !== undefined) {
           const refField = ref.fields.find(x => x.name === field.name)
@@ -38,7 +43,9 @@ export class RemoveRelationName implements INormalizer {
       // TODO: We should move all tooling for finding types or fields into some common class.
       const ref =
         this.baseModel !== null
-          ? this.baseModel.types.find(x => x.name === type.name || x.databaseName === type.name)
+          ? this.baseModel.types.find(
+              x => x.name === type.name || x.databaseName === type.name,
+            )
           : undefined
       this.normalizeType(type, ref)
     }

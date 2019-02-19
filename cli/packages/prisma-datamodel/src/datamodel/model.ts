@@ -1,5 +1,17 @@
-import { GraphQLScalarType, GraphQLNonNull, GraphQLList, GraphQLObjectType, GraphQLType } from 'graphql'
-import { GraphQLString, GraphQLInt, GraphQLFloat, GraphQLBoolean, GraphQLID } from 'graphql/type'
+import {
+  GraphQLScalarType,
+  GraphQLNonNull,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLType,
+} from 'graphql'
+import {
+  GraphQLString,
+  GraphQLInt,
+  GraphQLFloat,
+  GraphQLBoolean,
+  GraphQLID,
+} from 'graphql/type'
 
 // tslint:disable:max-classes-per-file
 
@@ -274,7 +286,10 @@ export class GQLMultiRelationField extends GQLFieldBase {
   }
 }
 
-function cloneComments(copy: ISDL | IGQLField | IGQLType, obj: ISDL | IGQLField | IGQLType) {
+function cloneComments(
+  copy: ISDL | IGQLField | IGQLType,
+  obj: ISDL | IGQLField | IGQLType,
+) {
   if (obj.comments !== undefined) {
     copy.comments = []
     for (const comment of obj.comments) {
@@ -289,7 +304,10 @@ function cloneSequence(copy: IGQLField, obj: IGQLField) {
   }
 }
 
-function cloneCommentsAndDirectives(copy: IGQLField | IGQLType, obj: IGQLField | IGQLType) {
+function cloneCommentsAndDirectives(
+  copy: IGQLField | IGQLType,
+  obj: IGQLField | IGQLType,
+) {
   if (obj.directives !== undefined) {
     copy.directives = []
     for (const directive of obj.directives) {

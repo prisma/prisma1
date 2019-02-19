@@ -85,7 +85,9 @@ export class PrismaDBClient implements IDatabaseClient {
 
     const databaseType = typeMap[primaryConnector]
     if (!databaseType) {
-      throw new Error(`Could not identify primaryConnector ${primaryConnector} as database type`)
+      throw new Error(
+        `Could not identify primaryConnector ${primaryConnector} as database type`,
+      )
     }
 
     this.databaseType = databaseType
@@ -95,7 +97,8 @@ export class PrismaDBClient implements IDatabaseClient {
     let queryString = query
 
     for (const [index, variable] of variables.entries()) {
-      const pattern = this.databaseType === DatabaseType.postgres ? `\\$${index + 1}` : '\\?'
+      const pattern =
+        this.databaseType === DatabaseType.postgres ? `\\$${index + 1}` : '\\?'
       const regex = new RegExp(pattern, 'g')
       queryString = queryString.replace(regex, `'${variable}'`)
     }

@@ -9,7 +9,8 @@ import { getGraphQLConfig } from 'graphql-config'
 import { values } from 'lodash'
 import { getRoot } from './util'
 
-const isDevConsole = (process.env.CONSOLE_ENDPOINT || '').toLowerCase() === 'dev'
+const isDevConsole =
+  (process.env.CONSOLE_ENDPOINT || '').toLowerCase() === 'dev'
 
 export class Config {
   /**
@@ -17,7 +18,9 @@ export class Config {
    */
   mockInquirer?: any
   out: Output
-  debug: boolean = Boolean(process.env.DEBUG && process.env.DEBUG!.includes('*'))
+  debug: boolean = Boolean(
+    process.env.DEBUG && process.env.DEBUG!.includes('*'),
+  )
   windows: boolean = false
   bin: string = 'prisma'
   mock: boolean = true
@@ -53,8 +56,11 @@ export class Config {
   /**
    * Urls
    */
-  cloudApiEndpoint = process.env.CLOUD_API_ENDPOINT || 'https://api2.cloud.prisma.sh'
-  consoleEndpoint = isDevConsole ? 'http://localhost:3000' : 'https://app.prisma.io'
+  cloudApiEndpoint =
+    process.env.CLOUD_API_ENDPOINT || 'https://api2.cloud.prisma.sh'
+  consoleEndpoint = isDevConsole
+    ? 'http://localhost:3000'
+    : 'https://app.prisma.io'
 
   /* tslint:disable-next-line */
   __cache = {}
@@ -81,13 +87,21 @@ export class Config {
     return os.platform() === 'win32' ? 'windows' : os.platform()
   }
   get userAgent(): string {
-    return `${this.name}/${this.version} (${this.platform}-${this.arch}) node-${process.version}`
+    return `${this.name}/${this.version} (${this.platform}-${this.arch}) node-${
+      process.version
+    }`
   }
   get dirname() {
     return this.pjson['cli-engine'].dirname || this.bin
   }
   get cacheDir() {
-    const x = dir(this, 'cache', this.platform === 'darwin' ? path.join(this.home, 'Library', 'Caches') : null)
+    const x = dir(
+      this,
+      'cache',
+      this.platform === 'darwin'
+        ? path.join(this.home, 'Library', 'Caches')
+        : null,
+    )
     return x
   }
   get requireCachePath() {
@@ -97,9 +111,12 @@ export class Config {
     return path.join(this.cacheDir, '/.requests.json')
   }
   findConfigDir(): null | string {
-    const configPath = findUp.sync(['.graphqlconfig', '.graphqlconfig.yml', '.graphqlconfig.yaml'], {
-      cwd: this.cwd,
-    })
+    const configPath = findUp.sync(
+      ['.graphqlconfig', '.graphqlconfig.yml', '.graphqlconfig.yaml'],
+      {
+        cwd: this.cwd,
+      },
+    )
 
     if (configPath) {
       return path.dirname(configPath)
@@ -166,7 +183,10 @@ export class Config {
       const configDir = this.findConfigDir()!
       const config = getGraphQLConfig(configDir).config
 
-      const allExtensions = [config.extensions, ...values(config.projects).map(p => p.extensions)]
+      const allExtensions = [
+        config.extensions,
+        ...values(config.projects).map(p => p.extensions),
+      ]
 
       const prismaExtension = allExtensions.find(e => Boolean(e && e.prisma))
       if (prismaExtension) {
@@ -209,7 +229,12 @@ function dir(config: Config, category: string, d: string | null): string {
   if (cache) {
     return cache
   }
-  d = d || path.join(config.home, category === 'data' ? '.local/share' : '.' + category)
+  d =
+    d ||
+    path.join(
+      config.home,
+      category === 'data' ? '.local/share' : '.' + category,
+    )
   if (config.windows) {
     d = process.env.LOCALAPPDATA || d
   }

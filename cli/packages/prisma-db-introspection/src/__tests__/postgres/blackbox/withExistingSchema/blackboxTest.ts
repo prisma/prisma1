@@ -7,10 +7,16 @@ import PostgresDatabaseClient from '../../../../databases/relational/postgres/po
 import { DefaultParser, DefaultRenderer, DatabaseType } from 'prisma-datamodel'
 
 // Tests are located in different module.
-const relativeTestCaseDir = path.join(__dirname, '../../../../../../prisma-generate-schema/__tests__/blackbox/cases/')
+const relativeTestCaseDir = path.join(
+  __dirname,
+  '../../../../../../prisma-generate-schema/__tests__/blackbox/cases/',
+)
 
 export default async function blackBoxTest(name: string) {
-  const modelPath = path.join(relativeTestCaseDir, `${name}/model_relational.graphql`)
+  const modelPath = path.join(
+    relativeTestCaseDir,
+    `${name}/model_relational.graphql`,
+  )
   const sqlDumpPath = path.join(relativeTestCaseDir, `${name}/postgres.sql`)
 
   expect(fs.existsSync(modelPath))
@@ -28,19 +34,27 @@ export default async function blackBoxTest(name: string) {
   const connector = new PostgresConnector(client)
 
   await client.connect()
-  await client.query(`DROP SCHEMA IF EXISTS "schema-generator$${name}" cascade;`)
+  await client.query(
+    `DROP SCHEMA IF EXISTS "schema-generator$${name}" cascade;`,
+  )
   await client.query(sqlDump)
 
-  const introspectionResult = await connector.introspect(`schema-generator$${name}`)
+  const introspectionResult = await connector.introspect(
+    `schema-generator$${name}`,
+  )
 
   const unnormalized = introspectionResult.getDatamodel()
 
   const normalizedWithoutReference = introspectionResult.getNormalizedDatamodel()
-  const normalizedWithReference = introspectionResult.getNormalizedDatamodel(refModel)
+  const normalizedWithReference = introspectionResult.getNormalizedDatamodel(
+    refModel,
+  )
 
   // Backwards compatible (v1) rendering
   const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres)
-  const legacyRenderedWithReference = legacyRenderer.render(normalizedWithReference)
+  const legacyRenderedWithReference = legacyRenderer.render(
+    normalizedWithReference,
+  )
 
   expect(legacyRenderedWithReference).toEqual(model)
 

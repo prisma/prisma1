@@ -1,4 +1,11 @@
-import { IGQLType, IGQLField, ISDL, capitalize, plural, toposort } from 'prisma-datamodel'
+import {
+  IGQLType,
+  IGQLField,
+  ISDL,
+  capitalize,
+  plural,
+  toposort,
+} from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
 export default class ModelOrderNormalizer implements INormalizer {
@@ -11,26 +18,43 @@ export default class ModelOrderNormalizer implements INormalizer {
   public normalize(model: ISDL): ISDL {
     const baseTypes = this.baseModel !== null ? this.baseModel.types : []
 
-    model.types = model.types.sort((a, b) => this.typeOrderComparer(baseTypes, a, b))
+    model.types = model.types.sort((a, b) =>
+      this.typeOrderComparer(baseTypes, a, b),
+    )
 
     for (const type of model.types) {
-      const baseType = this.baseModel === null ? undefined : this.baseModel.types.find(x => x.name === type.name)
+      const baseType =
+        this.baseModel === null
+          ? undefined
+          : this.baseModel.types.find(x => x.name === type.name)
 
       if (baseType === undefined) {
         // Alphabetically is fallback.
-        type.fields = type.fields.sort((a, b) => this.fieldOrderComparer([], a, b))
+        type.fields = type.fields.sort((a, b) =>
+          this.fieldOrderComparer([], a, b),
+        )
       } else {
-        type.fields = type.fields.sort((a, b) => this.fieldOrderComparer(baseType.fields, a, b))
+        type.fields = type.fields.sort((a, b) =>
+          this.fieldOrderComparer(baseType.fields, a, b),
+        )
       }
     }
 
     return model
   }
 
-  protected typeOrderComparer(ref: IGQLType[], a: IGQLType, b: IGQLType): number {
+  protected typeOrderComparer(
+    ref: IGQLType[],
+    a: IGQLType,
+    b: IGQLType,
+  ): number {
     // Should we also compare for enum?
-    const ia = ref.findIndex(x => x.name === a.name || x.databaseName === a.name)
-    const ib = ref.findIndex(x => x.name === b.name || x.databaseName === b.name)
+    const ia = ref.findIndex(
+      x => x.name === a.name || x.databaseName === a.name,
+    )
+    const ib = ref.findIndex(
+      x => x.name === b.name || x.databaseName === b.name,
+    )
 
     // If both types or fields are present in the reference,
     // compare by index. Else, append to back and compare by name.
@@ -45,9 +69,17 @@ export default class ModelOrderNormalizer implements INormalizer {
     }
   }
 
-  protected fieldOrderComparer(ref: IGQLField[], a: IGQLField, b: IGQLField): number {
-    const ia = ref.findIndex(x => x.name === a.name || x.databaseName === a.name)
-    const ib = ref.findIndex(x => x.name === b.name || x.databaseName === b.name)
+  protected fieldOrderComparer(
+    ref: IGQLField[],
+    a: IGQLField,
+    b: IGQLField,
+  ): number {
+    const ia = ref.findIndex(
+      x => x.name === a.name || x.databaseName === a.name,
+    )
+    const ib = ref.findIndex(
+      x => x.name === b.name || x.databaseName === b.name,
+    )
 
     // If both types or fields are present in the reference,
     // compare by index. Else, append to back and compare by name.

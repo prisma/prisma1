@@ -10,10 +10,14 @@ export default class RelationalParser extends Parser {
     return field.name.value === LegacyRelationalReservedFields.idFieldName
   }
   protected isCreatedAtField(field: any): boolean {
-    return field.name.value === LegacyRelationalReservedFields.createdAtFieldName
+    return (
+      field.name.value === LegacyRelationalReservedFields.createdAtFieldName
+    )
   }
   protected isUpdatedAtField(field: any): boolean {
-    return field.name.value === LegacyRelationalReservedFields.updatedAtFieldName
+    return (
+      field.name.value === LegacyRelationalReservedFields.updatedAtFieldName
+    )
   }
   protected isEmbedded(type: any): boolean {
     // Related models are never embedded

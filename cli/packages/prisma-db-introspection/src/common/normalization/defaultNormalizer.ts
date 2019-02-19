@@ -35,7 +35,10 @@ export default abstract class DefaultNormalizer {
     }
   }
 
-  public static createWithBaseModel(databaseType: DatabaseType, baseModel: ISDL) {
+  public static createWithBaseModel(
+    databaseType: DatabaseType,
+    baseModel: ISDL,
+  ) {
     if (databaseType === DatabaseType.mongo) {
       // Document normalization with base model
       return new NormalizerGroup([

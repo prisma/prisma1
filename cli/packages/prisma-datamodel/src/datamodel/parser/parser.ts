@@ -94,19 +94,34 @@ export default abstract class DefaultParser {
   }
 
   protected parseSequence(field: any): ISequenceInfo | null {
-    const sequenceDirective = this.getDirectiveByName(field, DirectiveKeys.sequence)
+    const sequenceDirective = this.getDirectiveByName(
+      field,
+      DirectiveKeys.sequence,
+    )
 
     if (sequenceDirective === null) {
       return null
     }
 
     const name = this.getDirectiveArgument(sequenceDirective, 'name')
-    const initialValue = this.getDirectiveArgument(sequenceDirective, 'initialValue')
-    const allocationSize = this.getDirectiveArgument(sequenceDirective, 'allocationSize')
+    const initialValue = this.getDirectiveArgument(
+      sequenceDirective,
+      'initialValue',
+    )
+    const allocationSize = this.getDirectiveArgument(
+      sequenceDirective,
+      'allocationSize',
+    )
 
     GQLAssert.raiseIf(name === null, 'Name is required in sequence directive.')
-    GQLAssert.raiseIf(initialValue === null, 'initialValue is required in sequence directive.')
-    GQLAssert.raiseIf(allocationSize === null, 'allocationSize is required in sequence directive.')
+    GQLAssert.raiseIf(
+      initialValue === null,
+      'initialValue is required in sequence directive.',
+    )
+    GQLAssert.raiseIf(
+      allocationSize === null,
+      'allocationSize is required in sequence directive.',
+    )
 
     return {
       name: name as string,
@@ -120,7 +135,11 @@ export default abstract class DefaultParser {
    * @param field
    */
   protected isReservedReadOnlyField(field: any) {
-    return this.isIdField(field) || this.isUpdatedAtField(field) || this.isCreatedAtField(field)
+    return (
+      this.isIdField(field) ||
+      this.isUpdatedAtField(field) ||
+      this.isCreatedAtField(field)
+    )
   }
 
   /**
@@ -166,7 +185,10 @@ export default abstract class DefaultParser {
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, DirectiveKeys.default)
-    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
+    const args =
+      directive === null
+        ? []
+        : directive.arguments.filter(x => x.name.value === 'value')
     return args.length !== 0 ? args[0].value.value : null
   }
 
@@ -217,7 +239,9 @@ export default abstract class DefaultParser {
       const nameArgument = directive.arguments.find(a => a.name.value === name)
       if (nameArgument) {
         // Fallback from single value to list value.
-        return nameArgument.value.value !== undefined ? nameArgument.value.value : nameArgument.value.values
+        return nameArgument.value.value !== undefined
+          ? nameArgument.value.value
+          : nameArgument.value.values
       }
     }
 
@@ -232,7 +256,9 @@ export default abstract class DefaultParser {
       const nameArgument = obj.fields.find(a => a.name.value === name)
       if (nameArgument) {
         // Fallback from single value to list value.
-        return nameArgument.value.value !== undefined ? nameArgument.value.value : nameArgument.value.values
+        return nameArgument.value.value !== undefined
+          ? nameArgument.value.value
+          : nameArgument.value.values
       }
     }
 
@@ -252,7 +278,9 @@ export default abstract class DefaultParser {
 
       if (field === undefined) {
         GQLAssert.raise(
-          `Error during index association. Field ${fieldArgument.value} is missing on index ${nameArgument}.`,
+          `Error during index association. Field ${
+            fieldArgument.value
+          } is missing on index ${nameArgument}.`,
         )
       }
 
@@ -500,7 +528,9 @@ export default abstract class DefaultParser {
           for (const fieldB of fieldA.type.fields) {
             if (fieldB.relationName === fieldA.relationName) {
               if (fieldB.type !== typeA) {
-                GQLAssert.raise(`Relation type mismatch for relation ${fieldA.relationName}`)
+                GQLAssert.raise(
+                  `Relation type mismatch for relation ${fieldA.relationName}`,
+                )
               }
               fieldA.relatedField = fieldB
               fieldB.relatedField = fieldA

@@ -25,15 +25,21 @@ export default function blackBoxTest(
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const prisma = fs.readFileSync(prismaPath, { encoding: 'UTF-8' })
 
-  const { types } = DefaultParser.create(databaseType).parseFromSchemaString(model)
+  const { types } = DefaultParser.create(databaseType).parseFromSchemaString(
+    model,
+  )
   const ourSchema = generator.schema.generate(types, {})
 
   const ourPrintedSchema = printSchema(ourSchema)
 
   // Write a copy of the generated schema to the FS, for debugging
-  fs.writeFileSync(path.join(__dirname, `cases/${name}/generated_${databaseType}.graphql`), ourPrintedSchema, {
-    encoding: 'UTF-8',
-  })
+  fs.writeFileSync(
+    path.join(__dirname, `cases/${name}/generated_${databaseType}.graphql`),
+    ourPrintedSchema,
+    {
+      encoding: 'UTF-8',
+    },
+  )
 
   // Check if our schema equals the prisma schema.
   const prismaSchema = buildSchema(prisma)

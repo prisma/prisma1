@@ -1,6 +1,19 @@
-import { ITable, ITableRelation, IEnum, ISequenceInfo } from '../relationalConnector'
+import {
+  ITable,
+  ITableRelation,
+  IEnum,
+  ISequenceInfo,
+} from '../relationalConnector'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
-import { IGQLField, IGQLType, DatabaseType, Renderer, TypeIdentifiers, GQLAssert, IdStrategy } from 'prisma-datamodel'
+import {
+  IGQLField,
+  IGQLType,
+  DatabaseType,
+  Renderer,
+  TypeIdentifiers,
+  GQLAssert,
+  IdStrategy,
+} from 'prisma-datamodel'
 
 export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   constructor(
@@ -16,7 +29,11 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   protected isTypeReserved(type: IGQLType): boolean {
     return type.name == '_RelayId'
   }
-  protected toTypeIdentifyer(fieldTypeName: string, fieldInfo: IGQLField, typeName: string): string | null {
+  protected toTypeIdentifyer(
+    fieldTypeName: string,
+    fieldInfo: IGQLField,
+    typeName: string,
+  ): string | null {
     switch (fieldTypeName) {
       case 'int1':
       case 'int2':
@@ -50,7 +67,10 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
         return null
     }
   }
-  protected parseDefaultValue(defaultValueString: string, type: string): string | null {
+  protected parseDefaultValue(
+    defaultValueString: string,
+    type: string,
+  ): string | null {
     let val = defaultValueString
 
     // Detect string
@@ -74,7 +94,11 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
     // If the field is not a string field,
     // and the default val is not a boolean or a number, we assume a function call or sequence reference.
     if (type !== TypeIdentifiers.string && type != TypeIdentifiers.id) {
-      if (isNaN(val as any) && val.toLowerCase() !== 'true' && val.toLowerCase() !== 'false') {
+      if (
+        isNaN(val as any) &&
+        val.toLowerCase() !== 'true' &&
+        val.toLowerCase() !== 'false'
+      ) {
         return null
       }
     }
@@ -87,9 +111,14 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   protected resolveSequences(types: IGQLType[], sequences: ISequenceInfo[]) {
     for (const type of types) {
       for (const field of type.fields) {
-        if (typeof field.defaultValue === 'string' && field.defaultValue.startsWith('nextval')) {
+        if (
+          typeof field.defaultValue === 'string' &&
+          field.defaultValue.startsWith('nextval')
+        ) {
           // Regex also truncates the database schema name, if included in the regex. that's the first capture group.
-          const match = field.defaultValue.match(/^nextval\('(?:.*\.)?(.*?)'::regclass\)$/i)
+          const match = field.defaultValue.match(
+            /^nextval\('(?:.*\.)?(.*?)'::regclass\)$/i,
+          )
 
           if (match === null) {
             continue
@@ -101,7 +130,9 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
 
           if (seq === undefined) {
             field.comments.push({
-              text: `Error resolving sequence ${seqName} for ${type.name}.${field.name}: The sequence was not found.`,
+              text: `Error resolving sequence ${seqName} for ${type.name}.${
+                field.name
+              }: The sequence was not found.`,
               isError: true,
             })
           } else {

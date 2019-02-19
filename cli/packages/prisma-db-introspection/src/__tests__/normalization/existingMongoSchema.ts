@@ -1,4 +1,9 @@
-import { DatabaseType, DefaultParser, DefaultRenderer, dedent } from 'prisma-datamodel'
+import {
+  DatabaseType,
+  DefaultParser,
+  DefaultRenderer,
+  dedent,
+} from 'prisma-datamodel'
 import DefaultNormalizer from '../../common/normalization/defaultNormalizer'
 
 function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {

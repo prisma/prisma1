@@ -26,7 +26,10 @@ export async function createAndIntrospect(
   }
   await client.query(schemaSql)
 
-  const dml = (await Connectors.create(DatabaseType.postgres, client).introspect(schemaName)).getNormalizedDatamodel()
+  const dml = (await Connectors.create(
+    DatabaseType.postgres,
+    client,
+  ).introspect(schemaName)).getNormalizedDatamodel()
 
   // V2 rendering
   const renderer = DefaultRenderer.create(DatabaseType.postgres, true)

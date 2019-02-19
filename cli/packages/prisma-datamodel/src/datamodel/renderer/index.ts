@@ -6,7 +6,10 @@ import { DatabaseType } from '../../databaseType'
 import GQLAssert from '../../util/gqlAssert'
 
 export default abstract class DefaultRenderer {
-  public static create(databaseType: DatabaseType, enableV2: boolean = false): Renderer {
+  public static create(
+    databaseType: DatabaseType,
+    enableV2: boolean = false,
+  ): Renderer {
     if (enableV2) {
       switch (databaseType) {
         case DatabaseType.mongo:
@@ -31,7 +34,9 @@ export default abstract class DefaultRenderer {
       }
     }
 
-    GQLAssert.raise(`Attempting to create renderer for unknown database type: ${databaseType}`)
+    GQLAssert.raise(
+      `Attempting to create renderer for unknown database type: ${databaseType}`,
+    )
     return new DocumentRenderer() // Make TS happy.
   }
 }

@@ -47,13 +47,20 @@ export abstract class RelationalConnector implements IConnector {
   /**
    * Indices are DB specific
    */
-  protected abstract async queryIndices(schemaName: string, tableName: string): Promise<IInternalIndexInfo[]>
+  protected abstract async queryIndices(
+    schemaName: string,
+    tableName: string,
+  ): Promise<IInternalIndexInfo[]>
 
   protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
 
-  protected abstract async listSequences(schemaName: string): Promise<ISequenceInfo[]>
+  protected abstract async listSequences(
+    schemaName: string,
+  ): Promise<ISequenceInfo[]>
 
-  public async introspect(schema: string): Promise<RelationalIntrospectionResult> {
+  public async introspect(
+    schema: string,
+  ): Promise<RelationalIntrospectionResult> {
     return this.createIntrospectionResult(
       await this.listModels(schema),
       await this.listRelations(schema),
@@ -89,7 +96,11 @@ export abstract class RelationalConnector implements IConnector {
       const columns = await this.queryColumns(schemaName, tableName)
 
       for (const column of columns) {
-        column.comment = await this.queryColumnComment(schemaName, tableName, column.name)
+        column.comment = await this.queryColumnComment(
+          schemaName,
+          tableName,
+          column.name,
+        )
       }
 
       const allIndices = await this.queryIndices(schemaName, tableName)
@@ -118,7 +129,9 @@ export abstract class RelationalConnector implements IConnector {
         -- Views are not supported yet
         AND table_type = 'BASE TABLE'`
 
-    return (await this.query(allTablesQuery, [schemaName])).map(row => row.table_name as string)
+    return (await this.query(allTablesQuery, [schemaName])).map(
+      row => row.table_name as string,
+    )
   }
 
   /**

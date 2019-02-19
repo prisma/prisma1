@@ -1,6 +1,18 @@
-import { ISDL, IGQLType, IDirectiveInfo, IGQLField, IIndexInfo, IdStrategy } from '../model'
+import {
+  ISDL,
+  IGQLType,
+  IDirectiveInfo,
+  IGQLField,
+  IIndexInfo,
+  IdStrategy,
+} from '../model'
 import { GraphQLSchema } from 'graphql/type/schema'
-import { GraphQLObjectType, GraphQLEnumType, GraphQLField, GraphQLFieldConfig } from 'graphql/type/definition'
+import {
+  GraphQLObjectType,
+  GraphQLEnumType,
+  GraphQLField,
+  GraphQLFieldConfig,
+} from 'graphql/type/definition'
 import { GraphQLDirective } from 'graphql/type/directives'
 import { DirectiveKeys } from '../directives'
 import { TypeIdentifiers } from '../scalar'
@@ -38,11 +50,19 @@ export default abstract class Renderer {
   }
 
   protected createDatabaseNameTypeDirective(type: IGQLType) {
-    return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, type.databaseName) } }
+    return {
+      name: DirectiveKeys.db,
+      arguments: {
+        name: this.renderValue(TypeIdentifiers.string, type.databaseName),
+      },
+    }
   }
 
   // TODO: Cleanup index rendering.
-  protected createIndexDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
+  protected createIndexDirectives(
+    type: IGQLType,
+    typeDirectives: IDirectiveInfo[],
+  ) {
     if (type.indices.length > 0) {
       const indexDescriptions: string[] = []
       for (const index of type.indices) {
@@ -63,7 +83,9 @@ export default abstract class Renderer {
       arguments: {
         name: this.renderValue(TypeIdentifiers.string, index.name),
         // Special rendering: We escape manually here to render an array.
-        fields: `[${index.fields.map(x => this.renderValue(TypeIdentifiers.string, x.name)).join(', ')}]`,
+        fields: `[${index.fields
+          .map(x => this.renderValue(TypeIdentifiers.string, x.name))
+          .join(', ')}]`,
       },
     }
 
@@ -96,7 +118,10 @@ export default abstract class Renderer {
     return type.indices.length > 0
   }
 
-  protected createReservedTypeDirectives(type: IGQLType, typeDirectives: IDirectiveInfo[]) {
+  protected createReservedTypeDirectives(
+    type: IGQLType,
+    typeDirectives: IDirectiveInfo[],
+  ) {
     if (this.shouldCreateIsEmbeddedTypeDirective(type)) {
       typeDirectives.push(this.createIsEmbeddedTypeDirective(type))
     }
@@ -121,10 +146,14 @@ export default abstract class Renderer {
     const renderedFields = sortedFields.map(x => this.renderField(x))
 
     const renderedTypeName =
-      renderedDirectives.length > 0 ? `type ${type.name} ${renderedDirectives}` : `type ${type.name}`
+      renderedDirectives.length > 0
+        ? `type ${type.name} ${renderedDirectives}`
+        : `type ${type.name}`
 
     const { renderedComments, hasError } = this.renderComments(type, '')
-    const allFieldsHaveError = type.fields.every(x => x.comments.some(c => c.isError))
+    const allFieldsHaveError = type.fields.every(x =>
+      x.comments.some(c => c.isError),
+    )
 
     const commentPrefix = allFieldsHaveError ? `${comment} ` : ''
 
@@ -133,19 +162,26 @@ export default abstract class Renderer {
         '\n',
       )}\n${commentPrefix}}`
     } else {
-      return `${commentPrefix}${renderedTypeName} {\n${renderedFields.join('\n')}\n${commentPrefix}}`
+      return `${commentPrefix}${renderedTypeName} {\n${renderedFields.join(
+        '\n',
+      )}\n${commentPrefix}}`
     }
   }
 
   protected renderComments(type: IGQLType | IGQLField, spacing: string) {
-    const renderedComments = type.comments.map(x => `${spacing}${comment} ${x.text}`).join('\n')
+    const renderedComments = type.comments
+      .map(x => `${spacing}${comment} ${x.text}`)
+      .join('\n')
     const hasError = type.comments.some(x => x.isError)
 
     return { renderedComments, hasError }
   }
 
   protected createDefaultValueFieldDirective(field: IGQLField) {
-    return { name: DirectiveKeys.default, arguments: { value: this.renderValue(field.type, field.defaultValue) } }
+    return {
+      name: DirectiveKeys.default,
+      arguments: { value: this.renderValue(field.type, field.defaultValue) },
+    }
   }
 
   protected createIsUniqueFieldDirective(field: IGQLField) {
@@ -155,7 +191,9 @@ export default abstract class Renderer {
   protected createRelationNameFieldDirective(field: IGQLField) {
     return {
       name: DirectiveKeys.relation,
-      arguments: { name: this.renderValue(TypeIdentifiers.string, field.relationName) },
+      arguments: {
+        name: this.renderValue(TypeIdentifiers.string, field.relationName),
+      },
     }
   }
 
@@ -175,8 +213,14 @@ export default abstract class Renderer {
       name: DirectiveKeys.sequence,
       arguments: {
         name: this.renderValue(TypeIdentifiers.string, sequence.name),
-        initialValue: this.renderValue(TypeIdentifiers.integer, sequence.initialValue),
-        allocationSize: this.renderValue(TypeIdentifiers.integer, sequence.allocationSize),
+        initialValue: this.renderValue(
+          TypeIdentifiers.integer,
+          sequence.initialValue,
+        ),
+        allocationSize: this.renderValue(
+          TypeIdentifiers.integer,
+          sequence.allocationSize,
+        ),
       },
     }
   }
@@ -189,7 +233,12 @@ export default abstract class Renderer {
   }
 
   protected createDatabaseNameFieldDirective(field: IGQLField) {
-    return { name: DirectiveKeys.db, arguments: { name: this.renderValue(TypeIdentifiers.string, field.databaseName) } }
+    return {
+      name: DirectiveKeys.db,
+      arguments: {
+        name: this.renderValue(TypeIdentifiers.string, field.databaseName),
+      },
+    }
   }
 
   protected shouldCreateDefaultValueFieldDirective(field: IGQLField) {
@@ -224,7 +273,10 @@ export default abstract class Renderer {
     return field.databaseName !== null
   }
 
-  protected createReservedFieldDirectives(field: IGQLField, fieldDirectives: IDirectiveInfo[]) {
+  protected createReservedFieldDirectives(
+    field: IGQLField,
+    fieldDirectives: IDirectiveInfo[],
+  ) {
     if (this.shouldCreateDefaultValueFieldDirective(field)) {
       fieldDirectives.push(this.createDefaultValueFieldDirective(field))
     }
@@ -267,7 +319,9 @@ export default abstract class Renderer {
     }
 
     const renderedField =
-      renderedDirectives.length > 0 ? `${field.name}: ${type} ${renderedDirectives}` : `${field.name}: ${type}`
+      renderedDirectives.length > 0
+        ? `${field.name}: ${type} ${renderedDirectives}`
+        : `${field.name}: ${type}`
 
     const { renderedComments, hasError } = this.renderComments(field, indent)
 
@@ -287,7 +341,12 @@ export default abstract class Renderer {
 
     for (const field of type.fields) {
       if (field.defaultValue !== null) {
-        values.push(`${indent}${field.name} = ${this.renderValue(field.type as string, field.defaultValue)}`)
+        values.push(
+          `${indent}${field.name} = ${this.renderValue(
+            field.type as string,
+            field.defaultValue,
+          )}`,
+        )
       } else {
         values.push(`${indent}${field.name}`)
       }
@@ -297,7 +356,9 @@ export default abstract class Renderer {
   }
 
   protected renderDirectives(directives: IDirectiveInfo[]): string {
-    const sortedDirectives = [...directives].sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+    const sortedDirectives = [...directives].sort((a, b) =>
+      a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
+    )
     return this.mergeDirectives(sortedDirectives)
       .map(x => this.renderDirective(x))
       .join(` `)
@@ -393,7 +454,9 @@ export default abstract class Renderer {
     if (!this.sortBeforeRendering) {
       return fields
     } else {
-      return [...fields].sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+      return [...fields].sort((a, b) =>
+        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
+      )
     }
   }
 }

@@ -55,7 +55,11 @@ export class PostgresConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(schemaName: string, tableName: string, columnName: string) {
+  protected async queryColumnComment(
+    schemaName: string,
+    tableName: string,
+    columnName: string,
+  ) {
     const commentQuery = `
       SELECT
       (
@@ -73,9 +77,11 @@ export class PostgresConnector extends RelationalConnector {
         cols.table_name    = $2::text AND
         cols.column_name   = $3::text;
     `
-    const [comment] = (await this.query(commentQuery, [schemaName, tableName, columnName])).map(
-      row => row.column_comment as string,
-    )
+    const [comment] = (await this.query(commentQuery, [
+      schemaName,
+      tableName,
+      columnName,
+    ])).map(row => row.column_comment as string)
 
     if (comment === undefined) {
       return null

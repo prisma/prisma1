@@ -1,6 +1,11 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog, DatabaseCredentials } from '../../utils/EndpointDialog'
-import { PostgresConnector, PrismaDBClient, MongoConnector, Connectors } from 'prisma-db-introspection'
+import {
+  PostgresConnector,
+  PrismaDBClient,
+  MongoConnector,
+  Connectors,
+} from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../utils/util'
@@ -8,7 +13,12 @@ import chalk from 'chalk'
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
 import { createConnection } from 'mysql'
-import { DefaultParser, DatabaseType, DefaultRenderer, ISDL } from 'prisma-datamodel'
+import {
+  DefaultParser,
+  DatabaseType,
+  DefaultRenderer,
+  ISDL,
+} from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
 import { omit } from 'lodash'
 import {
@@ -87,7 +97,8 @@ export default class IntrospectCommand extends Command {
      * Temporary flag needed to test Datamodel v2
      */
     ['prototype']: flags.boolean({
-      description: 'Output Datamodel v2. Note: This is a temporary flag for debugging',
+      description:
+        'Output Datamodel v2. Note: This is a temporary flag for debugging',
     }),
   }
   static hidden = false
@@ -102,8 +113,14 @@ export default class IntrospectCommand extends Command {
      */
 
     const before = Date.now()
-    this.out.action.start(`Introspecting database ${chalk.bold(connectorData.databaseName)}`)
-    const { sdl: newDatamodelSdl, numTables, referenceDatamodelExists } = await this.introspect(connectorData)
+    this.out.action.start(
+      `Introspecting database ${chalk.bold(connectorData.databaseName)}`,
+    )
+    const {
+      sdl: newDatamodelSdl,
+      numTables,
+      referenceDatamodelExists,
+    } = await this.introspect(connectorData)
     this.out.action.stop(prettyTime(Date.now() - before))
 
     /**
@@ -111,10 +128,16 @@ export default class IntrospectCommand extends Command {
      */
     const fileName = this.writeDatamodel(newDatamodelSdl)
 
-    this.out.log(`Created datamodel definition based on ${numTables} database tables.`)
-    const andDatamodelText = referenceDatamodelExists ? ' and the existing datamodel' : ''
+    this.out.log(
+      `Created datamodel definition based on ${numTables} database tables.`,
+    )
+    const andDatamodelText = referenceDatamodelExists
+      ? ' and the existing datamodel'
+      : ''
     this.out.log(`\
-${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
+${chalk.bold(
+  'Created 1 new file:',
+)}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
 
   ${chalk.cyan(fileName)}
 `)
@@ -122,7 +145,9 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
     if (this.definition.definition && !this.definition.definition!.datamodel) {
       await this.definition.load(this.flags)
       this.definition.addDatamodel(fileName)
-      this.out.log(`Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`)
+      this.out.log(
+        `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
+      )
     }
   }
 
@@ -152,7 +177,10 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
       ? await introspection.getNormalizedDatamodel(existingDatamodel)
       : await introspection.getDatamodel()
 
-    const renderer = DefaultRenderer.create(introspection.databaseType, this.flags.prototype)
+    const renderer = DefaultRenderer.create(
+      introspection.databaseType,
+      this.flags.prototype,
+    )
     const renderedSdl = renderer.render(sdl)
 
     // disconnect from database
@@ -195,7 +223,12 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
       const cluster = this.definition.getCluster()
       this.env.setActiveCluster(cluster!)
       await this.client.initClusterClient(cluster!, service!, stage, workspace!)
-      const introspection = await this.client.introspect(service, stage, token, workspace!)
+      const introspection = await this.client.introspect(
+        service,
+        stage,
+        token,
+        workspace!,
+      )
       const introspectionString = JSON.stringify(introspection)
       return introspectionString.includes('executeRaw')
     } catch (e) {
@@ -224,7 +257,10 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
     const hasExecuteRaw = await this.hasExecuteRaw()
     const credentials = await this.getCredentials(hasExecuteRaw)
     if (credentials) {
-      const { connector, disconnect } = await getConnectedConnectorFromCredentials(credentials)
+      const {
+        connector,
+        disconnect,
+      } = await getConnectedConnectorFromCredentials(credentials)
       return {
         connector,
         disconnect,
@@ -247,8 +283,11 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
     await client.connect()
     const connector = Connectors.create(client.databaseType, client)
     const disconnect = () => client.end()
-    const databaseDivider = client.databaseType! === DatabaseType.postgres ? '$' : '@'
-    const databaseName = `${this.definition.service}${databaseDivider}${this.definition.stage}`
+    const databaseDivider =
+      client.databaseType! === DatabaseType.postgres ? '$' : '@'
+    const databaseName = `${this.definition.service}${databaseDivider}${
+      this.definition.stage
+    }`
     return {
       connector,
       disconnect,
@@ -257,7 +296,9 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
     }
   }
 
-  async getCredentials(hasExecuteRaw: boolean): Promise<DatabaseCredentials | null> {
+  async getCredentials(
+    hasExecuteRaw: boolean,
+  ): Promise<DatabaseCredentials | null> {
     const requiredPostgresFlags = ['pg-host', 'pg-user', 'pg-password', 'pg-db']
     const requiredMysqlFlags = ['mysql-host', 'mysql-user', 'mysql-password']
 
@@ -265,17 +306,27 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
     const flagsKeys = Object.keys(flags)
 
     const mysqlFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
-    const postgresFlags = flagsKeys.filter(f => requiredPostgresFlags.includes(f))
+    const postgresFlags = flagsKeys.filter(f =>
+      requiredPostgresFlags.includes(f),
+    )
 
     if (mysqlFlags.length > 0 && postgresFlags.length > 0) {
-      throw new Error(`You can't provide both MySQL and Postgres connection flags. Please provide either of both.`)
+      throw new Error(
+        `You can't provide both MySQL and Postgres connection flags. Please provide either of both.`,
+      )
     }
 
-    if (mysqlFlags.length > 0 && mysqlFlags.length < requiredMysqlFlags.length) {
+    if (
+      mysqlFlags.length > 0 &&
+      mysqlFlags.length < requiredMysqlFlags.length
+    ) {
       this.handleMissingArgs(requiredMysqlFlags, mysqlFlags, 'mysql')
     }
 
-    if (postgresFlags.length > 0 && postgresFlags.length < requiredPostgresFlags.length) {
+    if (
+      postgresFlags.length > 0 &&
+      postgresFlags.length < requiredPostgresFlags.length
+    ) {
       this.handleMissingArgs(requiredPostgresFlags, postgresFlags, 'pg')
     }
 
@@ -324,8 +375,14 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
 
     return null
   }
-  handleMissingArgs(requiredArgs: string[], providedArgs: string[], prefix: string) {
-    const missingArgs = requiredArgs.filter(arg => !providedArgs.some(provided => arg === provided))
+  handleMissingArgs(
+    requiredArgs: string[],
+    providedArgs: string[],
+    prefix: string,
+  ) {
+    const missingArgs = requiredArgs.filter(
+      arg => !providedArgs.some(provided => arg === provided),
+    )
 
     throw new Error(
       `If you provide one of the ${prefix}- arguments, you need to provide all of them. The arguments ${missingArgs.join(

@@ -112,8 +112,10 @@ export class GoGenerator extends Generator {
           .filter(key => {
             const field = fieldMap![key]
             return (
-              this.getDeepType(field.type).constructor.name === 'GraphQLScalarType' ||
-                this.getDeepType(field.type).constructor.name === 'GraphQLEnumType'
+              this.getDeepType(field.type).constructor.name ===
+                'GraphQLScalarType' ||
+              this.getDeepType(field.type).constructor.name ===
+                'GraphQLEnumType'
             )
           })
           .map(key => `"${fieldMap![key].name}"`)
@@ -289,9 +291,9 @@ export class GoGenerator extends Generator {
           })
           .join('\n')}
 
-          func (instance ${goCase(type.name)}Exec) Exec(ctx context.Context) (*${
-        goCase(type.name)
-      }, error) {
+          func (instance ${goCase(
+            type.name,
+          )}Exec) Exec(ctx context.Context) (*${goCase(type.name)}, error) {
             var v ${goCase(type.name)}
             ok, err := instance.exec.Exec(ctx, &v)
             if err != nil {
@@ -303,9 +305,9 @@ export class GoGenerator extends Generator {
             return &v, nil
           }
 
-          func (instance ${
-            goCase(type.name)
-          }Exec) Exists(ctx context.Context) (bool, error) {
+          func (instance ${goCase(
+            type.name,
+          )}Exec) Exists(ctx context.Context) (bool, error) {
             return instance.exec.Exists(ctx)
           }
 
@@ -313,9 +315,11 @@ export class GoGenerator extends Generator {
             exec *prisma.Exec
           }
 
-          func (instance ${goCase(type.name)}ExecArray) Exec(ctx context.Context) ([]${
-        goCase(type.name)
-      }, error) {
+          func (instance ${goCase(
+            type.name,
+          )}ExecArray) Exec(ctx context.Context) ([]${goCase(
+        type.name,
+      )}, error) {
             var v []${goCase(type.name)}
             err := instance.exec.ExecArray(ctx, &v)
             return v, err
@@ -505,9 +509,9 @@ export class GoGenerator extends Generator {
 
   opDeleteMany(field) {
     return `
-      func (client *Client) ${goCase(field.name)} (params *${goCase(this.getDeepType(
-      field.args[0].type,
-    ).toString())}) *BatchPayloadExec {
+      func (client *Client) ${goCase(field.name)} (params *${goCase(
+      this.getDeepType(field.args[0].type).toString(),
+    )}) *BatchPayloadExec {
         exec := client.Client.DeleteMany(params, "${field.args[0].type}", "${
       field.name
     }")
@@ -518,9 +522,9 @@ export class GoGenerator extends Generator {
   opDelete(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${goCase(this.getDeepType(
-      field.args[0].type,
-    ).toString())}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${goCase(
+      this.getDeepType(field.args[0].type).toString(),
+    )}) *${goCase(typeName)}Exec {
         ret := client.Client.Delete(
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},
@@ -534,9 +538,9 @@ export class GoGenerator extends Generator {
   opGetOne(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${goCase(this.getDeepType(
-      field.args[0].type,
-    ).toString())}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${goCase(
+      this.getDeepType(field.args[0].type).toString(),
+    )}) *${goCase(typeName)}Exec {
         ret := client.Client.GetOne(
           nil,
           params,
@@ -602,9 +606,9 @@ export class GoGenerator extends Generator {
   opCreate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${goCase(this.getDeepType(
-      field.args[0].type,
-    ).toString())}) *${goCase(typeName)}Exec {
+      func (client *Client) ${goCase(field.name)} (params ${goCase(
+      this.getDeepType(field.args[0].type).toString(),
+    )}) *${goCase(typeName)}Exec {
         ret := client.Client.Create(
           params,
           [2]string{"${field.args[0].type}", "${typeName}"},

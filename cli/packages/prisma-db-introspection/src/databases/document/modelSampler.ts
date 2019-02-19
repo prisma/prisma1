@@ -1,4 +1,11 @@
-import { IGQLField, IGQLType, IComment, TypeIdentifier, TypeIdentifiers, capitalize } from 'prisma-datamodel'
+import {
+  IGQLField,
+  IGQLType,
+  IComment,
+  TypeIdentifier,
+  TypeIdentifiers,
+  capitalize,
+} from 'prisma-datamodel'
 import { Data } from './data'
 import { isArray, isRegExp } from 'util'
 import { ObjectID } from 'bson' // TODO - remove dependency to mongo's BSON and subclass to abstract primitive type inferrer.
@@ -36,7 +43,8 @@ interface FieldInfo {
  * Does not infer relations. Fields which might have a relation get their `relationName` attribute
  * set to `ModelSampler.ErrorType` for later resolving.
  */
-export class ModelSampler<InternalCollectionType> implements ModelSampler<InternalCollectionType> {
+export class ModelSampler<InternalCollectionType>
+  implements ModelSampler<InternalCollectionType> {
   private samplingStrategy: SamplingStrategy
 
   public static ErrorType = '<Unknown>'
@@ -100,7 +108,11 @@ export class ModelMerger {
    * @param isEmbedded Indicates if the type is an embedded type
    * @param primitiveResolver Resolver or primitive types.
    */
-  constructor(name: string, isEmbedded: boolean, primitiveResolver: IDataTypeInferrer) {
+  constructor(
+    name: string,
+    isEmbedded: boolean,
+    primitiveResolver: IDataTypeInferrer,
+  ) {
     this.name = name
     this.isEmbedded = isEmbedded
     this.fields = {}
@@ -121,7 +133,9 @@ export class ModelMerger {
    * Gets the top level type only.
    */
   public getTopLevelType(): IGQLType {
-    const fields = Object.keys(this.fields).map(key => this.toIGQLField(this.fields[key]))
+    const fields = Object.keys(this.fields).map(key =>
+      this.toIGQLField(this.fields[key]),
+    )
 
     return {
       fields: fields,
@@ -204,7 +218,9 @@ export class ModelMerger {
     if (typeCandidates.length > 1) {
       comments.push({
         isError: true,
-        text: 'Datatype inconsistency. Conflicting types found: ' + typeCandidates.join(', '),
+        text:
+          'Datatype inconsistency. Conflicting types found: ' +
+          typeCandidates.join(', '),
       })
     }
 
@@ -228,7 +244,9 @@ export class ModelMerger {
     } else {
       comments.push({
         isError: true,
-        text: 'Field type not found due to conflict. Candidates: ' + [...typeCandidates].join(', '),
+        text:
+          'Field type not found due to conflict. Candidates: ' +
+          [...typeCandidates].join(', '),
       })
     }
 
@@ -259,7 +277,8 @@ export class ModelMerger {
       // Never unique in Mongo.
       isUnique: false,
       // Reserved relation name for potential relations.
-      relationName: info.isRelationCandidate && !isId ? ModelSampler.ErrorType : null,
+      relationName:
+        info.isRelationCandidate && !isId ? ModelSampler.ErrorType : null,
       relatedField: null,
       defaultValue: null,
       comments: comments,
@@ -296,7 +315,12 @@ export class ModelMerger {
       if (typeInfo.type === ObjectTypeIdentifier) {
         // Generate basic embedded model name, which has no purpose outside of the schema.
         this.embeddedTypes[name] =
-          this.embeddedTypes[name] || new ModelMerger(this.name + capitalize(name), true, this.primitiveResolver)
+          this.embeddedTypes[name] ||
+          new ModelMerger(
+            this.name + capitalize(name),
+            true,
+            this.primitiveResolver,
+          )
         if (typeInfo.isArray) {
           // Embedded array.
           for (const item of value) {
@@ -313,7 +337,10 @@ export class ModelMerger {
       // On error, register an invalid type.
       if (err.name === UnsupportedTypeErrorKey) {
         this.initField(name)
-        this.fields[name].invalidTypes = this.merge(this.fields[name].invalidTypes, err.invalidType)
+        this.fields[name].invalidTypes = this.merge(
+          this.fields[name].invalidTypes,
+          err.invalidType,
+        )
       } else if (err.name == UnsupportedArrayTypeErrorKey) {
         this.initField(name)
         this.fields[name] = this.mergeField(this.fields[name], {
@@ -321,7 +348,10 @@ export class ModelMerger {
           type: null,
           isRelationCandidate: false,
         })
-        this.fields[name].invalidTypes = this.merge(this.fields[name].invalidTypes, err.invalidType)
+        this.fields[name].invalidTypes = this.merge(
+          this.fields[name].invalidTypes,
+          err.invalidType,
+        )
       } else {
         throw err
       }
@@ -343,7 +373,8 @@ export class ModelMerger {
       isArray: this.merge(field.isArray, info.isArray),
       name: field.name,
       types: types,
-      isRelationCandidate: field.isRelationCandidate || info.isRelationCandidate,
+      isRelationCandidate:
+        field.isRelationCandidate || info.isRelationCandidate,
     }
   }
 
