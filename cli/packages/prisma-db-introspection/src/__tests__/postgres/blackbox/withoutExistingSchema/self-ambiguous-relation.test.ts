@@ -1,4 +1,4 @@
-import testSchema from "../common"
+import testSchema from '../common'
 
 describe('Introspector', () => {
   // Schema from https://github.com/prismagraphql/prisma/issues/2504

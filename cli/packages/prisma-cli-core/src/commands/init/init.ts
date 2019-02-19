@@ -107,10 +107,10 @@ datamodel: datamodel.prisma
 
       this.out.log(`
 ${chalk.bold(
-        `Created ${
-          endpointCreatedFiles.length
-        } new files:                                                                          `,
-      )}
+  `Created ${
+    endpointCreatedFiles.length
+  } new files:                                                                          `,
+)}
 
 ${endpointCreatedFiles.join('\n')}
 
@@ -222,10 +222,10 @@ datamodel: datamodel.prisma${databaseTypeString}`
 
     this.out.log(`
 ${chalk.bold(
-      `Created ${
-        createdFiles.length
-      } new files:                                                                          `,
-    )}
+  `Created ${
+    createdFiles.length
+  } new files:                                                                          `,
+)}
 
 ${createdFiles.join('\n')}
 

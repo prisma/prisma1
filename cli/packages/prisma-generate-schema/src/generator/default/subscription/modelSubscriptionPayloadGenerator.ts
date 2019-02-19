@@ -1,4 +1,9 @@
-import { GraphQLList, GraphQLNonNull, GraphQLString, GraphQLFieldConfigMap } from 'graphql/type'
+import {
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLFieldConfigMap,
+} from 'graphql/type'
 import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { ModelObjectTypeGenerator, RootGenerator } from '../../generator'
 
@@ -21,7 +26,9 @@ export default class ModelSubscriptionPayloadGenerator extends ModelObjectTypeGe
     } as GraphQLFieldConfigMap<any, any>
 
     if (this.hasScalarFields(input.fields)) {
-      payload.previousValues = { type: this.generators.modelPreviousValues.generate(input, {}) }
+      payload.previousValues = {
+        type: this.generators.modelPreviousValues.generate(input, {}),
+      }
     }
 
     return payload

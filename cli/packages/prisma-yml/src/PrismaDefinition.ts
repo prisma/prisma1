@@ -31,7 +31,12 @@ export class PrismaDefinitionClass {
   envVars: any
   rawEndpoint?: string
   private definitionString: string
-  constructor(env: Environment, definitionPath?: string | null, envVars: EnvVars = process.env, out?: IOutput) {
+  constructor(
+    env: Environment,
+    definitionPath?: string | null,
+    envVars: EnvVars = process.env,
+    out?: IOutput,
+  ) {
     this.secrets = null
     this.definitionPath = definitionPath
     if (definitionPath) {
@@ -57,12 +62,20 @@ export class PrismaDefinitionClass {
 
       this.validate()
     } else {
-      throw new Error(`Couldn’t find \`prisma.yml\` file. Are you in the right directory?`)
+      throw new Error(
+        `Couldn’t find \`prisma.yml\` file. Are you in the right directory?`,
+      )
     }
   }
 
   private async loadDefinition(args: any, graceful?: boolean) {
-    const { definition, rawJson } = await readDefinition(this.definitionPath!, args, this.out, this.envVars, graceful)
+    const { definition, rawJson } = await readDefinition(
+      this.definitionPath!,
+      args,
+      this.out,
+      this.envVars,
+      graceful,
+    )
     this.rawEndpoint = rawJson.endpoint
     this.definition = definition
     this.rawJson = rawJson
@@ -73,7 +86,10 @@ export class PrismaDefinitionClass {
   }
 
   get endpoint(): string | undefined {
-    return (this.definition && this.definition.endpoint) || process.env.PRISMA_MANAGEMENT_API_ENDPOINT
+    return (
+      (this.definition && this.definition.endpoint) ||
+      process.env.PRISMA_MANAGEMENT_API_ENDPOINT
+    )
   }
 
   get clusterBaseUrl(): string | undefined {
@@ -135,7 +151,9 @@ export class PrismaDefinitionClass {
 Make sure that your \`cluster\` property looks like this: ${chalk.bold(
           '<workspace>/<cluster-name>',
         )}. You can also remove the cluster property from the prisma.yml
-and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-filled.`,
+and execute ${chalk.bold.green(
+          'prisma deploy',
+        )} again, to get that value auto-filled.`,
       )
     }
     if (
@@ -154,9 +172,15 @@ and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-f
         } points to a demo cluster, but is missing the workspace slug. A valid demo endpoint looks like this: https://eu1.prisma.sh/myworkspace/service-name/stage-name`,
       )
     }
-    if (this.definition && this.definition.endpoint && !this.definition.endpoint.startsWith('http')) {
+    if (
+      this.definition &&
+      this.definition.endpoint &&
+      !this.definition.endpoint.startsWith('http')
+    ) {
       throw new Error(
-        `${chalk.bold(this.definition.endpoint)} is not a valid endpoint. It must start with http:// or https://`,
+        `${chalk.bold(
+          this.definition.endpoint,
+        )} is not a valid endpoint. It must start with http:// or https://`,
       )
     }
     this.env.sharedClusters
@@ -202,7 +226,14 @@ and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-f
       }
     }
 
-    const { clusterName, clusterBaseUrl, shared, isPrivate, local, workspaceSlug } = data
+    const {
+      clusterName,
+      clusterBaseUrl,
+      shared,
+      isPrivate,
+      local,
+      workspaceSlug,
+    } = data
 
     // if the cluster could potentially be served by the cloud api, fetch the available
     // clusters from the cloud api
@@ -240,7 +271,9 @@ and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-f
         const types = fs.readFileSync(typesPath, 'utf-8')
         allTypes += types + '\n'
       } else {
-        throw new Error(`The types definition file "${typesPath}" could not be found.`)
+        throw new Error(
+          `The types definition file "${typesPath}" could not be found.`,
+        )
       }
     })
 
@@ -269,34 +302,46 @@ and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-f
 
   getSubscriptions(): FunctionInput[] {
     if (this.definition && this.definition.subscriptions) {
-      return Object.entries(this.definition!.subscriptions!).map(([name, subscription]) => {
-        const url = typeof subscription.webhook === 'string' ? subscription.webhook : subscription.webhook.url
-        const headers = typeof subscription.webhook === 'string' ? [] : transformHeaders(subscription.webhook.headers)
+      return Object.entries(this.definition!.subscriptions!).map(
+        ([name, subscription]) => {
+          const url =
+            typeof subscription.webhook === 'string'
+              ? subscription.webhook
+              : subscription.webhook.url
+          const headers =
+            typeof subscription.webhook === 'string'
+              ? []
+              : transformHeaders(subscription.webhook.headers)
 
-        let query = subscription.query
-        if (subscription.query.endsWith('.graphql')) {
-          const queryPath = path.join(this.definitionDir, subscription.query)
-          if (!fs.pathExistsSync(queryPath)) {
-            throw new Error(
-              `Subscription query ${queryPath} provided in subscription "${name}" in prisma.yml does not exist.`,
-            )
+          let query = subscription.query
+          if (subscription.query.endsWith('.graphql')) {
+            const queryPath = path.join(this.definitionDir, subscription.query)
+            if (!fs.pathExistsSync(queryPath)) {
+              throw new Error(
+                `Subscription query ${queryPath} provided in subscription "${name}" in prisma.yml does not exist.`,
+              )
+            }
+            query = fs.readFileSync(queryPath, 'utf-8')
           }
-          query = fs.readFileSync(queryPath, 'utf-8')
-        }
 
-        return {
-          name,
-          query,
-          headers,
-          url,
-        }
-      })
+          return {
+            name,
+            query,
+            headers,
+            url,
+          }
+        },
+      )
     }
     return []
   }
 
   replaceEndpoint(newEndpoint) {
-    this.definitionString = replaceYamlValue(this.definitionString, 'endpoint', newEndpoint)
+    this.definitionString = replaceYamlValue(
+      this.definitionString,
+      'endpoint',
+      newEndpoint,
+    )
     fs.writeFileSync(this.definitionPath!, this.definitionString)
   }
 
@@ -320,10 +365,16 @@ and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-f
   }
 
   getHooks(hookType: HookType): string[] {
-    if (this.definition && this.definition.hooks && this.definition.hooks[hookType]) {
+    if (
+      this.definition &&
+      this.definition.hooks &&
+      this.definition.hooks[hookType]
+    ) {
       const hooks = this.definition.hooks[hookType]
       if (typeof hooks !== 'string' && !Array.isArray(hooks)) {
-        throw new Error(`Hook ${hookType} provided in prisma.yml must be string or an array of strings.`)
+        throw new Error(
+          `Hook ${hookType} provided in prisma.yml must be string or an array of strings.`,
+        )
       }
       return typeof hooks === 'string' ? [hooks] : hooks
     }
@@ -332,7 +383,11 @@ and execute ${chalk.bold.green('prisma deploy')} again, to get that value auto-f
   }
 }
 
-export function concatName(cluster: Cluster, name: string, workspace: string | null) {
+export function concatName(
+  cluster: Cluster,
+  name: string,
+  workspace: string | null,
+) {
   if (cluster.shared) {
     const workspaceString = workspace ? `${workspace}~` : ''
     return `${workspaceString}${name}`

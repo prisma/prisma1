@@ -1,8 +1,9 @@
-import testSchema from "../common"
+import testSchema from '../common'
 
 describe('Introspector', () => {
   test('Type with scalar lists', async () => {
-    await testSchema(`--
+    await testSchema(
+      `--
     -- PostgreSQL database dump
     --
     
@@ -263,6 +264,9 @@ describe('Introspector', () => {
     --
     -- PostgreSQL database dump complete
     --
-    `, "service$stage", false)
+    `,
+      'service$stage',
+      false,
+    )
   })
 })

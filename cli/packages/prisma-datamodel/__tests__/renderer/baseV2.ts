@@ -1,4 +1,10 @@
-import { IGQLType, IGQLField, GQLScalarField, IDirectiveInfo, GQLOneRelationField } from '../../src/datamodel/model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  IDirectiveInfo,
+  GQLOneRelationField,
+} from '../../src/datamodel/model'
 import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType'

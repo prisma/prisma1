@@ -2,7 +2,9 @@ import { TypescriptGenerator } from '../../typescript-client'
 import { test } from 'ava'
 
 test('typescript env interpolation - plain', t => {
-  const result = TypescriptGenerator.replaceEnv(`http://localhost:4466/test/dev`)
+  const result = TypescriptGenerator.replaceEnv(
+    `http://localhost:4466/test/dev`,
+  )
   t.snapshot(result)
 })
 

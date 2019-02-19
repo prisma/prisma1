@@ -64,7 +64,9 @@ class PluginCommandManager extends CommandManagerBase {
     let out = new Output(this.config)
     let plugins = new Plugins(out)
     await plugins.load()
-    const foundCommand = plugins.findCommand(id || this.config.defaultCommand || 'help')
+    const foundCommand = plugins.findCommand(
+      id || this.config.defaultCommand || 'help',
+    )
     return foundCommand
   }
   async findTopic(id: string) {
@@ -81,7 +83,11 @@ export class Dispatcher {
 
   constructor(config: Config) {
     this.config = config
-    this.managers = [new CLICommandManager(config), new BuiltinCommandManager(config), new PluginCommandManager(config)]
+    this.managers = [
+      new CLICommandManager(config),
+      new BuiltinCommandManager(config),
+      new PluginCommandManager(config),
+    ]
   }
 
   async findCommand(

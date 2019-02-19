@@ -1,4 +1,4 @@
-import { ArgumentsGenerator } from "../../generator"
+import { ArgumentsGenerator } from '../../generator'
 import { IGQLType } from 'prisma-datamodel'
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull } from 'graphql/type'
 
@@ -9,7 +9,9 @@ export default class UniqueQueryArgumentsGenerator extends ArgumentsGenerator {
 
   public generate(model: IGQLType, args: {}) {
     return {
-      where: { type: new GraphQLNonNull(this.getGenerator().generate(model, {})) }
+      where: {
+        type: new GraphQLNonNull(this.getGenerator().generate(model, {})),
+      },
     } as GraphQLFieldConfigArgumentMap
   }
 

@@ -10,7 +10,10 @@ import * as express from 'express'
 import * as requestProxy from 'express-request-proxy'
 import expressPlayground from 'graphql-playground-middleware-express'
 import { getGraphQLConfig, GraphQLConfig } from 'graphql-config'
-import { makeConfigFromPath, patchEndpointsToConfig } from 'graphql-config-extension-prisma'
+import {
+  makeConfigFromPath,
+  patchEndpointsToConfig,
+} from 'graphql-config-extension-prisma'
 
 function randomString(len = 32) {
   return crypto
@@ -40,7 +43,8 @@ export default class Playground extends Command {
     }),
     port: flags.number({
       char: 'p',
-      description: 'Port to serve the Playground web version on. Assumes --web.',
+      description:
+        'Port to serve the Playground web version on. Assumes --web.',
     }),
   }
   async run() {
@@ -76,7 +80,11 @@ export default class Playground extends Command {
     if (shouldStartServer) {
       const endpoint =
         this.definition.definition!.endpoint ||
-        cluster!.getApiEndpoint(this.definition.service!, stage, this.definition.getWorkspace() || undefined)
+        cluster!.getApiEndpoint(
+          this.definition.service!,
+          stage,
+          this.definition.getWorkspace() || undefined,
+        )
       const link = await this.startServer({ config, endpoint, port })
 
       if (shouldOpenBrowser) {
@@ -92,13 +100,24 @@ export default class Playground extends Command {
 
   async getConfig(): Promise<GraphQLConfig> {
     try {
-      return await patchEndpointsToConfig(getGraphQLConfig(this.config.cwd), this.config.cwd)
+      return await patchEndpointsToConfig(
+        getGraphQLConfig(this.config.cwd),
+        this.config.cwd,
+      )
     } catch (e) {
       return makeConfigFromPath() as any
     }
   }
 
-  startServer = async ({ config, endpoint, port = 3000 }: { config; endpoint: string; port: any }) =>
+  startServer = async ({
+    config,
+    endpoint,
+    port = 3000,
+  }: {
+    config
+    endpoint: string
+    port: any
+  }) =>
     new Promise<string>(async (resolve, reject) => {
       const app = express()
       const projects = config.getProjects()
@@ -122,7 +141,10 @@ export default class Playground extends Command {
           }),
         )
       } else {
-        app.use('/playground', expressPlayground({ config: config.config } as any))
+        app.use(
+          '/playground',
+          expressPlayground({ config: config.config } as any),
+        )
       }
 
       const listener = app.listen(port, () => {

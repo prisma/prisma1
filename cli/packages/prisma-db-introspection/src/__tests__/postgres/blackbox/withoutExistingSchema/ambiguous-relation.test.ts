@@ -8,6 +8,8 @@ describe('Introspector', () => {
 })
 
 const sql = `
+CREATE USER postgres SUPERUSER;
+
 --
 -- PostgreSQL database dump
 --

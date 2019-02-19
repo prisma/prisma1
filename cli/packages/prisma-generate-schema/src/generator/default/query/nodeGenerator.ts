@@ -1,6 +1,11 @@
-import { ModelObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, AuxillaryObjectTypeGenerator, AuxillaryInterfaceGenerator } from '../../generator'
-import { GraphQLInterfaceType, GraphQLID, GraphQLNonNull } from "graphql/type"
-
+import {
+  ModelObjectTypeGenerator,
+  RelatedGeneratorArgs,
+  IGenerators,
+  AuxillaryObjectTypeGenerator,
+  AuxillaryInterfaceGenerator,
+} from '../../generator'
+import { GraphQLInterfaceType, GraphQLID, GraphQLNonNull } from 'graphql/type'
 
 export default class NodeGenerator extends AuxillaryInterfaceGenerator {
   public getTypeName(input: null, args: {}) {
@@ -10,9 +15,8 @@ export default class NodeGenerator extends AuxillaryInterfaceGenerator {
     return new GraphQLInterfaceType({
       name: this.getTypeName(input, args),
       fields: {
-        id: { type: new GraphQLNonNull(GraphQLID) }
-      }
+        id: { type: new GraphQLNonNull(GraphQLID) },
+      },
     })
   }
-
 }

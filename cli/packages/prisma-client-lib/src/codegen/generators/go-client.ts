@@ -822,15 +822,15 @@ ${this.printOperation(queryFields, 'query', options)}
 ${this.printOperation(mutationFields, 'mutation', options)}
 
 ${typeNames
-      .map(key => {
-        let type = typeMap[key]
-        return this.graphqlRenderers[type.constructor.name]
-          ? this.graphqlRenderers[type.constructor.name](type)
-          : `// No GraphQL Renderer for Type ${type.name} of type ${
-              type.constructor.name
-            }`
-      })
-      .join('\n')}
+  .map(key => {
+    let type = typeMap[key]
+    return this.graphqlRenderers[type.constructor.name]
+      ? this.graphqlRenderers[type.constructor.name](type)
+      : `// No GraphQL Renderer for Type ${type.name} of type ${
+          type.constructor.name
+        }`
+  })
+  .join('\n')}
         `
 
     return fixed + dynamic

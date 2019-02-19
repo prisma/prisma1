@@ -13,9 +13,7 @@ const pjson = fs.readJsonSync(path.join(root, 'package.json'))
 const nodeVersion = process.version.split('v')[1]
 if (!semver.satisfies(nodeVersion, pjson.engines.node)) {
   process.stderr.write(
-    `ERROR: Node version must be ${
-      pjson.engines.node
-    } to use the Prisma CLI`,
+    `ERROR: Node version must be ${pjson.engines.node} to use the Prisma CLI`,
   )
   process.exit(1)
 }
