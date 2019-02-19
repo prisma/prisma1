@@ -8,6 +8,7 @@ describe('Introspector', () => {
 })
 
 const sql = `
+DROP ROLE IF EXISTS postgres;
 CREATE USER postgres SUPERUSER;
 
 --
