@@ -1,11 +1,15 @@
-use crate::models::{Model, ModelWeakRef};
-
+use crate::models::prelude::*;
+use sql::{
+    grammar::definition::Column,
+    language::{column, full_column},
+};
 use std::sync::Arc;
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
 static UPDATED_AT_FIELD: &str = "updatedAt";
 static CREATED_AT_FIELD: &str = "createdAt";
+static ALIAS: &str = "Alias";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]
@@ -47,8 +51,8 @@ pub struct ScalarFieldTemplate {
 
 #[derive(Debug)]
 pub enum Field {
-    Scalar(ScalarField),
-    Relation(RelationField),
+    Scalar(Arc<ScalarField>),
+    Relation(Arc<RelationField>),
 }
 
 #[derive(DebugStub)]
@@ -155,7 +159,7 @@ impl RelationSide {
 }
 
 impl ScalarField {
-    fn with_model<F, T>(&self, f: F) -> T
+    pub fn with_model<F, T>(&self, f: F) -> T
     where
         F: FnOnce(Arc<Model>) -> T,
     {
@@ -165,6 +169,13 @@ impl ScalarField {
                 "Model does not exist anymore. Parent model is deleted without deleting the child fields."
             )
         }
+    }
+
+    pub fn with_project<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Arc<Project>) -> T,
+    {
+        self.with_model(|m| m.with_project(|p| f(p)))
     }
 
     /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
@@ -218,6 +229,18 @@ impl ScalarField {
             .map(|mf| mf.db_name.as_ref())
             .unwrap_or_else(|| self.name.as_ref())
     }
+
+    pub fn model_column(&self) -> Column {
+        self.with_model(|model| {
+            model.with_project(|project| {
+                full_column(project.db_name(), model.db_name(), self.db_name())
+            })
+        })
+    }
+
+    pub fn alias_column(&self) -> Column {
+        column(format!("{}.{}", ALIAS, self.db_name()))
+    }
 }
 
 impl RelationField {
@@ -256,7 +279,7 @@ impl FieldTemplate {
                     model,
                 };
 
-                Field::Scalar(scalar)
+                Field::Scalar(Arc::new(scalar))
             }
             FieldTemplate::Relation(rt) => {
                 let relation = RelationField {
@@ -274,7 +297,7 @@ impl FieldTemplate {
                     model,
                 };
 
-                Field::Relation(relation)
+                Field::Relation(Arc::new(relation))
             }
         }
     }
