@@ -23,8 +23,12 @@ type House {
 `
 
 async function introspect(client: Client) {
-  const existing = Parser.create(DatabaseType.postgres).parseFromSchemaString(existingSchema)
-  return (await Connectors.create(DatabaseType.postgres, client).introspect('service$stage')).renderToNormalizedDatamodelString(existing)
+  const existing = Parser.create(DatabaseType.postgres).parseFromSchemaString(
+    existingSchema,
+  )
+  return (await Connectors.create(DatabaseType.postgres, client).introspect(
+    'service$stage',
+  )).renderToNormalizedDatamodelString(existing)
 }
 
 async function testSchema(sql: string) {

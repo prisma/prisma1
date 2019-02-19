@@ -21,10 +21,14 @@ export default class Deploy extends Command {
   
   ${chalk.green.bold('Examples:')}
       
-${chalk.gray('-')} Deploy local changes from prisma.yml to the default service environment.
+${chalk.gray(
+  '-',
+)} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
     
-${chalk.gray('-')} Deploy local changes from default service file accepting potential data loss caused by schema changes
+${chalk.gray(
+  '-',
+)} Deploy local changes from default service file accepting potential data loss caused by schema changes
   ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
@@ -78,7 +82,9 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     await this.definition.load(this.flags, envFile)
 
     if (!this.definition.definition!.datamodel) {
-      await this.out.error(`The property ${chalk.bold('datamodel')} is missing in your prisma.yml`)
+      await this.out.error(
+        `The property ${chalk.bold('datamodel')} is missing in your prisma.yml`,
+      )
     }
 
     let serviceName = this.definition.service!
@@ -108,13 +114,21 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
       this.definition.replaceEndpoint(results.endpoint)
       // Reload definition because we are changing the yml file
       await this.definition.load(this.flags, envFile)
-      this.out.log(`\nWritten endpoint \`${chalk.bold(results.endpoint)}\` to prisma.yml\n`)
+      this.out.log(
+        `\nWritten endpoint \`${chalk.bold(
+          results.endpoint,
+        )}\` to prisma.yml\n`,
+      )
     } else {
       cluster = await this.definition.getCluster(false)
     }
 
     if (cluster && cluster.local && !(await cluster.isOnline())) {
-      throw new Error(`Could not connect to server at ${cluster.baseUrl}. Please check if your server is running.`)
+      throw new Error(
+        `Could not connect to server at ${
+          cluster.baseUrl
+        }. Please check if your server is running.`,
+      )
     }
 
     /**
@@ -154,11 +168,23 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
       projectNew = true
     }
 
-    await this.deploy(stage, serviceName, cluster, cluster.name, force, dryRun, projectNew, workspace!, noMigrate)
+    await this.deploy(
+      stage,
+      serviceName,
+      cluster,
+      cluster.name,
+      force,
+      dryRun,
+      projectNew,
+      workspace!,
+      noMigrate,
+    )
   }
 
   private getSillyName() {
-    return `${slugify(sillyname()).split('-')[0]}-${Math.round(Math.random() * 1000)}`
+    return `${slugify(sillyname()).split('-')[0]}-${Math.round(
+      Math.random() * 1000,
+    )}`
   }
 
   private async projectExists(
@@ -168,13 +194,23 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     workspace: string | null,
   ): Promise<boolean> {
     try {
-      return Boolean(await this.client.getProject(concatName(cluster, name, workspace), stage))
+      return Boolean(
+        await this.client.getProject(
+          concatName(cluster, name, workspace),
+          stage,
+        ),
+      )
     } catch (e) {
       return false
     }
   }
 
-  private async addProject(cluster: Cluster, name: string, stage: string, workspace: string | null): Promise<void> {
+  private async addProject(
+    cluster: Cluster,
+    name: string,
+    stage: string,
+    workspace: string | null,
+  ): Promise<void> {
     this.out.action.start(`Creating stage ${stage} for service ${name}`)
     const createdProject = await this.client.addProject(
       concatName(cluster, name, workspace),
@@ -203,7 +239,9 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     const verb = dryRun ? 'Performing dry run for' : 'Deploying'
 
     this.out.action.start(
-      `${verb} service ${b(serviceName)} to stage ${b(stageName)} to server ${b(completeClusterName)}`,
+      `${verb} service ${b(serviceName)} to stage ${b(stageName)} to server ${b(
+        completeClusterName,
+      )}`,
     )
 
     const migrationResult: DeployPayload = await this.client.deploy(
@@ -219,13 +257,23 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     this.out.action.stop(prettyTime(Date.now() - before))
     this.printResult(migrationResult, force, dryRun)
 
-    if (migrationResult.migration && migrationResult.migration.revision > 0 && !dryRun) {
+    if (
+      migrationResult.migration &&
+      migrationResult.migration.revision > 0 &&
+      !dryRun
+    ) {
       before = Date.now()
-      this.out.action.start(`Applying changes`, this.getProgress(0, migrationResult.migration.steps.length))
+      this.out.action.start(
+        `Applying changes`,
+        this.getProgress(0, migrationResult.migration.steps.length),
+      )
       let done = false
       while (!done) {
         const revision = migrationResult.migration.revision
-        const migration = await this.client.getMigration(concatName(cluster, serviceName, workspace), stageName)
+        const migration = await this.client.getMigration(
+          concatName(cluster, serviceName, workspace),
+          stageName,
+        )
 
         if (migration.errors && migration.errors.length > 0) {
           this.out.action.stop(prettyTime(Date.now() - before))
@@ -240,11 +288,16 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
          */
         if (
           migration.applied === migrationResult.migration.steps.length ||
-          ['SUCCESS', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE'].includes(migration.status)
+          ['SUCCESS', 'ROLLBACK_SUCCESS', 'ROLLBACK_FAILURE'].includes(
+            migration.status,
+          )
         ) {
           done = true
         }
-        this.out.action.status = this.getProgress(migration.applied, migrationResult.migration.steps.length)
+        this.out.action.status = this.getProgress(
+          migration.applied,
+          migrationResult.migration.steps.length,
+        )
         await new Promise(r => setTimeout(r, 500))
       }
 
@@ -281,15 +334,30 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     }
 
     if (migrationResult.migration) {
-      if (this.definition.definition!.seed && !this.flags['no-seed'] && projectNew) {
+      if (
+        this.definition.definition!.seed &&
+        !this.flags['no-seed'] &&
+        projectNew
+      ) {
         this.printHooks()
-        await this.seed(cluster, projectNew, serviceName, stageName, this.definition.getWorkspace())
+        await this.seed(
+          cluster,
+          projectNew,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace(),
+        )
       }
 
       // no action required
       this.deploying = false
       if (migrationResult.migration) {
-        this.printEndpoints(cluster, serviceName, stageName, this.definition.getWorkspace() || undefined)
+        this.printEndpoints(
+          cluster,
+          serviceName,
+          stageName,
+          this.definition.getWorkspace() || undefined,
+        )
       }
     }
   }
@@ -312,9 +380,16 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     stageName: string,
     workspace: string | null,
   ) {
-    const seeder = new Seeder(this.definition, this.client, this.out, this.config)
+    const seeder = new Seeder(
+      this.definition,
+      this.client,
+      this.out,
+      this.config,
+    )
     const before = Date.now()
-    const seedSource = this.definition.definition!.seed!.import || this.definition.definition!.seed!.run
+    const seedSource =
+      this.definition.definition!.seed!.import ||
+      this.definition.definition!.seed!.run
     if (!seedSource) {
       this.out.log(
         chalk.yellow(
@@ -332,8 +407,12 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
-      this.out.log('\nDeployment canceled. Please fix the above errors to continue deploying.')
-      this.out.log('Read more about deployment errors here: https://bit.ly/prisma-force-flag')
+      this.out.log(
+        '\nDeployment canceled. Please fix the above errors to continue deploying.',
+      )
+      this.out.log(
+        'Read more about deployment errors here: https://bit.ly/prisma-force-flag',
+      )
 
       this.out.exit(1)
     }
@@ -350,12 +429,15 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
             '$ prisma deploy --force',
           )}`,
         )
-        this.out.log('Read more about deployment warnings here: https://bit.ly/prisma-force-flag')
+        this.out.log(
+          'Read more about deployment warnings here: https://bit.ly/prisma-force-flag',
+        )
         this.out.exit(1)
       }
     }
 
-    const steps = payload.steps || (payload.migration && payload.migration.steps) || []
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
 
     if (steps.length === 0) {
       if (dryRun) {
@@ -367,17 +449,34 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     }
 
     if (steps.length > 0) {
-      this.out.log('\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'))
+      this.out.log(
+        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
+      )
       this.out.migration.printMessages(steps)
       this.out.log('')
     }
   }
 
-  private printEndpoints(cluster: Cluster, serviceName: string, stageName: string, workspace?: string) {
-    this.out.log(`\n${chalk.bold('Your Prisma GraphQL database endpoint is live:')}
+  private printEndpoints(
+    cluster: Cluster,
+    serviceName: string,
+    stageName: string,
+    workspace?: string,
+  ) {
+    this.out.log(`\n${chalk.bold(
+      'Your Prisma GraphQL database endpoint is live:',
+    )}
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
-  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(serviceName, stageName, workspace)}
+  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+      serviceName,
+      stageName,
+      workspace,
+    )}
+  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
+      serviceName,
+      stageName,
+      workspace,
+    )}
 `)
   }
 
@@ -388,7 +487,9 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
   private async clusterSelection(loggedIn: boolean): Promise<string> {
     debug({ loggedIn })
 
-    const choices = loggedIn ? await this.getLoggedInChoices() : this.getPublicChoices()
+    const choices = loggedIn
+      ? await this.getLoggedInChoices()
+      : this.getPublicChoices()
 
     const question = {
       name: 'cluster',
@@ -417,7 +518,9 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
     await this.env.fetchClusters()
     const localChoices = this.getLocalClusterChoices()
     const combinations: string[][] = []
-    const remoteClusters = this.env.clusters.filter(c => c.shared || c.isPrivate)
+    const remoteClusters = this.env.clusters.filter(
+      c => c.shared || c.isPrivate,
+    )
 
     remoteClusters.forEach(cluster => {
       const label = this.env.sharedClusters.includes(cluster.name)
@@ -433,12 +536,16 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
       ...this.convertChoices(allCombinations),
       new inquirer.Separator('                     '),
       new inquirer.Separator(
-        chalk.dim(`You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`),
+        chalk.dim(
+          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
+        ),
       ),
     ]
   }
 
-  private convertChoices(choices: string[][]): Array<{ value: string; name: string }> {
+  private convertChoices(
+    choices: string[][],
+  ): Array<{ value: string; name: string }> {
     const padded = this.out.printPadded(choices, 0, 6).split('\n')
     return padded.map((name, index) => ({
       name,
@@ -448,8 +555,14 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
 
   private getPublicChoices(): any[] {
     const publicChoices = [
-      ['prisma-eu1', 'Public development cluster (hosted in EU on Prisma Cloud)'],
-      ['prisma-us1', 'Public development cluster (hosted in US on Prisma Cloud)'],
+      [
+        'prisma-eu1',
+        'Public development cluster (hosted in EU on Prisma Cloud)',
+      ],
+      [
+        'prisma-us1',
+        'Public development cluster (hosted in US on Prisma Cloud)',
+      ],
     ]
     const allCombinations = [...publicChoices, ...this.getLocalClusterChoices()]
 
@@ -462,10 +575,14 @@ ${chalk.gray('-')} Deploy local changes from default service file accepting pote
       },
       new inquirer.Separator('                     '),
       new inquirer.Separator(
-        chalk.dim(`Note: When not logged in, service deployments to Prisma Cloud expire after 7 days.`),
+        chalk.dim(
+          `Note: When not logged in, service deployments to Prisma Cloud expire after 7 days.`,
+        ),
       ),
       new inquirer.Separator(
-        chalk.dim(`You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`),
+        chalk.dim(
+          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
+        ),
       ),
       new inquirer.Separator('                     '),
     ]

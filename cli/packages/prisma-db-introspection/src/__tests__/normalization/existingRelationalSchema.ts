@@ -26,7 +26,7 @@ describe('Schema normalization from existing postgres schema', () => {
         updatedAt: DateTime!
       }`
 
-    // User has renamed a few types, but post is missing 
+    // User has renamed a few types, but post is missing
     const existingSchema = `type User {
       id: Id! @unique
       age: Int!
@@ -57,7 +57,7 @@ describe('Schema normalization from existing postgres schema', () => {
         user: [User]
       }`
 
-    // User has renamed a few types, but post is missing 
+    // User has renamed a few types, but post is missing
     const existingSchema = `
       type User {
         id: Id! @unique
@@ -86,7 +86,6 @@ describe('Schema normalization from existing postgres schema', () => {
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
 
-
   it('Should adjust n:n relations and fall back to 1:1 if a 1:1 relation is given in the reference datamodel.', () => {
     const schemaFromDb = `
       type User {
@@ -100,7 +99,7 @@ describe('Schema normalization from existing postgres schema', () => {
         user: [User]
       }`
 
-    // User has renamed a few types, but post is missing 
+    // User has renamed a few types, but post is missing
     const existingSchema = `
       type User {
         id: Id! @unique

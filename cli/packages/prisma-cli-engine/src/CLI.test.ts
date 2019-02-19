@@ -1,11 +1,11 @@
-import {CLI} from './CLI'
+import { CLI } from './CLI'
 
 jest.unmock('fs-extra')
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000
 
-async function run ( ...argv: string[]) {
-  const cli = new CLI({config: {argv: ['prisma'].concat(argv), mock: true}})
+async function run(...argv: string[]) {
+  const cli = new CLI({ config: { argv: ['prisma'].concat(argv), mock: true } })
   try {
     await cli.run()
     return cli
@@ -94,4 +94,3 @@ describe('cli version', () => {
     expect(cli.cmd.out.stdout.output).toContain('prisma/')
   })
 })
-

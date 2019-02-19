@@ -155,5 +155,4 @@ export {
   InitPrisma,
   IntrospectCommand,
   Generate,
-  }
-
+}

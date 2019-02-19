@@ -6,10 +6,17 @@ import Generator from '../../src/generator'
 import * as fs from 'fs'
 import * as path from 'path'
 
-export default function blackBoxTest(name: string, databaseType: DatabaseType, filePrefix: string) {
+export default function blackBoxTest(
+  name: string,
+  databaseType: DatabaseType,
+  filePrefix: string,
+) {
   const generator = Generator.create(databaseType)
 
-  const modelPath = path.join(__dirname, `cases/${name}/model_${filePrefix}.graphql`)
+  const modelPath = path.join(
+    __dirname,
+    `cases/${name}/model_${filePrefix}.graphql`,
+  )
   const prismaPath = path.join(__dirname, `cases/${name}/${filePrefix}.graphql`)
 
   expect(fs.existsSync(modelPath))

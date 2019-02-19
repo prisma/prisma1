@@ -1,5 +1,5 @@
-import IDatabaseClient from "../../IDatabaseClient";
-import { Connection } from "mysql";
+import IDatabaseClient from '../../IDatabaseClient'
+import { Connection } from 'mysql'
 
 export default class MySqlDatabaseClient implements IDatabaseClient {
   private client: Connection
@@ -11,7 +11,7 @@ export default class MySqlDatabaseClient implements IDatabaseClient {
   public query(query: string, variables: any[]): Promise<any[]> {
     return new Promise<any[]>((resolve, reject) => {
       this.client.query(query, variables, (err, res) => {
-        if(err) {
+        if (err) {
           reject(err)
         } else {
           resolve(res)
@@ -19,5 +19,4 @@ export default class MySqlDatabaseClient implements IDatabaseClient {
       })
     })
   }
-  
 }

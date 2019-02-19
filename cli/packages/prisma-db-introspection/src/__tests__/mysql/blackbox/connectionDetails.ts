@@ -3,5 +3,8 @@ export const connectionDetails = {
   user: process.env.TEST_MYSQL_USER,
   password: process.env.TEST_MYSQL_PASSWORD,
   host: process.env.TEST_MYSQL_HOST,
-  multipleStatements: true
+  port: process.env.TEST_MYSQL_PORT
+    ? parseInt(process.env.TEST_MYSQL_PORT, 10)
+    : undefined,
+  multipleStatements: true,
 }

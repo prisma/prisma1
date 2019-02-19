@@ -1,4 +1,11 @@
-import { Command, Flags, flags, ProjectInfo, Output, Project } from 'prisma-cli-engine'
+import {
+  Command,
+  Flags,
+  flags,
+  ProjectInfo,
+  Output,
+  Project,
+} from 'prisma-cli-engine'
 import chalk from 'chalk'
 
 export default class Reset extends Command {
@@ -35,7 +42,9 @@ export default class Reset extends Command {
 
   async reset(serviceName, stageName) {
     const before = Date.now()
-    this.out.action.start(`Resetting ${chalk.bold(`${serviceName}@${stageName}`)}`)
+    this.out.action.start(
+      `Resetting ${chalk.bold(`${serviceName}@${stageName}`)}`,
+    )
     await this.client.reset(
       serviceName,
       stageName,
@@ -49,12 +58,14 @@ export default class Reset extends Command {
     const confirmationQuestion = {
       name: 'confirmation',
       type: 'input',
-      message: `Are you sure that you want to reset the data of ${chalk.bold(serviceName)} in stage ${chalk.bold(
-        stage,
-      )}? y/N`,
+      message: `Are you sure that you want to reset the data of ${chalk.bold(
+        serviceName,
+      )} in stage ${chalk.bold(stage)}? y/N`,
       default: 'n',
     }
-    const { confirmation }: { confirmation: string } = await this.out.prompt(confirmationQuestion)
+    const { confirmation }: { confirmation: string } = await this.out.prompt(
+      confirmationQuestion,
+    )
     if (confirmation.toLowerCase().startsWith('n')) {
       this.out.exit(0)
     }

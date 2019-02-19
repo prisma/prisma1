@@ -1,4 +1,11 @@
-import { Command, Flags, flags, ProjectInfo, Output, Project } from 'prisma-cli-engine'
+import {
+  Command,
+  Flags,
+  flags,
+  ProjectInfo,
+  Output,
+  Project,
+} from 'prisma-cli-engine'
 import chalk from 'chalk'
 import { Cluster } from 'prisma-yml'
 
@@ -43,12 +50,23 @@ export default class InfoCommand extends Command {
 
     const cluster = await this.definition.getCluster()
     if (!cluster) {
-      throw new Error(`No cluster set. Please set the "cluster" property in your prisma.yml`)
+      throw new Error(
+        `No cluster set. Please set the "cluster" property in your prisma.yml`,
+      )
     }
     if (!json) {
       this.out.log(`Service Name: ${chalk.bold(serviceName)}`)
     }
-    this.out.log(this.printStage(serviceName, stage, cluster, this.definition.secrets, workspace || undefined, json))
+    this.out.log(
+      this.printStage(
+        serviceName,
+        stage,
+        cluster,
+        this.definition.secrets,
+        workspace || undefined,
+        json,
+      ),
+    )
   }
 
   printStage(

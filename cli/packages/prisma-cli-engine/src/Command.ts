@@ -42,9 +42,13 @@ export class Command {
 
     argv.unshift('argv0', 'cmd')
 
-    const mockDefinition = customArgs && customArgs.mockDefinition ? customArgs.mockDefinition : mock.mockDefinition
+    const mockDefinition =
+      customArgs && customArgs.mockDefinition
+        ? customArgs.mockDefinition
+        : mock.mockDefinition
     const mockRC = customArgs && customArgs.mockRC ? customArgs.mockRC : null
-    const mockConfig = customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
+    const mockConfig =
+      customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
     debug(`Using mockDefinition`, mockDefinition)
     debug(`Using mockRC`, mockRC)
 
@@ -99,7 +103,12 @@ export class Command {
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.env = new Environment(this.config.home, this.out, this.config.version)
-    this.definition = new PrismaDefinitionClass(this.env, this.config.definitionPath, process.env, this.out)
+    this.definition = new PrismaDefinitionClass(
+      this.env,
+      this.config.definitionPath,
+      process.env,
+      this.out,
+    )
     this.client = new Client(this.config, this.env, this.out)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)
     // this.client.setAuth(this.auth)

@@ -2,7 +2,7 @@ import Parser from './parser'
 import { IGQLField, IGQLType } from '../model'
 
 /**
- * Parser implementation for related models. 
+ * Parser implementation for related models.
  */
 export default class RelationalParser extends Parser {
   public static idFieldName = 'id'
@@ -23,8 +23,6 @@ export default class RelationalParser extends Parser {
     return false
   }
 
-
-
   /**
    * Postgres fallback for db directive, which is not known in postgres.
    */
@@ -35,7 +33,7 @@ export default class RelationalParser extends Parser {
   protected getDatabaseTypeName(type: IGQLType): string | null {
     return super.getDatabaseTypeName(type) || this.getPgTableName(type)
   }
-  
+
   protected getPgColumnName(field: IGQLField): string | null {
     const directive = this.getDirectiveByName(field, 'pgColumn')
     return this.getDirectiveArgument(directive, 'name')

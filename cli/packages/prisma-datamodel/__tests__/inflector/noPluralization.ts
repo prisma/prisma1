@@ -3,7 +3,7 @@ import { plural } from '../../src/util/util'
 const exampleWordList = [
   ['News', 'Newses'],
   ['Homework', 'Homeworks'],
-  ['Scissors', 'Scissorses']
+  ['Scissors', 'Scissorses'],
 ]
 
 test('Must work correctly with types that can not be pluralized', () => {

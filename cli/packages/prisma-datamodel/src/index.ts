@@ -1,4 +1,4 @@
-export { DirectiveKeys } from './datamodel/directives';
+export { DirectiveKeys } from './datamodel/directives'
 
 export {
   ISDL,
@@ -13,9 +13,9 @@ export {
   GQLMultiRelationField,
   GQLScalarField,
   cloneSchema,
-  cloneField, 
-  cloneIndices, 
-  cloneType
+  cloneField,
+  cloneIndices,
+  cloneType,
 } from './datamodel/model'
 export { default as Parser } from './datamodel/parser'
 export { default as Renderer } from './datamodel/renderer/renderer'

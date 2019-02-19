@@ -1,7 +1,15 @@
-import { IGQLType, IGQLField, GQLScalarField, ISDL, IDirectiveInfo, IArguments, IIndexInfo } from '../model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  ISDL,
+  IDirectiveInfo,
+  IArguments,
+  IIndexInfo,
+} from '../model'
 import { parse } from 'graphql'
-import { DirectiveKeys } from '../directives';
-import GQLAssert from '../../util/gqlAssert';
+import { DirectiveKeys } from '../directives'
+import GQLAssert from '../../util/gqlAssert'
 
 // TODO(ejoebstl): It would be good to have this Parser fill the directive field for types and models as well.
 // TODO(ejoebstl): Directive parsing should be cleaned up: Parse all directives first and then extract build-in directives.
@@ -43,7 +51,7 @@ export default abstract class Parser {
     // * Check for duplicate type names
     // * Check for conflicting relations
     return {
-      types
+      types,
     }
   }
 
@@ -70,9 +78,11 @@ export default abstract class Parser {
    * @param field
    */
   protected isReservedReadOnlyField(field: any) {
-    return this.isIdField(field) ||
+    return (
+      this.isIdField(field) ||
       this.isUpdatedAtField(field) ||
       this.isCreatedAtField(field)
+    )
   }
 
   /**
@@ -83,7 +93,7 @@ export default abstract class Parser {
   protected getDirectivesByName(fieldOrType: any, name: string): any[] {
     return fieldOrType.directives.filter(x => x.name.value === name)
   }
- 
+
   /**
    * Finds a directive on a field or type by name and returns the first occurance.
    * @param fieldOrType
@@ -118,7 +128,10 @@ export default abstract class Parser {
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, DirectiveKeys.default)
-    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
+    const args =
+      directive === null
+        ? []
+        : directive.arguments.filter(x => x.name.value === 'value')
     return args.length !== 0 ? args[0].value.value : null
   }
 
@@ -166,12 +179,12 @@ export default abstract class Parser {
    */
   protected getDirectiveArgument(directive: any, name: string) {
     if (directive && directive.arguments) {
-      const nameArgument = directive.arguments.find(
-        a => a.name.value === name,
-      )
-      if(nameArgument) {
+      const nameArgument = directive.arguments.find(a => a.name.value === name)
+      if (nameArgument) {
         // Fallback from single value to list value.
-        return nameArgument.value.value !== undefined ? nameArgument.value.value : nameArgument.value.values
+        return nameArgument.value.value !== undefined
+          ? nameArgument.value.value
+          : nameArgument.value.values
       }
     }
 
@@ -183,51 +196,54 @@ export default abstract class Parser {
    */
   protected getObjectFieldValue(obj: any, name: string) {
     if (obj && obj.fields) {
-      const nameArgument = obj.fields.find(
-        a => a.name.value === name,
-      )
-      if(nameArgument) {
+      const nameArgument = obj.fields.find(a => a.name.value === name)
+      if (nameArgument) {
         // Fallback from single value to list value.
-        return nameArgument.value.value !== undefined ? nameArgument.value.value : nameArgument.value.values
+        return nameArgument.value.value !== undefined
+          ? nameArgument.value.value
+          : nameArgument.value.values
       }
     }
 
     return null
   }
 
-
   /**
-   * Parses a single index directive input object, resolves all field references. 
+   * Parses a single index directive input object, resolves all field references.
    */
-  protected parseIndex(indexObject: any, fields: IGQLField[]) : IIndexInfo {
+  protected parseIndex(indexObject: any, fields: IGQLField[]): IIndexInfo {
     const fieldsArgument = this.getObjectFieldValue(indexObject, 'fields')
     const nameArgument = this.getObjectFieldValue(indexObject, 'name')
     const uniqueArgument = this.getObjectFieldValue(indexObject, 'unique')
-  
+
     const indexFields = fieldsArgument.map(fieldArgument => {
       const [field] = fields.filter(f => f.name === fieldArgument.value)
 
-      if(field === undefined) {
-        GQLAssert.raise(`Error during index association. Field ${fieldArgument.value} is missing on index ${nameArgument}.`)
+      if (field === undefined) {
+        GQLAssert.raise(
+          `Error during index association. Field ${
+            fieldArgument.value
+          } is missing on index ${nameArgument}.`,
+        )
       }
 
       return field
     })
 
     return {
-      fields: indexFields, 
-      name: nameArgument, 
+      fields: indexFields,
+      name: nameArgument,
       // Unique default is true.
-      unique: uniqueArgument === null ? true : uniqueArgument
+      unique: uniqueArgument === null ? true : uniqueArgument,
     }
   }
 
-  /** 
-   * Parses all index directives on the given type. 
+  /**
+   * Parses all index directives on the given type.
    */
-  protected parseIndices(type: any, fields: IGQLField[]) : IIndexInfo[] {
+  protected parseIndices(type: any, fields: IGQLField[]): IIndexInfo[] {
     const indexDirective = this.getDirectiveByName(type, DirectiveKeys.indexes)
-    if(indexDirective === null) {
+    if (indexDirective === null) {
       return []
     }
     const subIndexes = this.getDirectiveArgument(indexDirective, 'value')
@@ -236,36 +252,46 @@ export default abstract class Parser {
   }
 
   /**
-   * Gets all reserved directive keys. 
+   * Gets all reserved directive keys.
    */
   protected getReservedDirectiveNames() {
-    return [DirectiveKeys.default, DirectiveKeys.isEmbedded, DirectiveKeys.db, DirectiveKeys.isCreatedAt, DirectiveKeys.isUpdatedAt, DirectiveKeys.isUnique, DirectiveKeys.isId, DirectiveKeys.index, DirectiveKeys.relation]
+    return [
+      DirectiveKeys.default,
+      DirectiveKeys.isEmbedded,
+      DirectiveKeys.db,
+      DirectiveKeys.isCreatedAt,
+      DirectiveKeys.isUpdatedAt,
+      DirectiveKeys.isUnique,
+      DirectiveKeys.isId,
+      DirectiveKeys.index,
+      DirectiveKeys.relation,
+    ]
   }
 
   /**
-   * Parses all directives that are not reserved (build-in) 
+   * Parses all directives that are not reserved (build-in)
    * from a field or type
    */
   protected parseDirectives(fieldOrType: any) {
     const res: IDirectiveInfo[] = []
     const reservedDirectiveNames = this.getReservedDirectiveNames()
 
-    for(const directive of fieldOrType.directives) {
-      if(reservedDirectiveNames.includes(directive.name.value)) {
+    for (const directive of fieldOrType.directives) {
+      if (reservedDirectiveNames.includes(directive.name.value)) {
         continue
       }
 
       const resArgs = {}
-      for(const args of directive.arguments) {
+      for (const args of directive.arguments) {
         resArgs[args.name.value] = args.value.value
       }
       res.push({
         name: directive.name.value,
-        arguments: resArgs
+        arguments: resArgs,
       })
     }
 
-    if(res.length === 0) {
+    if (res.length === 0) {
       return []
     } else {
       return res
@@ -307,7 +333,7 @@ export default abstract class Parser {
       isReadOnly,
       databaseName,
       directives,
-      comments: []
+      comments: [],
     }
   }
 
@@ -316,7 +342,7 @@ export default abstract class Parser {
    * @param type
    */
   protected abstract isEmbedded(type: any): boolean
- 
+
   /**
    * Parases an object type.
    * @param type
@@ -343,7 +369,7 @@ export default abstract class Parser {
       databaseName,
       directives,
       indices,
-      comments: []
+      comments: [],
     }
   }
 
@@ -391,7 +417,7 @@ export default abstract class Parser {
           directives,
           comments: [],
           databaseName: null,
-          indices: []
+          indices: [],
         })
       }
     }

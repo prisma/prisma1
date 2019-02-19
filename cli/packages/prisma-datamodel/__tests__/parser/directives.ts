@@ -1,12 +1,15 @@
 import RelationalParser from '../../src/datamodel/parser/relationalParser'
 import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
-import { SdlExpect } from '../../src/test-helpers' 
-import { TypeIdentifiers } from '../../src/datamodel/scalar';
+import { SdlExpect } from '../../src/test-helpers'
+import { TypeIdentifiers } from '../../src/datamodel/scalar'
 
-const parsersToTest = [{ name: 'relational', instance: new RelationalParser()}, { name: 'document', instance: new DocumentParser()}]
+const parsersToTest = [
+  { name: 'relational', instance: new RelationalParser() },
+  { name: 'document', instance: new DocumentParser() },
+]
 
-for(const parser of parsersToTest) {
+for (const parser of parsersToTest) {
   describe(`${parser.name} parser directive tests`, () => {
     test('Parse a type with build-in directives correctly.', () => {
       const model = `
@@ -23,17 +26,48 @@ for(const parser of parsersToTest) {
       const userType = SdlExpect.type(types, 'User')
       expect(userType.databaseName).toBe('user')
 
-      const idField = SdlExpect.field(userType, 'id', true, false, 'Int', true, true)
+      const idField = SdlExpect.field(
+        userType,
+        'id',
+        true,
+        false,
+        'Int',
+        true,
+        true,
+      )
       expect(idField.isId).toBe(true)
-      const createdAtField = SdlExpect.field(userType, 'createdAt', true, false, 'DateTime', false, true)
+      const createdAtField = SdlExpect.field(
+        userType,
+        'createdAt',
+        true,
+        false,
+        'DateTime',
+        false,
+        true,
+      )
       expect(createdAtField.isCreatedAt).toBe(true)
-      const updatedAtField = SdlExpect.field(userType, 'updatedAt', true, false, 'DateTime', false, true)
+      const updatedAtField = SdlExpect.field(
+        userType,
+        'updatedAt',
+        true,
+        false,
+        'DateTime',
+        false,
+        true,
+      )
       expect(updatedAtField.isUpdatedAt).toBe(true)
-      const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String', false, false)
+      const mappedField = SdlExpect.field(
+        userType,
+        'mappedField',
+        true,
+        false,
+        'String',
+        false,
+        false,
+      )
       expect(mappedField.databaseName).toBe('dbField')
       expect(mappedField.relationName).toBe('typeRelation')
     })
-
 
     test('Parse a type with multiple index directives correctly.', () => {
       const model = `
@@ -50,11 +84,36 @@ for(const parser of parsersToTest) {
       const { types } = parser.instance.parseFromSchemaString(model)
 
       const userType = SdlExpect.type(types, 'User')
-      const idField = SdlExpect.field(userType, 'id', true, false, 'Int', true, true)
-      const firstNameField = SdlExpect.field(userType, 'firstName', true, false, TypeIdentifiers.string)
-      const lastNameField = SdlExpect.field(userType, 'lastName', true, false, TypeIdentifiers.string)
- 
-      SdlExpect.index(userType, 'NameIndex', [firstNameField, lastNameField], false)
+      const idField = SdlExpect.field(
+        userType,
+        'id',
+        true,
+        false,
+        'Int',
+        true,
+        true,
+      )
+      const firstNameField = SdlExpect.field(
+        userType,
+        'firstName',
+        true,
+        false,
+        TypeIdentifiers.string,
+      )
+      const lastNameField = SdlExpect.field(
+        userType,
+        'lastName',
+        true,
+        false,
+        TypeIdentifiers.string,
+      )
+
+      SdlExpect.index(
+        userType,
+        'NameIndex',
+        [firstNameField, lastNameField],
+        false,
+      )
       // True is the default value
       SdlExpect.index(userType, 'PrimaryIndex', [idField], true)
     })
@@ -72,13 +131,36 @@ for(const parser of parsersToTest) {
       const { types } = parser.instance.parseFromSchemaString(model)
 
       const userType = SdlExpect.type(types, 'DirectiveUser')
-      SdlExpect.directive(userType, { name: 'typeDirective', arguments: { name: 'database' } })
+      SdlExpect.directive(userType, {
+        name: 'typeDirective',
+        arguments: { name: 'database' },
+      })
 
-      const createdAtField = SdlExpect.field(userType, 'createdAt', true, false, 'DateTime', false, true)
-      SdlExpect.directive(createdAtField, { name: 'funnyDirective', arguments: {} })
+      const createdAtField = SdlExpect.field(
+        userType,
+        'createdAt',
+        true,
+        false,
+        'DateTime',
+        false,
+        true,
+      )
+      SdlExpect.directive(createdAtField, {
+        name: 'funnyDirective',
+        arguments: {},
+      })
 
-      const mappedField = SdlExpect.field(userType, 'mappedField', true, false, 'String')
-      SdlExpect.directive(mappedField, { name: 'unfunnyDirective', arguments: { funny: 'false' } })
+      const mappedField = SdlExpect.field(
+        userType,
+        'mappedField',
+        true,
+        false,
+        'String',
+      )
+      SdlExpect.directive(mappedField, {
+        name: 'unfunnyDirective',
+        arguments: { funny: 'false' },
+      })
     })
   })
 }

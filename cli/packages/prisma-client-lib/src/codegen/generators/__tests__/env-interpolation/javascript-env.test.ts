@@ -2,7 +2,9 @@ import { JavascriptGenerator } from '../../javascript-client'
 import { test } from 'ava'
 
 test('javascript env interpolation - plain', t => {
-  const result = JavascriptGenerator.replaceEnv(`http://localhost:4466/test/dev`)
+  const result = JavascriptGenerator.replaceEnv(
+    `http://localhost:4466/test/dev`,
+  )
   t.snapshot(result)
 })
 

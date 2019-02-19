@@ -102,7 +102,9 @@ export class Environment {
         }
         if (res.me && res.me.memberships && Array.isArray(res.me.memberships)) {
           // clean up all prisma-eu1 and prisma-us1 clusters if they already exist
-          this.clusters = this.clusters.filter(c => c.name !== 'prisma-eu1' && c.name !== 'prisma-us1')
+          this.clusters = this.clusters.filter(
+            c => c.name !== 'prisma-eu1' && c.name !== 'prisma-us1',
+          )
 
           res.me.memberships.forEach(m => {
             m.workspace.clusters.forEach(cluster => {
@@ -160,7 +162,9 @@ export class Environment {
   addCluster(cluster: Cluster) {
     const existingClusterIndex = this.clusters.findIndex(c => {
       if (cluster.workspaceSlug) {
-        return c.workspaceSlug === cluster.workspaceSlug && c.name === cluster.name
+        return (
+          c.workspaceSlug === cluster.workspaceSlug && c.name === cluster.name
+        )
       } else {
         return c.name === cluster.name
       }
@@ -177,7 +181,9 @@ export class Environment {
 
   saveGlobalRC() {
     const rc = {
-      cloudSessionKey: this.globalRC.cloudSessionKey ? this.globalRC.cloudSessionKey.trim() : undefined,
+      cloudSessionKey: this.globalRC.cloudSessionKey
+        ? this.globalRC.cloudSessionKey.trim()
+        : undefined,
       clusters: this.getLocalClusterConfig(),
     }
     // parse & stringify to rm undefined for yaml parser
@@ -191,7 +197,10 @@ export class Environment {
   }
 
   async loadGlobalRC(): Promise<void> {
-    const globalFile = this.rcPath && fs.pathExistsSync(this.rcPath) ? fs.readFileSync(this.rcPath, 'utf-8') : undefined
+    const globalFile =
+      this.rcPath && fs.pathExistsSync(this.rcPath)
+        ? fs.readFileSync(this.rcPath, 'utf-8')
+        : undefined
     await this.parseGlobalRC(globalFile)
   }
 
@@ -202,7 +211,10 @@ export class Environment {
     this.clusters = this.initClusters(this.globalRC)
   }
 
-  private async loadYaml(file: string | null, filePath: string | null = null): Promise<any> {
+  private async loadYaml(
+    file: string | null,
+    filePath: string | null = null,
+  ): Promise<any> {
     if (file) {
       let content
       try {
@@ -210,7 +222,11 @@ export class Environment {
       } catch (e) {
         throw new Error(`Yaml parsing error in ${filePath}: ${e.message}`)
       }
-      const variables = new Variables(filePath || 'no filepath provided', this.args, this.out)
+      const variables = new Variables(
+        filePath || 'no filepath provided',
+        this.args,
+        this.out,
+      )
       content = await variables.populateJson(content)
 
       return content
@@ -239,7 +255,10 @@ export class Environment {
 
   private getLocalClusterConfig() {
     return this.clusters
-      .filter(c => !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate)
+      .filter(
+        c =>
+          !c.shared && c.clusterSecret !== this.cloudSessionKey && !c.isPrivate,
+      )
       .reduce((acc, cluster) => {
         return {
           ...acc,
@@ -268,4 +287,5 @@ export class Environment {
   }
 }
 
-export const isLocal = hostname => hostname.includes('localhost') || hostname.includes('127.0.0.1')
+export const isLocal = hostname =>
+  hostname.includes('localhost') || hostname.includes('127.0.0.1')

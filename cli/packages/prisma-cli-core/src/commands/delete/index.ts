@@ -26,7 +26,12 @@ export default class Delete extends Command {
     const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
-    await this.client.initClusterClient(cluster!, serviceName, stage, this.definition.getWorkspace())
+    await this.client.initClusterClient(
+      cluster!,
+      serviceName,
+      stage,
+      this.definition.getWorkspace(),
+    )
 
     const prettyName = `${chalk.bold(serviceName)}@${stage}`
 
@@ -35,14 +40,19 @@ export default class Delete extends Command {
     }
 
     const before = Date.now()
-    this.out.action.start(`${chalk.red.bold(`Deleting service ${prettyName} from ${this.definition.cluster}`)}`)
+    this.out.action.start(
+      `${chalk.red.bold(
+        `Deleting service ${prettyName} from ${this.definition.cluster}`,
+      )}`,
+    )
     try {
       await this.client.deleteProject(
         serviceName,
         stage,
-        this.definition.getWorkspace() || (this.env.activeCluster.workspaceSlug as string),
+        this.definition.getWorkspace() ||
+          (this.env.activeCluster.workspaceSlug as string),
       )
-    } catch(e) {
+    } catch (e) {
       if (!force) {
         this.out.error(e)
       }
@@ -57,7 +67,9 @@ export default class Delete extends Command {
       message: `Are you sure that you want to delete ${projects}? y/N`,
       default: 'n',
     }
-    const { confirmation }: { confirmation: string } = await this.out.prompt(confirmationQuestion)
+    const { confirmation }: { confirmation: string } = await this.out.prompt(
+      confirmationQuestion,
+    )
     if (confirmation.toLowerCase().startsWith('n')) {
       this.out.exit(0)
     }

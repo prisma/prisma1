@@ -27,7 +27,7 @@ import { getExistsTypes } from '../../utils'
 import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
 import { codeComment } from '../../utils/codeComment'
-import { connectionNodeHasScalars } from '../../utils/connectionNodeHasScalars';
+import { connectionNodeHasScalars } from '../../utils/connectionNodeHasScalars'
 
 export interface RenderOptions {
   endpoint?: string
@@ -620,7 +620,7 @@ export const prisma = new Prisma()`
     const isOptional = !(isNonNullType(type) || isNonNullType(type.ofType))
     const isScalar = isScalarType(deepType) || isEnumType(deepType)
     const isInput = field.astNode.kind === 'InputValueDefinition'
-    
+
     let typeString = this.getInternalTypeName(type)
 
     if (typeString === 'DateTime') {

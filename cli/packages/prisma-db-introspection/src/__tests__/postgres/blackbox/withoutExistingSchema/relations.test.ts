@@ -1,4 +1,4 @@
-import testSchema from "../common"
+import testSchema from '../common'
 
 describe('Introspector', () => {
   test('relation with relation table', async () => {
