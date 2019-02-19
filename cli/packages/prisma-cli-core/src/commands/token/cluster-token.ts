@@ -16,17 +16,13 @@ export default class ClusterToken extends Command {
     await this.definition.load(this.flags)
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
 
     if (!cluster) {
       throw new Error(`Please provide a cluster in your prisma.yml`)
     }
 
-    const token = await cluster!.getToken(
-      serviceName,
-      this.definition.getWorkspace() || undefined,
-      stage,
-    )
+    const token = await cluster!.getToken(serviceName, this.definition.getWorkspace() || undefined, stage)
 
     if (!token) {
       throw new Error(`Couldn't generate token`)

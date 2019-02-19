@@ -4,8 +4,8 @@ import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType'
 import { dedent } from '../../src/util/util'
 
-describe(`Renderer datamodel v2 test`, () => {
-  test('Render postgres special fields according to datamodel v2', () => {
+describe(`Renderer datamodel v1.1 test`, () => {
+  test('Render postgres special fields according to datamodel v1.1', () => {
     const renderer = Renderer.create(DatabaseType.postgres, true)
 
     const modelWithDirectives = dedent(`

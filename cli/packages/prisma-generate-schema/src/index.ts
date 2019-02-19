@@ -32,7 +32,9 @@ export function generateCRUDSchema(
   databaseType: DatabaseType,
 ): GraphQLSchema {
   const { types } = parseInternalTypes(model, databaseType)
-  return Generator.create(databaseType).schema.generate(types, {})
+  return Generator.create(databaseType).schema.generate(types.sort(
+    ({ name: a }, { name: b }) => (a > b ? 1 : -1),
+  ), {})
 }
 
 /**

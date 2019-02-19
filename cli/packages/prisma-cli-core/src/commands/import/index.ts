@@ -23,13 +23,10 @@ export default class Import extends Command {
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
-    if (
-      this.definition.definition!.databaseType &&
-      this.definition.definition!.databaseType === 'document'
-    ) {
+    if (this.definition.definition!.databaseType && this.definition.definition!.databaseType === 'document') {
       throw new Error('Import is not yet supported for document stores.')
     }
 
@@ -51,22 +48,10 @@ export default class Import extends Command {
     )
   }
 
-  async import(
-    source: string,
-    serviceName: string,
-    stage: string,
-    token?: string,
-    workspaceSlug?: string,
-  ) {
+  async import(source: string, serviceName: string, stage: string, token?: string, workspaceSlug?: string) {
     await this.definition.load({})
     const typesString = this.definition.typesString!
-    const importer = new Importer(
-      source,
-      typesString,
-      this.client,
-      this.out,
-      this.config,
-    )
+    const importer = new Importer(source, typesString, this.client, this.out, this.config)
     await importer.upload(serviceName, stage, token, workspaceSlug)
   }
 }

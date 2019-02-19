@@ -14,14 +14,7 @@ export class PrismaDBClient implements IDatabaseClient {
   databaseType: DatabaseType
 
   constructor(definition: PrismaDefinitionClass) {
-    this.cluster = definition.getCluster()!
     this.definition = definition
-
-    if (this.cluster.shared) {
-      throw new Error(
-        `Cannot introspect demo server. Please use introspection on your self-hosted server.`,
-      )
-    }
   }
 
   async query(query: string, variables: string[]): Promise<any[]> {
@@ -92,9 +85,7 @@ export class PrismaDBClient implements IDatabaseClient {
 
     const databaseType = typeMap[primaryConnector]
     if (!databaseType) {
-      throw new Error(
-        `Could not identify primaryConnector ${primaryConnector} as database type`,
-      )
+      throw new Error(`Could not identify primaryConnector ${primaryConnector} as database type`)
     }
 
     this.databaseType = databaseType
@@ -104,8 +95,7 @@ export class PrismaDBClient implements IDatabaseClient {
     let queryString = query
 
     for (const [index, variable] of variables.entries()) {
-      const pattern =
-        this.databaseType === DatabaseType.postgres ? `\\$${index + 1}` : '\\?'
+      const pattern = this.databaseType === DatabaseType.postgres ? `\\$${index + 1}` : '\\?'
       const regex = new RegExp(pattern, 'g')
       queryString = queryString.replace(regex, `'${variable}'`)
     }
@@ -115,13 +105,17 @@ export class PrismaDBClient implements IDatabaseClient {
 
   async connect() {
     await this.setDatabaseType()
+    const cluster = await this.definition.getCluster()
+    if (!cluster) {
+      throw new Error('Could not get Prisma server for introspection')
+    }
     await this.cluster
       .request(
         `mutation($input: AddProjectInput!) {
-      addProject(input: $input) {
-        clientMutationId
-      }
-    }`,
+          addProject(input: $input) {
+            clientMutationId
+          }
+        }`,
         {
           input: {
             name: SERVICE_NAME,
@@ -151,10 +145,10 @@ export class PrismaDBClient implements IDatabaseClient {
       await this.cluster
         .request(
           `mutation($input: DeleteProjectInput!) {
-      deleteProject(input: $input) {
-        clientMutationId
-      }
-    }`,
+            deleteProject(input: $input) {
+              clientMutationId
+            }
+          }`,
           {
             input: {
               name: SERVICE_NAME,

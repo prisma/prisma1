@@ -75,7 +75,7 @@ constructor(options: PrismaOptions): Prisma
 
 The `PrismaOptions` type has the following fields:
 
-- `schemaPath` (required, `string`): File path to the schema definition of your Prisma service (typically a file called `prisma.graphql`) 
+- `typeDefs` (required, `string`): File path to the schema definition of your Prisma service (typically a file called `prisma.graphql`) 
 - `endpoint` (required, `string`): The endpoint of your Prisma service
 - `secret` (optional, `string`): The secret of your Prisma service
 - `fragmentReplacements` (optional, `FragmentReplacements`): A list of GraphQL fragment definitions, specifying fields that are required for the resolver to function correctly
