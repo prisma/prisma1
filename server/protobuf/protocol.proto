@@ -80,6 +80,16 @@ message GetNodesInput {
     repeated SelectedField  selected_fields = 5;
 }
 
+message GetRelatedNodesInput {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required RelationalField from_field      = 4;
+    repeated GraphqlId       from_node_ids   = 5;
+    required QueryArguments  query_arguments = 6;
+    repeated SelectedField   selected_fields = 7;
+}
+
 message QueryArguments {
     optional uint32    skip     = 1;
     optional GraphqlId after    = 2;
@@ -102,15 +112,15 @@ message OrderBy {
 
 message Filter {
     oneof type {
-        AndFilter               and                  = 1;
-        OrFilter                or                   = 2;
-        NotFilter               not                  = 3;
-        ScalarFilter            scalar               = 4;
-        ScalarListFilter        scalar_list          = 5;
-        RelationalField         one_relation_is_null = 6;
-        RelationFilter          relation             = 7;
-        bool                    node_subscription    = 8;
-        bool                    bool_filter          = 9;
+        AndFilter        and                  = 1;
+        OrFilter         or                   = 2;
+        NotFilter        not                  = 3;
+        ScalarFilter     scalar               = 4;
+        ScalarListFilter scalar_list          = 5;
+        RelationalField  one_relation_is_null = 6;
+        RelationFilter   relation             = 7;
+        bool             node_subscription    = 8;
+        bool             bool_filter          = 9;
     }
 }
 

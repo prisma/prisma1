@@ -49,16 +49,26 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     )
 
     val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(input)
-
-    // TODO: Do we need to handle the pagination stuff here?
     ResolverResult(queryArguments, nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
   }
 
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: QueryArguments,
-                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] =
-    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
+                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+    val projectJson = Json.toJson(project)
+    val input = prisma.protocol.GetRelatedNodesInput(
+      protocol.Header("GetRelatedNodesInput"),
+      ByteString.copyFromUtf8(projectJson.toString()),
+      fromField.model.dbName,
+      fromNodeIds.map(toPrismaValue),
+      toPrismaArguments(queryArguments),
+      toPrismaSelectedFields(selectedFields)
+    )
+
+    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(input)
+    ResolverResult(queryArguments, nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
+  }
 
   override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =
     forwarder.getScalarListValues(model, listField, queryArguments)

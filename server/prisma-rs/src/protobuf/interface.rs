@@ -8,9 +8,28 @@ use crate::{
 
 use prost::Message;
 
+macro_rules! input_to_query {
+    ( $x:tt, $y:ident ) => {
+        fn $y(&self, payload: &mut [u8]) -> Vec<u8> {
+            Self::protobuf_result(|| {
+                let input = $x::decode(payload)?;
+                let query = input.into_select_query()?;
+                let (nodes, fields) = self.data_resolver.select_nodes(query)?;
+                let response = RpcResponse::ok(NodesResult { nodes, fields });
+
+                let mut response_payload = Vec::new();
+                response.encode(&mut response_payload).unwrap();
+
+                Ok(response_payload)
+            })
+        }
+    }
+}
+
 pub trait ExternalInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
+    fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
 }
 
 pub struct ProtoBufInterface {
@@ -67,35 +86,7 @@ impl ProtoBufInterface {
 }
 
 impl ExternalInterface for ProtoBufInterface {
-    fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
-        Self::protobuf_result(|| {
-            let input = GetNodeByWhereInput::decode(payload)?;
-            let query = input.into_select_query()?;
-            let (nodes, fields) = self.data_resolver.select_nodes(query)?;
-
-            let response = RpcResponse::ok(NodesResult { nodes, fields });
-
-            let mut response_payload = Vec::new();
-            response.encode(&mut response_payload).unwrap();
-
-            Ok(response_payload)
-        })
-    }
-
-    fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
-        Self::protobuf_result(|| {
-            let input = GetNodesInput::decode(payload)?;
-            Self::validate(&input.query_arguments)?;
-
-            let query = input.into_select_query()?;
-            let (nodes, fields) = self.data_resolver.select_nodes(query)?;
-
-            let response = RpcResponse::ok(NodesResult { nodes, fields });
-
-            let mut response_payload = Vec::new();
-            response.encode(&mut response_payload).unwrap();
-
-            Ok(response_payload)
-        })
-    }
+    input_to_query!(GetNodeByWhereInput, get_node_by_where);
+    input_to_query!(GetNodesInput, get_nodes);
+    input_to_query!(GetRelatedNodesInput, get_related_nodes);
 }

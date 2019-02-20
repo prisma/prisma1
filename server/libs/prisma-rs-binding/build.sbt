@@ -13,12 +13,14 @@ buildNativeLib := {
   if ((Process(Seq("bash", "build.sh"), nativePath, "CARGO_FLAGS"-> cargoFlags) ! logger) != 0) {
     sys.error("Prisma library build failed.")
   }
-} 
-
-compile in Compile := {
-  buildNativeLib.value
-  (compile in Compile).value
 }
+
+(Compile / compile) := ((Compile / compile) dependsOn buildNativeLib).value
+
+//compile in Compile := {
+//  buildNativeLib.value
+//  (compile in Compile).value
+//}
 
 val nativeClasspath = taskKey[String]("The classpath.")
 nativeClasspath := {
