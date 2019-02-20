@@ -120,8 +120,8 @@ exports[`Introspector text columns 1`] = `
   a: String @unique
   aa: String! @unique
   b: String @unique
-  c: String @default(value: \\"abc'\\")
-  cc: String! @default(value: \\"abc'\\")
+  c: String @default(value: \\"abc\\")
+  cc: String! @default(value: \\"abc\\")
   d: String!
   e: String!
   f: String!
@@ -136,8 +136,8 @@ exports[`Introspector text columns 2`] = `
   a: String @unique
   aa: String! @unique
   b: String @unique
-  c: String @default(value: \\"abc'\\")
-  cc: String! @default(value: \\"abc'\\")
+  c: String @default(value: \\"abc\\")
+  cc: String! @default(value: \\"abc\\")
   d: String!
   e: String!
   f: String!
