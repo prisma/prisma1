@@ -209,7 +209,7 @@ ${chalk.bold(
       const stage = this.definition.stage!
       const token = this.definition.getToken(service, stage)
       const workspace = this.definition.getWorkspace()
-      const cluster = this.definition.getCluster()
+      const cluster = await this.definition.getCluster()
       this.env.setActiveCluster(cluster!)
       await this.client.initClusterClient(cluster!, service!, stage, workspace!)
       const introspection = await this.client.introspect(
