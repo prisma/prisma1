@@ -73,17 +73,17 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   ): string | null {
     let val = defaultValueString
 
-    // Detect string
-    if (val.startsWith("'")) {
-      // Strip quotes (are added again by renderer)
-      val = val.substring(1, val.length - 1)
-    }
-
     // Remove cast operator
     const i = val.indexOf('::')
 
     if (i >= 0) {
       val = val.substring(0, i)
+    }
+
+    // Detect string
+    if (val.startsWith("'")) {
+      // Strip quotes (are added again by renderer)
+      val = val.substring(1, val.length - 1)
     }
 
     // Check for null
