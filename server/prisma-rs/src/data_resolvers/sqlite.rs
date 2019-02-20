@@ -9,7 +9,7 @@ use std::collections::HashSet;
 use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult, PrismaValue, SERVER_ROOT};
 
 use rusqlite::{
-    types::{FromSql, FromSqlResult, Null, ToSql, ToSqlOutput, ValueRef},
+    types::{FromSql, FromSqlResult, Null, ToSqlOutput, ValueRef},
     Error as RusqlError, Row, NO_PARAMS,
 };
 
