@@ -3,7 +3,7 @@ use crate::{
     protobuf::prelude::*,
     PrismaResult,
 };
-use rusqlite::NO_PARAMS;
+use rusqlite::types::ToSqlOutput;
 use sql::prelude::*;
 
 impl DataResolver for Sqlite {
@@ -47,10 +47,15 @@ impl DataResolver for Sqlite {
                 .into_iter()
                 .fold(query_sql, |query_sql, limit| query_sql.limit(limit));
 
-            let query_sql = dbg!(query_sql.compile().unwrap());
+            let (query_sql, params) = dbg!(query_sql.compile().unwrap());
             let mut stmt = conn.prepare(&query_sql)?;
 
-            let nodes_iter = stmt.query_map(NO_PARAMS, |row| {
+            let params: Vec<ToSqlOutput<'static>> = params
+                .into_iter()
+                .map(|v| Self::to_sql_value(v).unwrap())
+                .collect();
+
+            let nodes_iter = stmt.query_map(&params, |row| {
                 let mut values = Vec::new();
 
                 for (i, field) in selected_fields.iter().enumerate() {

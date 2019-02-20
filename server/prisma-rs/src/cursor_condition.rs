@@ -38,7 +38,7 @@ impl CursorCondition {
                     let select_query = select_from(&model.table())
                         .column(field.model_column())
                         .column(id.clone())
-                        .so_that(where_condition);
+                        .so_that(ConditionTree::single(where_condition));
 
                     let compare = match (cursor_type, sort_order) {
                         (CursorType::Before, Order::Ascending) => row.less_than(select_query),

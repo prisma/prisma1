@@ -5,6 +5,7 @@ use sql::{
     },
     prelude::*,
 };
+use std::fmt;
 
 use crate::protobuf::prelude::*;
 
@@ -13,6 +14,27 @@ impl Into<Order> for SortOrder {
         match self {
             SortOrder::Asc => Order::Ascending,
             SortOrder::Desc => Order::Descending,
+        }
+    }
+}
+
+impl fmt::Display for PrismaValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PrismaValue::String(s) => s.fmt(f),
+            PrismaValue::Float(s) => s.fmt(f),
+            PrismaValue::Boolean(s) => s.fmt(f),
+            PrismaValue::DateTime(s) => s.fmt(f),
+            PrismaValue::Enum(s) => s.fmt(f),
+            PrismaValue::Json(s) => s.fmt(f),
+            PrismaValue::Int(s) => s.fmt(f),
+            PrismaValue::Relation(s) => s.fmt(f),
+            PrismaValue::Null(s) => s.fmt(f),
+            PrismaValue::Uuid(s) => s.fmt(f),
+            PrismaValue::GraphqlId(ref id) => match id.id_value.as_ref().unwrap() {
+                IdValue::String(s) => s.fmt(f),
+                IdValue::Int(s) => s.fmt(f),
+            },
         }
     }
 }
@@ -185,7 +207,7 @@ impl ToDatabaseValue for PrismaValue {
 #[cfg(test)]
 mod tests {
     use crate::protobuf::prelude::*;
-    use sql::grammar::{clause::ConditionTree, Operation};
+    use sql::grammar::{clause::ConditionTree, database_value::DatabaseValue, Expression};
 
     impl Filter {
         fn bool_filter(condition: bool) -> Filter {
@@ -362,7 +384,7 @@ mod tests {
     fn test_true() {
         let condition: ConditionTree = Filter::bool_filter(true).into();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut Vec::new()).unwrap();
 
         assert_eq!("1=1", sql);
     }
@@ -371,7 +393,7 @@ mod tests {
     fn test_false() {
         let condition: ConditionTree = Filter::bool_filter(false).into();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut Vec::new()).unwrap();
 
         assert_eq!("1=0", sql);
     }
@@ -379,87 +401,107 @@ mod tests {
     #[test]
     fn test_equals() {
         let condition: ConditionTree = Filter::equals("foo", PrismaValue::Int(1)).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` = 1", sql);
+        assert_eq!("`foo` = ?", sql);
+        assert_eq!(vec![DatabaseValue::Integer(1)], params);
     }
 
     #[test]
     fn test_not_equals() {
         let condition: ConditionTree = Filter::not_equals("foo", PrismaValue::Int(1)).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` <> 1", sql);
+        assert_eq!("`foo` <> ?", sql);
+        assert_eq!(vec![DatabaseValue::Integer(1)], params);
     }
 
     #[test]
     fn test_less_than() {
         let condition: ConditionTree = Filter::less_than("foo", PrismaValue::Int(1)).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` < 1", sql);
+        assert_eq!("`foo` < ?", sql);
+        assert_eq!(vec![DatabaseValue::Integer(1)], params);
     }
 
     #[test]
     fn test_less_than_or_equals() {
         let condition: ConditionTree =
             Filter::less_than_or_equals("foo", PrismaValue::Int(1)).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` <= 1", sql);
+        assert_eq!("`foo` <= ?", sql);
+        assert_eq!(vec![DatabaseValue::Integer(1)], params);
     }
 
     #[test]
     fn test_greater_than() {
         let condition: ConditionTree = Filter::greater_than("foo", PrismaValue::Int(1)).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` > 1", sql);
+        assert_eq!("`foo` > ?", sql);
+        assert_eq!(vec![DatabaseValue::Integer(1)], params);
     }
 
     #[test]
     fn test_greater_than_or_equals() {
         let condition: ConditionTree =
             Filter::greater_than_or_equals("foo", PrismaValue::Int(1)).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` >= 1", sql);
+        assert_eq!("`foo` >= ?", sql);
+        assert_eq!(vec![DatabaseValue::Integer(1)], params);
     }
 
     #[test]
     fn test_contains() {
         let condition: ConditionTree =
             Filter::contains("foo", PrismaValue::String("bar".to_string())).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` LIKE '%bar%'", sql);
+        assert_eq!("`foo` LIKE ?", sql);
+        assert_eq!(vec![DatabaseValue::Text(String::from("%bar%"))], params);
     }
 
     #[test]
     fn test_not_contains() {
         let condition: ConditionTree =
             Filter::not_contains("foo", PrismaValue::String("bar".to_string())).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` NOT LIKE '%bar%'", sql);
+        assert_eq!("`foo` NOT LIKE ?", sql);
+        assert_eq!(vec![DatabaseValue::Text(String::from("%bar%"))], params);
     }
 
     #[test]
     fn test_in() {
         let condition: ConditionTree =
             Filter::in_selection("foo", vec![PrismaValue::Int(1), PrismaValue::Int(2)]).into();
+        let mut params = Vec::new();
+        let sql = condition.compile(&mut params).unwrap();
 
-        let sql = condition.compile().unwrap();
-
-        assert_eq!("`foo` IN (1, 2)", sql);
+        assert_eq!("`foo` IN (?, ?)", sql);
+        assert_eq!(
+            vec![DatabaseValue::Integer(1), DatabaseValue::Integer(2)],
+            params
+        );
     }
 
     #[test]
@@ -472,50 +514,65 @@ mod tests {
             ],
         )
         .into();
+        let mut params = Vec::new();
+        let sql = condition.compile(&mut params).unwrap();
 
-        let sql = condition.compile().unwrap();
-
-        assert_eq!("`foo` NOT IN ('foo', 'bar')", sql);
+        assert_eq!("`foo` NOT IN (?, ?)", sql);
+        assert_eq!(
+            vec![
+                DatabaseValue::Text(String::from("foo")),
+                DatabaseValue::Text(String::from("bar"))
+            ],
+            params
+        );
     }
 
     #[test]
     fn test_starts_with() {
         let condition: ConditionTree =
             Filter::starts_with("foo", PrismaValue::String("bar".to_string())).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` LIKE 'bar%'", sql);
+        assert_eq!("`foo` LIKE ?", sql);
+        assert_eq!(vec![DatabaseValue::Text(String::from("bar%"))], params);
     }
 
     #[test]
     fn test_not_starts_with() {
         let condition: ConditionTree =
             Filter::not_starts_with("foo", PrismaValue::String("bar".to_string())).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` NOT LIKE 'bar%'", sql);
+        assert_eq!("`foo` NOT LIKE ?", sql);
+        assert_eq!(vec![DatabaseValue::Text(String::from("bar%"))], params);
     }
 
     #[test]
     fn test_ends_with() {
         let condition: ConditionTree =
             Filter::ends_with("foo", PrismaValue::String("bar".to_string())).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` LIKE '%bar'", sql);
+        assert_eq!("`foo` LIKE ?", sql);
+        assert_eq!(vec![DatabaseValue::Text(String::from("%bar"))], params);
     }
 
     #[test]
     fn test_not_ends_with() {
         let condition: ConditionTree =
             Filter::not_ends_with("foo", PrismaValue::String("bar".to_string())).into();
+        let mut params = Vec::new();
 
-        let sql = condition.compile().unwrap();
+        let sql = condition.compile(&mut params).unwrap();
 
-        assert_eq!("`foo` NOT LIKE '%bar'", sql);
+        assert_eq!("`foo` NOT LIKE ?", sql);
+        assert_eq!(vec![DatabaseValue::Text(String::from("%bar"))], params);
     }
 
     #[test]
@@ -523,7 +580,7 @@ mod tests {
         let filter = Filter::and(Vec::new());
         let condition: ConditionTree = filter.into();
 
-        assert_eq!("1=1", condition.compile().unwrap());
+        assert_eq!("1=1", condition.compile(&mut Vec::new()).unwrap());
     }
 
     #[test]
@@ -532,7 +589,7 @@ mod tests {
 
         let condition: ConditionTree = filter.into();
 
-        assert_eq!("`foo` = false", condition.compile().unwrap());
+        assert_eq!("`foo` = ?", condition.compile(&mut Vec::new()).unwrap());
     }
 
     #[test]
@@ -543,10 +600,15 @@ mod tests {
         ]);
 
         let condition: ConditionTree = filter.into();
+        let mut params = Vec::new();
 
         assert_eq!(
-            "(`foo` = false AND `bar` = 2)",
-            condition.compile().unwrap()
+            "(`foo` = ? AND `bar` = ?)",
+            condition.compile(&mut params).unwrap()
+        );
+        assert_eq!(
+            vec![DatabaseValue::Boolean(false), DatabaseValue::Integer(2)],
+            params
         );
     }
 
@@ -558,10 +620,16 @@ mod tests {
         ]);
 
         let condition: ConditionTree = filter.into();
+        let mut params = Vec::new();
 
         assert_eq!(
-            "(NOT (`foo` = false AND `bar` = 2))",
-            condition.compile().unwrap()
+            "(NOT (`foo` = ? AND `bar` = ?))",
+            condition.compile(&mut params).unwrap()
+        );
+
+        assert_eq!(
+            vec![DatabaseValue::Boolean(false), DatabaseValue::Integer(2)],
+            params
         );
     }
 
@@ -574,10 +642,20 @@ mod tests {
         ]);
 
         let condition: ConditionTree = filter.into();
+        let mut params = Vec::new();
 
         assert_eq!(
-            "(`foo` = false AND (`bar` = 2 AND `lol` = 'wtf'))",
-            condition.compile().unwrap()
+            "(`foo` = ? AND (`bar` = ? AND `lol` = ?))",
+            condition.compile(&mut params).unwrap()
+        );
+
+        assert_eq!(
+            vec![
+                DatabaseValue::Boolean(false),
+                DatabaseValue::Integer(2),
+                DatabaseValue::Text(String::from("wtf"))
+            ],
+            params
         );
     }
 
@@ -590,15 +668,26 @@ mod tests {
 
         let and_2 = Filter::and(vec![
             Filter::equals("musti", PrismaValue::String(String::from("cat"))),
-            Filter::equals("naukio", PrismaValue::String(String::from("cat"))),
+            Filter::equals("naukio", PrismaValue::String(String::from("meow"))),
         ]);
 
         let filter = Filter::or(vec![and_1, and_2]);
         let condition: ConditionTree = filter.into();
+        let mut params = Vec::new();
 
         assert_eq!(
-            "((`foo` = false AND `bar` = 2) OR (`musti` = 'cat' AND `naukio` = 'cat'))",
-            condition.compile().unwrap(),
+            "((`foo` = ? AND `bar` = ?) OR (`musti` = ? AND `naukio` = ?))",
+            condition.compile(&mut params).unwrap(),
+        );
+
+        assert_eq!(
+            vec![
+                DatabaseValue::Boolean(false),
+                DatabaseValue::Integer(2),
+                DatabaseValue::Text(String::from("cat")),
+                DatabaseValue::Text(String::from("meow"))
+            ],
+            params
         );
     }
 }

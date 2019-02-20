@@ -897,7 +897,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "sql"
 version = "0.4.3"
-source = "git+https://github.com/prisma/sql.git#b644e628338f5ff978888d79c5b0a1c44366875d"
+source = "git+https://github.com/prisma/sql.git#c2df0c2a0de9a56f0630b43b2190a71eefda8b61"
 
 [[package]]
 name = "stable_deref_trait"

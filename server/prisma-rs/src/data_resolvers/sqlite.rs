@@ -3,6 +3,7 @@ mod service;
 
 use chrono::{DateTime, Utc};
 use r2d2_sqlite::SqliteConnectionManager;
+use sql::prelude::*;
 use std::collections::HashSet;
 
 use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult, PrismaValue, SERVER_ROOT};
@@ -98,30 +99,15 @@ impl Sqlite {
             }
         }
     }
-}
 
-impl ToSql for PrismaValue {
-    fn to_sql(&self) -> Result<ToSqlOutput, RusqlError> {
-        let value = match self {
-            PrismaValue::String(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Float(value) => ToSqlOutput::from(f64::from(*value)),
-            PrismaValue::Int(value) => ToSqlOutput::from(*value),
-            PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
-            PrismaValue::DateTime(value) => value.to_sql().unwrap(),
-            PrismaValue::Null(_) => ToSqlOutput::from(Null),
-
-            PrismaValue::GraphqlId(value) => match value.id_value {
-                Some(graphql_id::IdValue::String(ref value)) => {
-                    ToSqlOutput::from(value.as_ref() as &str)
-                }
-                Some(graphql_id::IdValue::Int(value)) => ToSqlOutput::from(value),
-                None => panic!("We got an empty ID value here. Tsk tsk."),
-            },
-
-            PrismaValue::Relation(_) => panic!("We should not have a Relation value here."),
+    fn to_sql_value(v: DatabaseValue) -> Result<ToSqlOutput<'static>, RusqlError> {
+        let value = match v {
+            DatabaseValue::Null => ToSqlOutput::from(Null),
+            DatabaseValue::Integer(integer) => ToSqlOutput::from(integer),
+            DatabaseValue::Real(float) => ToSqlOutput::from(float),
+            DatabaseValue::Boolean(boolean) => ToSqlOutput::from(boolean),
+            DatabaseValue::Text(s) => ToSqlOutput::from(s),
+            v => panic!("Cannot get a database value for {:#?}", v),
         };
 
         Ok(value)
