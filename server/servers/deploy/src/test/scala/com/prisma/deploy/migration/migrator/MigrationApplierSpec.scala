@@ -120,7 +120,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
   def loadMigrationFromDb: Migration = persistence.byId(migration.id).await.get
 
   def migrationApplier(stepMapper: MigrationStepMapper, mutactionExecutor: DeployMutactionExecutor) = {
-    MigrationApplierImpl(persistence, testDependencies.projectPersistence, stepMapper, mutactionExecutor, deployConnector.testFacilities.inspector)
+    MigrationApplierImpl(persistence, testDependencies.projectPersistence, stepMapper, mutactionExecutor, deployConnector.databaseInspector)
   }
 
 //  lazy val succeedingSqlMutactionWithSucceedingRollback = clientSqlMutaction(succeedingStatementResult, rollback = succeedingStatementResult)

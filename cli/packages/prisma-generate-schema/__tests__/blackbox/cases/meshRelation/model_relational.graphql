@@ -1,15 +1,15 @@
 type A {
     field: Int!
     a: A!
-    b: [B!]!
+    b: [B]
     c: C
-    e: [E!]!
+    e: [E]
 }
 
 type B {
-    field: [String!]!
+    field: [String]
     c: C @relation(name: "BToC")
-    b: [B!]!
+    b: [B]
     a: A!
     c2: C @relation(name: "BToC2")
 }
@@ -17,7 +17,7 @@ type B {
 type C {
     expirationDate: DateTime
     c: C! 
-    b: [B!]! @relation(name: "BToC")
+    b: [B] @relation(name: "BToC")
     a: A
     b2: B @relation(name: "BToC2")
 }
@@ -27,7 +27,7 @@ type D {
     c: C!
     b: B!
     a: A!
-    d: [D!]!
+    d: [D]
 }
 
 

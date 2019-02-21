@@ -65,7 +65,7 @@ type User {
   updatedAt: DateTime!
   handle: String! @unique
   name: String
-  tweets: [Tweet!]!
+  tweets: [Tweet]
 }
 
 type Location {

@@ -1,13 +1,11 @@
 /* tslint:disable */
 import { ProjectDefinition } from 'prisma-cli-engine'
 
-
 export const defaultPjson = {
-  "name": "",
-  "version": "1.0.0",
-  "description": "My Prisma Service"
+  name: '',
+  version: '1.0.0',
+  description: 'My Prisma Service',
 }
-
 
 export const defaultDefinition: ProjectDefinition = {
   modules: [

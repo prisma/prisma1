@@ -3,7 +3,7 @@ package com.prisma.image
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.import_export.{BulkExport, BulkImport}
-import com.prisma.api.schema.APIErrors.InvalidToken
+import com.prisma.api.schema.APIErrors.AuthFailure
 import com.prisma.api.schema.{PrivateSchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.deploy.DeployDependencies
@@ -21,10 +21,9 @@ import play.api.libs.json.{JsValue, Json}
 import sangria.execution.{Executor, QueryAnalysisError}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
-case class SangriaHandlerImpl(
-    managementApiEnabled: Boolean
-)(
+case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     deployDependencies: DeployDependencies,
@@ -98,11 +97,22 @@ case class SangriaHandlerImpl(
   def isManagementApiRequest(request: RawRequest): Boolean = request.path == Vector("management")
 
   private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: Project => Future[T]): Future[T] = {
-    for {
-      project    <- apiDependencies.projectFetcher.fetch_!(projectId)
-      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("Authorization"))
-      result     <- if (authResult.isSuccess) fn(project) else Future.failed(InvalidToken())
-    } yield result
+    (for {
+      project <- apiDependencies.projectFetcher.fetch_!(projectId)
+    } yield {
+      if (project.secrets.nonEmpty) {
+        Try { apiDependencies.auth.extractToken(rawRequest.headers.get("authorization")) } match {
+          case Success(token) =>
+            apiDependencies.auth.verifyToken(token, project.secrets) match {
+              case Success(_) => project
+              case Failure(_) => throw AuthFailure()
+            }
+          case Failure(_) => throw AuthFailure()
+        }
+      } else {
+        project
+      }
+    }).flatMap(fn)
   }
 
   override def supportedWebsocketProtocols                       = websocketHandler.supportedProtocols
@@ -114,7 +124,7 @@ case class SangriaHandlerImpl(
       case e: DeployApiError => Some(e.code)
       case _                 => None
     }
-    val userContext = SystemUserContext(authorizationHeader = request.headers.get("Authorization"))
+    val userContext = SystemUserContext(authorizationHeader = request.headers.get("authorization"))
     val errorHandler =
       ErrorHandler(
         request.id,
@@ -224,6 +234,7 @@ case class SangriaHandlerImpl(
     actualDuration
   }
 
-  private def metricKeyFor(projectId: String): String =
+  private def metricKeyFor(projectId: String): String = {
     projectId.replace(projectIdEncoder.stageSeparator, '-').replace(projectIdEncoder.workspaceSeparator, '-')
+  }
 }

@@ -1,5 +1,6 @@
 package com.prisma.messagebus.queue.rabbit
 
+import akka.actor.ActorSystem
 import com.prisma.errors.ErrorReporter
 import com.prisma.messagebus.Conversions.{ByteMarshaller, ByteUnmarshaller}
 import com.prisma.messagebus.QueueConsumer.ConsumeFn
@@ -22,7 +23,8 @@ case class RabbitQueue[T](
 )(
     implicit reporter: ErrorReporter,
     marshaller: ByteMarshaller[T],
-    unmarshaller: ByteUnmarshaller[T]
+    unmarshaller: ByteUnmarshaller[T],
+    system: ActorSystem
 ) extends Queue[T] {
 
   val exchange: Exchange                 = RabbitUtils.declareExchange(amqpUri, exchangeName, exchangeConcurrency, durableExchange)
@@ -73,7 +75,11 @@ object RabbitQueue {
       workerConcurrency: Int = 1,
       durableExchange: Boolean = false,
       backoff: BackoffStrategy = LinearBackoff(5.seconds)
-  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T]): RabbitQueueConsumer[T] = {
+  )(
+      implicit reporter: ErrorReporter,
+      unmarshaller: ByteUnmarshaller[T],
+      system: ActorSystem
+  ): RabbitQueueConsumer[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, exchangeConcurrency, durableExchange)
 
     RabbitQueueConsumer[T](exchangeName, exchange, backoff, workerConcurrency, onShutdown = () => exchange.channel.close())
@@ -88,7 +94,7 @@ object RabbitQueue {
       autoDelete: Boolean = true,
       durableExchange: Boolean = false,
       backoff: BackoffStrategy = LinearBackoff(5.seconds)
-  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T]): RabbitPlainQueueConsumer[T] = {
+  )(implicit reporter: ErrorReporter, unmarshaller: ByteUnmarshaller[T], system: ActorSystem): RabbitPlainQueueConsumer[T] = {
     val exchange = RabbitUtils.declareExchange(amqpUri, exchangeName, exchangeConcurrency, durableExchange)
 
     RabbitPlainQueueConsumer[T](queueName, exchange, backoff, autoDelete = autoDelete, onShutdown = () => exchange.channel.close())

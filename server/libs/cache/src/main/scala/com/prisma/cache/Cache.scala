@@ -1,20 +1,6 @@
 package com.prisma.cache
 
-import scala.concurrent.{ExecutionContext, Future}
-
-object Cache {
-  def unbounded[K, V >: Null](): Cache[K, V] = {
-    CaffeineImplForCache.unbounded[K, V]
-  }
-
-  def lfu[K, V >: Null](initialCapacity: Int, maxCapacity: Int): Cache[K, V] = {
-    CaffeineImplForCache.lfu(initialCapacity = initialCapacity, maxCapacity = maxCapacity)
-  }
-
-  def lfuAsync[K, V >: Null](initialCapacity: Int, maxCapacity: Int)(implicit ec: ExecutionContext): AsyncCache[K, V] = {
-    CaffeineImplForAsyncCache.lfu(initialCapacity = initialCapacity, maxCapacity = maxCapacity)
-  }
-}
+import scala.concurrent.Future
 
 trait Cache[K, V] {
   def get(key: K): Option[V]

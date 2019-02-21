@@ -1,4 +1,10 @@
-import { IGQLType, IGQLField, GQLScalarField, IDirectiveInfo, GQLOneRelationField } from '../../src/datamodel/model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  IDirectiveInfo,
+  GQLOneRelationField,
+} from '../../src/datamodel/model'
 import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType'
@@ -7,14 +13,14 @@ import { dedent } from '../../src/util/util'
 describe(`Renderer datamodel v1.1 test`, () => {
   test('Render postgres special fields according to datamodel v1.1', () => {
     const renderer = Renderer.create(DatabaseType.postgres, true)
-    
+
     const modelWithDirectives = dedent(`
       type Test {
         hasBeenCreatedAt: DateTime @createdAt
         hasBeenUpdatedAt: DateTime @updatedAt
         primaryId: Int @id
       }`)
-      
+
     const field1 = new GQLScalarField('hasBeenCreatedAt', 'DateTime')
     field1.isCreatedAt = true
     const field2 = new GQLScalarField('hasBeenUpdatedAt', 'DateTime')
@@ -23,17 +29,22 @@ describe(`Renderer datamodel v1.1 test`, () => {
     field3.isId = true
 
     const type: IGQLType = {
-      name: "Test", 
+      name: 'Test',
       isEmbedded: false,
       isEnum: false,
-      fields: [
-        field1, field2, field3
-      ]
+      fields: [field1, field2, field3],
+      comments: [],
+      directives: [],
+      databaseName: null,
+      indices: [],
     }
 
-    const res = renderer.render({
-      types: [type]
-    })
+    const res = renderer.render(
+      {
+        types: [type],
+      },
+      true,
+    )
 
     expect(res).toEqual(modelWithDirectives)
   })

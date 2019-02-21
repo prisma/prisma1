@@ -1,11 +1,11 @@
 type User {
   id: ID! @unique
   name: String!
-  posts: [Post!]! @relation(name: "PostsByUser")
-  postsWithoutConnection: [PostWithoutConnection!]!
+  posts: [Post] @relation(name: "PostsByUser")
+  postsWithoutConnection: [PostWithoutConnection]
   billingInfo: BillingInfo!
   billingInfoWithoutConnection: BillingInfoWithoutConnection!
-  likes: [Post!]! @relation(name: "LikesByUser")
+  likes: [Post] @relation(name: "LikesByUser")
   optionalDetails: OptionalDetails
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection
 }
@@ -15,7 +15,7 @@ type Post {
   text: String!
   count: Int!
   user: User! @relation(name: "PostsByUser")
-  likes: [User!]! @relation(name: "LikesByUser")
+  likes: [User] @relation(name: "LikesByUser")
 }
 
 type PostWithoutConnection {

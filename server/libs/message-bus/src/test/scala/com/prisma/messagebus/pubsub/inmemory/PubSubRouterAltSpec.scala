@@ -61,7 +61,7 @@ class PubSubRouterAltSpec
       router.router.routees.length shouldEqual 1
 
       system.stop(probe.ref)
-      Thread.sleep(50)
+      Thread.sleep(500)
       router.router.routees.length shouldEqual 0
     }
   }

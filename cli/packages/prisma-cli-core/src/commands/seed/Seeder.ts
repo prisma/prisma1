@@ -125,7 +125,6 @@ export class Seeder {
       } catch (e) {
         throw new Error(`Error while executing operation:\n${e.message}`)
       }
-
     } catch (e) {
       throw new Error(`Error while parsing ${filePath}:\n${e.message}`)
     }

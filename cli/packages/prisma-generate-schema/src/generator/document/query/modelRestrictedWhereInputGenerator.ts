@@ -7,16 +7,19 @@ export default class ModelRestrictedWhereInputGenerator extends RelationalModelW
     return `${input.name}RestrictedWhereInput`
   }
 
-  public generateRelationFilterFields(model: IGQLType, field: IGQLField): GraphQLInputFieldConfigMap | null {
+  public generateRelationFilterFields(
+    model: IGQLType,
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap | null {
     // Can only filter for embedded types, or on embedded types when in restricted where type.
-    if((field.type as IGQLType).isEmbedded) {
+    if ((field.type as IGQLType).isEmbedded) {
       return super.generateRelationFilterFields(model, field)
     } else {
       return null
     }
   }
 
-  protected getLogicalOperators() : string[] {
+  protected getLogicalOperators(): string[] {
     return ['AND']
   }
 }

@@ -10,6 +10,6 @@ export default class ConsoleCommand extends Command {
     const url = `https://app.prisma.io`
 
     this.out.log(`Opening prisma console ${url} in the browser`)
-    opn(url).catch(() => {}); // Prevent `unhandledRejection` error.
+    opn(url).catch(() => {}) // Prevent `unhandledRejection` error.
   }
 }

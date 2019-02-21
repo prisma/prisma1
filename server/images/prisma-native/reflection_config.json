@@ -1,0 +1,271 @@
+[
+  {
+    "name": "akka.event.DefaultLoggingFilter",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.ActorSystem$Settings",
+          "akka.event.EventStream"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.actor.LightArrayRevolverScheduler",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.typesafe.config.Config",
+          "akka.event.LoggingAdapter",
+          "java.util.concurrent.ThreadFactory"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.actor.LocalActorRefProvider",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "akka.actor.ActorSystem$Settings",
+          "akka.event.EventStream",
+          "akka.actor.DynamicAccess"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.routing.ConsistentHashingPool",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.typesafe.config.Config"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.routing.RoundRobinPool",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.typesafe.config.Config"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.dispatch.BoundedMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.MultipleConsumerSemantics"
+  },
+  {
+    "name": "akka.dispatch.BoundedControlAwareMessageQueueSemantics"
+  },
+  {
+    "name": "akka.event.LoggerMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.BoundedDequeBasedMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.UnboundedMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.UnboundedDequeBasedMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.UnboundedControlAwareMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.ControlAwareMessageQueueSemantics"
+  },
+  {
+    "name": "akka.dispatch.DequeBasedMessageQueueSemantics"
+  },
+  {
+    "name": "akka.actor.LocalActorRefProvider$Guardian",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.SupervisorStrategy"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.dispatch.UnboundedDequeBasedMailbox",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.ActorSystem$Settings",
+          "com.typesafe.config.Config"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.dispatch.UnboundedMailbox",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.ActorSystem$Settings",
+          "com.typesafe.config.Config"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.actor.DefaultSupervisorStrategy",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "akka.actor.LocalActorRefProvider$SystemGuardian",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.SupervisorStrategy",
+          "akka.actor.ActorRef"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.event.Logging$DefaultLogger",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "akka.event.LoggerMailboxType",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.ActorSystem$Settings",
+          "com.typesafe.config.Config"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.event.DeadLetterListener",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "akka.event.EventStreamUnsubscriber",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name": "akka.serialization.SerializationExtension$",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name": "com.typesafe.sslconfig.ssl.DefaultHostnameVerifier",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "com.typesafe.sslconfig.util.LoggerFactory"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.io.TcpManager",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.io.TcpExt"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.io.SelectionHandler",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.io.SelectionHandlerSettings"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.routing.RoutedActorCell$RouterActorCreator",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.routing.RouterConfig"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.io.TcpListener",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "akka.actor.ActorRef",
+          "akka.io.TcpExt",
+          "akka.io.ChannelRegistry",
+          "akka.actor.ActorRef",
+          "akka.io.Tcp$Bind"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "akka.http.impl.engine.client.PoolMasterActor",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name" : "com.github.benmanes.caffeine.cache.SSMS",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "com.github.benmanes.caffeine.cache.PSMS",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "com.github.benmanes.caffeine.cache.PSMW",
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "akka.io.TcpOutgoingConnection",
+    "allDeclaredConstructors" : true
+  }
+]

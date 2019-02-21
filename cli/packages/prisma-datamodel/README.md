@@ -1,3 +1,3 @@
 # prisma-datamodel
 
-Prisma Datamodel
+Prisma Datamodel package.

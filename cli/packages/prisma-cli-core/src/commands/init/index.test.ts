@@ -49,7 +49,7 @@ function makeOutputDeterministic(output: string) {
     .join('\n')
 }
 
-describe('init', () => {
+describe.skip('init', () => {
   test('choose local', async () => {
     await testChoices({
       choice: 'local',

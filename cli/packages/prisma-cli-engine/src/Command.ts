@@ -6,14 +6,10 @@ import { ProjectDefinition, RunOptions } from './types/common'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
-// import { Auth } from './Auth'
 import { Environment, PrismaDefinitionClass } from 'prisma-yml'
 import packagejson = require('../package.json')
 import * as mock from './mock'
-import * as fs from 'fs-extra'
-import * as path from 'path'
 import { RC } from './types/rc'
-import { PrismaDefinition } from 'prisma-json-schema'
 import { initStatusChecker } from './StatusChecker'
 const debug = require('debug')('command')
 
@@ -46,9 +42,13 @@ export class Command {
 
     argv.unshift('argv0', 'cmd')
 
-    const mockDefinition = customArgs && customArgs.mockDefinition ? customArgs.mockDefinition : mock.mockDefinition
+    const mockDefinition =
+      customArgs && customArgs.mockDefinition
+        ? customArgs.mockDefinition
+        : mock.mockDefinition
     const mockRC = customArgs && customArgs.mockRC ? customArgs.mockRC : null
-    const mockConfig = customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
+    const mockConfig =
+      customArgs && customArgs.mockConfig ? customArgs.mockConfig : null
     debug(`Using mockDefinition`, mockDefinition)
     debug(`Using mockRC`, mockRC)
 
@@ -103,7 +103,12 @@ export class Command {
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
     this.env = new Environment(this.config.home, this.out, this.config.version)
-    this.definition = new PrismaDefinitionClass(this.env, this.config.definitionPath, process.env, this.out)
+    this.definition = new PrismaDefinitionClass(
+      this.env,
+      this.config.definitionPath,
+      process.env,
+      this.out,
+    )
     this.client = new Client(this.config, this.env, this.out)
     // this.auth = new Auth(this.out, this.config, this.env, this.client)
     // this.client.setAuth(this.auth)

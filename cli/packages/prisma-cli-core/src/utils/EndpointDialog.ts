@@ -2,7 +2,13 @@ import { Output, Client, Config, getPing } from 'prisma-cli-engine'
 import * as inquirer from 'inquirer'
 import chalk from 'chalk'
 import { Cluster, Environment, PrismaDefinitionClass } from 'prisma-yml'
-import { concatName, defaultDataModel, defaultMongoDataModel, defaultDockerCompose, prettyTime } from '../util'
+import {
+  concatName,
+  defaultDataModel,
+  defaultMongoDataModel,
+  defaultDockerCompose,
+  prettyTime,
+} from '../util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -125,7 +131,14 @@ export class EndpointDialog {
   config: Config
   definition: PrismaDefinitionClass
   shouldAskForGenerator: boolean
-  constructor({ out, client, env, config, definition, shouldAskForGenerator }: ConstructorArgs) {
+  constructor({
+    out,
+    client,
+    env,
+    config,
+    definition,
+    shouldAskForGenerator,
+  }: ConstructorArgs) {
     this.out = out
     this.client = client
     this.env = env
@@ -136,9 +149,14 @@ export class EndpointDialog {
 
   async getEndpoint(): Promise<GetEndpointResult> {
     await this.env.fetchClusters()
-    const localClusterRunning = await this.isClusterOnline('http://localhost:4466')
+    const localClusterRunning = await this.isClusterOnline(
+      'http://localhost:4466',
+    )
     let folderName = path.basename(this.config.definitionDir)
-    folderName = folderName === 'prisma' ? path.basename(path.join(this.config.definitionDir, '../')) : folderName
+    folderName =
+      folderName === 'prisma'
+        ? path.basename(path.join(this.config.definitionDir, '../'))
+        : folderName
 
     if (/^\d+/.test(folderName)) {
       folderName = `service-${folderName}`
@@ -150,7 +168,12 @@ export class EndpointDialog {
     const files = this.listFiles()
     const hasDockerComposeYml = files.includes('docker-compose.yml')
 
-    const question = this.getClusterQuestion(!loggedIn && !localClusterRunning, hasDockerComposeYml, clusters, loggedIn)
+    const question = this.getClusterQuestion(
+      !loggedIn && !localClusterRunning,
+      hasDockerComposeYml,
+      clusters,
+      loggedIn,
+    )
 
     const { choice } = await this.out.prompt(question)
 
@@ -181,8 +204,14 @@ export class EndpointDialog {
     let data: any = {
       connector: credentials.type,
       host: credentials.host,
-      database: credentials.database && credentials.database.length > 0 ? credentials.database : undefined,
-      schema: credentials.schema && credentials.schema.length > 0 ? credentials.schema : undefined,
+      database:
+        credentials.database && credentials.database.length > 0
+          ? credentials.database
+          : undefined,
+      schema:
+        credentials.schema && credentials.schema.length > 0
+          ? credentials.schema
+          : undefined,
       user: credentials.user,
       password: credentials.password,
       uri: credentials.uri,
@@ -265,7 +294,10 @@ export class EndpointDialog {
           (this.env.clusters || []).find(c => c.name === 'local') ||
           new Cluster(this.out, 'local', 'http://localhost:4466')
 
-        const type = choice === 'Create new database' ? await this.askForDatabaseType() : 'mysql'
+        const type =
+          choice === 'Create new database'
+            ? await this.askForDatabaseType()
+            : 'mysql'
         if (type === 'mongo') {
           datamodel = defaultMongoDataModel
         }
@@ -303,7 +335,9 @@ export class EndpointDialog {
           // Only introspect, if there is already data
           if (credentials.alreadyData) {
             const connector = new MongoConnector(client)
-            const introspection = await connector.introspect(credentials.database!)
+            const introspection = await connector.introspect(
+              credentials.database!,
+            )
             const sdl = await introspection.getDatamodel()
             const numCollections = sdl.types.length
             const renderedSdl = introspection.renderer.render(sdl)
@@ -321,7 +355,9 @@ export class EndpointDialog {
             }
 
             this.out.action.stop(prettyTime(Date.now() - before))
-            this.out.log(`Created datamodel definition based on ${numCollections} Mongo collections.`)
+            this.out.log(
+              `Created datamodel definition based on ${numCollections} Mongo collections.`,
+            )
             datamodel = renderedSdl
           } else {
             this.out.action.stop(prettyTime(Date.now() - before))
@@ -333,8 +369,13 @@ export class EndpointDialog {
         } else {
           this.out.log('')
           const before = Date.now()
-          this.out.action.start(credentials!.alreadyData ? `Introspecting database` : `Connecting to database`)
+          this.out.action.start(
+            credentials!.alreadyData
+              ? `Introspecting database`
+              : `Connecting to database`,
+          )
           const client = new PGClient(this.replaceLocalDockerHost(credentials))
+          await client.connect()
           const connector = new PostgresConnector(client)
           let schemas
           try {
@@ -343,7 +384,12 @@ export class EndpointDialog {
             throw new Error(`Could not connect to database. ${e.message}`)
           }
 
-          if (credentials && credentials.alreadyData && schemas && schemas.length > 0) {
+          if (
+            credentials &&
+            credentials.alreadyData &&
+            schemas &&
+            schemas.length > 0
+          ) {
             const schema = credentials.schema || schemas[0]
 
             const introspection = await connector.introspect(schema)
@@ -364,7 +410,9 @@ export class EndpointDialog {
             }
 
             this.out.action.stop(prettyTime(Date.now() - before))
-            this.out.log(`Created datamodel definition based on ${numTables} database tables.`)
+            this.out.log(
+              `Created datamodel definition based on ${numTables} database tables.`,
+            )
             datamodel = renderedSdl
           } else {
             this.out.action.stop(prettyTime(Date.now() - before))
@@ -391,7 +439,10 @@ export class EndpointDialog {
             workspace = this.getPublicName()
           }
         } else {
-          cluster = clusters.find(c => c.name === result.cluster && c.workspaceSlug === result.workspace)
+          cluster = clusters.find(
+            c =>
+              c.name === result.cluster && c.workspaceSlug === result.workspace,
+          )
           workspace = result.workspace
         }
     }
@@ -403,15 +454,23 @@ export class EndpointDialog {
     this.env.setActiveCluster(cluster!)
 
     // TODO propose alternatives if folderName already taken to ensure global uniqueness
-    if (!cluster.local || (await this.projectExists(cluster, service, stage, workspace))) {
+    if (
+      !cluster.local ||
+      (await this.projectExists(cluster, service, stage, workspace))
+    ) {
       service = await this.askForService(folderName)
     }
 
-    if (!cluster.local || (await this.projectExists(cluster, service, stage, workspace))) {
+    if (
+      !cluster.local ||
+      (await this.projectExists(cluster, service, stage, workspace))
+    ) {
       stage = await this.askForStage('dev')
     }
 
-    const generator = this.shouldAskForGenerator ? await this.askForGenerator() : undefined
+    const generator = this.shouldAskForGenerator
+      ? await this.askForGenerator()
+      : undefined
 
     workspace = workspace || cluster.workspaceSlug
 
@@ -473,7 +532,9 @@ export class EndpointDialog {
     return connectionString.replace('localhost', 'host.docker.internal')
   }
 
-  async getDatabase(introspection: boolean = false): Promise<DatabaseCredentials> {
+  async getDatabase(
+    introspection: boolean = false,
+  ): Promise<DatabaseCredentials> {
     const type = await this.askForDatabaseType(introspection)
     const credentials: any = {
       type,
@@ -482,7 +543,9 @@ export class EndpointDialog {
       const alreadyData = introspection || (await this.askForExistingData())
       const askForSchema = introspection ? true : alreadyData ? true : false
       if (type === 'mysql' && alreadyData) {
-        throw new Error(`Existing MySQL databases with data are not yet supported.`)
+        throw new Error(
+          `Existing MySQL databases with data are not yet supported.`,
+        )
       }
       credentials.alreadyData = alreadyData
       credentials.host = await this.ask({
@@ -531,7 +594,8 @@ export class EndpointDialog {
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
-      const alreadyData = introspection || (await this.askForExistingDataMongo())
+      const alreadyData =
+        introspection || (await this.askForExistingDataMongo())
       if (alreadyData) {
         credentials.database = await this.ask({
           message: `Enter name of existing database`,
@@ -560,7 +624,9 @@ export class EndpointDialog {
     return choice
   }
 
-  private getClusterAndWorkspaceFromChoice(choice: string): { workspace: string | null; cluster: string } {
+  private getClusterAndWorkspaceFromChoice(
+    choice: string,
+  ): { workspace: string | null; cluster: string } {
     const splitted = choice.split('/')
     const workspace = splitted.length > 1 ? splitted[0] : null
     const cluster = splitted.slice(-1)[0]
@@ -582,7 +648,12 @@ export class EndpointDialog {
     workspace: string | undefined,
   ): Promise<boolean> {
     try {
-      return Boolean(await this.client.getProject(concatName(cluster, name, workspace || null), stage))
+      return Boolean(
+        await this.client.getProject(
+          concatName(cluster, name, workspace || null),
+          stage,
+        ),
+      )
     } catch (e) {
       return false
     }
@@ -604,8 +675,14 @@ export class EndpointDialog {
     isAuthenticated: boolean,
   ) {
     const sandboxChoices = [
-      ['Demo server', 'Hosted demo environment incl. database (requires login)'],
-      ['Use other server', 'Manually provide endpoint of a running Prisma server'],
+      [
+        'Demo server',
+        'Hosted demo environment incl. database (requires login)',
+      ],
+      [
+        'Use other server',
+        'Manually provide endpoint of a running Prisma server',
+      ],
     ]
     if (fromScratch && !hasDockerComposeYml) {
       const fixChoices = [
@@ -616,10 +693,16 @@ export class EndpointDialog {
       const choices = this.convertChoices(rawChoices)
       const finalChoices = [
         new inquirer.Separator('                       '),
-        new inquirer.Separator(chalk.bold('You can set up Prisma for local development (based on docker-compose)')),
+        new inquirer.Separator(
+          chalk.bold(
+            'You can set up Prisma for local development (based on docker-compose)',
+          ),
+        ),
         ...choices.slice(0, fixChoices.length),
         new inquirer.Separator('                       '),
-        new inquirer.Separator(chalk.bold('Or deploy to an existing Prisma server:')),
+        new inquirer.Separator(
+          chalk.bold('Or deploy to an existing Prisma server:'),
+        ),
         ...choices.slice(fixChoices.length, 5),
       ]
       return {
@@ -632,21 +715,33 @@ export class EndpointDialog {
       }
     } else {
       const clusterChoices =
-        clusters.length > 0 ? clusters.filter(c => !c.shared).map(this.getClusterChoice) : sandboxChoices
+        clusters.length > 0
+          ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
+          : sandboxChoices
 
       const rawChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
         ...clusterChoices,
-        ['Demo server', `Hosted demo environment incl. database${!isAuthenticated ? ` (requires login)` : ``}`],
-        ['Use other server', 'Manually provide endpoint of a running Prisma server'],
+        [
+          'Demo server',
+          `Hosted demo environment incl. database${
+            !isAuthenticated ? ` (requires login)` : ``
+          }`,
+        ],
+        [
+          'Use other server',
+          'Manually provide endpoint of a running Prisma server',
+        ],
       ]
       const choices = this.convertChoices(rawChoices)
       const dockerChoices = hasDockerComposeYml
         ? []
         : [
             new inquirer.Separator(
-              chalk.bold('Set up a new Prisma server for local development (based on docker-compose):'),
+              chalk.bold(
+                'Set up a new Prisma server for local development (based on docker-compose):',
+              ),
             ),
             ...choices.slice(0, 2),
           ]
@@ -654,7 +749,9 @@ export class EndpointDialog {
         new inquirer.Separator('                       '),
         ...dockerChoices,
         new inquirer.Separator('                       '),
-        new inquirer.Separator(chalk.bold('Or deploy to an existing Prisma server:')),
+        new inquirer.Separator(
+          chalk.bold('Or deploy to an existing Prisma server:'),
+        ),
         ...choices.slice(2),
       ]
       return {
@@ -668,7 +765,9 @@ export class EndpointDialog {
   }
 
   private getClusterName(c: Cluster): string {
-    return `${c.workspaceSlug ? `${c.workspaceSlug}/` : ''}${this.encodeName(c.name)}`
+    return `${c.workspaceSlug ? `${c.workspaceSlug}/` : ''}${this.encodeName(
+      c.name,
+    )}`
   }
 
   private getClusterChoice = (c: Cluster): string[] => {
@@ -687,13 +786,19 @@ export class EndpointDialog {
   private async askForDemoCluster(): Promise<Cluster> {
     const eu1Ping = await getPing('EU_WEST_1')
     const us1Ping = await getPing('US_WEST_2')
-    const clusters = this.getCloudClusters().filter(c => c.name === 'prisma-eu1' || c.name === 'prisma-us1')
+    const clusters = this.getCloudClusters().filter(
+      c => c.name === 'prisma-eu1' || c.name === 'prisma-us1',
+    )
 
     const rawChoices = clusters.map(c => {
       const clusterName = this.getClusterName(c)
       const clusterRegion = c.name === 'prisma-eu1' ? `eu-west-1` : `us-west-2`
-      const pingTime = c.name === 'prisma-eu1' ? eu1Ping.toFixed() : us1Ping.toFixed()
-      return [clusterName, `Hosted on AWS in ${clusterRegion} using MySQL [${pingTime}ms latency]`]
+      const pingTime =
+        c.name === 'prisma-eu1' ? eu1Ping.toFixed() : us1Ping.toFixed()
+      return [
+        clusterName,
+        `Hosted on AWS in ${clusterRegion} using MySQL [${pingTime}ms latency]`,
+      ]
     })
     const choices = this.convertChoices(rawChoices)
 
@@ -723,7 +828,8 @@ export class EndpointDialog {
     if (!introspect) {
       choices.push({
         value: 'mysql',
-        name: 'MySQL             MySQL compliant databases like MySQL or MariaDB',
+        name:
+          'MySQL             MySQL compliant databases like MySQL or MariaDB',
         short: 'MySQL',
       })
     }
@@ -743,7 +849,9 @@ export class EndpointDialog {
     const { dbType } = await this.out.prompt({
       name: 'dbType',
       type: 'list',
-      message: `What kind of database do you want to ${introspect ? 'introspect' : 'deploy to'}?`,
+      message: `What kind of database do you want to ${
+        introspect ? 'introspect' : 'deploy to'
+      }?`,
       choices,
       // pageSize: 9,
     })
@@ -751,7 +859,9 @@ export class EndpointDialog {
     return dbType
   }
 
-  private convertChoices(choices: string[][]): Array<{ value: string; name: string }> {
+  private convertChoices(
+    choices: string[][],
+  ): Array<{ value: string; name: string }> {
     const padded = this.out.printPadded(choices, 0, 6).split('\n')
     return padded.map((name, index) => ({
       name,
@@ -800,7 +910,8 @@ export class EndpointDialog {
     const { generator } = await this.out.prompt({
       name: 'generator',
       type: 'list',
-      message: 'Select the programming language for the generated Prisma client',
+      message:
+        'Select the programming language for the generated Prisma client',
       pageSize: choices.length,
       choices,
     })
@@ -907,7 +1018,11 @@ export class EndpointDialog {
       validate:
         defaultValue || !required
           ? undefined
-          : validate || (value => (value && value.length > 0 ? true : `Please provide a valid ${key}`)),
+          : validate ||
+            (value =>
+              value && value.length > 0
+                ? true
+                : `Please provide a valid ${key}`),
     }
 
     const result = await this.out.prompt(question)
@@ -916,7 +1031,9 @@ export class EndpointDialog {
   }
 
   private getSillyName() {
-    return `${slugify(sillyname()).split('-')[0]}-${Math.round(Math.random() * 1000)}`
+    return `${slugify(sillyname()).split('-')[0]}-${Math.round(
+      Math.random() * 1000,
+    )}`
   }
 
   private getPublicName() {

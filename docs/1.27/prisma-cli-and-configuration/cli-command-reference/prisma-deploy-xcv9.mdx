@@ -1,0 +1,52 @@
+export const meta = {
+  title: "prisma deploy",
+  position: 120,
+}
+
+## `$ prisma deploy`
+
+Deploys a service configuration to a Prisma service. 
+
+Every time you're changing a file from your service configuration, you need to synchronize these changes with the running Prisma service.
+
+Upon the very first deploy of a service, the command will perform initial data seeding if the `seed` property in prisma.yml is provided. You can prevent this by passing the `--no-seed` option.
+
+If no [`endpoint`](5cy7#endpoint-optional) property is specifed in prisma.yml, the command will prompt you to interactively select a Prisma server as a deployment target for the service. After you selected a Prisma server, the CLI writes the `endpoint` into prisma.yml as the default for future deploys. To bring up the interactive prompt again, simply remove the `endpoint` property from prisma.yml manually or pass the `--new` option.
+
+### Usage
+
+```bash
+prisma deploy [flags]
+```
+
+### Flags
+
+```
+-d, --dry-run              Perform a dry-run of the deployment
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+-f, --force                Accept data loss caused by schema changes
+-j, --json                 JSON Output
+-n, --new                  Force interactive mode to select the cluster
+-w, --watch                Watch for changes
+--no-seed                  Disable seed on initial service deploy
+```
+
+### Examples
+
+**Deploy service configuration in current directory**
+
+```bash
+prisma deploy
+```
+
+**Deploy service and interactively select a Prisma server as deployment target**:
+
+```bash
+prisma deploy --new
+```
+
+**Deploy service with environment variables specified in `.env.prod`**
+
+```bash
+prisma deploy --env-file .env.prod
+```

@@ -44,26 +44,7 @@ case class UpdateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
     val project  = mutaction.project
     val oldModel = mutaction.oldModel
     val newModel = mutaction.newModel
-
-    val updateType = if (oldField.typeIdentifier != newField.typeIdentifier) {
-      List(builder.updateScalarListType(project, oldModel.dbName, oldField.dbName, newField.typeIdentifier))
-    } else {
-      List.empty
-    }
-
-    val renameTable = if (oldField.dbName != newField.dbName || oldModel.dbName != newModel.dbName) {
-      List(builder.renameScalarListTable(project, oldModel.dbName, oldField.dbName, newModel.dbName, newField.dbName))
-    } else {
-      List.empty
-    }
-
-    val changes = updateType ++ renameTable
-
-    if (changes.isEmpty) {
-      DBIO.successful(())
-    } else {
-      DBIO.seq(changes: _*)
-    }
+    builder.renameTable(project, s"${oldModel.dbName}_${oldField.dbName}", s"${newModel.dbName}_${newField.dbName}")
   }
 
   override def rollback(mutaction: UpdateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {

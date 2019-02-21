@@ -8,9 +8,9 @@ type Person {
   email: String
   firstName: String
   lastName: String
-  phoneNumbers: [PhoneNumber!]!
-  scheduledTransactions: [FinancialScheduledTransaction!]!
-  transactions: [FinancialTransaction!]!
+  phoneNumbers: [PhoneNumber]
+  scheduledTransactions: [FinancialScheduledTransaction]
+  transactions: [FinancialTransaction]
   user: User
 }
 
@@ -22,7 +22,7 @@ type PhoneNumber {
 type FinancialAccount {
   id: ID! @unique
   key: String @unique
-  campuses: [Campus!]!
+  campuses: [Campus]
   description: String!
   isActive: Boolean!
   name: String
@@ -71,7 +71,7 @@ type FinancialScheduledTransaction {
   isActive: Boolean!
   startDate: DateTime
   frequency: TRANSACTION_FREQUENCY
-  transactions: [FinancialTransaction!]!
+  transactions: [FinancialTransaction]
   account: FinancialAccount
   amount: Float!
 }
@@ -135,9 +135,9 @@ type GroupRole {
 type GroupType {
   id: ID! @unique
   description: String
-  groups: [Group!]!
+  groups: [Group]
   name: String! @unique
-  roles: [GroupRole!]!
+  roles: [GroupRole]
 }
 
 type Group {
@@ -145,22 +145,22 @@ type Group {
   key: String @unique
   description: String
   type: GroupType!
-  invites: [GroupInvite!]!
+  invites: [GroupInvite]
   isActive: Boolean!
-  members: [GroupMember!]!
+  members: [GroupMember]
   name: String!
   organization: Group
 }
 
 type Campus {
   id: ID! @unique
-  accounts: [FinancialAccount!]!
+  accounts: [FinancialAccount]
   description: String
   isActive: Boolean
   organization: Group
   location: Location
   name: String!
-  phoneNumbers: [PhoneNumber!]!
+  phoneNumbers: [PhoneNumber]
 }
 
 enum LOCATION_TYPE {

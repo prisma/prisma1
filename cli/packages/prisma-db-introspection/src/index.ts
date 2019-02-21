@@ -3,7 +3,9 @@ export { default as Connectors } from './connectors'
 /**
  * Deprecated. Please use Connectors interface if possible.
  */
-export { PostgresConnector } from './databases/relational/postgres/postgresConnector'
+export {
+  PostgresConnector,
+} from './databases/relational/postgres/postgresConnector'
 
 /**
  * Deprecated. Please use Connectors interface if possible.
@@ -12,4 +14,4 @@ export { MongoConnector } from './databases/document/mongo/mongoConnector'
 
 export { PrismaDBClient } from './databases/prisma/prismaDBClient'
 
-export { default as ModelNameAndDirectiveNormalizer } from './common/modelNameAndDirectiveNormalizer'
+export { default as Normalizer } from './common/normalization/defaultNormalizer'

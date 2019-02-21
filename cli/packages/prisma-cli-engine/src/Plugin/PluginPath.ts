@@ -9,32 +9,32 @@ import * as path from 'path'
 const debug = require('debug')('cli-engine:plugins:manager')
 
 export interface PluginPathOptions {
-  output: Output,
-  type: PluginType,
-  path: string,
+  output: Output
+  type: PluginType
+  path: string
   tag?: string
 }
 
 export interface ParsedTopic {
-  id: string,
-  name?: string,
-  topic?: string,
-  description?: string,
+  id: string
+  name?: string
+  topic?: string
+  description?: string
   hidden?: boolean
   group: string
 }
 
 export interface ParsedCommand {
-  id: string,
-  topic: string,
-  command?: string,
-  aliases?: string[],
-  variableArgs?: boolean,
-  args: Arg[],
-  flags: { [name: string]: Flag<any> },
-  description?: string,
-  help?: string,
-  usage?: string,
+  id: string
+  topic: string
+  command?: string
+  aliases?: string[]
+  variableArgs?: boolean
+  args: Arg[]
+  flags: { [name: string]: Flag<any> }
+  description?: string
+  help?: string
+  usage?: string
   hidden?: boolean
   default?: boolean
   group: string
@@ -74,8 +74,8 @@ export class PluginPath {
       throw new Error('no commands found')
     }
 
-    const commands: CachedCommand[] = plugin.commands
-      .map((c: ParsedCommand): CachedCommand => ({
+    const commands: CachedCommand[] = plugin.commands.map(
+      (c: ParsedCommand): CachedCommand => ({
         id: c.id || this.makeID(c),
         topic: c.topic,
         command: c.command,
@@ -87,17 +87,19 @@ export class PluginPath {
         hidden: !!c.hidden,
         aliases: getAliases(c),
         flags: c.flags,
-        group: c.group
-      }))
+        group: c.group,
+      }),
+    )
 
-    const topics: CachedTopic[] = (plugin.topics || [])
-      .map((t: ParsedTopic): CachedTopic => ({
+    const topics: CachedTopic[] = (plugin.topics || []).map(
+      (t: ParsedTopic): CachedTopic => ({
         id: t.id || '',
         topic: t.topic || '',
         description: t.description,
         hidden: !!t.hidden,
-        group: t.group
-      }))
+        group: t.group,
+      }),
+    )
 
     for (const command of commands) {
       if (topics.find(t => t.id === command.topic)) {
@@ -107,21 +109,21 @@ export class PluginPath {
         id: command.topic,
         topic: command.topic,
         group: command.group,
-        hidden: true
+        hidden: true,
       }
       topics.push(topic)
     }
 
     const groups = plugin.groups || []
 
-    const {name, version} = this.pjson()
-    return {name, path: this.path, version, commands, topics, groups}
+    const { name, version } = this.pjson()
+    return { name, path: this.path, version, commands, topics, groups }
   }
 
   // TODO rm any hack
-  undefaultTopic(t: (ParsedTopic | { default: ParsedTopic } | any)): ParsedTopic {
+  undefaultTopic(t: ParsedTopic | { default: ParsedTopic } | any): ParsedTopic {
     if (t.default) {
-      t = (t.default as any)
+      t = t.default as any
     }
     // normalize v5 exported topic
     if (!t.topic) {
@@ -133,11 +135,13 @@ export class PluginPath {
     return t
   }
 
-  undefaultCommand(c: (ParsedCommand | { default: ParsedCommand })): ParsedCommand {
+  undefaultCommand(
+    c: ParsedCommand | { default: ParsedCommand },
+  ): ParsedCommand {
     if (c.default && typeof c.default !== 'boolean') {
-      return (c.default as any)
+      return c.default as any
     }
-    return (c as any)
+    return c as any
   }
 
   async require(): Promise<ParsedPlugin> {
@@ -154,13 +158,18 @@ export class PluginPath {
       }
     }
 
-    const exportedTopic: ParsedTopic = required.topic && this.undefaultTopic(required.topic)
-    const exportedTopics: ParsedTopic[] = required.topics && required.topics.map(t => this.undefaultTopic(t))
-    const topics: ParsedTopic[] = this.parsePjsonTopics().concat(exportedTopics || []).concat(exportedTopic || [])
-    const commands: ParsedCommand[] = required.commands && required.commands.map(t => this.undefaultCommand(t))
+    const exportedTopic: ParsedTopic =
+      required.topic && this.undefaultTopic(required.topic)
+    const exportedTopics: ParsedTopic[] =
+      required.topics && required.topics.map(t => this.undefaultTopic(t))
+    const topics: ParsedTopic[] = this.parsePjsonTopics()
+      .concat(exportedTopics || [])
+      .concat(exportedTopic || [])
+    const commands: ParsedCommand[] =
+      required.commands && required.commands.map(t => this.undefaultCommand(t))
     const groups: Group[] = required.groups || []
 
-    return {topics, commands, groups}
+    return { topics, commands, groups }
   }
 
   parsePjsonTopics() {
@@ -194,12 +203,12 @@ export class PluginPath {
   }
 
   makeID(o: any): string {
-    return [(o.topic || o.name), o.command].filter(s => s).join(':')
+    return [o.topic || o.name, o.command].filter(s => s).join(':')
   }
 
-  pjson(): { name: string, version: string } {
+  pjson(): { name: string; version: string } {
     if (this.type === 'builtin') {
-      return {name: 'builtin', version: this.config.version}
+      return { name: 'builtin', version: this.config.version }
     }
 
     return require(path.join(this.path, 'package.json'))

@@ -1,4 +1,9 @@
-import { IGQLType, IGQLField, GQLScalarField, IDirectiveInfo } from '../../src/datamodel/model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  IDirectiveInfo,
+} from '../../src/datamodel/model'
 import Renderer from '../../src/datamodel/renderer'
 import Parser from '../../src/datamodel/parser'
 import { DatabaseType } from '../../src/databaseType'
@@ -8,10 +13,10 @@ const parser = Parser.create(DatabaseType.postgres)
 
 const simpleModel = `type User {
   age: int
-  isAdmin: Boolean @default(value: false)
+  isAdmin: Boolean @default(value: "false")
   name: String
   nationality: String @default(value: "DE")
-  roles: [Int!]!
+  roles: [Int]
 }`
 
 const modelWithDirectives = `type Test @dummyDirective(isDummy: true) {
@@ -24,13 +29,16 @@ describe(`Renderer test`, () => {
     const fieldWithDefaultValue = new GQLScalarField('isAdmin', 'Boolean')
     fieldWithDefaultValue.defaultValue = 'false'
 
-    const fieldWithStringDefaultValue = new GQLScalarField('nationality', 'String')
+    const fieldWithStringDefaultValue = new GQLScalarField(
+      'nationality',
+      'String',
+    )
     fieldWithStringDefaultValue.defaultValue = 'DE'
 
     const listField = new GQLScalarField('roles', 'Int')
     listField.isList = true
 
-    const model = {
+    const model: IGQLType = {
       fields: [
         new GQLScalarField('name', 'String'),
         new GQLScalarField('age', 'int'),
@@ -41,11 +49,18 @@ describe(`Renderer test`, () => {
       name: 'User',
       isEmbedded: false,
       isEnum: false,
-    } as IGQLType
+      indices: [],
+      directives: [],
+      comments: [],
+      databaseName: null,
+    }
 
-    const res = renderer.render({
-      types: [model],
-    })
+    const res = renderer.render(
+      {
+        types: [model],
+      },
+      true,
+    )
 
     expect(res).toEqual(simpleModel)
   })
@@ -92,18 +107,24 @@ describe(`Renderer test`, () => {
       directives: typeDirectives,
       isEnum: false,
       fields: [scalarField, arrayField],
+      comments: [],
+      indices: [],
+      databaseName: null,
     }
 
-    const res = renderer.render({
-      types: [type],
-    })
+    const res = renderer.render(
+      {
+        types: [type],
+      },
+      true,
+    )
 
     expect(res).toEqual(modelWithDirectives)
   })
 
-  test.skip('Render a single type consistently with the parser', () => {
+  test('Render a single type consistently with the parser', () => {
     const parsed = parser.parseFromSchemaString(simpleModel)
-    const rendered = renderer.render(parsed)
+    const rendered = renderer.render(parsed, true)
 
     expect(rendered).toEqual(simpleModel)
   })

@@ -1,7 +1,7 @@
 import Parser from './parser'
 import { DirectiveKeys } from '../directives'
 /**
- * Parser implementation for document models. 
+ * Parser implementation for document models.
  */
 export default class DocumentParser extends Parser {
   public isIdField(field: any): boolean {
@@ -11,7 +11,7 @@ export default class DocumentParser extends Parser {
     return this.hasDirective(type, DirectiveKeys.isEmbedded)
   }
   protected isCreatedAtField(field: any): boolean {
-    return this.hasDirective(field, DirectiveKeys.isCreatedAt) 
+    return this.hasDirective(field, DirectiveKeys.isCreatedAt)
   }
   protected isUpdatedAtField(field: any): boolean {
     return this.hasDirective(field, DirectiveKeys.isUpdatedAt)

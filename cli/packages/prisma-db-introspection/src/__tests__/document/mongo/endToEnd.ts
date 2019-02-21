@@ -1,7 +1,10 @@
 import { MongoConnector } from '../../../databases/document/mongo/mongoConnector'
 import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
-import { collections, schemaString, normalizedSchemaString } from '../data/webshop'
-import ModelNameNormalizer from '../../../common/modelNameNormalizer'
+import {
+  collections,
+  schemaString,
+  normalizedSchemaString,
+} from '../data/webshop'
 
 const env = new MongoTestEnvironment()
 

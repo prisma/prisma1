@@ -60,7 +60,6 @@ object ConfigLoader {
     Try {
       val port           = sys.env.getOrElse("PORT", "4466").toInt
       val secret         = sys.env.getOrElse("PRISMA_MANAGEMENT_API_JWT_SECRET", "")
-      val legacySecret   = sys.env.getOrElse("CLUSTER_PUBLIC_KEY", "")
       val clusterAddress = sys.env.getOrElse("CLUSTER_ADDRESS", "")
       val rabbitUri      = sys.env.getOrElse("RABBITMQ_URI", "")
       val dbHost         = sys.env.getOrElse("SQL_CLIENT_HOST", sys.error("Env var SQL_CLIENT_HOST required but not found"))
@@ -77,7 +76,6 @@ object ConfigLoader {
       s"""
         |port: $port
         |managementApiSecret: $secret
-        |legacySecret: $legacySecret
         |clusterAddress: $clusterAddress
         |rabbitUri: $rabbitUri
         |enableManagementApi: $mgmtApiEnabled
@@ -98,7 +96,6 @@ object ConfigLoader {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
     val prototype      = extractBooleanOpt("prototype", map)
-    val legacySecret   = extractStringOpt("legacySecret", map)
     val clusterAddress = extractStringOpt("clusterAddress", map)
     val rabbitUri      = extractStringOpt("rabbitUri", map)
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
@@ -115,7 +112,6 @@ object ConfigLoader {
     PrismaConfig(
       port = port,
       managementApiSecret = secret,
-      legacySecret = legacySecret,
       clusterAddress = clusterAddress,
       rabbitUri = rabbitUri,
       managmentApiEnabled = mgmtApiEnabled,
@@ -361,7 +357,6 @@ object ConfigLoader {
 case class PrismaConfig(
     port: Option[Int],
     managementApiSecret: Option[String],
-    legacySecret: Option[String],
     clusterAddress: Option[String],
     rabbitUri: Option[String],
     managmentApiEnabled: Option[Boolean],

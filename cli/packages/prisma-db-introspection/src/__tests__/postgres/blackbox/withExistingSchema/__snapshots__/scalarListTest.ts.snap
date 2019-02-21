@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector Type with scalar lists and existing schema 1`] = `
+"type User {
+  id: ID! @unique
+  name355: String!
+  car: Car
+  houses: [House]
+  scalarIntList: [Int]
+  scalarStringList: [String]
+}
+
+type Car {
+  id: ID! @unique
+  name: String!
+}
+
+type House {
+  id: ID! @unique
+  windows: Int!
+}"
+`;

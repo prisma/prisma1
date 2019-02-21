@@ -1,12 +1,12 @@
 import { Cluster, PrismaDefinitionClass } from 'prisma-yml'
 import { GraphQLClient } from 'graphql-request'
+import IDatabaseClient from '../IDatabaseClient'
 
 const SERVICE_NAME = 'prisma-temporary-introspection-service'
 const SERVICE_STAGE = 'prisma-temporary-test-stage'
 const SERVICE_SECRET = 'prisma-instrospection-secret'
 
-// Removed DB Client interface. This is not polymorphic to other db clients.
-export class PrismaDBClient {
+export class PrismaDBClient implements IDatabaseClient {
   cluster: Cluster
   client: GraphQLClient
   definition: PrismaDefinitionClass
@@ -15,7 +15,7 @@ export class PrismaDBClient {
     this.definition = definition
   }
 
-  async query(query: string, variables: string[] = []): Promise<any> {
+  async query(query: string, variables: string[]): Promise<any[]> {
     const finalQuery = this.replace(query, variables)
     const databases = await this.getDatabases()
 
@@ -23,7 +23,7 @@ export class PrismaDBClient {
       throw new Error(`Prisma Config doesn't have any database connection`)
     }
 
-    return this.client.request(
+    const res = await this.client.request(
       `
       mutation executeRaw($query: String! $database: PrismaDatabase) {
         rows: executeRaw(
@@ -37,6 +37,8 @@ export class PrismaDBClient {
         database: databases[0],
       },
     )
+
+    return (res as any).rows as any[]
   }
 
   async getDatabases(): Promise<string[]> {

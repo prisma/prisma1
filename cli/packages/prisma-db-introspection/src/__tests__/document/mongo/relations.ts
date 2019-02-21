@@ -2,7 +2,12 @@ import { MongoConnector } from '../../../databases/document/mongo/mongoConnector
 import { MongoClient } from 'mongodb'
 import { MongoTestEnvironment } from '../../../test-helpers/mongoTestEnvironment'
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
-import { users, items, assertUserItemModel, schemaString } from '../data/simpleRelational'
+import {
+  users,
+  items,
+  assertUserItemModel,
+  schemaString,
+} from '../data/simpleRelational'
 
 const env = new MongoTestEnvironment()
 

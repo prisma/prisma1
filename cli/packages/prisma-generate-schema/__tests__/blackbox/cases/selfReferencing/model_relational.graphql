@@ -12,7 +12,7 @@ type SelfReferencingBWithId {
 
 type SelfReferencingCWithId {
     id: ID! @unique
-    a: [SelfReferencingBWithId!]!
+    a: [SelfReferencingBWithId]
     field: Int!
 }
 
@@ -30,14 +30,14 @@ type SelfReferencingB {
 
 type SelfReferencingC {
     id: ID! @unique
-    a: [SelfReferencingC!]!
+    a: [SelfReferencingC]
     field: Int!
 }
 
 type MultiSelfReferencingCWithId {
     id: ID! @unique
-    a: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA")
-    b: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA")
+    a: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA")
+    b: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA")
 }
 
 type MultiSelfReferencingBWithId {
@@ -54,8 +54,8 @@ type MultiSelfReferencingBWithId {
 #}
 
 type MultiSelfReferencingC {
-    a: [MultiSelfReferencingC!]! @relation(name: "AToA")
-    b: [MultiSelfReferencingC!]! @relation(name: "AToA")
+    a: [MultiSelfReferencingC] @relation(name: "AToA")
+    b: [MultiSelfReferencingC] @relation(name: "AToA")
 }
 
 type MultiSelfReferencingB {

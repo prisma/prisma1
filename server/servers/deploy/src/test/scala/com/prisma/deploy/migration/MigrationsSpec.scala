@@ -23,7 +23,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  val inspector          = deployConnector.testFacilities.inspector
   var project: Project   = Project(id = serviceId, schema = Schema.empty)
   lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
   def isMySql            = slickDatabase.isMySql
@@ -271,8 +270,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel)
-    val relationTable = result.table_!("AToB")
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability))
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
@@ -296,8 +295,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
-    val relationTable = result.table_!("AToB")
+    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability, RelationLinkTableCapability))
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.Int)
@@ -327,7 +326,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
 
     val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
-    val relationTable = result.table_!("AToB")
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
@@ -618,7 +617,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result = deploy(dataModel, capas)
     result.table("CustomLinkTable").isDefined should be(false)
-    val relationTable = result.table_!("AToB")
+    val relationTable = result.table_!("_AToB")
     relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
@@ -794,7 +793,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result = deploy(newDataModel, capas)
     result.table_!("A").column("b").isDefined should be(false)
-    result.table("AToB").isDefined should be(true)
+    result.table("_AToB").isDefined should be(true)
   }
 
   "converting a link table to an inline relation should work" in {
@@ -815,7 +814,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     {
       val result = deploy(initialDataModel, capas)
       result.table_!("A").column("b").isDefined should be(false)
-      result.table("AToB").isDefined should be(true)
+      result.table("_AToB").isDefined should be(true)
     }
 
     val newDataModel =
@@ -984,13 +983,14 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       clientDbQueries = deployConnector.clientDBQueries(project),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true
+      isActive = true,
+      deployConnector = deployConnector
     )
 
     mutation.execute.await
   }
 
   def inspect: DatabaseSchema = {
-    deployConnector.testFacilities.inspector.inspect(serviceId).await()
+    deployConnector.databaseInspector.inspect(serviceId).await()
   }
 }
